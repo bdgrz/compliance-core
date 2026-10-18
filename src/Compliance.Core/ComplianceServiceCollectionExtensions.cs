@@ -209,6 +209,13 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IApplicationPolicyReferenceDirectory>(provider =>
             provider.GetRequiredService<FitzApplicationPolicyReferenceDirectory>());
         services.AddScoped<ApplicationPolicyReferenceReadConsistency>();
+        services.AddScoped<FitzApplicationEvidenceSourceReferenceDirectory>();
+        services.AddScoped<IApplicationEvidenceSourceReferenceProjection>(provider =>
+            provider.GetRequiredService<FitzApplicationEvidenceSourceReferenceDirectory>());
+        services.AddScoped<IApplicationEvidenceSourceReferenceDirectory>(provider =>
+            provider.GetRequiredService<FitzApplicationEvidenceSourceReferenceDirectory>());
+        services.AddScoped<ApplicationEvidenceSourceReferenceReadConsistency>();
+        services.AddScoped<IApplicationEvidenceSourceAccess, ApplicationEvidenceSourceAccess>();
         services.AddScoped<IProgramDirectoryProjection>(
             provider => provider.GetRequiredService<FitzProgramDirectory>());
         services.AddScoped<IProgramDirectoryReader>(
@@ -1338,6 +1345,9 @@ public static class ComplianceServiceCollectionExtensions
                 WorkloadScope.PerTenant)
             .AddProjector<ApplicationPolicyReferenceProjector>(
                 FitzApplicationPolicyReferenceDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<ApplicationEvidenceSourceReferenceProjector>(
+                FitzApplicationEvidenceSourceReferenceDirectory.ProjectorName,
+                WorkloadScope.PerTenant)
             .AddProjector<ProviderProjector>(FitzProviderDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AssuranceProjector>(FitzAssuranceDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ClientServiceDirectoryProjector>("ClientServiceDirectory", WorkloadScope.PerTenant)

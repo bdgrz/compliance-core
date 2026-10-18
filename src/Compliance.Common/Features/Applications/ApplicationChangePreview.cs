@@ -4,8 +4,8 @@ namespace Bdgrz.Compliance.Features.Applications;
 
 /// <summary>
 /// A bounded observation, not an approval or complete retirement clearance. Boundary, control,
-/// and policy-reference collections include direct application and indexed system-instance
-/// references when their projections are current.
+/// policy, and evidence-source collections include direct application and indexed system-instance
+/// references when their projections are current and the caller has the required access.
 /// </summary>
 public sealed record ApplicationChangePreview(Uuid TenantId, Uuid ApplicationId,
     long ApplicationRevision, string ChangeKind,
@@ -32,6 +32,9 @@ public sealed record ApplicationChangePreview(Uuid TenantId, Uuid ApplicationId,
 
     /// <summary>Direct policy applicability and lifecycle facts for the application and its systems.</summary>
     public IReadOnlyList<ApplicationPolicyReferenceView> PolicyReferences { get; init; } = [];
+
+    /// <summary>Evidence support metadata for affected controls, filtered by exact artifact read access.</summary>
+    public IReadOnlyList<ApplicationEvidenceSourceReferenceView> EvidenceSourceReferences { get; init; } = [];
 
     /// <summary>Up to 200 projected system instances that a change or retirement would affect.</summary>
     public IReadOnlyList<SystemInstanceView> SystemInstanceReferences { get; init; } = [];

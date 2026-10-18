@@ -67,6 +67,31 @@ public sealed class ApplicationImportRetirementPlanTests
     }
 
     [Fact]
+    public void ShouldRejectRetirementGivenEvidenceSourceReference()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var impact = new ApplicationChangePreview(tenantId, applicationId, 1, "retire",
+            [], [], [], true)
+        {
+            ImpactDigest = new string('c', 64),
+            EvidenceSourceReferences = [new ApplicationEvidenceSourceReferenceView(tenantId,
+                Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+                "control_version", 1, Uuid.CreateVersion4(), 1,
+                new DateOnly(2026, 1, 1), new DateOnly(2026, 1, 31), "Payroll evidence")],
+        };
+        var retirement = new ApplicationImportRetirementRow(Uuid.CreateVersion4(), "payroll",
+            applicationId, Uuid.CreateVersion4(), 1, DateTimeOffset.UtcNow);
+
+        // Act
+        var usable = ApplicationImportRetirementImpact.IsUsable(impact, tenantId, retirement);
+
+        // Assert
+        Assert.False(usable);
+    }
+
+    [Fact]
     public void ShouldReject201ProofRowsGiven200SourceRowsAndOneRetirement()
     {
         // Arrange

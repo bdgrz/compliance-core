@@ -18,7 +18,10 @@ public sealed class PreviewApplicationChangeHandler(
     IApplicationControlVersionReferenceDirectory? controlVersions = null,
     ApplicationControlVersionReferenceReadConsistency? controlVersionConsistency = null,
     IApplicationPolicyReferenceDirectory? policyReferences = null,
-    ApplicationPolicyReferenceReadConsistency? policyReferenceConsistency = null)
+    ApplicationPolicyReferenceReadConsistency? policyReferenceConsistency = null,
+    IApplicationEvidenceSourceReferenceDirectory? evidenceSources = null,
+    ApplicationEvidenceSourceReferenceReadConsistency? evidenceSourceConsistency = null,
+    IApplicationEvidenceSourceAccess? evidenceSourceAccess = null)
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
@@ -28,6 +31,7 @@ public sealed class PreviewApplicationChangeHandler(
     const int MaximumSystemInstanceControlVersionReferences = 200;
     const int MaximumApplicationPolicyReferences = 200;
     const int MaximumSystemInstancePolicyReferences = 200;
+    const int MaximumApplicationEvidenceSourceReferences = 200;
 
     public PreviewApplicationChangeHandler(IAggregateReader aggregates,
         IApplicationDirectoryReader applications,
@@ -46,7 +50,7 @@ public sealed class PreviewApplicationChangeHandler(
         ["vendors"];
 
     static readonly string[] MissingContextsAfterSystemInstanceControls =
-        ["evidence_sources", "access_populations", "review_campaigns", "open_work",
+        ["access_populations", "review_campaigns", "open_work",
             "readiness", "engagements", "cross_source_manual_reliance"];
 
     public async ValueTask<Result<ApplicationChangePreview>> HandleAsync(
@@ -81,6 +85,9 @@ public sealed class PreviewApplicationChangeHandler(
         if ((policyReferences is null) != (policyReferenceConsistency is null))
             throw new InvalidOperationException(
                 "The policy-reference reader and consistency fence must be registered together.");
+        if ((evidenceSources is null) != (evidenceSourceConsistency is null))
+            throw new InvalidOperationException(
+                "The evidence-source reader and consistency fence must be registered together.");
 
         var inputError = Validate(request);
         if (inputError is not null)
@@ -206,6 +213,15 @@ public sealed class PreviewApplicationChangeHandler(
             if (!capturedPolicyReferences.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(capturedPolicyReferences.Error);
             policyReferenceFence = capturedPolicyReferences.Value;
+        }
+        ProjectionCheckpoint? evidenceSourceFence = null;
+        if (evidenceSourceConsistency is not null)
+        {
+            var capturedEvidenceSources = await evidenceSourceConsistency.CaptureAsync(
+                request.TenantId, ct).ConfigureAwait(false);
+            if (!capturedEvidenceSources.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(capturedEvidenceSources.Error);
+            evidenceSourceFence = capturedEvidenceSources.Value;
         }
         ProjectionCheckpoint? instanceFence = null;
         if (instanceConsistency is not null)
@@ -433,6 +449,104 @@ public sealed class PreviewApplicationChangeHandler(
                 request.TenantId, ct).ConfigureAwait(false);
         }
 
+        var evidenceSourceReferenceItems = new List<ApplicationEvidenceSourceReferenceView>();
+        var evidenceSourceReferencesOverLimit = false;
+        var evidenceSourceHasUnresolvedReferences = false;
+        var hasHiddenEvidenceSourceReferences = false;
+        var evidenceSourceControlsIncomplete = controlPage.NextCursor is not null ||
+            systemInstanceControlDraftReferencesOverLimit ||
+            approvedApplicationReferencesOverLimit || approvedSystemInstanceReferencesOverLimit ||
+            controlVersions is null || controlVersionConsistency is null ||
+            instanceConsistency is null || instancePage.NextCursor is not null;
+        var canDiscoverEvidenceSources = evidenceSourceAccess is not null && userId != Uuid.Empty;
+        var affectedControlReferences = controlPage.Items
+            .Concat(systemInstanceControlDraftReferences)
+            .Select(static reference => (reference.TenantId, reference.ProgramId,
+                reference.ControlId))
+            .Concat(approvedControlReferences.Select(static reference =>
+                (reference.TenantId, reference.ProgramId, reference.ControlId)))
+            .ToArray();
+        if (affectedControlReferences.Any(reference => reference.TenantId != request.TenantId ||
+                reference.ProgramId == Uuid.Empty || reference.ControlId == Uuid.Empty))
+            return Result<ApplicationChangePreview>.Failure(new RequestError(
+                RequestErrorKind.Conflict,
+                "The application control reference projection is inconsistent.",
+                isTransient: true));
+        var affectedControlPrograms = affectedControlReferences
+            .Distinct()
+            .ToArray();
+        if (affectedControlPrograms.GroupBy(static reference => reference.ControlId)
+            .Any(static group => group.Select(reference => reference.ProgramId).Distinct().Count() > 1))
+            return Result<ApplicationChangePreview>.Failure(new RequestError(
+                RequestErrorKind.Conflict,
+                "The application control reference projection is inconsistent.",
+                isTransient: true));
+        var affectedControls = affectedControlPrograms
+            .GroupBy(static reference => reference.ControlId)
+            .Select(static group => group.First())
+            .OrderBy(static reference => reference.ControlId.ToString(), StringComparer.Ordinal)
+            .ToArray();
+        var affectedProgramIds = affectedControls
+            .Select(static reference => reference.ProgramId)
+            .Distinct()
+            .ToArray();
+        if (evidenceSources is not null)
+        {
+            evidenceSourceHasUnresolvedReferences = await evidenceSources
+                .HasUnresolvedReferencesAsync(request.TenantId, affectedProgramIds, ct)
+                .ConfigureAwait(false);
+            if (canDiscoverEvidenceSources)
+            {
+                if (affectedControls.Length > MaximumApplicationEvidenceSourceReferences)
+                    evidenceSourceReferencesOverLimit = true;
+
+                var artifactAccess = new Dictionary<Uuid, bool>();
+                var scannedEvidenceSourceReferences = 0;
+                foreach (var affectedControl in affectedControls.Take(
+                             MaximumApplicationEvidenceSourceReferences))
+                {
+                    var remaining = MaximumApplicationEvidenceSourceReferences -
+                        scannedEvidenceSourceReferences;
+                    if (remaining == 0)
+                    {
+                        evidenceSourceReferencesOverLimit = true;
+                        break;
+                    }
+
+                    var sourcePage = await evidenceSources.ListByControlAsync(request.TenantId,
+                        affectedControl.ControlId, remaining, null, ct).ConfigureAwait(false);
+                    if (sourcePage.Items.Count > remaining || sourcePage.Items.Any(reference =>
+                            !IsValidEvidenceSourceReference(reference, request.TenantId,
+                                affectedControl.ControlId, affectedControl.ProgramId)))
+                        return Result<ApplicationChangePreview>.Failure(new RequestError(
+                            RequestErrorKind.Conflict,
+                            "The application evidence-source reference projection is inconsistent.",
+                            isTransient: true));
+
+                    scannedEvidenceSourceReferences += sourcePage.Items.Count;
+                    evidenceSourceReferencesOverLimit |= sourcePage.NextCursor is not null;
+                    foreach (var reference in sourcePage.Items)
+                    {
+                        if (!artifactAccess.TryGetValue(reference.ArtifactId, out var canRead))
+                        {
+                            canRead = await evidenceSourceAccess!.CanReadAsync(request.TenantId,
+                                userId, reference.ArtifactId, ct).ConfigureAwait(false);
+                            artifactAccess.Add(reference.ArtifactId, canRead);
+                        }
+                        if (!canRead)
+                        {
+                            hasHiddenEvidenceSourceReferences = true;
+                            continue;
+                        }
+                        evidenceSourceReferenceItems.Add(reference);
+                    }
+
+                    if (sourcePage.NextCursor is not null)
+                        break;
+                }
+            }
+        }
+
         var boundaryConfirmed = await boundaryConsistency.ConfirmUnchangedAndCaughtUpAsync(
             request.TenantId, boundaryFence.Value, ct).ConfigureAwait(false);
         if (!boundaryConfirmed.IsSuccess)
@@ -473,6 +587,14 @@ public sealed class PreviewApplicationChangeHandler(
             if (!policyReferencesConfirmed.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(policyReferencesConfirmed.Error);
         }
+        if (evidenceSourceFence is { } capturedEvidenceSourceFence)
+        {
+            var evidenceSourcesConfirmed = await evidenceSourceConsistency!
+                .ConfirmUnchangedAndCaughtUpAsync(request.TenantId,
+                    capturedEvidenceSourceFence, ct).ConfigureAwait(false);
+            if (!evidenceSourcesConfirmed.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(evidenceSourcesConfirmed.Error);
+        }
 
         // Source rechecks catch a pending application or relationship write that raced the reads.
         var latest = await aggregates.HydrateApplicationAsync(request.TenantId, request.ApplicationId, ct).ConfigureAwait(false);
@@ -512,6 +634,13 @@ public sealed class PreviewApplicationChangeHandler(
             pending.Add("policies");
         if (policyReferencesOverLimit)
             pending.Add("policy_references_over_limit");
+        if (evidenceSources is null || evidenceSourceConsistency is null ||
+            evidenceSourceAccess is null || !canDiscoverEvidenceSources ||
+            evidenceSourceControlsIncomplete || evidenceSourceReferencesOverLimit ||
+            evidenceSourceHasUnresolvedReferences || hasHiddenEvidenceSourceReferences)
+            pending.Add("evidence_sources");
+        if (evidenceSourceReferencesOverLimit)
+            pending.Add("evidence_source_references_over_limit");
         pending.AddRange(MissingContextsAfterSystemInstanceControls);
         var preview = new ApplicationChangePreview(
             request.TenantId, request.ApplicationId, source.Revision, request.ChangeKind,
@@ -543,6 +672,12 @@ public sealed class PreviewApplicationChangeHandler(
                 .ThenBy(static item => item.PolicyId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.Version)
                 .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
+            EvidenceSourceReferences = evidenceSourceReferenceItems
+                .OrderBy(static item => item.ControlId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.SupportedRecordType, StringComparer.Ordinal)
+                .ThenBy(static item => item.SupportedRecordRevision)
+                .ThenBy(static item => item.EvidenceSupportId.ToString(), StringComparer.Ordinal)
+                .ToArray(),
         };
         return Result<ApplicationChangePreview>.Success(preview with
         {
@@ -653,6 +788,17 @@ public sealed class PreviewApplicationChangeHandler(
             _ => false,
         };
     }
+
+    static bool IsValidEvidenceSourceReference(ApplicationEvidenceSourceReferenceView reference,
+        Uuid tenantId, Uuid controlId, Uuid programId) =>
+        reference.TenantId == tenantId && reference.ProgramId == programId &&
+        reference.EvidenceSupportId != Uuid.Empty && reference.ControlId == controlId &&
+        reference.SupportedRecordType is "control" or "control_version" &&
+        reference.SupportedRecordRevision > 0 && reference.ArtifactId != Uuid.Empty &&
+        reference.ArtifactRevision > 0 && reference.PeriodStart != default &&
+        reference.PeriodEnd != default && reference.PeriodStart <= reference.PeriodEnd &&
+        !string.IsNullOrWhiteSpace(reference.Purpose) &&
+        reference.Purpose == reference.Purpose.Trim() && reference.Purpose.Length <= 2000;
 
     static bool IsValidSystemInstanceBoundaryReference(
         ApplicationBoundaryReferenceView reference, Uuid tenantId, Uuid systemInstanceId) =>
