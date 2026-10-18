@@ -780,6 +780,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordManagementRepresentationLetterHandler>()
             .AddRequestHandler<SignManagementRepresentationLetterHandler>()
             .AddRequestHandler<RecordExaminationOutcomeHandler>()
+            .AddRequestHandler<RecordManagementExaminationReviewHandler>()
             .AddRequestHandler<CreateAuditPackageHandler>()
             .AddRequestHandler<AmendAuditPackageHandler>()
             .AddRequestHandler<ValidateAuditPackageHandler>()

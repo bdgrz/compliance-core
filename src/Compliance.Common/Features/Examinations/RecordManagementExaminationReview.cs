@@ -4,6 +4,8 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Records the record management examination review intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.examinations.record-management-examination-review", 1)]
-public sealed record RecordManagementExaminationReview(Uuid TenantId, Uuid ProgramId, Uuid ExaminationId, long PackageVersion, string Outcome, string Comments) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Records management's review of one exact examination source chain.</summary>
+[Discriminator("bdgrz.examinations.record-management-examination-review", 2)]
+public sealed record RecordManagementExaminationReview(Uuid TenantId, Uuid ProgramId,
+    Uuid ExaminationId, Uuid SignOffId, ExaminationSignOffContent Content)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
