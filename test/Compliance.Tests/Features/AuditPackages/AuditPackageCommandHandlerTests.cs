@@ -83,6 +83,69 @@ public sealed class AuditPackageCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldQueueBuildForExactExistingPackageGivenPersonalActor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var packageId = await fixture.SeedDraftPackageAsync();
+        var command = new RequestAuditPackageBuild(fixture.TenantId, fixture.ProgramId,
+            fixture.ExaminationId, packageId, "type_i", "build-key-1");
+
+        // Act
+        var result = await fixture.RequestBuildHandler().HandleAsync(Fixture.Context(
+            fixture.LeadUserId, command), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
+            fixture.ProgramId, packageId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var view = saved.Current!;
+        Assert.Equal("building", view.Status);
+        var attempt = Assert.Single(view.Versions[0].BuildAttempts);
+        Assert.Equal("build-key-1", attempt.BuildKey);
+        Assert.Equal("requested", attempt.Status);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.LeadUserId),
+            attempt.RequestedByMemberId);
+    }
+
+    [Fact]
+    public async Task ShouldRejectSystemActorGivenBuildRequest()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var command = new RequestAuditPackageBuild(fixture.TenantId, fixture.ProgramId,
+            fixture.ExaminationId, Uuid.CreateVersion4(), "type_i", "build-key-2");
+
+        // Act
+        var result = await fixture.RequestBuildHandler().HandleAsync(
+            Fixture.SystemContext(command), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldRejectBuildRequestForDifferentExaminationGivenExistingPackage()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var packageId = await fixture.SeedDraftPackageAsync();
+        var command = new RequestAuditPackageBuild(fixture.TenantId, fixture.ProgramId,
+            Uuid.CreateVersion4(), packageId, "type_i", "build-key-3");
+
+        // Act
+        var result = await fixture.RequestBuildHandler().HandleAsync(Fixture.Context(
+            fixture.LeadUserId, command), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
+            fixture.ProgramId, packageId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal("draft", saved.Current!.Status);
+        Assert.Empty(saved.Current.Versions[0].BuildAttempts);
+    }
+
+    [Fact]
     public async Task ShouldOverrideExactBlockingFindingGivenIndependentExecutiveActor()
     {
         // Arrange
@@ -147,6 +210,19 @@ public sealed class AuditPackageCommandHandlerTests
 
         public ApproveAuditPackageValidationOverrideHandler ApproveValidationOverrideHandler() =>
             new(Executor, _clock);
+
+        public RequestAuditPackageBuildHandler RequestBuildHandler() =>
+            new(Executor, _clock);
+
+        public async Task<Uuid> SeedDraftPackageAsync()
+        {
+            var packageId = Uuid.CreateVersion4();
+            var package = new AuditPackageAggregate(TenantId, ProgramId, packageId);
+            Assert.Null(package.Create(Content(packageId), RbacIds.Member(TenantId, LeadUserId),
+                "Lead", Now));
+            await Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+            return packageId;
+        }
 
         public async Task<Uuid> SeedBuiltAndValidatedPackageAsync()
         {

@@ -596,13 +596,13 @@ OpenEvidenceRequest handles internal evidence work; it does not retain the exter
 
 Scope: **T1-05, T3-05**. Requirement source: [decisions/m0-d17-audit-deliverables](decisions/m0-d17-audit-deliverables.md).
 
-No AuditPackage request/build/validation/delivery contracts exist. Snapshot manifests are a reusable primitive, not an examination package. #339 must validate actual auditor expectations; Privacy support remains #349.
+AuditPackage contracts and an aggregate exist, but the source-complete package creation and build pipeline is unfinished. The build-request handler persists an attempt against the frozen manifest, and the trusted result handler accepts only the exact worker callback caused by that request. Snapshot manifests alone are not an examination package. #339 must validate actual auditor expectations; Privacy support remains #349.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `RequestAuditPackageBuild`; `RecordAuditPackageBuildResult` | Generate deterministic exact-version package/index/control-matrix/evidence-index outputs with durable progress and terminal failure; internal completion records remain distinct from human approval. |
-| Missing | `ValidateAuditPackage`; `ApproveAuditPackageValidationOverride` | Retain validation against exact manifest/version and explicit authorized rationale for permitted overrides. Missing or unauthorized artifacts cannot be hidden by a clean result. |
-| Missing | `ApproveAuditPackageDisclosure`; `RecordAuditPackageDelivery`; `AmendAuditPackage` | Bind approval/recipient/actual delivery to immutable package bytes and retain amendments. Reuse general artifact disclosure where semantics match rather than create two approval authorities. |
+| Partial | `RequestAuditPackageBuild`; `RecordAuditPackageBuildResult` | Build-request and exact worker-result handlers persist an attempt and verify its request event. Still generate deterministic exact-version package/index/control-matrix/evidence-index outputs from frozen sources and store immutable bytes; internal completion remains distinct from human approval. |
+| Partial | `ValidateAuditPackage`; `ApproveAuditPackageValidationOverride` | The override handler retains an independent decision; validation still needs source-backed findings against the exact manifest/version. Missing or unauthorized artifacts cannot be hidden by a clean result. |
+| Partial | `ApproveAuditPackageDisclosure`; `RecordAuditPackageDelivery`; `AmendAuditPackage` | Disclosure and delivery handlers bind recipient/receipt to a package version; package creation/build output and amendment selection snapshots remain incomplete. Reuse general artifact disclosure where semantics match rather than create two approval authorities. |
 
 <a id="g13"></a>
 

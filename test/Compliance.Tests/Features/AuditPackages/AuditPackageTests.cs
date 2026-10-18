@@ -80,6 +80,26 @@ public sealed class AuditPackageTests
     }
 
     [Fact]
+    public void ShouldTreatSameBuildKeyAndActorAsRetryGivenLaterRequestTime()
+    {
+        // Arrange
+        var package = NewPackage(PackageId, Entries());
+        var first = package.RequestBuild(package.Revision, "same-key", LeadId, "Lead",
+            Now.AddMinutes(1));
+        var revisionAfterFirst = package.Revision;
+
+        // Act
+        var retry = package.RequestBuild(package.Revision, "same-key", LeadId, "Lead (renamed)",
+            Now.AddMinutes(5));
+
+        // Assert
+        Assert.Null(first);
+        Assert.Null(retry);
+        Assert.Equal(revisionAfterFirst, package.Revision);
+        Assert.Single(package.Current!.Versions[0].BuildAttempts);
+    }
+
+    [Fact]
     public void ShouldRequireExactManifestValidationOverrideAndDisclosureGivenBuiltPackage()
     {
         // Arrange

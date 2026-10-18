@@ -109,8 +109,7 @@ public sealed class AuditPackage : Aggregate
         var version = CurrentVersion(current);
         var attemptId = Uuid.CreateVersion5(BuildNamespace, $"{Id}\n{version.PackageVersion}\n{buildKey}");
         if (version.BuildAttempts.FirstOrDefault(attempt => attempt.BuildAttemptId == attemptId) is { } prior)
-            return prior.BuildKey == buildKey && prior.RequestedByMemberId == actorMemberId &&
-                   prior.RequestedByDisplay == actorDisplay.Trim() && prior.RequestedAt == requestedAt
+            return prior.BuildKey == buildKey && prior.RequestedByMemberId == actorMemberId
                 ? null
                 : CommandFailure.StateConflict("A build key cannot be reused with changed intent or attribution.");
         if (expectedRevision != Revision)
@@ -767,7 +766,8 @@ public sealed class AuditPackage : Aggregate
         if (output.IncludedEntries is null || !version.Manifest.Entries.SequenceEqual(output.IncludedEntries))
             return "incomplete_or_inconsistent_entries";
         if (attempt.CompletedEntryCount > attempt.TotalEntryCount ||
-            output.ArchiveArtifactId == Uuid.Empty || !Sha256(output.ArchiveSha256) || output.ArchiveBytes <= 0)
+            output.ArchiveArtifactId is not { } artifactId || artifactId == Uuid.Empty ||
+            !Sha256(output.ArchiveSha256) || output.ArchiveBytes is not > 0)
             return "invalid_archive_identity";
         return null;
     }
