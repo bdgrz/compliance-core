@@ -6,8 +6,8 @@ Handler status `partial` means the command has a registered handler for only par
 
 ## Current gap
 
-- The plan contains 127 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 122 active commands, 76 have complete handler coverage and 46 still need a handler.
-- Active command registration gaps: 46. Active commands without a handler test reference: 46.
+- The plan contains 127 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 122 active commands, 77 have complete handler coverage and 45 still need a handler.
+- Active command registration gaps: 45. Active commands without a handler test reference: 45.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
 
@@ -257,7 +257,7 @@ Handler status `partial` means the command has a registered handler for only par
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `RevokeArtifactDisclosure` | present | present | present | referenced |
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `ApproveArtifactDisposition` | present | missing | check | no reference |
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `ExecuteArtifactDisposition` | present | missing | check | no reference |
-| Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `RecordArtifactDispositionResult` | present | missing | check | no reference |
+| Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `RecordArtifactDispositionResult` | present | present | present | `RecordArtifactDispositionResultHandlerTests` |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CreateAdvisorHandoff` | present | missing | check | no reference |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `ReviseAdvisorHandoffSelection` | present | missing | check | no reference |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `MarkAdvisorHandoffReadyForReview` | present | missing | check | no reference |
@@ -381,7 +381,8 @@ These are implementation dependencies found in the existing contracts, aggregate
 
 | Commands | Prerequisite before a correct handler can be wired |
 |---|---|
-| `ApproveArtifactDisposition`, `ExecuteArtifactDisposition`, `RecordArtifactDispositionResult` | Build a tenant-scoped eligibility reader that binds the exact artifact, retention basis, handling policy, active legal and engagement holds, historical reliance, and storage readiness. Execution also needs a durable deletion provider and trusted worker identity. `ArtifactDisposition` already rejects missing or changed eligibility snapshots. |
+| `ApproveArtifactDisposition`, `ExecuteArtifactDisposition` | Build a tenant-scoped eligibility reader that binds the exact artifact, retention basis, handling policy, active legal and engagement holds, historical reliance, and storage readiness. Execution also needs a durable deletion provider. `ArtifactDisposition` already rejects missing or changed eligibility snapshots. |
+| `RecordArtifactDispositionResult` reactor integration | The handler now accepts results only from the named internal worker, bound to the exact execution-request event and attempt number. The storage deletion reactor and its durable provider outcome remain to be implemented in the reactor layer. |
 | `CreateAdvisorHandoff`, `ReviseAdvisorHandoffSelection`, `MarkAdvisorHandoffReadyForReview` | Add a resolver for every supported record kind that proves tenant, program, current exact version, and shareable status. The aggregate accepts IDs but cannot establish those source facts. Readiness must be restricted to the Compliance Lead as required by [M0-D14](decisions/m0-d14-advisor-collaboration.md). |
 | `RecordAdvisorFeedback`, `CorrectAdvisorFeedback`, `RespondToAdvisorFeedback` | Add the M0-D14 scoped advisor/guest authorization model, including accepted firm-staff assignments, program-scoped expiring guest grants, and attribution rules. The current commands use ordinary client-management authorization, which cannot authorize the specified advisor actors. |
 | `ScheduleWeeklyWorkDigest`, `DeliverWeeklyWorkDigest`, `RecordWorkDigestDelivery` | Add a bounded weekly recipient/snapshot source, stable digest attempt identity, and a trusted email delivery adapter with durable outcome callbacks. The existing digest query and preference do not provide delivery state. |

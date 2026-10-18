@@ -347,7 +347,7 @@ This pruned plan has 127 required additions, including five evidence command con
 - **RevokeArtifactDisclosure** — handler records a personal, revision-checked revocation while preserving the delivery history
 - **ApproveArtifactDisposition** — coded ([contract](../../src/Compliance.Common/Features/Retention/ApproveArtifactDisposition.cs#L7))
 - **ExecuteArtifactDisposition** — coded ([contract](../../src/Compliance.Common/Features/Retention/ExecuteArtifactDisposition.cs#L7))
-- **RecordArtifactDispositionResult** — coded ([contract](../../src/Compliance.Common/Features/Retention/RecordArtifactDispositionResult.cs#L7))
+- **RecordArtifactDispositionResult** — internal v2 callback bound to the exact execution-request event and attempt; named worker only ([contract](../../src/Compliance.Common/Features/Retention/RecordArtifactDispositionResult.cs#L7))
 
 ### Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md)
 

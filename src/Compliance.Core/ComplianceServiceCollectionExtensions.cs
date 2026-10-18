@@ -622,6 +622,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordArtifactRetentionBasisHandler>()
             .AddRequestHandler<PlaceArtifactLegalHoldHandler>()
             .AddRequestHandler<ReleaseArtifactLegalHoldHandler>()
+            .AddRequestHandler<RecordArtifactDispositionResultHandler>()
+            .AddRequestAuthorizer<RecordArtifactDispositionResultAuthorizer>()
             .AddRequestHandler<GetArtifactRetentionHandler>()
             .AddRequestHandler<GetApplicationImportRetentionHandler>()
             .AddRequestHandler<ListArtifactLegalHoldsHandler>()
