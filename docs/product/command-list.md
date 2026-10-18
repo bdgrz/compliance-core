@@ -481,14 +481,14 @@ These commands carry the complete change or incident content accepted by their o
 
 ### Professional authority and actual assignments — [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md)
 
-- **AcceptServiceEngagement** — extend existing internal behavior
-- **AssignServiceEngagementStaff** — coded ([contract](../../src/Compliance.Common/Features/AccessControl/AssignServiceEngagementStaff.cs#L7))
+- **AcceptServiceEngagement** — implemented with current partner, directory, ratified-rule, boundary, and management-acknowledgement verification ([handler](../../src/Compliance.Core/Features/AccessControl/AcceptServiceEngagementHandler.cs#L7))
+- **AssignServiceEngagementStaff** — implemented as a personal current-partner decision with exact directory identity, client sequence, effective date, and lifetime independence checks ([contract](../../src/Compliance.Common/Features/AccessControl/AssignServiceEngagementStaff.cs#L7), [handler](../../src/Compliance.Core/Features/AccessControl/AssignServiceEngagementStaffHandler.cs#L7))
 - **RevokeServiceEngagementActualStaff** — implemented through the exact-assignment handler and HTTP/MCP registrations ([contract](../../src/Compliance.Common/Features/AccessControl/RevokeServiceEngagementActualStaff.cs#L5), [handler](../../src/Compliance.Core/Features/AccessControl/RevokeServiceEngagementActualStaffHandler.cs#L5))
 
 ### Independence authority — [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md)
 
-- **RatifyIndependenceRuleVersion** — required partner ratification before production acceptance can use a rule version
-- **RecordPartnerIndependenceEvaluation** — required personal evaluation when the accepted rules classify readiness-only service as conditionally compatible
+- **RatifyIndependenceRuleVersion** — implemented with signed current rule-ratifier authority; production trust remains deployment-owned ([handler](../../src/Compliance.Core/Features/AccessControl/RatifyIndependenceRuleVersionHandler.cs#L5))
+- **RecordPartnerIndependenceEvaluation** — implemented for exact current partner identity and complete independence inputs ([handler](../../src/Compliance.Core/Features/AccessControl/RecordPartnerIndependenceEvaluationHandler.cs#L5))
 
 ### Own-attest delivery and organization offboarding — [F1-01](backlog.md#f1-01-onboard-suspend-and-offboard-client-organizations), [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks); [M0-D27](decisions/m0-d27-attest-scope.md)
 

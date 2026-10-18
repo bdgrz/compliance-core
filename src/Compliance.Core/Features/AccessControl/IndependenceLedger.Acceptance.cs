@@ -71,7 +71,8 @@ public sealed partial class IndependenceLedger
             "allowed", AcceptanceOutcome(policyResult.Decision), policyResult.ConsideredIds,
             Array.AsReadOnly(proposed.Select(staff => new EngagementActualAssignmentView(staff.StaffMemberId, staff.UserId,
                 staff.Practice, staff.DirectoryStaffRevision,
-                proof.CurrentStaff.Single(current => current.StaffMemberId == staff.StaffMemberId).RecordedAt, true, actor, recordedAt)).ToArray()), "active", actor, recordedAt)
+                proof.CurrentStaff.Single(current => current.StaffMemberId == staff.StaffMemberId).RecordedAt, true,
+                actor, recordedAt, DateOnly.FromDateTime(recordedAt.UtcDateTime))).ToArray()), "active", actor, recordedAt)
         {
             PartnerEvaluation = proof.PartnerEvaluation
         };
@@ -94,7 +95,13 @@ public sealed partial class IndependenceLedger
             receipt.Source.StaffMemberId == staffMemberId && receipt.Source.UserId == userId) &&
         CompleteFacts(acceptance.CompleteServiceHistory.Select(service => service.ServiceRecordId).ToArray()) &&
         acceptance.Assignments.Any(staff => staff.IsCurrent && staff.StaffMemberId == staffMemberId &&
-            staff.UserId == userId && staff.AssignedAt <= effectiveAt && staff.DirectoryStaffRevision == currentDirectoryStaffRevision);
+            staff.UserId == userId && staff.AssignedAt <= effectiveAt &&
+            EffectiveFrom(staff) <= DateOnly.FromDateTime(effectiveAt.UtcDateTime) &&
+            staff.DirectoryStaffRevision == currentDirectoryStaffRevision);
+
+    static DateOnly EffectiveFrom(EngagementActualAssignmentView staff) => staff.EffectiveFrom == default
+        ? DateOnly.FromDateTime(staff.AssignedAt.UtcDateTime)
+        : staff.EffectiveFrom;
 
     bool EngagementSourcesExistBy(Uuid engagementId, DateTimeOffset acceptedAt) =>
         _engagementHistory[engagementId].All(version => version.RecordedAt <= acceptedAt &&

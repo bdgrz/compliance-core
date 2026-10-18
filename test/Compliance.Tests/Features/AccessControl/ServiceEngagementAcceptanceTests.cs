@@ -18,6 +18,183 @@ public sealed class ServiceEngagementAcceptanceTests
     static readonly DateTimeOffset Now = new(2026, 10, 7, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public void ShouldAssignExactCurrentStaffToAcceptedEngagementGivenCurrentPartnerAndFutureEffectiveDate()
+    {
+        // Arrange
+        var (ledger, proof, rules) = Fixture("attest");
+        Assert.True(ledger.AcceptEngagement(Uuid.CreateVersion4(), 2, proof, rules, Now).IsSuccess);
+        var staff = proof.CurrentPartner;
+        var effectiveFrom = new DateOnly(2026, 10, 8);
+        var requestId = Uuid.CreateVersion4();
+        var request = new AssignServiceEngagementStaff(Tenant, proof.EngagementId, staff.StaffMemberId,
+            3, effectiveFrom);
+        var operatorActor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic authority recorder");
+        var designation = new FirmProfessionalDutyDesignationView(Uuid.CreateVersion4(), staff.StaffMemberId,
+            staff.UserId, FirmProfessionalDuty.EngagementPartner, Tenant, "Synthetic partner authority",
+            staff.Revision, true, 1, operatorActor, Now, operatorActor, Now, null);
+        var currentDuty = new CurrentProfessionalDuty(staff, designation, 1);
+        var actor = ActorReference.ForFirmStaff(staff.UserId, "Synthetic engagement partner");
+
+        // Act
+        var result = ledger.AssignActualStaff(requestId, request, staff, currentDuty, actor, Now.AddDays(1));
+        var retry = ledger.AssignActualStaff(requestId, request, staff, currentDuty, actor, Now.AddDays(1));
+        var conflictingRetry = ledger.AssignActualStaff(requestId, request with
+        {
+            EffectiveFrom = effectiveFrom.AddDays(1)
+        }, staff, currentDuty, actor, Now.AddDays(1));
+        var events = new AggregateScenario<IndependenceLedger>(ledger).PendingEvents.ToArray();
+        var replay = new AggregateScenario<IndependenceLedger>(new IndependenceLedger(Tenant)).Given(events).Aggregate;
+        var assignmentEvent = Assert.IsType<ServiceEngagementStaffAssigned>(events[^1]);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(JsonSerializer.Serialize(result.Value, ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceView),
+            JsonSerializer.Serialize(retry.Value, ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceView));
+        Assert.Equal(RequestErrorKind.Conflict, conflictingRetry.Error?.Kind);
+        Assert.Equal(4, replay.Sequence);
+        Assert.Equal(3, ledger.Engagement(proof.EngagementId)!.Revision);
+        Assert.Equal(2, replay.AcceptanceHistory(proof.EngagementId).Count);
+        Assert.Equal(2, replay.ActualAssignmentHistory.Count);
+        Assert.Equal(staff, assignmentEvent.AssignedStaff);
+        Assert.Equal("active", result.Value!.Status);
+        var assignment = Assert.Single(result.Value.Assignments, item => item.StaffMemberId == staff.StaffMemberId);
+        Assert.True(assignment.IsCurrent);
+        Assert.Equal(effectiveFrom, assignment.EffectiveFrom);
+        Assert.Equal(actor, assignment.Actor);
+        Assert.False(ledger.IsEligibleForProfessionalAccess(proof.EngagementId, staff.StaffMemberId,
+            staff.UserId, rules.Version, staff.Revision, Now.AddHours(12)));
+        Assert.True(ledger.IsEligibleForProfessionalAccess(proof.EngagementId, staff.StaffMemberId,
+            staff.UserId, rules.Version, staff.Revision, Now.AddDays(1)));
+    }
+
+    [Fact]
+    public void ShouldRejectActualAssignmentReplayGivenInactiveDirectoryEvidence()
+    {
+        // Arrange
+        var (ledger, proof, rules) = Fixture("attest");
+        Assert.True(ledger.AcceptEngagement(Uuid.CreateVersion4(), 2, proof, rules, Now).IsSuccess);
+        var staff = proof.CurrentPartner;
+        var operatorActor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic authority recorder");
+        var designation = new FirmProfessionalDutyDesignationView(Uuid.CreateVersion4(), staff.StaffMemberId,
+            staff.UserId, FirmProfessionalDuty.EngagementPartner, Tenant, "Synthetic partner authority",
+            staff.Revision, true, 1, operatorActor, Now, operatorActor, Now, null);
+        var currentDuty = new CurrentProfessionalDuty(staff, designation, 1);
+        var actor = ActorReference.ForFirmStaff(staff.UserId, "Synthetic engagement partner");
+        var request = new AssignServiceEngagementStaff(Tenant, proof.EngagementId, staff.StaffMemberId,
+            ledger.Sequence, new DateOnly(2026, 10, 8));
+        Assert.True(ledger.AssignActualStaff(Uuid.CreateVersion4(), request, staff, currentDuty, actor,
+            Now.AddDays(1)).IsSuccess);
+        var events = new AggregateScenario<IndependenceLedger>(ledger).PendingEvents.ToArray();
+        var assignmentIndex = Array.FindIndex(events, item => item is ServiceEngagementStaffAssigned);
+        var assignment = Assert.IsType<ServiceEngagementStaffAssigned>(events[assignmentIndex]);
+        events[assignmentIndex] = assignment with
+        {
+            AssignedStaff = assignment.AssignedStaff with { IsActive = false }
+        };
+
+        // Act
+        var replayError = Record.Exception(() =>
+        {
+            _ = new AggregateScenario<IndependenceLedger>(new IndependenceLedger(Tenant)).Given(events).Aggregate;
+        });
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(replayError);
+    }
+
+    [Fact]
+    public void ShouldRefuseActualAssignmentGivenIncompleteDirectorySourceEvidence()
+    {
+        // Arrange
+        var (ledger, proof, rules) = Fixture("attest");
+        Assert.True(ledger.AcceptEngagement(Uuid.CreateVersion4(), 2, proof, rules, Now).IsSuccess);
+        var staff = proof.CurrentPartner with { SourceReference = " " };
+        var operatorActor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic authority recorder");
+        var designation = new FirmProfessionalDutyDesignationView(Uuid.CreateVersion4(), staff.StaffMemberId,
+            staff.UserId, FirmProfessionalDuty.EngagementPartner, Tenant, "Synthetic partner authority",
+            staff.Revision, true, 1, operatorActor, Now, operatorActor, Now, null);
+        var currentDuty = new CurrentProfessionalDuty(proof.CurrentPartner, designation, 1);
+        var actor = ActorReference.ForFirmStaff(proof.CurrentPartner.UserId, "Synthetic engagement partner");
+        var request = new AssignServiceEngagementStaff(Tenant, proof.EngagementId, staff.StaffMemberId,
+            ledger.Sequence, new DateOnly(2026, 10, 8));
+
+        // Act
+        var result = ledger.AssignActualStaff(Uuid.CreateVersion4(), request, staff, currentDuty, actor,
+            Now.AddDays(1));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Equal(3, ledger.Sequence);
+        Assert.Single(ledger.ActualAssignmentHistory);
+    }
+
+    [Fact]
+    public void ShouldRefuseActualAssignmentGivenStaleSequenceOrBackdatedEffectiveDate()
+    {
+        // Arrange
+        var (ledger, proof, rules) = Fixture("attest");
+        Assert.True(ledger.AcceptEngagement(Uuid.CreateVersion4(), 2, proof, rules, Now).IsSuccess);
+        var staff = proof.CurrentPartner;
+        var operatorActor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic authority recorder");
+        var designation = new FirmProfessionalDutyDesignationView(Uuid.CreateVersion4(), staff.StaffMemberId,
+            staff.UserId, FirmProfessionalDuty.EngagementPartner, Tenant, "Synthetic partner authority",
+            staff.Revision, true, 1, operatorActor, Now, operatorActor, Now, null);
+        var currentDuty = new CurrentProfessionalDuty(staff, designation, 1);
+        var actor = ActorReference.ForFirmStaff(staff.UserId, "Synthetic engagement partner");
+        var stale = new AssignServiceEngagementStaff(Tenant, proof.EngagementId, staff.StaffMemberId,
+            2, new DateOnly(2026, 10, 8));
+        var backdated = new AssignServiceEngagementStaff(Tenant, proof.EngagementId, staff.StaffMemberId,
+            3, new DateOnly(2026, 10, 6));
+
+        // Act
+        var staleResult = ledger.AssignActualStaff(Uuid.CreateVersion4(), stale, staff, currentDuty, actor, Now);
+        var backdatedResult = ledger.AssignActualStaff(Uuid.CreateVersion4(), backdated, staff, currentDuty, actor, Now);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, staleResult.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, backdatedResult.Error?.Kind);
+        Assert.Equal(3, ledger.Sequence);
+        Assert.Single(ledger.ActualAssignmentHistory);
+    }
+
+    [Fact]
+    public void ShouldRejectActualAssignmentGivenPermanentOppositePracticeHistory()
+    {
+        // Arrange
+        var (ledger, advisoryProof, advisoryRules) = Fixture("advisory");
+        Assert.True(ledger.AcceptEngagement(Uuid.CreateVersion4(), 2, advisoryProof, advisoryRules, Now).IsSuccess);
+        var (_, attestProof, attestRules) = Fixture("attest", ledger);
+        Assert.True(ledger.AcceptEngagement(Uuid.CreateVersion4(), ledger.Sequence, attestProof,
+            attestRules, Now.AddDays(1)).IsSuccess);
+        var historical = advisoryProof.CurrentStaff[0];
+        var candidate = attestProof.CurrentPartner with { UserId = historical.UserId };
+        var request = new AssignServiceEngagementStaff(Tenant, attestProof.EngagementId,
+            candidate.StaffMemberId, ledger.Sequence, new DateOnly(2026, 10, 9));
+        var actor = ActorReference.ForFirmStaff(attestProof.CurrentPartner.UserId, "Synthetic engagement partner");
+        var authorityRecorder = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic authority recorder");
+        var designation = new FirmProfessionalDutyDesignationView(Uuid.CreateVersion4(),
+            attestProof.CurrentPartner.StaffMemberId, attestProof.CurrentPartner.UserId,
+            FirmProfessionalDuty.EngagementPartner, Tenant, "Synthetic partner authority",
+            attestProof.CurrentPartner.Revision, true, 1, authorityRecorder, Now,
+            authorityRecorder, Now, null);
+        var currentDuty = new CurrentProfessionalDuty(attestProof.CurrentPartner, designation, 1);
+        var sequence = ledger.Sequence;
+
+        // Act
+        var result = ledger.AssignActualStaff(Uuid.CreateVersion4(), request, candidate, currentDuty,
+            actor, Now.AddDays(2));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Contains(IndependenceCompartments.PersonExclusivityRuleId, result.Error!.Message,
+            StringComparison.Ordinal);
+        Assert.Equal(sequence, ledger.Sequence);
+        Assert.Equal(2, ledger.ActualAssignmentHistory.Count);
+        Assert.Single(ledger.AcceptanceHistory(attestProof.EngagementId));
+    }
+
+    [Fact]
     public void ShouldCommitActualHistoryGivenVerifiedSyntheticAcceptanceAndRatifiedFixtureRules()
     {
         // Arrange
@@ -495,6 +672,109 @@ public sealed class ServiceEngagementAcceptanceTests
         Assert.Equal(seeded.Proof.PartnerStaffMemberId, result.Value.PartnerStaffMemberId);
         Assert.Equal(seeded.Proof.PartnerDutyRevision, result.Value.PartnerDutyRevision);
         Assert.Equal(seeded.Proof.PartnerUserId, evidenceReader.LastActorUserId);
+    }
+
+    [Fact]
+    public async Task ShouldAssignCurrentStaffToAcceptedEngagementGivenDesignatedPartnerAndEffectiveDate()
+    {
+        // Arrange
+        var evidenceReader = new TestAcceptanceEvidenceReader();
+        await using var provider = ComposeAcceptanceProvider(evidenceReader);
+        var seeded = await SeedDraftAsync(provider);
+        evidenceReader.Evidence = new ServiceEngagementAcceptanceEvidence(seeded.Proof, seeded.Rules);
+        await using var scope = provider.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var acceptPath = $"/api/v1/tenants/{Tenant}/service-engagements/{seeded.Proof.EngagementId}/acceptance";
+        var accepted = await bus.DispatchAsync(new AcceptServiceEngagement(Tenant,
+                seeded.Proof.EngagementId, seeded.Sequence),
+            new RequestDispatchContext(ActorFor(seeded.Proof.PartnerUserId),
+                new HttpInvocation("POST", acceptPath, acceptPath, "bdgrz.service-engagement.accept")),
+            CancellationToken.None);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+
+        var assignedStaffId = Uuid.CreateVersion4();
+        var assignedUserId = Uuid.CreateVersion4();
+        await SeedCurrentStaffAsync(provider, assignedStaffId, assignedUserId);
+        var before = await reader.HydrateAsync(new IndependenceLedger(Tenant), CancellationToken.None);
+        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), CancellationToken.None);
+        var expectedStaff = directory.Get(assignedStaffId)!;
+        var effectiveFrom = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
+        var request = new AssignServiceEngagementStaff(Tenant, seeded.Proof.EngagementId,
+            assignedStaffId, before.Sequence, effectiveFrom);
+        var path = $"/api/v1/tenants/{Tenant}/service-engagements/{seeded.Proof.EngagementId}/actual-assignments/{assignedStaffId}";
+        var context = new RequestDispatchContext(ActorFor(seeded.Proof.PartnerUserId),
+            new HttpInvocation("POST", path, path, "bdgrz.service-engagement.actual-staff.assign"));
+
+        // Act
+        var result = await bus.DispatchAsync(request, context, CancellationToken.None);
+        var retry = await bus.DispatchAsync(request, context, CancellationToken.None);
+        var retained = await reader.HydrateAsync(new IndependenceLedger(Tenant), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(JsonSerializer.Serialize(result.Value, ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceView),
+            JsonSerializer.Serialize(retry.Value, ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceView));
+        Assert.Equal(before.Sequence + 1, retained.Sequence);
+        Assert.Equal(2, retained.AcceptanceHistory(request.EngagementId).Count);
+        var assignment = Assert.Single(result.Value!.Assignments,
+            item => item.StaffMemberId == assignedStaffId && item.UserId == assignedUserId);
+        Assert.Equal(expectedStaff.Revision, assignment.DirectoryStaffRevision);
+        Assert.Equal(effectiveFrom, assignment.EffectiveFrom);
+        Assert.Equal("firm_staff", assignment.Actor.Kind);
+        Assert.Equal(seeded.Proof.PartnerUserId.ToString(), assignment.Actor.Id);
+        Assert.False(retained.IsEligibleForProfessionalAccess(request.EngagementId, assignedStaffId,
+            assignedUserId, seeded.Rules.Version, expectedStaff.Revision,
+            new DateTimeOffset(effectiveFrom.AddDays(-1).ToDateTime(TimeOnly.MaxValue), TimeSpan.Zero)));
+        Assert.True(retained.IsEligibleForProfessionalAccess(request.EngagementId, assignedStaffId,
+            assignedUserId, seeded.Rules.Version, expectedStaff.Revision,
+            new DateTimeOffset(effectiveFrom.ToDateTime(TimeOnly.MaxValue), TimeSpan.Zero)));
+    }
+
+    [Theory]
+    [InlineData("non_partner_http")]
+    [InlineData("partner_mcp")]
+    public async Task ShouldDenyActualAssignmentGivenNonPartnerOrNonPersonalTransport(string caller)
+    {
+        // Arrange
+        var evidenceReader = new TestAcceptanceEvidenceReader();
+        await using var provider = ComposeAcceptanceProvider(evidenceReader);
+        var seeded = await SeedDraftAsync(provider);
+        evidenceReader.Evidence = new ServiceEngagementAcceptanceEvidence(seeded.Proof, seeded.Rules);
+        await using var scope = provider.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var acceptPath = $"/api/v1/tenants/{Tenant}/service-engagements/{seeded.Proof.EngagementId}/acceptance";
+        var accepted = await bus.DispatchAsync(new AcceptServiceEngagement(Tenant,
+                seeded.Proof.EngagementId, seeded.Sequence),
+            new RequestDispatchContext(ActorFor(seeded.Proof.PartnerUserId),
+                new HttpInvocation("POST", acceptPath, acceptPath, "bdgrz.service-engagement.accept")),
+            CancellationToken.None);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+        var staffId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        await SeedCurrentStaffAsync(provider, staffId, userId);
+        var before = await reader.HydrateAsync(new IndependenceLedger(Tenant), CancellationToken.None);
+        var effectiveFrom = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
+        var request = new AssignServiceEngagementStaff(Tenant, seeded.Proof.EngagementId,
+            staffId, before.Sequence, effectiveFrom);
+        var path = $"/api/v1/tenants/{Tenant}/service-engagements/{seeded.Proof.EngagementId}/actual-assignments/{staffId}";
+        var actorUserId = caller == "non_partner_http" ? ClientUser : seeded.Proof.PartnerUserId;
+        RequestInvocation invocation = caller == "partner_mcp"
+            ? new McpInvocation("bdgrz.service-engagement.actual-staff.assign")
+            : new HttpInvocation("POST", path, path, "bdgrz.service-engagement.actual-staff.assign");
+
+        // Act
+        var result = await bus.DispatchAsync(request, new RequestDispatchContext(ActorFor(actorUserId), invocation),
+            CancellationToken.None);
+        var retained = await reader.HydrateAsync(new IndependenceLedger(Tenant), CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal(before.Sequence, retained.Sequence);
+        Assert.Single(retained.ActualAssignmentHistory);
     }
 
     [Fact]
@@ -980,10 +1260,12 @@ public sealed class ServiceEngagementAcceptanceTests
         var approvalId = Uuid.CreateVersion4();
         var content = new ServiceEngagementDraftContent(practice, "Synthetic scope", new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), staff.StaffMemberId,
             selectBoundary ? new ServiceEngagementBoundaryReference(boundaryId, versionId, 1) : null);
-        Assert.True(ledger.CreateEngagement(Uuid.CreateVersion4(), engagement, 0, content, staff, ClientActor, Now).IsSuccess);
+        Assert.True(ledger.CreateEngagement(Uuid.CreateVersion4(), engagement, ledger.Sequence,
+            content, staff, ClientActor, Now).IsSuccess);
         var acknowledgement = Uuid.CreateVersion4();
         Assert.True(ledger.AcknowledgeManagement(Uuid.CreateVersion4(), new AcknowledgeEngagementManagement(
-            Tenant, engagement, acknowledgement, 1, 1, [], "I retain management responsibility."), ClientUser, ClientActor, Now).IsSuccess);
+            Tenant, engagement, acknowledgement, ledger.Sequence, 1, [],
+            "I retain management responsibility."), ClientUser, ClientActor, Now).IsSuccess);
         var boundary = new BoundaryVersionView(Tenant, boundaryId, Uuid.CreateVersion4(), versionId, 1,
             new BoundaryContent("Synthetic approved scope", "examination", ["security"], []), "approved",
             new DateOnly(2026, 1, 1), Uuid.CreateVersion4(), "Synthetic author", sourceTime);

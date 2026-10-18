@@ -2816,11 +2816,16 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}` | `ProposeServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L606) |
 | POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals` | `WithdrawServiceEngagementStaffProposal` | [registration](../../src/Compliance.App/Program.cs#L610) |
 | POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations` | `RevokeServiceEngagementActualStaff` | [registration](../../src/Compliance.App/Program.cs#L655) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}` | `AssignServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L659) |
 | GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance` | `GetServiceEngagementAcceptance` | [registration](../../src/Compliance.App/Program.cs#L614) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance` | `AcceptServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L667) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations` | `RecordPartnerIndependenceEvaluation` | [registration](../../src/Compliance.App/Program.cs#L623) |
+| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-review-context` | `GetServiceEngagementPartnerReviewContext` | [registration](../../src/Compliance.App/Program.cs#L627) |
 | POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}` | `AcknowledgeEngagementManagement` | [registration](../../src/Compliance.App/Program.cs#L622) |
 | POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure` | `CloseServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L630) |
 | GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `GetServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L634) |
 | PUT | `/api/v1/platform/independence/rules` | `ReviseIndependenceRules` | [registration](../../src/Compliance.App/Program.cs#L654) |
+| POST | `/api/v1/platform/independence/rules/{rule_version}/ratification` | `RatifyIndependenceRuleVersion` | [registration](../../src/Compliance.App/Program.cs#L711) |
 | PUT | `/api/v1/tenants/{tenant_id}/independence/services/{service_record_id}` | `RecordNonattestService` | [registration](../../src/Compliance.App/Program.cs#L658) |
 | PUT | `/api/v1/tenants/{tenant_id}/independence/evaluations/{evaluation_id}` | `EvaluateClientIndependence` | [registration](../../src/Compliance.App/Program.cs#L662) |
 | GET | `/api/v1/tenants/{tenant_id}/independence/history` | `GetClientIndependenceHistory` | [registration](../../src/Compliance.App/Program.cs#L666) |

@@ -272,9 +272,9 @@ Events to backfill:
 
 **Requirement source:** [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md).
 
-Ratified partner authority, personal independence evaluation, and actual accepted-engagement assignment. Reuse existing acceptance and revocation events.
+The existing acceptance and revocation events retain their original facts. Ratification, partner evaluation, and post-acceptance actual assignment have typed events emitted by their owning aggregates. The actual-assignment event retains the exact current partner designation, staff-directory identity, effective date, request identity, and attribution. Projector and reactor consumers remain in their assembly-line layers.
 
-Events to backfill:
+Events now emitted:
 - `IndependenceRuleVersionRatified`
 - `PartnerIndependenceEvaluationRecorded`
 - `ServiceEngagementStaffAssigned`
