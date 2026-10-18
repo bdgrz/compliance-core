@@ -12,6 +12,20 @@ public sealed class TenantIdentityProviderCommandHandlerTests
     static readonly DateTimeOffset Now = new(2026, 10, 17, 20, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public void ShouldCarryExpectedRevisionGivenProviderTestCommand()
+    {
+        // Arrange
+        var commandType = typeof(TestTenantIdentityProvider);
+
+        // Act
+        var property = commandType.GetProperty("ExpectedRevision");
+
+        // Assert
+        Assert.NotNull(property);
+        Assert.Equal(typeof(long), property.PropertyType);
+    }
+
+    [Fact]
     public async Task ShouldConfigureConnectionAsPendingTestGivenPersonalAdministrator()
     {
         // Arrange
@@ -41,6 +55,102 @@ public sealed class TenantIdentityProviderCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldPersistProviderTestRequestGivenPersonalAdministrator()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedConfiguredProviderAsync();
+        var command = new TestTenantIdentityProvider(fixture.TenantId, fixture.ProviderId, 1,
+            "oidc-check-2026-10");
+
+        // Act
+        var result = await fixture.TestHandler.HandleAsync(Fixture.Context(fixture.UserId, command),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
+            fixture.ProviderId));
+        var requested = Assert.Single((await fixture.ReadEventsAsync())
+            .OfType<TenantIdentityProviderTestRequested>());
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(2, saved.Revision);
+        Assert.Equal("oidc-check-2026-10", saved.Current!.PendingTest!.TestKey);
+        Assert.Equal(1, saved.Current.PendingTest.CredentialRevision);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId),
+            saved.Current.PendingTest.RequestedByMemberId);
+        Assert.Equal("oidc-check-2026-10", requested.Request.TestKey);
+        Assert.Equal(Now, requested.OccurredAt);
+    }
+
+    [Fact]
+    public async Task ShouldRejectStaleProviderTestRequestGivenConcurrentProviderChange()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedConfiguredProviderAsync();
+
+        // Act
+        var result = await fixture.TestHandler.HandleAsync(Fixture.Context(fixture.UserId,
+            new TestTenantIdentityProvider(fixture.TenantId, fixture.ProviderId, 0, "stale-test")),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
+            fixture.ProviderId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(1, saved.Revision);
+        Assert.Null(saved.Current!.PendingTest);
+    }
+
+    [Fact]
+    public async Task ShouldTreatRepeatedTestKeyAsIdempotentGivenSamePendingRequest()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedConfiguredProviderAsync();
+        var context = Fixture.Context(fixture.UserId,
+            new TestTenantIdentityProvider(fixture.TenantId, fixture.ProviderId, 1, "retry-test"));
+
+        // Act
+        var first = await fixture.TestHandler.HandleAsync(context, CancellationToken.None);
+        var retry = await fixture.TestHandler.HandleAsync(context, CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
+            fixture.ProviderId));
+        var requested = (await fixture.ReadEventsAsync()).OfType<TenantIdentityProviderTestRequested>();
+
+        // Assert
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(2, saved.Revision);
+        Assert.Equal("retry-test", saved.Current!.PendingTest!.TestKey);
+        Assert.Single(requested);
+    }
+
+    [Fact]
+    public async Task ShouldRejectSystemActorGivenProviderTestRequest()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedConfiguredProviderAsync();
+        var command = new TestTenantIdentityProvider(fixture.TenantId, fixture.ProviderId, 1,
+            "system-test");
+        var context = new Cntryl.Portia.RequestContext<TestTenantIdentityProvider>(command,
+            new RequestDispatchContext(RequestActor.System, new HttpInvocation("POST",
+                "/api/v1/tenants/test/identity-providers/test/tests",
+                "/api/v1/tenants/test/identity-providers/test/tests", "identity-provider-test")));
+
+        // Act
+        var result = await fixture.TestHandler.HandleAsync(context, CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
+            fixture.ProviderId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal(1, saved.Revision);
+        Assert.Null(saved.Current!.PendingTest);
+    }
+
+    [Fact]
     public async Task ShouldRotateCredentialAndRequireNewProviderTestGivenEnabledConnection()
     {
         // Arrange
@@ -48,6 +158,9 @@ public sealed class TenantIdentityProviderCommandHandlerTests
         await fixture.SeedConfiguredProviderAsync();
         var current = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
             fixture.ProviderId));
+        Assert.Null(current.RequestTest(current.Revision, "test-1",
+            RbacIds.Member(fixture.TenantId, fixture.UserId), "Tenant administrator",
+            Now.AddMinutes(-1)));
         Assert.Null(current.RecordTest(current.Revision,
             new TenantIdentityProviderTestResultContent("test-1", "passed", null, null),
             RbacIds.Member(fixture.TenantId, fixture.UserId), "Tenant administrator",
@@ -66,7 +179,7 @@ public sealed class TenantIdentityProviderCommandHandlerTests
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal("pending_test", saved.Current!.Status);
-        Assert.Equal(3, saved.Current.Revision);
+        Assert.Equal(4, saved.Current.Revision);
         Assert.Equal(2, saved.Current.CredentialRevision);
         Assert.Equal("vault://tenant/idp/credential-v2", rotated.EncryptedCredentialReference);
         Assert.Equal("rotation-2026-10", saved.Current.LastRotationReference);
@@ -130,6 +243,9 @@ public sealed class TenantIdentityProviderCommandHandlerTests
         await fixture.SeedConfiguredProviderAsync();
         var current = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
             fixture.ProviderId));
+        Assert.Null(current.RequestTest(current.Revision, "test-1",
+            RbacIds.Member(fixture.TenantId, fixture.UserId), "Tenant administrator",
+            Now.AddMinutes(-1)));
         Assert.Null(current.RecordTest(current.Revision,
             new TenantIdentityProviderTestResultContent("test-1", "passed", null, null),
             RbacIds.Member(fixture.TenantId, fixture.UserId), "Tenant administrator",
@@ -146,7 +262,7 @@ public sealed class TenantIdentityProviderCommandHandlerTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Equal("enabled", saved.Current!.Status);
-        Assert.Equal(2, saved.Current.Revision);
+        Assert.Equal(3, saved.Current.Revision);
     }
 
     [Fact]
@@ -188,6 +304,7 @@ public sealed class TenantIdentityProviderCommandHandlerTests
         public DisableTenantIdentityProviderHandler Handler { get; }
         public ConfigureTenantIdentityProviderHandler ConfigureHandler { get; }
         public RotateTenantIdentityProviderCredentialsHandler RotateHandler { get; }
+        public TestTenantIdentityProviderHandler TestHandler { get; }
 
         public Fixture()
         {
@@ -207,6 +324,8 @@ public sealed class TenantIdentityProviderCommandHandlerTests
             ConfigureHandler = new ConfigureTenantIdentityProviderHandler(
                 _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), _clock);
             RotateHandler = new RotateTenantIdentityProviderCredentialsHandler(
+                _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), _clock);
+            TestHandler = new TestTenantIdentityProviderHandler(
                 _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), _clock);
         }
 
@@ -236,6 +355,8 @@ public sealed class TenantIdentityProviderCommandHandlerTests
             var path = request switch
             {
                 ConfigureTenantIdentityProvider => "/api/v1/tenants/test/identity-providers/test",
+                TestTenantIdentityProvider =>
+                    "/api/v1/tenants/test/identity-providers/test/tests",
                 RotateTenantIdentityProviderCredentials =>
                     "/api/v1/tenants/test/identity-providers/test/credential-rotations",
                 _ => "/api/v1/tenants/test/identity-providers/test/disable",

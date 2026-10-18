@@ -530,6 +530,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GetEmailAddressHandler>()
             .AddRequestHandler<ListEmailAddressesHandler>()
             .AddRequestHandler<ConfigureTenantIdentityProviderHandler>()
+            .AddRequestHandler<TestTenantIdentityProviderHandler>()
             .AddRequestHandler<RotateTenantIdentityProviderCredentialsHandler>()
             .AddRequestHandler<DisableTenantIdentityProviderHandler>()
             .AddRequestAuthorizer<EmailOwnershipAuthorizer>()

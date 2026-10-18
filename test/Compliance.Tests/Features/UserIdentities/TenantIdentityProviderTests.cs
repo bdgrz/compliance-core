@@ -34,12 +34,60 @@ public sealed class TenantIdentityProviderTests
     }
 
     [Fact]
+    public void ShouldKeepFirstRequestTimeGivenRepeatedProviderTestKey()
+    {
+        // Arrange
+        var provider = new TenantIdentityProvider(TenantId, ProviderId);
+        Assert.Null(provider.Configure(Content("https://idp.example.com"), ActorId,
+            "Tenant administrator", Now));
+
+        // Act
+        var first = provider.RequestTest(provider.Revision, "retry-test", ActorId,
+            "Tenant administrator", Now.AddMinutes(1));
+        var retry = provider.RequestTest(1, "retry-test", ActorId,
+            "Tenant administrator", Now.AddMinutes(2));
+
+        // Assert
+        Assert.Null(first);
+        Assert.Null(retry);
+        Assert.Equal(2, provider.Revision);
+        Assert.Equal(Now.AddMinutes(1), provider.Current!.PendingTest!.RequestedAt);
+    }
+
+    [Fact]
+    public void ShouldInvalidatePendingTestGivenCredentialRotation()
+    {
+        // Arrange
+        var provider = new TenantIdentityProvider(TenantId, ProviderId);
+        Assert.Null(provider.Configure(Content("https://idp.example.com"), ActorId,
+            "Tenant administrator", Now));
+        Assert.Null(provider.RequestTest(provider.Revision, "test-before-rotation", ActorId,
+            "Tenant administrator", Now.AddMinutes(1)));
+
+        // Act
+        var rotated = provider.RotateCredentials(provider.Revision,
+            "vault://tenant/idp/credential-v2", "rotation-2", ActorId,
+            "Tenant administrator", Now.AddMinutes(2));
+        var lateResult = provider.RecordTest(provider.Revision,
+            new TenantIdentityProviderTestResultContent("test-before-rotation", "passed", null, null),
+            ActorId, "Tenant administrator", Now.AddMinutes(3));
+
+        // Assert
+        Assert.Null(rotated);
+        Assert.Null(provider.Current!.PendingTest);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(lateResult).Code);
+        Assert.Empty(provider.Current.TestHistory);
+    }
+
+    [Fact]
     public void ShouldRequireSuccessfulTestAfterRotationAndNeverExposeCredentialReferenceGivenConnectionLifecycle()
     {
         // Arrange
         var provider = new TenantIdentityProvider(TenantId, ProviderId);
         Assert.Null(provider.Configure(Content("https://idp.example.com"), ActorId,
             "Tenant administrator", Now));
+        Assert.Null(provider.RequestTest(provider.Revision, "test-1", ActorId,
+            "Tenant administrator", Now.AddMinutes(1)));
 
         // Act
         var failedTest = provider.RecordTest(provider.Revision,
@@ -50,6 +98,8 @@ public sealed class TenantIdentityProviderTests
         var rotate = provider.RotateCredentials(provider.Revision, "vault://tenant/idp/credential-v2",
             "rotation-2", ActorId, "Tenant administrator", Now.AddMinutes(2));
         var rotatedView = provider.Current!;
+        Assert.Null(provider.RequestTest(provider.Revision, "test-2", ActorId,
+            "Tenant administrator", Now.AddMinutes(3)));
         var passedTest = provider.RecordTest(provider.Revision,
             new TenantIdentityProviderTestResultContent("test-2", "passed", null, null), ActorId,
             "Tenant administrator", Now.AddMinutes(3));

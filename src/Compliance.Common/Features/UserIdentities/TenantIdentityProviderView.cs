@@ -21,4 +21,5 @@ public sealed record TenantIdentityProviderView(
     Uuid ActorMemberId,
     string ActorDisplay,
     DateTimeOffset UpdatedAt,
-    string ContentSha256);
+    string ContentSha256,
+    TenantIdentityProviderTestRequestView? PendingTest = null);

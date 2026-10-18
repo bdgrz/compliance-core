@@ -2187,6 +2187,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Identity federation");
+    app.MapPortiaPost<TestTenantIdentityProvider>(
+            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/tests")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Identity federation");
     app.MapPortiaPost<RotateTenantIdentityProviderCredentials>(
             "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

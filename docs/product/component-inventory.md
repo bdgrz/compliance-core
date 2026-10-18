@@ -1,6 +1,6 @@
 # Required component inventory
 
-Planning baseline: local product contracts and backend source inspected 2026-10-17.
+Planning baseline: local product contracts and backend source inspected 2026-10-18.
 
 For the reconciled command list, requirement coverage and remaining work, use [System command list](command-list.md), with rationale in the [command gap analysis](command-inventory-gap-analysis.md). Its command conclusions supersede the provisional completion suggestions below, including periodic-review subsystems and external-auditor account proposals.
 
@@ -271,12 +271,12 @@ The following is a static source inventory, including internal operations. Queri
 | --- | ---: |
 | Commands | 231 |
 | Queries | 271 |
-| Events | 372 |
+| Events | 373 |
 | Aggregates | 83 |
 | Models and supporting contracts | 562 |
 | Reactors | 30 |
 | Projectors | 66 |
-| Explicit MapPortia HTTP route registrations | 330 |
+| Explicit MapPortia HTTP route registrations | 331 |
 
 ### Existing commands
 
@@ -571,7 +571,7 @@ The following is a static source inventory, including internal operations. Queri
 - [ReserveEmail](../../src/Compliance.Common/Features/UserIdentities/ReserveEmail.cs#L6) — `bdgrz.email-address.reserve` v1
 - [RotateTenantIdentityProviderCredentials](../../src/Compliance.Common/Features/UserIdentities/RotateTenantIdentityProviderCredentials.cs#L7) — `bdgrz.user-identities.rotate-tenant-identity-provider-credentials` v1
 - [StartIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/StartIdentityRecovery.cs#L6) — `bdgrz.user-identity.start-recovery` v1
-- [TestTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/TestTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.test-tenant-identity-provider` v1
+- [TestTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/TestTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.test-tenant-identity-provider` v2
 
 #### Work
 
@@ -1343,6 +1343,8 @@ These 131 requirement-backed event contracts have been added since the existing-
 - [TenantIdentityProviderDisabled](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderDisabled.cs#L6)
 
 - [TenantIdentityProviderTested](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTested.cs#L6)
+
+- [TenantIdentityProviderTestRequested](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestRequested.cs#L6)
 
 
 ### Incidents
@@ -2744,7 +2746,8 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/tenants/{tenant_id}` | `GetTenant` | [registration](../../src/Compliance.App/Program.cs#L540) |
 | GET | `/api/v1/tenants/{tenant_id}/provisioning-status` | `GetTenantProvisioningStatus` | [registration](../../src/Compliance.App/Program.cs#L543) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}` | `ConfigureTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2186) |
-| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations` | `RotateTenantIdentityProviderCredentials` | [registration](../../src/Compliance.App/Program.cs#L2190) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/tests` | `TestTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2190) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations` | `RotateTenantIdentityProviderCredentials` | [registration](../../src/Compliance.App/Program.cs#L2194) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}` | `CreateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2194) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments` | `AmendAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2198) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations` | `ValidateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2202) |
