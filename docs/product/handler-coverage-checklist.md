@@ -21,8 +21,8 @@ Work the layers in order. A command is complete only when its source and authori
 
 Evidence handling:
 
-- [ ] `ApproveArtifactDisposition` — exact eligibility snapshot, holds, historical reliance, and storage readiness.
-- [ ] `ExecuteArtifactDisposition` — durable deletion provider and exact execution outcome.
+- [ ] `ApproveArtifactDisposition` — source-backed eligibility, active holds, historical reliance, retention, and storage readiness.
+- [ ] `ExecuteArtifactDisposition` — recheck the exact approved eligibility and record a durable execution attempt; provider deletion is reactor work.
 
 Advisor collaboration:
 
@@ -180,7 +180,7 @@ Identity provider:
 | Controls | `ProposeControlSuccessor` | present | present | present | referenced |
 | Controls | `RetireControl` | present | present | present | referenced |
 | Controls | `ReviewControl` | present | present | present | referenced |
-| Controls | `ReviseControlDraft` | present | present | present | no reference |
+| Controls | `ReviseControlDraft` | present | present | present | referenced |
 | Controls | `WithdrawControlProposal` | present | present | present | referenced |
 | Criteria | `SetCriteriaTextOverlay` | present | present | present | referenced |
 | Evaluations | `DefineControlEvaluationPlan` | present | present | present | referenced |
@@ -464,7 +464,7 @@ These dependencies are found in the existing contracts, aggregates, and accepted
 
 | Commands | Prerequisite before a correct handler can be wired |
 |---|---|
-| `ApproveArtifactDisposition`, `ExecuteArtifactDisposition` | Build a tenant-scoped eligibility reader that binds the exact artifact, retention basis, handling policy, active legal and engagement holds, historical reliance, and storage readiness. Execution also needs a durable deletion provider. `ArtifactDisposition` already rejects missing or changed eligibility snapshots. |
+| `ApproveArtifactDisposition`, `ExecuteArtifactDisposition` | Build a tenant-scoped eligibility reader that binds the exact artifact, retention basis, handling policy, active legal and engagement holds, historical reliance, and storage readiness. The handlers must persist approval and an exact execution attempt; provider deletion and its callback belong to `ArtifactDispositionReactor`. `ArtifactDisposition` already rejects missing or changed eligibility snapshots. |
 | `CreateAdvisorHandoff`, `ReviseAdvisorHandoffSelection`, `MarkAdvisorHandoffReadyForReview` | Add a resolver for every supported record kind that proves tenant, program, current exact version, and shareable status. The aggregate accepts IDs but cannot establish those source facts. Readiness must be restricted to the Compliance Lead as required by [M0-D14](decisions/m0-d14-advisor-collaboration.md). |
 | `RecordAdvisorFeedback`, `CorrectAdvisorFeedback`, `RespondToAdvisorFeedback` | Add the M0-D14 scoped advisor/guest authorization model, including accepted firm-staff assignments, program-scoped expiring guest grants, and attribution rules. The current commands use ordinary client-management authorization, which cannot authorize the specified advisor actors. |
 | `FreezeTypeIBaseline`, `AmendTypeIBaseline` | Add the authoritative baseline preview/source builder and a complete amendment snapshot. A handler cannot freeze or amend a baseline from a date and an opaque revision alone. |

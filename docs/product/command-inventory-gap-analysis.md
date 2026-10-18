@@ -456,7 +456,7 @@ Retention supports evidence artifacts and application import sources, one retent
 | Missing | `PlaceArtifactEngagementHold`; `RecordEngagementReportIssued`; `ReleaseArtifactEngagementHold` | Bind hold scope to the engagement/report and release authority, including report issuance plus one year and outstanding own-attest delivery requirements. |
 | Partial | `PrepareEvidenceRedaction`; `ApproveEvidenceRedaction` | Retain existing lineage/approval commands; add an authorized byte-derivation workflow and govern actual delivery of the approved derivative. |
 | Missing | `ApproveArtifactDisclosure`; `RecordArtifactDisclosureDelivery`; `RevokeArtifactDisclosure` | Bind approval and actual external delivery to exact content, recipient, purpose, actor and time. Revoke further access where supported without claiming downloaded bytes can be recalled. |
-| Partial | `ApproveArtifactDisposition`; `ExecuteArtifactDisposition` | Require exact Org Admin approval eligibility and safe deletion after current retention, legal and engagement hold, historical reliance, and storage-readiness checks. `RecordArtifactDispositionResult` is now a trusted-worker handler bound to the exact execution event and attempt; the deletion reactor remains. |
+| Partial | `ApproveArtifactDisposition`; `ExecuteArtifactDisposition` | Handlers must persist exact Org Admin approval eligibility and a revision-fenced execution attempt after current retention, legal and engagement hold, historical reliance, and storage-readiness checks. `RecordArtifactDispositionResult` is a trusted-worker callback bound to the exact execution event and attempt; durable deletion belongs to the reactor. |
 
 <a id="g03"></a>
 
