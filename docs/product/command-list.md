@@ -424,10 +424,10 @@ This pruned plan has 128 required additions, including five evidence command con
 
 ### Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md)
 
-- **CreateAuditPackage** — Type I and Type II creation are handled ([contract](../../src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs#L9), [handler](../../src/Compliance.Core/Features/AuditPackages/CreateAuditPackageHandler.cs#L8)); the source builder binds the latest frozen snapshot and exact selected version IDs. Canonical source metadata and archive-content verification remain open, so handler coverage is partial.
+- **CreateAuditPackage** — Type I and Type II creation are handled ([contract](../../src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs#L9), [handler](../../src/Compliance.Core/Features/AuditPackages/CreateAuditPackageHandler.cs#L8)); the source builder binds the latest frozen snapshot and exact selected version IDs. Canonical source metadata remains open, so handler coverage is partial.
 - **RequestAuditPackageBuild** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RequestAuditPackageBuild.cs#L7))
 - **RecordAuditPackageBuildResult** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs#L7))
-- **ValidateAuditPackage** — Type I/II source resolution and manifest-linked validation are handled ([contract](../../src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs#L7), [handler](../../src/Compliance.Core/Features/AuditPackages/ValidateAuditPackageHandler.cs#L8)); archive-content verification remains open.
+- **ValidateAuditPackage** — Type I/II source resolution, manifest-linked validation, and tenant-scoped archive verification against the exact ZIP entries are handled ([contract](../../src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs#L7), [handler](../../src/Compliance.Core/Features/AuditPackages/ValidateAuditPackageHandler.cs#L8)).
 - **ApproveAuditPackageValidationOverride** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageValidationOverride.cs#L7))
 - **ApproveAuditPackageDisclosure** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageDisclosure.cs#L7))
 - **RecordAuditPackageDelivery** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageDelivery.cs#L7))

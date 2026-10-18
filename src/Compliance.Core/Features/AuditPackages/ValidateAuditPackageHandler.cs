@@ -1,11 +1,13 @@
 using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Artifacts;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
 /// <summary>Validates that the current package selection still matches its frozen source snapshot.</summary>
 public sealed class ValidateAuditPackageHandler(IAggregateExecutor executor, IAggregateReader reader,
-    AuditPackageSourceBuilder sources, TimeProvider clock) : IRequestHandler<ValidateAuditPackage>
+    AuditPackageSourceBuilder sources, IArtifactContentStore artifacts, TimeProvider clock)
+    : IRequestHandler<ValidateAuditPackage>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<ValidateAuditPackage> context,
         CancellationToken ct)
@@ -35,17 +37,31 @@ public sealed class ValidateAuditPackageHandler(IAggregateExecutor executor, IAg
             current.Name, version.SelectedContent, version.SourcePeriodId);
         var resolved = await sources.ResolveAsync(request.TenantId, request.ProgramId, content, ct)
             .ConfigureAwait(false);
-        IReadOnlyList<AuditPackageValidationFinding> findings = resolved.IsSuccess
+        var failureCode = resolved.IsSuccess ? null : "frozen_source_mismatch";
+        if (failureCode is null && version.BuildAttempts.LastOrDefault(attempt =>
+                attempt.Status == "built") is { } successfulBuild)
+            failureCode = await AuditPackageArchiveVerifier.FailureCodeAsync(artifacts,
+                request.TenantId, successfulBuild, version.Manifest, ct).ConfigureAwait(false);
+
+        var findings = failureCode is null
             ? Array.Empty<AuditPackageValidationFinding>()
             : [new AuditPackageValidationFinding(
                 Uuid.CreateVersion5(request.PackageId,
-                    $"{request.PackageVersion}\n{request.ValidationKey}\nfrozen-source"),
-                "frozen_source_mismatch", "error", true, false,
-                "Selected source versions do not match a supported frozen examination snapshot.")];
+                    $"{request.PackageVersion}\n{request.ValidationKey}\n{failureCode}"),
+                failureCode, "error", true, false, Summary(failureCode))];
 
         return await executor.ExecuteAsync(aggregateId, aggregate =>
             CommandFailureRequestAdapter.ToOutcome(aggregate.RecordValidation(aggregate.Revision,
                 (int)request.PackageVersion, request.ValidationKey, findings, actorMemberId, actorDisplay,
                 clock.GetUtcNow())), context, ct).ConfigureAwait(false);
     }
+
+    static string Summary(string failureCode) => failureCode switch
+    {
+        "frozen_source_mismatch" =>
+            "Selected source versions do not match a supported frozen examination snapshot.",
+        "archive_content_unavailable" =>
+            "The exact built package archive is not available in verified tenant storage.",
+        _ => "The built archive entries do not match the exact package manifest content.",
+    };
 }

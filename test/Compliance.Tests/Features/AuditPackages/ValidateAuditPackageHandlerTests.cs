@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.Artifacts;
 using Cntryl.Portia;
 using static Bdgrz.Compliance.Tests.Features.AuditPackages.AmendAuditPackageHandlerTests;
 using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackage;
@@ -18,7 +19,8 @@ public sealed class ValidateAuditPackageHandlerTests
         var command = new ValidateAuditPackage(fixture.TenantId, fixture.ProgramId, packageId,
             1, "validate-exact-type-i");
         var handler = new ValidateAuditPackageHandler(fixture.Executor, fixture.Reader,
-            new AuditPackageSourceBuilder(fixture.Reader), TimeProvider.System);
+            new AuditPackageSourceBuilder(fixture.Reader), fixture.ArtifactStore,
+            TimeProvider.System);
 
         // Act
         var result = await handler.HandleAsync(Fixture.Context(fixture.UserId, command),
@@ -42,11 +44,12 @@ public sealed class ValidateAuditPackageHandlerTests
         await using var fixture = new Fixture();
         var baseline = await fixture.SeedBaselineAsync();
         var packageId = Uuid.CreateVersion4();
-        await fixture.SeedBuiltPackageAsync(packageId, baseline, new string('d', 64));
+        await fixture.SeedBuiltPackageAsync(packageId, baseline, firstSourceHash: new string('d', 64));
         var command = new ValidateAuditPackage(fixture.TenantId, fixture.ProgramId, packageId,
             1, "validate-source-mismatch");
         var handler = new ValidateAuditPackageHandler(fixture.Executor, fixture.Reader,
-            new AuditPackageSourceBuilder(fixture.Reader), TimeProvider.System);
+            new AuditPackageSourceBuilder(fixture.Reader), fixture.ArtifactStore,
+            TimeProvider.System);
 
         // Act
         var result = await handler.HandleAsync(Fixture.Context(fixture.UserId, command),
@@ -67,6 +70,60 @@ public sealed class ValidateAuditPackageHandlerTests
     }
 
     [Fact]
+    public async Task ShouldBlockUnavailableArchiveGivenExactFrozenSourceSelection()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var baseline = await fixture.SeedBaselineAsync();
+        var packageId = Uuid.CreateVersion4();
+        await fixture.SeedBuiltPackageAsync(packageId, baseline, storeArchive: false);
+        var command = new ValidateAuditPackage(fixture.TenantId, fixture.ProgramId, packageId,
+            1, "validate-missing-archive");
+        var handler = new ValidateAuditPackageHandler(fixture.Executor, fixture.Reader,
+            new AuditPackageSourceBuilder(fixture.Reader), fixture.ArtifactStore,
+            TimeProvider.System);
+
+        // Act
+        var result = await handler.HandleAsync(Fixture.Context(fixture.UserId, command),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
+            fixture.ProgramId, packageId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var validation = Assert.Single(saved.Current!.Versions[0].Validations);
+        Assert.Equal("blocked", validation.Status);
+        Assert.Equal("archive_content_unavailable", Assert.Single(validation.Findings).Code);
+    }
+
+    [Fact]
+    public async Task ShouldBlockArchiveEntryChangedAfterBuildGivenExactFrozenSourceSelection()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var baseline = await fixture.SeedBaselineAsync();
+        var packageId = Uuid.CreateVersion4();
+        await fixture.SeedBuiltPackageAsync(packageId, baseline, corruptArchiveEntry: true);
+        var command = new ValidateAuditPackage(fixture.TenantId, fixture.ProgramId, packageId,
+            1, "validate-tampered-archive-entry");
+        var handler = new ValidateAuditPackageHandler(fixture.Executor, fixture.Reader,
+            new AuditPackageSourceBuilder(fixture.Reader), fixture.ArtifactStore,
+            TimeProvider.System);
+
+        // Act
+        var result = await handler.HandleAsync(Fixture.Context(fixture.UserId, command),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
+            fixture.ProgramId, packageId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var validation = Assert.Single(saved.Current!.Versions[0].Validations);
+        Assert.Equal("blocked", validation.Status);
+        Assert.Equal("archive_content_mismatch", Assert.Single(validation.Findings).Code);
+    }
+
+    [Fact]
     public async Task ShouldRejectSystemActorGivenPackageValidation()
     {
         // Arrange
@@ -74,7 +131,8 @@ public sealed class ValidateAuditPackageHandlerTests
         var command = new ValidateAuditPackage(fixture.TenantId, fixture.ProgramId,
             Uuid.CreateVersion4(), 1, "validate-system-actor");
         var handler = new ValidateAuditPackageHandler(fixture.Executor, fixture.Reader,
-            new AuditPackageSourceBuilder(fixture.Reader), TimeProvider.System);
+            new AuditPackageSourceBuilder(fixture.Reader), fixture.ArtifactStore,
+            TimeProvider.System);
 
         // Act
         var result = await handler.HandleAsync(Fixture.SystemContext(command),
