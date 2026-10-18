@@ -42,6 +42,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(new DeveloperUserRegistration(developerAuthentication));
         services.AddSingleton(PlatformOperatorAuthority.FromConfiguration(configuration, developerAuthentication));
         services.AddScoped<IPlatformOperatorAccess, EventSourcedPlatformOperatorAccess>();
+        var professionalAuthorityTrust = FirmProfessionalAuthorityTrustSettings.FromConfiguration(configuration);
+        services.TryAddScoped<IFirmProfessionalDutyAssertionVerifier>(_ =>
+            new SignedFirmProfessionalDutyAssertionVerifier(professionalAuthorityTrust));
         services.AddSingleton(ControlDraftDiscardReleaseGate.FromConfiguration(configuration));
         services.AddSingleton(ControlActivationReleaseGate.FromConfiguration(configuration));
         services.AddSingleton(ControlLifecycleReleaseGate.FromConfiguration(configuration));
@@ -534,8 +537,13 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceSupportTargetSource>();
         services.AddScoped<AuditorResponseEvidence>();
         services.AddScoped<DirectoryReevaluationDiscovery>();
+        services.AddScoped<ProfessionalDutyAdministrationAuthorizer>();
+        services.AddScoped<ProfessionalDutyAuthorityReader>();
+        services.AddScoped<IndependenceRuleRatificationAuthorizer>();
+        services.AddScoped<ProfessionalEngagementPartnerAuthorizer>();
+        services.AddScoped<CurrentRatifiedIndependenceRulesReader>();
         services.TryAddScoped<IServiceEngagementAcceptanceEvidenceReader,
-            UnconfiguredServiceEngagementAcceptanceEvidenceReader>();
+            EventSourcedServiceEngagementAcceptanceEvidenceReader>();
         services.AddScoped<FitzActualStaffEngagementLocator>();
         services.AddScoped<IActualStaffEngagementLocatorProjection>(provider =>
             provider.GetRequiredService<FitzActualStaffEngagementLocator>());
@@ -574,6 +582,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<RecordTenantIdentityProviderTestResultAuthorizer>()
             .AddRequestAuthorizer<EmailOwnershipAuthorizer>()
             .AddRequestHandler<ReviseIndependenceRulesHandler>()
+            .AddRequestHandler<RatifyIndependenceRuleVersionHandler>()
+            .AddRequestHandler<RecordPartnerIndependenceEvaluationHandler>()
+            .AddRequestHandler<GetServiceEngagementPartnerReviewContextHandler>()
             .AddRequestHandler<GetIndependenceRuleVersionsHandler>()
             .AddRequestHandler<GetClientIndependenceRulesHandler>()
             .AddRequestHandler<RecordNonattestServiceHandler>()
@@ -583,6 +594,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RegisterFirmStaffHandler>()
             .AddRequestHandler<SetFirmStaffStatusHandler>()
             .AddRequestHandler<GetFirmStaffDirectoryHandler>()
+            .AddRequestHandler<RecordFirmProfessionalDutyDesignationHandler>()
+            .AddRequestHandler<RevokeFirmProfessionalDutyDesignationHandler>()
+            .AddRequestHandler<GetFirmProfessionalDutyCatalogHandler>()
             .AddRequestHandler<ListAssignableFirmStaffHandler>()
             .AddRequestHandler<CreateServiceEngagementHandler>()
             .AddRequestHandler<AmendServiceEngagementHandler>()
@@ -599,7 +613,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<AcknowledgeEngagementManagementHandler>()
             .AddRequestHandler<GetEngagementManagementAcknowledgementsHandler>()
             .AddRequestAuthorizer<IndependenceRuleAdministrationAuthorizer>()
+            .AddRequestAuthorizer<IndependenceRuleRatificationAuthorizer>()
+            .AddRequestAuthorizer<ProfessionalEngagementPartnerAuthorizer>()
             .AddRequestAuthorizer<FirmStaffAdministrationAuthorizer>()
+            .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
             .AddRequestAuthorizer<ServiceEngagementAcceptanceAuthorizer>()
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
             .AddRequestAuthorizer<RecordDirectoryIndependenceReevaluationAuthorizer>()
