@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
@@ -54,7 +55,8 @@ static class TypeIIPlanSourceValidator
                 "The Type II plan must retain the audit firm and trust-service categories from the Type I engagement.");
 
         if (!ExactBaselineSources(content.CarryForwardInputs, baseline.Sources) ||
-            content.CarriedForwardGaps.Any(gap => !baseline.Sources.Any(source =>
+            content.CarriedForwardGaps.Any(gap => gap.SourceKind != "finding" &&
+                !baseline.Sources.Any(source =>
                 source.Kind == gap.SourceKind && source.RecordId == gap.SourceRecordId &&
                 source.VersionId == gap.SourceVersionId && source.Revision == gap.SourceVersion &&
                 HashEquals(source.ContentSha256, gap.SourceSha256))) ||
@@ -62,6 +64,10 @@ static class TypeIIPlanSourceValidator
                 source.Kind == "change" && source.RecordId == change.ChangeId)))
             return Failure(RequestErrorKind.Conflict,
                 "Every carried-forward source, gap, and required change must belong to the exact frozen baseline.");
+        var findings = await ValidateCarriedForwardFindingsAsync(reader, tenantId, programId,
+            content, proposedAt, ct).ConfigureAwait(false);
+        if (!findings.IsSuccess)
+            return Result<TypeIIPlanSourceValidation>.Failure(findings.Error!);
         if (!await ControlPlansMatchAsync(reader, tenantId, programId, content, baseline,
                 proposedAt, ct).ConfigureAwait(false))
             return Failure(RequestErrorKind.Conflict,
@@ -125,6 +131,47 @@ static class TypeIIPlanSourceValidator
             source.RecordId == reference.RecordId && source.VersionId == reference.VersionId &&
             source.Revision == reference.Version &&
             HashEquals(source.ContentSha256, reference.ContentSha256)));
+
+    static async ValueTask<Result> ValidateCarriedForwardFindingsAsync(IAggregateReader reader,
+        Uuid tenantId, Uuid programId, TypeIIPlanContent content, DateTimeOffset asOf,
+        CancellationToken ct)
+    {
+        var ledger = await reader.HydrateAsync(new RemediationLedger(tenantId, programId), ct)
+            .ConfigureAwait(false);
+        var current = ledger.ReadAll(asOf);
+        var required = current.Where(finding => finding.Status is RemediationLedger.Open or
+            RemediationLedger.Remediated).ToArray();
+        var planned = content.CarriedForwardGaps.Where(gap => gap.SourceKind == "finding")
+            .ToArray();
+        if (required.Length != planned.Length ||
+            planned.Select(gap => gap.SourceRecordId).Distinct().Count() != planned.Length)
+            return Conflict("Every current open or remediated finding must be explicitly carried into the Type II plan.");
+
+        foreach (var finding in required)
+        {
+            var gap = planned.SingleOrDefault(item => item.SourceRecordId == finding.FindingId);
+            if (gap is null)
+                return Conflict("A current finding is missing from the Type II opening plan.");
+            var identity = FindingContentIdentityFactory.Create(finding,
+                ledger.ReadClosures(finding.FindingId));
+            var accepted = finding.ReadinessStatus == RemediationLedger.Accepted;
+            if (gap.SourceVersionId != identity.VersionId || gap.SourceVersion != identity.Revision ||
+                !HashEquals(gap.SourceSha256, identity.ContentSha256) ||
+                gap.OwnerMemberId != finding.OwnerMemberId ||
+                finding.Status == RemediationLedger.Open && gap.Disposition == "remediated" ||
+                finding.Status == RemediationLedger.Remediated && gap.Disposition != "remediated" ||
+                accepted && gap.Disposition != "accepted" || !accepted && gap.Disposition == "accepted")
+                return Conflict("A carried-forward finding must retain its exact current revision, owner, and disposition.");
+
+            var owner = await reader.HydrateAsync(Member.ForVerification(tenantId,
+                finding.OwnerMemberId), ct).ConfigureAwait(false);
+            if (!owner.IsRegistered || owner.IsSuspended || owner.IsDeprovisioned ||
+                owner.Affiliation != "client_personnel" || owner.UserId == Uuid.Empty)
+                return Conflict("Every carried-forward finding must retain a current client personnel owner.");
+        }
+
+        return Result.Success;
+    }
 
     static async ValueTask<bool> ControlPlansMatchAsync(IAggregateReader reader, Uuid tenantId,
         Uuid programId, TypeIIPlanContent content, TypeIBaselineView baseline,
@@ -227,6 +274,9 @@ static class TypeIIPlanSourceValidator
 
     static Result<TypeIIPlanSourceValidation> Failure(RequestErrorKind kind, string message) =>
         Result<TypeIIPlanSourceValidation>.Failure(new RequestError(kind, message));
+
+    static Result Conflict(string message) =>
+        Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
 }
 
 sealed record TypeIIPlanSourceValidation(TypeIBaselineView Baseline,

@@ -9,4 +9,5 @@ public sealed record TypeIICarriedForwardGap(
     Uuid SourceVersionId,
     long SourceVersion,
     string SourceSha256,
-    string Disposition);
+    string Disposition,
+    Uuid? OwnerMemberId = null);

@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
@@ -124,6 +125,161 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
     }
 
     [Fact]
+    public async Task ShouldRejectOmittedOpenFindingGivenTypeIIOperatingPlanProposal()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var content = await fixture.SeedTypeISourceChainAsync();
+        var request = fixture.Request(content with
+        {
+            CarriedForwardGaps = [],
+            AcknowledgedGaps = [],
+        });
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPlanAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.PlanId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectChangedFindingRevisionGivenTypeIIOperatingPlanProposal()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var content = await fixture.SeedTypeISourceChainAsync();
+        await fixture.ReviseFindingAsync();
+        var request = fixture.Request(content);
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPlanAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.PlanId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectUnattributedFindingOwnerGivenTypeIIOperatingPlanProposal()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var content = await fixture.SeedTypeISourceChainAsync();
+        var request = fixture.Request(content with
+        {
+            CarriedForwardGaps = [content.CarriedForwardGaps[0] with
+            {
+                OwnerMemberId = Uuid.CreateVersion4(),
+            }],
+        });
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPlanAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.PlanId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectAcceptedDispositionWithoutActiveFindingAcceptanceGivenProposal()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var content = await fixture.SeedTypeISourceChainAsync();
+        var request = fixture.Request(content with
+        {
+            CarriedForwardGaps = [content.CarriedForwardGaps[0] with
+            {
+                Disposition = "accepted",
+            }],
+        });
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPlanAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.PlanId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectDuplicateFindingGivenTypeIIOperatingPlanProposal()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var content = await fixture.SeedTypeISourceChainAsync();
+        await fixture.SeedAdditionalFindingAsync();
+        var duplicate = content.CarriedForwardGaps[0] with
+        {
+            SourceVersionId = Uuid.CreateVersion4(),
+        };
+        var request = fixture.Request(content with
+        {
+            CarriedForwardGaps = [content.CarriedForwardGaps[0], duplicate],
+            AcknowledgedGaps = [content.AcknowledgedGaps[0],
+                content.AcknowledgedGaps[0] with
+                {
+                    GapId = fixture.SecondFindingId,
+                    Summary = "Second current finding",
+                }],
+        });
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPlanAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.PlanId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldCaptureCurrentFindingRevisionAfterBaselineFreezeGivenProposal()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var content = await fixture.SeedTypeISourceChainAsync();
+        var currentFinding = await fixture.ReviseFindingAsync();
+        var currentGap = content.CarriedForwardGaps[0] with
+        {
+            SourceVersionId = currentFinding.VersionId,
+            SourceVersion = currentFinding.Revision,
+            SourceSha256 = currentFinding.ContentSha256,
+        };
+        var request = fixture.Request(content with { CarriedForwardGaps = [currentGap] });
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPlanAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.PlanId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(currentFinding.VersionId, saved.Current!.Current!.Content.CarriedForwardGaps[0]
+            .SourceVersionId);
+        Assert.Equal(fixture.MemberId, saved.Current.Current.Content.CarriedForwardGaps[0]
+            .OwnerMemberId);
+    }
+
+    [Fact]
     public async Task ShouldRejectSystemActorGivenTypeIIOperatingPlanProposal()
     {
         // Arrange
@@ -211,6 +367,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
         public Uuid RiskId { get; } = Uuid.CreateVersion4();
         public Uuid VendorId { get; } = Uuid.CreateVersion4();
         public Uuid FindingId { get; } = Uuid.CreateVersion4();
+        public Uuid SecondFindingId { get; } = Uuid.CreateVersion4();
         public Uuid ChangeId { get; } = Uuid.CreateVersion4();
         public Uuid BaselineId { get; } = Uuid.CreateVersion4();
         public Uuid DescriptionId { get; } = Uuid.CreateVersion4();
@@ -257,6 +414,17 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
                 Assert.True(member.Register().IsSuccess);
                 await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
             }
+
+            var findings = new RemediationLedger(TenantId, ProgramId);
+            Assert.Null(findings.Raise(FindingId,
+                new FindingSource("readiness_gap", Uuid.CreateVersion4(), "1", "Known opening gap."),
+                "Known opening finding", "A readiness gap remains open.", "medium",
+                "System access", MemberId, new DateOnly(2026, 12, 1), [],
+                ActorReference.ForMember(ActorMemberId, "Plan author"), Now.AddMinutes(-21)));
+            await Writer.SaveAsync(findings, new RequestDispatchContext(RequestActor.System));
+            var finding = findings.Read(FindingId, Now)!;
+            var findingIdentity = FindingContentIdentityFactory.Create(finding,
+                findings.ReadClosures(FindingId));
 
             var control = new ControlDraft(TenantId, ControlId);
             Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "AC-T1-01",
@@ -318,8 +486,8 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
                     1, Hash('d')),
                 new TypeIBaselineSourceReference("vendor", VendorId, Uuid.CreateVersion4(),
                     1, Hash('e')),
-                new TypeIBaselineSourceReference("finding", FindingId, Uuid.CreateVersion4(),
-                    1, Hash('f')),
+                new TypeIBaselineSourceReference("finding", FindingId, findingIdentity.VersionId,
+                    findingIdentity.Revision, findingIdentity.ContentSha256),
                 new TypeIBaselineSourceReference("change", ChangeId, Uuid.CreateVersion4(),
                     1, Hash('1')),
                 new TypeIBaselineSourceReference("system_description", DescriptionId,
@@ -348,8 +516,8 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
 
             var references = sources.Select(ToReference).ToArray();
             var gap = new TypeIICarriedForwardGap("finding", FindingId,
-                sources.Single(source => source.Kind == "finding").VersionId, 1,
-                sources.Single(source => source.Kind == "finding").ContentSha256, "carry");
+                findingIdentity.VersionId, findingIdentity.Revision,
+                findingIdentity.ContentSha256, "carry", MemberId);
             return new TypeIIPlanContent(ExaminationId, BaselineId,
                 engagement.Baseline.ContentSha256, DescriptionVersionId, PeriodStart, PeriodEnd,
                 "Audit Firm", ["security"], BaselineId, OutcomeId, references,
@@ -367,6 +535,32 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             Assert.True(owner.Suspend(AuthorId, "Administrator", Now.AddMinutes(1),
                 "The control owner left the organization.").IsSuccess);
             await Writer.SaveAsync(owner, new RequestDispatchContext(RequestActor.System));
+        }
+
+        public async Task<FindingContentIdentity> ReviseFindingAsync()
+        {
+            var findings = await Reader.HydrateAsync(new RemediationLedger(TenantId, ProgramId));
+            var current = findings.Read(FindingId, Now)!;
+            Assert.Null(findings.Revise(FindingId, current.Revision, "high", MemberId,
+                current.DueOn, current.AffectedScope, "Updated current finding state.",
+                "Refresh finding for the Type II opening plan.",
+                ActorReference.ForMember(ActorMemberId, "Plan author"), Now.AddMinutes(1)));
+            await Writer.SaveAsync(findings, new RequestDispatchContext(RequestActor.System));
+            var revised = findings.Read(FindingId, Now.AddMinutes(1))!;
+            return FindingContentIdentityFactory.Create(revised,
+                findings.ReadClosures(FindingId));
+        }
+
+        public async Task SeedAdditionalFindingAsync()
+        {
+            var findings = await Reader.HydrateAsync(new RemediationLedger(TenantId, ProgramId));
+            Assert.Null(findings.Raise(SecondFindingId,
+                new FindingSource("readiness_gap", Uuid.CreateVersion4(), "2",
+                    "Another known opening gap."),
+                "Second opening finding", "A second readiness gap remains open.", "low",
+                "Data retention", MemberId, new DateOnly(2026, 12, 15), [],
+                ActorReference.ForMember(ActorMemberId, "Plan author"), Now.AddMinutes(-20)));
+            await Writer.SaveAsync(findings, new RequestDispatchContext(RequestActor.System));
         }
 
         static ExaminationContentReference ToReference(TypeIBaselineSourceReference source) =>
