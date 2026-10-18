@@ -18,6 +18,7 @@ public sealed class PreviewApplicationChangeHandler(
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
+    const int MaximumSystemInstanceBoundaryReferences = 200;
     const int MaximumSystemInstanceControlDraftReferences = 200;
 
     public PreviewApplicationChangeHandler(IAggregateReader aggregates,
@@ -213,6 +214,43 @@ public sealed class PreviewApplicationChangeHandler(
                 RequestErrorKind.Conflict, "The system instance projection is inconsistent.",
                 isTransient: true));
 
+        var systemInstanceBoundaryReferences =
+            new List<ApplicationBoundaryReferenceView>();
+        var systemInstanceBoundaryReferencesOverLimit = false;
+        if (instanceConsistency is not null)
+        {
+            systemInstanceBoundaryReferencesOverLimit = instancePage.NextCursor is not null;
+            foreach (var instance in instancePage.Items)
+            {
+                var remaining = MaximumSystemInstanceBoundaryReferences -
+                    systemInstanceBoundaryReferences.Count;
+                if (remaining == 0)
+                {
+                    systemInstanceBoundaryReferencesOverLimit = true;
+                    break;
+                }
+
+                var instanceBoundaries = await references.ListAsync(request.TenantId,
+                    "system_instance", instance.SystemInstanceId,
+                    Math.Min(200, remaining), null, ct).ConfigureAwait(false);
+                if (instanceBoundaries.Items.Count > remaining ||
+                    instanceBoundaries.Items.Any(reference =>
+                        !IsValidSystemInstanceBoundaryReference(reference, request.TenantId,
+                            instance.SystemInstanceId)))
+                    return Result<ApplicationChangePreview>.Failure(new RequestError(
+                        RequestErrorKind.Conflict,
+                        "The system-instance boundary reference projection is inconsistent.",
+                        isTransient: true));
+
+                systemInstanceBoundaryReferences.AddRange(instanceBoundaries.Items);
+                if (instanceBoundaries.NextCursor is not null)
+                {
+                    systemInstanceBoundaryReferencesOverLimit = true;
+                    break;
+                }
+            }
+        }
+
         var systemInstanceControlDraftReferences =
             new List<ApplicationControlDraftReferenceView>();
         var systemInstanceControlDraftReferencesOverLimit = instancePage.NextCursor is not null;
@@ -283,7 +321,7 @@ public sealed class PreviewApplicationChangeHandler(
                 isTransient: true));
 
         List<string> pending = [];
-        if (page.NextCursor is not null)
+        if (page.NextCursor is not null || systemInstanceBoundaryReferencesOverLimit)
             pending.Add("boundary_references_over_limit");
         if (controlPage.NextCursor is not null)
             pending.Add("control_draft_references_over_limit");
@@ -295,13 +333,21 @@ public sealed class PreviewApplicationChangeHandler(
         if (incomingRelationshipDirectory is null)
             pending.Add("application_relationships");
         if (instanceConsistency is null)
+            pending.Add("system_instance_boundary_references");
+        if (instanceConsistency is null)
             pending.Add("system_instance_control_draft_references");
         else if (systemInstanceControlDraftReferencesOverLimit)
             pending.Add("system_instance_control_draft_references_over_limit");
         pending.AddRange(MissingContextsAfterSystemInstanceControls);
         var preview = new ApplicationChangePreview(
             request.TenantId, request.ApplicationId, source.Revision, request.ChangeKind,
-            Changes(current, content), page.Items, pending, false)
+            Changes(current, content), page.Items.Concat(systemInstanceBoundaryReferences)
+                .OrderBy(static item => item.SubjectType, StringComparer.Ordinal)
+                .ThenBy(static item => item.GovernedRecordId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.BoundaryId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.VersionId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
+            pending, false)
         {
             ApplicationRelationships = relationships.Items,
             IncomingApplicationRelationships = incomingRelationships,
@@ -365,6 +411,18 @@ public sealed class PreviewApplicationChangeHandler(
         reference.ControlId != Uuid.Empty && reference.EntryId != Uuid.Empty &&
         reference.Revision > 0 && !string.IsNullOrWhiteSpace(reference.Identifier) &&
         !string.IsNullOrWhiteSpace(reference.Subject) &&
+        !string.IsNullOrWhiteSpace(reference.Rationale);
+
+    static bool IsValidSystemInstanceBoundaryReference(
+        ApplicationBoundaryReferenceView reference, Uuid tenantId, Uuid systemInstanceId) =>
+        reference.TenantId == tenantId && reference.SubjectType == "system_instance" &&
+        reference.GovernedRecordId == systemInstanceId && reference.BoundaryId != Uuid.Empty &&
+        reference.ProgramId != Uuid.Empty && reference.VersionId != Uuid.Empty &&
+        reference.EntryId != Uuid.Empty && reference.Revision > 0 &&
+        reference.Status is "draft" or "approved" or "historical" &&
+        !string.IsNullOrWhiteSpace(reference.Kind) &&
+        !string.IsNullOrWhiteSpace(reference.Subject) &&
+        !string.IsNullOrWhiteSpace(reference.OwnerReference) &&
         !string.IsNullOrWhiteSpace(reference.Rationale);
 
     static List<ApplicationFieldChange> Changes(ApplicationView current,

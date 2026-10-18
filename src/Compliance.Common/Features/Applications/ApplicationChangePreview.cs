@@ -2,7 +2,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-/// <summary>A bounded observation, not an approval or a complete retirement clearance.</summary>
+/// <summary>
+/// A bounded observation, not an approval or complete retirement clearance. Boundary and
+/// ControlDraftReferences include direct application and indexed system-instance references
+/// when their projections are current.
+/// </summary>
 public sealed record ApplicationChangePreview(Uuid TenantId, Uuid ApplicationId,
     long ApplicationRevision, string ChangeKind,
     IReadOnlyList<ApplicationFieldChange> Changes,

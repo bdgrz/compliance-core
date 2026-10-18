@@ -116,6 +116,7 @@ public sealed class ApplicationChangePreviewTests
         Assert.False(result.Value.Complete);
         Assert.Equal(
             ["vendors", "approved_control_versions_and_lifecycle_impact",
+                "system_instance_boundary_references",
                 "system_instance_control_draft_references", "policies", "evidence_sources",
                 "access_populations", "review_campaigns", "open_work", "readiness", "engagements",
                 "cross_source_manual_reliance"],
@@ -1021,11 +1022,12 @@ public sealed class ApplicationChangePreviewTests
     }
 
     [Fact]
-    public async Task ShouldReportKnownBoundaryAndPendingContextsGivenProposedRevision()
+    public async Task ShouldIncludeApplicationAndSystemInstanceBoundariesGivenChangePreview()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var applicationId = Uuid.CreateVersion4();
+        var systemInstanceId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
         var actorId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
@@ -1038,10 +1040,16 @@ public sealed class ApplicationChangePreviewTests
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
             tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+        await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
+            tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
+            null, null, actorId, "Manager", now));
         DomainEvent boundary = new BoundaryDraftCreated(tenantId, boundaryId, Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), new BoundaryContent("Payroll system", "readiness",
-                ["security"], [new BoundaryScopeEntry(Uuid.CreateVersion4(), "inclusion",
-                    "application", "Payroll", applicationId, "Operations", "In scope", false)]),
+                ["security"],
+                [new BoundaryScopeEntry(Uuid.CreateVersion4(), "inclusion", "application",
+                    "Payroll", applicationId, "Operations", "In scope", false),
+                new BoundaryScopeEntry(Uuid.CreateVersion4(), "inclusion", "system_instance",
+                    "Payroll production", systemInstanceId, "Operations", "In scope", false)]),
             actorId, "Manager", now);
         await using (var batch = await references.BeginAsync(new ProjectionBatchContext(
                          new CheckpointIdentity("ApplicationBoundaryReferencesV2",
@@ -1072,12 +1080,77 @@ public sealed class ApplicationChangePreviewTests
         Assert.Equal(3, result.Value.Changes.Count);
         Assert.Equal(["name", "owner_reference", "classification"],
             result.Value.Changes.Select(static change => change.Field));
-        Assert.Equal(boundaryId, Assert.Single(result.Value.BoundaryReferences).BoundaryId);
+        Assert.Collection(result.Value.BoundaryReferences,
+            reference =>
+            {
+                Assert.Equal("application", reference.SubjectType);
+                Assert.Equal(applicationId, reference.GovernedRecordId);
+                Assert.Equal(boundaryId, reference.BoundaryId);
+            },
+            reference =>
+            {
+                Assert.Equal("system_instance", reference.SubjectType);
+                Assert.Equal(systemInstanceId, reference.GovernedRecordId);
+                Assert.Equal(boundaryId, reference.BoundaryId);
+            });
+        Assert.DoesNotContain("system_instance_boundary_references",
+            result.Value.PendingContexts);
         Assert.Contains("engagements", result.Value.PendingContexts);
         Assert.Contains("approved_control_versions_and_lifecycle_impact",
             result.Value.PendingContexts);
         Assert.DoesNotContain("controls", result.Value.PendingContexts);
         Assert.DoesNotContain("boundary_references_over_limit", result.Value.PendingContexts);
+    }
+
+    [Fact]
+    public async Task ShouldMarkInstanceBoundaryImpactOverLimitGivenTruncatedPage()
+    {
+        // Arrange
+        ApplicationBoundaryReferenceView? reference = null;
+        var boundaries = new BoundaryReferenceDirectory((subjectType, recordId, _, _) =>
+            subjectType == "system_instance" && reference?.GovernedRecordId == recordId
+                ? new Page<ApplicationBoundaryReferenceView>([reference], "next")
+                : new Page<ApplicationBoundaryReferenceView>([], null));
+        var scenario = await CreateSystemInstanceBoundaryScenarioAsync(boundaries);
+        reference = new ApplicationBoundaryReferenceView(scenario.TenantId, "system_instance",
+            scenario.SystemInstanceId, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, "draft", null, "inclusion",
+            "Payroll production", "Operations", "In scope");
+
+        // Act
+        var result = await scenario.Handler.HandleAsync(scenario.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(reference, Assert.Single(result.Value.BoundaryReferences));
+        Assert.Contains("boundary_references_over_limit", result.Value.PendingContexts);
+        Assert.DoesNotContain("system_instance_boundary_references",
+            result.Value.PendingContexts);
+        Assert.False(result.Value.Complete);
+    }
+
+    [Fact]
+    public async Task ShouldReturnTransientConflictGivenCrossTenantSystemInstanceBoundaryReference()
+    {
+        // Arrange
+        ApplicationBoundaryReferenceView? reference = null;
+        var boundaries = new BoundaryReferenceDirectory((subjectType, recordId, _, _) =>
+            subjectType == "system_instance" && reference?.GovernedRecordId == recordId
+                ? new Page<ApplicationBoundaryReferenceView>([reference], null)
+                : new Page<ApplicationBoundaryReferenceView>([], null));
+        var scenario = await CreateSystemInstanceBoundaryScenarioAsync(boundaries);
+        reference = new ApplicationBoundaryReferenceView(Uuid.CreateVersion4(),
+            "system_instance", scenario.SystemInstanceId, Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1,
+            "draft", null, "inclusion", "Payroll production", "Operations", "In scope");
+
+        // Act
+        var result = await scenario.Handler.HandleAsync(scenario.Context, CancellationToken.None);
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.True(error.IsTransient);
     }
 
     [Fact]
@@ -1196,6 +1269,39 @@ public sealed class ApplicationChangePreviewTests
         Assert.Equal(boundaryId, Assert.Single(recovered.Value.BoundaryReferences).BoundaryId);
     }
 
+    static async Task<(Uuid TenantId, Uuid ApplicationId, Uuid SystemInstanceId,
+        PreviewApplicationChangeHandler Handler, RequestContext<PreviewApplicationChange> Context)>
+        CreateSystemInstanceBoundaryScenarioAsync(
+            IApplicationBoundaryReferenceDirectory boundaries)
+    {
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var systemInstanceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var source = DeclaredApplicationForTest(tenantId, applicationId, actorId, now);
+        var sourceReader = new SourceReader(source);
+        var kv = new InMemoryKvClient();
+        var applications = new FitzApplicationDirectory(kv);
+        await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
+            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+        await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
+            tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
+            null, null, actorId, "Manager", now));
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var events = new InMemoryEventStore();
+        var handler = new PreviewApplicationChangeHandler(sourceReader, applications,
+            boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
+            controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
+            RestrictedApplicationVisibilityFixture.Create(sourceReader),
+            new SystemInstanceReadConsistency(applications, sourceReader,
+                new LegacySystemInstanceSource(applications, events), events));
+        var context = new RequestContext<PreviewApplicationChange>(
+            new PreviewApplicationChange(tenantId, applicationId, 1, "retire"),
+            new ClaimsPrincipal());
+        return (tenantId, applicationId, systemInstanceId, handler, context);
+    }
+
     static async Task ProjectApplicationAsync(FitzApplicationDirectory directory,
         Uuid tenantId, DomainEvent domainEvent)
     {
@@ -1276,6 +1382,19 @@ public sealed class ApplicationChangePreviewTests
                 await OnListAsync(ct);
             return PageFor?.Invoke(subjectType, recordId, limit, cursor) ?? Page;
         }
+
+        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+    }
+
+    sealed class BoundaryReferenceDirectory(
+        Func<string, Uuid, int, string?, Page<ApplicationBoundaryReferenceView>> pageFor)
+        : IApplicationBoundaryReferenceDirectory
+    {
+        public ValueTask<Page<ApplicationBoundaryReferenceView>> ListAsync(Uuid tenantId,
+            string subjectType, Uuid recordId, int limit, string? cursor,
+            CancellationToken ct = default) =>
+            ValueTask.FromResult(pageFor(subjectType, recordId, limit, cursor));
 
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
             CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
