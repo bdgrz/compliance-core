@@ -273,7 +273,7 @@ The following is a static source inventory, including internal operations. Queri
 | Queries | 271 |
 | Events | 372 |
 | Aggregates | 83 |
-| Models and supporting contracts | 561 |
+| Models and supporting contracts | 562 |
 | Reactors | 30 |
 | Projectors | 66 |
 | Explicit MapPortia HTTP route registrations | 327 |
@@ -2679,6 +2679,8 @@ These 131 requirement-backed event contracts have been added since the existing-
 - [ObservationPeriodClosePreview](../../src/Compliance.Common/Features/AuditPopulations/ObservationPeriodClosePreview.cs#L6)
 - [ObservationPeriodCloseView](../../src/Compliance.Common/Features/AuditPopulations/ObservationPeriodCloseView.cs#L6)
 - [AuditPopulationDefinitionView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationDefinitionView.cs#L6)
+- [AuditPopulationExportView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationExportView.cs#L6)
+- [AuditPopulationExportReceipt](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationExportReceipt.cs#L4)
 - [AuditPopulationView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationView.cs#L6)
 - [AuditPopulationRowView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationRowView.cs#L6)
 - [PopulationReconciliationView](../../src/Compliance.Common/Features/AuditPopulations/PopulationReconciliationView.cs#L6)

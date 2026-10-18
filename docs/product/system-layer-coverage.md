@@ -10,7 +10,7 @@ Reconciled 2026-10-17 against `src/Compliance.Common` and `src/Compliance.Core`.
 | Query contracts | 271 (216 existing + 55 backfilled contracts) | [Existing queries](component-inventory.md#existing-queries) and [required query/view-model backfill](query-and-view-model-list.md) |
 | Domain events | 372 (236 existing + 136 backfilled contracts) | [Existing events](component-inventory.md#existing-events) and [required event backfill](domain-event-list.md) |
 | Aggregates | 84 (68 existing + 16 TDD-backed aggregates) | [Existing aggregates](component-inventory.md#existing-aggregates) |
-| Models, views, and supporting contracts | 561 (436 existing + 54 response views + 71 aggregate payload/support models) | [Existing models](component-inventory.md#existing-models-and-supporting-contracts) and [required query/view-model backfill](query-and-view-model-list.md) |
+| Models, views, and supporting contracts | 562 (436 existing + 55 response/receipt views + 71 aggregate payload/support models) | [Existing models](component-inventory.md#existing-models-and-supporting-contracts) and [required query/view-model backfill](query-and-view-model-list.md) |
 
 All source links in those existing inventories resolve to files. The command list separates existing contracts from additional candidates and internal operations. The component inventory contains the proposed future queries, events, aggregate/model candidates, reactors, and projectors.
 
@@ -20,7 +20,7 @@ The former broad proposal list mixed required work with hypotheses and unresolve
 
 The pruned plan retains 127 feature-backed command requirements, and each has a typed command contract file. Five readiness-material import commands are explicitly deferred, leaving 122 active handler requirements. Excluded P2 hypotheses, unsettled BO scope, and unvalidated Privacy scope are not counted as required product commands.
 
-The domain-event backfill adds 136 typed per-file contracts from accepted backlog requirements; 8 readiness-import events remain deferred. The R2-08 `AdvisorHandoff`, T1-01 `ExaminationEngagement`, T1-02 `SystemDescription`, T1-04 `AuditorRequest`, R2-12 evidence-governance roots, T1-05/T3-05 `AuditPackage`, T1-07 examination transition roots, and T2-01/T3-01 `TypeIIPeriod` have focused RED-to-GREEN behavior tests. Handler work is in progress: 75 of 122 active commands have complete handler coverage, and 47 active commands remain. Five readiness-import commands remain explicitly deferred. The [handler checklist](handler-coverage-checklist.md) tracks active gaps and prerequisites. Projectors and reactors follow this layer.
+The domain-event backfill adds 136 typed per-file contracts from accepted backlog requirements; 8 readiness-import events remain deferred. The R2-08 `AdvisorHandoff`, T1-01 `ExaminationEngagement`, T1-02 `SystemDescription`, T1-04 `AuditorRequest`, R2-12 evidence-governance roots, T1-05/T3-05 `AuditPackage`, T1-07 examination transition roots, and T2-01/T3-01 `TypeIIPeriod` have focused RED-to-GREEN behavior tests. Handler work is in progress: 76 of 122 active commands have complete handler coverage, and 46 active commands remain. Five readiness-import commands remain explicitly deferred. The [handler checklist](handler-coverage-checklist.md) tracks active gaps and prerequisites. Projectors and reactors follow this layer.
 
 ## Validation
 

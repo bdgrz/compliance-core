@@ -61,6 +61,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationVersionView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationAmendmentView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationExportView))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationExportReceipt))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.AuditPopulationView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.GetAuditPopulation))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPopulations.GetObservationPeriodClose))]

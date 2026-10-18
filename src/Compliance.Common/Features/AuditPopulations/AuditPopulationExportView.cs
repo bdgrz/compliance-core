@@ -12,4 +12,7 @@ public sealed record AuditPopulationExportView(
     Uuid CloseSnapshotId,
     DateTimeOffset GeneratedAt,
     Uuid GeneratedByMemberId,
-    string GeneratedByDisplay);
+    string GeneratedByDisplay,
+    Uuid ArtifactId = default,
+    string? OutputContentSha256 = null,
+    long? OutputContentLength = null);

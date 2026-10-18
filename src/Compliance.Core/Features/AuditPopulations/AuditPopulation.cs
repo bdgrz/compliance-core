@@ -352,7 +352,8 @@ public sealed class AuditPopulation : Aggregate
     }
 
     public CommandFailure? RecordExport(long expectedRevision, Uuid exportId,
-        int populationVersion, string format, string fileName,
+        int populationVersion, string format, string fileName, Uuid artifactId,
+        string outputContentSha256, long outputContentLength,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset generatedAt)
     {
         if (_current is not { } current)
@@ -361,20 +362,24 @@ public sealed class AuditPopulation : Aggregate
         fileName = Clean(fileName);
         if (current.Exports.FirstOrDefault(item => item.ExportId == exportId) is { } existing)
             return existing.PopulationVersion == populationVersion && existing.Format == format &&
-                existing.FileName == fileName && existing.GeneratedByMemberId == actorMemberId &&
-                existing.GeneratedAt == generatedAt ? null :
+                existing.FileName == fileName && existing.ArtifactId == artifactId &&
+                existing.OutputContentSha256 == outputContentSha256 &&
+                existing.OutputContentLength == outputContentLength ? null :
                 CommandFailure.StateConflict("An export identity cannot be reused for different population content.");
         if (expectedRevision != Revision)
             return StaleRevision();
         var version = current.Versions.FirstOrDefault(item => item.Version == populationVersion);
-        if (current.Status != "frozen" || version is null || !ExportFormats.Contains(format) ||
-            exportId == Uuid.Empty || !Bounded(fileName, 1, 255) ||
+        if (current.Status is not ("frozen" or "amending" or "reconciled") || version is null ||
+            !ExportFormats.Contains(format) ||
+            exportId == Uuid.Empty || artifactId == Uuid.Empty || !IsHash(outputContentSha256) ||
+            outputContentLength <= 0 || !Bounded(fileName, 1, 255) ||
             fileName.Contains('/') || fileName.Contains('\\') ||
             !ValidActor(actorMemberId, actorDisplay, generatedAt) || generatedAt < current.UpdatedAt ||
             current.Exports.Count >= MaximumExports)
             return Invalid("Population export requires an exact frozen version, supported format, stable identity, and attribution.");
         var export = new AuditPopulationExportView(exportId, populationVersion, format, fileName,
-            version.ContentSha256, version.CloseSnapshotId, generatedAt, actorMemberId, actorDisplay.Trim());
+            version.ContentSha256, version.CloseSnapshotId, generatedAt, actorMemberId, actorDisplay.Trim(),
+            artifactId, outputContentSha256, outputContentLength);
         var state = current with
         {
             Revision = Revision + 1,
@@ -523,7 +528,8 @@ public sealed class AuditPopulation : Aggregate
             "freeze" => prior.Status == "reconciled" && next.Status == "frozen" &&
                 next.Versions.Count == prior.Versions.Count + 1 &&
                 next.Versions[^1].FrozenByMemberId == actor && next.Versions[^1].FrozenAt == next.UpdatedAt,
-            "export" => prior.Status == "frozen" && next.Status == "frozen" &&
+            "export" => prior.Status is "frozen" or "amending" or "reconciled" &&
+                next.Status == prior.Status &&
                 next.Exports.Count == prior.Exports.Count + 1 &&
                 next.Exports[^1].GeneratedByMemberId == actor && next.Exports[^1].GeneratedAt == next.UpdatedAt,
             _ => false,
@@ -603,6 +609,9 @@ public sealed class AuditPopulation : Aggregate
             version.ContentSha256 == item.PopulationContentSha256 && version.CloseSnapshotId == item.CloseSnapshotId) &&
         ExportFormats.Contains(item.Format) && Bounded(item.FileName, 1, 255) &&
         !item.FileName.Contains('/') && !item.FileName.Contains('\\') &&
+        (item.ArtifactId == Uuid.Empty && item.OutputContentSha256 is null && item.OutputContentLength is null ||
+         item.ArtifactId != Uuid.Empty && item.OutputContentSha256 is { } sha && IsHash(sha) &&
+         item.OutputContentLength is > 0) &&
         ValidActor(item.GeneratedByMemberId, item.GeneratedByDisplay, item.GeneratedAt);
 
     static bool ValidCloseSnapshot(TypeIIPeriodCloseSnapshotView item) => item.CloseSnapshotId != Uuid.Empty &&

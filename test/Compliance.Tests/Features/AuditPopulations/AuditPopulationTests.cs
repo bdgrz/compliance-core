@@ -190,10 +190,11 @@ public sealed class AuditPopulationTests
         // Arrange
         var population = FrozenPopulation();
         var exportId = Uuid.CreateVersion4();
+        var artifactId = Uuid.CreateVersion4();
 
         // Act
         var exported = population.RecordExport(population.Revision, exportId, 1, "csv",
-            "population-v1.csv", RecorderId, "Compliance lead", Now.AddMinutes(4));
+            "population-v1.csv", artifactId, Hash('6'), 128, RecorderId, "Compliance lead", Now.AddMinutes(4));
         var events = new AggregateScenario<AuditPopulationAggregate>(population).PendingEvents.ToArray();
         var replay = new AggregateScenario<AuditPopulationAggregate>(NewPopulation()).Given(events).Aggregate;
 
@@ -201,6 +202,9 @@ public sealed class AuditPopulationTests
         Assert.Null(exported);
         Assert.Equal(exportId, replay.Current!.Exports.Single().ExportId);
         Assert.Equal(replay.Current.Current!.ContentSha256, replay.Current.Exports.Single().PopulationContentSha256);
+        Assert.Equal(artifactId, replay.Current.Exports.Single().ArtifactId);
+        Assert.Equal(Hash('6'), replay.Current.Exports.Single().OutputContentSha256);
+        Assert.Equal(128, replay.Current.Exports.Single().OutputContentLength);
         Assert.True(replay.Current.SampleEligible);
     }
 
