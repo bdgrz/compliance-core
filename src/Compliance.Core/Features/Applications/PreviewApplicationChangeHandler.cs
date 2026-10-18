@@ -29,7 +29,8 @@ public sealed class PreviewApplicationChangeHandler(
     IAccessReviewCampaignImpactDirectoryReader? reviewCampaigns = null,
     ApplicationReviewCampaignReadConsistency? reviewCampaignConsistency = null,
     IProviderReader? providers = null,
-    ProviderReadConsistency? providerConsistency = null)
+    ProviderReadConsistency? providerConsistency = null,
+    IApplicationReadinessImpactReader? readinessImpactReader = null)
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
@@ -57,9 +58,9 @@ public sealed class PreviewApplicationChangeHandler(
     {
     }
 
-    static readonly string[] MissingContextsAfterSystemInstanceControls =
-        ["open_work",
-            "readiness", "engagements", "cross_source_manual_reliance"];
+    static readonly string[] MissingContextsBeforeReadiness = ["open_work"];
+    static readonly string[] MissingContextsAfterReadiness =
+        ["engagements", "cross_source_manual_reliance"];
 
     public async ValueTask<Result<ApplicationChangePreview>> HandleAsync(
         IRequestContext<PreviewApplicationChange> context, CancellationToken ct)
@@ -305,6 +306,20 @@ public sealed class PreviewApplicationChangeHandler(
             return Result<ApplicationChangePreview>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "The system instance projection is inconsistent.",
                 isTransient: true));
+
+        ApplicationReadinessImpact? readinessImpact = null;
+        if (readinessImpactReader is not null)
+        {
+            var readiness = await readinessImpactReader.ReadAsync(request.TenantId,
+                request.ApplicationId, instanceConsistency is null
+                    ? []
+                    : instancePage.Items.Select(static item => item.SystemInstanceId).ToArray(),
+                instanceConsistency is not null && instancePage.NextCursor is null, ct)
+                .ConfigureAwait(false);
+            if (!readiness.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(readiness.Error);
+            readinessImpact = readiness.Value;
+        }
 
         var vendorReferenceItems = new List<ApplicationVendorReferenceView>();
         var vendorReferencesOverLimit = false;
@@ -892,7 +907,14 @@ public sealed class PreviewApplicationChangeHandler(
             pending.Add("review_campaigns");
         if (reviewCampaignReferencesOverLimit)
             pending.Add("review_campaign_references_over_limit");
-        pending.AddRange(MissingContextsAfterSystemInstanceControls);
+        pending.AddRange(MissingContextsBeforeReadiness);
+        if (readinessImpactReader is null || readinessImpact is not { Complete: true })
+            pending.Add("readiness");
+        if (readinessImpact?.ProgramsOverLimit == true)
+            pending.Add("readiness_programs_over_limit");
+        if (readinessImpact?.ReferencesOverLimit == true)
+            pending.Add("readiness_references_over_limit");
+        pending.AddRange(MissingContextsAfterReadiness);
         var preview = new ApplicationChangePreview(
             request.TenantId, request.ApplicationId, source.Revision, request.ChangeKind,
             Changes(current, content), page.Items.Concat(systemInstanceBoundaryReferences)
@@ -944,6 +966,7 @@ public sealed class PreviewApplicationChangeHandler(
                 .ThenBy(static item => item.SystemInstanceId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.DependencyIndex)
                 .ToArray(),
+            ReadinessReferences = readinessImpact?.References ?? [],
         };
         return Result<ApplicationChangePreview>.Success(preview with
         {

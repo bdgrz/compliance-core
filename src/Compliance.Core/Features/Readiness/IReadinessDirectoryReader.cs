@@ -5,6 +5,9 @@ namespace Bdgrz.Compliance.Features.Readiness;
 
 public interface IReadinessDirectoryReader
 {
+    ValueTask<Result<Uuid?>> GetLatestAssessmentIdAsync(Uuid tenantId, Uuid programId,
+        CancellationToken ct = default);
+
     ValueTask<ReadinessAssessmentView?> GetAssessmentAsync(Uuid tenantId, Uuid programId,
         Uuid assessmentId, CancellationToken ct = default);
 

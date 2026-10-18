@@ -67,8 +67,8 @@ The 200 result contains `tenant_id`, `application_id`,
 up to 200 direct-Application `policy_references`, up to 200
 `evidence_source_references`, up to 200 currently visible outgoing
 `application_relationships`, up to 200 `access_population_references`, and up to
-200 `review_campaign_references`, and up to 200 `vendor_references`,
-`pending_contexts`, and `complete`. A control
+200 `review_campaign_references`, up to 200 `vendor_references`, and up to 200
+`readiness_references`, `pending_contexts`, and `complete`. A control
 reference contains the stable control, program, applicability-entry, and
 current draft revision identifiers plus the authored subject and rationale; it
 does not contain full draft content. `complete` is true only when no impact
@@ -103,6 +103,18 @@ an incomplete provider or SystemInstance scan keep `vendors` pending. The
 `vendor_references_over_limit` context is added when more than 200 references
 are available. A provider projection that has not caught up returns a retryable
 409.
+`readiness_references` identifies the program, latest assessment, readiness ledger revision,
+rule version, as-of time, and exact source kind, ID, and version for each assessed source that
+directly names this Application or one of its projected system instances. It does not include
+assessment narratives or evidence content. Programs and their latest assessments are read under
+separate tenant-scoped program and readiness fences. The result is bounded to 200 references;
+`readiness_programs_over_limit` or `readiness_references_over_limit` keeps `readiness` pending
+when either scan exceeds its bound. An incomplete system-instance scan also keeps readiness
+pending. The current assessment contract does not retain every relationship from its control,
+provider, and boundary inputs back to an Application, so any existing latest assessment keeps
+`readiness` pending even when no direct reference is found. Current readiness rules v12 also
+explicitly leave workforce and evidence unassessed. A lagging program or readiness projection
+returns a retryable 409.
 `boundary_references_over_limit` and
 `control_draft_references_over_limit` are added when their respective result
 sets exceed 200, rather than silently presenting a truncated set as complete.
@@ -163,7 +175,7 @@ SystemInstance list keep `review_campaigns` pending.
 The handler hydrates the tenant Application aggregate, checks its exact
 revision against the Fitz Application projection, and checks the boundary,
 Control, approved-Control-version, policy, evidence-support, access-population,
-and review-campaign
+review-campaign, program-directory, and readiness-directory
 projection checkpoints against their corresponding tenant source streams before
 and after reading references. It rechecks the Application and relationship source revisions after
 the projection reads. A source write

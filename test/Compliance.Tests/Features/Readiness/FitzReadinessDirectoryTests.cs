@@ -93,6 +93,9 @@ public sealed class FitzReadinessDirectoryTests
             "planned", 100, null, runnerId, "catalog_support_gap", "catalog_support_declared",
             privacyGap.Subject);
         var summaries = await replayed.ListAssessmentsAsync(tenantId, programId, 100, null);
+        var latestAssessmentId = await replayed.GetLatestAssessmentIdAsync(tenantId, programId);
+        var missingLatestAssessmentId = await replayed.GetLatestAssessmentIdAsync(tenantId,
+            Uuid.CreateVersion4());
 
         // Assert
         Assert.NotNull(storedOld);
@@ -107,6 +110,10 @@ public sealed class FitzReadinessDirectoryTests
         Assert.Equal(6, storedCurrent.Gaps.Count(gap => gap.Kind == "catalog_support_gap"));
         AssertGapEqual(privacyGap with { Plan = plan.Plan }, Assert.Single(filtered.Value.Items));
         Assert.Equal(2, summaries.Value.Items.Count);
+        Assert.True(latestAssessmentId.IsSuccess);
+        Assert.Equal(current.AssessmentId, latestAssessmentId.Value);
+        Assert.True(missingLatestAssessmentId.IsSuccess);
+        Assert.Null(missingLatestAssessmentId.Value);
         Assert.Equal(current.Gaps.Count, Assert.Single(summaries.Value.Items,
             summary => summary.AssessmentId == current.AssessmentId).GapCount);
         Assert.Single((await replayed.ListAnnotationsAsync(tenantId, programId,

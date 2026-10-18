@@ -4,9 +4,9 @@ namespace Bdgrz.Compliance.Features.Applications;
 
 /// <summary>
 /// A bounded observation, not an approval or complete retirement clearance. Boundary, control,
-/// policy, evidence-source, access-population, review-campaign, and provider collections include
-/// direct application and indexed system-instance references when their projections are current
-/// and the caller has the required access.
+/// policy, evidence-source, access-population, review-campaign, provider, and readiness collections
+/// include direct application and indexed system-instance references when their projections are
+/// current and the caller has the required access.
 /// </summary>
 public sealed record ApplicationChangePreview(Uuid TenantId, Uuid ApplicationId,
     long ApplicationRevision, string ChangeKind,
@@ -45,6 +45,9 @@ public sealed record ApplicationChangePreview(Uuid TenantId, Uuid ApplicationId,
 
     /// <summary>Up to 200 visible provider dependencies on this application's systems.</summary>
     public IReadOnlyList<ApplicationVendorReferenceView> VendorReferences { get; init; } = [];
+
+    /// <summary>Up to 200 source references from current readiness assessments.</summary>
+    public IReadOnlyList<ApplicationReadinessReferenceView> ReadinessReferences { get; init; } = [];
 
     /// <summary>Up to 200 projected system instances that a change or retirement would affect.</summary>
     public IReadOnlyList<SystemInstanceView> SystemInstanceReferences { get; init; } = [];

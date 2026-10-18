@@ -144,6 +144,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ITenantInvitationDirectoryReader>(
             provider => provider.GetRequiredService<FitzTenantInvitationDirectory>());
         services.AddScoped<FitzProgramDirectory>();
+        services.AddScoped<ProgramDirectoryReadConsistency>();
         services.AddScoped<FitzApplicationDirectory>();
         services.AddScoped<IApplicationDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzApplicationDirectory>());
@@ -540,6 +541,7 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzReadinessDirectory>());
         services.AddScoped<IReadinessReadModel, FitzReadinessReadModel>();
         services.AddScoped<ReadinessProjectionReadConsistency>();
+        services.AddScoped<IApplicationReadinessImpactReader, ApplicationReadinessImpactReader>();
         services.AddScoped<IReadinessSourceReader, DirectoryReadinessSourceReader>();
         services.AddScoped<IResponsibilityScopeValidator, SourceRecordResponsibilityScopeValidator>();
         services.AddScoped<BoundaryImpactService>();
