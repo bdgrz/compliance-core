@@ -68,12 +68,14 @@ public sealed class AuditPopulation : Aggregate
             NormalizeDefinition(content) is not { } normalized ||
             !ValidClosedPeriod(closedPeriod) ||
             closedPeriod.TenantId != _tenantId || closedPeriod.ProgramId != _programId ||
+            closedPeriod.PeriodId == Uuid.Empty || closedPeriod.ExaminationId == Uuid.Empty ||
             normalized.PeriodStart < closedPeriod.PeriodStart || normalized.PeriodEnd > closedPeriod.PeriodEnd)
             return Invalid("A population definition requires valid scope, attribution, and the exact frozen Type II close snapshot.");
 
         var closeSnapshot = closedPeriod.CloseSnapshots[^1];
         var definition = NewDefinition(normalized, 1, actorMemberId, actorDisplay.Trim(), definedAt, "");
-        var state = new AuditPopulationView(_tenantId, _programId, Id, definitionId, "defined", 1,
+        var state = new AuditPopulationView(_tenantId, _programId, Id, definitionId,
+            closedPeriod.PeriodId, closedPeriod.ExaminationId, "defined", 1,
             normalized.PeriodStart, normalized.PeriodEnd, 0, null, [definition], closeSnapshot, [], [], null, [], [], [], false,
             actorMemberId, actorDisplay.Trim(), definedAt);
         return Emit(state, actorMemberId, definedAt,
@@ -489,6 +491,7 @@ public sealed class AuditPopulation : Aggregate
         if (next.Revision != prior.Revision + 1 || next.TenantId != prior.TenantId ||
             next.ProgramId != prior.ProgramId || next.AuditPopulationId != prior.AuditPopulationId ||
             next.AuditPopulationDefinitionId != prior.AuditPopulationDefinitionId ||
+            next.TypeIIPeriodId != prior.TypeIIPeriodId || next.ExaminationId != prior.ExaminationId ||
             !Prefix(prior.DefinitionVersions, next.DefinitionVersions) ||
             !Prefix(prior.SourceSnapshots, next.SourceSnapshots) ||
             !Prefix(prior.Versions, next.Versions) || !Prefix(prior.Amendments, next.Amendments) ||

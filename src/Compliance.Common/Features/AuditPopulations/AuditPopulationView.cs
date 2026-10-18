@@ -9,6 +9,8 @@ public sealed record AuditPopulationView(
     Uuid ProgramId,
     Uuid AuditPopulationId,
     Uuid AuditPopulationDefinitionId,
+    Uuid TypeIIPeriodId,
+    Uuid ExaminationId,
     string Status,
     long Revision,
     DateOnly PeriodStart,

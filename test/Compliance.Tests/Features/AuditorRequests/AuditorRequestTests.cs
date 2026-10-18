@@ -126,13 +126,17 @@ public sealed class AuditorRequestTests
 
         // Act
         var created = request.RecordSampleSelection(request.Revision, selectionId, populationId,
-            manifestDigest, "random", rowIds, OwnerId, "Owner", Now.AddHours(1));
+            1, manifestDigest, "random", rowIds, "external_email", "sample-001", OwnerId,
+            "Owner", Now.AddHours(1));
         var exactRetry = request.RecordSampleSelection(request.Revision, selectionId, populationId,
-            manifestDigest, "random", rowIds, OwnerId, "Owner", Now.AddHours(1));
+            1, manifestDigest, "random", rowIds, "external_email", "sample-001", OwnerId,
+            "Owner", Now.AddHours(2));
         var changedRetry = request.RecordSampleSelection(request.Revision, selectionId, populationId,
-            new string('b', 64), "random", rowIds, OwnerId, "Owner", Now.AddHours(1));
+            1, new string('b', 64), "random", rowIds, "external_email", "sample-001", OwnerId,
+            "Owner", Now.AddHours(1));
         var invalid = request.RecordSampleSelection(request.Revision, Uuid.CreateVersion4(), populationId,
-            "not-a-digest", "random", rowIds, OwnerId, "Owner", Now.AddHours(2));
+            1, "not-a-digest", "random", rowIds, "external_email", "sample-001", OwnerId,
+            "Owner", Now.AddHours(4));
 
         // Assert
         Assert.Null(created);
@@ -145,6 +149,57 @@ public sealed class AuditorRequestTests
         Assert.Equal(populationId, selection.PopulationSnapshotId);
         Assert.Equal(manifestDigest, selection.PopulationContentSha256);
         Assert.Equal(rowIds.OrderBy(static id => id.ToString()), selection.SelectedRowIds);
+        Assert.Equal(Now.AddHours(1), selection.RecordedAt);
+    }
+
+    [Fact]
+    public void ShouldRetainExactPopulationVersionAndSourceProvenanceGivenSampleAndAmendment()
+    {
+        // Arrange
+        var request = OpenRequest(requiresInternalReview: false);
+        var firstSelectionId = Uuid.CreateVersion4();
+        var firstPopulationId = Uuid.CreateVersion4();
+        var firstRow = Uuid.CreateVersion4();
+        var firstDigest = new string('a', 64);
+
+        // Act
+        var first = request.RecordSampleSelection(request.Revision, firstSelectionId,
+            firstPopulationId, 2, firstDigest, "random", [firstRow], "external_email",
+            "sample-mail-004", OwnerId, "Owner", Now.AddHours(1));
+        var secondSelectionId = Uuid.CreateVersion4();
+        var secondPopulationId = firstPopulationId;
+        var secondRow = Uuid.CreateVersion4();
+        var secondDigest = new string('b', 64);
+        var sameVersionAmendment = request.AmendSampleSelection(request.Revision,
+            Uuid.CreateVersion4(), firstSelectionId, secondPopulationId, 2, secondDigest,
+            "targeted", [secondRow], "external_portal", "portal-export-118",
+            "The population has not advanced.", OwnerId, "Owner", Now.AddHours(2));
+        var amended = request.AmendSampleSelection(request.Revision, secondSelectionId,
+            firstSelectionId, secondPopulationId, 3, secondDigest, "targeted", [secondRow],
+            "external_portal", "portal-export-119", "The auditor selected additional rows from the amended population.",
+            OwnerId, "Owner", Now.AddHours(3));
+
+        // Assert
+        Assert.Null(first);
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(sameVersionAmendment).Code);
+        Assert.Null(amended);
+        var selections = request.Current!.SampleSelections;
+        Assert.Equal(2, selections.Count);
+        Assert.Equal(2, selections[0].PopulationVersion);
+        Assert.Equal(firstDigest, selections[0].PopulationContentSha256);
+        Assert.Equal("external_email", selections[0].Source);
+        Assert.Equal("sample-mail-004", selections[0].ExternalReference);
+        Assert.Null(selections[0].SupersedesSelectionId);
+        Assert.Equal(3, selections[1].PopulationVersion);
+        Assert.Equal(secondDigest, selections[1].PopulationContentSha256);
+        Assert.Equal("external_portal", selections[1].Source);
+        Assert.Equal("portal-export-119", selections[1].ExternalReference);
+        Assert.Equal(firstSelectionId, selections[1].SupersedesSelectionId);
+        Assert.Equal("The auditor selected additional rows from the amended population.",
+            selections[1].AmendmentReason);
+        Assert.Equal(firstRow, Assert.Single(selections[0].SelectedRowIds));
+        Assert.Equal(secondRow, Assert.Single(selections[1].SelectedRowIds));
     }
 
     [Fact]

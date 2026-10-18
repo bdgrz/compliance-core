@@ -42,6 +42,23 @@ public sealed class AuditPopulationTests
     }
 
     [Fact]
+    public void ShouldRetainTheExactExaminationAndClosedPeriodGivenPopulationDefinition()
+    {
+        // Arrange
+        var population = NewPopulation();
+        var closedPeriod = ClosedPeriod();
+
+        // Act
+        var defined = population.Define(DefinitionId, Definition(), closedPeriod,
+            RecorderId, "Compliance lead", Now);
+
+        // Assert
+        Assert.Null(defined);
+        Assert.Equal(closedPeriod.PeriodId, population.Current!.TypeIIPeriodId);
+        Assert.Equal(closedPeriod.ExaminationId, population.Current.ExaminationId);
+    }
+
+    [Fact]
     public void ShouldRejectUnauthorizedFieldsAndDuplicateStableRowIdentitiesGivenSourceFacts()
     {
         // Arrange

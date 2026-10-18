@@ -778,6 +778,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordAuditorResponseDispositionHandler>()
             .AddRequestHandler<ResolveAuditorRequestHandler>()
             .AddRequestHandler<ReopenAuditorRequestHandler>()
+            .AddRequestHandler<RecordSampleSelectionHandler>()
+            .AddRequestHandler<AmendSampleSelectionHandler>()
             .AddRequestHandler<RecordSignificantChangeHandler>()
             .AddRequestHandler<ReviseSignificantChangeHandler>()
             .AddRequestHandler<AssessSignificantChangeHandler>()

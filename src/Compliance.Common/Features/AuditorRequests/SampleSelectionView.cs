@@ -9,9 +9,14 @@ public sealed record SampleSelectionView(
     Uuid SampleSelectionId,
     Uuid AuditorRequestId,
     Uuid PopulationSnapshotId,
+    int PopulationVersion,
     string PopulationContentSha256,
     string SelectionMethod,
     IReadOnlyList<Uuid> SelectedRowIds,
     string SelectionContentSha256,
     string Status,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string Source,
+    string ExternalReference,
+    Uuid? SupersedesSelectionId,
+    string? AmendmentReason);

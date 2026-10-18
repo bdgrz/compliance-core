@@ -419,8 +419,8 @@ This pruned plan has 127 required additions, including five evidence command con
 - **RecordAuditorResponseDisposition** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/RecordAuditorResponseDisposition.cs#L7))
 - **ResolveAuditorRequest** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/ResolveAuditorRequest.cs#L7))
 - **ReopenAuditorRequest** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/ReopenAuditorRequest.cs#L7))
-- **RecordSampleSelection** — coded ([contract](../../src/Compliance.Common/Features/AuditPopulations/RecordSampleSelection.cs#L7))
-- **AmendSampleSelection** — coded ([contract](../../src/Compliance.Common/Features/AuditPopulations/AmendSampleSelection.cs#L7))
+- **RecordSampleSelection** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/RecordSampleSelection.cs#L7))
+- **AmendSampleSelection** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/AmendSampleSelection.cs#L7))
 
 ### Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md)
 

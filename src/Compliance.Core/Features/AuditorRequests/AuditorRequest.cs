@@ -504,14 +504,53 @@ public sealed class AuditorRequest : Aggregate
     }
 
     public CommandFailure? RecordSampleSelection(long expectedRevision, Uuid selectionId,
-        Uuid populationSnapshotId, string populationContentSha256, string selectionMethod,
-        IReadOnlyList<Uuid> selectedRowIds, Uuid actorMemberId, string actorDisplay,
+        Uuid populationSnapshotId, int populationVersion, string populationContentSha256,
+        string selectionMethod, IReadOnlyList<Uuid> selectedRowIds, string source,
+        string externalReference, Uuid actorMemberId, string actorDisplay,
+        DateTimeOffset recordedAt) => AppendSampleSelection(expectedRevision, selectionId,
+            populationSnapshotId, populationVersion, populationContentSha256, selectionMethod,
+            selectedRowIds, source, externalReference, null, null, actorMemberId, actorDisplay,
+            recordedAt);
+
+    /// <summary>
+    /// Appends a new immutable selection for a later population version. The earlier selection
+    /// remains in history and is linked explicitly instead of being replaced.
+    /// </summary>
+    public CommandFailure? AmendSampleSelection(long expectedRevision, Uuid selectionId,
+        Uuid supersedesSelectionId, Uuid populationSnapshotId, int populationVersion,
+        string populationContentSha256, string selectionMethod,
+        IReadOnlyList<Uuid> selectedRowIds, string source, string externalReference,
+        string amendmentReason, Uuid actorMemberId, string actorDisplay,
         DateTimeOffset recordedAt)
+    {
+        if (_current is not { } current)
+            return CommandFailure.MissingRecord("The auditor request was not found.");
+        var prior = current.SampleSelections.FirstOrDefault(selection =>
+            selection.SampleSelectionId == supersedesSelectionId);
+        if (supersedesSelectionId == Uuid.Empty || prior is null)
+            return CommandFailure.MissingRecord("The sample selection to amend was not found.");
+        if (prior.PopulationSnapshotId != populationSnapshotId ||
+            populationVersion <= prior.PopulationVersion)
+            return CommandFailure.StateConflict(
+                "An amended selection must bind a later version of the same audit population.");
+        return AppendSampleSelection(expectedRevision, selectionId, populationSnapshotId,
+            populationVersion, populationContentSha256, selectionMethod, selectedRowIds, source,
+            externalReference, supersedesSelectionId, amendmentReason, actorMemberId,
+            actorDisplay, recordedAt);
+    }
+
+    CommandFailure? AppendSampleSelection(long expectedRevision, Uuid selectionId,
+        Uuid populationSnapshotId, int populationVersion, string populationContentSha256,
+        string selectionMethod, IReadOnlyList<Uuid> selectedRowIds, string source,
+        string externalReference, Uuid? supersedesSelectionId, string? amendmentReason,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset recordedAt)
     {
         if (_current is { } existing && existing.SampleSelections.FirstOrDefault(selection =>
                 selection.SampleSelectionId == selectionId) is { } prior)
-            return SameSelection(prior, populationSnapshotId, populationContentSha256,
-                    selectionMethod, selectedRowIds, actorMemberId, actorDisplay, recordedAt)
+            return SameSelection(prior, populationSnapshotId, populationVersion,
+                    populationContentSha256, selectionMethod, selectedRowIds, source,
+                    externalReference, supersedesSelectionId, amendmentReason, actorMemberId,
+                    actorDisplay)
                 ? null
                 : CommandFailure.StateConflict(
                     "A sample selection identity cannot be reused with different population content.");
@@ -525,20 +564,35 @@ public sealed class AuditorRequest : Aggregate
             return actorFailure;
         populationContentSha256 = CleanToken(populationContentSha256);
         selectionMethod = CleanToken(selectionMethod);
-        if (selectionId == Uuid.Empty || populationSnapshotId == Uuid.Empty ||
+        source = CleanToken(source);
+        externalReference = CleanText(externalReference);
+        amendmentReason = string.IsNullOrWhiteSpace(amendmentReason)
+            ? null : CleanText(amendmentReason);
+        var validProvenance = Sources.Contains(source) &&
+            (source == "in_product_attest" || Bounded(externalReference, 1, MaximumReferenceLength));
+        var validAmendment = supersedesSelectionId is null
+            ? amendmentReason is null
+            : supersedesSelectionId != Uuid.Empty && amendmentReason is not null &&
+              Bounded(amendmentReason, 1, MaximumRationaleLength) &&
+              current.SampleSelections.Any(selection =>
+                  selection.SampleSelectionId == supersedesSelectionId);
+        if (selectionId == Uuid.Empty || populationSnapshotId == Uuid.Empty || populationVersion <= 0 ||
             !ValidDigest(populationContentSha256) || !SampleMethods.Contains(selectionMethod) ||
-            selectedRowIds is null || selectedRowIds.Count is 0 or > MaximumSampleRows ||
+            !validProvenance || !validAmendment || selectedRowIds is null ||
+            selectedRowIds.Count is 0 or > MaximumSampleRows ||
             selectedRowIds.Any(static id => id == Uuid.Empty) ||
             selectedRowIds.Distinct().Count() != selectedRowIds.Count ||
             current.SampleSelections.Count >= MaximumSampleSelections)
-            return Invalid("A sample selection requires an exact frozen population and unique bounded rows.");
+            return Invalid("A sample selection requires an exact frozen population, provenance, and unique bounded rows.");
 
         var display = actorDisplay.Trim();
         var rows = FreezeIds(selectedRowIds);
         var selection = new AuditorSampleSelectionView(selectionId, populationSnapshotId,
             populationContentSha256, selectionMethod, rows,
-            SelectionDigest(populationSnapshotId, populationContentSha256, selectionMethod, rows),
-            actorMemberId, display, recordedAt);
+            SelectionDigest(populationSnapshotId, populationVersion, populationContentSha256,
+                selectionMethod, rows, source, externalReference, supersedesSelectionId,
+                amendmentReason), actorMemberId, display, recordedAt, populationVersion, source,
+            externalReference, supersedesSelectionId, amendmentReason);
         var next = Next(current, "sample_selection_recorded", selectionId.ToString(), actorMemberId,
             display, recordedAt) with
         { SampleSelections = Append(current.SampleSelections, selection) };
@@ -742,18 +796,24 @@ public sealed class AuditorRequest : Aggregate
     }
 
     static bool SameSelection(AuditorSampleSelectionView selection, Uuid populationId,
-        string digest, string method, IReadOnlyList<Uuid> rowIds, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset at)
+        int populationVersion, string digest, string method, IReadOnlyList<Uuid> rowIds,
+        string source, string externalReference, Uuid? supersedesSelectionId,
+        string? amendmentReason, Uuid actorMemberId, string actorDisplay)
     {
         if (rowIds is null)
             return false;
         var rows = rowIds.OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray();
         return selection.PopulationSnapshotId == populationId &&
+            selection.PopulationVersion == populationVersion &&
             selection.PopulationContentSha256 == CleanToken(digest) &&
             selection.SelectionMethod == CleanToken(method) &&
             selection.SelectedRowIds.SequenceEqual(rows) &&
-            selection.ActorMemberId == actorMemberId && selection.ActorDisplay == actorDisplay?.Trim() &&
-            selection.RecordedAt == at;
+            selection.Source == CleanToken(source) &&
+            selection.ExternalReference == CleanText(externalReference) &&
+            selection.SupersedesSelectionId == supersedesSelectionId &&
+            selection.AmendmentReason == (string.IsNullOrWhiteSpace(amendmentReason)
+                ? null : CleanText(amendmentReason)) &&
+            selection.ActorMemberId == actorMemberId && selection.ActorDisplay == actorDisplay?.Trim();
     }
 
     static CommandFailure? ValidateActor(Uuid memberId, string display, DateTimeOffset at) =>
@@ -856,18 +916,50 @@ public sealed class AuditorRequest : Aggregate
                     return Invalid("An auditor response version is structurally invalid.");
         }
         foreach (var selection in state.SampleSelections)
-            if (selection.SampleSelectionId == Uuid.Empty || selection.PopulationSnapshotId == Uuid.Empty ||
-                !ValidDigest(selection.PopulationContentSha256) || !SampleMethods.Contains(selection.SelectionMethod) ||
-                selection.SelectedRowIds is null || selection.SelectedRowIds.Count is 0 or > MaximumSampleRows ||
-                selection.SelectedRowIds.Any(static id => id == Uuid.Empty) ||
-                selection.SelectedRowIds.Distinct().Count() != selection.SelectedRowIds.Count ||
-                selection.ActorMemberId == Uuid.Empty ||
-                !Bounded(selection.ActorDisplay, 1, MaximumActorDisplayLength) ||
-                selection.RecordedAt == default ||
-                selection.SelectionContentSha256 != SelectionDigest(selection.PopulationSnapshotId,
-                    selection.PopulationContentSha256, selection.SelectionMethod, selection.SelectedRowIds))
+            if (!ValidSampleSelection(selection, state.SampleSelections))
                 return Invalid("The sample selection state is structurally invalid.");
         return null;
+    }
+
+    static bool ValidSampleSelection(AuditorSampleSelectionView selection,
+        IReadOnlyList<AuditorSampleSelectionView> selections)
+    {
+        if (selection.SampleSelectionId == Uuid.Empty || selection.PopulationSnapshotId == Uuid.Empty ||
+            !ValidDigest(selection.PopulationContentSha256) || !SampleMethods.Contains(selection.SelectionMethod) ||
+            selection.SelectedRowIds is null || selection.SelectedRowIds.Count is 0 or > MaximumSampleRows ||
+            selection.SelectedRowIds.Any(static id => id == Uuid.Empty) ||
+            selection.SelectedRowIds.Distinct().Count() != selection.SelectedRowIds.Count ||
+            selection.ActorMemberId == Uuid.Empty ||
+            !Bounded(selection.ActorDisplay, 1, MaximumActorDisplayLength) ||
+            selection.RecordedAt == default)
+            return false;
+
+        if (selection.PopulationVersion == 0 && selection.Source is null &&
+            selection.ExternalReference is null && selection.SupersedesSelectionId is null &&
+            selection.AmendmentReason is null)
+            return selection.SelectionContentSha256 == LegacySelectionDigest(
+                selection.PopulationSnapshotId, selection.PopulationContentSha256,
+                selection.SelectionMethod, selection.SelectedRowIds);
+
+        if (selection.PopulationVersion <= 0 || selection.Source is not { } source ||
+            !Sources.Contains(source) || selection.ExternalReference is not { } externalReference ||
+            !Bounded(externalReference, source == "in_product_attest" ? 0 : 1,
+                MaximumReferenceLength) ||
+            (selection.SupersedesSelectionId is null) != (selection.AmendmentReason is null))
+            return false;
+
+        if (selection.SupersedesSelectionId is { } supersedes &&
+            (supersedes == Uuid.Empty || supersedes == selection.SampleSelectionId ||
+             !selections.TakeWhile(candidate =>
+                 candidate.SampleSelectionId != selection.SampleSelectionId).Any(candidate =>
+                 candidate.SampleSelectionId == supersedes) ||
+             !Bounded(selection.AmendmentReason ?? string.Empty, 1, MaximumRationaleLength)))
+            return false;
+
+        return selection.SelectionContentSha256 == SelectionDigest(selection.PopulationSnapshotId,
+            selection.PopulationVersion, selection.PopulationContentSha256,
+            selection.SelectionMethod, selection.SelectedRowIds, source, externalReference,
+            selection.SupersedesSelectionId, selection.AmendmentReason);
     }
 
     static AuditorRequestView FreezeView(AuditorRequestView view) => view with
@@ -894,7 +986,18 @@ public sealed class AuditorRequest : Aggregate
     static ReadOnlyCollection<Uuid> FreezeIds(IEnumerable<Uuid> ids) =>
         Array.AsReadOnly(ids.OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray());
 
-    static string SelectionDigest(Uuid populationId, string populationDigest, string method,
+    static string SelectionDigest(Uuid populationId, int populationVersion,
+        string populationDigest, string method, IReadOnlyList<Uuid> rows, string source,
+        string externalReference, Uuid? supersedesSelectionId, string? amendmentReason)
+    {
+        var canonical = string.Join('\n', populationId, populationVersion, populationDigest, method,
+            source, externalReference, supersedesSelectionId?.ToString() ?? string.Empty,
+            amendmentReason ?? string.Empty,
+            string.Join('\n', rows.OrderBy(static id => id.ToString(), StringComparer.Ordinal)));
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
+    }
+
+    static string LegacySelectionDigest(Uuid populationId, string populationDigest, string method,
         IReadOnlyList<Uuid> rows)
     {
         var canonical = string.Join('\n', populationId, populationDigest, method,

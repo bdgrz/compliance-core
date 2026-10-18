@@ -12,4 +12,9 @@ public sealed record AuditorSampleSelectionView(
     string SelectionContentSha256,
     Uuid ActorMemberId,
     string ActorDisplay,
-    DateTimeOffset RecordedAt);
+    DateTimeOffset RecordedAt,
+    int PopulationVersion = 0,
+    string? Source = null,
+    string? ExternalReference = null,
+    Uuid? SupersedesSelectionId = null,
+    string? AmendmentReason = null);
