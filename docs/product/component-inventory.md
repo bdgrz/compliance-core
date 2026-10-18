@@ -269,7 +269,7 @@ The following is a static source inventory, including internal operations. Queri
 
 | Category | Unique feature/type names |
 | --- | ---: |
-| Commands | 232 |
+| Commands | 231 |
 | Queries | 271 |
 | Events | 374 |
 | Aggregates | 83 |
@@ -310,6 +310,7 @@ The following is a static source inventory, including internal operations. Queri
 - [RenameRole](../../src/Compliance.Common/Features/AccessControl/RenameRole.cs#L6) — `bdgrz.rbac.role.rename` v1
 - [ReviseIndependenceRules](../../src/Compliance.Common/Features/AccessControl/ReviseIndependenceRules.cs#L6) — `bdgrz.independence.rules.revise` v1
 - [RevokeAccessGrant](../../src/Compliance.Common/Features/AccessControl/RevokeAccessGrant.cs#L6) — `bdgrz.access-grant.revoke` v1
+- [RevokeServiceEngagementActualStaff](../../src/Compliance.Common/Features/AccessControl/RevokeServiceEngagementActualStaff.cs#L5) — `bdgrz.service-engagement.actual-staff.revoke` v1
 - [SetFirmStaffStatus](../../src/Compliance.Common/Features/AccessControl/SetFirmStaffStatus.cs#L6) — `bdgrz.firm-staff.status.set` v1
 - [SuspendMember](../../src/Compliance.Common/Features/AccessControl/SuspendMember.cs#L6) — `bdgrz.tenant.member.suspend` v1
 - [WithdrawServiceEngagementStaffProposal](../../src/Compliance.Common/Features/AccessControl/WithdrawServiceEngagementStaffProposal.cs#L6) — `bdgrz.service-engagement.staff.withdraw` v1
@@ -2814,6 +2815,7 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/draft` | `AmendServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L602) |
 | PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}` | `ProposeServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L606) |
 | POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals` | `WithdrawServiceEngagementStaffProposal` | [registration](../../src/Compliance.App/Program.cs#L610) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations` | `RevokeServiceEngagementActualStaff` | [registration](../../src/Compliance.App/Program.cs#L655) |
 | GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance` | `GetServiceEngagementAcceptance` | [registration](../../src/Compliance.App/Program.cs#L614) |
 | POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}` | `AcknowledgeEngagementManagement` | [registration](../../src/Compliance.App/Program.cs#L622) |
 | POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure` | `CloseServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L630) |
@@ -3159,28 +3161,31 @@ These source lines identify raw routes, health routes and MCP configuration. Fol
 - [Program.cs:91](../../src/Compliance.App/Program.cs#L91): `.AddMcpTool<ListCriteriaCatalogEntries>(tool => tool.ReadOnly())`
 - [Program.cs:92](../../src/Compliance.App/Program.cs#L92): `.AddMcpTool<GetCriteriaCatalogEntry>(tool => tool.ReadOnly())`
 - [Program.cs:93](../../src/Compliance.App/Program.cs#L93): `.AddMcpTool<ExportCriteriaCatalogEntries>(tool => tool.ReadOnly())`
-- [Program.cs:94](../../src/Compliance.App/Program.cs#L94): `.AddMcpTool<RegisterFirmStaff>(tool => tool.Idempotent())`
-- [Program.cs:95](../../src/Compliance.App/Program.cs#L95): `.AddMcpTool<SetFirmStaffStatus>(tool => tool.Idempotent())`
-- [Program.cs:96](../../src/Compliance.App/Program.cs#L96): `.AddMcpTool<GetFirmStaffDirectory>(tool => tool.ReadOnly())`
-- [Program.cs:97](../../src/Compliance.App/Program.cs#L97): `.AddMcpTool<ListAssignableFirmStaff>(tool => tool.ReadOnly())`
-- [Program.cs:98](../../src/Compliance.App/Program.cs#L98): `.AddMcpTool<GetServiceEngagementAcceptance>(tool => tool.ReadOnly())`
-- [Program.cs:99](../../src/Compliance.App/Program.cs#L99): `.AddMcpTool<GetServiceEngagementAcceptanceHistory>(tool => tool.ReadOnly())`
-- [Program.cs:100](../../src/Compliance.App/Program.cs#L100): `.AddMcpTool<GetEngagementManagementAcknowledgements>(tool => tool.ReadOnly())`
-- [Program.cs:101](../../src/Compliance.App/Program.cs#L101): `.AddMcpTool<CreateServiceEngagement>(tool => tool.Idempotent())`
-- [Program.cs:102](../../src/Compliance.App/Program.cs#L102): `.AddMcpTool<AmendServiceEngagement>(tool => tool.Idempotent())`
-- [Program.cs:103](../../src/Compliance.App/Program.cs#L103): `.AddMcpTool<ProposeServiceEngagementStaff>(tool => tool.Idempotent())`
-- [Program.cs:104](../../src/Compliance.App/Program.cs#L104): `.AddMcpTool<WithdrawServiceEngagementStaffProposal>(tool => tool.Idempotent())`
-- [Program.cs:105](../../src/Compliance.App/Program.cs#L105): `.AddMcpTool<CloseServiceEngagement>(tool => tool.Idempotent())`
-- [Program.cs:106](../../src/Compliance.App/Program.cs#L106): `.AddMcpTool<GetServiceEngagement>(tool => tool.ReadOnly())`
-- [Program.cs:107](../../src/Compliance.App/Program.cs#L107): `.AddMcpTool<ListServiceEngagements>(tool => tool.ReadOnly())`
-- [Program.cs:108](../../src/Compliance.App/Program.cs#L108): `.AddMcpTool<GetServiceEngagementHistory>(tool => tool.ReadOnly())`
-- [Program.cs:109](../../src/Compliance.App/Program.cs#L109): `.AddMcpTool<GetClientIndependenceRules>(tool => tool.ReadOnly())`
-- [Program.cs:110](../../src/Compliance.App/Program.cs#L110): `.AddMcpTool<GetIndependenceRuleVersions>(tool => tool.ReadOnly())`
-- [Program.cs:111](../../src/Compliance.App/Program.cs#L111): `.AddMcpTool<ReviseIndependenceRules>(tool => tool.Idempotent())`
-- [Program.cs:112](../../src/Compliance.App/Program.cs#L112): `.AddMcpTool<RecordNonattestService>(tool => tool.Idempotent())`
-- [Program.cs:113](../../src/Compliance.App/Program.cs#L113): `.AddMcpTool<EvaluateClientIndependence>(tool => tool.Idempotent())`
-- [Program.cs:114](../../src/Compliance.App/Program.cs#L114): `.AddMcpTool<GetClientIndependenceHistory>(tool => tool.ReadOnly())`
-- [Program.cs:115](../../src/Compliance.App/Program.cs#L115): `.AddMcpTool<SetCriteriaTextOverlay>(tool => tool.Idempotent())`
+- [Program.cs:97](../../src/Compliance.App/Program.cs#L97): `.AddMcpTool<RegisterFirmStaff>(tool => tool.Idempotent())`
+- [Program.cs:98](../../src/Compliance.App/Program.cs#L98): `.AddMcpTool<SetFirmStaffStatus>(tool => tool.Idempotent())`
+- [Program.cs:99](../../src/Compliance.App/Program.cs#L99): `.AddMcpTool<GetFirmStaffDirectory>(tool => tool.ReadOnly())`
+- [Program.cs:100](../../src/Compliance.App/Program.cs#L100): `.AddMcpTool<ListAssignableFirmStaff>(tool => tool.ReadOnly())`
+- [Program.cs:101](../../src/Compliance.App/Program.cs#L101): `.AddMcpTool<GetServiceEngagementAcceptance>(tool => tool.ReadOnly())`
+- [Program.cs:102](../../src/Compliance.App/Program.cs#L102): `.AddMcpTool<GetServiceEngagementAcceptanceHistory>(tool => tool.ReadOnly())`
+- [Program.cs:103](../../src/Compliance.App/Program.cs#L103): `.AddMcpTool<GetEngagementManagementAcknowledgements>(tool => tool.ReadOnly())`
+- [Program.cs:104](../../src/Compliance.App/Program.cs#L104): `.AddMcpTool<CreateServiceEngagement>(tool => tool.Idempotent())`
+- [Program.cs:105](../../src/Compliance.App/Program.cs#L105): `.AddMcpTool<AmendServiceEngagement>(tool => tool.Idempotent())`
+- [Program.cs:106](../../src/Compliance.App/Program.cs#L106): `.AddMcpTool<ProposeServiceEngagementStaff>(tool => tool.Idempotent())`
+- [Program.cs:107](../../src/Compliance.App/Program.cs#L107): `.AddMcpTool<WithdrawServiceEngagementStaffProposal>(tool => tool.Idempotent())`
+- [Program.cs:108](../../src/Compliance.App/Program.cs#L108): `.AddMcpTool<RevokeServiceEngagementActualStaff>(tool => tool.Idempotent())`
+- [Program.cs:109](../../src/Compliance.App/Program.cs#L109): `.AddMcpTool<CloseServiceEngagement>(tool => tool.Idempotent())`
+- [Program.cs:110](../../src/Compliance.App/Program.cs#L110): `.AddMcpTool<GetServiceEngagement>(tool => tool.ReadOnly())`
+- [Program.cs:111](../../src/Compliance.App/Program.cs#L111): `.AddMcpTool<ListServiceEngagements>(tool => tool.ReadOnly())`
+- [Program.cs:112](../../src/Compliance.App/Program.cs#L112): `.AddMcpTool<GetServiceEngagementHistory>(tool => tool.ReadOnly())`
+- [Program.cs:113](../../src/Compliance.App/Program.cs#L113): `.AddMcpTool<GetExaminationEngagement>(tool => tool.ReadOnly())`
+- [Program.cs:114](../../src/Compliance.App/Program.cs#L114): `.AddMcpTool<GetTypeIBaseline>(tool => tool.ReadOnly())`
+- [Program.cs:115](../../src/Compliance.App/Program.cs#L115): `.AddMcpTool<GetClientIndependenceRules>(tool => tool.ReadOnly())`
+- [Program.cs:116](../../src/Compliance.App/Program.cs#L116): `.AddMcpTool<GetIndependenceRuleVersions>(tool => tool.ReadOnly())`
+- [Program.cs:117](../../src/Compliance.App/Program.cs#L117): `.AddMcpTool<ReviseIndependenceRules>(tool => tool.Idempotent())`
+- [Program.cs:118](../../src/Compliance.App/Program.cs#L118): `.AddMcpTool<RecordNonattestService>(tool => tool.Idempotent())`
+- [Program.cs:119](../../src/Compliance.App/Program.cs#L119): `.AddMcpTool<EvaluateClientIndependence>(tool => tool.Idempotent())`
+- [Program.cs:120](../../src/Compliance.App/Program.cs#L120): `.AddMcpTool<GetClientIndependenceHistory>(tool => tool.ReadOnly())`
+- [Program.cs:121](../../src/Compliance.App/Program.cs#L121): `.AddMcpTool<SetCriteriaTextOverlay>(tool => tool.Idempotent())`
 - [Program.cs:116](../../src/Compliance.App/Program.cs#L116): `.AddMcpTool<SelectProgramCriteriaEdition>(tool => tool.Idempotent())`
 - [Program.cs:117](../../src/Compliance.App/Program.cs#L117): `.AddMcpTool<CreateControlDraft>()`
 - [Program.cs:118](../../src/Compliance.App/Program.cs#L118): `.AddMcpTool<ReviseControlDraft>(tool => tool.Idempotent())`
