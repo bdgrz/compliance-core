@@ -23,10 +23,13 @@ public sealed class ReviseControlDraftHandler(IAggregateExecutor executor,
         var structuralError = ControlDraft.ValidateContent(request.Content);
         if (structuralError is not null)
             return Result.Failure(structuralError);
-        var validation = await applicability.ValidateAsync(request.TenantId, request.Content, ct)
-            .ConfigureAwait(false);
-        if (!validation.IsSuccess)
-            return validation;
+        if (!current.HasSameCurrentContent(request.Content))
+        {
+            var validation = await applicability.ValidateAsync(request.TenantId, request.Content, ct)
+                .ConfigureAwait(false);
+            if (!validation.IsSuccess)
+                return validation;
+        }
         var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
             ? subject
             : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");

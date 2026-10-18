@@ -389,8 +389,14 @@ public sealed class ControlDraft : Aggregate
         var error = Validate(_identifier!, content);
         if (error is not null)
             return CommandFailure.InvalidContent(error.Message!);
+        if (_currentContent is { } current && Equal(current, Clean(content)))
+            return null;
         return RaiseRevision(programId, content, actorMemberId, actorDisplay, changedAt);
     }
+
+    internal bool HasSameCurrentContent(ControlDraftContent? content) =>
+        HasOpenDraft && content is not null && ValidateContent(content) is null &&
+        _currentContent is { } current && Equal(current, Clean(content));
 
     CommandFailure? RaiseRevision(Uuid programId, ControlDraftContent content,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset changedAt,
