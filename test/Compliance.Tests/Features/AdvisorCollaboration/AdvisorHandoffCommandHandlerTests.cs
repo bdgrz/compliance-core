@@ -43,6 +43,111 @@ public sealed class AdvisorHandoffCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldRecordFeedbackAgainstSharedExactSelectionGivenPersonalHttpActor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, recordId, recordVersionId) = await fixture.SeedOpenHandoffWithSelectionAsync();
+        var feedbackId = Uuid.CreateVersion4();
+        var request = new RecordAdvisorFeedback(fixture.TenantId, fixture.ProgramId,
+            handoffId, feedbackId, recordId, recordVersionId, "change_request",
+            "Clarify the evidence owner.");
+
+        // Act
+        var result = await new RecordAdvisorFeedbackHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var feedback = Assert.Single(saved.ReadFeedback());
+        Assert.Equal(feedbackId, feedback.FeedbackId);
+        Assert.Equal(recordId, feedback.RecordId);
+        Assert.Equal(recordVersionId, feedback.RecordVersionId);
+        Assert.Equal("change_request", feedback.Kind);
+        Assert.Equal("Clarify the evidence owner.", feedback.Body);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId).ToString(), feedback.Author.Id);
+        Assert.Equal(Now.AddMinutes(2), feedback.CreatedAt);
+        Assert.Equal(3, saved.Revision);
+
+        var retry = await new RecordAdvisorFeedbackHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var retried = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Single(retried.ReadFeedback());
+        Assert.Equal(3, retried.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectSystemDispatchGivenAdvisorFeedback()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, recordId, recordVersionId) = await fixture.SeedOpenHandoffWithSelectionAsync();
+        var request = new RecordAdvisorFeedback(fixture.TenantId, fixture.ProgramId,
+            handoffId, Uuid.CreateVersion4(), recordId, recordVersionId, "comment",
+            "Please clarify the control owner.");
+
+        // Act
+        var result = await new RecordAdvisorFeedbackHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(new Cntryl.Portia.RequestContext<RecordAdvisorFeedback>(request,
+                RequestActor.System), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Empty(saved.ReadFeedback());
+        Assert.Equal(2, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectFeedbackGivenTargetOutsideSharedExactSelection()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, _, _) = await fixture.SeedOpenHandoffWithSelectionAsync();
+        var request = new RecordAdvisorFeedback(fixture.TenantId, fixture.ProgramId,
+            handoffId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            "comment", "Please clarify the control owner.");
+
+        // Act
+        var result = await new RecordAdvisorFeedbackHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Empty(saved.ReadFeedback());
+        Assert.Equal(2, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldNotRecordFeedbackGivenDifferentProgramScope()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, recordId, recordVersionId) = await fixture.SeedOpenHandoffWithSelectionAsync();
+        var request = new RecordAdvisorFeedback(fixture.TenantId, Uuid.CreateVersion4(),
+            handoffId, Uuid.CreateVersion4(), recordId, recordVersionId, "comment",
+            "Please clarify the control owner.");
+
+        // Act
+        var result = await new RecordAdvisorFeedbackHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+        Assert.Empty(saved.ReadFeedback());
+        Assert.Equal(2, saved.Revision);
+    }
+
+    [Fact]
     public async Task ShouldRejectSystemDispatchGivenHandoffTermination()
     {
         // Arrange
@@ -200,6 +305,21 @@ public sealed class AdvisorHandoffCommandHandlerTests
                 Now.AddMinutes(1)).IsSuccess);
             await Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
             return handoffId;
+        }
+
+        public async Task<(Uuid HandoffId, Uuid RecordId, Uuid RecordVersionId)>
+            SeedOpenHandoffWithSelectionAsync()
+        {
+            var handoffId = Uuid.CreateVersion4();
+            var recordId = Uuid.CreateVersion4();
+            var recordVersionId = Uuid.CreateVersion4();
+            var lead = ActorReference.ForMember(RbacIds.Member(TenantId, UserId), "Compliance lead");
+            var handoff = new AdvisorHandoff(TenantId, ProgramId, handoffId);
+            Assert.True(handoff.Create("Type I controls", [new(recordId, recordVersionId)],
+                new DateOnly(2026, 12, 31), lead, Now).IsSuccess);
+            Assert.True(handoff.MarkReadyForReview(1, lead, Now.AddMinutes(1)).IsSuccess);
+            await Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
+            return (handoffId, recordId, recordVersionId);
         }
 
         public async Task<(Uuid HandoffId, Uuid FeedbackId)> SeedHandoffWithFeedbackAsync()

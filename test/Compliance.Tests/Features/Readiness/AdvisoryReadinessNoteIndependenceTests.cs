@@ -159,6 +159,12 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         var correctionRequest = new CorrectAdvisorFeedback(fixture.Tenant,
             fixture.Program, handoffId, feedbackId, Uuid.CreateVersion4(), "Corrected wording.",
             "The original wording was incomplete.");
+        var feedbackPostRequest = new RecordAdvisorFeedback(fixture.Tenant, fixture.Program,
+            handoffId, Uuid.CreateVersion4(), recordId, recordVersionId, "comment",
+            "Please clarify the control owner.");
+        var feedbackOutsideSelectionRequest = new RecordAdvisorFeedback(fixture.Tenant,
+            fixture.Program, handoffId, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), "comment", "This version was not shared.");
 
         // Act
         var principal = ProgramManagementServices.Actor(fixture.User);
@@ -171,6 +177,18 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         var clientCorrectionResult = await clientMutationAuthorizer.AuthorizeAsync(
             new RequestContext<IClientManagementMutationRequest>(correctionRequest, principal),
             CancellationToken.None);
+        var feedbackPostResult = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(feedbackPostRequest, principal),
+            CancellationToken.None);
+        var clientFeedbackPostResult = await clientMutationAuthorizer.AuthorizeAsync(
+            new RequestContext<IClientManagementMutationRequest>(feedbackPostRequest, principal),
+            CancellationToken.None);
+        var feedbackOutsideSelectionResult = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(feedbackOutsideSelectionRequest, principal),
+            CancellationToken.None);
+        var clientFeedbackOutsideSelectionResult = await clientMutationAuthorizer.AuthorizeAsync(
+            new RequestContext<IClientManagementMutationRequest>(feedbackOutsideSelectionRequest, principal),
+            CancellationToken.None);
 
         // Assert
         if (expectedAllowed)
@@ -179,6 +197,8 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             Assert.True(feedbackResult.IsSuccess, feedbackResult.Error?.Message);
             Assert.True(correctionResult.IsSuccess, correctionResult.Error?.Message);
             Assert.True(clientCorrectionResult.IsSuccess, clientCorrectionResult.Error?.Message);
+            Assert.True(feedbackPostResult.IsSuccess, feedbackPostResult.Error?.Message);
+            Assert.True(clientFeedbackPostResult.IsSuccess, clientFeedbackPostResult.Error?.Message);
         }
         else
         {
@@ -187,6 +207,8 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             Assert.Equal(RequestErrorKind.NotFound, correctionResult.Error?.Kind);
             Assert.Equal(RequestErrorKind.NotFound, clientCorrectionResult.Error?.Kind);
         }
+        Assert.Equal(RequestErrorKind.NotFound, feedbackOutsideSelectionResult.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, clientFeedbackOutsideSelectionResult.Error?.Kind);
     }
 
     [Fact]

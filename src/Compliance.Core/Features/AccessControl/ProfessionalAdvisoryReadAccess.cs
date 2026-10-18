@@ -73,6 +73,21 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
             feedback.Author.Id == RbacIds.Member(tenantId, userId).ToString());
     }
 
+    /// <summary>An assigned Advisor may post only against an exact version in a shared handoff.</summary>
+    public async ValueTask<bool> CanRecordFeedbackAsync(Uuid tenantId, Uuid programId,
+        Uuid handoffId, Uuid recordId, Uuid recordVersionId, Uuid userId,
+        CancellationToken ct = default)
+    {
+        if (handoffId == Uuid.Empty || recordId == Uuid.Empty || recordVersionId == Uuid.Empty ||
+            !await CanReadAsync(tenantId, programId, userId, ct).ConfigureAwait(false))
+            return false;
+
+        var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
+            handoffId), ct).ConfigureAwait(false);
+        return IsSharedHandoff(handoff, programId) &&
+               handoff.Selection.Contains(new AdvisorRecordVersion(recordId, recordVersionId));
+    }
+
     bool IsSharedHandoff(AdvisorHandoff handoff, Uuid programId) => handoff.IsCreated &&
         handoff.ProgramId == programId && handoff.Status == "ready_for_review" &&
         handoff.ExpiresOn >= DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);

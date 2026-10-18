@@ -33,6 +33,14 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
             await professionalAdvisoryRead.CanCorrectFeedbackAsync(tenantId, correction.ProgramId,
                 correction.HandoffId, correction.FeedbackId, userId, ct).ConfigureAwait(false))
             return Result.Success;
+        if (context.Request is RecordAdvisorFeedback advisorFeedback)
+            return professionalAdvisoryRead is not null &&
+                   await professionalAdvisoryRead.CanRecordFeedbackAsync(tenantId,
+                       advisorFeedback.ProgramId, advisorFeedback.HandoffId, advisorFeedback.RecordId,
+                       advisorFeedback.RecordVersionId, userId, ct).ConfigureAwait(false)
+                ? Result.Success
+                : Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The shared advisor handoff was not found."));
         if (context.Request is ListReadinessAnnotations annotations && professionalAdvisoryRead is not null &&
             await professionalAdvisoryRead.CanReadAsync(tenantId, annotations.ProgramId, userId, ct)
                 .ConfigureAwait(false))

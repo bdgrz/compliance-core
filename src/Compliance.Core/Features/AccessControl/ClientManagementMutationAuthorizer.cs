@@ -20,6 +20,14 @@ sealed class ClientManagementMutationAuthorizer(ClientManagementIndependenceGuar
                 correction.ProgramId, correction.HandoffId, correction.FeedbackId, userId, ct)
                 .ConfigureAwait(false))
             return Result.Success;
+        if (context.Request is RecordAdvisorFeedback feedback)
+            return professionalAdvisoryRead is not null &&
+                   await professionalAdvisoryRead.CanRecordFeedbackAsync(context.Request.TenantId,
+                       feedback.ProgramId, feedback.HandoffId, feedback.RecordId,
+                       feedback.RecordVersionId, userId, ct).ConfigureAwait(false)
+                ? Result.Success
+                : Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The shared advisor handoff was not found."));
         var membership = await memberships.GetAsync(context.Request.TenantId.ToString(), userId, ct)
             .ConfigureAwait(false);
         if (membership is null || membership.TenantId != context.Request.TenantId || membership.UserId != userId ||

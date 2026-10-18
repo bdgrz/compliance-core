@@ -6,4 +6,6 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>Records the record advisor feedback intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.advisor-collaboration.record-advisor-feedback", 1)]
-public sealed record RecordAdvisorFeedback(Uuid TenantId, Uuid ProgramId, Uuid HandoffId, Uuid RecordId, Uuid RecordVersionId, string Kind, string Body) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+public sealed record RecordAdvisorFeedback(Uuid TenantId, Uuid ProgramId, Uuid HandoffId,
+    Uuid FeedbackId, Uuid RecordId, Uuid RecordVersionId, string Kind, string Body)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
