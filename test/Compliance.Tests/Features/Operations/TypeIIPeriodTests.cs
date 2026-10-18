@@ -218,6 +218,34 @@ public sealed class TypeIIPeriodTests
     }
 
     [Fact]
+    public void ShouldReplaySameCloseApprovalIntentWithoutChangingFirstTimestampGivenApprovedClose()
+    {
+        // Arrange
+        var period = StartedPeriod();
+        var occurrences = period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId).ToArray();
+        Assert.Null(period.RecordCloseValidation(period.Revision,
+            new TypeIIPeriodCloseValidationContent(SourceReferences(), occurrences, occurrences,
+                [], [], [GapId]), ValidatorId, "Close validator", Now.AddMonths(12)));
+        Assert.Null(period.ApproveClose(period.Revision, [GapId], "Reviewed close",
+            CEOId, "CEO", "Chief Executive", Now.AddMonths(12).AddHours(1)));
+
+        // Act
+        var retry = period.ApproveClose(period.Revision, [GapId], "Reviewed close",
+            CEOId, "CEO", "Chief Executive", Now.AddMonths(12).AddHours(4));
+        var conflictingRetry = period.ApproveClose(period.Revision, [GapId], "Changed rationale",
+            CEOId, "CEO", "Chief Executive", Now.AddMonths(12).AddHours(5));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(conflictingRetry).Code);
+        Assert.Equal(3, period.Revision);
+        var approval = Assert.Single(period.Current.CloseApprovals);
+        Assert.Equal(Now.AddMonths(12).AddHours(1), approval.ApprovedAt);
+        Assert.Equal("Reviewed close", approval.Rationale);
+    }
+
+    [Fact]
     public void ShouldFreezeExactReconciledSnapshotAndPreserveAmendmentLineageGivenApprovedClose()
     {
         // Arrange

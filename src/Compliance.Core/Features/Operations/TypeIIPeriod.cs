@@ -227,7 +227,7 @@ public sealed class TypeIIPeriod : Aggregate
         if (current.CloseApprovals.Count > 0 && current.CloseApprovals[^1] is { } prior && acknowledged is not null &&
             prior.AcknowledgedMaterialItemIds.SequenceEqual(acknowledged) && prior.Rationale == rationale &&
             prior.ApprovedByMemberId == approverMemberId && prior.ApproverRole == approverRole &&
-            prior.ApproverDisplay == Clean(approverDisplay) && prior.ApprovedAt == approvedAt)
+            prior.ApproverDisplay == Clean(approverDisplay))
             return null;
         if (expectedRevision != Revision)
             return StaleRevision();

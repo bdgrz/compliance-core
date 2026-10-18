@@ -657,7 +657,9 @@ Access populations and workforce snapshots are bounded reusable records; no Type
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `ApproveTypeIIPeriodClose`; `FreezeTypeIIPeriodClose`; `AmendTypeIIPeriodClose` | Bind management approval to completeness/blockers/unresolved acknowledgements and freeze the exact complete examination boundary; amendments preserve original content. |
+| Partial | `ApproveTypeIIPeriodClose` | The v2 command and handler require an explicit unresolved-item acknowledgement set and current CEO/CISO permission. The aggregate can record close validation, but there is no public validation command/handler. |
+| Missing | `FreezeTypeIIPeriodClose`; `AmendTypeIIPeriodClose` | Build and verify the exact complete examination boundary before freezing; amendments preserve original content and identify affected material. |
+| Missing | `RecordTypeIIPeriodCloseValidation` (required by T3-01; absent from the current command list) | Reconcile expected and actual occurrences, missing work, unresolved material items, and exact source versions. Expose the aggregate's close-validation transition only after a source-backed builder exists. |
 | Missing | `DefineAuditPopulation`; `ReviseAuditPopulationDefinition` | Version source universe, covered period, inclusion/exclusion, completeness evidence, permitted fields and control relationships. |
 | Missing | `RecordAuditPopulationFacts`; `ClassifyAuditPopulationRow`; `ReconcileAuditPopulation` | Allow manual source facts and classify included/excluded/duplicate/missing/rejected/unresolved rows; preserve source identity and explain exact totals. |
 | Missing | `GenerateAuditPopulation`; `FreezeAuditPopulation`; `AmendAuditPopulation`; `GenerateAuditPopulationExport` | Generate from exact close/source snapshots, retain completeness and immutable hash/row IDs, freeze before sampling and create linked amendments/exports. No connector dependency. |

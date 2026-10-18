@@ -5,5 +5,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Records the approve type iiperiod close intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.examinations.approve-type-iiperiod-close", 1)]
-public sealed record ApproveTypeIIPeriodClose(Uuid TenantId, Uuid ProgramId, Uuid PeriodId, long ExpectedRevision, string Rationale) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+[Discriminator("bdgrz.examinations.approve-type-iiperiod-close", 2)]
+public sealed record ApproveTypeIIPeriodClose(Uuid TenantId, Uuid ProgramId, Uuid PeriodId,
+    long ExpectedRevision, string Rationale, IReadOnlyList<Uuid> AcknowledgedMaterialItemIds)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
