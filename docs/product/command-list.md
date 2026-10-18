@@ -326,7 +326,7 @@ The source-backed command plan for the product features we have committed to sup
 
 The list below maps directly to accepted feature requirements. P0/P1 manual outcomes are included even when a later slice has prerequisite work; P2 hypotheses and proposed BO scope are not treated as committed commands. A worker result is listed only when a feature requires a durable outcome or replayable external effect.
 
-This pruned plan has 127 required additions, including five evidence command contracts already present in source; 122 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
+This pruned plan has 128 required additions, including five evidence command contracts already present in source; 123 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
 
 ### Governed evidence capture and support — [EN-06](backlog.md#en-06-store-governed-artifacts-with-immutable-content-identity), [R2-03](backlog.md#r2-03-request-and-capture-trustworthy-evidence), [R2-04](backlog.md#r2-04-perform-a-control-and-attest-to-the-result), [R2-05](backlog.md#r2-05-review-control-design-implementation-and-evidence), [R1-14](backlog.md#r1-14-evaluate-vendors-and-subservice-organizations)
 
@@ -424,6 +424,7 @@ This pruned plan has 127 required additions, including five evidence command con
 
 ### Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md)
 
+- **CreateAuditPackage** — required by T1-05/T3-05, but the command contract and source-backed selection builder are missing. `AuditPackage.Create` has no request path; creation must bind a frozen baseline or period snapshot to explicitly selected, resolved record versions.
 - **RequestAuditPackageBuild** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RequestAuditPackageBuild.cs#L7))
 - **RecordAuditPackageBuildResult** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs#L7))
 - **ValidateAuditPackage** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs#L7))
