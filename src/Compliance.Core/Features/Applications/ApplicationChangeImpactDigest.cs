@@ -56,6 +56,11 @@ static class ApplicationChangeImpactDigest
                 .ThenByDescending(static item => item.ObservedAt)
                 .ThenBy(static item => item.PopulationId.ToString(), StringComparer.Ordinal)
                 .ToArray(),
+            ReviewCampaignReferences = preview.ReviewCampaignReferences
+                .OrderBy(static item => item.SystemInstanceId.ToString(), StringComparer.Ordinal)
+                .ThenByDescending(static item => item.LaunchedAt)
+                .ThenBy(static item => item.CampaignId.ToString(), StringComparer.Ordinal)
+                .ToArray(),
             SystemInstanceReferences = preview.SystemInstanceReferences
                 .OrderBy(static item => item.SystemInstanceId.ToString(), StringComparer.Ordinal)
                 .ToArray(),

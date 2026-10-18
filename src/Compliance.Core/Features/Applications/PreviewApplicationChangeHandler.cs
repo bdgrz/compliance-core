@@ -24,7 +24,9 @@ public sealed class PreviewApplicationChangeHandler(
     ApplicationEvidenceSourceReferenceReadConsistency? evidenceSourceConsistency = null,
     IApplicationEvidenceSourceAccess? evidenceSourceAccess = null,
     IAccessPopulationDirectoryReader? accessPopulations = null,
-    ApplicationAccessPopulationReadConsistency? accessPopulationConsistency = null)
+    ApplicationAccessPopulationReadConsistency? accessPopulationConsistency = null,
+    IAccessReviewCampaignImpactDirectoryReader? reviewCampaigns = null,
+    ApplicationReviewCampaignReadConsistency? reviewCampaignConsistency = null)
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
@@ -36,6 +38,7 @@ public sealed class PreviewApplicationChangeHandler(
     const int MaximumSystemInstancePolicyReferences = 200;
     const int MaximumApplicationEvidenceSourceReferences = 200;
     const int MaximumApplicationAccessPopulationReferences = 200;
+    const int MaximumApplicationReviewCampaignReferences = 200;
 
     public PreviewApplicationChangeHandler(IAggregateReader aggregates,
         IApplicationDirectoryReader applications,
@@ -54,7 +57,7 @@ public sealed class PreviewApplicationChangeHandler(
         ["vendors"];
 
     static readonly string[] MissingContextsAfterSystemInstanceControls =
-        ["review_campaigns", "open_work",
+        ["open_work",
             "readiness", "engagements", "cross_source_manual_reliance"];
 
     public async ValueTask<Result<ApplicationChangePreview>> HandleAsync(
@@ -95,6 +98,9 @@ public sealed class PreviewApplicationChangeHandler(
         if ((accessPopulations is null) != (accessPopulationConsistency is null))
             throw new InvalidOperationException(
                 "The access-population reader and consistency fence must be registered together.");
+        if ((reviewCampaigns is null) != (reviewCampaignConsistency is null))
+            throw new InvalidOperationException(
+                "The review-campaign reader and consistency fence must be registered together.");
 
         var inputError = Validate(request);
         if (inputError is not null)
@@ -238,6 +244,15 @@ public sealed class PreviewApplicationChangeHandler(
             if (!capturedPopulations.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(capturedPopulations.Error);
             accessPopulationFence = capturedPopulations.Value;
+        }
+        ProjectionCheckpoint? reviewCampaignFence = null;
+        if (reviewCampaignConsistency is not null)
+        {
+            var capturedCampaigns = await reviewCampaignConsistency.CaptureAsync(
+                request.TenantId, ct).ConfigureAwait(false);
+            if (!capturedCampaigns.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(capturedCampaigns.Error);
+            reviewCampaignFence = capturedCampaigns.Value;
         }
         ProjectionCheckpoint? instanceFence = null;
         if (instanceConsistency is not null)
@@ -606,6 +621,69 @@ public sealed class PreviewApplicationChangeHandler(
             }
         }
 
+        var reviewCampaignReferenceItems = new List<ApplicationReviewCampaignReferenceView>();
+        var reviewCampaignReferencesOverLimit = instancePage.NextCursor is not null;
+        var reviewCampaignSourcesIncomplete = instanceConsistency is null ||
+            instancePage.NextCursor is not null;
+        if (reviewCampaigns is not null && instanceConsistency is not null)
+        {
+            var scannedCampaignReferences = 0;
+            var campaignSummaries = new Dictionary<Uuid, AccessReviewCampaignSummaryView>();
+            foreach (var instance in instancePage.Items)
+            {
+                var remaining = MaximumApplicationReviewCampaignReferences -
+                    scannedCampaignReferences;
+                if (remaining == 0)
+                {
+                    reviewCampaignReferencesOverLimit = true;
+                    break;
+                }
+
+                var campaignPage = await reviewCampaigns.ListBySystemInstanceAsync(
+                    request.TenantId, instance.SystemInstanceId, remaining, null, ct)
+                    .ConfigureAwait(false);
+                if (campaignPage.Items.Count > remaining || campaignPage.Items.Any(reference =>
+                        reference.TenantId != request.TenantId ||
+                        reference.CampaignId == Uuid.Empty ||
+                        reference.SystemInstanceId != instance.SystemInstanceId ||
+                        reference.LaunchedAt == default))
+                    return Result<ApplicationChangePreview>.Failure(new RequestError(
+                        RequestErrorKind.Conflict,
+                        "The application review-campaign projection is inconsistent.",
+                        isTransient: true));
+
+                scannedCampaignReferences += campaignPage.Items.Count;
+                foreach (var reference in campaignPage.Items)
+                {
+                    if (!campaignSummaries.TryGetValue(reference.CampaignId,
+                            out var campaign))
+                    {
+                        campaign = await reviewCampaigns.GetCampaignAsync(request.TenantId,
+                            reference.CampaignId, ct).ConfigureAwait(false);
+                        if (IsValidReviewCampaignSummary(campaign, request.TenantId,
+                                reference.CampaignId))
+                            campaignSummaries.Add(reference.CampaignId, campaign!);
+                    }
+                    if (!IsValidReviewCampaignSummary(campaign, request.TenantId,
+                            reference.CampaignId) || campaign!.LaunchedAt != reference.LaunchedAt)
+                        return Result<ApplicationChangePreview>.Failure(new RequestError(
+                            RequestErrorKind.Conflict,
+                            "The application review-campaign projection is inconsistent.",
+                            isTransient: true));
+
+                    reviewCampaignReferenceItems.Add(new ApplicationReviewCampaignReferenceView(
+                        request.TenantId, request.ApplicationId, instance.SystemInstanceId,
+                        reference.CampaignId, campaign.Status, campaign.SnapshotId,
+                        campaign.LaunchedAt, campaign.FinalSnapshotId, campaign.CompletedAt));
+                }
+                if (campaignPage.NextCursor is not null)
+                {
+                    reviewCampaignReferencesOverLimit = true;
+                    break;
+                }
+            }
+        }
+
         var boundaryConfirmed = await boundaryConsistency.ConfirmUnchangedAndCaughtUpAsync(
             request.TenantId, boundaryFence.Value, ct).ConfigureAwait(false);
         if (!boundaryConfirmed.IsSuccess)
@@ -662,6 +740,14 @@ public sealed class PreviewApplicationChangeHandler(
             if (!populationsConfirmed.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(populationsConfirmed.Error);
         }
+        if (reviewCampaignFence is { } capturedReviewCampaignFence)
+        {
+            var campaignsConfirmed = await reviewCampaignConsistency!
+                .ConfirmUnchangedAndCaughtUpAsync(request.TenantId,
+                    capturedReviewCampaignFence, ct).ConfigureAwait(false);
+            if (!campaignsConfirmed.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(campaignsConfirmed.Error);
+        }
 
         // Source rechecks catch a pending application or relationship write that raced the reads.
         var latest = await aggregates.HydrateApplicationAsync(request.TenantId, request.ApplicationId, ct).ConfigureAwait(false);
@@ -713,6 +799,11 @@ public sealed class PreviewApplicationChangeHandler(
             pending.Add("access_populations");
         if (accessPopulationReferencesOverLimit)
             pending.Add("access_population_references_over_limit");
+        if (reviewCampaigns is null || reviewCampaignConsistency is null ||
+            reviewCampaignSourcesIncomplete || reviewCampaignReferencesOverLimit)
+            pending.Add("review_campaigns");
+        if (reviewCampaignReferencesOverLimit)
+            pending.Add("review_campaign_references_over_limit");
         pending.AddRange(MissingContextsAfterSystemInstanceControls);
         var preview = new ApplicationChangePreview(
             request.TenantId, request.ApplicationId, source.Revision, request.ChangeKind,
@@ -754,6 +845,11 @@ public sealed class PreviewApplicationChangeHandler(
                 .OrderBy(static item => item.SystemInstanceId.ToString(), StringComparer.Ordinal)
                 .ThenByDescending(static item => item.ObservedAt)
                 .ThenBy(static item => item.PopulationId.ToString(), StringComparer.Ordinal)
+                .ToArray(),
+            ReviewCampaignReferences = reviewCampaignReferenceItems
+                .OrderBy(static item => item.SystemInstanceId.ToString(), StringComparer.Ordinal)
+                .ThenByDescending(static item => item.LaunchedAt)
+                .ThenBy(static item => item.CampaignId.ToString(), StringComparer.Ordinal)
                 .ToArray(),
         };
         return Result<ApplicationChangePreview>.Success(preview with
@@ -895,6 +991,26 @@ public sealed class PreviewApplicationChangeHandler(
             population.ContentSha256 is { Length: 64 } contentSha256 &&
             contentSha256.All(Uri.IsHexDigit) && population.AcceptedAt is { } acceptedAt &&
             acceptedAt != default && acceptedAt >= population.ObservedAt;
+    }
+
+    static bool IsValidReviewCampaignSummary(AccessReviewCampaignSummaryView? campaign,
+        Uuid tenantId, Uuid campaignId)
+    {
+        if (campaign is null || campaign.TenantId != tenantId ||
+            campaign.CampaignId != campaignId || campaign.SnapshotId == Uuid.Empty ||
+            campaign.LaunchedAt == default || campaign.ItemCount < 1 ||
+            string.IsNullOrWhiteSpace(campaign.Name))
+            return false;
+
+        return campaign.Status switch
+        {
+            AccessReviewCampaign.Active => campaign.FinalSnapshotId is null &&
+                campaign.CompletedAt is null,
+            AccessReviewCampaign.Completed => campaign.FinalSnapshotId is { } finalSnapshotId &&
+                finalSnapshotId != Uuid.Empty && campaign.CompletedAt is { } completedAt &&
+                completedAt != default && completedAt >= campaign.LaunchedAt,
+            _ => false,
+        };
     }
 
     static bool IsValidSystemInstanceBoundaryReference(

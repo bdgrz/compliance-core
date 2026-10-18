@@ -459,6 +459,12 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IAccessPopulationDirectoryReader>(
             provider => provider.GetRequiredService<FitzAccessPopulationDirectory>());
         services.AddScoped<ApplicationAccessPopulationReadConsistency>();
+        services.AddScoped<FitzAccessReviewCampaignImpactDirectory>();
+        services.AddScoped<IAccessReviewCampaignImpactProjection>(
+            provider => provider.GetRequiredService<FitzAccessReviewCampaignImpactDirectory>());
+        services.AddScoped<IAccessReviewCampaignImpactDirectoryReader>(
+            provider => provider.GetRequiredService<FitzAccessReviewCampaignImpactDirectory>());
+        services.AddScoped<ApplicationReviewCampaignReadConsistency>();
         services.AddScoped<FitzAccessReviewCampaignDirectory>();
         services.AddScoped<IAccessReviewCampaignDirectoryProjection>(
             provider => provider.GetRequiredService<FitzAccessReviewCampaignDirectory>());
@@ -1329,6 +1335,8 @@ public static class ComplianceServiceCollectionExtensions
                 AccessReviewDirectorySchema.PopulationProjector, WorkloadScope.PerTenant)
             .AddProjector<AccessReviewCampaignDirectoryProjector>(
                 AccessReviewDirectorySchema.CampaignProjector, WorkloadScope.PerTenant)
+            .AddProjector<AccessReviewCampaignImpactProjector>(
+                AccessReviewCampaignImpactSchema.Projector, WorkloadScope.PerTenant)
             .AddProjector<AccessReviewCampaignWorkItemProjector>(
                 FitzAccessReviewCampaignWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AccessReviewScopeDirectoryProjector>(
