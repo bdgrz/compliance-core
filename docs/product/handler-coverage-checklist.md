@@ -4,8 +4,8 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 
 ## Current gap
 
-- Required commands in the plan: 127. 57 have handler source; 70 still need one.
-- Required command registration gaps: 70. Required commands without a static test reference: 69.
+- Required commands in the plan: 127. 58 have handler source; 69 still need one.
+- Required command registration gaps: 69. Required commands without a static test reference: 68.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
 
@@ -284,7 +284,7 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 | Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `BindSystemDescriptionSources` | present | missing | check | no reference |
 | Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `ReviewSystemDescription` | present | present | present | referenced |
 | Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `ApproveSystemDescription` | present | present | present | referenced |
-| Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `ProposeSystemDescriptionSuccessor` | present | missing | check | no reference |
+| Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `ProposeSystemDescriptionSuccessor` | present | present | present | referenced |
 | Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `RecordSystemDescriptionNoChangeDecision` | present | present | present | referenced |
 | Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `BindSystemDescriptionToExamination` | present | present | present | referenced |
 | Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `GenerateSystemDescriptionExport` | present | present | present | referenced |

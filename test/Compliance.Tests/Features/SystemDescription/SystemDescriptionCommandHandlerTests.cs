@@ -92,11 +92,35 @@ public sealed class SystemDescriptionCommandHandlerTests
         Assert.Equal(2, saved.Revision);
     }
 
+    [Fact]
+    public async Task ShouldProposeSuccessorFromApprovedVersionGivenChangeReason()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var descriptionId = await fixture.SeedApprovedDescriptionAsync();
+
+        // Act
+        var result = await fixture.ProposeSuccessorHandler().HandleAsync(Fixture.Context(
+            fixture.UserId, new ProposeSystemDescriptionSuccessor(fixture.TenantId,
+                fixture.ProgramId, descriptionId, 3, "Reflect the approved service expansion.")),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.SystemDescription.SystemDescription(
+            fixture.TenantId, fixture.ProgramId, descriptionId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("approved", saved.FindVersion(1)!.Status);
+        Assert.Equal("draft", saved.CurrentVersion!.Status);
+        Assert.Equal(2, saved.CurrentVersion.Version);
+        Assert.Equal("Reflect the approved service expansion.", saved.CurrentVersion.ChangeReason);
+        Assert.Equal("The Sample System", saved.CurrentVersion.Content.Title);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
         readonly AsyncServiceScope _scope;
-        readonly TimeProvider _clock = new FixedTimeProvider(Now);
+        readonly TimeProvider _clock = new FixedTimeProvider(Now.AddMinutes(3));
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid ProgramId { get; } = Uuid.CreateVersion4();
         public Uuid ExaminationId { get; } = Uuid.CreateVersion4();
@@ -127,6 +151,8 @@ public sealed class SystemDescriptionCommandHandlerTests
         public RecordSystemDescriptionNoChangeDecisionHandler NoChangeHandler() => new(Executor, _clock);
         public BindSystemDescriptionToExaminationHandler BindHandler() => new(Executor, _clock);
         public GenerateSystemDescriptionExportHandler ExportHandler() => new(Executor, _clock);
+        public ProposeSystemDescriptionSuccessorHandler ProposeSuccessorHandler() =>
+            new(Executor, _clock);
 
         public static Cntryl.Portia.RequestContext<T> Context<T>(Uuid userId, T request)
             where T : IRequestBase => new(request, new RequestDispatchContext(Actor(userId),
@@ -145,6 +171,23 @@ public sealed class SystemDescriptionCommandHandlerTests
                 TenantId, ProgramId, descriptionId);
             Assert.Null(aggregate.Create(Uuid.CreateVersion4(), scope, content,
                 RbacIds.Member(TenantId, UserId), "author@example.test", Now));
+            await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
+            return descriptionId;
+        }
+
+        public async Task<Uuid> SeedApprovedDescriptionAsync()
+        {
+            var descriptionId = Uuid.CreateVersion4();
+            var aggregate = new Bdgrz.Compliance.Features.SystemDescription.SystemDescription(
+                TenantId, ProgramId, descriptionId);
+            Assert.Null(aggregate.Create(Uuid.CreateVersion4(), new SystemDescriptionScope("type_i",
+                    ExaminationId, BaselineId, null, null), Content(Uuid.Empty),
+                RbacIds.Member(TenantId, UserId), "author@example.test", Now));
+            Assert.Null(aggregate.Review(1, RbacIds.Member(TenantId, ReviewerId),
+                "reviewer@example.test", "approve", "Reviewed exact draft.", Now.AddMinutes(1)));
+            Assert.Null(aggregate.Approve(1, RbacIds.Member(TenantId, ApproverId),
+                "approver@example.test", "Management approved the exact version.",
+                Now.AddMinutes(2)));
             await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
             return descriptionId;
         }

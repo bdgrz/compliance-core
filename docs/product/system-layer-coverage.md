@@ -20,7 +20,7 @@ The former broad proposal list mixed required work with hypotheses and unresolve
 
 The pruned plan retains 127 feature-backed command requirements, and each has a typed command contract file. Excluded P2 hypotheses, unsettled BO scope, and unvalidated Privacy scope are not counted as required product commands.
 
-The domain-event backfill adds 136 typed per-file contracts from accepted backlog requirements; 8 readiness-import events remain deferred. The R2-08 `AdvisorHandoff`, T1-01 `ExaminationEngagement`, T1-02 `SystemDescription`, T1-04 `AuditorRequest`, R2-12 evidence-governance roots, T1-05/T3-05 `AuditPackage`, T1-07 examination transition roots, and T2-01/T3-01 `TypeIIPeriod` have focused RED-to-GREEN behavior tests. Required handler work is in progress: 57 of 127 commands are implemented and registered, with static test references for 58. The [handler checklist](handler-coverage-checklist.md) tracks the remaining 70. Projectors and reactors follow this layer.
+The domain-event backfill adds 136 typed per-file contracts from accepted backlog requirements; 8 readiness-import events remain deferred. The R2-08 `AdvisorHandoff`, T1-01 `ExaminationEngagement`, T1-02 `SystemDescription`, T1-04 `AuditorRequest`, R2-12 evidence-governance roots, T1-05/T3-05 `AuditPackage`, T1-07 examination transition roots, and T2-01/T3-01 `TypeIIPeriod` have focused RED-to-GREEN behavior tests. Required handler work is in progress: 58 of 127 commands are implemented and registered, with static test references for 59. The [handler checklist](handler-coverage-checklist.md) tracks the remaining 69. Projectors and reactors follow this layer.
 
 ## Validation
 
