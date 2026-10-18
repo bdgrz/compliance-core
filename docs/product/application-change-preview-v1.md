@@ -67,12 +67,14 @@ The 200 result contains `tenant_id`, `application_id`,
 up to 200 direct-Application `policy_references`, up to 200
 `evidence_source_references`, up to 200 currently visible outgoing
 `application_relationships`, up to 200 `access_population_references`, and up to
-200 `review_campaign_references`,
+200 `review_campaign_references`, and up to 200 `vendor_references`,
 `pending_contexts`, and `complete`. A control
 reference contains the stable control, program, applicability-entry, and
 current draft revision identifiers plus the authored subject and rationale; it
-does not contain full draft content. `complete` is always `false` in this
-slice. `policy_references` contains policy and program IDs, identifier, title,
+does not contain full draft content. `complete` is true only when no impact
+context is pending; the preview remains incomplete while any decided context
+lacks an authoritative contribution. `policy_references` contains policy and
+program IDs, identifier, title,
 revision or approved version, direct applicability subject, effective interval,
 and successor or retirement state. It never contains policy body text.
 `evidence_source_references` contains support-link, Control, and artifact IDs,
@@ -91,6 +93,16 @@ campaign status, frozen launch snapshot ID and launch time, plus the final
 snapshot ID and completion time when completed. Campaign names, reviewers, and
 review-item data are omitted. `review_campaign_references_over_limit` is added
 when the bounded result truncates.
+`vendor_references` contains each current provider dependency attributed to the
+Application, with provider ID, name, kind and revision; materiality and
+subservice treatment; dependency index; SystemInstance ID and recorded source
+and Application revisions; rationale; and effective interval. The tenant
+provider projection is checked against its source before and after the read.
+Unresolved SystemInstance dependencies, missing or stale source revisions, and
+an incomplete provider or SystemInstance scan keep `vendors` pending. The
+`vendor_references_over_limit` context is added when more than 200 references
+are available. A provider projection that has not caught up returns a retryable
+409.
 `boundary_references_over_limit` and
 `control_draft_references_over_limit` are added when their respective result
 sets exceed 200, rather than silently presenting a truncated set as complete.

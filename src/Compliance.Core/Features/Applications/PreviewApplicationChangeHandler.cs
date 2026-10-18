@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.Versioning;
 using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
@@ -26,7 +27,9 @@ public sealed class PreviewApplicationChangeHandler(
     IAccessPopulationDirectoryReader? accessPopulations = null,
     ApplicationAccessPopulationReadConsistency? accessPopulationConsistency = null,
     IAccessReviewCampaignImpactDirectoryReader? reviewCampaigns = null,
-    ApplicationReviewCampaignReadConsistency? reviewCampaignConsistency = null)
+    ApplicationReviewCampaignReadConsistency? reviewCampaignConsistency = null,
+    IProviderReader? providers = null,
+    ProviderReadConsistency? providerConsistency = null)
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
@@ -39,6 +42,7 @@ public sealed class PreviewApplicationChangeHandler(
     const int MaximumApplicationEvidenceSourceReferences = 200;
     const int MaximumApplicationAccessPopulationReferences = 200;
     const int MaximumApplicationReviewCampaignReferences = 200;
+    const int MaximumApplicationVendorReferences = 200;
 
     public PreviewApplicationChangeHandler(IAggregateReader aggregates,
         IApplicationDirectoryReader applications,
@@ -52,9 +56,6 @@ public sealed class PreviewApplicationChangeHandler(
             controlConsistency, visibility, null, instanceConsistency)
     {
     }
-
-    static readonly string[] MissingContextsBeforeSystemInstanceControls =
-        ["vendors"];
 
     static readonly string[] MissingContextsAfterSystemInstanceControls =
         ["open_work",
@@ -101,6 +102,9 @@ public sealed class PreviewApplicationChangeHandler(
         if ((reviewCampaigns is null) != (reviewCampaignConsistency is null))
             throw new InvalidOperationException(
                 "The review-campaign reader and consistency fence must be registered together.");
+        if ((providers is null) != (providerConsistency is null))
+            throw new InvalidOperationException(
+                "The provider reader and consistency fence must be registered together.");
 
         var inputError = Validate(request);
         if (inputError is not null)
@@ -254,6 +258,15 @@ public sealed class PreviewApplicationChangeHandler(
                 return Result<ApplicationChangePreview>.Failure(capturedCampaigns.Error);
             reviewCampaignFence = capturedCampaigns.Value;
         }
+        ProjectionCheckpoint? providerFence = null;
+        if (providerConsistency is not null)
+        {
+            var capturedProviders = await providerConsistency.CaptureListFenceAsync(
+                request.TenantId, ct).ConfigureAwait(false);
+            if (!capturedProviders.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(capturedProviders.Error);
+            providerFence = capturedProviders.Value;
+        }
         ProjectionCheckpoint? instanceFence = null;
         if (instanceConsistency is not null)
         {
@@ -292,6 +305,70 @@ public sealed class PreviewApplicationChangeHandler(
             return Result<ApplicationChangePreview>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "The system instance projection is inconsistent.",
                 isTransient: true));
+
+        var vendorReferenceItems = new List<ApplicationVendorReferenceView>();
+        var vendorReferencesOverLimit = false;
+        var vendorReferencesIncomplete = instancePage.NextCursor is not null;
+        if (providers is not null && providerConsistency is not null)
+        {
+            var providerPage = await providers.ListAsync(request.TenantId,
+                MaximumApplicationVendorReferences, null, ct).ConfigureAwait(false);
+            if (providerPage.Items.Count > MaximumApplicationVendorReferences ||
+                providerPage.Items.Any(provider => !IsValidProviderView(provider,
+                    request.TenantId)) ||
+                providerPage.Items.Select(static provider => provider.ProviderId).Distinct()
+                    .Count() != providerPage.Items.Count)
+                return Result<ApplicationChangePreview>.Failure(new RequestError(
+                    RequestErrorKind.Conflict,
+                    "The provider projection is inconsistent.", isTransient: true));
+
+            vendorReferencesOverLimit = providerPage.NextCursor is not null;
+            vendorReferencesIncomplete = providerPage.NextCursor is not null ||
+                vendorReferencesIncomplete;
+            var currentInstances = instancePage.Items.ToDictionary(
+                static instance => instance.SystemInstanceId);
+            foreach (var provider in providerPage.Items)
+            {
+                var dependencies = ProviderRules.Normalize(provider.Content).Dependencies!;
+                for (var index = 0; index < dependencies.Count; index++)
+                {
+                    var dependency = dependencies[index];
+                    if (dependency.SubjectKind != "system_instance")
+                        continue;
+                    if (dependency.SubjectId is null)
+                    {
+                        // An unresolved system dependency cannot be ruled out as part of this
+                        // application's downstream impact.
+                        vendorReferencesIncomplete = true;
+                        continue;
+                    }
+                    if (dependency.ApplicationId != request.ApplicationId)
+                        continue;
+                    if (vendorReferenceItems.Count == MaximumApplicationVendorReferences)
+                    {
+                        vendorReferencesOverLimit = true;
+                        vendorReferencesIncomplete = true;
+                        continue;
+                    }
+
+                    var currentInstance = currentInstances.GetValueOrDefault(
+                        dependency.SubjectId.Value);
+                    if (instanceConsistency is null ||
+                        dependency.SourceRevision is not { } sourceRevision ||
+                        dependency.ApplicationRevision != source.Revision ||
+                        currentInstance is null || currentInstance.Revision != sourceRevision)
+                        vendorReferencesIncomplete = true;
+
+                    vendorReferenceItems.Add(new ApplicationVendorReferenceView(
+                        provider.ProviderId, provider.Content.Name, provider.Content.ProviderKind,
+                        provider.Revision, provider.Content.Materiality, provider.Content.Subservice,
+                        provider.Content.BoundaryTreatment, index, dependency.SubjectId.Value,
+                        dependency.SourceRevision, dependency.ApplicationRevision,
+                        dependency.Rationale, dependency.EffectiveFrom,
+                        dependency.EffectiveUntilExclusive));
+                }
+            }
+        }
 
         var systemInstanceBoundaryReferences =
             new List<ApplicationBoundaryReferenceView>();
@@ -748,6 +825,14 @@ public sealed class PreviewApplicationChangeHandler(
             if (!campaignsConfirmed.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(campaignsConfirmed.Error);
         }
+        if (providerFence is { } capturedProviderFence)
+        {
+            var providersConfirmed = await providerConsistency!
+                .EnsureFenceHeldAsync(request.TenantId, capturedProviderFence, ct)
+                .ConfigureAwait(false);
+            if (!providersConfirmed.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(providersConfirmed.Error);
+        }
 
         // Source rechecks catch a pending application or relationship write that raced the reads.
         var latest = await aggregates.HydrateApplicationAsync(request.TenantId, request.ApplicationId, ct).ConfigureAwait(false);
@@ -766,7 +851,10 @@ public sealed class PreviewApplicationChangeHandler(
             pending.Add("system_instance_references_over_limit");
         if (relationships.HasMore || incomingRelationshipsOverLimit)
             pending.Add("application_relationships_over_limit");
-        pending.AddRange(MissingContextsBeforeSystemInstanceControls);
+        if (providers is null || providerConsistency is null || vendorReferencesIncomplete)
+            pending.Add("vendors");
+        if (vendorReferencesOverLimit)
+            pending.Add("vendor_references_over_limit");
         if (controlVersions is null || controlVersionConsistency is null ||
             instanceConsistency is null || approvedApplicationReferencesOverLimit ||
             approvedSystemInstanceReferencesOverLimit)
@@ -813,7 +901,7 @@ public sealed class PreviewApplicationChangeHandler(
                 .ThenBy(static item => item.BoundaryId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.VersionId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
-            pending, false)
+            pending, pending.Count == 0)
         {
             ApplicationRelationships = relationships.Items,
             IncomingApplicationRelationships = incomingRelationships,
@@ -850,6 +938,11 @@ public sealed class PreviewApplicationChangeHandler(
                 .OrderBy(static item => item.SystemInstanceId.ToString(), StringComparer.Ordinal)
                 .ThenByDescending(static item => item.LaunchedAt)
                 .ThenBy(static item => item.CampaignId.ToString(), StringComparer.Ordinal)
+                .ToArray(),
+            VendorReferences = vendorReferenceItems
+                .OrderBy(static item => item.ProviderId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.SystemInstanceId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.DependencyIndex)
                 .ToArray(),
         };
         return Result<ApplicationChangePreview>.Success(preview with
@@ -896,6 +989,20 @@ public sealed class PreviewApplicationChangeHandler(
             "replaces" => relationship.Status is "active" or "proposed" or "approved",
             _ => false,
         };
+    }
+
+    static bool IsValidProviderView(ProviderView provider, Uuid tenantId)
+    {
+        if (provider is null || provider.TenantId != tenantId ||
+            provider.ProviderId == Uuid.Empty || provider.Revision < 1 ||
+            provider.RecordedAt == default || provider.Unresolved is null ||
+            ProviderRules.InputError(provider.Content) is not null)
+            return false;
+
+        var content = ProviderRules.Normalize(provider.Content);
+        return ProviderRules.Validate(content) is null &&
+            provider.Unresolved.SequenceEqual(ProviderRules.Unresolved(content),
+                StringComparer.Ordinal);
     }
 
     static bool IsValidSystemInstanceControlReference(

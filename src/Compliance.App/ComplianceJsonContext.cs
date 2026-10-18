@@ -15,6 +15,7 @@ namespace Bdgrz.Compliance;
     PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
 [JsonSerializable(typeof(ComplianceAuthenticationClientConfiguration))]
 [JsonSerializable(typeof(ApplicationChangePreview))]
+[JsonSerializable(typeof(ApplicationVendorReferenceView))]
 [JsonSerializable(typeof(ApplicationControlVersionReferenceView))]
 [JsonSerializable(typeof(ApplicationPolicyReferenceView))]
 [JsonSerializable(typeof(ApplicationEvidenceSourceReferenceView))]
