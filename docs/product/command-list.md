@@ -494,7 +494,7 @@ These commands carry the complete change or incident content accepted by their o
 
 - **RequestClientExport** — coded ([contract](../../src/Compliance.Common/Features/Exports/RequestClientExport.cs#L7))
 - **RecordClientExportBuildResult** — coded ([contract](../../src/Compliance.Common/Features/Exports/RecordClientExportBuildResult.cs#L7))
-- **RecordClientExportDelivery** — coded ([contract](../../src/Compliance.Common/Features/Exports/RecordClientExportDelivery.cs#L7))
+- **RecordClientExportDelivery** — coded; carries the expected export revision ([contract](../../src/Compliance.Common/Features/Exports/RecordClientExportDelivery.cs#L7))
 - **RequestOwnAttestRecordPackage** — coded ([contract](../../src/Compliance.Common/Features/AttestRecords/RequestOwnAttestRecordPackage.cs#L7))
 - **RecordOwnAttestRecordPackageResult** — coded ([contract](../../src/Compliance.Common/Features/AttestRecords/RecordOwnAttestRecordPackageResult.cs#L7))
 - **RecordOwnAttestRecordDelivery** — coded ([contract](../../src/Compliance.Common/Features/AttestRecords/RecordOwnAttestRecordDelivery.cs#L7))

@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.AuditorRequests;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Exports;
 using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.Retention;
 using Bdgrz.Compliance.Features.Evidence;
@@ -772,6 +773,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordAuditPackageBuildResultHandler>()
             .AddRequestHandler<RequestAuditPackageBuildHandler>()
             .AddRequestHandler<RecordAuditPackageDeliveryHandler>()
+            .AddRequestHandler<RecordClientExportDeliveryHandler>()
             .AddRequestAuthorizer<RecordAuditPackageBuildResultAuthorizer>()
             .AddRequestHandler<DefineAuditPopulationHandler>()
             .AddRequestHandler<RecordAuditPopulationFactsHandler>()
