@@ -108,9 +108,9 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 | Evaluations | `StartControlEvaluation` | present | present | present | referenced |
 | Evaluations | `SubmitControlEvaluation` | present | present | present | referenced |
 | Evidence | `ApproveEvidenceRedaction` | present | present | present | referenced |
-| Evidence | `CancelEvidenceRequest` | present | present | check | referenced |
-| Evidence | `FulfilEvidenceRequest` | present | present | check | referenced |
-| Evidence | `OpenEvidenceRequest` | present | present | check | referenced |
+| Evidence | `CancelEvidenceRequest` | present | present | present | referenced |
+| Evidence | `FulfilEvidenceRequest` | present | present | present | referenced |
+| Evidence | `OpenEvidenceRequest` | present | present | present | referenced |
 | Evidence | `PrepareEvidenceRedaction` | present | present | present | referenced |
 | Operations | `ApproveControlOperatingPlan` | present | present | present | referenced |
 | Operations | `AttestControlOccurrence` | present | present | present | referenced |
@@ -368,6 +368,31 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 | Methodology templates — [F1-04](backlog.md#f1-04-maintain-a-reusable-template-library-and-apply-it-to-clients) | `ProposeDeidentifiedTemplateContribution` | present | present | present | referenced |
 | Methodology templates — [F1-04](backlog.md#f1-04-maintain-a-reusable-template-library-and-apply-it-to-clients) | `ReviewTemplateContribution` | present | present | present | referenced |
 | Methodology templates — [F1-04](backlog.md#f1-04-maintain-a-reusable-template-library-and-apply-it-to-clients) | `AcceptTemplateContribution` | present | present | present | referenced |
+
+## Remaining handler prerequisites
+
+These are implementation dependencies found in the existing contracts, aggregates, and accepted decisions. They are not reasons to add handlers that guess at source facts or authority. Close each prerequisite, then add a red behavior test and implement its handler.
+
+| Commands | Prerequisite before a correct handler can be wired |
+|---|---|
+| `ApproveArtifactDisposition`, `ExecuteArtifactDisposition`, `RecordArtifactDispositionResult` | Build a tenant-scoped eligibility reader that binds the exact artifact, retention basis, handling policy, active legal and engagement holds, historical reliance, and storage readiness. Execution also needs a durable deletion provider and trusted worker identity. `ArtifactDisposition` already rejects missing or changed eligibility snapshots. |
+| `CreateAdvisorHandoff`, `ReviseAdvisorHandoffSelection`, `MarkAdvisorHandoffReadyForReview` | Add a resolver for every supported record kind that proves tenant, program, current exact version, and shareable status. The aggregate accepts IDs but cannot establish those source facts. Readiness must be restricted to the Compliance Lead as required by [M0-D14](decisions/m0-d14-advisor-collaboration.md). |
+| `RecordAdvisorFeedback`, `CorrectAdvisorFeedback`, `RespondToAdvisorFeedback` | Add the M0-D14 scoped advisor/guest authorization model, including accepted firm-staff assignments, program-scoped expiring guest grants, and attribution rules. The current commands use ordinary client-management authorization, which cannot authorize the specified advisor actors. |
+| `GenerateDueControlOccurrences` | Add a deterministic recurrence batch operation that binds `PeriodId` and `GenerationKey`, creates stable occurrence identities, and is replay-safe. The existing ledger can read expected occurrences but has no generation command operation. |
+| `StageReadinessMaterialImport`, `ResolveReadinessMaterialImportRow`, `AcceptReadinessMaterialImport`, `CancelReadinessMaterialImport`, `ExecuteReadinessMaterialImport` | Readiness import remains deferred until the EN-05 prerequisites exist: a source preview builder, durable row reconciliation, an accepted immutable plan, and safe idempotent target execution. |
+| `ScheduleWeeklyWorkDigest`, `DeliverWeeklyWorkDigest`, `RecordWorkDigestDelivery` | Add a bounded weekly recipient/snapshot source, stable digest attempt identity, and a trusted email delivery adapter with durable outcome callbacks. The existing digest query and preference do not provide delivery state. |
+| `FreezeTypeIBaseline`, `AmendTypeIBaseline` | Add the authoritative baseline preview/source builder and a complete amendment snapshot. A handler cannot freeze or amend a baseline from a date and an opaque revision alone. |
+| `CreateSystemDescriptionDraft`, `ReviseSystemDescriptionDraft`, `BindSystemDescriptionSources` | Expand the request contract with structured description sections and exact source bindings, then provide source verification. Current command fields cannot represent the accepted system-description content. |
+| `RecordSampleSelection`, `AmendSampleSelection` | Add the target auditor-request ID, stable selection identity/revision, and exact source population resolution. Current commands identify an examination and population but cannot select which auditor request owns the sample. |
+| `RequestAuditPackageBuild`, `RecordAuditPackageBuildResult`, `ValidateAuditPackage`, `AmendAuditPackage` | Add the frozen package-content builder, build-attempt/manifest/entry result contract, source-backed validation findings, and complete amendment selection snapshot. `AuditPackage` deliberately requires these facts before it can record each transition. |
+| `RecordManagementAssertion`, `ApproveManagementAssertion`, `RecordManagementRepresentationLetter`, `RecordExaminationOutcome`, `RecordManagementExaminationReview`, `ProposeTypeIIOperatingPlan`, `ApproveTypeIIOperatingPlan` | Complete the exact package, description, examination, signer, and outcome source contracts. Add trusted CEO/CISO role evidence for approval; neither plain claims nor client-authored signer lists prove executive authority. |
+| `StartTypeIIObservationPeriod`, `ProposeProgramRollover`, `ApproveProgramRollover` | Add the approved Type I baseline and complete opening source/gap snapshot to period start. Rollover must bind the exact closed period and auditor outcome; approval requires trusted role evidence. |
+| `ApproveTypeIIPeriodClose`, `FreezeTypeIIPeriodClose`, `AmendTypeIIPeriodClose` | Add trusted CEO/CISO role resolution and the close snapshot builder that verifies every source reference, expected occurrence, and acknowledgement. The aggregate requires those exact facts for approval and freeze. |
+| `DefineAuditPopulation`, `RecordAuditPopulationFacts`, `AmendAuditPopulation`, `GenerateAuditPopulationExport` | Add population rule rows and a source-fact builder, complete amendment content, and an exporter bound to an immutable frozen version. Existing commands do not carry or construct all of these facts. |
+| `AcceptServiceEngagement`, `AssignServiceEngagementStaff`, `RevokeServiceEngagementStaff` | Add verified partner authority, current firm-staff directory snapshots, ratified rule versions, exact boundary approvals, and management acknowledgements. Assignment and revocation also need the authoritative effective-date staff source. |
+| `RatifyIndependenceRuleVersion`, `RecordPartnerIndependenceEvaluation` | Resolve the still-open professional ratification policy in [M0-D26](decisions/m0-d26-independence.md) / issue #343 and model trusted quality-partner authority. An `IPlatformOperatorRequest` does not establish firm quality-partner authority. Evaluation also needs verified partner identity and the exact current source set. |
+| `RequestClientExport`, `RecordClientExportBuildResult`, `RecordClientExportDelivery`, `RequestOwnAttestRecordPackage`, `RecordOwnAttestRecordPackageResult`, `RecordOwnAttestRecordDelivery`, `CompleteTenantOffboarding` | Add source-complete export/package builders, durable encrypted artifact storage and delivery receipts, plus a bounded offboarding coordinator that verifies all export and retention obligations before completion. |
+| `ConfigureTenantIdentityProvider`, `TestTenantIdentityProvider`, `DisableTenantIdentityProvider`, `RotateTenantIdentityProviderCredentials` | Add encrypted tenant credential storage and a provider test/rotation adapter with verifiable outcomes. The command contracts alone cannot safely test or rotate secrets. |
 
 ## Order of work
 
