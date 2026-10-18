@@ -20,6 +20,7 @@ public sealed record ApplicationChangePreview(Uuid TenantId, Uuid ApplicationId,
         IncomingApplicationRelationships
     { get; init; } = [];
 
+    /// <summary>Current control draft references to the application or one of its system instances.</summary>
     public IReadOnlyList<ApplicationControlDraftReferenceView> ControlDraftReferences { get; init; } = [];
 
     /// <summary>Up to 200 projected system instances that a change or retirement would affect.</summary>

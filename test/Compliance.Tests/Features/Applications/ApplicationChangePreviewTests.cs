@@ -550,6 +550,9 @@ public sealed class ApplicationChangePreviewTests
         var events = new InMemoryEventStore();
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
             applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+        await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
+            tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
+            null, null, actorId, "Manager", now));
         DomainEvent control = new ControlDraftCreated(tenantId, programId, controlId,
             Uuid.CreateVersion4(), "AC-01", new ControlDraftContent("Access control",
                 "Restrict payroll access", "Payroll access control",
@@ -589,19 +592,140 @@ public sealed class ApplicationChangePreviewTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        var reference = Assert.Single(result.Value.ControlDraftReferences);
-        Assert.Equal(controlId, reference.ControlId);
-        Assert.Equal(programId, reference.ProgramId);
-        Assert.Equal("AC-01", reference.Identifier);
-        Assert.Equal(applicationEntryId, reference.EntryId);
-        Assert.DoesNotContain(result.Value.ControlDraftReferences,
-            item => item.SubjectType == "system_instance");
+        Assert.Collection(result.Value.ControlDraftReferences,
+            reference =>
+            {
+                Assert.Equal("application", reference.SubjectType);
+                Assert.Equal(controlId, reference.ControlId);
+                Assert.Equal(programId, reference.ProgramId);
+                Assert.Equal("AC-01", reference.Identifier);
+                Assert.Equal(applicationEntryId, reference.EntryId);
+            },
+            reference =>
+            {
+                Assert.Equal("system_instance", reference.SubjectType);
+                Assert.Equal(systemInstanceId, reference.GovernedRecordId);
+                Assert.Equal(controlId, reference.ControlId);
+                Assert.Equal(programId, reference.ProgramId);
+                Assert.Equal("AC-01", reference.Identifier);
+                Assert.Equal(systemInstanceEntryId, reference.EntryId);
+            });
         Assert.Contains("approved_control_versions_and_lifecycle_impact",
             result.Value.PendingContexts);
         Assert.Contains("application_relationships", result.Value.PendingContexts);
-        Assert.Contains("system_instance_control_draft_references", result.Value.PendingContexts);
+        Assert.DoesNotContain("system_instance_control_draft_references",
+            result.Value.PendingContexts);
         Assert.DoesNotContain("controls", result.Value.PendingContexts);
         Assert.False(result.Value.Complete);
+    }
+
+    [Fact]
+    public async Task ShouldMarkSystemInstanceControlReferencesOverLimitGivenTruncatedPage()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var systemInstanceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var source = DeclaredApplicationForTest(tenantId, applicationId, actorId, now);
+        var applications = new FitzApplicationDirectory(new InMemoryKvClient());
+        await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
+            tenantId, applicationId, "Payroll", "Purpose", null, actorId, "Manager", now));
+        await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
+            tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
+            null, null, actorId, "Manager", now));
+        var controlReference = new ApplicationControlDraftReferenceView(tenantId,
+            "system_instance", systemInstanceId, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            "AC-01", 1, Uuid.CreateVersion4(), "Payroll production", "Current control draft.");
+        var controls = new ControlReferenceDirectory
+        {
+            PageFor = (subjectType, recordId, _, _) => subjectType == "system_instance" &&
+                recordId == systemInstanceId
+                ? new Page<ApplicationControlDraftReferenceView>([controlReference], "next")
+                : new Page<ApplicationControlDraftReferenceView>([], null),
+        };
+        var events = new InMemoryEventStore();
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var sourceReader = new SourceReader(source);
+        var handler = new PreviewApplicationChangeHandler(sourceReader, applications, boundaries,
+            new ApplicationBoundaryReferenceReadConsistency(boundaries, events), controls,
+            new ApplicationControlDraftReferenceReadConsistency(controls, events),
+            RestrictedApplicationVisibilityFixture.Create(sourceReader),
+            new SystemInstanceReadConsistency(applications, sourceReader,
+                new LegacySystemInstanceSource(applications, events), events));
+        var context = new RequestContext<PreviewApplicationChange>(
+            new PreviewApplicationChange(tenantId, applicationId, 1, "retire"),
+            new ClaimsPrincipal());
+
+        // Act
+        var result = await handler.HandleAsync(context, CancellationToken.None);
+        controlReference = controlReference with { Rationale = "Revised control impact." };
+        var changed = await handler.HandleAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.True(changed.IsSuccess);
+        Assert.Equal(200, controls.Limit);
+        Assert.Equal(controlReference,
+            Assert.Single(changed.Value.ControlDraftReferences));
+        Assert.Contains("system_instance_control_draft_references_over_limit",
+            changed.Value.PendingContexts);
+        Assert.DoesNotContain("system_instance_control_draft_references",
+            changed.Value.PendingContexts);
+        Assert.False(changed.Value.Complete);
+        Assert.NotEqual(result.Value.ImpactDigest, changed.Value.ImpactDigest);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldReturnTransientConflictGivenInvalidSystemInstanceControlReference(
+        bool crossTenant)
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var systemInstanceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var source = DeclaredApplicationForTest(tenantId, applicationId, actorId, now);
+        var applications = new FitzApplicationDirectory(new InMemoryKvClient());
+        await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
+            tenantId, applicationId, "Payroll", "Purpose", null, actorId, "Manager", now));
+        await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
+            tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
+            null, null, actorId, "Manager", now));
+        var corrupted = new ApplicationControlDraftReferenceView(
+            crossTenant ? Uuid.CreateVersion4() : tenantId, "system_instance",
+            crossTenant ? systemInstanceId : Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            "AC-01", 1, Uuid.CreateVersion4(), "Payroll production", "Current control draft.");
+        var controls = new ControlReferenceDirectory
+        {
+            PageFor = (subjectType, recordId, _, _) => subjectType == "system_instance" &&
+                recordId == systemInstanceId
+                ? new Page<ApplicationControlDraftReferenceView>([corrupted], null)
+                : new Page<ApplicationControlDraftReferenceView>([], null),
+        };
+        var events = new InMemoryEventStore();
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
+        var sourceReader = new SourceReader(source);
+        var handler = new PreviewApplicationChangeHandler(sourceReader, applications, boundaries,
+            new ApplicationBoundaryReferenceReadConsistency(boundaries, events), controls,
+            new ApplicationControlDraftReferenceReadConsistency(controls, events),
+            RestrictedApplicationVisibilityFixture.Create(sourceReader),
+            new SystemInstanceReadConsistency(applications, sourceReader,
+                new LegacySystemInstanceSource(applications, events), events));
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<PreviewApplicationChange>(
+            new PreviewApplicationChange(tenantId, applicationId, 1, "retire"),
+            new ClaimsPrincipal()), CancellationToken.None);
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.True(error.IsTransient);
     }
 
     [Fact]
@@ -1083,6 +1207,9 @@ public sealed class ApplicationChangePreviewTests
         public int Limit { get; private set; }
         public Page<ApplicationControlDraftReferenceView> Page { get; init; } = new([], null);
         public Func<CancellationToken, ValueTask>? OnListAsync { get; init; }
+        public Func<string, Uuid, int, string?, Page<ApplicationControlDraftReferenceView>>?
+            PageFor
+        { get; init; }
 
         public async ValueTask<Page<ApplicationControlDraftReferenceView>> ListAsync(Uuid tenantId,
             string subjectType, Uuid recordId, int limit, string? cursor,
@@ -1091,7 +1218,7 @@ public sealed class ApplicationChangePreviewTests
             Limit = limit;
             if (OnListAsync is not null)
                 await OnListAsync(ct);
-            return Page;
+            return PageFor?.Invoke(subjectType, recordId, limit, cursor) ?? Page;
         }
 
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
