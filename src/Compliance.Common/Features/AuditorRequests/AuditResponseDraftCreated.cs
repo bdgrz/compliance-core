@@ -9,4 +9,5 @@ public sealed record AuditResponseDraftCreated(
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    AuditorRequestView State,
     DateTimeOffset OccurredAt) : DomainEvent;

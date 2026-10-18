@@ -2,11 +2,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-/// <summary>Records the SystemDescriptionNoChangeRecorded domain fact for one tenant-owned subject revision.</summary>
+/// <summary>Persists a reasoned disposition for one non-material period change.</summary>
 [Discriminator("bdgrz.systemdescription.system-description-no-change-recorded", 1)]
 public sealed record SystemDescriptionNoChangeRecorded(
     Uuid TenantId,
-    Uuid SubjectId,
-    long Revision,
-    Uuid? ActorMemberId,
+    Uuid ProgramId,
+    Uuid SystemDescriptionId,
+    long AggregateRevision,
+    SystemDescriptionNoChangeDecisionView Decision,
     DateTimeOffset OccurredAt) : DomainEvent;

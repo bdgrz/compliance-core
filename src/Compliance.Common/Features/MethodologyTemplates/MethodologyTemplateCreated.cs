@@ -2,11 +2,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
-/// <summary>Records the MethodologyTemplateCreated domain fact for one tenant-owned subject revision.</summary>
-[Discriminator("bdgrz.methodologytemplates.methodology-template-created", 1)]
+/// <summary>Creates the first replayable version snapshot of a platform-owned template.</summary>
+[Discriminator("bdgrz.methodologytemplates.methodology-template-created", 2)]
 public sealed record MethodologyTemplateCreated(
     Uuid TenantId,
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    MethodologyTemplateView State,
     DateTimeOffset OccurredAt) : DomainEvent;

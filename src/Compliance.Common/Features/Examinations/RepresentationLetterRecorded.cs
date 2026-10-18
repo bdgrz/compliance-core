@@ -2,11 +2,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Records the RepresentationLetterRecorded domain fact for one tenant-owned subject revision.</summary>
-[Discriminator("bdgrz.examinations.representation-letter-recorded", 1)]
+/// <summary>Records an externally sourced representation letter and its required signers.</summary>
+[Discriminator("bdgrz.examinations.representation-letter-recorded", 2)]
 public sealed record RepresentationLetterRecorded(
     Uuid TenantId,
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    ManagementRepresentationLetterView State,
     DateTimeOffset OccurredAt) : DomainEvent;

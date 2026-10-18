@@ -1,0 +1,25 @@
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.Examinations;
+
+/// <summary>Exact source references and unresolved issues shown before baseline confirmation.</summary>
+public sealed record TypeIBaselinePreview(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid ExaminationEngagementId,
+    IReadOnlyList<TypeIBaselineSourceReference> Sources,
+    IReadOnlyList<string> Blockers,
+    IReadOnlyList<string> ScopeDifferences)
+{
+    public string CanonicalManifest => TypeIBaselineContentIdentity.Manifest(this).Json;
+
+    public string ContentSha256 => TypeIBaselineContentIdentity.Manifest(this).Digest;
+
+    public static TypeIBaselinePreview Create(Uuid tenantId, Uuid programId,
+        Uuid examinationEngagementId, IReadOnlyList<TypeIBaselineSourceReference> sources,
+        IReadOnlyList<string>? blockers = null, IReadOnlyList<string>? scopeDifferences = null) =>
+        new(tenantId, programId, examinationEngagementId,
+            Array.AsReadOnly(sources?.ToArray() ?? []),
+            Array.AsReadOnly(blockers?.ToArray() ?? []),
+            Array.AsReadOnly(scopeDifferences?.ToArray() ?? []));
+}

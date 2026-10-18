@@ -2,11 +2,9 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Records the ExaminationEngagementRevised domain fact for one tenant-owned subject revision.</summary>
+/// <summary>Records a complete successor revision of an unfrozen engagement.</summary>
 [Discriminator("bdgrz.examinations.examination-engagement-revised", 1)]
 public sealed record ExaminationEngagementRevised(
     Uuid TenantId,
-    Uuid SubjectId,
-    long Revision,
-    Uuid? ActorMemberId,
+    ExaminationEngagementView Engagement,
     DateTimeOffset OccurredAt) : DomainEvent;

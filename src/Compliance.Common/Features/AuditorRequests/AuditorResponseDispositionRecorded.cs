@@ -9,4 +9,5 @@ public sealed record AuditorResponseDispositionRecorded(
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    AuditorRequestView State,
     DateTimeOffset OccurredAt) : DomainEvent;

@@ -2,5 +2,24 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Frozen baseline manifest, exact source versions, and verification state.</summary>
-public sealed record TypeIBaselineView(Uuid TenantId, Uuid ProgramId, Uuid TypeIBaselineId, string Status, long Revision, DateTimeOffset UpdatedAt);
+/// <summary>Immutable Type I baseline manifest and attributable amendment lineage.</summary>
+public sealed record TypeIBaselineView(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid ExaminationEngagementId,
+    Uuid TypeIBaselineId,
+    string Status,
+    long Revision,
+    IReadOnlyList<TypeIBaselineSourceReference> Sources,
+    IReadOnlyList<string> ScopeDifferences,
+    string CanonicalManifest,
+    string ContentSha256,
+    DateTimeOffset UpdatedAt,
+    Uuid ActorMemberId,
+    string ActorDisplay,
+    string ConfirmationRationale,
+    Uuid? AmendsBaselineId,
+    string? AmendmentReason,
+    IReadOnlyList<Uuid> ChangedRecordIds,
+    IReadOnlyList<Uuid> AffectedPackageMaterialIds,
+    int AmendmentDepth);

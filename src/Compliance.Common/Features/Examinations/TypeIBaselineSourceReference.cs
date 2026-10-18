@@ -1,0 +1,11 @@
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.Examinations;
+
+/// <summary>Identifies one exact immutable source used by a Type I baseline.</summary>
+public sealed record TypeIBaselineSourceReference(
+    string Kind,
+    Uuid RecordId,
+    Uuid VersionId,
+    long Revision,
+    string ContentSha256);

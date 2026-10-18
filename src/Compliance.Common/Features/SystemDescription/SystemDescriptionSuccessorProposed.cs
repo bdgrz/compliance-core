@@ -2,11 +2,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-/// <summary>Records the SystemDescriptionSuccessorProposed domain fact for one tenant-owned subject revision.</summary>
+/// <summary>Persists a proposed successor to an already approved narrative version.</summary>
 [Discriminator("bdgrz.systemdescription.system-description-successor-proposed", 1)]
 public sealed record SystemDescriptionSuccessorProposed(
     Uuid TenantId,
-    Uuid SubjectId,
-    long Revision,
-    Uuid? ActorMemberId,
+    Uuid ProgramId,
+    Uuid SystemDescriptionId,
+    long AggregateRevision,
+    SystemDescriptionVersionView Version,
     DateTimeOffset OccurredAt) : DomainEvent;

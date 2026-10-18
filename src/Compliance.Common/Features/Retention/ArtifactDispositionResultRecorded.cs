@@ -9,4 +9,5 @@ public sealed record ArtifactDispositionResultRecorded(
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    ArtifactDispositionView State,
     DateTimeOffset OccurredAt) : DomainEvent;

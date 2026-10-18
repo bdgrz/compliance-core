@@ -8,9 +8,9 @@ Reconciled 2026-10-17 against `src/Compliance.Common` and `src/Compliance.Core`.
 | --- | ---: | --- |
 | Request/command contracts | 230 inventoried contracts, plus 5 new evidence contracts | [Existing commands](component-inventory.md#existing-commands) and [command list](command-list.md) |
 | Query contracts | 271 (216 existing + 55 backfilled contracts) | [Existing queries](component-inventory.md#existing-queries) and [required query/view-model backfill](query-and-view-model-list.md) |
-| Domain events | 364 (236 existing + 128 backfilled contracts) | [Existing events](component-inventory.md#existing-events) and [required event backfill](domain-event-list.md) |
-| Aggregates | 68 | [Existing aggregates](component-inventory.md#existing-aggregates) |
-| Models, views, and supporting contracts | 490 (436 existing + 54 response views) | [Existing models](component-inventory.md#existing-models-and-supporting-contracts) and [required query/view-model backfill](query-and-view-model-list.md) |
+| Domain events | 372 (236 existing + 136 backfilled contracts) | [Existing events](component-inventory.md#existing-events) and [required event backfill](domain-event-list.md) |
+| Aggregates | 83 (68 existing + 15 TDD-backed aggregates) | [Existing aggregates](component-inventory.md#existing-aggregates) |
+| Models, views, and supporting contracts | 561 (436 existing + 54 response views + 71 aggregate payload/support models) | [Existing models](component-inventory.md#existing-models-and-supporting-contracts) and [required query/view-model backfill](query-and-view-model-list.md) |
 
 All source links in those existing inventories resolve to files. The command list separates existing contracts from additional candidates and internal operations. The component inventory contains the proposed future queries, events, aggregate/model candidates, reactors, and projectors.
 
@@ -20,7 +20,7 @@ The former broad proposal list mixed required work with hypotheses and unresolve
 
 The pruned plan retains 127 feature-backed command additions. Five have contract files and 122 still need request-contract types. Excluded P2 hypotheses, unsettled BO scope, and unvalidated Privacy scope are not counted as required product commands.
 
-The domain-event backfill adds 128 typed per-file contracts from accepted backlog requirements; 8 readiness-import events remain deferred. Contracts still require handler emission, aggregate transitions, and projector consumption.
+The domain-event backfill adds 136 typed per-file contracts from accepted backlog requirements; 8 readiness-import events remain deferred. The R2-08 `AdvisorHandoff`, T1-01 `ExaminationEngagement`, T1-02 `SystemDescription`, T1-04 `AuditorRequest`, R2-12 evidence-governance roots, T1-05/T3-05 `AuditPackage`, T1-07 examination transition roots, and T2-01/T3-01 `TypeIIPeriod` have focused RED-to-GREEN behavior tests. Handlers and projectors remain outstanding.
 
 ## Validation
 

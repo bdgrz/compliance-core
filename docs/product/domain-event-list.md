@@ -8,9 +8,9 @@ The source inventory contains **236 `DomainEvent` contracts**. Their complete fe
 
 ## Backfill result
 
-- **128 missing event contracts** support accepted, requirement-backed workflows below.
+- **136 missing event contracts** support accepted, requirement-backed workflows below.
 - **8 additional event contracts** belong to readiness-material import and stay deferred with that feature until its prerequisites and durable import boundary are implemented.
-- The named universe is therefore **364 current-plus-required event contracts**, with **8 deferred import events** outside the immediate backfill.
+- The named universe is therefore **372 current-plus-required event contracts**, with **8 deferred import events** outside the immediate backfill.
 
 These names were reconciled against current `DomainEvent` declarations, the pruned command inventory, and gap-analysis sections G01–G20. Event names retain business facts and outcomes; they are not a one-for-one mirror of every command or query. Existing events remain the owner when they already represent a required fact. Each backfill event is a typed contract for the listed story outcome. Payloads carry tenant and subject identity, revision, optional member attribution, and occurrence time; handlers still need to populate and emit them, and projectors still need to consume them.
 
@@ -34,6 +34,7 @@ Policy assignment, engagement/report hold lifecycle, exact-recipient disclosure,
 
 Events to backfill:
 - `ArtifactHandlingPolicyAssigned`
+- `ArtifactHandlingPolicyRevised`
 - `ArtifactEngagementHoldPlaced`
 - `EngagementReportIssued`
 - `ArtifactEngagementHoldReleased`
@@ -51,7 +52,7 @@ Events to backfill:
 Scoped handoff selection/access transitions and immutable feedback/correction/response/resolution. The older proposed `AdvisorRequestWithdrawn` name is omitted because the required command plan uses close and revoke intents.
 
 Events to backfill:
-- `AdvisorRequestOpened`
+- `AdvisorHandoffCreated`
 - `AdvisorHandoffSelectionRevised`
 - `AdvisorHandoffReadiedForReview`
 - `AdvisorHandoffClosed`
@@ -118,7 +119,9 @@ Events to backfill:
 Build intent/outcome, validation and explicit override, disclosure/delivery, and linked amendments.
 
 Events to backfill:
+- `AuditPackageCreated`
 - `AuditPackageBuildRequested`
+- `AuditPackageBuildProgressRecorded`
 - `AuditPackageBuilt`
 - `AuditPackageBuildFailed`
 - `AuditPackageValidated`
@@ -140,8 +143,13 @@ Events to backfill:
 - `TypeIIPlanProposed`
 - `TypeIIPlanApproved`
 - `ManagementAssertionRecorded`
+- `ManagementAssertionRevised`
+- `ManagementAssertionApproved`
 - `RepresentationLetterRecorded`
+- `ManagementRepresentationLetterSigned`
 - `ExaminationSignedOff`
+- `TypeIIPlanReviewed`
+- `TypeIIPlanRevised`
 
 ### Observation periods and recurrence — T2-01/02/03
 

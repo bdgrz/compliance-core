@@ -9,4 +9,5 @@ public sealed record ArtifactHandlingPolicyAssigned(
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    EvidenceHandlingPolicyView State,
     DateTimeOffset OccurredAt) : DomainEvent;

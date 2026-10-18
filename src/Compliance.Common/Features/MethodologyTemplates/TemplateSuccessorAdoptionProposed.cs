@@ -2,11 +2,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
-/// <summary>Records the TemplateSuccessorAdoptionProposed domain fact for one tenant-owned subject revision.</summary>
-[Discriminator("bdgrz.methodologytemplates.template-successor-adoption-proposed", 1)]
+/// <summary>Proposes one exact approved successor to a tenant application.</summary>
+[Discriminator("bdgrz.methodologytemplates.template-successor-adoption-proposed", 2)]
 public sealed record TemplateSuccessorAdoptionProposed(
     Uuid TenantId,
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    TemplateApplicationView State,
     DateTimeOffset OccurredAt) : DomainEvent;

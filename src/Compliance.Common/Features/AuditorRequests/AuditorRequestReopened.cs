@@ -9,4 +9,5 @@ public sealed record AuditorRequestReopened(
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    AuditorRequestView State,
     DateTimeOffset OccurredAt) : DomainEvent;

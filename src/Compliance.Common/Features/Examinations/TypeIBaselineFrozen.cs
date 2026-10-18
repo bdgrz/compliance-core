@@ -2,11 +2,10 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Records the TypeIBaselineFrozen domain fact for one tenant-owned subject revision.</summary>
+/// <summary>Freezes the exact baseline and advances the owning engagement lifecycle.</summary>
 [Discriminator("bdgrz.examinations.type-i-baseline-frozen", 1)]
 public sealed record TypeIBaselineFrozen(
     Uuid TenantId,
-    Uuid SubjectId,
-    long Revision,
-    Uuid? ActorMemberId,
+    ExaminationEngagementView Engagement,
+    TypeIBaselineView Baseline,
     DateTimeOffset OccurredAt) : DomainEvent;

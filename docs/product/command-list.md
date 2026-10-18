@@ -351,8 +351,8 @@ This pruned plan has 127 required additions, including five evidence command con
 
 ### Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md)
 
-- **CreateAdvisorHandoff** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs#L7))
-- **ReviseAdvisorHandoffSelection** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs#L7))
+- **CreateAdvisorHandoff** — coded; selects exact `(RecordId, VersionId)` pairs ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs#L7))
+- **ReviseAdvisorHandoffSelection** — coded; replaces exact `(RecordId, VersionId)` pairs and requires a change reason ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs#L7))
 - **MarkAdvisorHandoffReadyForReview** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs#L7))
 - **CloseAdvisorHandoff** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs#L7))
 - **RevokeAdvisorHandoff** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs#L7))

@@ -2,5 +2,16 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Sign-off record, author, timestamp, and exact package/period references.</summary>
-public sealed record ExaminationSignOffView(Uuid TenantId, Uuid ProgramId, Uuid ExaminationSignOffId, string Status, long Revision, DateTimeOffset UpdatedAt);
+/// <summary>Immutable management review binding an examination to exact evidence and external outcomes.</summary>
+public sealed record ExaminationSignOffView(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid ExaminationSignOffId,
+    ExaminationSignOffContent Content,
+    string Status,
+    long Revision,
+    Uuid SignedOffByMemberId,
+    string ApproverRole,
+    string ApproverDisplay,
+    DateTimeOffset SignedOffAt,
+    DateTimeOffset UpdatedAt);
