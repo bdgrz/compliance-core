@@ -110,6 +110,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetServiceEngagement>(tool => tool.ReadOnly())
         .AddMcpTool<ListServiceEngagements>(tool => tool.ReadOnly())
         .AddMcpTool<GetServiceEngagementHistory>(tool => tool.ReadOnly())
+        .AddMcpTool<GetExaminationEngagement>(tool => tool.ReadOnly())
         .AddMcpTool<GetClientIndependenceRules>(tool => tool.ReadOnly())
         .AddMcpTool<GetIndependenceRuleVersions>(tool => tool.ReadOnly())
         .AddMcpTool<ReviseIndependenceRules>(tool => tool.Idempotent())
@@ -2281,6 +2282,18 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Audit packages");
+    app.MapPortiaPut<CreateExaminationEngagement>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
+    app.MapPortiaPut<ReviseExaminationEngagement>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/revisions")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
+    app.MapPortiaGet<GetExaminationEngagement, ExaminationEngagementView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
     app.MapPortiaPost<RecordManagementAssertion>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

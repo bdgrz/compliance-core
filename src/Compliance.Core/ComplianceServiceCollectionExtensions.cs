@@ -539,6 +539,11 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzReadinessDirectory>());
         services.AddScoped<IReadinessDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzReadinessDirectory>());
+        services.AddScoped<FitzExaminationEngagementDirectory>();
+        services.AddScoped<IExaminationEngagementDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzExaminationEngagementDirectory>());
+        services.AddScoped<IExaminationEngagementDirectoryProjection>(provider =>
+            provider.GetRequiredService<FitzExaminationEngagementDirectory>());
         services.AddScoped<IReadinessReadModel, FitzReadinessReadModel>();
         services.AddScoped<ReadinessProjectionReadConsistency>();
         services.AddScoped<IApplicationReadinessImpactReader, ApplicationReadinessImpactReader>();
@@ -861,6 +866,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListTypeIEntryDecisionsHandler>()
             .AddRequestHandler<CreateExaminationEngagementHandler>()
             .AddRequestHandler<ReviseExaminationEngagementHandler>()
+            .AddRequestHandler<GetExaminationEngagementHandler>()
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ProposeTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ApproveTypeIIOperatingPlanHandler>()
@@ -1292,6 +1298,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<TenantInvitationDirectoryProjector>("TenantInvitationDirectory",
                 WorkloadScope.PerTenant)
             .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant)
+            .AddProjector<ExaminationEngagementDirectoryProjector>(
+                FitzExaminationEngagementDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ControlDraftDirectoryV2Projector>("ControlDraftDirectoryV2",
                 WorkloadScope.PerTenant)
             .AddProjector<ControlDraftHistoryDirectoryV1Projector>(
