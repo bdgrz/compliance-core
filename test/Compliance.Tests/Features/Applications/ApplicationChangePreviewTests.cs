@@ -44,7 +44,7 @@ public sealed class ApplicationChangePreviewTests
     [Theory]
     [InlineData("revise")]
     [InlineData("retire")]
-    public async Task ShouldReturnVisibleOutgoingRelationshipsAndKeepRelationshipContextPendingGivenChangePreview(
+    public async Task ShouldReturnVisibleOutgoingRelationshipsAndResolveRelationshipContextGivenChangePreview(
         string changeKind)
     {
         // Arrange
@@ -115,7 +115,7 @@ public sealed class ApplicationChangePreviewTests
         Assert.Empty(result.Value.IncomingApplicationRelationships);
         Assert.False(result.Value.Complete);
         Assert.Equal(
-            ["application_relationships", "vendors", "approved_control_versions_and_lifecycle_impact",
+            ["vendors", "approved_control_versions_and_lifecycle_impact",
                 "system_instance_control_draft_references", "policies", "evidence_sources",
                 "access_populations", "review_campaigns", "open_work", "readiness", "engagements",
                 "cross_source_manual_reliance"],
@@ -212,14 +212,14 @@ public sealed class ApplicationChangePreviewTests
         Assert.Equal(legacyRelationshipId, bySource[legacySourceId].RelationshipId);
         Assert.DoesNotContain(incoming, item => item.SourceApplicationId == restrictedSourceId ||
             item.SourceApplicationId == removedSourceId);
-        Assert.Contains("application_relationships", result.Value.PendingContexts);
+        Assert.DoesNotContain("application_relationships", result.Value.PendingContexts);
         Assert.DoesNotContain("application_relationships_over_limit",
             result.Value.PendingContexts);
         Assert.False(result.Value.Complete);
     }
 
     [Fact]
-    public async Task ShouldBoundIncomingCandidatesAndKeepRelationshipContextPendingGivenMoreThanTwoHundredVisibleSources()
+    public async Task ShouldMarkRelationshipImpactOverLimitGivenMoreThanTwoHundredIncomingSources()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -267,10 +267,62 @@ public sealed class ApplicationChangePreviewTests
         Assert.Equal(sourceIds.Take(200), result.Value.IncomingApplicationRelationships
             .Select(static relationship => relationship.SourceApplicationId));
         Assert.Equal(200, result.Value.IncomingApplicationRelationships.Count);
-        Assert.Contains("application_relationships", result.Value.PendingContexts);
-        Assert.DoesNotContain("application_relationships_over_limit",
+        Assert.DoesNotContain("application_relationships", result.Value.PendingContexts);
+        Assert.Contains("application_relationships_over_limit",
             result.Value.PendingContexts);
         Assert.False(result.Value.Complete);
+    }
+
+    [Fact]
+    public async Task ShouldReturnTransientConflictGivenIncomingPageExceedsRequestedLimit()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var target = DeclaredApplicationForTest(tenantId, targetId, actorId, now);
+        var incomingRows = Enumerable.Range(0, 201).Select(index =>
+        {
+            var sourceId = Uuid.CreateVersion5(targetId, $"incoming-source:{index}");
+            return new ApplicationRelationshipView(
+                Uuid.CreateVersion5(sourceId, $"depends_on:{targetId}"), targetId,
+                "depends_on", actorId, "Owner", now)
+            {
+                TenantId = tenantId,
+                SourceApplicationId = sourceId,
+                Revision = 1,
+            };
+        }).ToArray();
+        var sourceApplications = incomingRows.Select(row =>
+            DeclaredApplicationForTest(tenantId, row.SourceApplicationId, actorId, now)).ToArray();
+        var aggregateReader = new ApplicationMapReader([target, .. sourceApplications]);
+        var kv = new InMemoryKvClient();
+        var applications = new FitzApplicationDirectory(kv);
+        await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
+            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+        var incoming = new StubIncomingRelationshipDirectory(
+            new Page<ApplicationRelationshipView>(incomingRows, null));
+        var events = new InMemoryEventStore();
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
+            boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
+            controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
+            RestrictedApplicationVisibilityFixture.Create(aggregateReader),
+            incomingRelationshipDirectory: incoming,
+            incomingRelationshipConsistency: new ApplicationIncomingRelationshipReadConsistency(
+                incoming, events));
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<PreviewApplicationChange>(
+            new PreviewApplicationChange(tenantId, targetId, 1, "retire"),
+            new ClaimsPrincipal()), CancellationToken.None);
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.True(error.IsTransient);
     }
 
     [Fact]
@@ -458,6 +510,7 @@ public sealed class ApplicationChangePreviewTests
         var aggregateReader = new ApplicationMapReader([source, .. targets]);
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
+        var incomingRelationships = new FitzApplicationIncomingRelationshipDirectory(kv);
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();
@@ -466,7 +519,10 @@ public sealed class ApplicationChangePreviewTests
         var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
             controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
-            RestrictedApplicationVisibilityFixture.Create(aggregateReader));
+            RestrictedApplicationVisibilityFixture.Create(aggregateReader),
+            incomingRelationshipDirectory: incomingRelationships,
+            incomingRelationshipConsistency: new ApplicationIncomingRelationshipReadConsistency(
+                incomingRelationships, events));
 
         // Act
         var result = await handler.HandleAsync(new RequestContext<PreviewApplicationChange>(
@@ -479,7 +535,7 @@ public sealed class ApplicationChangePreviewTests
         Assert.Equal(201, targets.Sum(target => aggregateReader.HydrationCount(target.Id)));
         Assert.All(result.Value.ApplicationRelationships, relationship =>
             Assert.Contains(relationship.RelationshipId, relationshipIds));
-        Assert.Contains("application_relationships", result.Value.PendingContexts);
+        Assert.DoesNotContain("application_relationships", result.Value.PendingContexts);
         Assert.Contains("application_relationships_over_limit", result.Value.PendingContexts);
         Assert.False(result.Value.Complete);
     }

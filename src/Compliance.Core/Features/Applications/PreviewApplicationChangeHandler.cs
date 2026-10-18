@@ -34,7 +34,7 @@ public sealed class PreviewApplicationChangeHandler(
     }
 
     static readonly string[] MissingContextsBeforeSystemInstanceControls =
-        ["application_relationships", "vendors", "approved_control_versions_and_lifecycle_impact"];
+        ["vendors", "approved_control_versions_and_lifecycle_impact"];
 
     static readonly string[] MissingContextsAfterSystemInstanceControls =
         ["policies", "evidence_sources", "access_populations", "review_campaigns",
@@ -125,6 +125,7 @@ public sealed class PreviewApplicationChangeHandler(
             request.TenantId, userId, visibility, ct).ConfigureAwait(false);
         IReadOnlyList<ApplicationIncomingRelationshipView> incomingRelationships = [];
         ProjectionCheckpoint? incomingRelationshipFence = null;
+        var incomingRelationshipsOverLimit = false;
         if (incomingRelationshipDirectory is not null &&
             incomingRelationshipConsistency is not null)
         {
@@ -136,6 +137,12 @@ public sealed class PreviewApplicationChangeHandler(
 
             var candidates = await incomingRelationshipDirectory.ListActiveIncomingAsync(
                 request.TenantId, request.ApplicationId, 200, null, ct).ConfigureAwait(false);
+            if (candidates.Items.Count > 200)
+                return Result<ApplicationChangePreview>.Failure(new RequestError(
+                    RequestErrorKind.Conflict,
+                    "The application incoming-relationship projection is inconsistent.",
+                    isTransient: true));
+            incomingRelationshipsOverLimit = candidates.NextCursor is not null;
             var visible = new List<ApplicationIncomingRelationshipView>(candidates.Items.Count);
             foreach (var candidate in candidates.Items)
             {
@@ -282,9 +289,11 @@ public sealed class PreviewApplicationChangeHandler(
             pending.Add("control_draft_references_over_limit");
         if (instancePage.NextCursor is not null)
             pending.Add("system_instance_references_over_limit");
-        if (relationships.HasMore)
+        if (relationships.HasMore || incomingRelationshipsOverLimit)
             pending.Add("application_relationships_over_limit");
         pending.AddRange(MissingContextsBeforeSystemInstanceControls);
+        if (incomingRelationshipDirectory is null)
+            pending.Add("application_relationships");
         if (instanceConsistency is null)
             pending.Add("system_instance_control_draft_references");
         else if (systemInstanceControlDraftReferencesOverLimit)
