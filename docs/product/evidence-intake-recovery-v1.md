@@ -93,11 +93,12 @@ Independent artifact authorization and durable delivery issuance, derived
 lineage, production storage, the selected malware and secret scan engine,
 pending-inspection scheduling, and full R2-03 first-consumer proof remain open.
 
-Portia 0.7.0's tagged `IObjectStorage` contract
-lacks the quarantine and hold operations required by ADR0006. Its composition
-requires an AWS SDK client while the ADR excludes AWS SDK types and bespoke S3
-implementation from Compliance. This increment preserves the existing package
-versions and development content store.
+Portia [0.8.0's tagged `IObjectStorage` contract](https://github.com/cntryl/portia/blob/v0.8.0/src/Portia.Storage.Abstractions/Objects/IObjectStorage.cs)
+still provides multipart upload, verification, bounded download, read, and
+delete, but lacks the quarantine and hold operations required by ADR0006. The
+required hooks remain a Portia-owned dependency; Compliance must not add AWS SDK
+types or a bespoke S3 implementation. This recovery increment preserves the
+development content store.
 
 Focused unit tests cover scanner and event append failures, immutable retry
 provenance, refused and interrupted storage effects, recorded verdict replay,

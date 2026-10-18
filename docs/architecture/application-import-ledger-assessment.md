@@ -1,23 +1,24 @@
 # Application import ledger: Portia ownership assessment
 
-Recorded 2026-10-06 for [EN-05 #195](https://github.com/bdgrz/compliance/issues/195).
-This satisfies the platform assessment required by
+Recorded 2026-10-06 for [EN-05 #195](https://github.com/bdgrz/compliance/issues/195)
+against Portia 0.7.0; refreshed 2026-10-18 against Portia 0.8.0. This satisfies
+the platform assessment required by
 [ADR 0005](decisions/0005-import-reconciliation-and-background-processing.md#barrier-design).
 The acceptance, effect execution, and visibility behavior described below remain
 implementation work under #195 and its first consumer #213.
 
 ## Evidence and ownership
 
-Compliance pins Portia 0.7.0 in `Directory.Packages.props`. Its installed package
-metadata identifies source commit
-`20cac664d58c86014c88d3e91203edec7e30b47e`.
+Compliance now pins Portia 0.8.0 in `Directory.Packages.props`. The relevant
+aggregate, execution, and workload boundaries below were rechecked against the
+released [v0.8.0 tag](https://github.com/cntryl/portia/releases/tag/v0.8.0).
 
-| Existing primitive | Evidence at the pinned source commit | Import responsibility |
+| Existing primitive | Evidence at the reviewed tag | Import responsibility |
 | --- | --- | --- |
-| One aggregate execution with one commit/discard decision and authoritative optimistic concurrency | [IAggregateExecutor](https://github.com/cntryl/portia/blob/20cac664d58c86014c88d3e91203edec7e30b47e/src/Portia.Abstractions/Aggregates/IAggregateExecutor.cs) | Serialize a source's acceptance, cancellation, failure, and commit in one application ledger stream. |
-| Read-only aggregate hydration from its own event stream | [IAggregateReader](https://github.com/cntryl/portia/blob/20cac664d58c86014c88d3e91203edec7e30b47e/src/Portia.Abstractions/Aggregates/IAggregateReader.cs) | Read authoritative batch and ledger state in authorizers, handlers, and visibility decisions. |
-| At-least-once cross-aggregate reactions with application-owned idempotent effects | [Portia scope](https://github.com/cntryl/portia/blob/20cac664d58c86014c88d3e91203edec7e30b47e/docs/scope.md) | Resume the frozen application plan after interruption; use deterministic batch/row effect identities. |
-| Projection data and checkpoint share a commit; reactor effects have a separate checkpoint | [Projectors and reactors](https://github.com/cntryl/portia/blob/20cac664d58c86014c88d3e91203edec7e30b47e/docs/projectors-and-reactors.md) | Maintain import progress and inventory reads without treating a checkpoint as batch acceptance. |
+| One aggregate execution with one commit/discard decision and authoritative optimistic concurrency | [IAggregateExecutor](https://github.com/cntryl/portia/blob/v0.8.0/src/Portia.Abstractions/Aggregates/IAggregateExecutor.cs) | Serialize a source's acceptance, cancellation, failure, and commit in one application ledger stream. |
+| Read-only aggregate hydration from its own event stream | [IAggregateReader](https://github.com/cntryl/portia/blob/v0.8.0/src/Portia.Abstractions/Aggregates/IAggregateReader.cs) | Read authoritative batch and ledger state in authorizers, handlers, and visibility decisions. |
+| At-least-once cross-aggregate reactions with application-owned idempotent effects | [Portia scope](https://github.com/cntryl/portia/blob/v0.8.0/docs/scope.md) | Resume the frozen application plan after interruption; use deterministic batch/row effect identities. |
+| Projection data and checkpoint share a commit; reactor effects have a separate checkpoint | [Projectors and reactors](https://github.com/cntryl/portia/blob/v0.8.0/docs/projectors-and-reactors.md) | Maintain import progress and inventory reads without treating a checkpoint as batch acceptance. |
 
 Portia owns event persistence, aggregate execution, optimistic concurrency,
 generated registration/serialization, request dispatch, and workload execution.
