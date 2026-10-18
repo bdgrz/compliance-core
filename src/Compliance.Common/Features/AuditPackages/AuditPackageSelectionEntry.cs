@@ -12,4 +12,5 @@ public sealed record AuditPackageSelectionEntry(
     string Extension,
     string ContentSha256,
     long ByteLength,
-    string Authorship);
+    string Authorship,
+    Uuid SourceVersionId = default);

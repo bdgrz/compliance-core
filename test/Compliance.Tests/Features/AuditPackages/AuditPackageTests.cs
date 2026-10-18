@@ -43,6 +43,11 @@ public sealed class AuditPackageTests
         var changed = NewPackage(PackageId, [entries[0] with { SourceVersion = 2 }, .. entries.Skip(1)]);
         Assert.NotEqual(package.Current.Versions[0].Manifest.ManifestSha256,
             changed.Current!.Versions[0].Manifest!.ManifestSha256);
+
+        var changedSourceVersionId = NewPackage(PackageId,
+            [entries[0] with { SourceVersionId = Uuid.CreateVersion4() }, .. entries.Skip(1)]);
+        Assert.NotEqual(package.Current.Versions[0].Manifest.ManifestSha256,
+            changedSourceVersionId.Current!.Versions[0].Manifest!.ManifestSha256);
     }
 
     [Fact]
@@ -285,9 +290,10 @@ public sealed class AuditPackageTests
         // Arrange
         var package = new AuditPackageAggregate(TenantId, ProgramId, Uuid.CreateVersion4());
         var closeSnapshotId = Uuid.CreateVersion4();
+        var periodId = Uuid.CreateVersion4();
         var content = new AuditPackageContent(ExaminationId, "type_ii",
             "type_ii_close_snapshot", closeSnapshotId, new string('9', 64),
-            "Type II package", Entries());
+            "Type II package", Entries(), periodId);
 
         // Act
         var created = package.Create(content, LeadId, "Lead", Now);
@@ -297,6 +303,25 @@ public sealed class AuditPackageTests
         Assert.Equal("type_ii", package.Current!.PackageKind);
         Assert.Equal("type_ii_close_snapshot", package.Current.Versions[0].SourceSnapshotKind);
         Assert.Equal(closeSnapshotId, package.Current.Versions[0].Manifest.SourceSnapshotId);
+        Assert.Equal(periodId, package.Current.Versions[0].SourcePeriodId);
+    }
+
+    [Fact]
+    public void ShouldRequireOwningPeriodIdentityGivenNewTypeIIPackage()
+    {
+        // Arrange
+        var package = new AuditPackageAggregate(TenantId, ProgramId, Uuid.CreateVersion4());
+        var content = new AuditPackageContent(ExaminationId, "type_ii",
+            "type_ii_close_snapshot", Uuid.CreateVersion4(), new string('9', 64),
+            "Type II package", Entries());
+
+        // Act
+        var created = package.Create(content, LeadId, "Lead", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent,
+            Assert.IsType<CommandFailure>(created).Code);
+        Assert.Equal(0, package.Revision);
     }
 
     static AuditPackageAggregate BuiltPackage()

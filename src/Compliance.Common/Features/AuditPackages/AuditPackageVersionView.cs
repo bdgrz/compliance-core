@@ -19,4 +19,5 @@ public sealed record AuditPackageVersionView(
     string? AmendmentReason,
     Uuid CreatedByMemberId,
     string CreatedByDisplay,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    Uuid SourcePeriodId = default);

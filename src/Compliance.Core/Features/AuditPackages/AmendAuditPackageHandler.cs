@@ -41,7 +41,7 @@ public sealed class AmendAuditPackageHandler(IAggregateExecutor executor, IAggre
 
         var content = new AuditPackageContent(current.ExaminationId, current.PackageKind,
             prior.SourceSnapshotKind, prior.SourceSnapshotId, prior.SourceSnapshotSha256,
-            current.Name, selection);
+            current.Name, selection, prior.SourcePeriodId);
         var resolved = await sources.ResolveAsync(request.TenantId, request.ProgramId, content, ct)
             .ConfigureAwait(false);
         if (!resolved.IsSuccess)

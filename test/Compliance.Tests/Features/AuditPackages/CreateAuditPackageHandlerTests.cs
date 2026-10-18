@@ -2,10 +2,13 @@ using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackage;
+using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
+using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPackages;
 
@@ -72,7 +75,7 @@ public sealed class CreateAuditPackageHandlerTests
     }
 
     [Fact]
-    public async Task ShouldRejectTypeIIPackageUntilCloseSnapshotResolutionIsSupportedGivenCommand()
+    public async Task ShouldRequireOwningPeriodIdGivenTypeIICloseSnapshot()
     {
         // Arrange
         await using var fixture = new Fixture();
@@ -93,7 +96,7 @@ public sealed class CreateAuditPackageHandlerTests
             fixture.ProgramId, packageId));
 
         // Assert
-        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
         Assert.Null(saved.Current);
     }
 
@@ -113,6 +116,34 @@ public sealed class CreateAuditPackageHandlerTests
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
     }
 
+    [Fact]
+    public async Task ShouldCreateTypeIIPackageFromLatestFrozenCloseGivenExactSourceVersion()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var close = await fixture.SeedTypeIICloseAsync();
+        var packageId = Uuid.CreateVersion4();
+        var content = new AuditPackageContent(fixture.ExaminationId, "type_ii",
+            "type_ii_close_snapshot", close.CloseSnapshotId, close.ContentSha256,
+            "SOC 2 Type II", [fixture.TypeIISelection()], fixture.TypeIIPeriodId);
+        var request = new CreateAuditPackage(fixture.TenantId, fixture.ProgramId, packageId,
+            content);
+
+        // Act
+        var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
+            request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
+            fixture.ProgramId, packageId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var version = Assert.Single(saved.Current!.Versions);
+        Assert.Equal(fixture.TypeIIPeriodId, version.SourcePeriodId);
+        Assert.Equal(close.CloseSnapshotId, version.SourceSnapshotId);
+        Assert.Equal(fixture.SourceVersionId,
+            Assert.Single(version.SelectedContent).SourceVersionId);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -124,6 +155,8 @@ public sealed class CreateAuditPackageHandlerTests
         public Uuid ProgramId { get; } = Uuid.CreateVersion4();
         public Uuid ExaminationId { get; } = Uuid.CreateVersion4();
         public Uuid BaselineId { get; } = Uuid.CreateVersion4();
+        public Uuid TypeIIPeriodId { get; } = Uuid.CreateVersion4();
+        public Uuid TypeIIPlanId { get; } = Uuid.CreateVersion4();
         public Uuid SourceRecordId { get; } = Uuid.CreateVersion4();
         public Uuid SourceVersionId { get; } = Uuid.CreateVersion4();
         public string SourceSha256 { get; } = new('b', 64);
@@ -158,7 +191,11 @@ public sealed class CreateAuditPackageHandlerTests
 
         public AuditPackageSelectionEntry Selection() => new("system_description",
             "system-description-1", "system_description", SourceRecordId, SourceRevision,
-            "json", SourceSha256, 128, "management");
+            "json", SourceSha256, 128, "management", SourceVersionId);
+
+        public AuditPackageSelectionEntry TypeIISelection() => new("control_matrix",
+            "control-17", "control", SourceRecordId, SourceRevision, "json", SourceSha256,
+            128, "management", SourceVersionId);
 
         public async Task<TypeIBaselineView> SeedTypeIBaselineAsync()
         {
@@ -177,6 +214,64 @@ public sealed class CreateAuditPackageHandlerTests
             await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
             return _baseline!;
         }
+
+        public async Task<TypeIIPeriodCloseSnapshotView> SeedTypeIICloseAsync()
+        {
+            var memberId = RbacIds.Member(TenantId, UserId);
+            var reviewerMemberId = RbacIds.Member(TenantId, Uuid.CreateVersion4());
+            var executiveMemberId = RbacIds.Member(TenantId, Uuid.CreateVersion4());
+            var plan = new TypeIIPlanAggregate(TenantId, ProgramId, TypeIIPlanId);
+            Assert.Null(plan.Propose(CreateTypeIIPlanContent(), memberId, "Compliance lead",
+                Now.AddDays(-3)));
+            Assert.Null(plan.Review(plan.Revision, 1, "approve", "Reviewed the controls and gaps.",
+                reviewerMemberId, "Independent reviewer", Now.AddDays(-2)));
+            Assert.Null(plan.Approve(plan.Revision, 1, "Approved the Type II scope.",
+                executiveMemberId, "CISO", "Executive approver", Now.AddDays(-1)));
+
+            var sourceReferences = TypeIIPeriodSourceReferences();
+            var period = new TypeIIPeriodAggregate(TenantId, ProgramId, TypeIIPeriodId);
+            Assert.Null(period.Start(plan.Current!, new TypeIIPeriodOpeningContent(ExaminationId,
+                Uuid.CreateVersion4(), new string('c', 64), sourceReferences, [GapId]), memberId,
+                "Compliance lead", Now));
+            var occurrences = period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId)
+                .ToArray();
+            Assert.Null(period.RecordCloseValidation(period.Revision,
+                new TypeIIPeriodCloseValidationContent(sourceReferences, occurrences, occurrences,
+                    [], [], []), reviewerMemberId, "Close validator", Now.AddMonths(12)));
+            Assert.Null(period.ApproveClose(period.Revision, [], "Reviewed the exact close.",
+                executiveMemberId, "Chief Executive", "Executive approver",
+                Now.AddMonths(12).AddHours(1)));
+            var closeSnapshotId = Uuid.CreateVersion4();
+            Assert.Null(period.FreezeClose(period.Revision, new TypeIIPeriodCloseSnapshotContent(
+                closeSnapshotId, sourceReferences, occurrences, []), executiveMemberId,
+                "Chief Executive", Now.AddMonths(12).AddHours(2)));
+            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+            return period.Current!.CloseSnapshots[^1];
+        }
+
+        TypeIIPlanContent CreateTypeIIPlanContent() => new(ExaminationId, Uuid.CreateVersion4(),
+            new string('a', 64), Uuid.CreateVersion4(), new DateOnly(2026, 10, 1),
+            new DateOnly(2027, 9, 30), "Independent Audit LLP", ["security", "availability"],
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            [TypeIIReference("policy"), TypeIIReference("risk"), TypeIIReference("vendor"),
+                TypeIIReference("finding"), TypeIIReference("change")],
+            [new TypeIIControlPlanEntry(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+                "Quarterly access review", Uuid.CreateVersion4(), "quarterly", 4,
+                new DateOnly(2026, 10, 1), null)],
+            [new("finding", GapId, Uuid.CreateVersion4(), 1, new string('b', 64), "carry")],
+            [new(GapId, "Open control gap", "acknowledged", "Owner and due date confirmed")],
+            []);
+
+        IReadOnlyList<ExaminationContentReference> TypeIIPeriodSourceReferences() =>
+            [TypeIIReference("boundary"), TypeIIReference("inventory"),
+             new ExaminationContentReference("control", SourceRecordId, SourceVersionId,
+                 SourceRevision, SourceSha256), TypeIIReference("policy"),
+             TypeIIReference("provider"), TypeIIReference("finding")];
+
+        static ExaminationContentReference TypeIIReference(string kind) =>
+            new(kind, Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, new string('d', 64));
+
+        static Uuid GapId { get; } = Uuid.CreateVersion4();
 
         public Task<TypeIBaselineView> GetBaselineAsync() => Task.FromResult(_baseline!);
 

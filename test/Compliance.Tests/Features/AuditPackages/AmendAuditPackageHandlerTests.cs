@@ -96,6 +96,8 @@ public sealed class AmendAuditPackageHandlerTests
         public Uuid BaselineId { get; } = Uuid.CreateVersion4();
         public Uuid SourceRecord1 { get; } = Uuid.CreateVersion4();
         public Uuid SourceRecord2 { get; } = Uuid.CreateVersion4();
+        public Uuid SourceVersion1 { get; } = Uuid.CreateVersion4();
+        public Uuid SourceVersion2 { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
@@ -126,9 +128,9 @@ public sealed class AmendAuditPackageHandlerTests
                 Uuid.CreateVersion4(), [memberId]), memberId, "Engagement lead", Now));
             var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, ExaminationId,
             [new TypeIBaselineSourceReference("system_description", SourceRecord1,
-                Uuid.CreateVersion4(), 3, SourceHash1),
+                SourceVersion1, 3, SourceHash1),
              new TypeIBaselineSourceReference("system_description", SourceRecord2,
-                Uuid.CreateVersion4(), 4, SourceHash2)]);
+                SourceVersion2, 4, SourceHash2)]);
             Assert.Null(engagement.FreezeBaseline(engagement.Revision, BaselineId, preview,
                 "Confirmed the exact Type I source snapshot.", memberId, "Engagement lead",
                 Now.AddMinutes(1)));
@@ -157,13 +159,14 @@ public sealed class AmendAuditPackageHandlerTests
         AuditPackageContent Content(TypeIBaselineView baseline, string? firstSourceHash = null) => new(ExaminationId,
             "type_i", "type_i_baseline", baseline.TypeIBaselineId, baseline.ContentSha256,
             "SOC 2 Type I", [
-                Selection(SourceRecord1, 3, firstSourceHash ?? SourceHash1),
-                Selection(SourceRecord2, 4, SourceHash2),
+                Selection(SourceRecord1, SourceVersion1, 3, firstSourceHash ?? SourceHash1),
+                Selection(SourceRecord2, SourceVersion2, 4, SourceHash2),
             ]);
 
-        static AuditPackageSelectionEntry Selection(Uuid sourceId, long revision, string hash) =>
+        static AuditPackageSelectionEntry Selection(Uuid sourceId, Uuid sourceVersionId,
+            long revision, string hash) =>
             new("system_description", "system-description", "system_description", sourceId,
-                revision, "json", hash, 128, "management");
+                revision, "json", hash, 128, "management", sourceVersionId);
 
         public static Cntryl.Portia.RequestContext<T> Context<T>(Uuid userId, T request)
             where T : IRequestBase => new(request, new RequestDispatchContext(Actor(userId),

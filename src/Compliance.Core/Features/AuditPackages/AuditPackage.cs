@@ -83,6 +83,8 @@ public sealed class AuditPackage : Aggregate
             return Invalid("An audit package requires tenant, program, and package identities.");
         if (ValidateHumanActor(actorMemberId, actorDisplay, createdAt) is { } actorFailure)
             return actorFailure;
+        if (content?.PackageKind == "type_ii" && content.SourcePeriodId == Uuid.Empty)
+            return Invalid("A Type II package must retain the identity of its owning period.");
         if (NormalizeContent(content) is not { } normalized)
             return Invalid("An audit package requires a frozen examination snapshot and explicit valid content selection.");
 
@@ -442,13 +444,16 @@ public sealed class AuditPackage : Aggregate
         if (ValidateHumanActor(actorMemberId, actorDisplay, amendedAt) is { } actorFailure)
             return actorFailure;
         var prior = CurrentVersion(current);
+        if (current.PackageKind == "type_ii" && prior.SourcePeriodId == Uuid.Empty)
+            return CommandFailure.StateConflict(
+                "This legacy Type II package has no owning period binding and cannot be amended safely.");
         amendmentReason = Clean(amendmentReason);
         if (!Bounded(amendmentReason, 1, MaximumTextLength) || sourceSnapshotId == Uuid.Empty ||
             !Sha256(sourceSnapshotSha256))
             return Invalid("An amendment requires a new frozen source snapshot and bounded reason.");
         var content = new AuditPackageContent(current.ExaminationId, current.PackageKind,
             prior.SourceSnapshotKind, sourceSnapshotId, NormalizeHash(sourceSnapshotSha256),
-            current.Name, selectedContent);
+            current.Name, selectedContent, prior.SourcePeriodId);
         if (NormalizeContent(content) is not { } normalized)
             return Invalid("An amendment requires an explicit valid selection from its frozen source snapshot.");
         if (prior.PackageVersion > 1 && prior.AmendsVersion == prior.PackageVersion - 1 &&
@@ -562,6 +567,7 @@ public sealed class AuditPackage : Aggregate
                    oldVersion.SourceSnapshotId == newVersion.SourceSnapshotId &&
                    oldVersion.SourceSnapshotKind == newVersion.SourceSnapshotKind &&
                    oldVersion.SourceSnapshotSha256 == newVersion.SourceSnapshotSha256 &&
+                   oldVersion.SourcePeriodId == newVersion.SourcePeriodId &&
                    oldVersion.SelectedContent.SequenceEqual(newVersion.SelectedContent) &&
                    SameManifest(oldVersion.Manifest, newVersion.Manifest) &&
                    IsAppendOrLastUpdate(oldVersion.BuildAttempts, newVersion.BuildAttempts) &&
@@ -593,6 +599,7 @@ public sealed class AuditPackage : Aggregate
         left.SourceSnapshotId == right.SourceSnapshotId &&
         left.SourceSnapshotKind == right.SourceSnapshotKind &&
         left.SourceSnapshotSha256 == right.SourceSnapshotSha256 &&
+        left.SourcePeriodId == right.SourcePeriodId &&
         left.SelectedContent.SequenceEqual(right.SelectedContent) &&
         SameManifest(left.Manifest, right.Manifest) &&
         left.BuildAttempts.SequenceEqual(right.BuildAttempts) &&
@@ -640,6 +647,7 @@ public sealed class AuditPackage : Aggregate
             if (version.PackageVersion != index + 1 || version.SourceSnapshotId == Uuid.Empty ||
                 version.SourceSnapshotKind != (state.PackageKind == "type_i"
                     ? "type_i_baseline" : "type_ii_close_snapshot") ||
+                state.PackageKind == "type_i" && version.SourcePeriodId != Uuid.Empty ||
                 !Sha256(version.SourceSnapshotSha256) || version.SelectedContent is null ||
                 version.SelectedContent.Count is < 1 or > MaximumSelectedContent ||
                 NormalizeContent(ContentFor(state, version, version.SelectedContent)) is not { } normalized ||
@@ -868,7 +876,7 @@ public sealed class AuditPackage : Aggregate
         return new AuditPackageVersionView(packageVersion, "draft", content.SourceSnapshotId,
             content.SourceSnapshotKind, content.SourceSnapshotSha256,
             Freeze(content.SelectedContent.ToArray()), manifest, [], [], [], [], amendsVersion,
-            amendmentReason, actorMemberId, actorDisplay, createdAt);
+            amendmentReason, actorMemberId, actorDisplay, createdAt, content.SourcePeriodId);
     }
 
     AuditPackageView ReplaceCurrentVersion(AuditPackageView current,
@@ -892,7 +900,8 @@ public sealed class AuditPackage : Aggregate
     static AuditPackageContent ContentFor(AuditPackageView root,
         AuditPackageVersionView version, IReadOnlyList<AuditPackageSelectionEntry> entries) =>
         new(root.ExaminationId, root.PackageKind, version.SourceSnapshotKind,
-            version.SourceSnapshotId, version.SourceSnapshotSha256, root.Name, entries);
+            version.SourceSnapshotId, version.SourceSnapshotSha256, root.Name, entries,
+            version.SourcePeriodId);
 
     static string ManifestDigest(AuditPackageContent content,
         IReadOnlyList<AuditPackageManifestEntryView> entries)
@@ -909,8 +918,10 @@ public sealed class AuditPackage : Aggregate
             builder.Append(entry.RelativePath).Append('|')
                 .Append(source.SourceType).Append('|')
                 .Append(source.SourceRecordId).Append('|')
-                .Append(source.SourceVersion.ToString(CultureInfo.InvariantCulture)).Append('|')
-                .Append(source.ContentSha256).Append('|')
+                .Append(source.SourceVersion.ToString(CultureInfo.InvariantCulture)).Append('|');
+            if (source.SourceVersionId != Uuid.Empty)
+                builder.Append(source.SourceVersionId).Append('|');
+            builder.Append(source.ContentSha256).Append('|')
                 .Append(source.ByteLength.ToString(CultureInfo.InvariantCulture)).Append('|')
                 .Append(source.Authorship).Append('\n');
         }
@@ -955,6 +966,7 @@ public sealed class AuditPackage : Aggregate
                current.CreatedAt == createdAt && version.SourceSnapshotId == normalized.SourceSnapshotId &&
                version.SourceSnapshotKind == normalized.SourceSnapshotKind &&
                version.SourceSnapshotSha256 == normalized.SourceSnapshotSha256 &&
+               version.SourcePeriodId == normalized.SourcePeriodId &&
                version.SelectedContent.SequenceEqual(normalized.SelectedContent);
     }
 

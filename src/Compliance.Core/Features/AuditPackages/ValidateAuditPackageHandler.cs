@@ -32,7 +32,7 @@ public sealed class ValidateAuditPackageHandler(IAggregateExecutor executor, IAg
         var version = current.Versions[^1];
         var content = new AuditPackageContent(current.ExaminationId, current.PackageKind,
             version.SourceSnapshotKind, version.SourceSnapshotId, version.SourceSnapshotSha256,
-            current.Name, version.SelectedContent);
+            current.Name, version.SelectedContent, version.SourcePeriodId);
         var resolved = await sources.ResolveAsync(request.TenantId, request.ProgramId, content, ct)
             .ConfigureAwait(false);
         IReadOnlyList<AuditPackageValidationFinding> findings = resolved.IsSuccess

@@ -10,4 +10,5 @@ public sealed record AuditPackageContent(
     Uuid SourceSnapshotId,
     string SourceSnapshotSha256,
     string Name,
-    IReadOnlyList<AuditPackageSelectionEntry> SelectedContent);
+    IReadOnlyList<AuditPackageSelectionEntry> SelectedContent,
+    Uuid SourcePeriodId = default);
