@@ -997,7 +997,7 @@ The following is a static source inventory, including internal operations. Queri
 
 ### Backfilled event contracts
 
-These 131 requirement-backed event contracts have been added since the existing-event inventory below was captured. The eight readiness-import events remain deferred. Contract presence does not mean command handlers emit them or projectors consume them.
+These 135 requirement-backed event contracts have been added since the existing-event inventory below was captured. The eight readiness-import events remain deferred. Contract presence does not mean command handlers emit them or projectors consume them.
 
 #### AccessControl
 
@@ -1352,6 +1352,13 @@ These 131 requirement-backed event contracts have been added since the existing-
 
 - [TenantIdentityProviderTestedV2](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestedV2.cs#L6)
 
+#### Work
+
+- [WeeklyWorkDigestScheduled](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestScheduled.cs#L7)
+- [WeeklyWorkDigestDeliveryRequested](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRequested.cs#L7)
+- [WeeklyWorkDigestDeliveryRecorded](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRecorded.cs#L7)
+- [WeeklyWorkDigestDeliverySuppressed](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliverySuppressed.cs#L7)
+
 
 ### Incidents
 
@@ -1660,10 +1667,6 @@ These 131 requirement-backed event contracts have been added since the existing-
 #### Work
 
 - [WorkDigestPreferenceChanged](../../src/Compliance.Common/Features/Work/WorkDigestPreferenceChanged.cs#L7) — `bdgrz.work.digest_preference.changed` v1
-- [WeeklyWorkDigestScheduled](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestScheduled.cs#L8) — `bdgrz.work.weekly-digest.scheduled` v1
-- [WeeklyWorkDigestDeliveryRequested](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRequested.cs#L8) — `bdgrz.work.weekly-digest.delivery-requested` v1
-- [WeeklyWorkDigestDeliveryRecorded](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRecorded.cs#L8) — `bdgrz.work.weekly-digest.delivery-recorded` v1
-- [WeeklyWorkDigestDeliverySuppressed](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliverySuppressed.cs#L8) — `bdgrz.work.weekly-digest.delivery-suppressed` v1
 - [WorkItemAssigned](../../src/Compliance.Common/Features/Work/WorkItemAssigned.cs#L8) — `bdgrz.work.assigned` v1
 - [WorkItemEscalated](../../src/Compliance.Common/Features/Work/WorkItemEscalated.cs#L8) — `bdgrz.work.escalated` v1
 
