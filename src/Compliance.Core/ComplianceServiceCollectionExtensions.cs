@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.AuditorRequests;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Features.Examinations;
@@ -751,6 +752,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<CreateExaminationEngagementHandler>()
             .AddRequestHandler<ReviseExaminationEngagementHandler>()
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
+            .AddRequestHandler<ApproveAuditPackageDisclosureHandler>()
+            .AddRequestHandler<RecordAuditPackageDeliveryHandler>()
             .AddRequestHandler<RecordAuditorRequestHandler>()
             .AddRequestHandler<ReviseAuditorRequestHandler>()
             .AddRequestHandler<AssignAuditorRequestHandler>()
