@@ -483,6 +483,7 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
         services.AddScoped<IPopulationSnapshotDirectoryReader>(
             provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
+        services.AddScoped<PopulationSnapshotDirectoryReadConsistency>();
         services.AddScoped<PopulationSnapshotFreezer>();
         services.TryAddSingleton(TenantActivationPolicy.Default);
         services.AddScoped<TenantManagerInvariant>();
@@ -545,6 +546,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IExaminationEngagementDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
         services.AddScoped<ITypeIBaselineSourceContributor, BoundaryTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, WorkforceTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselinePreviewReader, TypeIBaselinePreviewReader>();
         services.AddScoped<IReadinessReadModel, FitzReadinessReadModel>();
         services.AddScoped<ReadinessProjectionReadConsistency>();

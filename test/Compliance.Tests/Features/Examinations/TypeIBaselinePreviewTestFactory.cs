@@ -20,6 +20,7 @@ static class TypeIBaselinePreviewTestFactory
     static string? SourceFamily(string kind) => kind switch
     {
         "approved_boundary" => "approved_boundary",
+        "workforce_roster_snapshot" => "workforce",
         "control" or "approved_control" => "controls",
         "criteria" => "criteria",
         "policy" => "policies",
