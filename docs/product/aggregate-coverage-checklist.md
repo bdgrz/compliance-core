@@ -130,9 +130,12 @@ behavioral coverage remains; `[~]` intentionally deferred by the backlog.
   stable expected control-occurrence identities, records attributable period
   amendments, reconciles close sources and completeness, requires exact
   unresolved-item acknowledgement by an independent executive, and freezes an
-  immutable close snapshot with exact amendment lineage. Control operations,
-  evidence, plan, examination decisions, and cross-period overlap remain in
-  their own streams and are checked by handlers.
+  immutable close snapshot with exact amendment lineage. The program-scoped
+  `TypeIIObservationCalendar` serializes active date reservations, imports
+  existing period streams, protects overlapping starts and amendments, and
+  releases a range only against an exact frozen close snapshot. Closed periods
+  remain in history without blocking later active ranges. Control operations,
+  evidence, plan, and examination decisions remain in their own streams.
 - [x] T2-02 and T2-03 Recurring operation and evidence — reuse
   `ControlOperationsLedger`, `EvidenceRequestLedger`, and `EvidenceArtifact`;
   do not create a second occurrence or evidence aggregate.
@@ -226,11 +229,13 @@ behavioral coverage remains; `[~]` intentionally deferred by the backlog.
   `TypeIIPlan`; each received focused failing behavior tests before its
   implementation and now passes exact-binding, attribution, independence,
   completeness, provenance, approval-gate, and replay tests.
-- [x] T2-01/T3-01 Type II period: `TypeIIPeriod`; focused tests were written
-  before implementation, failed because the root/contracts were absent, and now
+- [x] T2-01/T3-01 Type II period and program calendar: `TypeIIPeriod` and
+  `TypeIIObservationCalendar`; focused tests failed before implementation and
   pass approved-plan binding, stable occurrence generation, opening-gap
-  acknowledgement, effective amendments, close completeness, exact material
-  acknowledgement, snapshot lineage, and event replay.
+  acknowledgement, calendar migration, inclusive overlap rejection, adjacent
+  date allowance, closed-period date reuse, amendment
+  reservation/completion/cancellation/release, close
+  completeness, exact material acknowledgement, snapshot lineage, and replay.
 - [x] All identified P1 aggregate gaps above have behavior tests and verified
   implementations; deferred `[~]` items remain decision-gated by the backlog.
 - [x] T2-07 Change and incident oversight: separate `SignificantChange` and

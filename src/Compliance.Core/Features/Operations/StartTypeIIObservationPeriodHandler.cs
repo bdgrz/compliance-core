@@ -13,7 +13,8 @@ namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Starts a period from an approved plan and its exact frozen Type I source chain.</summary>
 public sealed class StartTypeIIObservationPeriodHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock) : IRequestHandler<StartTypeIIObservationPeriod>
+    IAggregateReader reader, IDomainEventReader events, TimeProvider clock)
+    : IRequestHandler<StartTypeIIObservationPeriod>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<StartTypeIIObservationPeriod> context,
         CancellationToken ct)
@@ -136,6 +137,25 @@ public sealed class StartTypeIIObservationPeriodHandler(IAggregateExecutor execu
             sourceReferences, acknowledgedGaps);
         var opening = new TypeIIPeriodOpeningContent(request.ExaminationId, request.PeriodId,
             Digest(openingManifest), sourceReferences, acknowledgedGaps);
+
+        var bootstrap = await TypeIIObservationCalendarBootstrap.EnsureAsync(executor, reader,
+            events, context, request.TenantId, request.ProgramId, ct).ConfigureAwait(false);
+        if (!bootstrap.IsSuccess)
+            return bootstrap;
+
+        var period = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId,
+            request.ProgramId, request.PeriodId), ct).ConfigureAwait(false);
+        if (period.Start(planView, opening, actorMemberId, actorDisplay, now) is { } startFailure)
+            return Result.Failure(startFailure.ToRequestError());
+
+        var reserved = await executor.ExecuteAsync(new TypeIIObservationCalendar(request.TenantId,
+                request.ProgramId), calendar => CommandFailureRequestAdapter.ToOutcome(
+                calendar.Reserve(request.PeriodId, request.ExaminationId, request.PlanId,
+                    request.PeriodStart, request.PeriodEnd, opening.OpeningSnapshotSha256,
+                    actorMemberId, actorDisplay, now)), context, ct)
+            .ConfigureAwait(false);
+        if (!reserved.IsSuccess)
+            return reserved;
 
         return await executor.ExecuteAsync(new TypeIIPeriod(request.TenantId, request.ProgramId,
                 request.PeriodId), aggregate => CommandFailureRequestAdapter.ToOutcome(

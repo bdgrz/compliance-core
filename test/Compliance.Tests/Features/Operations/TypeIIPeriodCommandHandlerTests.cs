@@ -38,6 +38,32 @@ public sealed class TypeIIPeriodCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldSynchronizeReservedRangeAfterAmendmentGivenStartedPeriod()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedStartedPeriodAsync();
+        var amendedEnd = fixture.PeriodEnd.AddDays(7);
+        var request = new AmendTypeIIObservationPeriod(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId, 1, null, amendedEnd, "Extend for the delayed sample window.");
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var retry = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
+            fixture.TenantId, fixture.ProgramId));
+        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(2, period.Revision);
+        Assert.Equal(3, calendar.Revision);
+        Assert.Equal(amendedEnd, Assert.Single(calendar.Current!.Periods).PeriodEnd);
+    }
+
+    [Fact]
     public async Task ShouldRejectStaleAmendmentWithoutAppendingGivenConcurrentPeriodChange()
     {
         // Arrange
@@ -163,6 +189,7 @@ public sealed class TypeIIPeriodCommandHandlerTests
         public IAggregateExecutor Executor { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateReader Reader { get; }
+        public IDomainEventReader Events { get; }
         public AmendTypeIIObservationPeriodHandler Handler { get; }
         public TimeProvider Clock { get; } = new FixedTimeProvider(AmendedAt);
 
@@ -179,7 +206,8 @@ public sealed class TypeIIPeriodCommandHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-            Handler = new AmendTypeIIObservationPeriodHandler(Executor, Reader, Clock);
+            Events = (IDomainEventReader)_scope.ServiceProvider.GetRequiredService<IEventStore>();
+            Handler = new AmendTypeIIObservationPeriodHandler(Executor, Reader, Events, Clock);
             CloseClock = new MutableTimeProvider(CloseValidationAt.AddHours(1));
         }
 

@@ -97,7 +97,7 @@ public sealed class TypeIIPeriod : Aggregate
         if (current.Amendments.Count > 0 && current.Amendments[^1] is { } prior &&
             prior.PeriodStart == periodStart &&
             prior.PeriodEnd == periodEnd && prior.Reason == reason && prior.ActorMemberId == actorMemberId &&
-            prior.ActorDisplay == actorDisplay.Trim() && prior.AmendedAt == amendedAt)
+            prior.ActorDisplay == actorDisplay.Trim())
             return null;
         if (expectedRevision != Revision)
             return StaleRevision();

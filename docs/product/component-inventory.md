@@ -129,10 +129,10 @@ These candidates make later scope concrete. They are not established public cont
 
 ### Observation periods and recurrence — T2-01/02/03
 
-- Aggregate/model candidates: TypeIIPeriod (expected population and generation batches); ControlOperationsLedger (materialized occurrences).
-- Commands: StartObservationPeriod; ReviseFutureControlSchedule; GenerateDueControlOccurrences; RecordMissingOccurrence; EndObservationPeriod.
+- Aggregate/model candidates: TypeIIPeriod (approved opening, expected population and generation batches); TypeIIObservationCalendar (program-wide reserved ranges); ControlOperationsLedger (materialized occurrences).
+- Commands: StartTypeIIObservationPeriod; AmendTypeIIObservationPeriod; ReviseFutureControlSchedule; GenerateDueControlOccurrences; RecordMissingOccurrence; EndObservationPeriod.
 - Queries: GetObservationPeriod; ListObservationPeriods; GetControlCalendar; ListMissingOccurrences.
-- Events: ObservationPeriodStarted; FutureControlScheduleRevised; DueControlOccurrencesGenerated; MissingOccurrenceRecorded; ObservationPeriodEnded.
+- Events: ObservationPeriodStarted; ObservationPeriodAmended; ObservationPeriodReserved; ObservationPeriodAmendmentReserved; ObservationPeriodAmendmentCompleted; ObservationPeriodAmendmentCancelled; ObservationPeriodReservationReleased; FutureControlScheduleRevised; DueControlOccurrencesGenerated; MissingOccurrenceRecorded; ObservationPeriodEnded.
 - Reactors: ControlOccurrenceSchedulingReactor; MissingOccurrenceDetectionReactor.
 - Projectors: ObservationPeriodDirectoryProjector; ControlCalendarProjector; OccurrenceCompletenessProjector.
 - API family: periods, control calendar and occurrence completeness.
@@ -1004,7 +1004,7 @@ The following is a static source inventory, including internal operations. Queri
 
 ### Backfilled event contracts
 
-These 135 requirement-backed event contracts have been added since the existing-event inventory below was captured. The eight readiness-import events remain deferred. Contract presence does not mean command handlers emit them or projectors consume them.
+These 140 requirement-backed event contracts have been added since the existing-event inventory below was captured. The eight readiness-import events remain deferred. Contract presence does not mean command handlers emit them or projectors consume them.
 
 #### AccessControl
 
@@ -1265,11 +1265,21 @@ These 135 requirement-backed event contracts have been added since the existing-
 
 - [MissingOccurrenceRecorded](../../src/Compliance.Common/Features/Operations/MissingOccurrenceRecorded.cs#L6)
 
+- [ObservationPeriodAmendmentCancelled](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentCancelled.cs#L6)
+
+- [ObservationPeriodAmendmentCompleted](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentCompleted.cs#L6)
+
+- [ObservationPeriodAmendmentReserved](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentReserved.cs#L6)
+
+- [ObservationPeriodReservationReleased](../../src/Compliance.Common/Features/Operations/ObservationPeriodReservationReleased.cs#L6)
+
 - [ObservationPeriodAmended](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmended.cs#L6)
 
 - [ObservationPeriodEnded](../../src/Compliance.Common/Features/Operations/ObservationPeriodEnded.cs#L6)
 
 - [ObservationPeriodStarted](../../src/Compliance.Common/Features/Operations/ObservationPeriodStarted.cs#L6)
+
+- [ObservationPeriodReserved](../../src/Compliance.Common/Features/Operations/ObservationPeriodReserved.cs#L6)
 
 - [TypeIIOperatingPlanApproved](../../src/Compliance.Common/Features/Operations/TypeIIOperatingPlanApproved.cs#L6)
 
@@ -1782,6 +1792,7 @@ These 135 requirement-backed event contracts have been added since the existing-
 
 - [ControlOperationsLedger](../../src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs#L13)
 - [TypeIIPeriod](../../src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L17)
+- [TypeIIObservationCalendar](../../src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs#L8)
 
 #### Policies
 
@@ -2678,6 +2689,9 @@ These 135 requirement-backed event contracts have been added since the existing-
 
 - [ObservationPeriodView](../../src/Compliance.Common/Features/Operations/ObservationPeriodView.cs#L6)
 - [ObservationPeriodSummaryView](../../src/Compliance.Common/Features/Operations/ObservationPeriodSummaryView.cs#L6)
+- [TypeIIObservationCalendarView](../../src/Compliance.Common/Features/Operations/TypeIIObservationCalendarView.cs#L6)
+- [TypeIIObservationCalendarPeriodView](../../src/Compliance.Common/Features/Operations/TypeIIObservationCalendarPeriodView.cs#L6)
+- [TypeIIObservationCalendarAmendmentView](../../src/Compliance.Common/Features/Operations/TypeIIObservationCalendarAmendmentView.cs#L6)
 - [TypeIIPeriodView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodView.cs#L8)
 - [TypeIIPeriodOpeningContent](../../src/Compliance.Common/Features/Operations/TypeIIPeriodOpeningContent.cs#L7)
 - [TypeIIPeriodOccurrenceView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodOccurrenceView.cs#L7)

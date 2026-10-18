@@ -1,16 +1,16 @@
 # Domain event universe and backfill list
 
-Baseline: repository source and the accepted backlog reviewed 2026-10-17. This is the event counterpart to the [system command list](command-list.md) and [query/view-model list](query-and-view-model-list.md). The weekly work digest contracts below were added afterward from R2-11c and M0-D15.
+Baseline: repository source and the accepted backlog reviewed 2026-10-18. This is the event counterpart to the [system command list](command-list.md) and [query/view-model list](query-and-view-model-list.md).
 
 ## Existing event contracts
 
-The original component inventory listed **236 existing `DomainEvent` contracts**. The current source declares **387** event types; the original feature-backed event universe plus the four weekly-digest events accounts for 376, leaving 11 source declarations to reconcile against accepted requirements before the inventory can be considered closed. Coded event types do not by themselves prove persistence retains them or projectors consume them.
+The original component inventory listed **236 existing `DomainEvent` contracts**. The current source declares **392** event types; the original feature-backed event universe, four weekly-digest events, and five program-calendar lifecycle events account for 381, leaving 11 source declarations to reconcile against accepted requirements before the inventory can be considered closed. Coded event types do not by themselves prove persistence retains them or projectors consume them.
 
 ## Backfill result
 
-- **136 event contracts** were identified for accepted, requirement-backed workflows below.
+- **141 event contracts** are identified for accepted, requirement-backed workflows below.
 - **8 additional event contracts** belong to readiness-material import and stay deferred with that feature until its prerequisites and durable import boundary are implemented.
-- R2-11c adds four typed weekly-digest lifecycle contracts, bringing the tracked current-plus-required universe to **376 event contracts**; the 8 readiness-import events remain outside the immediate backfill.
+- Four weekly-digest lifecycle contracts and five program-calendar lifecycle contracts bring the tracked current-plus-required universe to **381 event contracts**; the 8 readiness-import events remain outside the immediate backfill.
 
 These names were reconciled against `DomainEvent` declarations, the pruned command inventory, and gap-analysis sections G01–G20. Event names retain business facts and outcomes; they are not a one-for-one mirror of every command or query. Existing events remain the owner when they already represent a required fact. Each backfill event is a typed contract for the listed story outcome. Payloads carry tenant and subject identity, revision, optional member attribution, and occurrence time; handlers must populate and emit them, and projectors must consume them.
 
@@ -160,6 +160,11 @@ Period and schedule changes, approved Type II operating plan, durable recurring 
 Events to backfill:
 - `ObservationPeriodStarted`
 - `ObservationPeriodAmended`
+- `ObservationPeriodReserved`
+- `ObservationPeriodAmendmentReserved`
+- `ObservationPeriodAmendmentCompleted`
+- `ObservationPeriodAmendmentCancelled`
+- `ObservationPeriodReservationReleased`
 - `FutureControlScheduleRevised`
 - `TypeIIOperatingPlanProposed`
 - `TypeIIOperatingPlanReviewed`

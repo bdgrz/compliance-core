@@ -629,11 +629,11 @@ DecideTypeIEntry is a readiness entry decision, not an assertion, representation
 
 Scope: **T2-01, T3-07**. Requirement source: [backlog](backlog.md).
 
-ProgramPlan holds target dates; it does not retain an approved TypeIIPeriod opening snapshot, overlap constraints, amendments or rollover approvals.
+`TypeIIPeriod` retains the approved opening snapshot and amendments, while `TypeIIObservationCalendar` serializes program-wide date reservations. `ProgramPlan` continues to hold target dates; it is not the authoritative period calendar.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `StartTypeIIObservationPeriod` | Start from the approved plan and Type I baseline, then freeze complete opening source and gap inputs. |
+| Partial | `StartTypeIIObservationPeriod` | The handler binds the exact approved plan, current Type I baseline, auditor outcome, and approved system description; it freezes the opening source manifest, bootstraps committed periods, and rejects overlapping reservations. The approved Type II plan proposal still needs its authoritative source builder. |
 | Present | `AmendTypeIIObservationPeriod`; `ProposeProgramRollover`; `ApproveProgramRollover` | Amendments preserve prior period history. Rollover proposals bind complete carry-forward choices and rationale to the exact closed-period snapshot and auditor outcome; approval retains the exact reviewed decision before next-period creation. |
 | Reuse | `ReviseFinding` | Reuse the new period-start operation for later periods and existing finding identity/history for carry-forward. Add explicit carry-forward source references if needed, not a duplicate finding or schedule. |
 

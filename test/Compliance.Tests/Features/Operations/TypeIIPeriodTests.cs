@@ -100,6 +100,28 @@ public sealed class TypeIIPeriodTests
     }
 
     [Fact]
+    public void ShouldPreserveFirstTimestampForSameDateAmendmentRetryGivenActivePeriod()
+    {
+        // Arrange
+        var period = StartedPeriod();
+        var expectedRevision = period.Revision;
+        const string reason = "Extend observation by one week";
+        var firstAmendedAt = Now.AddMonths(2);
+        Assert.Null(period.Amend(expectedRevision, PeriodStart, PeriodEnd.AddDays(7), reason,
+            ProposerId, "Compliance lead", firstAmendedAt));
+
+        // Act
+        var retry = period.Amend(expectedRevision, PeriodStart, PeriodEnd.AddDays(7), reason,
+            ProposerId, "Compliance lead", firstAmendedAt.AddHours(4));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(expectedRevision + 1, period.Revision);
+        var amendment = Assert.Single(period.Current!.Amendments);
+        Assert.Equal(firstAmendedAt, amendment.AmendedAt);
+    }
+
+    [Fact]
     public void ShouldGenerateDueExpectedOccurrencesOncePerPeriodAcrossGenerationKeysGivenActivePeriod()
     {
         // Arrange
