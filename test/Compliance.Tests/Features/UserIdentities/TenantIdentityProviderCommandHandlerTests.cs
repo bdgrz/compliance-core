@@ -12,6 +12,93 @@ public sealed class TenantIdentityProviderCommandHandlerTests
     static readonly DateTimeOffset Now = new(2026, 10, 17, 20, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public async Task ShouldConfigureConnectionAsPendingTestGivenPersonalAdministrator()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var command = new ConfigureTenantIdentityProvider(fixture.TenantId, fixture.ProviderId,
+            "https://idp.example.test", "client-app", "vault://tenant/idp/credential-v1",
+            ["client-app", "api://compliance"]);
+
+        // Act
+        var result = await fixture.ConfigureHandler.HandleAsync(Fixture.Context(fixture.UserId,
+            command), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
+            fixture.ProviderId));
+        var configured = Assert.Single((await fixture.ReadEventsAsync())
+            .OfType<TenantIdentityProviderConfigured>());
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("pending_test", saved.Current!.Status);
+        Assert.Equal(1, saved.Current.Revision);
+        Assert.Equal(1, saved.Current.CredentialRevision);
+        Assert.Equal("https://idp.example.test", saved.Current.Issuer);
+        Assert.Equal("vault://tenant/idp/credential-v1",
+            configured.Configuration.EncryptedCredentialReference);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.Current.ActorMemberId);
+        Assert.Equal(Now, saved.Current.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task ShouldRotateCredentialAndRequireNewProviderTestGivenEnabledConnection()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedConfiguredProviderAsync();
+        var current = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
+            fixture.ProviderId));
+        Assert.Null(current.RecordTest(current.Revision,
+            new TenantIdentityProviderTestResultContent("test-1", "passed", null, null),
+            RbacIds.Member(fixture.TenantId, fixture.UserId), "Tenant administrator",
+            Now.AddMinutes(-1)));
+        await fixture.Writer.SaveAsync(current, new RequestDispatchContext(RequestActor.System));
+
+        // Act
+        var result = await fixture.RotateHandler.HandleAsync(Fixture.Context(fixture.UserId,
+            new RotateTenantIdentityProviderCredentials(fixture.TenantId, fixture.ProviderId,
+                "vault://tenant/idp/credential-v2", "rotation-2026-10")), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
+            fixture.ProviderId));
+        var rotated = Assert.Single((await fixture.ReadEventsAsync())
+            .OfType<TenantIdentityProviderCredentialsRotated>());
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("pending_test", saved.Current!.Status);
+        Assert.Equal(3, saved.Current.Revision);
+        Assert.Equal(2, saved.Current.CredentialRevision);
+        Assert.Equal("vault://tenant/idp/credential-v2", rotated.EncryptedCredentialReference);
+        Assert.Equal("rotation-2026-10", saved.Current.LastRotationReference);
+        Assert.Single(saved.Current.TestHistory);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.Current.ActorMemberId);
+    }
+
+    [Fact]
+    public async Task ShouldRejectSystemActorGivenProviderConfiguration()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var command = new ConfigureTenantIdentityProvider(fixture.TenantId, fixture.ProviderId,
+            "https://idp.example.test", "client-app", "vault://tenant/idp/credential-v1",
+            ["client-app"]);
+
+        // Act
+        var context = new Cntryl.Portia.RequestContext<ConfigureTenantIdentityProvider>(command,
+            new RequestDispatchContext(RequestActor.System, new HttpInvocation("POST",
+                "/api/v1/tenants/test/identity-providers", "/api/v1/tenants/test/identity-providers",
+                "identity-provider-test")));
+        var result = await fixture.ConfigureHandler.HandleAsync(context, CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TenantIdentityProvider(fixture.TenantId,
+            fixture.ProviderId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Null(saved.Current);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
     public async Task ShouldDisableConfiguredConnectionAndRetainAttributionGivenTenantAdministrator()
     {
         // Arrange
@@ -97,19 +184,29 @@ public sealed class TenantIdentityProviderCommandHandlerTests
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
+        public IDomainEventReader Events { get; }
         public DisableTenantIdentityProviderHandler Handler { get; }
+        public ConfigureTenantIdentityProviderHandler ConfigureHandler { get; }
+        public RotateTenantIdentityProviderCredentialsHandler RotateHandler { get; }
 
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var store = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(store);
+            services.AddSingleton<IDomainEventReader>(store);
             services.AddPortia();
             _provider = services.BuildServiceProvider(
                 new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+            Events = _scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
             Handler = new DisableTenantIdentityProviderHandler(
+                _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), _clock);
+            ConfigureHandler = new ConfigureTenantIdentityProviderHandler(
+                _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), _clock);
+            RotateHandler = new RotateTenantIdentityProviderCredentialsHandler(
                 _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), _clock);
         }
 
@@ -123,11 +220,29 @@ public sealed class TenantIdentityProviderCommandHandlerTests
             await Writer.SaveAsync(provider, new RequestDispatchContext(RequestActor.System));
         }
 
+        public async Task<IReadOnlyList<DomainEvent>> ReadEventsAsync()
+        {
+            var aggregate = new TenantIdentityProvider(TenantId, ProviderId);
+            var events = new List<DomainEvent>();
+            await foreach (var record in Events.ReadAsync(aggregate.Stream, 0,
+                               CancellationToken.None))
+                events.Add(record.Event);
+            return events;
+        }
+
         public static Cntryl.Portia.RequestContext<T> Context<T>(Uuid userId, T request)
-            where T : IRequestBase => new(request, new RequestDispatchContext(Actor(userId),
-                new HttpInvocation("POST", "/api/v1/tenants/test/identity-providers/test/disable",
-                    "/api/v1/tenants/test/identity-providers/test/disable",
-                    "identity-provider-test")));
+            where T : IRequestBase
+        {
+            var path = request switch
+            {
+                ConfigureTenantIdentityProvider => "/api/v1/tenants/test/identity-providers/test",
+                RotateTenantIdentityProviderCredentials =>
+                    "/api/v1/tenants/test/identity-providers/test/credential-rotations",
+                _ => "/api/v1/tenants/test/identity-providers/test/disable",
+            };
+            return new(request, new RequestDispatchContext(Actor(userId),
+                new HttpInvocation("POST", path, path, "identity-provider-test")));
+        }
 
         static ClaimsPrincipal Actor(Uuid userId) => new(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString()),

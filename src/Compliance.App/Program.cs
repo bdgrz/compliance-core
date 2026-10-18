@@ -2183,6 +2183,14 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListAccessGrants, AccessGrantSetView>("/api/v1/tenants/{tenant_id}/access-grants")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Access grants");
+    app.MapPortiaPost<ConfigureTenantIdentityProvider>(
+            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Identity federation");
+    app.MapPortiaPost<RotateTenantIdentityProviderCredentials>(
+            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Identity federation");
     app.MapMethods(
         "/api/{**path}",
         ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],
