@@ -4,6 +4,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Programs;
 
-/// <summary>Records the propose program rollover intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.programs.propose-program-rollover", 1)]
-public sealed record ProposeProgramRollover(Uuid TenantId, Uuid ProgramId, Uuid RolloverId, Uuid SourcePeriodId, DateOnly NextPeriodStart, DateOnly NextPeriodEnd, string Rationale) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Proposes a reviewed carry-forward plan from an exact completed Type II period.</summary>
+[Discriminator("bdgrz.programs.propose-program-rollover", 2)]
+public sealed record ProposeProgramRollover(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid RolloverId,
+    ProgramRolloverContent Content)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;

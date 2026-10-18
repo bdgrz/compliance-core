@@ -276,7 +276,7 @@ The following is a static source inventory, including internal operations. Queri
 | Models and supporting contracts | 562 |
 | Reactors | 30 |
 | Projectors | 66 |
-| Explicit MapPortia HTTP route registrations | 331 |
+| Explicit MapPortia HTTP route registrations | 437 |
 
 ### Existing commands
 
@@ -456,6 +456,8 @@ The following is a static source inventory, including internal operations. Queri
 
 - [CreateClientService](../../src/Compliance.Common/Features/Programs/CreateClientService.cs#L7) — `bdgrz.client-service.create` v2
 - [CreateProgram](../../src/Compliance.Common/Features/Programs/CreateProgram.cs#L7) — `bdgrz.program.create` v1
+- [ProposeProgramRollover](../../src/Compliance.Common/Features/Programs/ProposeProgramRollover.cs#L7) — `bdgrz.programs.propose-program-rollover` v2; [handler](../../src/Compliance.Core/Features/Programs/ProposeProgramRolloverHandler.cs#L8) binds full rollover content to the exact closed-period snapshot and auditor outcome
+- [ApproveProgramRollover](../../src/Compliance.Common/Features/Programs/ApproveProgramRollover.cs#L7) — `bdgrz.programs.approve-program-rollover` v1
 - [RetireClientService](../../src/Compliance.Common/Features/Programs/RetireClientService.cs#L7) — `bdgrz.client-service.retire` v1
 - [ReviseClientService](../../src/Compliance.Common/Features/Programs/ReviseClientService.cs#L7) — `bdgrz.client-service.revise` v1
 - [ReviseProgram](../../src/Compliance.Common/Features/Programs/ReviseProgram.cs#L7) — `bdgrz.program.revise` v1
@@ -2774,6 +2776,8 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations` | `ValidateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2206) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/representation-letters/{letter_id}` | `RecordManagementRepresentationLetter` | [registration](../../src/Compliance.App/Program.cs#L2210) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2214) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2218) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2222) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |

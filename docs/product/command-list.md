@@ -449,7 +449,7 @@ This pruned plan has 129 required additions, including five evidence command con
 
 - **StartTypeIIObservationPeriod** — coded ([contract](../../src/Compliance.Common/Features/Operations/StartTypeIIObservationPeriod.cs#L7))
 - **AmendTypeIIObservationPeriod** — coded ([contract](../../src/Compliance.Common/Features/Operations/AmendTypeIIObservationPeriod.cs#L7))
-- **ProposeProgramRollover** — coded ([contract](../../src/Compliance.Common/Features/Programs/ProposeProgramRollover.cs#L7))
+- **ProposeProgramRollover** — v2 handler binds the full carry-forward plan and rationale to the exact frozen close snapshot and auditor outcome ([contract](../../src/Compliance.Common/Features/Programs/ProposeProgramRollover.cs#L7), [handler](../../src/Compliance.Core/Features/Programs/ProposeProgramRolloverHandler.cs#L8))
 - **ApproveProgramRollover** — coded ([contract](../../src/Compliance.Common/Features/Programs/ApproveProgramRollover.cs#L7))
 
 ### Native significant changes and incidents — [T2-07](backlog.md#t2-07-assess-system-changes-and-incidents-for-compliance-impact), [M0-D21](decisions/m0-d21-significant-change.md)

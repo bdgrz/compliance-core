@@ -200,7 +200,10 @@ public sealed class ApproveProgramRolloverHandlerTests
                 Uuid.CreateVersion4(),
                 [new ProgramRolloverRecordContent("control", Uuid.CreateVersion4(), 1,
                     Hash('f'), "carried", Uuid.CreateVersion4(), "Still approved.")], [],
-                ["readiness"]);
+                ["readiness"])
+            {
+                ProposalRationale = "Carry forward the reviewed control into the next period.",
+            };
             var rollover = new ProgramRolloverAggregate(TenantId, ProgramId, rolloverId);
             Assert.Null(rollover.Propose(content, sourcePeriod, outcome, proposerId, "Proposer", Now));
             await Writer.SaveAsync(rollover, new RequestDispatchContext(RequestActor.System));

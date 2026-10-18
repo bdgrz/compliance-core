@@ -63,7 +63,7 @@ public sealed class ProgramRollover : Aggregate
     {
         if (_current is { } existing)
             return SameProposal(existing, content, sourcePeriod, outcome, actorMemberId,
-                actorDisplay, proposedAt) ? null : CommandFailure.StateConflict(
+                actorDisplay) ? null : CommandFailure.StateConflict(
                 "The rollover identity already has different source records or carry-forward choices.");
         if (!ValidIdentity() || !ValidActor(actorMemberId, actorDisplay, proposedAt) ||
             NormalizeContent(content) is not { } normalized ||
@@ -302,6 +302,7 @@ public sealed class ProgramRollover : Aggregate
         if (content is null || content.SourcePeriodId == Uuid.Empty || content.SourceExaminationId == Uuid.Empty ||
             content.SourceCloseSnapshotId == Uuid.Empty || !Sha256(content.SourceCloseSnapshotSha256) ||
             content.AuditOutcomeId == Uuid.Empty || !Sha256(content.AuditOutcomeContentSha256) ||
+            !Bounded(content.ProposalRationale, 1, MaximumTextLength) ||
             content.NextPeriodStart == default || content.NextPeriodEnd < content.NextPeriodStart ||
             content.NextPeriodId == Uuid.Empty || content.NextTypeIIPlanId == Uuid.Empty ||
             content.Records is null || content.Records.Count is < 1 or > MaximumRecords ||
@@ -320,6 +321,7 @@ public sealed class ProgramRollover : Aggregate
         {
             SourceCloseSnapshotSha256 = NormalizeHash(content.SourceCloseSnapshotSha256),
             AuditOutcomeContentSha256 = NormalizeHash(content.AuditOutcomeContentSha256),
+            ProposalRationale = Clean(content.ProposalRationale),
             Records = Freeze(content.Records.Select(item => item with
             {
                 RecordType = item.RecordType.Trim().ToLowerInvariant(),
@@ -376,10 +378,10 @@ public sealed class ProgramRollover : Aggregate
     }
 
     bool SameProposal(ProgramRolloverView state, ProgramRolloverContent? content,
-        TypeIIPeriodView? period, AuditOutcomeView? outcome, Uuid actor, string display, DateTimeOffset at) =>
+        TypeIIPeriodView? period, AuditOutcomeView? outcome, Uuid actor, string display) =>
         NormalizeContent(content) is { } normalized && Digest(normalized) == state.CurrentVersion.ContentSha256 &&
         ValidCompletedSources(normalized, period, outcome) && state.CurrentVersion.ProposedByMemberId == actor &&
-        state.CurrentVersion.ProposedByDisplay == Clean(display) && state.CurrentVersion.ProposedAt == at;
+        state.CurrentVersion.ProposedByDisplay == Clean(display);
 
     static ProgramRolloverVersionView NewVersion(ProgramRolloverContent content, int version,
         Uuid actor, string display, DateTimeOffset at, string reason) =>

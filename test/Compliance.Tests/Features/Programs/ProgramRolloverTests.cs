@@ -26,6 +26,42 @@ public sealed class ProgramRolloverTests
     static readonly ProgramRolloverContent RolloverContent = BuildContent();
 
     [Fact]
+    public void ShouldRequireBoundedProposalRationaleGivenExactCompletedSources()
+    {
+        // Arrange
+        var rollover = NewRollover();
+        var content = Content() with { ProposalRationale = "  " };
+
+        // Act
+        var failure = rollover.Propose(content, SourcePeriod(), Outcome(), CEOId,
+            "Compliance lead", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent,
+            Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Equal(0, rollover.Revision);
+    }
+
+    [Fact]
+    public void ShouldRetrySameProposalWithoutChangingFirstTimestampGivenLaterCommandTime()
+    {
+        // Arrange
+        var rollover = NewRollover();
+        var content = Content();
+        Assert.Null(rollover.Propose(content, SourcePeriod(), Outcome(), CEOId,
+            "Compliance lead", Now));
+
+        // Act
+        var retry = rollover.Propose(content, SourcePeriod(), Outcome(), CEOId,
+            "Compliance lead", Now.AddHours(1));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(1, rollover.Revision);
+        Assert.Equal(Now, rollover.Current!.CurrentVersion.ProposedAt);
+    }
+
+    [Fact]
     public void ShouldRequireExactCompletedTypeIISourceAndPreserveCarryForwardAndCommitmentProvenanceGivenProposal()
     {
         // Arrange
@@ -196,7 +232,10 @@ public sealed class ProgramRolloverTests
         [new ProgramRolloverCommitmentContent(Uuid.CreateVersion4(),
             "Finish access recertification.", CEOId, new DateOnly(2027, 2, 15),
             SourceEngagementId, Uuid.CreateVersion4(), 2, Hash('d'))],
-        ["readiness", "open_findings", "overdue_work"]);
+        ["readiness", "open_findings", "overdue_work"])
+    {
+        ProposalRationale = "Carry forward reviewed open obligations into the next Type II period.",
+    };
 
     static ProgramRolloverRecordContent Record(string type, string disposition) => new(type,
         Uuid.CreateVersion4(), 2, Hash('c'), disposition,

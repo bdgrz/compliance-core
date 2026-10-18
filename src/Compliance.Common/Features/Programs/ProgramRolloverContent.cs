@@ -16,4 +16,7 @@ public sealed record ProgramRolloverContent(
     Uuid NextTypeIIPlanId,
     IReadOnlyList<ProgramRolloverRecordContent> Records,
     IReadOnlyList<ProgramRolloverCommitmentContent> Commitments,
-    IReadOnlyList<string> ComparisonMeasures);
+    IReadOnlyList<string> ComparisonMeasures)
+{
+    public string ProposalRationale { get; init; } = string.Empty;
+}

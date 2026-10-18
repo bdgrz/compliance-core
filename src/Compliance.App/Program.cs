@@ -2215,6 +2215,14 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
+    app.MapPortiaPost<ProposeProgramRollover>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Programs");
+    app.MapPortiaPost<ApproveProgramRollover>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Programs");
     app.MapMethods(
         "/api/{**path}",
         ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],

@@ -633,8 +633,8 @@ ProgramPlan holds target dates; it does not retain an approved TypeIIPeriod open
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `StartTypeIIObservationPeriod`; `AmendTypeIIObservationPeriod` | Start from approved plan/baseline, freeze opening inputs and govern date/scope amendments without rewriting earlier operation. |
-| Missing | `ProposeProgramRollover`; `ApproveProgramRollover` | Review changed/carried-forward/retired/unresolved records and retain approval before opening the next period. |
+| Missing | `StartTypeIIObservationPeriod` | Start from the approved plan and Type I baseline, then freeze complete opening source and gap inputs. |
+| Present | `AmendTypeIIObservationPeriod`; `ProposeProgramRollover`; `ApproveProgramRollover` | Amendments preserve prior period history. Rollover proposals bind complete carry-forward choices and rationale to the exact closed-period snapshot and auditor outcome; approval retains the exact reviewed decision before next-period creation. |
 | Reuse | `ReviseFinding` | Reuse the new period-start operation for later periods and existing finding identity/history for carry-forward. Add explicit carry-forward source references if needed, not a duplicate finding or schedule. |
 
 <a id="g15"></a>

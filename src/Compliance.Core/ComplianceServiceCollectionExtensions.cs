@@ -1015,6 +1015,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviewTemplateContributionHandler>()
             .AddRequestHandler<AcceptTemplateContributionHandler>()
             .AddRequestHandler<ReviseProgramHandler>()
+            .AddRequestHandler<ProposeProgramRolloverHandler>()
             .AddRequestHandler<ApproveProgramRolloverHandler>()
             .AddRequestHandler<SelectProgramCriteriaEditionHandler>()
             .AddRequestHandler<GetProgramHandler>()
