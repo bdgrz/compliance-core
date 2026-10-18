@@ -762,6 +762,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<FreezeAuditPopulationHandler>()
             .AddRequestHandler<ReviseAuditPopulationDefinitionHandler>()
             .AddRequestHandler<GenerateAuditPopulationHandler>()
+            .AddRequestHandler<ReconcileAuditPopulationHandler>()
             .AddRequestHandler<RecordAuditorRequestHandler>()
             .AddRequestHandler<ReviseAuditorRequestHandler>()
             .AddRequestHandler<AssignAuditorRequestHandler>()

@@ -4,8 +4,8 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 
 ## Current gap
 
-- Required commands in the plan: 127. 62 have handler source; 65 still need one.
-- Required command registration gaps: 65. Required commands without a static test reference: 64.
+- Required commands in the plan: 127. 63 have handler source; 64 still need one.
+- Required command registration gaps: 64. Required commands without a static test reference: 63.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
 
@@ -336,7 +336,7 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 | Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ReviseAuditPopulationDefinition` | present | present | present | referenced |
 | Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `RecordAuditPopulationFacts` | present | missing | check | no reference |
 | Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ClassifyAuditPopulationRow` | present | present | present | referenced |
-| Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ReconcileAuditPopulation` | present | missing | check | no reference |
+| Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ReconcileAuditPopulation` | present | present | present | referenced |
 | Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `GenerateAuditPopulation` | present | present | present | referenced |
 | Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `FreezeAuditPopulation` | present | present | present | referenced |
 | Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `AmendAuditPopulation` | present | missing | check | no reference |

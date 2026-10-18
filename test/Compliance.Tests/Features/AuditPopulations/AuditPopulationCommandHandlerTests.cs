@@ -106,6 +106,30 @@ public sealed class AuditPopulationCommandHandlerTests
         Assert.Empty(saved.Current.Rows);
     }
 
+    [Fact]
+    public async Task ShouldReconcileExactStoredRowClassificationsGivenRationale()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (populationId, _) = await fixture.SeedPopulationAsync(reconciled: false);
+
+        // Act
+        var result = await fixture.ReconcileHandler().HandleAsync(Fixture.Context(fixture.UserId,
+            new ReconcileAuditPopulation(fixture.TenantId, fixture.ProgramId, populationId, 2,
+                "Every row was compared with the approved source export.")), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(fixture.TenantId,
+            fixture.ProgramId, populationId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("reconciled", saved.Current!.Status);
+        Assert.Equal("complete", saved.Current.Reconciliation!.Completeness);
+        Assert.Equal(1, saved.Current.Reconciliation.SourceTotal);
+        Assert.Equal(1, saved.Current.Reconciliation.IncludedCount);
+        Assert.Equal("Every row was compared with the approved source export.",
+            saved.Current.Reconciliation.ReconciliationRationale);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -142,6 +166,8 @@ public sealed class AuditPopulationCommandHandlerTests
             new(Executor, _clock);
 
         public GenerateAuditPopulationHandler GenerateHandler() => new(Executor, _clock);
+
+        public ReconcileAuditPopulationHandler ReconcileHandler() => new(Executor, _clock);
 
         public async Task<(Uuid PopulationId, Uuid RowId)> SeedPopulationAsync(bool reconciled)
         {
