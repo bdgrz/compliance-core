@@ -294,6 +294,35 @@ public sealed class ComplianceWebTests
     }
 
     [Fact]
+    public async Task ShouldDescribeAdvisorHandoffTerminationGivenOpenApi()
+    {
+        // Arrange
+        await using var factory = CreateBrokerFreeFactory("Development");
+        using var client = factory.CreateClient();
+        const string closeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures";
+        const string revokeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations";
+
+        // Act
+        using var response = await client.GetAsync("/openapi/v1.json", CancellationToken.None);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStreamAsync(
+            CancellationToken.None));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var paths = document.RootElement.GetProperty("paths");
+        foreach (var route in new[] { closeRoute, revokeRoute })
+        {
+            var operation = paths.GetProperty(route).GetProperty("post");
+            Assert.True(operation.TryGetProperty("requestBody", out _));
+            var parameters = operation.GetProperty("parameters").EnumerateArray()
+                .Select(parameter => parameter.GetProperty("name").GetString()).ToArray();
+            Assert.Contains("tenant_id", parameters);
+            Assert.Contains("program_id", parameters);
+            Assert.Contains("handoff_id", parameters);
+        }
+    }
+
+    [Fact]
     public async Task ShouldDescribeRiskEvaluationContractsGivenOpenApi()
     {
         // Arrange
