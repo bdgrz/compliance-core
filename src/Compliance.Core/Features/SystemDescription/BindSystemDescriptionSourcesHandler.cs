@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -21,34 +22,72 @@ public sealed class BindSystemDescriptionSourcesHandler(IAggregateReader reader,
         if (description.CurrentVersion is not { } current)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The system description was not found."));
-        if (current.Scope.Stage != "type_i" || current.Scope.TypeIBaselineId is not { } baselineId)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "Source refresh requires a Type I description bound to a frozen baseline."));
         if (request.SourceVersionIds is null || request.SourceVersionIds.Count == 0 ||
             request.SourceVersionIds.Any(static id => id == Uuid.Empty) ||
             request.SourceVersionIds.Distinct().Count() != request.SourceVersionIds.Count)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Source refresh requires a nonempty list of unique source-version identities."));
 
-        var engagement = await reader.HydrateAsync(new ExaminationEngagement(request.TenantId,
-            request.ProgramId, current.Scope.ExaminationId), ct);
-        var baseline = engagement.Baseline;
-        if (engagement.Current is not { Status: "baseline_frozen" } || baseline is null ||
-            baseline.Status is not ("frozen" or "amended") ||
-            baseline.TypeIBaselineId != baselineId || baseline.ProgramId != request.ProgramId ||
-            baseline.TenantId != request.TenantId)
+        IReadOnlyList<SystemDescriptionSourceReference> availableSources;
+        if (current.Scope.Stage == "type_i" && current.Scope.TypeIBaselineId is { } baselineId)
+        {
+            var engagement = await reader.HydrateAsync(new ExaminationEngagement(request.TenantId,
+                request.ProgramId, current.Scope.ExaminationId), ct);
+            var baseline = engagement.Baseline;
+            if (engagement.Current is not { Status: "baseline_frozen" } || baseline is null ||
+                baseline.Status is not ("frozen" or "amended") ||
+                baseline.TypeIBaselineId != baselineId || baseline.ProgramId != request.ProgramId ||
+                baseline.TenantId != request.TenantId)
+                return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The system description's Type I baseline is no longer the examination's current baseline."));
+
+            availableSources = baseline.Sources.Select(source =>
+                new SystemDescriptionSourceReference(source.Kind, source.RecordId, source.VersionId,
+                    source.Revision, source.ContentSha256, "current")).ToArray();
+        }
+        else if (current.Scope.Stage == "type_ii" &&
+                 current.Scope.TypeIBaselineId is { } typeIBaselineId &&
+                 current.Scope.TypeIIPeriodId is { } periodId &&
+                 current.Scope.CloseSnapshotId is { } closeSnapshotId)
+        {
+            var periodAggregate = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId,
+                request.ProgramId, periodId), ct);
+            var period = periodAggregate.Current;
+            if (period is not { Status: "closed" } || period.TenantId != request.TenantId ||
+                period.ProgramId != request.ProgramId || period.ExaminationId != current.Scope.ExaminationId ||
+                period.CloseSnapshots.Count == 0 ||
+                period.CloseSnapshots[^1].CloseSnapshotId != closeSnapshotId)
+                return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The system description must bind the current frozen Type II close snapshot."));
+
+            var planAggregate = await reader.HydrateAsync(new TypeIIPlan(request.TenantId,
+                request.ProgramId, period.TypeIIPlanId), ct);
+            var plan = planAggregate.Current;
+            if (plan is not { Status: "approved" } ||
+                plan.CurrentVersionNumber != period.TypeIIPlanVersion ||
+                plan.Current is not { } approvedVersion ||
+                approvedVersion.Content.ExaminationId != current.Scope.ExaminationId ||
+                approvedVersion.Content.TypeIBaselineId != typeIBaselineId)
+                return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The system description's Type II period is not backed by its exact approved plan and Type I baseline."));
+
+            availableSources = period.CloseSnapshots[^1].SourceReferences.Select(source =>
+                new SystemDescriptionSourceReference(source.SourceType, source.RecordId,
+                    source.VersionId, source.Version, source.ContentSha256, "current")).ToArray();
+        }
+        else
+        {
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The system description's Type I baseline is no longer the examination's current baseline."));
+                "Source refresh requires an examination description bound to an exact Type I baseline or Type II close."));
+        }
 
         var requestedVersions = request.SourceVersionIds.ToHashSet();
-        var baselineVersions = baseline.Sources.Select(static source => source.VersionId).ToHashSet();
-        if (requestedVersions.Count != baselineVersions.Count ||
-            !requestedVersions.SetEquals(baselineVersions))
+        var availableVersionIds = availableSources.Select(static source => source.VersionId).ToHashSet();
+        if (requestedVersions.Count != availableVersionIds.Count ||
+            !requestedVersions.SetEquals(availableVersionIds))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "A system description must bind the complete source-version set from its frozen baseline."));
-        var selected = baseline.Sources.Where(source => requestedVersions.Contains(source.VersionId))
-            .Select(source => new SystemDescriptionSourceReference(source.Kind, source.RecordId,
-                source.VersionId, source.Revision, source.ContentSha256, "current")).ToArray();
+                "A system description must bind the complete source-version set from its frozen snapshot."));
+        var selected = availableSources.Where(source => requestedVersions.Contains(source.VersionId)).ToArray();
         if (selected.Length != requestedVersions.Count || selected.Select(static source => source.VersionId)
                 .Distinct().Count() != requestedVersions.Count)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,

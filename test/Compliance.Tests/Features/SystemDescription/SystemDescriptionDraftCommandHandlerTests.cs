@@ -1,11 +1,14 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using DescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
+using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
 
 namespace Bdgrz.Compliance.Tests.Features.SystemDescription;
 
@@ -207,6 +210,56 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         Assert.Equal(1, saved.Revision);
     }
 
+    [Fact]
+    public async Task ShouldBindTypeIIDescriptionToItsExactClosedPeriodSourcesGivenPersonalCommand()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var period = await fixture.SeedClosedTypeIIPeriodAsync();
+        await fixture.SeedTypeIIDescriptionAsync(period.CloseSnapshots[^1].CloseSnapshotId);
+        var sourceVersionIds = period.CloseSnapshots[^1].SourceReferences
+            .Select(static source => source.VersionId).ToArray();
+        var request = new BindSystemDescriptionSources(fixture.TenantId, fixture.ProgramId,
+            fixture.DescriptionId, 1, sourceVersionIds);
+
+        // Act
+        var result = await fixture.BindSourcesHandler().HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(2, saved.Revision);
+        Assert.Equal(sourceVersionIds.OrderBy(static id => id.ToString(), StringComparer.Ordinal),
+            saved.CurrentVersion!.Content.Sources.Select(static source => source.VersionId)
+                .OrderBy(static id => id.ToString(), StringComparer.Ordinal));
+        Assert.All(saved.CurrentVersion.Content.Sources, static source =>
+            Assert.Equal("current", source.Status));
+    }
+
+    [Fact]
+    public async Task ShouldRejectTypeIIDescriptionGivenSupersededCloseSnapshot()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var period = await fixture.SeedClosedTypeIIPeriodAsync();
+        await fixture.SeedTypeIIDescriptionAsync(Uuid.CreateVersion4());
+        var request = new BindSystemDescriptionSources(fixture.TenantId, fixture.ProgramId,
+            fixture.DescriptionId, 1, period.CloseSnapshots[^1].SourceReferences
+                .Select(static source => source.VersionId).ToArray());
+
+        // Act
+        var result = await fixture.BindSourcesHandler().HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new DescriptionAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.DescriptionId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(1, saved.Revision);
+    }
+
     static SystemDescriptionSection[] Sections() => SectionIds.Select(id =>
         new SystemDescriptionSection(id, id.Replace('_', ' '), "Current system fact.",
             "complete", null)).ToArray();
@@ -221,11 +274,20 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         public Uuid ExaminationId { get; } = Uuid.CreateVersion4();
         public Uuid DescriptionId { get; } = Uuid.CreateVersion4();
         public Uuid BaselineId { get; } = Uuid.CreateVersion4();
+        public Uuid PlanId { get; } = Uuid.CreateVersion4();
+        public Uuid PeriodId { get; } = Uuid.CreateVersion4();
+        public Uuid CloseSnapshotId { get; } = Uuid.CreateVersion4();
         public Uuid BoundaryId { get; } = Uuid.CreateVersion4();
         public Uuid BaselineSourceVersionId { get; } = Uuid.CreateVersion4();
         public Uuid AdditionalSourceRecordId { get; } = Uuid.CreateVersion4();
         public Uuid AdditionalSourceVersionId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
+        public Uuid ReviewerId { get; } = Uuid.CreateVersion4();
+        public Uuid ApproverId { get; } = Uuid.CreateVersion4();
+        public Uuid ValidatorId { get; } = Uuid.CreateVersion4();
+        public Uuid GapId { get; } = Uuid.CreateVersion4();
+        public Uuid ControlId { get; } = Uuid.CreateVersion4();
+        public Uuid ControlVersionId { get; } = Uuid.CreateVersion4();
         public Uuid UserMemberId => RbacIds.Member(TenantId, UserId);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
@@ -296,6 +358,66 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
                 "author@example.test", Now.AddMinutes(2)));
             await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
         }
+
+        public async Task<TypeIIPeriodView> SeedClosedTypeIIPeriodAsync()
+        {
+            var references = TypeIISourceReferences();
+            var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);
+            var content = new TypeIIPlanContent(ExaminationId, Uuid.CreateVersion4(),
+                new string('c', 64), Uuid.CreateVersion4(), new DateOnly(2026, 10, 1),
+                new DateOnly(2027, 9, 30), "Audit LLP", ["security"], BaselineId,
+                Uuid.CreateVersion4(), references,
+                [new TypeIIControlPlanEntry(ControlId, ControlVersionId, "Quarterly review",
+                    UserMemberId, "quarterly", 4, new DateOnly(2026, 10, 1), null)],
+                [new TypeIICarriedForwardGap("risk", GapId, Uuid.CreateVersion4(), 1,
+                    new string('d', 64), "carry")],
+                [new TypeIIPlanGapAcknowledgement(GapId, "Known opening gap", "acknowledged",
+                    "Owner and target date are recorded.")], []);
+            Assert.Null(plan.Propose(content, UserMemberId, "Compliance lead", Now.AddMinutes(-3)));
+            Assert.Null(plan.Review(plan.Revision, 1, "approve", "Plan reviewed.",
+                RbacIds.Member(TenantId, ReviewerId), "Independent reviewer", Now.AddMinutes(-2)));
+            Assert.Null(plan.Approve(plan.Revision, 1, "Approved period plan.",
+                RbacIds.Member(TenantId, ApproverId), "CISO", "Chief Information Security Officer",
+                Now.AddMinutes(-1)));
+            await Writer.SaveAsync(plan, new RequestDispatchContext(RequestActor.System));
+
+            var period = new TypeIIPeriodAggregate(TenantId, ProgramId, PeriodId);
+            Assert.Null(period.Start(plan.Current!, new TypeIIPeriodOpeningContent(ExaminationId,
+                Uuid.CreateVersion4(), new string('e', 64), references, [GapId]),
+                UserMemberId, "Compliance lead", Now));
+            var occurrences = period.Current!.ExpectedOccurrences.Select(static item => item.OccurrenceId)
+                .OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray();
+            Assert.Null(period.RecordCloseValidation(period.Revision,
+                new TypeIIPeriodCloseValidationContent(references, occurrences, occurrences, [], [],
+                    [GapId]), RbacIds.Member(TenantId, ValidatorId), "Close validator",
+                Now.AddDays(400)));
+            Assert.Null(period.ApproveClose(period.Revision, [GapId], "Reviewed close.",
+                RbacIds.Member(TenantId, ApproverId), "CEO", "Chief Executive",
+                Now.AddDays(400).AddHours(1)));
+            Assert.Null(period.FreezeClose(period.Revision, new TypeIIPeriodCloseSnapshotContent(
+                CloseSnapshotId, references, occurrences, [GapId]),
+                RbacIds.Member(TenantId, ApproverId), "Chief Executive", Now.AddDays(400).AddHours(2)));
+            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+            return period.Current!;
+        }
+
+        public async Task SeedTypeIIDescriptionAsync(Uuid closeSnapshotId)
+        {
+            var scope = new SystemDescriptionScope("type_ii", ExaminationId, BaselineId,
+                PeriodId, closeSnapshotId);
+            var content = new SystemDescriptionDraftContent("The Sample System", Sections(), [], [], []);
+            var aggregate = new DescriptionAggregate(TenantId, ProgramId, DescriptionId);
+            Assert.Null(aggregate.Create(Uuid.CreateVersion4(), scope, content, UserMemberId,
+                "author@example.test", Now.AddMinutes(2)));
+            await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
+        }
+
+        IReadOnlyList<ExaminationContentReference> TypeIISourceReferences() =>
+        [
+            new("boundary", BoundaryId, BaselineSourceVersionId, 1, new string('a', 64)),
+            new("control", AdditionalSourceRecordId, AdditionalSourceVersionId, 2,
+                new string('b', 64)),
+        ];
 
         public async ValueTask DisposeAsync()
         {
