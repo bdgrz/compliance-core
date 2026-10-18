@@ -8,8 +8,8 @@ Keep the layer boundary explicit: when a handler durably records valid intent an
 
 ## Current gap
 
-- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 106 have complete handler coverage, 3 have partial handler coverage, and 15 still have no handler.
-- Active command registration gaps: 15. Active commands without a handler test reference: 15. The three partial handlers are registered and tested but do not yet cover their accepted feature scope.
+- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 106 have complete handler coverage, 5 have partial handler coverage, and 13 still have no handler.
+- Active command registration gaps: 13. Active commands without a handler test reference: 13. The five partial handlers are registered and tested but do not yet cover their accepted feature scope.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Then implement reactors, with projectors as the final layer.
 
@@ -17,7 +17,7 @@ Keep the layer boundary explicit: when a handler durably records valid intent an
 
 Work the layers in order. A command is complete only when its source and authority checks are implemented, its aggregate transition is exercised by a red-to-green behavior test, the handler is registered and host-dispatched, and the owning API authorization is verified. Update the table below as each item closes; do not move into reactors while any active handler is missing or partial.
 
-### Handlers — 18 active open items (15 missing, 3 partial)
+### Handlers — 18 active open items (13 missing, 5 partial)
 
 Evidence handling:
 
@@ -34,8 +34,8 @@ Advisor collaboration:
 
 Type I baseline:
 
-- [ ] `FreezeTypeIBaseline` — authoritative source-complete preview and frozen point-in-time snapshot.
-- [ ] `AmendTypeIBaseline` — complete amendment snapshot and package-impact evidence.
+- [ ] `FreezeTypeIBaseline` (partial) — authoritative source-complete preview and frozen point-in-time snapshot; only 3 of 21 required source families currently contribute.
+- [ ] `AmendTypeIBaseline` (partial) — complete amendment snapshot and package-impact evidence; only 3 of 21 required source families currently contribute.
 
 Audit packages and Type II close:
 
@@ -356,8 +356,8 @@ Identity provider:
 | Work queue and digest delivery — [R2-11](backlog.md#r2-11-manage-accountable-compliance-work); [M0-D15](decisions/m0-d15-work-queue.md) | `RecordWorkDigestDelivery` | present | present | present | `WeeklyWorkDigestCommandHandlerTests` |
 | Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot) | `CreateExaminationEngagement` | present | present | present | referenced |
 | Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot) | `ReviseExaminationEngagement` | present | present | present | referenced |
-| Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot) | `FreezeTypeIBaseline` | present | missing | check | no reference |
-| Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot) | `AmendTypeIBaseline` | present | missing | check | no reference |
+| Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot) | `FreezeTypeIBaseline` | present | partial | present | `TypeIBaselineCommandHandlerTests` |
+| Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot) | `AmendTypeIBaseline` | present | partial | present | `TypeIBaselineCommandHandlerTests` |
 | Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `CreateSystemDescriptionDraft` | present | present | present | referenced |
 | Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `ReviseSystemDescriptionDraft` | present | present | present | referenced |
 | Management-authored system description — [T1-02](backlog.md#t1-02-author-approve-and-maintain-the-system-description), T2-07, T3-01/05/06; [M0-D21](decisions/m0-d21-significant-change.md) | `BindSystemDescriptionSources` | present | present | present | referenced |
@@ -462,7 +462,7 @@ These dependencies are found in the existing contracts, aggregates, and accepted
 | `ApproveArtifactDisposition`, `ExecuteArtifactDisposition` | Build a tenant-scoped eligibility reader that binds the exact artifact, retention basis, handling policy, active legal and engagement holds, historical reliance, and storage readiness. Portia 0.8.0's `IObjectStorage` still lacks the quarantine and hold hooks required for production storage readiness. The handlers must persist approval and an exact execution attempt; provider deletion and its callback belong to `ArtifactDispositionReactor`. `ArtifactDisposition` already rejects missing or changed eligibility snapshots. |
 | `CreateAdvisorHandoff`, `ReviseAdvisorHandoffSelection`, `MarkAdvisorHandoffReadyForReview` | Add a resolver for every supported record kind that proves tenant, program, current exact version, and shareable status. The aggregate accepts IDs but cannot establish those source facts. Readiness must be restricted to the Compliance Lead as required by [M0-D14](decisions/m0-d14-advisor-collaboration.md). |
 | `RecordAdvisorFeedback`, `CorrectAdvisorFeedback` | Add the M0-D14 scoped advisor/guest authorization model, including accepted firm-staff assignments, program-scoped expiring guest grants, and actual member attribution. The current commands use ordinary client-management authorization, which cannot authorize the specified advisor actors. |
-| `FreezeTypeIBaseline`, `AmendTypeIBaseline` | Add the authoritative baseline preview/source builder and a complete amendment snapshot. A handler cannot freeze or amend a baseline from a date and an opaque revision alone. |
+| `FreezeTypeIBaseline`, `AmendTypeIBaseline` | Handlers now require the preview digest, re-read current source state, persist immutable baseline manifests, and attribute amendments. Finish the remaining 18 of 21 source-family contributors before confirmation is source-complete. |
 | System-description Type II successor scope — T1-02, T2-07, T3-01 | Draft creation and revision accept structured sections; source refresh verifies the complete Type I baseline or exact approved Type II plan and frozen close manifest. The aggregate successor path still preserves its existing scope and cannot create a Type II period version; add a period-scoped successor transition before this part of the feature is complete. |
 | `ProposeTypeIIOperatingPlan` | The handler requires complete content and validates the current baseline manifest, auditor outcome, approved and bound system description, every carried-forward baseline reference, all approved controls, active member owners, approved control operating plans, cadence including its recurring due window, effective range, and required-change source IDs. It also requires every current open/remediated finding to appear exactly once with a deterministic hash of its current revision, matching disposition and active client-personnel owner. The plan contract still cannot carry expected evidence or person/team owners; policy/risk/vendor sources and event-driven/ad hoc trigger and due semantics remain unresolved. `RecordManagementExaminationReview` v2 validates an authorized executive against the exact delivered package and manifest, frozen Type I or Type II close snapshot, approved assertion and supporting references, signed representation letter and retained artifacts, auditor outcome, and management commitments before persisting the immutable sign-off. |
 | `StartTypeIIObservationPeriod` | Implemented as a partial source-bound handler: derives the opening manifest from the current approved plan, current frozen Type I baseline, recorded auditor outcome, and approved system description bound to that baseline. It shares the Type II source validator, which also verifies all carried-forward references, each current finding's exact revision and active client-personnel owner, exact planned controls, active member owners, operating-plan cadence and recurring due window, and effective range. The opening period records each recurring occurrence's due date using the approved window. The program calendar is bootstrapped from committed period streams and serializes inclusive date reservations; period amendments reserve replacement ranges until the period stream update completes. Policy/risk/vendor sources, expected evidence, nonmember owners, and event-driven/ad hoc trigger and due semantics still limit proposal completeness. |
