@@ -4,11 +4,11 @@ This is the requirement-backed read-layer plan for the committed product scope. 
 
 ## Existing inventory
 
-Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **271 query contracts** (216 existing plus 55 added here) and **490 model/supporting contracts** (436 existing plus 54 response views added here). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
+Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **270 query contracts** (216 existing plus 54 added here) and **489 model/supporting contracts** (436 existing plus 53 response views added here). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
 
 ## Required read workflows to backfill
 
-The 55 planned query contracts and 54 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Query handlers, projector-backed behavior, endpoint registration, and story-level authorization/field validation remain to be implemented and verified. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
+The 54 planned query contracts and 53 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Wiring and behavior status varies by query; a contract alone does not prove handler, read-model, API/MCP, or story-level authorization coverage. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
 
 ### Advisor collaboration — R2-08
 
@@ -18,13 +18,12 @@ The 55 planned query contracts and 54 response-view types listed below now have 
 | [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) | `Page<[AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)>` | Scoped handoff directory with status and review readiness. |
 | [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) | `Page<[AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)>` | Feedback and responses for a handoff or its selected records. |
 
-### Type I engagement — T1-01/03
+### Type I engagement — T1-01
 
 | Query | Response view | Required read |
 | --- | --- | --- |
 | [GetExaminationEngagement](../../src/Compliance.Common/Features/Examinations/GetExaminationEngagement.cs#L9) | [ExaminationEngagementView](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs#L6) | Engagement identity, period, lifecycle, and baseline binding. |
 | [GetTypeIBaseline](../../src/Compliance.Common/Features/Examinations/GetTypeIBaseline.cs#L9) | [TypeIBaselineView](../../src/Compliance.Common/Features/Examinations/TypeIBaselineView.cs#L6) | Frozen baseline manifest, exact source versions, and verification state. |
-| [ListEngagementAccess](../../src/Compliance.Common/Features/Examinations/ListEngagementAccess.cs#L9) | `Page<[EngagementAccessView](../../src/Compliance.Common/Features/Examinations/EngagementAccessView.cs#L6)>` | Auditor grants and revocations scoped to an engagement. |
 
 ### System description — T1-02
 
