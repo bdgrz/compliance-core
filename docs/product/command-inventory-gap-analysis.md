@@ -620,7 +620,7 @@ DecideTypeIEntry is a readiness entry decision, not an assertion, representation
 | Present | `SignManagementRepresentationLetter` | The handler requires the authenticated named signer and an available inspected signed artifact. The record command is now source-bound; enforcing the complete examination workflow sequence remains incomplete. |
 | Present | `RecordExaminationOutcome` | v2 binds an auditor-supplied code, summary, report reference/date, and optional inspected report artifact to an exact delivered package version and manifest; it rejects dates before package delivery or in the future. |
 | Missing | `RecordManagementExaminationReview` | Bind management's review to exact sign-off and auditor outcome identities; the current contract carries only package version and free-form result/comments. |
-| Missing | `ProposeTypeIIOperatingPlan` | Add a source builder for the Type I baseline/outcome, system description, controls, policy/risk/provider versions, ownership, cadence, open findings, and required changes. |
+| Partial | `ProposeTypeIIOperatingPlan` | The handler binds the current exact baseline, auditor outcome, approved/bound system description, complete baseline references, exact approved controls, active member owners, operating-plan cadence/effective range, and required-change IDs. Complete the resolver for live open findings and policy/risk/vendor versions; extend plan content for expected evidence and person/team owners; preserve cadence due-day semantics. |
 | Partial | `ReviewTypeIIOperatingPlan`; `ApproveTypeIIOperatingPlan` | Handlers and exact-version independent review/executive approval exist; the plan proposal source builder is required before the workflow is complete. |
 
 <a id="g14"></a>

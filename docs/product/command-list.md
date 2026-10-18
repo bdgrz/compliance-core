@@ -441,7 +441,7 @@ This pruned plan has 129 required additions, including five evidence command con
 - **SignManagementRepresentationLetter** — coded ([contract](../../src/Compliance.Common/Features/Examinations/SignManagementRepresentationLetter.cs#L7))
 - **RecordExaminationOutcome** — v2 handler records only auditor-supplied outcomes bound to an exact delivered package version and, when supplied, an available inspected report artifact ([contract](../../src/Compliance.Common/Features/Examinations/RecordExaminationOutcome.cs#L7), [handler](../../src/Compliance.Core/Features/Examinations/RecordExaminationOutcomeHandler.cs#L8))
 - **RecordManagementExaminationReview** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementExaminationReview.cs#L7))
-- **ProposeTypeIIOperatingPlan** — coded ([contract](../../src/Compliance.Common/Features/Operations/ProposeTypeIIOperatingPlan.cs#L7))
+- **ProposeTypeIIOperatingPlan** — source-bound handler is registered and routed; it checks the exact baseline/outcome/system-description chain and derives control cadence and member ownership from approved operating plans. The content contract still cannot represent expected evidence or person/team owners, and current open findings plus policy/risk/vendor source records lack live resolvers ([contract](../../src/Compliance.Common/Features/Operations/ProposeTypeIIOperatingPlan.cs#L7), [handler](../../src/Compliance.Core/Features/Operations/ProposeTypeIIOperatingPlanHandler.cs#L8))
 - **ReviewTypeIIOperatingPlan** — coded ([contract](../../src/Compliance.Common/Features/Operations/ReviewTypeIIOperatingPlan.cs#L7))
 - **ApproveTypeIIOperatingPlan** — coded ([contract](../../src/Compliance.Common/Features/Operations/ApproveTypeIIOperatingPlan.cs#L7))
 

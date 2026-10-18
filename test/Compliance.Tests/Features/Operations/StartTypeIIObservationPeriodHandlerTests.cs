@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -223,7 +225,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         public Uuid ExecutiveId { get; } = Uuid.CreateVersion4();
         public Uuid OtherReviewerId { get; } = Uuid.CreateVersion4();
         public Uuid ControlId { get; } = Uuid.CreateVersion4();
-        public Uuid ControlVersionId { get; } = Uuid.CreateVersion4();
+        public Uuid ControlVersionId => ControlVersionIds.Initial(ControlId);
         public DateOnly PeriodStart { get; } = new(2026, 10, 1);
         public DateOnly PeriodEnd { get; } = new(2027, 9, 30);
         public MutableTimeProvider Clock { get; } = new(Now);
@@ -265,6 +267,43 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         public async Task SeedApprovedPlanAsync(Uuid? sourceSnapshotId = null,
             Uuid? controlVersionId = null)
         {
+            var ownerMember = new Member(TenantId, UserId);
+            Assert.True(ownerMember.Register().IsSuccess);
+            await Writer.SaveAsync(ownerMember, new RequestDispatchContext(RequestActor.System));
+
+            var control = new ControlDraft(TenantId, ControlId);
+            Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "AC-T2-01",
+                new ControlDraftContent("Quarterly access review", "Review user access",
+                    "Management reviews access quarterly.",
+                    "The security lead reviews the access roster.", ["Dated review record"]),
+                AuthorId, "Control author", Now.AddMinutes(-20)).IsSuccess);
+            var controlScope = new ResponsibilityScope("control", ControlId, ControlVersionId, 1);
+            Assert.Null(control.AssignResponsibility(controlScope, Uuid.CreateVersion4(), MemberId,
+                ResponsibilityType.ControlOwner, AuthorId, "Control author", Now.AddMinutes(-18),
+                Now.AddMinutes(-19), null, []));
+            var controlReviewId = Uuid.CreateVersion4();
+            Assert.Null(control.Review(ProgramId, 1, controlReviewId, "accept",
+                "The quarterly evidence is defined.", ReviewerId, "Control reviewer",
+                Now.AddMinutes(-17)));
+            Assert.Null(control.Approve(ProgramId, 1, Uuid.CreateVersion4(), controlReviewId,
+                new DateOnly(2026, 10, 1), "Approved for operation.", new HashSet<Uuid> { MemberId },
+                ExecutiveId, "Chief Executive", Now.AddMinutes(-16)));
+            var controlVersion = control.ApprovedVersion!;
+            await Writer.SaveAsync(control, new RequestDispatchContext(RequestActor.System));
+
+            var controlOperations = new ControlOperationsLedger(TenantId, ProgramId);
+            var operatingPlanId = Uuid.CreateVersion4();
+            Assert.Null(controlOperations.ProposePlan(ControlId, 0, operatingPlanId, controlVersion,
+                new OperatingHolder("member", MemberId), null, ReviewerId, false,
+                new ControlCadence(ControlCadenceSchedule.Recurring, "quarterly", PeriodStart, 5),
+                PeriodStart, "Operate quarterly and retain dated evidence.", AuthorId,
+                "Control plan author", Now.AddMinutes(-14), null));
+            Assert.Null(controlOperations.ApprovePlan(ControlId, 1, operatingPlanId,
+                "The quarterly schedule and owner are approved.", ExecutiveId, "Chief Executive",
+                Now.AddMinutes(-13), null));
+            await Writer.SaveAsync(controlOperations,
+                new RequestDispatchContext(RequestActor.System));
+
             var systemDescriptionSource = new SystemDescriptionSourceReference("approved_boundary",
                 BoundaryId, Uuid.CreateVersion4(), 1, Hash('a'), "current");
             var description = new SystemDescriptionAggregate(TenantId, ProgramId, DescriptionId);
@@ -282,7 +321,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
             BaselineSources =
             [
                 new("approved_boundary", BoundaryId, systemDescriptionSource.VersionId, 1, Hash('a')),
-                new("approved_control", ControlId, ControlVersionId, 1, Hash('c')),
+                new("approved_control", ControlId, ControlVersionId, controlVersion.Revision, Hash('c')),
                 new("system_description", DescriptionId, DescriptionVersionId, 1,
                     descriptionVersion.ContentSha256),
             ];
@@ -312,7 +351,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
                 PeriodStart, PeriodEnd, "Audit Firm", ["security"], BaselineId, OutcomeId,
                 BaselineSources.Select(ToReference).ToArray(),
                 [new TypeIIControlPlanEntry(ControlId, controlVersionId ?? ControlVersionId,
-                    "Quarterly access review", MemberId, "quarterly", 4, PeriodStart, null)],
+                    controlVersion.Content.Title, MemberId, "quarterly", 4, PeriodStart, null)],
                 [], [], []);
             var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);
             Assert.Null(plan.Propose(planContent, AuthorId, "Plan author", Now.AddMinutes(-4)));

@@ -294,6 +294,32 @@ public sealed class ComplianceWebTests
     }
 
     [Fact]
+    public async Task ShouldDescribeTypeIIPlanProposalGivenOpenApi()
+    {
+        // Arrange
+        await using var factory = CreateBrokerFreeFactory("Development");
+        using var client = factory.CreateClient();
+        const string route = "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-ii-plans/{plan_id}/proposals";
+
+        // Act
+        using var response = await client.GetAsync("/openapi/v1.json", CancellationToken.None);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStreamAsync(
+            CancellationToken.None));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var operation = document.RootElement.GetProperty("paths").GetProperty(route)
+            .GetProperty("post");
+        Assert.True(operation.TryGetProperty("requestBody", out _));
+        var parameters = operation.GetProperty("parameters").EnumerateArray()
+            .Select(parameter => parameter.GetProperty("name").GetString()).ToArray();
+        Assert.Contains("tenant_id", parameters);
+        Assert.Contains("program_id", parameters);
+        Assert.Contains("examination_id", parameters);
+        Assert.Contains("plan_id", parameters);
+    }
+
+    [Fact]
     public async Task ShouldDescribeAdvisorHandoffTerminationGivenOpenApi()
     {
         // Arrange
