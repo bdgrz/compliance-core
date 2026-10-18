@@ -59,8 +59,7 @@ public sealed class PreviewApplicationChangeHandler(
     }
 
     static readonly string[] MissingContextsBeforeReadiness = ["open_work"];
-    static readonly string[] MissingContextsAfterReadiness =
-        ["engagements", "cross_source_manual_reliance"];
+    static readonly string[] MissingContextsAfterReadiness = ["engagements"];
 
     public async ValueTask<Result<ApplicationChangePreview>> HandleAsync(
         IRequestContext<PreviewApplicationChange> context, CancellationToken ct)
