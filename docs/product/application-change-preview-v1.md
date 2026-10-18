@@ -63,12 +63,16 @@ The 200 result contains `tenant_id`, `application_id`,
 `application_revision`, `change_kind`, a list of changed content fields with
 `before` and `after`, up to 200 current draft and approved or historical
 `boundary_references`, up to 200 current direct-Application
-`control_draft_references`, up to 200 currently visible outgoing
+`control_draft_references`, up to 200 approved `approved_control_references`,
+up to 200 direct-Application `policy_references`, up to 200 currently visible outgoing
 `application_relationships`, `pending_contexts`, and `complete`. A control
 reference contains the stable control, program, applicability-entry, and
 current draft revision identifiers plus the authored subject and rationale; it
 does not contain full draft content. `complete` is always `false` in this
-slice. `boundary_references_over_limit` and
+slice. `policy_references` contains policy and program IDs, identifier, title,
+revision or approved version, direct applicability subject, effective interval,
+and successor or retirement state. It never contains policy body text.
+`boundary_references_over_limit` and
 `control_draft_references_over_limit` are added when their respective result
 sets exceed 200, rather than silently presenting a truncated set as complete.
 `application_relationships_over_limit` is added when more than 200 visible
@@ -87,21 +91,27 @@ authorize successor approval.
 `control_draft_references` include only non-discarded, currently indexed
 `application` applicability entries. They do not establish an approved or
 effective ControlVersion, activation, retirement, historical relationship,
-coverage, effectiveness, or a complete lifecycle impact. A concrete
-`system_instance` reference is intentionally not fanned out through its owning
-Application in this slice; `system_instance_control_draft_references` remains
-pending so that omission is visible. Other pending contexts include
-`application_relationships`,
-vendors, `approved_control_versions_and_lifecycle_impact`, policies, evidence
-sources, access populations, review campaigns, open work, readiness, and
-engagements. Historical discarded drafts are not in either reverse index; their
-source event streams retain them.
+coverage, effectiveness, or a complete lifecycle impact. Approved control
+versions and lifecycle are contributed by their own tenant-scoped projection.
+Policy references include direct `application` and concrete `system_instance`
+applicability from the current draft and retained approved versions. The policy
+projection stores only relationship metadata, not policy bodies. An indirect
+Control, Criterion, Risk, Vendor, Process, or Scope reference, an applicability
+entry without a governed record ID, or a truncated result keeps `policies`
+pending because this slice cannot resolve those relationships authoritatively.
+The policy and Control projections are read under separate tenant source
+checkpoints; they do not establish a global cross-system snapshot. Other pending
+contexts include `application_relationships`, vendors, evidence sources, access
+populations, review campaigns, open work, readiness, and engagements. Historical
+discarded drafts are not in the current-draft reverse indexes; their source
+event streams retain them.
 
 The handler hydrates the tenant Application aggregate, checks its exact
-revision against the Fitz Application projection, and checks both the boundary
-and Control reverse-projection checkpoints against their corresponding tenant
-source streams before and after reading references. It rechecks the Application
-and relationship source revisions after the projection reads. A source write
+revision against the Fitz Application projection, and checks the boundary,
+Control, approved-Control-version, and policy reverse-projection checkpoints
+against their corresponding tenant source streams before and after reading
+references. It rechecks the Application and relationship source revisions after
+the projection reads. A source write
 detected during the read returns a retryable 409. A missing or wrong-tenant Application returns 404
 without disclosing another tenant. Invalid request fields return 400. A stale
 expected revision returns 409. This advisory observation is not an atomic

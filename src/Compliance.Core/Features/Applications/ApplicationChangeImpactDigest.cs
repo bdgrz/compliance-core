@@ -39,6 +39,12 @@ static class ApplicationChangeImpactDigest
                 .ThenBy(static item => item.ControlId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.VersionId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
+            PolicyReferences = preview.PolicyReferences
+                .OrderBy(static item => item.SubjectType, StringComparer.Ordinal)
+                .ThenBy(static item => item.GovernedRecordId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.PolicyId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.Version)
+                .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
             SystemInstanceReferences = preview.SystemInstanceReferences
                 .OrderBy(static item => item.SystemInstanceId.ToString(), StringComparer.Ordinal)
                 .ToArray(),
