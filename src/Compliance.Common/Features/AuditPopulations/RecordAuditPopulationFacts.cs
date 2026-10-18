@@ -4,6 +4,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPopulations;
 
-/// <summary>Records the record audit population facts intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.audit-populations.record-audit-population-facts", 1)]
-public sealed record RecordAuditPopulationFacts(Uuid TenantId, Uuid ProgramId, Uuid DefinitionId, IReadOnlyList<Uuid> SourceFactIds, string SourceReference, string CompletenessEvidence) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Records an attributed source snapshot and its complete, individually inspectable rows.</summary>
+[Discriminator("bdgrz.audit-populations.record-audit-population-facts", 2)]
+public sealed record RecordAuditPopulationFacts(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid DefinitionId,
+    long ExpectedRevision,
+    AuditPopulationSourceSnapshotContent SourceSnapshot,
+    IReadOnlyList<AuditPopulationRowContent> Rows) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;

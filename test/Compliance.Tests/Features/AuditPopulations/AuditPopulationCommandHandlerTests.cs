@@ -13,6 +13,8 @@ public sealed class AuditPopulationCommandHandlerTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 17, 18, 0, 0, TimeSpan.Zero);
 
+    static string Hash(char value) => new(value, 64);
+
     [Fact]
     public async Task ShouldClassifyExistingRowGivenAttributedProgramActor()
     {
@@ -86,6 +88,86 @@ public sealed class AuditPopulationCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldRecordExactManualSourceSnapshotAndRowsGivenCurrentDefinitionRevision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (populationId, _) = await fixture.SeedDefinedPopulationWithCloseAsync();
+        var rowId = Uuid.CreateVersion4();
+        var request = new RecordAuditPopulationFacts(fixture.TenantId, fixture.ProgramId,
+            populationId, 1, Fixture.SourceSnapshot(), [Fixture.Row(rowId)]);
+
+        // Act
+        var result = await fixture.RecordFactsHandler().HandleAsync(Fixture.Context(
+            fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(fixture.TenantId,
+            fixture.ProgramId, populationId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("collecting", saved.Current!.Status);
+        var source = Assert.Single(saved.Current.SourceSnapshots);
+        Assert.Equal("approved-change-register", source.SourceReference);
+        Assert.Equal(Hash('d'), source.ContentSha256);
+        Assert.Equal(1, source.ExpectedTotal);
+        Assert.True(source.CollectionComplete);
+        Assert.Equal("All approved changes are included.", source.CompletenessEvidence);
+        var row = Assert.Single(saved.Current.Rows);
+        Assert.Equal(rowId, row.RowId);
+        Assert.Equal(source.SnapshotId, row.SourceSnapshotId);
+        Assert.Equal("change-17", row.SourceRowIdentity);
+        Assert.Equal("included", row.Classification);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), row.RecordedByMemberId);
+    }
+
+    [Fact]
+    public async Task ShouldRejectStalePopulationRevisionGivenSourceFacts()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (populationId, _) = await fixture.SeedDefinedPopulationWithCloseAsync();
+        var request = new RecordAuditPopulationFacts(fixture.TenantId, fixture.ProgramId,
+            populationId, 0, Fixture.SourceSnapshot(), [Fixture.Row(Uuid.CreateVersion4())]);
+
+        // Act
+        var result = await fixture.RecordFactsHandler().HandleAsync(Fixture.Context(
+            fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(fixture.TenantId,
+            fixture.ProgramId, populationId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Empty(saved.Current!.SourceSnapshots);
+        Assert.Empty(saved.Current.Rows);
+        Assert.Equal(1, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectUnauthorizedPopulationFieldsGivenManualSourceRows()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (populationId, _) = await fixture.SeedDefinedPopulationWithCloseAsync();
+        var row = Fixture.Row(Uuid.CreateVersion4()) with
+        {
+            AuthorizedFields = new Dictionary<string, string> { ["secret"] = "do-not-record" },
+        };
+        var request = new RecordAuditPopulationFacts(fixture.TenantId, fixture.ProgramId,
+            populationId, 1, Fixture.SourceSnapshot(), [row]);
+
+        // Act
+        var result = await fixture.RecordFactsHandler().HandleAsync(Fixture.Context(
+            fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(fixture.TenantId,
+            fixture.ProgramId, populationId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Empty(saved.Current!.Rows);
+        Assert.Equal(1, saved.Revision);
+    }
+
+    [Fact]
     public async Task ShouldStartCollectionForExactFrozenPeriodCloseGivenGenerationKey()
     {
         // Arrange
@@ -104,6 +186,71 @@ public sealed class AuditPopulationCommandHandlerTests
         Assert.Equal("collecting", saved.Current!.Status);
         Assert.Equal("population-generation-1", saved.Current.GenerationKey);
         Assert.Empty(saved.Current.Rows);
+    }
+
+    [Fact]
+    public async Task ShouldAmendFrozenPopulationWithNewSnapshotAndChangedRowsGivenReason()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (populationId, rowId) = await fixture.SeedPopulationAsync(reconciled: true);
+        var freeze = await fixture.FreezeHandler().HandleAsync(Fixture.Context(fixture.UserId,
+            new FreezeAuditPopulation(fixture.TenantId, fixture.ProgramId, populationId, 3,
+                "The exact source rows and reconciliation were reviewed.")), CancellationToken.None);
+        Assert.True(freeze.IsSuccess, freeze.Error?.Message);
+        var sourceSnapshot = new AuditPopulationSourceSnapshotContent(Uuid.CreateVersion4(), 2,
+            "approved-change-register-amended", Hash('e'), 1, true,
+            "The corrected source export contains the complete population.", Now.AddMinutes(3));
+        var changedRow = Fixture.Row(rowId) with
+        {
+            Classification = "excluded",
+            ClassificationRationale = "The corrected source confirms the change was outside the period.",
+        };
+        var request = new AmendAuditPopulation(fixture.TenantId, fixture.ProgramId, populationId,
+            4, "Correct the source classification", sourceSnapshot, [changedRow]);
+
+        // Act
+        var result = await fixture.AmendHandler().HandleAsync(Fixture.Context(fixture.UserId,
+            request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(fixture.TenantId,
+            fixture.ProgramId, populationId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("amending", saved.Current!.Status);
+        var amendment = Assert.Single(saved.Current.Amendments);
+        Assert.Equal(1, amendment.SupersededVersion);
+        Assert.Equal(2, amendment.SuccessorVersion);
+        Assert.Equal("Correct the source classification", amendment.Reason);
+        Assert.Equal(rowId, Assert.Single(amendment.ChangedRowIds));
+        Assert.Equal(2, saved.Current.SourceSnapshots.Count);
+        Assert.Equal("excluded", Assert.Single(saved.Current.Rows).Classification);
+        Assert.Equal(sourceSnapshot.SnapshotId, Assert.Single(saved.Current.Rows).SourceSnapshotId);
+    }
+
+    [Fact]
+    public async Task ShouldRejectPopulationAmendmentGivenReconciledPopulationBeforeFreeze()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (populationId, rowId) = await fixture.SeedPopulationAsync(reconciled: true);
+        var sourceSnapshot = new AuditPopulationSourceSnapshotContent(Uuid.CreateVersion4(), 2,
+            "approved-change-register-amended", Hash('e'), 1, true,
+            "Corrected complete source.", Now.AddMinutes(3));
+        var request = new AmendAuditPopulation(fixture.TenantId, fixture.ProgramId, populationId,
+            3, "Attempt early amendment", sourceSnapshot, [Fixture.Row(rowId)]);
+
+        // Act
+        var result = await fixture.AmendHandler().HandleAsync(Fixture.Context(fixture.UserId,
+            request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(fixture.TenantId,
+            fixture.ProgramId, populationId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Empty(saved.Current!.Amendments);
+        Assert.Single(saved.Current.SourceSnapshots);
+        Assert.Equal(3, saved.Revision);
     }
 
     [Fact]
@@ -169,6 +316,11 @@ public sealed class AuditPopulationCommandHandlerTests
 
         public ReconcileAuditPopulationHandler ReconcileHandler() => new(Executor, _clock);
 
+        public RecordAuditPopulationFactsHandler RecordFactsHandler() =>
+            new(Executor, _clock);
+
+        public AmendAuditPopulationHandler AmendHandler() => new(Executor, _clock);
+
         public async Task<(Uuid PopulationId, Uuid RowId)> SeedPopulationAsync(bool reconciled)
         {
             var populationId = Uuid.CreateVersion4();
@@ -219,11 +371,11 @@ public sealed class AuditPopulationCommandHandlerTests
                 null, null, [], [], Uuid.CreateVersion4(), "ceo", "CEO", Now)],
             Uuid.CreateVersion4(), "Compliance lead", Now);
 
-        static AuditPopulationSourceSnapshotContent SourceSnapshot() => new(Uuid.CreateVersion4(), 1,
+        public static AuditPopulationSourceSnapshotContent SourceSnapshot() => new(Uuid.CreateVersion4(), 1,
             "approved-change-register", Hash('d'), 1, true, "All approved changes are included.",
             Now.AddMinutes(1));
 
-        static AuditPopulationRowContent Row(Uuid rowId) => new(rowId, "change-17",
+        public static AuditPopulationRowContent Row(Uuid rowId) => new(rowId, "change-17",
             "approved-change-register", "included", "The change falls in the observation period.",
             new Dictionary<string, string> { ["control"] = "AC-1" }, [], []);
 
