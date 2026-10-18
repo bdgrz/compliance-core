@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Retention;
+using Bdgrz.Compliance.Hosting;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -76,6 +77,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GrantPlatformOperator>()
         .AddMcpTool<RevokePlatformOperator>(tool => tool.Destructive())
         .AddMcpTool<ListPlatformOperators>(tool => tool.ReadOnly())
+        .AddMcpTool<GetWorkDigestDispatchStatus>(tool => tool.ReadOnly())
         .AddMcpTool<InviteTenantMember>()
         .AddMcpTool<InviteOrganizationMember>()
         .AddMcpTool<ListTenantInvitations>(tool => tool.ReadOnly())
@@ -103,6 +105,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<AmendServiceEngagement>(tool => tool.Idempotent())
         .AddMcpTool<ProposeServiceEngagementStaff>(tool => tool.Idempotent())
         .AddMcpTool<WithdrawServiceEngagementStaffProposal>(tool => tool.Idempotent())
+        .AddMcpTool<RevokeServiceEngagementActualStaff>(tool => tool.Idempotent())
         .AddMcpTool<CloseServiceEngagement>(tool => tool.Idempotent())
         .AddMcpTool<GetServiceEngagement>(tool => tool.ReadOnly())
         .AddMcpTool<ListServiceEngagements>(tool => tool.ReadOnly())
@@ -199,6 +202,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListApplicationRevisions>(tool => tool.ReadOnly())
         .AddMcpTool<GetSystemInstance>(tool => tool.ReadOnly())
         .AddMcpTool<ListSystemInstances>(tool => tool.ReadOnly())
+        .AddMcpTool<RecordApplicationRelationship>(tool => tool.Idempotent())
+        .AddMcpTool<RemoveApplicationRelationship>(tool => tool.Idempotent())
+        .AddMcpTool<RemoveGovernedApplicationRelationship>(tool => tool.Idempotent())
+        .AddMcpTool<ListApplicationRelationships>(tool => tool.ReadOnly())
+        .AddMcpTool<ListDirectedApplicationRelationships>(tool => tool.ReadOnly())
         .AddMcpTool<ListApplicationBoundaryReferences>(tool => tool.ReadOnly())
         .AddMcpTool<ListSystemInstanceBoundaryReferences>(tool => tool.ReadOnly())
         .AddMcpTool<PreviewApplicationChangeMcpInput>(tool => tool.Named("bdgrz.application.change.preview")
@@ -362,6 +370,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<PreviewBulkAccessDecision>(tool => tool.ReadOnly())
         .AddMcpTool<RecordAccessRemediationChange>()
         .AddMcpTool<VerifyAccessRemediation>()
+        .AddMcpTool<ReassignAccessReviewResponsibility>(tool => tool.Idempotent())
         .AddMcpTool<ListWork>(tool => tool.ReadOnly())
         .AddMcpTool<GetWorkItem>(tool => tool.ReadOnly())
         .AddMcpTool<ClaimWorkItem>()
@@ -382,6 +391,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     if (hostMode.RunsWorkers())
     {
         portia.AddWorkers();
+        builder.Services.AddHostedService<WorkDigestDispatchBackgroundService>();
     }
 
     builder.Services.AddHostedService<ReservedTenantRouteCollisionCheck>();
@@ -501,6 +511,14 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListPlatformOperators, PlatformOperatorRosterView>("/api/v1/platform/operators")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
+    app.MapPortiaGet<GetWorkDigestDispatchStatus, WorkDigestDispatchStatusView>(
+            "/api/v1/platform/tenants/{tenant_id}/members/{member_id}/work-digest-dispatches/{week_of}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Platform operators");
+    app.MapPortiaPost<AuthorizeWorkDigestUnknownRetry, WorkDigestDispatchStatusView>(
+            "/api/v1/platform/tenants/{tenant_id}/members/{member_id}/work-digest-dispatches/{week_of}/retry-authorizations")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Platform operators");
     app.MapPortiaPost<InviteTenantMember>("/api/v1/tenants/{tenant_id}/invitations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
@@ -612,7 +630,15 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
+    app.MapPortiaPost<RevokeServiceEngagementActualStaff, ServiceEngagementAcceptanceView>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Service engagements");
     app.MapPortiaGet<GetServiceEngagementAcceptance, ServiceEngagementAcceptanceView>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Service engagements");
+    app.MapPortiaPost<AcceptServiceEngagement, ServiceEngagementAcceptanceView>(
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
@@ -1402,6 +1428,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
+    app.MapPortiaPost<ReassignAccessReviewResponsibility, AccessReviewResponsibilityReassignmentView>(
+            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("AccessReviews");
     app.MapPortiaPost<VerifyAccessRemediation, AccessRemediationVerificationView>(
             "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -1785,6 +1815,26 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListApplicationRevisions, Page<ApplicationRevisionView>>(
             "/api/v1/tenants/{tenant_id}/applications/{application_id}/revisions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Applications");
+    app.MapPortiaPost<RecordApplicationRelationship, ApplicationRelationshipRegistration>(
+            "/api/v1/tenants/{tenant_id}/applications/{source_application_id}/relationships")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithSummary("Record a directed application dependency or proposed successor")
+        .WithTags("Applications");
+    app.MapPortiaDelete<RemoveGovernedApplicationRelationship>(
+            "/api/v1/tenants/{tenant_id}/applications/{source_application_id}/relationships/{relationship_type}/{target_application_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithSummary("Remove a directed application relationship")
+        .WithTags("Applications");
+    app.MapPortiaGet<ListDirectedApplicationRelationships, Page<ApplicationRelationshipView>>(
+            "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/directed")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithSummary("List incoming or outgoing application relationships")
+        .WithTags("Applications");
+    app.MapPortiaPost<ApproveApplicationSuccessor>(
+            "/api/v1/tenants/{tenant_id}/applications/{predecessor_application_id}/successors/{successor_application_id}/approval")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithSummary("Approve a proposed successor after a complete current impact review")
         .WithTags("Applications");
     app.MapPortiaPost<DeclareSystemInstance, SystemInstanceRegistration>(
             "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances")
@@ -2291,6 +2341,7 @@ static async Task RunWorkerAsync(string[] args)
         .AddCompliance(builder.Configuration, developerAuthentication,
             requireRealEmailDelivery: !builder.Environment.IsDevelopment())
         .AddWorkers();
+    builder.Services.AddHostedService<WorkDigestDispatchBackgroundService>();
     builder.Services.AddComplianceHealthChecks();
     builder.Services.AddTenantPathLogRedaction();
 
