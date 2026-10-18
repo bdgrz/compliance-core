@@ -458,6 +458,7 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzAccessPopulationDirectory>());
         services.AddScoped<IAccessPopulationDirectoryReader>(
             provider => provider.GetRequiredService<FitzAccessPopulationDirectory>());
+        services.AddScoped<ApplicationAccessPopulationReadConsistency>();
         services.AddScoped<FitzAccessReviewCampaignDirectory>();
         services.AddScoped<IAccessReviewCampaignDirectoryProjection>(
             provider => provider.GetRequiredService<FitzAccessReviewCampaignDirectory>());
