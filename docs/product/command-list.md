@@ -439,7 +439,7 @@ This pruned plan has 129 required additions, including five evidence command con
 - **ApproveManagementAssertion** — coded ([contract](../../src/Compliance.Common/Features/Examinations/ApproveManagementAssertion.cs#L7))
 - **RecordManagementRepresentationLetter** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L7))
 - **SignManagementRepresentationLetter** — coded ([contract](../../src/Compliance.Common/Features/Examinations/SignManagementRepresentationLetter.cs#L7))
-- **RecordExaminationOutcome** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordExaminationOutcome.cs#L7))
+- **RecordExaminationOutcome** — v2 handler records only auditor-supplied outcomes bound to an exact delivered package version and, when supplied, an available inspected report artifact ([contract](../../src/Compliance.Common/Features/Examinations/RecordExaminationOutcome.cs#L7), [handler](../../src/Compliance.Core/Features/Examinations/RecordExaminationOutcomeHandler.cs#L8))
 - **RecordManagementExaminationReview** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementExaminationReview.cs#L7))
 - **ProposeTypeIIOperatingPlan** — coded ([contract](../../src/Compliance.Common/Features/Operations/ProposeTypeIIOperatingPlan.cs#L7))
 - **ReviewTypeIIOperatingPlan** — coded ([contract](../../src/Compliance.Common/Features/Operations/ReviewTypeIIOperatingPlan.cs#L7))

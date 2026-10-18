@@ -34,7 +34,7 @@ public sealed class AuditOutcome : Aggregate
         string actorDisplay, DateTimeOffset recordedAt)
     {
         if (_current is { } existing)
-            return SameInitial(existing, content, actorMemberId, actorDisplay, recordedAt)
+            return SameInitial(existing, content, actorMemberId)
                 ? null
                 : CommandFailure.StateConflict("An audit outcome is immutable once recorded.");
         if (_tenantId == Uuid.Empty || _programId == Uuid.Empty || Id == Uuid.Empty ||
@@ -94,10 +94,9 @@ public sealed class AuditOutcome : Aggregate
         };
     }
 
-    static bool SameInitial(AuditOutcomeView state, AuditOutcomeContent? content,
-        Uuid actor, string display, DateTimeOffset at) =>
+    static bool SameInitial(AuditOutcomeView state, AuditOutcomeContent? content, Uuid actor) =>
         NormalizeContent(content) is { } normalized && Digest(normalized) == state.ContentSha256 &&
-        actor == state.RecordedByMemberId && display.Trim() == state.RecordedByDisplay && at == state.RecordedAt;
+        actor == state.RecordedByMemberId;
 
     static string Digest<T>(T content) => Convert.ToHexString(
         SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(content))).ToLowerInvariant();

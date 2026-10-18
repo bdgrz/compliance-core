@@ -610,14 +610,18 @@ AuditPackage contracts and an aggregate exist, but the source-complete package c
 
 Scope: **T1-07, T3-06**. Requirement source: [decisions/m0-d17-audit-deliverables](decisions/m0-d17-audit-deliverables.md).
 
-DecideTypeIEntry is a readiness entry decision, not an assertion, representation letter, issued report or outcome. No examination sign-off/outcome/operating-plan commands exist.
+DecideTypeIEntry is a readiness entry decision, not an assertion, representation letter, issued report or outcome. Assertion, representation-letter, outcome, sign-off, and Type II-plan records now have distinct contracts or aggregates; the remaining gaps are source-backed recording/review commands and public transitions.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `RecordManagementAssertion`; `ApproveManagementAssertion` | Retain exact assertion wording/artifact and personal CEO/CISO sign-off against the validated exact package, description, criteria and known exceptions. |
-| Missing | `RecordManagementRepresentationLetter`; `SignManagementRepresentationLetter` | Preserve auditor-supplied source/form, signed artifact, exact package, actual signers and time; retain the required sequence after assertion approval. |
-| Missing | `RecordExaminationOutcome`; `RecordManagementExaminationReview` | Capture externally issued report/status/opinion provenance and management review after the required sign-offs; never derive an opinion from readiness. |
-| Missing | `ProposeTypeIIOperatingPlan`; `ReviewTypeIIOperatingPlan`; `ApproveTypeIIOperatingPlan` | Bind the proposed observation period to exact control/policy/risk/provider versions, ownership, cadence, changes and open remediation, with explicit approval. |
+| Missing | `RecordManagementAssertion` | Build the exact source resolver for the package, system description, criteria, controls, exceptions, wording, and signer authority before creating assertion content. |
+| Present | `ApproveManagementAssertion` | The handler now checks the exact named CEO/CISO signer, current direct client membership, and matching persisted program permission; the assertion source/record command remains missing. |
+| Missing | `RecordManagementRepresentationLetter` | Resolve the auditor source, exact package and approved assertion, original report artifact hash, and actual required signer identities before recording. |
+| Present | `SignManagementRepresentationLetter` | The handler requires the authenticated named signer and an available inspected signed artifact. Recording the original letter and enforcing the full workflow sequence remain incomplete. |
+| Present | `RecordExaminationOutcome` | v2 binds an auditor-supplied code, summary, report reference/date, and optional inspected report artifact to an exact delivered package version and manifest; it rejects dates before package delivery or in the future. |
+| Missing | `RecordManagementExaminationReview` | Bind management's review to exact sign-off and auditor outcome identities; the current contract carries only package version and free-form result/comments. |
+| Missing | `ProposeTypeIIOperatingPlan` | Add a source builder for the Type I baseline/outcome, system description, controls, policy/risk/provider versions, ownership, cadence, open findings, and required changes. |
+| Partial | `ReviewTypeIIOperatingPlan`; `ApproveTypeIIOperatingPlan` | Handlers and exact-version independent review/executive approval exist; the plan proposal source builder is required before the workflow is complete. |
 
 <a id="g14"></a>
 

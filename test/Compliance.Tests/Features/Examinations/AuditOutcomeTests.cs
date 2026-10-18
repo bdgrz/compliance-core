@@ -51,6 +51,44 @@ public sealed class AuditOutcomeTests
     }
 
     [Fact]
+    public void ShouldTreatExactOutcomeRetryAsIdempotentGivenLaterRecordingTime()
+    {
+        // Arrange
+        var outcome = new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId);
+        var content = Content();
+        Assert.Null(outcome.Record(content, RecorderId, "Audit manager", Now));
+
+        // Act
+        var retried = outcome.Record(content, RecorderId, "Updated display name",
+            Now.AddMinutes(5));
+
+        // Assert
+        Assert.Null(retried);
+        Assert.Equal(1, outcome.Revision);
+        Assert.Equal(Now, outcome.Current!.RecordedAt);
+        Assert.Equal("Audit manager", outcome.Current.RecordedByDisplay);
+    }
+
+    [Fact]
+    public void ShouldRejectChangedOutcomeRetryGivenRecordedOutcomeIdentity()
+    {
+        // Arrange
+        var outcome = new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId);
+        var content = Content();
+        Assert.Null(outcome.Record(content, RecorderId, "Audit manager", Now));
+
+        // Act
+        var changed = outcome.Record(content with { OutcomeSummary = "Changed auditor opinion." },
+            RecorderId, "Audit manager", Now.AddMinutes(5));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(changed).Code);
+        Assert.Equal(1, outcome.Revision);
+        Assert.Equal(content.OutcomeSummary, outcome.Current!.Content.OutcomeSummary);
+    }
+
+    [Fact]
     public void ShouldReplayAuditorOutcomeAndExactReportBindingGivenRecordedOutcome()
     {
         // Arrange
