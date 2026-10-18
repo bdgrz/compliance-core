@@ -40,7 +40,7 @@ RUN case "$TARGETARCH" in \
       --output /app/publish \
       /p:PublishAot=true
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0.12-noble-chiseled-extra@sha256:566a1d5613279cf96a70bc456b85a5e1dda0cc53f394209680d54b55e4d13cf7 AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0.13-noble-chiseled-extra@sha256:b9f2fd17cfd23c997453e83adeaf2f2d20561f9754eb3ed5dbc97bd06867c377 AS runtime
 
 WORKDIR /app
 
