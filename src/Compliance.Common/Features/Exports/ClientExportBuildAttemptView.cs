@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Exports;
@@ -15,6 +16,11 @@ public sealed record ClientExportBuildAttemptView(
     int WithheldRecordCount,
     Uuid SourceSnapshotId,
     string SourceSnapshotSha256,
-    Uuid CompletedByMemberId,
+    Uuid? CompletedByMemberId,
     string CompletedByDisplay,
-    DateTimeOffset CompletedAt);
+    DateTimeOffset CompletedAt,
+    ActorReference? CompletedByActor = null)
+{
+    public ActorReference EffectiveCompletedBy => CompletedByActor ?? ActorReference.ForMember(
+        CompletedByMemberId ?? Uuid.Empty, CompletedByDisplay);
+}

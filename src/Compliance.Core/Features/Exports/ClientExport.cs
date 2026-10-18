@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -67,19 +68,31 @@ public sealed class ClientExport : Aggregate
 
     public CommandFailure? RecordBuildResult(long expectedRevision,
         ClientExportBuildResultContent result, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset completedAt)
+        string actorDisplay, DateTimeOffset completedAt) =>
+        RecordBuildResult(expectedRevision, result, actorMemberId,
+            ActorReference.ForMember(actorMemberId, actorDisplay), completedAt);
+
+    public CommandFailure? RecordBuildResult(long expectedRevision,
+        ClientExportBuildResultContent result, ActorReference completedBy,
+        DateTimeOffset completedAt) =>
+        RecordBuildResult(expectedRevision, result, null, completedBy, completedAt);
+
+    CommandFailure? RecordBuildResult(long expectedRevision,
+        ClientExportBuildResultContent result, Uuid? actorMemberId,
+        ActorReference completedBy, DateTimeOffset completedAt)
     {
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The client export was not found.");
         if (result is not null && current.BuildAttempts.FirstOrDefault(item => item.AttemptId == result.AttemptId) is { } prior)
-            return SameBuildAttempt(prior, result, actorMemberId, actorDisplay, completedAt)
+            return SameBuildAttempt(prior, result, completedBy, completedAt)
                 ? null : CommandFailure.StateConflict("A client export build-attempt identity cannot be reused.");
         if (expectedRevision != Revision)
             return StaleRevision();
         if (current.Status is not ("requested" or "build_failed") ||
             current.BuildAttempts.Count >= MaximumBuildAttempts ||
-            !ValidActor(actorMemberId, actorDisplay, completedAt) || completedAt < current.UpdatedAt ||
-            NormalizeBuildAttempt(result, current, actorMemberId, actorDisplay, completedAt) is not { } attempt ||
+            !ValidStateActor(actorMemberId, completedBy, completedBy.Display, completedAt) ||
+            completedAt < current.UpdatedAt ||
+            NormalizeBuildAttempt(result, current, actorMemberId, completedBy, completedAt) is not { } attempt ||
             attempt.AttemptNumber != current.BuildAttempts.Count + 1)
             return Invalid("An export build result must report the next attempt against the exact frozen source inventory.");
         var state = current with
@@ -88,8 +101,9 @@ public sealed class ClientExport : Aggregate
             Revision = Revision + 1,
             BuildAttempts = Append(current.BuildAttempts, attempt),
             ActorMemberId = actorMemberId,
-            ActorDisplay = actorDisplay.Trim(),
+            ActorDisplay = completedBy.Display.Trim(),
             UpdatedAt = completedAt,
+            StoredActor = actorMemberId is null ? completedBy : null,
         };
         if (attempt.Outcome == "built")
             return Emit(state, actorMemberId, completedAt,
@@ -210,7 +224,7 @@ public sealed class ClientExport : Aggregate
         _current = Freeze(state);
     }
 
-    CommandFailure? Emit(ClientExportView state, Uuid actorMemberId,
+    CommandFailure? Emit(ClientExportView state, Uuid? actorMemberId,
         DateTimeOffset occurredAt,
         Func<Uuid, Uuid, long, Uuid?, ClientExportView, DateTimeOffset, DomainEvent> createEvent,
         string transition, bool creating = false)
@@ -240,7 +254,7 @@ public sealed class ClientExport : Aggregate
             state.Delivery is { } delivery && !ValidDelivery(delivery, state) ||
             state.IsComplete != (state.Status == "delivered" && state.Delivery is not null) ||
             !ValidStatus(state) || !ValidActor(state.RequestedByMemberId, state.RequestedByDisplay, state.RequestedAt) ||
-            !ValidActor(state.ActorMemberId, state.ActorDisplay, state.UpdatedAt))
+            !ValidStateActor(state.ActorMemberId, state.StoredActor, state.ActorDisplay, state.UpdatedAt))
             return Invalid("The client-export event contains an invalid state snapshot.");
         return null;
     }
@@ -258,11 +272,15 @@ public sealed class ClientExport : Aggregate
         {
             "built" => prior.Status is "requested" or "build_failed" && next.Status == "built" &&
                 next.BuildAttempts.Count == prior.BuildAttempts.Count + 1 && next.BuildAttempts[^1].Outcome == "built" &&
-                next.BuildAttempts[^1].CompletedByMemberId == actor && next.BuildAttempts[^1].CompletedAt == next.UpdatedAt &&
+                next.BuildAttempts[^1].CompletedByMemberId == actor &&
+                next.BuildAttempts[^1].EffectiveCompletedBy == next.EffectiveActor &&
+                next.BuildAttempts[^1].CompletedAt == next.UpdatedAt &&
                 next.Delivery is null,
             "build_failed" => prior.Status is "requested" or "build_failed" && next.Status == "build_failed" &&
                 next.BuildAttempts.Count == prior.BuildAttempts.Count + 1 && next.BuildAttempts[^1].Outcome == "failed" &&
-                next.BuildAttempts[^1].CompletedByMemberId == actor && next.BuildAttempts[^1].CompletedAt == next.UpdatedAt &&
+                next.BuildAttempts[^1].CompletedByMemberId == actor &&
+                next.BuildAttempts[^1].EffectiveCompletedBy == next.EffectiveActor &&
+                next.BuildAttempts[^1].CompletedAt == next.UpdatedAt &&
                 next.Delivery is null,
             "attest_delivery" => prior.Status == "built" && next.Status == "built" &&
                 next.BuildAttempts.Count == prior.BuildAttempts.Count &&
@@ -319,13 +337,13 @@ public sealed class ClientExport : Aggregate
     }
 
     static ClientExportBuildAttemptView? NormalizeBuildAttempt(ClientExportBuildResultContent? result,
-        ClientExportView state, Uuid actor, string display, DateTimeOffset at)
+        ClientExportView state, Uuid? actorMemberId, ActorReference actor, DateTimeOffset at)
     {
         if (result is null || result.AttemptId == Uuid.Empty || result.AttemptNumber <= 0 ||
             result.Outcome is not ("built" or "failed") || result.IncludedRecordCount < 0 ||
             result.WithheldRecordCount < 0 || result.SourceSnapshotId != state.Content.SourceSnapshotId ||
             NormalizeHash(result.SourceSnapshotSha256) != state.Content.SourceSnapshotSha256 ||
-            !ValidActor(actor, display, at))
+            !ValidStateActor(actorMemberId, actor, actor.Display, at))
             return null;
         var success = result.Outcome == "built";
         if (success && (result.ArchiveArtifactId is null || result.ArchiveArtifactId == Uuid.Empty ||
@@ -341,7 +359,8 @@ public sealed class ClientExport : Aggregate
             result.Outcome, result.ArchiveArtifactId, result.ArchiveSha256 is null ? null : NormalizeHash(result.ArchiveSha256),
             result.FailureCode?.Trim().ToLowerInvariant(), result.ManifestId,
             result.IncludedRecordCount, result.WithheldRecordCount, result.SourceSnapshotId,
-            state.Content.SourceSnapshotSha256, actor, display.Trim(), at);
+            state.Content.SourceSnapshotSha256, actorMemberId, actor.Display.Trim(), at,
+            actorMemberId is null ? actor : null);
     }
 
     static bool ValidRecord(ClientExportRecordContent item)
@@ -365,7 +384,8 @@ public sealed class ClientExport : Aggregate
         item.IncludedRecordCount >= 0 && item.WithheldRecordCount >= 0 &&
         item.SourceSnapshotId == state.Content.SourceSnapshotId &&
         item.SourceSnapshotSha256 == state.Content.SourceSnapshotSha256 &&
-        ValidActor(item.CompletedByMemberId, item.CompletedByDisplay, item.CompletedAt) &&
+        ValidStateActor(item.CompletedByMemberId, item.CompletedByActor,
+            item.CompletedByDisplay, item.CompletedAt) &&
         (item.Outcome == "built"
             ? item.ArchiveArtifactId is { } archiveId && archiveId != Uuid.Empty && Sha256(item.ArchiveSha256) &&
               item.ManifestId is { } manifestId && manifestId != Uuid.Empty && item.FailureCode is null &&
@@ -417,13 +437,13 @@ public sealed class ClientExport : Aggregate
         state.RequestedByDisplay == Clean(display) && state.RequestedAt == at;
 
     static bool SameBuildAttempt(ClientExportBuildAttemptView prior,
-        ClientExportBuildResultContent result, Uuid actor, string display, DateTimeOffset at) =>
+        ClientExportBuildResultContent result, ActorReference actor, DateTimeOffset at) =>
         prior.AttemptNumber == result.AttemptNumber && prior.Outcome == result.Outcome &&
         prior.ArchiveArtifactId == result.ArchiveArtifactId && prior.ArchiveSha256 == result.ArchiveSha256 &&
         prior.FailureCode == result.FailureCode && prior.ManifestId == result.ManifestId &&
         prior.IncludedRecordCount == result.IncludedRecordCount && prior.WithheldRecordCount == result.WithheldRecordCount &&
         prior.SourceSnapshotId == result.SourceSnapshotId && prior.SourceSnapshotSha256 == NormalizeHash(result.SourceSnapshotSha256) &&
-        prior.CompletedByMemberId == actor && prior.CompletedByDisplay == Clean(display) && prior.CompletedAt == at;
+        prior.EffectiveCompletedBy == actor && prior.CompletedAt == at;
 
     static bool ValidInitialState(ClientExportView state) => state.Status == "requested" && state.Revision == 1 &&
         state.BuildAttempts.Count == 0 && state.AttestPackageDeliveries.Count == 0 && state.Delivery is null && !state.IsComplete;
@@ -461,6 +481,18 @@ public sealed class ClientExport : Aggregate
     static bool Bounded(string? value, int min, int max) => value is not null && value.Trim().Length >= min && value.Trim().Length <= max;
     static bool Token(string? value, int max) => Bounded(value, 1, max) && value!.Trim().All(character => char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '.');
     static bool ValidActor(Uuid id, string? display, DateTimeOffset at) => id != Uuid.Empty && Bounded(display, 1, 200) && at != default;
+    static bool ValidStateActor(Uuid? memberId, ActorReference? actor, string? display,
+        DateTimeOffset at)
+    {
+        if (at == default || !Bounded(display, 1, 200))
+            return false;
+        if (memberId is { } id)
+            return ValidActor(id, display, at) &&
+                (actor is null || actor == ActorReference.ForMember(id, Clean(display)));
+        return actor is { Kind: "system_process", Id: { } processId, Display: { } actorDisplay } &&
+            processId.StartsWith("reactor:", StringComparison.Ordinal) &&
+            actorDisplay == Clean(display) && Bounded(processId, 1, 200);
+    }
     CommandFailure StaleRevision() => CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("client export", Revision));
     static CommandFailure Invalid(string message) => CommandFailure.InvalidContent(message);
     static ReadOnlyCollection<T> Freeze<T>(T[] values) => Array.AsReadOnly(values);

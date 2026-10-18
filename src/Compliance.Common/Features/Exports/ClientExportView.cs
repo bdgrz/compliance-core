@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Exports;
@@ -17,6 +18,11 @@ public sealed record ClientExportView(
     IReadOnlyList<ClientExportAttestDeliveryView> AttestPackageDeliveries,
     ClientExportDeliveryView? Delivery,
     bool IsComplete,
-    Uuid ActorMemberId,
+    Uuid? ActorMemberId,
     string ActorDisplay,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    ActorReference? StoredActor = null)
+{
+    public ActorReference EffectiveActor => StoredActor ?? ActorReference.ForMember(
+        ActorMemberId ?? Uuid.Empty, ActorDisplay);
+}
