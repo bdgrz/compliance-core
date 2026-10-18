@@ -754,6 +754,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviseExaminationEngagementHandler>()
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ProposeSystemDescriptionSuccessorHandler>()
+            .AddRequestHandler<SignManagementRepresentationLetterHandler>()
             .AddRequestHandler<ApproveAuditPackageDisclosureHandler>()
             .AddRequestHandler<ApproveAuditPackageValidationOverrideHandler>()
             .AddRequestHandler<RecordAuditPackageDeliveryHandler>()
