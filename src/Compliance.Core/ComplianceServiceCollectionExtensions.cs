@@ -2,6 +2,7 @@ using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Incidents;
@@ -708,6 +709,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListOperationalProcessesHandler>()
             .AddRequestHandler<ListOperationalProcessRevisionsHandler>()
             .AddRequestAuthorizer<TechnologyInventoryAuthorizer>()
+            .AddRequestHandler<CloseAdvisorHandoffHandler>()
+            .AddRequestHandler<RevokeAdvisorHandoffHandler>()
             .AddRequestHandler<CreateProgramHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()
