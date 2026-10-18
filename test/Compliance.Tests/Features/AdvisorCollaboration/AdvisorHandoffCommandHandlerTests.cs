@@ -43,6 +43,246 @@ public sealed class AdvisorHandoffCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldCreateDraftHandoffGivenPersonalHttpActor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var handoffId = Uuid.CreateVersion4();
+        var recordId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion4();
+        var request = new CreateAdvisorHandoff(fixture.TenantId, fixture.ProgramId, handoffId,
+            [new(recordId, versionId)], "  Type I controls  ", new DateOnly(2026, 12, 31));
+
+        // Act
+        var result = await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.True(saved.IsCreated);
+        Assert.Equal("draft", saved.Status);
+        Assert.Equal("Type I controls", saved.Purpose);
+        Assert.Equal(new DateOnly(2026, 12, 31), saved.ExpiresOn);
+        Assert.Equal(1, saved.Revision);
+        Assert.Equal(Now.AddMinutes(2), saved.CreatedAt);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId).ToString(),
+            saved.CreatedBy!.Id);
+        Assert.Equal([new AdvisorRecordVersion(recordId, versionId)], saved.Selection);
+    }
+
+    [Fact]
+    public async Task ShouldNotCreateHandoffGivenSystemDispatch()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var handoffId = Uuid.CreateVersion4();
+        var request = new CreateAdvisorHandoff(fixture.TenantId, fixture.ProgramId, handoffId,
+            [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Review", new DateOnly(2026, 12, 31));
+
+        // Act
+        var result = await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(new Cntryl.Portia.RequestContext<CreateAdvisorHandoff>(request,
+                RequestActor.System), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.False(saved.IsCreated);
+    }
+
+    [Fact]
+    public async Task ShouldReviseSelectionGivenCurrentHandoffRevision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, _, _) = await fixture.SeedOpenHandoffWithSelectionAsync();
+        var revisedRecordId = Uuid.CreateVersion4();
+        var revisedVersionId = Uuid.CreateVersion4();
+        var request = new ReviseAdvisorHandoffSelection(fixture.TenantId, fixture.ProgramId,
+            handoffId, 2, [new(revisedRecordId, revisedVersionId)], "Updated the review scope");
+
+        // Act
+        var result = await new ReviseAdvisorHandoffSelectionHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("draft", saved.Status);
+        Assert.Equal(3, saved.Revision);
+        Assert.Equal(Now.AddMinutes(2), saved.UpdatedAt);
+        Assert.Equal([new AdvisorRecordVersion(revisedRecordId, revisedVersionId)], saved.Selection);
+    }
+
+    [Fact]
+    public async Task ShouldNotReviseSelectionGivenStaleHandoffRevision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, recordId, versionId) = await fixture.SeedOpenHandoffWithSelectionAsync();
+        var request = new ReviseAdvisorHandoffSelection(fixture.TenantId, fixture.ProgramId,
+            handoffId, 1, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Changed selection");
+
+        // Act
+        var result = await new ReviseAdvisorHandoffSelectionHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(2, saved.Revision);
+        Assert.Equal([new AdvisorRecordVersion(recordId, versionId)], saved.Selection);
+    }
+
+    [Fact]
+    public async Task ShouldMarkDraftHandoffReadyGivenCurrentRevision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var handoffId = await fixture.SeedDraftHandoffAsync();
+        var request = new MarkAdvisorHandoffReadyForReview(fixture.TenantId, fixture.ProgramId,
+            handoffId, 1);
+
+        // Act
+        var result = await new MarkAdvisorHandoffReadyForReviewHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("ready_for_review", saved.Status);
+        Assert.Equal(2, saved.Revision);
+        Assert.Equal(Now.AddMinutes(2), saved.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task ShouldNotMarkHandoffReadyGivenSystemDispatch()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var handoffId = await fixture.SeedDraftHandoffAsync();
+        var request = new MarkAdvisorHandoffReadyForReview(fixture.TenantId, fixture.ProgramId,
+            handoffId, 1);
+
+        // Act
+        var result = await new MarkAdvisorHandoffReadyForReviewHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(new Cntryl.Portia.RequestContext<MarkAdvisorHandoffReadyForReview>(request,
+                RequestActor.System), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal("draft", saved.Status);
+        Assert.Equal(1, saved.Revision);
+    }
+
+    [Theory]
+    [InlineData("create")]
+    [InlineData("revise")]
+    [InlineData("ready")]
+    public async Task ShouldNotMutateHandoffGivenDifferentProgramScope(string operation)
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var otherProgramId = Uuid.CreateVersion4();
+        var handoffId = operation == "revise"
+            ? (await fixture.SeedOpenHandoffWithSelectionAsync()).HandoffId
+            : await fixture.SeedDraftHandoffAsync();
+        IRequestBase request = operation switch
+        {
+            "create" => new CreateAdvisorHandoff(fixture.TenantId, otherProgramId, handoffId,
+                [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Review",
+                new DateOnly(2026, 12, 31)),
+            "revise" => new ReviseAdvisorHandoffSelection(fixture.TenantId, otherProgramId,
+                handoffId, 2, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Wrong program"),
+            "ready" => new MarkAdvisorHandoffReadyForReview(fixture.TenantId, otherProgramId,
+                handoffId, 1),
+            _ => throw new InvalidOperationException()
+        };
+
+        // Act
+        var result = operation switch
+        {
+            "create" => await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Clock)
+                .HandleAsync(Fixture.Context(fixture.UserId, (CreateAdvisorHandoff)request),
+                    CancellationToken.None),
+            "revise" => await new ReviseAdvisorHandoffSelectionHandler(fixture.Executor,
+                fixture.Clock).HandleAsync(Fixture.Context(fixture.UserId,
+                    (ReviseAdvisorHandoffSelection)request), CancellationToken.None),
+            "ready" => await new MarkAdvisorHandoffReadyForReviewHandler(fixture.Executor,
+                fixture.Clock).HandleAsync(Fixture.Context(fixture.UserId,
+                    (MarkAdvisorHandoffReadyForReview)request), CancellationToken.None),
+            _ => throw new InvalidOperationException()
+        };
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+        Assert.Equal(operation == "revise" ? "ready_for_review" : "draft", saved.Status);
+        Assert.Equal(operation == "revise" ? 2 : 1, saved.Revision);
+    }
+
+    [Theory]
+    [InlineData("create")]
+    [InlineData("revise")]
+    [InlineData("ready")]
+    public async Task ShouldRejectMcpInvocationGivenPersonalHandoffMutation(string operation)
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var handoffId = operation == "revise"
+            ? (await fixture.SeedOpenHandoffWithSelectionAsync()).HandoffId
+            : operation == "ready" ? await fixture.SeedDraftHandoffAsync() : Uuid.CreateVersion4();
+        IRequestBase request = operation switch
+        {
+            "create" => new CreateAdvisorHandoff(fixture.TenantId, fixture.ProgramId, handoffId,
+                [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Review",
+                new DateOnly(2026, 12, 31)),
+            "revise" => new ReviseAdvisorHandoffSelection(fixture.TenantId, fixture.ProgramId,
+                handoffId, 2, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Updated scope"),
+            "ready" => new MarkAdvisorHandoffReadyForReview(fixture.TenantId, fixture.ProgramId,
+                handoffId, 1),
+            _ => throw new InvalidOperationException()
+        };
+        var dispatch = new RequestDispatchContext(new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("iss", "bdgrz"), new Claim("sub", fixture.UserId.ToString()),
+                new Claim("email", "lead@example.test")], "BdgrzSession")),
+            new McpInvocation("advisor-handoff-mutation"));
+
+        // Act
+        var result = operation switch
+        {
+            "create" => await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Clock)
+                .HandleAsync(Fixture.Context((CreateAdvisorHandoff)request, dispatch),
+                    CancellationToken.None),
+            "revise" => await new ReviseAdvisorHandoffSelectionHandler(fixture.Executor,
+                fixture.Clock).HandleAsync(Fixture.Context(
+                    (ReviseAdvisorHandoffSelection)request, dispatch), CancellationToken.None),
+            "ready" => await new MarkAdvisorHandoffReadyForReviewHandler(fixture.Executor,
+                fixture.Clock).HandleAsync(Fixture.Context(
+                    (MarkAdvisorHandoffReadyForReview)request, dispatch), CancellationToken.None),
+            _ => throw new InvalidOperationException()
+        };
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal(operation == "create" ? "missing" :
+            operation == "revise" ? "ready_for_review" : "draft", saved.Status);
+        Assert.Equal(operation == "revise" ? 2 : operation == "ready" ? 1 : 0,
+            saved.Revision);
+    }
+
+    [Fact]
     public async Task ShouldRecordFeedbackAgainstSharedExactSelectionGivenPersonalHttpActor()
     {
         // Arrange
@@ -307,6 +547,18 @@ public sealed class AdvisorHandoffCommandHandlerTests
             return handoffId;
         }
 
+        public async Task<Uuid> SeedDraftHandoffAsync()
+        {
+            var handoffId = Uuid.CreateVersion4();
+            var handoff = new AdvisorHandoff(TenantId, ProgramId, handoffId);
+            Assert.True(handoff.Create("Type I controls",
+                [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())],
+                new DateOnly(2026, 12, 31), ActorReference.ForMember(RbacIds.Member(TenantId,
+                    UserId), "Compliance lead"), Now).IsSuccess);
+            await Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
+            return handoffId;
+        }
+
         public async Task<(Uuid HandoffId, Uuid RecordId, Uuid RecordVersionId)>
             SeedOpenHandoffWithSelectionAsync()
         {
@@ -344,6 +596,9 @@ public sealed class AdvisorHandoffCommandHandlerTests
             where T : IRequestBase => new(request, new RequestDispatchContext(Actor(userId),
                 new HttpInvocation("POST", "/api/v1/advisor-handoffs/end",
                     "/api/v1/advisor-handoffs/end", "advisor-handoff-handler-test")));
+
+        public static Cntryl.Portia.RequestContext<T> Context<T>(T request,
+            RequestDispatchContext dispatch) where T : IRequestBase => new(request, dispatch);
 
         static ClaimsPrincipal Actor(Uuid userId) => new(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString()),

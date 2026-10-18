@@ -8,8 +8,8 @@ Keep the layer boundary explicit: when a handler durably records valid intent an
 
 ## Current gap
 
-- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 106 have complete handler coverage, 5 have partial handler coverage, and 13 still have no handler.
-- Active command registration gaps: 13. Active commands without a handler test reference: 13. The five partial handlers are registered and tested but do not yet cover their accepted feature scope.
+- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 106 have complete handler coverage, 8 have partial handler coverage, and 10 still have no handler.
+- Active command registration gaps: 10. Active commands without a handler test reference: 10. The eight partial handlers are registered and tested but do not yet cover their accepted feature scope.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Then implement reactors, with projectors as the final layer.
 
@@ -17,7 +17,7 @@ Keep the layer boundary explicit: when a handler durably records valid intent an
 
 Work the layers in order. A command is complete only when its source and authority checks are implemented, its aggregate transition is exercised by a red-to-green behavior test, the handler is registered and host-dispatched, and the owning API authorization is verified. Update the table below as each item closes; do not move into reactors while any active handler is missing or partial.
 
-### Handlers — 18 active open items (13 missing, 5 partial)
+### Handlers — 18 active open items (10 missing, 8 partial)
 
 Evidence handling:
 
@@ -26,9 +26,9 @@ Evidence handling:
 
 Advisor collaboration:
 
-- [ ] `CreateAdvisorHandoff` — exact version resolver for every supported record family and Compliance Lead authorization.
-- [ ] `ReviseAdvisorHandoffSelection` — resolve every selected exact version and recheck shareable status.
-- [ ] `MarkAdvisorHandoffReadyForReview` — recheck the complete selection and Compliance Lead authority at sharing time.
+- [ ] `CreateAdvisorHandoff` (partial) — the personal HTTP handler and `program.manage` authorization are wired; exact version resolution for every supported record family remains.
+- [ ] `ReviseAdvisorHandoffSelection` (partial) — the personal HTTP handler and `program.manage` authorization are wired; resolve every selected exact version and recheck shareable status.
+- [ ] `MarkAdvisorHandoffReadyForReview` (partial) — the personal HTTP handler and `program.manage` authorization are wired; recheck the complete selection and current shareable status before sharing.
 - [ ] `RecordAdvisorFeedback` (partial) — exact selected-version feedback, assigned firm-Advisor authorization, scoped guest authorization, and actual member attribution are implemented; real source-version selection awaits the source resolver.
 - [ ] `CorrectAdvisorFeedback` (partial) — linked correction ID, author attribution, firm-Advisor and scoped guest author authorization are implemented; real source-version selection awaits the source resolver.
 
@@ -336,9 +336,9 @@ Identity provider:
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `ExecuteArtifactDisposition` | present | missing | check | no reference |
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `RecordArtifactDispositionResult` | present | present | present | `RecordArtifactDispositionResultHandlerTests` |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `CreateAuditPackage` | present | present | present | `CreateAuditPackageHandlerTests` |
-| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CreateAdvisorHandoff` | present | missing | check | no reference |
-| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `ReviseAdvisorHandoffSelection` | present | missing | check | no reference |
-| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `MarkAdvisorHandoffReadyForReview` | present | missing | check | no reference |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CreateAdvisorHandoff` | present | partial | present | `AdvisorHandoffCommandHandlerTests` |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `ReviseAdvisorHandoffSelection` | present | partial | present | `AdvisorHandoffCommandHandlerTests` |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `MarkAdvisorHandoffReadyForReview` | present | partial | present | `AdvisorHandoffCommandHandlerTests` |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CloseAdvisorHandoff` | present | present | present | referenced |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RevokeAdvisorHandoff` | present | present | present | referenced |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RecordAdvisorFeedback` | present | partial | present | `AdvisorHandoffCommandHandlerTests`, `AdvisoryReadinessNoteIndependenceTests` |

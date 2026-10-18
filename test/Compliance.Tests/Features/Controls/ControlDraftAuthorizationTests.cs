@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Programs;
@@ -32,6 +33,45 @@ public sealed class ControlDraftAuthorizationTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(result.Error).Kind);
         Assert.Empty(permissions.Permissions);
+        Assert.Equal(programId, scoped.ProgramId);
+        Assert.Equal(RbacPermissions.ProgramManage, scoped.Permission);
+    }
+
+    [Theory]
+    [InlineData("create", false)]
+    [InlineData("revise", true)]
+    [InlineData("ready", false)]
+    public async Task ShouldRequireProgramManagementGivenAdvisorHandoffMutation(string operation,
+        bool allowed)
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var scoped = new RecordingAccessGrantPermissionAuthorizer(allowed);
+        var authorizer = new ProgramManagementAuthorizer(new FixedMembershipDirectory(true),
+            new ActiveTenant(), scoped, ProgramManagementServices.ResourceScopes());
+        IProgramManagementRequest request = operation switch
+        {
+            "create" => new CreateAdvisorHandoff(tenantId, programId, Uuid.CreateVersion4(),
+                [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Readiness review",
+                new DateOnly(2026, 12, 31)),
+            "revise" => new ReviseAdvisorHandoffSelection(tenantId, programId,
+                Uuid.CreateVersion4(), 1,
+                [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Updated selection"),
+            "ready" => new MarkAdvisorHandoffReadyForReview(tenantId, programId,
+                Uuid.CreateVersion4(), 1),
+            _ => throw new InvalidOperationException()
+        };
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
+            request, ProgramManagementServices.Actor(Uuid.CreateVersion4())),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(allowed, result.IsSuccess);
+        if (!allowed)
+            Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Equal(programId, scoped.ProgramId);
         Assert.Equal(RbacPermissions.ProgramManage, scoped.Permission);
     }

@@ -2353,6 +2353,18 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Programs");
+    app.MapPortiaPost<CreateAdvisorHandoff>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaPost<ReviseAdvisorHandoffSelection>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaPost<MarkAdvisorHandoffReadyForReview>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
     app.MapPortiaPost<CloseAdvisorHandoff>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
