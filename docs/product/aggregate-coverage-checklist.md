@@ -84,10 +84,13 @@ behavioral coverage remains; `[~]` intentionally deferred by the backlog.
   snapshots use `ImmutableSnapshot`.
 - [x] R2-10 Policy distribution and training — `PolicyDistributionCampaign`
   and `TrainingCatalog`.
-- [x] R2-11 Accountable work — `WorkAssignmentLedger` and
-  `WorkDigestPreference`; `WeeklyWorkDigest` owns per-member/week scheduling,
-  suppression, deterministic delivery attempts, and outcomes. The
-  cross-feature work queue remains a projection.
+- [x] R2-11 Accountable work — `WorkItemAssignment` owns one item's assignment
+  and escalation history per stream; `LegacyWorkAssignmentLedger` remains a
+  read-only compatibility adapter so existing program-stream history is
+  imported on the item's first successful change. `WorkDigestPreference` and
+  `WeeklyWorkDigest` own
+  per-member/week preference, scheduling, suppression, delivery attempts, and
+  outcomes. The cross-feature work queue remains a projection.
 - [x] R2-12 Evidence handling and disclosure policy — `EvidenceHandlingPolicy`
   owns versioned classification for exact artifact content; `ArtifactDisclosure`
   owns approved exact-recipient access; `ArtifactEngagementHold` owns
@@ -264,3 +267,7 @@ behavioral coverage remains; `[~]` intentionally deferred by the backlog.
   audience checks, test-before-enable, rotation requiring retest, safe failure
   details, disable without deleting identity history, secret-reference
   non-disclosure, tenant-bound replay, and replay of lifecycle history.
+- [x] R2-11 accountable work boundary: the per-item stream assertion failed
+  against the program-wide ledger and passed after assignments moved to
+  `WorkItemAssignment`; the focused migration test preserves and imports legacy
+  assignment history on the first successful change.

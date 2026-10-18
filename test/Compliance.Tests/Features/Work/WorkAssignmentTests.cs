@@ -6,11 +6,31 @@ using Bdgrz.Compliance.Tests.Features.Operations;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Work;
 
 public sealed class WorkAssignmentTests
 {
+    [Fact]
+    public void ShouldIsolateAssignmentStreamsGivenIndependentProgramsAndItems()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var workItemId = Uuid.CreateVersion4();
+
+        // Act
+        var assignment = new WorkItemAssignment(tenantId, programId, workItemId);
+        var otherWorkItem = new WorkItemAssignment(tenantId, programId, Uuid.CreateVersion4());
+        var otherProgram = new WorkItemAssignment(tenantId, Uuid.CreateVersion4(), workItemId);
+
+        // Assert
+        Assert.NotEqual(assignment.Stream, otherWorkItem.Stream);
+        Assert.NotEqual(assignment.Stream, otherProgram.Stream);
+        Assert.NotEqual(assignment.Id, otherProgram.Id);
+    }
+
     [Fact]
     public async Task ShouldClaimTeamWorkGivenEligibleTeamMember()
     {
@@ -178,6 +198,79 @@ public sealed class WorkAssignmentTests
         await fixture.Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId,
                 fixture.ProgramId, item.WorkItemId, 0, fixture.OwnerMemberId))
             .ExpectFailure(RequestErrorKind.Conflict);
+    }
+
+    [Fact]
+    public async Task ShouldPersistAssignmentInItsOwnWorkItemStreamGivenAssignment()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await fixture.PlanAsync(backup: new OperatingHolder("member", fixture.BackupMemberId));
+        var item = (await fixture.AsAsync(fixture.OwnerUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId))).Items[0];
+
+        // Act
+        await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(fixture.TenantId,
+            fixture.ProgramId, item.WorkItemId, 0, fixture.BackupMemberId));
+
+        // Assert
+        var stream = new EventStreamAddress(fixture.TenantId.ToString(),
+            WorkItemAssignment.Area,
+            WorkItemAssignment.IdFor(fixture.ProgramId, item.WorkItemId).ToString());
+        var persisted = new List<DomainEvent>();
+        await foreach (var record in fixture.Provider.GetRequiredService<IEventStore>()
+                           .ReadAsync(stream, 0, CancellationToken.None))
+            persisted.Add(record.Event);
+        Assert.IsType<WorkItemAssigned>(Assert.Single(persisted));
+    }
+
+    [Fact]
+    public async Task ShouldCarryLegacyAssignmentIntoWorkItemStreamGivenFirstChange()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await fixture.PlanAsync(backup: new OperatingHolder("member", fixture.BackupMemberId));
+        var item = (await fixture.AsAsync(fixture.OwnerUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId))).Items[0];
+        var legacyReason = "Recorded before per-item streams.";
+        var legacyAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+        var legacyEvent = new WorkItemAssigned(fixture.TenantId, fixture.ProgramId,
+            item.WorkItemId, 1, "assign", fixture.OwnerMemberId, null, legacyReason,
+            ActorReference.ForMember(fixture.LeadMemberId, "Lead"), legacyAt);
+        await fixture.Provider.GetRequiredService<IEventStore>().AppendAsync(
+            new EventStreamAddress(fixture.TenantId.ToString(), "work-assignments",
+                fixture.ProgramId.ToString()), 0,
+            [DomainEventSeed.Attach(legacyEvent, fixture.ProgramId, 1)]);
+        var before = await fixture.AsAsync(fixture.OwnerUserId,
+            new GetWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId));
+
+        // Act
+        var delegated = await fixture.AsAsync(fixture.OwnerUserId, new DelegateWorkItem(
+            fixture.TenantId, fixture.ProgramId, item.WorkItemId, 1,
+            fixture.BackupMemberId, "Preserve the existing assignment history."));
+        var reloaded = await fixture.AsAsync(fixture.BackupUserId,
+            new GetWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId));
+
+        // Assert
+        Assert.Equal(fixture.OwnerMemberId, before.Item.AssigneeMemberId);
+        Assert.Equal(legacyReason, Assert.Single(before.History).Reason);
+        Assert.Equal(fixture.BackupMemberId, delegated.Item.AssigneeMemberId);
+        Assert.Equal(2, delegated.Item.AssignmentRevision);
+        Assert.Equal(legacyReason, delegated.History[0].Reason);
+        Assert.Equal("delegate", delegated.History[1].Action);
+        Assert.Equal(fixture.BackupMemberId, reloaded.Item.AssigneeMemberId);
+        Assert.Equal(legacyReason, reloaded.History[0].Reason);
+        Assert.Equal("delegate", reloaded.History[1].Action);
+        var stream = new EventStreamAddress(fixture.TenantId.ToString(),
+            WorkItemAssignment.Area,
+            WorkItemAssignment.IdFor(fixture.ProgramId, item.WorkItemId).ToString());
+        var persisted = new List<DomainEvent>();
+        await foreach (var record in fixture.Provider.GetRequiredService<IEventStore>()
+                           .ReadAsync(stream, 0, CancellationToken.None))
+            persisted.Add(record.Event);
+        Assert.Equal(2, persisted.Count);
+        Assert.IsNotType<WorkItemAssigned>(persisted[0]);
+        Assert.Equal("delegate", Assert.IsType<WorkItemAssigned>(persisted[1]).Action);
     }
 
     [Fact]

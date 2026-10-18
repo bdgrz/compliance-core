@@ -1865,7 +1865,8 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Work
 
-- [WorkAssignmentLedger](../../src/Compliance.Core/Features/Work/WorkAssignmentLedger.cs#L12)
+- [WorkItemAssignment](../../src/Compliance.Core/Features/Work/WorkItemAssignment.cs#L10)
+- [LegacyWorkAssignmentLedger](../../src/Compliance.Core/Features/Work/LegacyWorkAssignmentLedger.cs#L6) (read-only legacy stream adapter)
 - [WorkDigestPreference](../../src/Compliance.Core/Features/Work/WorkDigestPreference.cs#L9)
 - [WeeklyWorkDigest](../../src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs#L11)
 

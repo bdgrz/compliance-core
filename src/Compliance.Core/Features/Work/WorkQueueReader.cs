@@ -143,14 +143,21 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
                 return Result<WorkQueueSnapshot>.Failure(decisions.Error);
             candidates.AddRange(decisions.Value);
         }
-        var ledger = await reader.HydrateAsync(new WorkAssignmentLedger(tenantId, programId), ct)
+        var legacyLedger = await reader.HydrateAsync(new LegacyWorkAssignmentLedger(tenantId,
+            programId), ct)
             .ConfigureAwait(false);
         var manages = await authority.ManagesProgramAsync(tenantId, actor, programId, ct)
             .ConfigureAwait(false);
         var entries = new List<WorkQueueEntry>();
         foreach (var candidate in candidates)
         {
-            var state = ledger.Read(candidate.WorkItemId);
+            var assignment = await reader.HydrateAsync(new WorkItemAssignment(tenantId,
+                programId, candidate.WorkItemId), ct).ConfigureAwait(false);
+            var currentState = assignment.Read();
+            var legacyState = currentState.Revision == 0
+                ? legacyLedger.Read(candidate.WorkItemId)
+                : WorkAssignmentState.Empty;
+            var state = currentState.Revision == 0 ? legacyState : currentState;
             var assignee = await AssigneeAsync(tenantId, candidate, state, ct).ConfigureAwait(false);
             var item = Compose(candidate, state, assignee, today);
             var eligible = await IsEligibleAsync(tenantId, candidate, actor.MemberId, ct)
@@ -163,7 +170,8 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
             if (eligible || assignee == actor.MemberId ||
                 oversees && !RiskAcceptanceWork.HasRestrictedAuthority(candidate) &&
                 (candidate.Kind != FindingClosureWork.Kind || eligible))
-                entries.Add(new WorkQueueEntry(candidate, state, item, eligible, inTeam));
+                entries.Add(new WorkQueueEntry(candidate, state, legacyState, item, eligible,
+                    inTeam));
         }
         var ordered = entries
             .OrderBy(static entry => entry.Item.DueOn is null)

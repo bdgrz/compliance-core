@@ -33,8 +33,8 @@ public sealed class AssignWorkItemHandler(IAggregateExecutor executor, WorkQueue
                 var previous = entry.Item.AssigneeMemberId;
                 return await WorkCommands.ExecuteAsync(executor, context, request.TenantId,
                     request.ProgramId, entry, snapshot.Today, ledger => ledger.AssignTo(
-                        request.WorkItemId, request.ExpectedRevision,
-                        previous is null ? WorkAssignmentLedger.Assign : WorkAssignmentLedger.Reassign,
+                        request.ExpectedRevision,
+                        previous is null ? WorkItemAssignment.Assign : WorkItemAssignment.Reassign,
                         request.AssigneeMemberId, previous, request.Reason,
                         ActorReference.ForMember(actor.MemberId, actor.Display),
                         clock.GetUtcNow()), ct).ConfigureAwait(false);

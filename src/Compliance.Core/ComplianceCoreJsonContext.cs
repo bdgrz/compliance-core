@@ -1106,6 +1106,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(EscalateWorkItem))]
 [JsonSerializable(typeof(WorkItemAssigned))]
 [JsonSerializable(typeof(WorkItemEscalated))]
+[JsonSerializable(typeof(WorkItemAssignmentHistoryImported))]
 [JsonSerializable(typeof(ListWorkReminders))]
 [JsonSerializable(typeof(WorkReminderView))]
 [JsonSerializable(typeof(IReadOnlyList<WorkReminderView>))]

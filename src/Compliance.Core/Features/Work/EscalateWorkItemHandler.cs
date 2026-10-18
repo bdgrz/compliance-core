@@ -25,7 +25,7 @@ public sealed class EscalateWorkItemHandler(IAggregateExecutor executor, WorkQue
                         "The work item is already escalated.");
                 return await WorkCommands.ExecuteAsync(executor, context, request.TenantId,
                     request.ProgramId, entry, snapshot.Today, ledger => ledger.EscalateItem(
-                        request.WorkItemId, request.ExpectedRevision, request.Reason,
+                        request.ExpectedRevision, request.Reason,
                         ActorReference.ForMember(actor.MemberId, actor.Display),
                         clock.GetUtcNow()), ct).ConfigureAwait(false);
             }, ct);
