@@ -116,6 +116,46 @@ public sealed class ExaminationEngagementCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldReadFrozenBaselineGivenTenantProgramAndBaselineIdentity()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedBaselineAsync();
+        var request = new GetTypeIBaseline(fixture.TenantId, fixture.ProgramId,
+            fixture.BaselineId);
+
+        // Act
+        var result = await new GetTypeIBaselineHandler(fixture.Directory)
+            .HandleAsync(fixture.Context(request), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(fixture.TenantId, result.Value.TenantId);
+        Assert.Equal(fixture.ProgramId, result.Value.ProgramId);
+        Assert.Equal(fixture.EngagementId, result.Value.ExaminationEngagementId);
+        Assert.Equal(fixture.BaselineId, result.Value.TypeIBaselineId);
+        Assert.Equal("frozen", result.Value.Status);
+        Assert.Equal(1, result.Value.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldReturnNotFoundGivenBaselineFromDifferentProgram()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedBaselineAsync();
+        var request = new GetTypeIBaseline(fixture.TenantId, Uuid.CreateVersion4(),
+            fixture.BaselineId);
+
+        // Act
+        var result = await new GetTypeIBaselineHandler(fixture.Directory)
+            .HandleAsync(fixture.Context(request), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+    }
+
+    [Fact]
     public async Task ShouldRejectStaleRevisionWithoutAppendingGivenDraftRevision()
     {
         // Arrange
@@ -165,6 +205,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid ProgramId { get; } = Uuid.CreateVersion4();
         public Uuid EngagementId { get; } = Uuid.CreateVersion4();
+        public Uuid BaselineId { get; } = Uuid.CreateVersion4();
         public Uuid BoundaryId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public IAggregateReader Reader { get; }
@@ -205,12 +246,41 @@ public sealed class ExaminationEngagementCommandHandlerTests
                 new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
                 RbacIds.Member(TenantId, UserId), "Examiner", Now));
             await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
+            await ProjectAsync(new ExaminationEngagementOpened(TenantId,
+                aggregate.Current!, Now));
+        }
+
+        public async Task SeedBaselineAsync()
+        {
+            await SeedEngagementAsync();
+            var engagement = await Directory.GetAsync(TenantId, EngagementId);
+            var source = new TypeIBaselineSourceReference("approved_boundary", BoundaryId,
+                Uuid.CreateVersion4(), 1, new string('b', 64));
+            var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId, [source]);
+            var frozenAt = Now.AddMinutes(1);
+            var baseline = new TypeIBaselineView(TenantId, ProgramId, EngagementId, BaselineId,
+                "frozen", 1, preview.Sources, [], preview.CanonicalManifest, preview.ContentSha256,
+                frozenAt, RbacIds.Member(TenantId, UserId), "Examiner", "Confirmed", null,
+                null, [], [], 0);
+            var current = engagement ?? throw new InvalidOperationException(
+                "The seeded examination engagement was not projected.");
+            var frozenEngagement = current with
+            {
+                Status = "baseline_frozen",
+                Revision = current.Revision + 1,
+                UpdatedAt = frozenAt,
+            };
+            await ProjectAsync(new TypeIBaselineFrozen(TenantId, frozenEngagement, baseline,
+                frozenAt));
+        }
+
+        async Task ProjectAsync(DomainEvent domainEvent)
+        {
             var identity = new CheckpointIdentity(FitzExaminationEngagementDirectory.ProjectorName,
                 EventStreamPattern.ForPattern(TenantId.ToString()));
             await using var batch = await Directory.BeginAsync(new ProjectionBatchContext(identity,
                 ProjectionCheckpoint.Start));
-            await Directory.ApplyAsync(new ExaminationEngagementOpened(TenantId,
-                aggregate.Current!, Now));
+            await Directory.ApplyAsync(domainEvent);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
