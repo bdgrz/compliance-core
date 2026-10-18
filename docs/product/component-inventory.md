@@ -2795,6 +2795,7 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `CreateExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2285) |
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/revisions` | `ReviseExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2289) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `GetExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2293) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}` | `GetTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2298) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id}` | `RecordManagementAssertion` | [registration](../../src/Compliance.App/Program.cs#L2210) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/representation-letters/{letter_id}` | `RecordManagementRepresentationLetter` | [registration](../../src/Compliance.App/Program.cs#L2214) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2218) |

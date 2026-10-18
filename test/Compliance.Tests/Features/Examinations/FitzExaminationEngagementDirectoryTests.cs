@@ -38,6 +38,30 @@ public sealed class FitzExaminationEngagementDirectoryTests
             Uuid.CreateVersion4(), "frozen", 1, preview.Sources, [], preview.CanonicalManifest,
             preview.ContentSha256,
             frozen.UpdatedAt, actorMemberId, "Examiner", "Confirmed", null, null, [], [], 0);
+        var amendedPreview = TypeIBaselinePreview.Create(tenantId, programId, engagementId,
+            [new TypeIBaselineSourceReference("approved_boundary", boundaryId,
+                Uuid.CreateVersion4(), 2, new string('c', 64))]);
+        var amended = baseline with
+        {
+            TypeIBaselineId = Uuid.CreateVersion4(),
+            Status = "amended",
+            Revision = 2,
+            Sources = amendedPreview.Sources,
+            CanonicalManifest = amendedPreview.CanonicalManifest,
+            ContentSha256 = amendedPreview.ContentSha256,
+            UpdatedAt = now.AddMinutes(3),
+            ActorDisplay = "Approver",
+            AmendsBaselineId = baseline.TypeIBaselineId,
+            AmendmentReason = "Boundary scope correction",
+            ChangedRecordIds = [boundaryId],
+            AmendmentDepth = 1,
+        };
+        var amendedEngagement = frozen with
+        {
+            Revision = 4,
+            UpdatedAt = amended.UpdatedAt,
+            ActorDisplay = amended.ActorDisplay,
+        };
         var directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzExaminationEngagementDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString()));
@@ -53,15 +77,43 @@ public sealed class FitzExaminationEngagementDirectoryTests
                 frozen.UpdatedAt);
             await directory.ApplyAsync(frozenEvent);
             await directory.ApplyAsync(frozenEvent);
+            var amendedEvent = new TypeIBaselineAmended(tenantId, amendedEngagement, amended,
+                amended.UpdatedAt);
+            await directory.ApplyAsync(amendedEvent);
+            await directory.ApplyAsync(amendedEvent);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var current = await directory.GetAsync(tenantId, engagementId);
         var otherTenant = await directory.GetAsync(Uuid.CreateVersion4(), engagementId);
+        var frozenBaseline = await directory.GetBaselineAsync(tenantId, baseline.TypeIBaselineId);
+        var amendedBaseline = await directory.GetBaselineAsync(tenantId, amended.TypeIBaselineId);
+        var otherTenantBaseline = await directory.GetBaselineAsync(Uuid.CreateVersion4(),
+            baseline.TypeIBaselineId);
 
         // Assert
         Assert.Equal("Updated Audit LLP", current?.AuditFirm);
         Assert.Equal("baseline_frozen", current?.Status);
-        Assert.Equal(3, current?.Revision);
+        Assert.Equal(4, current?.Revision);
         Assert.Null(otherTenant);
+        Assert.Equal("frozen", frozenBaseline?.Status);
+        Assert.Equal(0, frozenBaseline?.AmendmentDepth);
+        Assert.Equal("amended", amendedBaseline?.Status);
+        Assert.Equal(baseline.TypeIBaselineId, amendedBaseline?.AmendsBaselineId);
+        Assert.Null(otherTenantBaseline);
+
+        var malformedEvent = new TypeIBaselineAmended(tenantId, amendedEngagement, null!,
+            amended.UpdatedAt);
+        await using (var invalidBatch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         ProjectionCheckpoint.Start)))
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                directory.ApplyAsync(malformedEvent).AsTask());
+
+        var conflictingBaseline = baseline with { ConfirmationRationale = "Different rationale" };
+        var conflictingEvent = new TypeIBaselineFrozen(tenantId, frozen, conflictingBaseline,
+            frozen.UpdatedAt);
+        await using var conflictBatch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+            ProjectionCheckpoint.Start));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            directory.ApplyAsync(conflictingEvent).AsTask());
     }
 }

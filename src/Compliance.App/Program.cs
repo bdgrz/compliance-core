@@ -111,6 +111,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListServiceEngagements>(tool => tool.ReadOnly())
         .AddMcpTool<GetServiceEngagementHistory>(tool => tool.ReadOnly())
         .AddMcpTool<GetExaminationEngagement>(tool => tool.ReadOnly())
+        .AddMcpTool<GetTypeIBaseline>(tool => tool.ReadOnly())
         .AddMcpTool<GetClientIndependenceRules>(tool => tool.ReadOnly())
         .AddMcpTool<GetIndependenceRuleVersions>(tool => tool.ReadOnly())
         .AddMcpTool<ReviseIndependenceRules>(tool => tool.Idempotent())
@@ -2292,6 +2293,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Examinations");
     app.MapPortiaGet<GetExaminationEngagement, ExaminationEngagementView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
+    app.MapPortiaGet<GetTypeIBaseline, TypeIBaselineView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
     app.MapPortiaPost<RecordManagementAssertion>(
