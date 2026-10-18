@@ -174,6 +174,12 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IApplicationRelationshipDirectory>(provider =>
             provider.GetRequiredService<FitzApplicationRelationshipDirectory>());
         services.AddScoped<ApplicationRelationshipReadConsistency>();
+        services.AddScoped<FitzApplicationIncomingRelationshipDirectory>();
+        services.AddScoped<IApplicationIncomingRelationshipProjection>(provider =>
+            provider.GetRequiredService<FitzApplicationIncomingRelationshipDirectory>());
+        services.AddScoped<IApplicationIncomingRelationshipDirectory>(provider =>
+            provider.GetRequiredService<FitzApplicationIncomingRelationshipDirectory>());
+        services.AddScoped<ApplicationIncomingRelationshipReadConsistency>();
         services.AddScoped<PreviewApplicationChangeHandler>();
         services.AddScoped<IApplicationChangeImpactReader>(provider =>
             provider.GetRequiredService<PreviewApplicationChangeHandler>());
@@ -1311,6 +1317,8 @@ public static class ComplianceServiceCollectionExtensions
                 "ApplicationBoundaryReferencesV2", WorkloadScope.PerTenant)
             .AddProjector<ApplicationRelationshipProjector>(
                 "ApplicationRelationshipsV1", WorkloadScope.PerTenant)
+            .AddProjector<ApplicationIncomingRelationshipProjector>(
+                ApplicationIncomingRelationshipProjector.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ApplicationControlDraftReferenceProjector>(
                 "ApplicationControlDraftReferencesV1", WorkloadScope.PerTenant)
             .AddProjector<ProviderProjector>(FitzProviderDirectory.ProjectorName, WorkloadScope.PerTenant)

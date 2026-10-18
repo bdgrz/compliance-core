@@ -727,6 +727,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(ApplicationRelationshipRemoved))]
 [JsonSerializable(typeof(ApplicationRelationshipGovernedRemoved))]
 [JsonSerializable(typeof(ApplicationRelationshipView))]
+[JsonSerializable(typeof(ApplicationIncomingRelationshipView))]
 [JsonSerializable(typeof(ApplicationRelationshipChange))]
 [JsonSerializable(typeof(ApplicationRelationshipPage))]
 [JsonSerializable(typeof(GetApplicationRevision))]

@@ -1991,6 +1991,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [AccessReviewScopeView](../../src/Compliance.Common/Features/Applications/AccessReviewScopeView.cs#L9)
 - [ApplicationBoundaryReferenceView](../../src/Compliance.Common/Features/Applications/ApplicationBoundaryReferenceView.cs#L9)
 - [ApplicationChangePreview](../../src/Compliance.Common/Features/Applications/ApplicationChangePreview.cs#L6)
+- [ApplicationIncomingRelationshipView](../../src/Compliance.Common/Features/Applications/ApplicationIncomingRelationshipView.cs#L5)
 - [ApplicationControlDraftReferenceView](../../src/Compliance.Common/Features/Applications/ApplicationControlDraftReferenceView.cs#L9)
 - [ApplicationFieldChange](../../src/Compliance.Common/Features/Applications/ApplicationFieldChange.cs#L3)
 - [ApplicationImportCorrelationView](../../src/Compliance.Common/Features/Applications/ApplicationImportCorrelationView.cs#L5)

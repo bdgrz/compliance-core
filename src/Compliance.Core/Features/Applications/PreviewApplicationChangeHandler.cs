@@ -12,7 +12,9 @@ public sealed class PreviewApplicationChangeHandler(
     ApplicationControlDraftReferenceReadConsistency controlConsistency,
     RestrictedApplicationVisibility visibility,
     ApplicationGovernedRevisionGate? gate = null,
-    SystemInstanceReadConsistency? instanceConsistency = null)
+    SystemInstanceReadConsistency? instanceConsistency = null,
+    IApplicationIncomingRelationshipDirectory? incomingRelationshipDirectory = null,
+    ApplicationIncomingRelationshipReadConsistency? incomingRelationshipConsistency = null)
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
@@ -57,6 +59,11 @@ public sealed class PreviewApplicationChangeHandler(
         PreviewApplicationChange request, Uuid userId, bool requireActorVisibility,
         CancellationToken ct)
     {
+        if ((incomingRelationshipDirectory is null) !=
+            (incomingRelationshipConsistency is null))
+            throw new InvalidOperationException(
+                "The incoming application relationship reader and consistency fence must be registered together.");
+
         var inputError = Validate(request);
         if (inputError is not null)
             return Result<ApplicationChangePreview>.Failure(inputError);
@@ -113,6 +120,41 @@ public sealed class PreviewApplicationChangeHandler(
         var relationshipSourceRevision = source.SourceRelationshipRevision;
         var relationships = await ApplicationRelationshipProjection.ReadPreviewAsync(source,
             request.TenantId, userId, visibility, ct).ConfigureAwait(false);
+        IReadOnlyList<ApplicationIncomingRelationshipView> incomingRelationships = [];
+        ProjectionCheckpoint? incomingRelationshipFence = null;
+        if (incomingRelationshipDirectory is not null &&
+            incomingRelationshipConsistency is not null)
+        {
+            var captured = await incomingRelationshipConsistency.CaptureAsync(request.TenantId,
+                ct).ConfigureAwait(false);
+            if (!captured.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(captured.Error);
+            incomingRelationshipFence = captured.Value;
+
+            var candidates = await incomingRelationshipDirectory.ListActiveIncomingAsync(
+                request.TenantId, request.ApplicationId, 200, null, ct).ConfigureAwait(false);
+            var visible = new List<ApplicationIncomingRelationshipView>(candidates.Items.Count);
+            foreach (var candidate in candidates.Items)
+            {
+                if (!IsValidIncomingRelationship(candidate, request.TenantId,
+                        request.ApplicationId))
+                    return Result<ApplicationChangePreview>.Failure(new RequestError(
+                        RequestErrorKind.Conflict,
+                        "The application incoming-relationship projection is inconsistent.",
+                        isTransient: true));
+                if (!await visibility.CanReadApplicationAsync(request.TenantId, userId,
+                        candidate.SourceApplicationId, ct).ConfigureAwait(false))
+                    continue;
+                visible.Add(new ApplicationIncomingRelationshipView(
+                    candidate.SourceApplicationId, candidate.RelationshipId,
+                    candidate.RelationshipType, candidate.ActorMemberId,
+                    candidate.ActorDisplay, candidate.ChangedAt));
+            }
+            incomingRelationships = visible
+                .OrderBy(static item => item.SourceApplicationId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.RelationshipId.ToString(), StringComparer.Ordinal)
+                .ToArray();
+        }
 
         var boundaryFence = await boundaryConsistency.CaptureAsync(request.TenantId, ct)
             .ConfigureAwait(false);
@@ -173,6 +215,14 @@ public sealed class PreviewApplicationChangeHandler(
             if (!instancesConfirmed.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(instancesConfirmed.Error);
         }
+        if (incomingRelationshipFence is { } capturedRelationshipFence)
+        {
+            var relationshipsConfirmed = await incomingRelationshipConsistency!
+                .ConfirmUnchangedAndCaughtUpAsync(request.TenantId, capturedRelationshipFence, ct)
+                .ConfigureAwait(false);
+            if (!relationshipsConfirmed.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(relationshipsConfirmed.Error);
+        }
 
         // Source rechecks catch a pending application or relationship write that raced the reads.
         var latest = await aggregates.HydrateApplicationAsync(request.TenantId, request.ApplicationId, ct).ConfigureAwait(false);
@@ -197,6 +247,7 @@ public sealed class PreviewApplicationChangeHandler(
             Changes(current, content), page.Items, pending, false)
         {
             ApplicationRelationships = relationships.Items,
+            IncomingApplicationRelationships = incomingRelationships,
             ControlDraftReferences = controlPage.Items,
             SystemInstanceReferences = instancePage.Items,
         };
@@ -222,6 +273,28 @@ public sealed class PreviewApplicationChangeHandler(
             return new RequestError(RequestErrorKind.Validation,
                 "The change kind must be revise or retire.");
         return null;
+    }
+
+    static bool IsValidIncomingRelationship(ApplicationRelationshipView relationship,
+        Uuid tenantId, Uuid targetApplicationId)
+    {
+        if (relationship.TenantId != tenantId ||
+            relationship.RelationshipId == Uuid.Empty ||
+            relationship.SourceApplicationId == Uuid.Empty ||
+            relationship.SourceApplicationId == targetApplicationId ||
+            relationship.TargetApplicationId != targetApplicationId ||
+            !ApplicationRelationshipIdentity.IsSupported(relationship.RelationshipType) ||
+            relationship.ActorMemberId == Uuid.Empty ||
+            string.IsNullOrWhiteSpace(relationship.ActorDisplay) ||
+            relationship.ChangedAt == default)
+            return false;
+
+        return relationship.RelationshipType switch
+        {
+            "depends_on" => relationship.Status == "active",
+            "replaces" => relationship.Status is "active" or "proposed" or "approved",
+            _ => false,
+        };
     }
 
     static List<ApplicationFieldChange> Changes(ApplicationView current,

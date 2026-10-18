@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Readiness;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.Workforce;
@@ -13,6 +14,7 @@ namespace Bdgrz.Compliance;
     JsonSerializerDefaults.Web,
     PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
 [JsonSerializable(typeof(ComplianceAuthenticationClientConfiguration))]
+[JsonSerializable(typeof(ApplicationChangePreview))]
 [JsonSerializable(typeof(ReadinessAssessmentView))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(bool))]
