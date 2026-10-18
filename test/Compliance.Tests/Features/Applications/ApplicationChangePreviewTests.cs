@@ -116,11 +116,11 @@ public sealed class ApplicationChangePreviewTests
         Assert.False(result.Value.Complete);
         Assert.Equal(
             ["vendors", "approved_control_versions_and_lifecycle_impact",
-                "system_instance_boundary_references",
-                "system_instance_control_draft_references", "policies", "evidence_sources",
-                "access_populations", "review_campaigns", "open_work", "readiness", "engagements",
-                "cross_source_manual_reliance"],
+                "system_instance_boundary_references", "system_instance_control_draft_references",
+                "policies", "evidence_sources", "access_populations", "review_campaigns",
+                "open_work", "readiness", "engagements"],
             result.Value.PendingContexts);
+        Assert.DoesNotContain("cross_source_manual_reliance", result.Value.PendingContexts);
     }
 
     [Fact]
