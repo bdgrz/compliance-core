@@ -3,8 +3,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Applications;
 
 /// <summary>
-/// A bounded observation, not an approval or complete retirement clearance. Boundary and
-/// control-reference collections include direct application and indexed system-instance
+/// A bounded observation, not an approval or complete retirement clearance. Boundary, control,
+/// and policy-reference collections include direct application and indexed system-instance
 /// references when their projections are current.
 /// </summary>
 public sealed record ApplicationChangePreview(Uuid TenantId, Uuid ApplicationId,
@@ -29,6 +29,9 @@ public sealed record ApplicationChangePreview(Uuid TenantId, Uuid ApplicationId,
 
     /// <summary>Approved control versions and lifecycle facts for the application and its systems.</summary>
     public IReadOnlyList<ApplicationControlVersionReferenceView> ApprovedControlReferences { get; init; } = [];
+
+    /// <summary>Direct policy applicability and lifecycle facts for the application and its systems.</summary>
+    public IReadOnlyList<ApplicationPolicyReferenceView> PolicyReferences { get; init; } = [];
 
     /// <summary>Up to 200 projected system instances that a change or retirement would affect.</summary>
     public IReadOnlyList<SystemInstanceView> SystemInstanceReferences { get; init; } = [];

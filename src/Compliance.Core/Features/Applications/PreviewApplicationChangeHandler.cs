@@ -16,7 +16,9 @@ public sealed class PreviewApplicationChangeHandler(
     IApplicationIncomingRelationshipDirectory? incomingRelationshipDirectory = null,
     ApplicationIncomingRelationshipReadConsistency? incomingRelationshipConsistency = null,
     IApplicationControlVersionReferenceDirectory? controlVersions = null,
-    ApplicationControlVersionReferenceReadConsistency? controlVersionConsistency = null)
+    ApplicationControlVersionReferenceReadConsistency? controlVersionConsistency = null,
+    IApplicationPolicyReferenceDirectory? policyReferences = null,
+    ApplicationPolicyReferenceReadConsistency? policyReferenceConsistency = null)
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
@@ -24,6 +26,8 @@ public sealed class PreviewApplicationChangeHandler(
     const int MaximumSystemInstanceControlDraftReferences = 200;
     const int MaximumApplicationControlVersionReferences = 200;
     const int MaximumSystemInstanceControlVersionReferences = 200;
+    const int MaximumApplicationPolicyReferences = 200;
+    const int MaximumSystemInstancePolicyReferences = 200;
 
     public PreviewApplicationChangeHandler(IAggregateReader aggregates,
         IApplicationDirectoryReader applications,
@@ -42,8 +46,8 @@ public sealed class PreviewApplicationChangeHandler(
         ["vendors"];
 
     static readonly string[] MissingContextsAfterSystemInstanceControls =
-        ["policies", "evidence_sources", "access_populations", "review_campaigns",
-            "open_work", "readiness", "engagements", "cross_source_manual_reliance"];
+        ["evidence_sources", "access_populations", "review_campaigns", "open_work",
+            "readiness", "engagements", "cross_source_manual_reliance"];
 
     public async ValueTask<Result<ApplicationChangePreview>> HandleAsync(
         IRequestContext<PreviewApplicationChange> context, CancellationToken ct)
@@ -74,6 +78,9 @@ public sealed class PreviewApplicationChangeHandler(
         if ((controlVersions is null) != (controlVersionConsistency is null))
             throw new InvalidOperationException(
                 "The approved control-version reader and consistency fence must be registered together.");
+        if ((policyReferences is null) != (policyReferenceConsistency is null))
+            throw new InvalidOperationException(
+                "The policy-reference reader and consistency fence must be registered together.");
 
         var inputError = Validate(request);
         if (inputError is not null)
@@ -190,6 +197,15 @@ public sealed class PreviewApplicationChangeHandler(
             if (!capturedControlVersions.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(capturedControlVersions.Error);
             controlVersionFence = capturedControlVersions.Value;
+        }
+        ProjectionCheckpoint? policyReferenceFence = null;
+        if (policyReferenceConsistency is not null)
+        {
+            var capturedPolicyReferences = await policyReferenceConsistency.CaptureAsync(
+                request.TenantId, ct).ConfigureAwait(false);
+            if (!capturedPolicyReferences.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(capturedPolicyReferences.Error);
+            policyReferenceFence = capturedPolicyReferences.Value;
         }
         ProjectionCheckpoint? instanceFence = null;
         if (instanceConsistency is not null)
@@ -359,6 +375,64 @@ public sealed class PreviewApplicationChangeHandler(
             }
         }
 
+        var policyReferenceItems = new List<ApplicationPolicyReferenceView>();
+        var policyReferencesOverLimit = instancePage.NextCursor is not null;
+        var policyHasUnresolvedReferences = false;
+        if (policyReferences is not null)
+        {
+            var applicationPolicyReferences = await policyReferences.ListAsync(request.TenantId,
+                "application", request.ApplicationId, MaximumApplicationPolicyReferences, null, ct)
+                .ConfigureAwait(false);
+            if (applicationPolicyReferences.Items.Count > MaximumApplicationPolicyReferences ||
+                applicationPolicyReferences.Items.Any(reference =>
+                    !IsValidPolicyReference(reference, request.TenantId, "application",
+                        request.ApplicationId)))
+                return Result<ApplicationChangePreview>.Failure(new RequestError(
+                    RequestErrorKind.Conflict,
+                    "The application policy-reference projection is inconsistent.",
+                    isTransient: true));
+            policyReferencesOverLimit |= applicationPolicyReferences.NextCursor is not null;
+            policyReferenceItems.AddRange(applicationPolicyReferences.Items);
+
+            var systemInstancePolicyReferenceCount = 0;
+            if (instanceConsistency is not null)
+            {
+                foreach (var instance in instancePage.Items)
+                {
+                    var remaining = MaximumSystemInstancePolicyReferences -
+                        systemInstancePolicyReferenceCount;
+                    if (remaining == 0)
+                    {
+                        policyReferencesOverLimit = true;
+                        break;
+                    }
+
+                    var instancePolicyReferences = await policyReferences.ListAsync(
+                        request.TenantId, "system_instance", instance.SystemInstanceId,
+                        Math.Min(MaximumSystemInstancePolicyReferences, remaining), null, ct)
+                        .ConfigureAwait(false);
+                    if (instancePolicyReferences.Items.Count > remaining ||
+                        instancePolicyReferences.Items.Any(reference =>
+                            !IsValidPolicyReference(reference, request.TenantId,
+                                "system_instance", instance.SystemInstanceId)))
+                        return Result<ApplicationChangePreview>.Failure(new RequestError(
+                            RequestErrorKind.Conflict,
+                            "The system-instance policy-reference projection is inconsistent.",
+                            isTransient: true));
+
+                    policyReferenceItems.AddRange(instancePolicyReferences.Items);
+                    systemInstancePolicyReferenceCount += instancePolicyReferences.Items.Count;
+                    if (instancePolicyReferences.NextCursor is not null)
+                    {
+                        policyReferencesOverLimit = true;
+                        break;
+                    }
+                }
+            }
+            policyHasUnresolvedReferences = await policyReferences.HasUnresolvedReferencesAsync(
+                request.TenantId, ct).ConfigureAwait(false);
+        }
+
         var boundaryConfirmed = await boundaryConsistency.ConfirmUnchangedAndCaughtUpAsync(
             request.TenantId, boundaryFence.Value, ct).ConfigureAwait(false);
         if (!boundaryConfirmed.IsSuccess)
@@ -390,6 +464,14 @@ public sealed class PreviewApplicationChangeHandler(
                     capturedControlVersionFence, ct).ConfigureAwait(false);
             if (!controlVersionsConfirmed.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(controlVersionsConfirmed.Error);
+        }
+        if (policyReferenceFence is { } capturedPolicyReferenceFence)
+        {
+            var policyReferencesConfirmed = await policyReferenceConsistency!
+                .ConfirmUnchangedAndCaughtUpAsync(request.TenantId,
+                    capturedPolicyReferenceFence, ct).ConfigureAwait(false);
+            if (!policyReferencesConfirmed.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(policyReferencesConfirmed.Error);
         }
 
         // Source rechecks catch a pending application or relationship write that raced the reads.
@@ -424,6 +506,12 @@ public sealed class PreviewApplicationChangeHandler(
             pending.Add("system_instance_control_draft_references");
         else if (systemInstanceControlDraftReferencesOverLimit)
             pending.Add("system_instance_control_draft_references_over_limit");
+        if (policyReferences is null || policyReferenceConsistency is null ||
+            instanceConsistency is null || instancePage.NextCursor is not null ||
+            policyReferencesOverLimit || policyHasUnresolvedReferences)
+            pending.Add("policies");
+        if (policyReferencesOverLimit)
+            pending.Add("policy_references_over_limit");
         pending.AddRange(MissingContextsAfterSystemInstanceControls);
         var preview = new ApplicationChangePreview(
             request.TenantId, request.ApplicationId, source.Revision, request.ChangeKind,
@@ -448,6 +536,12 @@ public sealed class PreviewApplicationChangeHandler(
                 .ThenBy(static item => item.GovernedRecordId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.ControlId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.VersionId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
+            PolicyReferences = policyReferenceItems
+                .OrderBy(static item => item.SubjectType, StringComparer.Ordinal)
+                .ThenBy(static item => item.GovernedRecordId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.PolicyId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.Version)
                 .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
         };
         return Result<ApplicationChangePreview>.Success(preview with
@@ -525,6 +619,40 @@ public sealed class PreviewApplicationChangeHandler(
              reference.PendingRetirementEffectiveUntil is null)) &&
         !string.IsNullOrWhiteSpace(reference.Subject) &&
         !string.IsNullOrWhiteSpace(reference.Rationale);
+
+    static bool IsValidPolicyReference(ApplicationPolicyReferenceView reference, Uuid tenantId,
+        string subjectType, Uuid governedRecordId)
+    {
+        if (reference.TenantId != tenantId || reference.SubjectType != subjectType ||
+            reference.GovernedRecordId != governedRecordId ||
+            reference.ProgramId == Uuid.Empty || reference.PolicyId == Uuid.Empty ||
+            reference.EntryId == Uuid.Empty || reference.Revision < 1 ||
+            string.IsNullOrWhiteSpace(reference.Identifier) ||
+            string.IsNullOrWhiteSpace(reference.Title) ||
+            string.IsNullOrWhiteSpace(reference.Subject) ||
+            reference.Status is not ("draft" or "approved" or "superseded" or "retired"))
+            return false;
+
+        if (reference.Status == "draft")
+            return reference.Version is null && reference.EffectiveFrom is null &&
+                   reference.EffectiveUntil is null && !reference.HasPendingSuccessor &&
+                   reference.PendingRetirementEffectiveUntil is null;
+
+        if (reference.Version is not >= 1 ||
+            reference.EffectiveFrom is not { } effectiveFrom || effectiveFrom == default ||
+            reference.PendingRetirementEffectiveUntil is { } pendingRetirement &&
+            pendingRetirement <= effectiveFrom)
+            return false;
+
+        return reference.Status switch
+        {
+            "approved" => reference.EffectiveUntil is null,
+            "superseded" or "retired" => reference.EffectiveUntil is { } effectiveUntil &&
+                effectiveUntil > effectiveFrom && !reference.HasPendingSuccessor &&
+                reference.PendingRetirementEffectiveUntil is null,
+            _ => false,
+        };
+    }
 
     static bool IsValidSystemInstanceBoundaryReference(
         ApplicationBoundaryReferenceView reference, Uuid tenantId, Uuid systemInstanceId) =>
