@@ -581,6 +581,9 @@ The following is a static source inventory, including internal operations. Queri
 - [DelegateWorkItem](../../src/Compliance.Common/Features/Work/DelegateWorkItem.cs#L8) — `bdgrz.work.delegate` v1
 - [EscalateWorkItem](../../src/Compliance.Common/Features/Work/EscalateWorkItem.cs#L8) — `bdgrz.work.escalate` v1
 - [SetWorkDigestPreference](../../src/Compliance.Common/Features/Work/SetWorkDigestPreference.cs#L8) — `bdgrz.work.digest_preference.set` v1
+- [ScheduleWeeklyWorkDigest](../../src/Compliance.Common/Features/Work/ScheduleWeeklyWorkDigest.cs#L7) — `bdgrz.work.schedule-weekly-work-digest` v2
+- [DeliverWeeklyWorkDigest](../../src/Compliance.Common/Features/Work/DeliverWeeklyWorkDigest.cs#L7) — `bdgrz.work.deliver-weekly-work-digest` v2
+- [RecordWorkDigestDelivery](../../src/Compliance.Common/Features/Work/RecordWorkDigestDelivery.cs#L7) — `bdgrz.work.record-work-digest-delivery` v2
 
 #### Workforce
 
@@ -1657,6 +1660,10 @@ These 131 requirement-backed event contracts have been added since the existing-
 #### Work
 
 - [WorkDigestPreferenceChanged](../../src/Compliance.Common/Features/Work/WorkDigestPreferenceChanged.cs#L7) — `bdgrz.work.digest_preference.changed` v1
+- [WeeklyWorkDigestScheduled](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestScheduled.cs#L8) — `bdgrz.work.weekly-digest.scheduled` v1
+- [WeeklyWorkDigestDeliveryRequested](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRequested.cs#L8) — `bdgrz.work.weekly-digest.delivery-requested` v1
+- [WeeklyWorkDigestDeliveryRecorded](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRecorded.cs#L8) — `bdgrz.work.weekly-digest.delivery-recorded` v1
+- [WeeklyWorkDigestDeliverySuppressed](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliverySuppressed.cs#L8) — `bdgrz.work.weekly-digest.delivery-suppressed` v1
 - [WorkItemAssigned](../../src/Compliance.Common/Features/Work/WorkItemAssigned.cs#L8) — `bdgrz.work.assigned` v1
 - [WorkItemEscalated](../../src/Compliance.Common/Features/Work/WorkItemEscalated.cs#L8) — `bdgrz.work.escalated` v1
 
@@ -1839,6 +1846,7 @@ These 131 requirement-backed event contracts have been added since the existing-
 
 - [WorkAssignmentLedger](../../src/Compliance.Core/Features/Work/WorkAssignmentLedger.cs#L12)
 - [WorkDigestPreference](../../src/Compliance.Core/Features/Work/WorkDigestPreference.cs#L9)
+- [WeeklyWorkDigest](../../src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs#L11)
 
 #### Workforce
 
@@ -2335,6 +2343,9 @@ These 131 requirement-backed event contracts have been added since the existing-
 - [WorkCountsView](../../src/Compliance.Common/Features/Work/WorkCountsView.cs#L4)
 - [WorkDigestPreferenceView](../../src/Compliance.Common/Features/Work/WorkDigestPreferenceView.cs#L4)
 - [WorkDigestView](../../src/Compliance.Common/Features/Work/WorkDigestView.cs#L9)
+- [WeeklyWorkDigestView](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestView.cs#L7)
+- [WorkDigestDeliveryAttemptView](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestView.cs#L20)
+- [WorkDigestSchedulePageView](../../src/Compliance.Common/Features/Work/WorkDigestSchedulePageView.cs#L4)
 - [WorkItemDetailView](../../src/Compliance.Common/Features/Work/WorkItemDetailView.cs#L4)
 - [WorkQueueItemView](../../src/Compliance.Common/Features/Work/WorkQueueItemView.cs#L15)
 - [WorkQueueView](../../src/Compliance.Common/Features/Work/WorkQueueView.cs#L4)

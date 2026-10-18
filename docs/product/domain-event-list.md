@@ -1,18 +1,18 @@
 # Domain event universe and backfill list
 
-Baseline: repository source and the accepted backlog reviewed 2026-10-17. This is the event counterpart to the [system command list](command-list.md) and [query/view-model list](query-and-view-model-list.md).
+Baseline: repository source and the accepted backlog reviewed 2026-10-17. This is the event counterpart to the [system command list](command-list.md) and [query/view-model list](query-and-view-model-list.md). The weekly work digest contracts below were added afterward from R2-11c and M0-D15.
 
 ## Existing event contracts
 
-The source inventory contains **238 `DomainEvent` contracts**. Their complete feature-grouped, source-linked list is in the [component inventory](component-inventory.md#existing-events). Those are coded event types; this does not by itself prove the owning command handlers emit them, persistence retains them, or projectors consume them.
+The original component inventory listed **236 existing `DomainEvent` contracts**. The current source declares **387** event types; the original feature-backed event universe plus the four weekly-digest events accounts for 376, leaving 11 source declarations to reconcile against accepted requirements before the inventory can be considered closed. Coded event types do not by themselves prove persistence retains them or projectors consume them.
 
 ## Backfill result
 
-- **136 missing event contracts** support accepted, requirement-backed workflows below.
+- **136 event contracts** were identified for accepted, requirement-backed workflows below.
 - **8 additional event contracts** belong to readiness-material import and stay deferred with that feature until its prerequisites and durable import boundary are implemented.
-- The named universe is therefore **374 current-plus-required event contracts**, with **8 deferred import events** outside the immediate backfill.
+- R2-11c adds four typed weekly-digest lifecycle contracts, bringing the tracked current-plus-required universe to **376 event contracts**; the 8 readiness-import events remain outside the immediate backfill.
 
-These names were reconciled against current `DomainEvent` declarations, the pruned command inventory, and gap-analysis sections G01–G20. Event names retain business facts and outcomes; they are not a one-for-one mirror of every command or query. Existing events remain the owner when they already represent a required fact. Each backfill event is a typed contract for the listed story outcome. Payloads carry tenant and subject identity, revision, optional member attribution, and occurrence time; handlers still need to populate and emit them, and projectors still need to consume them.
+These names were reconciled against `DomainEvent` declarations, the pruned command inventory, and gap-analysis sections G01–G20. Event names retain business facts and outcomes; they are not a one-for-one mirror of every command or query. Existing events remain the owner when they already represent a required fact. Each backfill event is a typed contract for the listed story outcome. Payloads carry tenant and subject identity, revision, optional member attribution, and occurrence time; handlers must populate and emit them, and projectors must consume them.
 
 ## Required backfill by feature
 
@@ -297,6 +297,18 @@ Events to backfill:
 - `SystemInstanceRevised`
 - `CommitmentRetired`
 
+### Weekly accountable-work digest — R2-11c
+
+**Requirement source:** [R2-11c](backlog.md#r2-11c-receive-in-app-reminders-a-weekly-digest-and-overdue-escalation); [M0-D15](decisions/m0-d15-work-queue.md).
+
+The aggregate retains a stable member/week schedule, deterministic delivery attempts, suppression, and exact provider outcome callbacks. Command handlers emit these four events; current authorized work snapshot composition and trusted email delivery remain reactor work.
+
+Events:
+- [WeeklyWorkDigestScheduled](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestScheduled.cs#L8)
+- [WeeklyWorkDigestDeliveryRequested](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRequested.cs#L8)
+- [WeeklyWorkDigestDeliveryRecorded](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRecorded.cs#L8)
+- [WeeklyWorkDigestDeliverySuppressed](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliverySuppressed.cs#L8)
+
 ## Deferred event family — readiness-material import
 
 R1-09/EN-05 is a committed feature, but the command plan marks the multi-family import slice deferred until prerequisites are met. Do not implement a second import event stream until the handler design resolves how the existing application-import staging, sealing, effect-pending, commit, cancel, and failure facts are reused or generalized. If readiness-material imports retain a distinct family, these are the candidate lifecycle facts:
@@ -316,7 +328,7 @@ R1-09/EN-05 is a committed feature, but the command plan marks the multi-family 
 - Reuse existing service-engagement acceptance/revocation, independence reevaluation, and assignment-revocation facts. The backfill adds only the missing partner ratification/evaluation and actual assignment facts.
 - Periodic policy, risk, provider, and management review occurrences reuse M0-D19 control-occurrence and review/finding workflows; do not create parallel policy/risk/vendor-review event families.
 - Exclude T1-03 direct external-auditor access events, T2-08 integration/agent events, F1-03 capacity-planning events, BO-01/02/03 handover/billing/add-on events, and Privacy lifecycle events while those remain optional, unvalidated, or policy-gated. T1-04 request/response records and T1-05 packages remain in scope.
-- Weekly digest scheduling/delivery outcomes remain decision-gated under G08. The command names in the provisional command inventory do not establish the delivery-consent and retry policy needed for durable event contracts.
+- Weekly digest scheduling and delivery now have four typed contracts, after confirming the R2-11/M0-D15 opt-out, deterministic retry, and durable callback rules: `WeeklyWorkDigestScheduled`, `WeeklyWorkDigestDeliveryRequested`, `WeeklyWorkDigestDeliveryRecorded`, and `WeeklyWorkDigestDeliverySuppressed`. Their command handlers are implemented; current-work snapshot composition, final access/consent recheck, trusted email delivery, and provider outcome recording remain reactor work.
 - A projector rebuilds from retained facts; it does not decide policy. Events require tenant identity, stable resource/revision identity, actor/time where attributable, and exact source-version references where history or reproducibility depends on them. External effects must distinguish committed intent from observed provider completion.
 
 ## Sources

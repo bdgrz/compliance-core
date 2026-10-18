@@ -540,11 +540,11 @@ Bounded feature contracts retain unresolved contexts: control risk/process appli
 
 Scope: **R2-11, F1-05**. Requirement source: [work-queue-source-coverage](work-queue-source-coverage.md).
 
-SetWorkDigestPreference persists preference; GetWorkDigest/ListWorkReminders are queries. Weekly email delivery/scheduling remains #647; tenant-owned campaign/waiver source placement remains #646.
+SetWorkDigestPreference persists preference; GetWorkDigest/ListWorkReminders are queries. R2-11c requires one opt-out weekly digest and records delivery outcomes; its bounded scheduling, suppression, deterministic attempt, and exact callback handlers are implemented. The content snapshot and trusted email provider remain reactor work. Tenant-owned campaign/waiver source placement remains #646.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Decision | `ScheduleWeeklyWorkDigest`; `DeliverWeeklyWorkDigest`; `RecordWorkDigestDelivery` | Set delivery cadence, recipient/consent policy, deduplication identity and failure/retry behavior before adding the delivery commands; queries and preferences already exist. |
+| Exists | `ScheduleWeeklyWorkDigest`; `DeliverWeeklyWorkDigest`; `RecordWorkDigestDelivery` | Handlers enforce the R2-11c opt-out, bounded membership paging, verified email, stable per-member/week identity, deterministic retries, and exact outcome callbacks. Current work snapshot composition and trusted email delivery remain for the reactor layer. |
 | Partial | `AssignWorkItem`; `ClaimWorkItem`; `DelegateWorkItem`; `EscalateWorkItem` | Extend only after the campaign/expectation/waiver owning-queue decision. Preserve source authority and eligibility; cross-client presentation does not introduce another task completion command. |
 
 <a id="g09"></a>
@@ -824,7 +824,7 @@ This maps write outcomes only. “Exists” does not declare a milestone accepte
 | [**R2-08**](backlog.md#L3642) Collaborate with a readiness advisor on work in progress | Scoped membership/grants and readiness annotation are prerequisites | Missing | G03: handoff/feedback/response/close/revoke lifecycle. |
 | [**R2-09**](backlog.md#L3706) Make and record the Type I entry decision | DecideTypeIEntry | Partial | G04: complete required input/source acceptance. This is not Type I sign-off. |
 | [**R2-10**](backlog.md#L3760) Publish policies and verify acknowledgement and training | LaunchPolicyCampaign; AcknowledgePolicy; training requirement/completion/campaign/waiver commands | Exists | G01/G08: governed support and source queue placement remain consuming integration work. |
-| [**R2-11**](backlog.md#L3835) Manage accountable compliance work | Assign/Claim/Delegate/EscalateWorkItem; SetWorkDigestPreference | Partial | G08: email policy/delivery and source placement. Source commands own completion. |
+| [**R2-11**](backlog.md#L3835) Manage accountable compliance work | Assign/Claim/Delegate/EscalateWorkItem; SetWorkDigestPreference; Schedule/Deliver/RecordWorkDigestDelivery | Partial | Weekly digest handlers are complete; content/delivery reactor remains. G08 campaign/waiver source placement remains #646. Source commands own completion. |
 | [**R2-12**](backlog.md#L3950) Govern evidence access, retention, and disclosure | Retention basis/legal holds; redaction lineage and approval | Partial | G02: full handling/storage hold/disclosure/engagement hold/disposition. |
 | [**T1-01**](backlog.md#L4030) Establish the Type I engagement and point-in-time snapshot | Program/workforce snapshots are only prerequisites | Missing | G09: examination engagement and complete point-in-time baseline. |
 | [**T1-02**](backlog.md#L4080) Author, approve, and maintain the system description | Boundary/control/policy versions are only inputs | Missing | G10: management-authored system description lifecycle/export. |

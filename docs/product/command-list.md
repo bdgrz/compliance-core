@@ -382,9 +382,9 @@ This pruned plan has 129 required additions, including five evidence command con
 
 ### Work queue and digest delivery — [R2-11](backlog.md#r2-11-manage-accountable-compliance-work); [M0-D15](decisions/m0-d15-work-queue.md)
 
-- **ScheduleWeeklyWorkDigest** — required internal scheduler command for the opt-out weekly digest
-- **DeliverWeeklyWorkDigest** — required internal delivery command; delivery failure never gates the queue
-- **RecordWorkDigestDelivery** — required internal command to retain delivery outcome and retry identity
+- **ScheduleWeeklyWorkDigest** — bounded internal scheduler command that pages active tenant members and records eligible opt-in digest schedules ([contract](../../src/Compliance.Common/Features/Work/ScheduleWeeklyWorkDigest.cs#L7), handler and focused behavior tests).
+- **DeliverWeeklyWorkDigest** — internal delivery-attempt command bound to the exact schedule event and deterministic attempt identity ([contract](../../src/Compliance.Common/Features/Work/DeliverWeeklyWorkDigest.cs#L7), handler and focused behavior tests); delivery failure never gates the work queue.
+- **RecordWorkDigestDelivery** — internal callback command bound to the exact delivery-request event and attempt, retaining provider outcome and retry identity ([contract](../../src/Compliance.Common/Features/Work/RecordWorkDigestDelivery.cs#L7), handler and focused behavior tests).
 
 ### Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot)
 

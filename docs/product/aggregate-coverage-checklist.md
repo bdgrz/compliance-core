@@ -85,7 +85,9 @@ behavioral coverage remains; `[~]` intentionally deferred by the backlog.
 - [x] R2-10 Policy distribution and training — `PolicyDistributionCampaign`
   and `TrainingCatalog`.
 - [x] R2-11 Accountable work — `WorkAssignmentLedger` and
-  `WorkDigestPreference`; the cross-feature work queue is a projection.
+  `WorkDigestPreference`; `WeeklyWorkDigest` owns per-member/week scheduling,
+  suppression, deterministic delivery attempts, and outcomes. The
+  cross-feature work queue remains a projection.
 - [x] R2-12 Evidence handling and disclosure policy — `EvidenceHandlingPolicy`
   owns versioned classification for exact artifact content; `ArtifactDisclosure`
   owns approved exact-recipient access; `ArtifactEngagementHold` owns

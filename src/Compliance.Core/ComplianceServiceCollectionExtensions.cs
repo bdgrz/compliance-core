@@ -450,6 +450,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ClientCompartmentIndependenceGuard>();
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
+        services.AddScoped<WeeklyWorkDigestRecipientResolver>();
         services.AddScoped<IProgramResourceScopeResolver, ProgramResourceScopeResolver>();
         services.AddScoped<BoundaryResponsibilityScopeValidator>();
         services.AddScoped<ControlResponsibilityScopeValidator>();
@@ -874,6 +875,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GetWorkDigestHandler>()
             .AddRequestHandler<SetWorkDigestPreferenceHandler>()
             .AddRequestHandler<GetWorkDigestPreferenceHandler>()
+            .AddRequestHandler<ScheduleWeeklyWorkDigestHandler>()
+            .AddRequestAuthorizer<ScheduleWeeklyWorkDigestAuthorizer>()
+            .AddRequestHandler<DeliverWeeklyWorkDigestHandler>()
+            .AddRequestAuthorizer<DeliverWeeklyWorkDigestAuthorizer>()
+            .AddRequestHandler<RecordWorkDigestDeliveryHandler>()
+            .AddRequestAuthorizer<RecordWorkDigestDeliveryAuthorizer>()
             .AddRequestAuthorizer<OperationsReactionAuthorizer>()
             .AddRequestHandler<AcceptAccessPopulationHandler>()
             .AddRequestHandler<ApproveAccessExpectationHandler>()
