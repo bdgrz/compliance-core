@@ -276,7 +276,7 @@ The following is a static source inventory, including internal operations. Queri
 | Models and supporting contracts | 562 |
 | Reactors | 30 |
 | Projectors | 66 |
-| Explicit MapPortia HTTP route registrations | 438 |
+| Explicit MapPortia HTTP route registrations | 439 |
 
 ### Existing commands
 
@@ -2778,8 +2778,9 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id}` | `RecordManagementAssertion` | [registration](../../src/Compliance.App/Program.cs#L2210) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/representation-letters/{letter_id}` | `RecordManagementRepresentationLetter` | [registration](../../src/Compliance.App/Program.cs#L2214) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2218) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2222) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2226) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2222) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2226) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2230) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |

@@ -1,0 +1,268 @@
+using System.Security.Claims;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.SystemDescription;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
+using ExaminationEngagementAggregate = Bdgrz.Compliance.Features.Examinations.ExaminationEngagement;
+using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
+using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
+
+namespace Bdgrz.Compliance.Tests.Features.Operations;
+
+public sealed class StartTypeIIObservationPeriodHandlerTests
+{
+    static readonly DateTimeOffset Now = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+    static readonly string[] RequiredSections =
+    [
+        "services", "commitments_requirements", "components_infrastructure_software", "people",
+        "procedures", "information_data_flows", "system_boundary", "control_environment",
+        "user_entity_controls", "subservice_organizations", "exclusions", "relevant_changes",
+    ];
+
+    [Fact]
+    public async Task ShouldStartFromApprovedPlanAndExactTypeIBaselineGivenPersonalActor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedApprovedPlanAsync();
+        var request = fixture.Request();
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(1, saved.Revision);
+        Assert.Equal(fixture.ExaminationId, saved.Current!.ExaminationId);
+        Assert.Equal(fixture.PlanId, saved.Current.TypeIIPlanId);
+        Assert.Equal(fixture.BaselineSources.Select(fixture.ToReference),
+            saved.Current.OpeningSourceReferences);
+        Assert.Equal(fixture.PeriodId, saved.Current.OpeningSnapshotId);
+        Assert.Equal(64, saved.Current.OpeningSnapshotSha256.Length);
+    }
+
+    [Fact]
+    public async Task ShouldRejectPlanBoundToDifferentTypeIBaselineGivenApprovedPlan()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedApprovedPlanAsync(sourceSnapshotId: Uuid.CreateVersion4());
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(fixture.Request()),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectControlVersionOutsideTypeIBaselineGivenApprovedPlan()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedApprovedPlanAsync(controlVersionId: Uuid.CreateVersion4());
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(fixture.Request()),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldPreserveOriginalStartTimeGivenSameIntentRetriedLater()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedApprovedPlanAsync();
+        var context = fixture.Context(fixture.Request());
+        Assert.True((await fixture.Handler.HandleAsync(context, CancellationToken.None)).IsSuccess);
+        fixture.Clock.Set(Now.AddHours(1));
+
+        // Act
+        var retry = await fixture.Handler.HandleAsync(context, CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+
+        // Assert
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(1, saved.Revision);
+        Assert.Equal(Now, saved.Current!.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task ShouldRequirePersonalHttpActorGivenStartCommand()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedApprovedPlanAsync();
+        var context = new Cntryl.Portia.RequestContext<StartTypeIIObservationPeriod>(fixture.Request(),
+            new RequestDispatchContext(new ClaimsPrincipal(),
+                new HttpInvocation("POST", "/type-ii-periods", "/type-ii-periods", "start-test")));
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(context, CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    sealed class Fixture : IAsyncDisposable
+    {
+        readonly ServiceProvider provider;
+        readonly AsyncServiceScope scope;
+        readonly ClaimsPrincipal actor;
+
+        public Uuid TenantId { get; } = Uuid.CreateVersion4();
+        public Uuid ProgramId { get; } = Uuid.CreateVersion4();
+        public Uuid ExaminationId { get; } = Uuid.CreateVersion4();
+        public Uuid EngagementId => ExaminationId;
+        public Uuid BoundaryId { get; } = Uuid.CreateVersion4();
+        public Uuid BaselineId { get; } = Uuid.CreateVersion4();
+        public Uuid DescriptionId { get; } = Uuid.CreateVersion4();
+        public Uuid DescriptionVersionId { get; } = Uuid.CreateVersion4();
+        public Uuid OutcomeId { get; } = Uuid.CreateVersion4();
+        public Uuid PlanId { get; } = Uuid.CreateVersion4();
+        public Uuid PeriodId { get; } = Uuid.CreateVersion4();
+        public Uuid UserId { get; } = Uuid.CreateVersion4();
+        public Uuid MemberId => RbacIds.Member(TenantId, UserId);
+        public Uuid AuthorId { get; } = Uuid.CreateVersion4();
+        public Uuid ReviewerId { get; } = Uuid.CreateVersion4();
+        public Uuid ExecutiveId { get; } = Uuid.CreateVersion4();
+        public Uuid OtherReviewerId { get; } = Uuid.CreateVersion4();
+        public Uuid ControlId { get; } = Uuid.CreateVersion4();
+        public Uuid ControlVersionId { get; } = Uuid.CreateVersion4();
+        public DateOnly PeriodStart { get; } = new(2026, 10, 1);
+        public DateOnly PeriodEnd { get; } = new(2027, 9, 30);
+        public MutableTimeProvider Clock { get; } = new(Now);
+        public IAggregateReader Reader { get; }
+        public IAggregateWriter Writer { get; }
+        public IAggregateExecutor Executor { get; }
+        public StartTypeIIObservationPeriodHandler Handler { get; }
+        public IReadOnlyList<TypeIBaselineSourceReference> BaselineSources { get; private set; } = [];
+
+        public Fixture()
+        {
+            actor = new ClaimsPrincipal(new ClaimsIdentity(
+                [new Claim("iss", "bdgrz"), new Claim("sub", UserId.ToString()),
+                    new Claim("name", "Period manager")], "BdgrzSession"));
+            var services = new ServiceCollection();
+            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddPortia();
+            provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+            scope = provider.CreateAsyncScope();
+            Reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+            Writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+            Executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+            Handler = new StartTypeIIObservationPeriodHandler(Executor, Reader, Clock);
+        }
+
+        public StartTypeIIObservationPeriod Request() => new(TenantId, ProgramId, PeriodId,
+            ExaminationId, PlanId, PeriodStart, PeriodEnd);
+
+        public Cntryl.Portia.RequestContext<T> Context<T>(T request) where T : IRequestBase => new(request,
+            new RequestDispatchContext(actor, new HttpInvocation("POST",
+                "/api/v1/tenants/tenant/programs/program/observation-periods", "/observation-periods",
+                "start-type-ii-period-test")));
+
+        public ExaminationContentReference ToReference(TypeIBaselineSourceReference source) =>
+            new(source.Kind, source.RecordId, source.VersionId, source.Revision, source.ContentSha256);
+
+        public async Task SeedApprovedPlanAsync(Uuid? sourceSnapshotId = null,
+            Uuid? controlVersionId = null)
+        {
+            var systemDescriptionSource = new SystemDescriptionSourceReference("approved_boundary",
+                BoundaryId, Uuid.CreateVersion4(), 1, Hash('a'), "current");
+            var description = new SystemDescriptionAggregate(TenantId, ProgramId, DescriptionId);
+            var descriptionContent = new SystemDescriptionDraftContent("Sample system", Sections(),
+                [systemDescriptionSource], [], []);
+            Assert.Null(description.Create(DescriptionVersionId,
+                new SystemDescriptionScope("type_i", ExaminationId, BaselineId, null, null),
+                descriptionContent, AuthorId, "Description author", Now.AddMinutes(-10)));
+            Assert.Null(description.Review(1, ReviewerId, "Independent reviewer", "approve",
+                "The system description is complete.", Now.AddMinutes(-9)));
+            Assert.Null(description.Approve(1, ExecutiveId, "Chief Executive",
+                "Approved the Type I system description.", Now.AddMinutes(-8)));
+
+            var descriptionVersion = description.FindVersion(DescriptionVersionId)!;
+            BaselineSources =
+            [
+                new("approved_boundary", BoundaryId, systemDescriptionSource.VersionId, 1, Hash('a')),
+                new("approved_control", ControlId, ControlVersionId, 1, Hash('c')),
+                new("system_description", DescriptionId, DescriptionVersionId, 1,
+                    descriptionVersion.ContentSha256),
+            ];
+            var engagement = new ExaminationEngagementAggregate(TenantId, ProgramId, EngagementId);
+            Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i", "Audit Firm",
+                new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
+                AuthorId, "Examiner", Now.AddMinutes(-12)));
+            var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId, BaselineSources);
+            Assert.Null(engagement.FreezeBaseline(1, BaselineId, preview,
+                "The frozen baseline includes the approved system description.", AuthorId,
+                "Examiner", Now.AddMinutes(-7)));
+            Assert.Null(description.BindToExamination(1, ExaminationId, "type_i_baseline", BaselineId,
+                ExecutiveId, "Chief Executive", Now.AddMinutes(-6)));
+            await Writer.SaveAsync(engagement, new RequestDispatchContext(RequestActor.System));
+            await Writer.SaveAsync(description, new RequestDispatchContext(RequestActor.System));
+
+            var baseline = engagement.Baseline!;
+            var outcome = new AuditOutcomeAggregate(TenantId, ProgramId, OutcomeId);
+            Assert.Null(outcome.Record(new AuditOutcomeContent(ExaminationId, "type_i", BaselineId,
+                baseline.ContentSha256, Uuid.CreateVersion4(), 1, Uuid.CreateVersion4(), Hash('b'),
+                "auditor", "unmodified_opinion", "No material exceptions.", "Report reference",
+                null, null, new DateOnly(2026, 10, 1)), OtherReviewerId, "Auditor", Now.AddMinutes(-5)));
+            await Writer.SaveAsync(outcome, new RequestDispatchContext(RequestActor.System));
+
+            var planContent = new TypeIIPlanContent(ExaminationId,
+                sourceSnapshotId ?? BaselineId, baseline.ContentSha256, DescriptionVersionId,
+                PeriodStart, PeriodEnd, "Audit Firm", ["security"], BaselineId, OutcomeId,
+                BaselineSources.Select(ToReference).ToArray(),
+                [new TypeIIControlPlanEntry(ControlId, controlVersionId ?? ControlVersionId,
+                    "Quarterly access review", MemberId, "quarterly", 4, PeriodStart, null)],
+                [], [], []);
+            var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);
+            Assert.Null(plan.Propose(planContent, AuthorId, "Plan author", Now.AddMinutes(-4)));
+            Assert.Null(plan.Review(plan.Revision, 1, "approve", "The proposed plan is complete.",
+                ReviewerId, "Independent reviewer", Now.AddMinutes(-3)));
+            Assert.Null(plan.Approve(plan.Revision, 1, "Approved for the observation period.",
+                ExecutiveId, "CEO", "Chief Executive", Now.AddMinutes(-2)));
+            await Writer.SaveAsync(plan, new RequestDispatchContext(RequestActor.System));
+        }
+
+        static SystemDescriptionSection[] Sections() => RequiredSections.Select(id =>
+            new SystemDescriptionSection(id, id.Replace('_', ' '), "Current system fact.",
+                "complete", null)).ToArray();
+
+        static string Hash(char value) => new(value, 64);
+
+        public async ValueTask DisposeAsync()
+        {
+            await scope.DisposeAsync();
+            await provider.DisposeAsync();
+        }
+    }
+
+    sealed class MutableTimeProvider(DateTimeOffset current) : TimeProvider
+    {
+        DateTimeOffset current = current;
+        public override DateTimeOffset GetUtcNow() => current;
+        public void Set(DateTimeOffset value) => current = value;
+    }
+}

@@ -57,7 +57,7 @@ public sealed class TypeIIPeriod : Aggregate
         Uuid actorMemberId, string actorDisplay, DateTimeOffset startedAt)
     {
         if (_current is { } existing)
-            return SameOpening(existing, approvedPlan, opening, actorMemberId, actorDisplay, startedAt)
+            return SameOpening(existing, approvedPlan, opening, actorMemberId, actorDisplay)
                 ? null
                 : CommandFailure.StateConflict("The Type II period already exists with a different opening.");
         if (!ValidIdentity() || !ValidActor(actorMemberId, actorDisplay, startedAt))
@@ -716,7 +716,7 @@ public sealed class TypeIIPeriod : Aggregate
         state.CloseApprovals.Count == 0 && state.CloseSnapshots.Count == 0;
 
     static bool SameOpening(TypeIIPeriodView state, TypeIIPlanView plan,
-        TypeIIPeriodOpeningContent opening, Uuid actor, string display, DateTimeOffset at) =>
+        TypeIIPeriodOpeningContent opening, Uuid actor, string display) =>
         ApprovedPlan(plan) && plan.TenantId == state.TenantId && plan.ProgramId == state.ProgramId &&
         NormalizeOpening(opening) is { } normalized &&
         state.TypeIIPlanId == plan.TypeIIPlanId && state.TypeIIPlanVersion == plan.CurrentVersionNumber &&
@@ -725,7 +725,7 @@ public sealed class TypeIIPeriod : Aggregate
         state.OpeningSnapshotSha256 == normalized.OpeningSnapshotSha256 &&
         SameReferences(state.OpeningSourceReferences, normalized.SourceReferences) &&
         state.AcknowledgedOpeningGapIds.SequenceEqual(normalized.AcknowledgedOpeningGapIds) &&
-        state.ActorMemberId == actor && state.ActorDisplay == display.Trim() && state.UpdatedAt == at;
+        state.ActorMemberId == actor && state.ActorDisplay == display.Trim();
 
     static bool SameValidation(TypeIIPeriodCloseValidationView? existing,
         TypeIIPeriodCloseValidationContent content, Uuid actor, string display, DateTimeOffset at) =>
