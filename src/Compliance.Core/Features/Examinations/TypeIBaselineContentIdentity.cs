@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 static class TypeIBaselineContentIdentity
 {
-    const string Domain = "bdgrz.snapshot.manifest.type_i_baseline.v2\0";
+    const string Domain = "bdgrz.snapshot.manifest.type_i_baseline.v3\0";
     const string CoverageDomain = "bdgrz.snapshot.coverage.type_i_baseline.v1\0";
 
     public static (string Json, string Digest) Manifest(TypeIBaselinePreview preview)
@@ -17,7 +17,7 @@ static class TypeIBaselineContentIdentity
                    new JsonWriterOptions { Encoder = JavaScriptEncoder.Default }))
         {
             writer.WriteStartObject();
-            writer.WriteNumber("format_version", 2);
+            writer.WriteNumber("format_version", 3);
             writer.WriteString("kind", "type_i_baseline");
             writer.WriteString("tenant_id", preview.TenantId.ToString());
             writer.WriteString("program_id", preview.ProgramId.ToString());
@@ -36,6 +36,13 @@ static class TypeIBaselineContentIdentity
                 writer.WriteString("content_sha256", source.ContentSha256);
                 writer.WriteEndObject();
             }
+            writer.WriteEndArray();
+            writer.WritePropertyName("blockers");
+            writer.WriteStartArray();
+            foreach (var blocker in preview.Blockers.Select(static value =>
+                         value.Normalize(NormalizationForm.FormC)).OrderBy(static value => value,
+                         StringComparer.Ordinal))
+                writer.WriteStringValue(blocker);
             writer.WriteEndArray();
             writer.WritePropertyName("source_coverage");
             writer.WriteStartArray();

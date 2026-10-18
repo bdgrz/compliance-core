@@ -11,7 +11,7 @@ sealed class ReviseExaminationEngagementHandler(IAggregateReader reader,
         CancellationToken ct)
     {
         var request = context.Request;
-        if (!ExaminationCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,
+        if (!ExaminationManagementActor.TryGet(context.Actor, context.Invocation, request.TenantId,
                 out var memberId, out var display))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "An examination engagement decision requires a personal HTTP actor."));

@@ -28,7 +28,7 @@ public sealed class PreviewTypeIBaselineHandler(IAggregateReader aggregateReader
         if (aggregate.Current is not { } current)
             return Failure(RequestErrorKind.Conflict,
                 "The examination engagement source has not reached its projection.", true);
-        if (!SameEngagement(projected, current))
+        if (!ExaminationEngagementSourceMatch.Matches(projected, current))
             return Failure(RequestErrorKind.Conflict,
                 "The examination engagement projection changed or has not caught up. Retry the preview.",
                 true);
@@ -45,7 +45,8 @@ public sealed class PreviewTypeIBaselineHandler(IAggregateReader aggregateReader
         var confirmed = await aggregateReader.HydrateAsync(new ExaminationEngagement(
             request.TenantId, projected.ProgramId, request.ExaminationId), ct)
             .ConfigureAwait(false);
-        if (confirmed.Current is not { } afterRead || !SameEngagement(current, afterRead))
+        if (confirmed.Current is not { } afterRead ||
+            !ExaminationEngagementSourceMatch.Matches(current, afterRead))
             return Failure(RequestErrorKind.Conflict,
                 "The examination engagement changed while its baseline preview was being read. Retry the preview.",
                 true);
@@ -59,16 +60,6 @@ public sealed class PreviewTypeIBaselineHandler(IAggregateReader aggregateReader
             Array.AsReadOnly(preview.Value.ScopeDifferences.ToArray()),
             preview.Value.CanonicalManifest, preview.Value.ContentSha256));
     }
-
-    static bool SameEngagement(ExaminationEngagementView left, ExaminationEngagementView right) =>
-        left.TenantId == right.TenantId && left.ProgramId == right.ProgramId &&
-        left.ExaminationEngagementId == right.ExaminationEngagementId &&
-        left.Revision == right.Revision && left.UpdatedAt == right.UpdatedAt &&
-        left.BoundaryId == right.BoundaryId && left.PeriodStart == right.PeriodStart &&
-        left.PeriodEnd == right.PeriodEnd && left.EngagementType == right.EngagementType &&
-        left.AuditFirm == right.AuditFirm &&
-        left.TrustServicesCategories.SequenceEqual(right.TrustServicesCategories) &&
-        left.ManagementContactMemberIds.SequenceEqual(right.ManagementContactMemberIds);
 
     static Result<TypeIBaselinePreviewView> Failure(RequestErrorKind kind, string message,
         bool transient = false) => Result<TypeIBaselinePreviewView>.Failure(

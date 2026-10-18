@@ -73,6 +73,30 @@ public sealed class TypeIBaselinePreviewReaderTests
     }
 
     [Fact]
+    public void ShouldBindPreviewBlockersIntoManifestGivenSameSources()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var boundary = new TypeIBaselineSourceReference("approved_boundary",
+            engagement.BoundaryId, Uuid.CreateVersion4(), 2, new string('a', 64));
+        var coverage = TypeIBaselineSourceFamilies.Required.Select(family =>
+            TypeIBaselineContentIdentity.Coverage(family,
+                family == "approved_boundary" ? [boundary] : [])).ToArray();
+        var clear = TypeIBaselinePreview.Create(engagement.TenantId, engagement.ProgramId,
+            engagement.ExaminationEngagementId, [boundary], [], [], coverage);
+        var blocked = TypeIBaselinePreview.Create(engagement.TenantId, engagement.ProgramId,
+            engagement.ExaminationEngagementId, [boundary], ["The scope requires review."], [],
+            coverage);
+
+        // Act
+        var clearDigest = clear.ContentSha256;
+        var blockedDigest = blocked.ContentSha256;
+
+        // Assert
+        Assert.NotEqual(clearDigest, blockedDigest);
+    }
+
+    [Fact]
     public async Task ShouldResolveBoundaryVersionEffectiveOnTypeIDateGivenBoundaryContribution()
     {
         // Arrange

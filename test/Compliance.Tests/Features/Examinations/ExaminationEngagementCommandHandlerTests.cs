@@ -38,6 +38,28 @@ public sealed class ExaminationEngagementCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldCreateTypeIEngagementGivenAuthenticatedMcpCommand()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
+            null, ["security", "availability"], fixture.BoundaryId);
+
+        // Act
+        var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request,
+            new McpInvocation("bdgrz.examinations.create-examination-engagement")),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("draft", saved.Current?.Status);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.Current?.ActorMemberId);
+    }
+
+    [Fact]
     public async Task ShouldCaptureActiveManagementContactsGivenCreate()
     {
         // Arrange
@@ -335,9 +357,10 @@ public sealed class ExaminationEngagementCommandHandlerTests
 
         public ReviseExaminationEngagementHandler ReviseHandler() => new(Reader, Executor, Clock);
 
-        public Cntryl.Portia.RequestContext<T> Context<T>(T request) where T : IRequestBase => new(request,
-            new RequestDispatchContext(Actor, new HttpInvocation("POST", "/api/v1/examinations",
-                "/api/v1/examinations", "examination-engagement-test")));
+        public Cntryl.Portia.RequestContext<T> Context<T>(T request,
+            RequestInvocation? invocation = null) where T : IRequestBase => new(request,
+            new RequestDispatchContext(Actor, invocation ?? new HttpInvocation("POST",
+                "/api/v1/examinations", "/api/v1/examinations", "examination-engagement-test")));
 
         public async Task SeedEngagementAsync(IReadOnlyList<Uuid>? managementContactMemberIds = null)
         {

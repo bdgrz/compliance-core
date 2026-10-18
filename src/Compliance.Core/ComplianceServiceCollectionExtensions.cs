@@ -872,6 +872,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GetExaminationEngagementHandler>()
             .AddRequestHandler<GetTypeIBaselineHandler>()
             .AddRequestHandler<PreviewTypeIBaselineHandler>()
+            .AddRequestHandler<FreezeTypeIBaselineHandler>()
+            .AddRequestHandler<AmendTypeIBaselineHandler>()
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ProposeTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ApproveTypeIIOperatingPlanHandler>()
