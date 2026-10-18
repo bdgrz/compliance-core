@@ -58,6 +58,54 @@ public sealed class AuditPopulationCommandHandlerTests
             saved.Current.Current!.FreezeRationale);
     }
 
+    [Fact]
+    public async Task ShouldRevisePopulationRulesWithoutChangingItsFrozenCloseGivenReason()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var populationId = await fixture.SeedDefinedPopulationAsync();
+
+        // Act
+        var result = await fixture.ReviseDefinitionHandler().HandleAsync(Fixture.Context(
+            fixture.UserId, new ReviseAuditPopulationDefinition(fixture.TenantId, fixture.ProgramId,
+                populationId, 1, "Approved production change register", "Include approved changes.",
+                "Exclude canceled and rejected changes.", "Clarify approved source boundaries.")),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(fixture.TenantId,
+            fixture.ProgramId, populationId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var content = saved.Current!.CurrentDefinition!.Content;
+        Assert.Equal("Approved production change register", content.SourceUniverse);
+        Assert.Equal("Include approved changes.", content.InclusionRules);
+        Assert.Equal("Exclude canceled and rejected changes.", content.ExclusionRules);
+        Assert.Equal("Clarify approved source boundaries.",
+            saved.Current.CurrentDefinition.ChangeReason);
+        Assert.Equal(2, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldStartCollectionForExactFrozenPeriodCloseGivenGenerationKey()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (populationId, closeSnapshotId) = await fixture.SeedDefinedPopulationWithCloseAsync();
+
+        // Act
+        var result = await fixture.GenerateHandler().HandleAsync(Fixture.Context(fixture.UserId,
+            new GenerateAuditPopulation(fixture.TenantId, fixture.ProgramId, populationId,
+                closeSnapshotId, "population-generation-1")), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPopulationAggregate(fixture.TenantId,
+            fixture.ProgramId, populationId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("collecting", saved.Current!.Status);
+        Assert.Equal("population-generation-1", saved.Current.GenerationKey);
+        Assert.Empty(saved.Current.Rows);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -90,6 +138,11 @@ public sealed class AuditPopulationCommandHandlerTests
 
         public FreezeAuditPopulationHandler FreezeHandler() => new(Executor, _clock);
 
+        public ReviseAuditPopulationDefinitionHandler ReviseDefinitionHandler() =>
+            new(Executor, _clock);
+
+        public GenerateAuditPopulationHandler GenerateHandler() => new(Executor, _clock);
+
         public async Task<(Uuid PopulationId, Uuid RowId)> SeedPopulationAsync(bool reconciled)
         {
             var populationId = Uuid.CreateVersion4();
@@ -107,6 +160,23 @@ public sealed class AuditPopulationCommandHandlerTests
                     "Compliance lead", Now.AddMinutes(2)));
             await Writer.SaveAsync(population, new RequestDispatchContext(RequestActor.System));
             return (populationId, rowId);
+        }
+
+        public async Task<Uuid> SeedDefinedPopulationAsync()
+        {
+            var (populationId, _) = await SeedDefinedPopulationWithCloseAsync();
+            return populationId;
+        }
+
+        public async Task<(Uuid PopulationId, Uuid CloseSnapshotId)> SeedDefinedPopulationWithCloseAsync()
+        {
+            var populationId = Uuid.CreateVersion4();
+            var closePeriod = ClosedPeriod(TenantId, ProgramId);
+            var population = new AuditPopulationAggregate(TenantId, ProgramId, populationId);
+            Assert.Null(population.Define(populationId, Definition(), closePeriod,
+                RbacIds.Member(TenantId, UserId), "Compliance lead", Now));
+            await Writer.SaveAsync(population, new RequestDispatchContext(RequestActor.System));
+            return (populationId, closePeriod.CloseSnapshots.Single().CloseSnapshotId);
         }
 
         AuditPopulationDefinitionContent Definition() => new("Production changes",

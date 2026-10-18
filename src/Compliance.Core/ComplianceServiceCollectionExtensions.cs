@@ -758,6 +758,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordAuditPackageDeliveryHandler>()
             .AddRequestHandler<ClassifyAuditPopulationRowHandler>()
             .AddRequestHandler<FreezeAuditPopulationHandler>()
+            .AddRequestHandler<ReviseAuditPopulationDefinitionHandler>()
+            .AddRequestHandler<GenerateAuditPopulationHandler>()
             .AddRequestHandler<RecordAuditorRequestHandler>()
             .AddRequestHandler<ReviseAuditorRequestHandler>()
             .AddRequestHandler<AssignAuditorRequestHandler>()
