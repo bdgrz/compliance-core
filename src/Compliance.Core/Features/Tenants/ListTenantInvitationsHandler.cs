@@ -66,9 +66,13 @@ public sealed class ListTenantInvitationsHandler(ITenantInvitationDirectoryReade
                 member.UserId == userId)
                 status = "active";
         }
+        if (entry.GuestExpiresOn is { } guestExpiresOn &&
+            DateOnly.FromDateTime(now.UtcDateTime) > guestExpiresOn)
+            status = "expired";
         return new TenantInvitationView(entry.TenantId, entry.EmailAddress,
             entry.Affiliation, entry.Administrator, entry.BuiltInRole, status,
-            entry.ExpiresAt, entry.InvitedBy, entry.AcceptedUserId)
+            entry.ExpiresAt, entry.InvitedBy, entry.AcceptedUserId,
+            entry.GuestProgramIds?.ToArray(), entry.GuestExpiresOn)
         {
             DeliveryStatus = entry.DeliveryStatus,
         };

@@ -60,7 +60,8 @@ public sealed class PolicyAcknowledgementIndependenceTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
-        Assert.Contains("Attest", result.Error!.Message, StringComparison.Ordinal);
+        Assert.Contains(affiliation == "guest" ? "Guest members" : "Attest",
+            result.Error!.Message, StringComparison.Ordinal);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
         Assert.Null(after.FindAcknowledgement(fixture.Source.NonMemberPersonId));
     }

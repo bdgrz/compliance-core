@@ -58,6 +58,8 @@ sealed class WorkDigestContentReader(ITenantDirectoryReader tenants, ITenantActi
         if (membership is null || membership.TenantId != tenantId || membership.UserId != userId ||
             membership.IsSuspended || membership.IsDeprovisioned)
             return WorkDigestContentRead.Skip("member_inactive");
+        if (membership.Affiliation == "guest")
+            return WorkDigestContentRead.Skip("guest_member");
 
         var preference = await ReadPreferenceAsync(reader, tenantId, memberId, ct)
             .ConfigureAwait(false);

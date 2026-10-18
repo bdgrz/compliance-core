@@ -264,6 +264,7 @@ The source-backed command plan for the product features we have committed to sup
 - **ConfirmTenantSlugSurrender** — exists ([contract](../../src/Compliance.Common/Features/Tenants/ConfirmTenantSlugSurrender.cs#L6))
 - **GrantPlatformOperator** — exists ([contract](../../src/Compliance.Common/Features/Tenants/GrantPlatformOperator.cs#L6))
 - **InviteOrganizationMember** — extend ([contract](../../src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs#L7))
+- **InviteGuestConsultant** — exists ([contract](../../src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs#L7))
 - **InviteTenantMember** — exists ([contract](../../src/Compliance.Common/Features/Tenants/InviteTenantMember.cs#L6))
 - **OffboardTenant** — extend ([contract](../../src/Compliance.Common/Features/Tenants/OffboardTenant.cs#L6))
 - **ReactivateTenant** — exists ([contract](../../src/Compliance.Common/Features/Tenants/ReactivateTenant.cs#L6))

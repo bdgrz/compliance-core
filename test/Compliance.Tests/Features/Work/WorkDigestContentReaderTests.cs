@@ -17,6 +17,41 @@ namespace Bdgrz.Compliance.Tests.Features.Work;
 public sealed class WorkDigestContentReaderTests
 {
     [Fact]
+    public async Task ShouldSkipGuestDigestGivenScopedGuestMembership()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var ownedProvider = fixture.Provider;
+        var weekOf = fixture.Today.AddDays(-(((int)fixture.Today.DayOfWeek + 6) % 7));
+        var visibility = new FixedProgramVisibilityAuthorizer(new ProgramAccessVisibility(false,
+            new HashSet<Uuid> { fixture.ProgramId }));
+        var settings = new WorkDigestDeliverySettings("https://app.example",
+            "/tenant/{tenant_id}/{tenant_slug}/program/{program_id}/work/{work_item_id}",
+            3, TimeSpan.FromMinutes(5), TimeSpan.FromDays(6), TimeSpan.FromMinutes(3),
+            TimeSpan.FromMinutes(1));
+        var dispatch = new WorkDigestDispatchStatusView(fixture.TenantId, fixture.OwnerMemberId,
+            weekOf, "America/New_York", DateTimeOffset.UtcNow, "scheduled", 0, null,
+            Uuid.CreateVersion4(), DateTimeOffset.UtcNow, null, null);
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = new WorkDigestContentReader(new TenantDirectory(fixture.TenantId),
+            services.GetRequiredService<ITenantActivity>(),
+            new MembershipDirectory(fixture.TenantId, fixture.OwnerUserId, "guest"),
+            new EmailDirectory(fixture.OwnerUserId), new ProgramDirectory([]), visibility,
+            services.GetRequiredService<WorkQueueReader>(),
+            services.GetRequiredService<IAggregateReader>(), settings);
+
+        // Act
+        var result = await reader.ReadAsync(fixture.TenantId, fixture.OwnerUserId, dispatch,
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(WorkDigestContentReadKind.Skip, result.Kind);
+        Assert.Equal("guest_member", result.SkipReason);
+        Assert.Empty(visibility.Calls);
+    }
+
+    [Fact]
     public async Task ShouldOmitUnpermittedProgramWorkGivenCurrentDigestVisibility()
     {
         // Arrange
@@ -108,6 +143,27 @@ public sealed class WorkDigestContentReaderTests
             string? cursor, CancellationToken ct = default) => ValueTask.FromResult(
             new Page<EmailAddressView>(requestedUserId == userId
                 ? [new EmailAddressView(userId, "owner@example.com", true)]
+                : [], null));
+    }
+
+    sealed class MembershipDirectory(Uuid tenantId, Uuid userId, string affiliation)
+        : ITenantMembershipDirectoryReader
+    {
+        public ValueTask<TenantMembershipView?> GetAsync(string requestedTenantId,
+            Uuid requestedUserId, CancellationToken ct = default) =>
+            ValueTask.FromResult<TenantMembershipView?>(requestedTenantId == tenantId.ToString() &&
+                requestedUserId == userId
+                    ? new TenantMembershipView(userId, tenantId, affiliation)
+                    : null);
+
+        public ValueTask<bool> IsMemberAsync(string requestedTenantId, Uuid requestedUserId,
+            CancellationToken ct = default) => ValueTask.FromResult(
+            requestedTenantId == tenantId.ToString() && requestedUserId == userId);
+
+        public ValueTask<Page<TenantMembershipView>> ListAsync(Uuid requestedTenantId, int limit,
+            string? cursor, CancellationToken ct = default) => ValueTask.FromResult(
+            new Page<TenantMembershipView>(requestedTenantId == tenantId
+                ? [new TenantMembershipView(userId, tenantId, affiliation)]
                 : [], null));
     }
 

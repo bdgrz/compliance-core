@@ -108,7 +108,9 @@ sealed class AccessGrantPermissionAuthorizer(IAccessGrantDirectory grants,
 
         var membership = await memberships.GetAsync(tenantId.ToString(), userId, ct)
             .ConfigureAwait(false);
-        if (membership is not { Affiliation: "client_personnel", IsSuspended: false, IsDeprovisioned: false } ||
+        if (membership is not { IsSuspended: false, IsDeprovisioned: false } ||
+            membership.Affiliation is not ("client_personnel" or "guest") ||
+            membership.Affiliation == "guest" && permission != RbacPermissions.TenantAccess ||
             membership.TenantId != tenantId || membership.UserId != userId ||
             !await sourceMember.IsEligibleAsync(tenantId, userId, ct).ConfigureAwait(false))
             return [];
@@ -129,6 +131,11 @@ sealed class AccessGrantPermissionAuthorizer(IAccessGrantDirectory grants,
             if (grant.TenantId != tenantId || grant.RevokedAt is not null ||
                 grant.Terms.EffectiveFrom > now ||
                 grant.Terms.EffectiveUntil is { } until && until <= now || !scopeMatches(scope))
+                continue;
+            if (membership.Affiliation == "guest" &&
+                (scope.Kind != AccessGrantScopeKind.Program ||
+                 grant.Terms.RoleId != BuiltInRbac.ViewerRoleId(tenantId) ||
+                 grant.Terms.EffectiveUntil is null))
                 continue;
 
             if (!principalMatches.TryGetValue(grant.Terms.Principal, out var includesMember))

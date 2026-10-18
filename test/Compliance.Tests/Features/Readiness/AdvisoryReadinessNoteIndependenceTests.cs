@@ -77,6 +77,47 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         Assert.Equal(RequestErrorKind.Forbidden, notes.Error?.Kind);
     }
 
+    [Fact]
+    public async Task ShouldLimitGuestProgramAccessToCurrentOpenHandoffGivenScopedGuestMembership()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        fixture.Memberships.Affiliation = "guest";
+        var handoffId = Uuid.CreateVersion4();
+        var recordId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant,
+            Uuid.CreateVersion4()), "Compliance Lead");
+        var createdAt = fixture.Clock.GetUtcNow().AddDays(-1);
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
+            {
+                Assert.True(handoff.Create("Guest review", [new(recordId, versionId)],
+                    DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime).AddDays(7),
+                    actor, createdAt).IsSuccess);
+                Assert.True(handoff.MarkReadyForReview(1, actor, createdAt.AddMinutes(1)).IsSuccess);
+                return Result.Success;
+            });
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
+            scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
+            scope.ServiceProvider.GetRequiredService<IProgramResourceScopeResolver>(),
+            scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        var guest = ProgramManagementServices.Actor(fixture.User);
+
+        // Act
+        var handoff = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
+            new GetAdvisorRequest(fixture.Tenant, fixture.Program, handoffId), guest),
+            CancellationToken.None);
+        var annotations = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(new ListReadinessAnnotations(
+                fixture.Tenant, fixture.Program, fixture.Assessment), guest), CancellationToken.None);
+
+        // Assert
+        Assert.True(handoff.IsSuccess);
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(annotations.Error).Kind);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -791,10 +832,11 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
     sealed class Memberships(Uuid tenant, Uuid user) : ITenantMembershipDirectoryReader
     {
         public string State { get; set; } = "active";
+        public string Affiliation { get; set; } = "client_personnel";
         public ValueTask<TenantMembershipView?> GetAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
             ValueTask.FromResult<TenantMembershipView?>(tenantId == tenant.ToString() && userId == user && State != "absent"
                 ? new TenantMembershipView(State == "wrong_user" ? Uuid.CreateVersion4() : user,
-                    State == "wrong_tenant" ? Uuid.CreateVersion4() : tenant, "client_personnel",
+                    State == "wrong_tenant" ? Uuid.CreateVersion4() : tenant, Affiliation,
                     IsSuspended: State == "suspended", IsDeprovisioned: State == "deprovisioned") : null);
         public ValueTask<bool> IsMemberAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
             ValueTask.FromResult(tenantId == tenant.ToString() && userId == user);

@@ -16,7 +16,8 @@ sealed class FitzTenantInvitationDirectory(IKvClient client)
             case TenantMemberInvited invited:
                 var next = new TenantInvitationDirectoryEntry(invited.TenantId,
                     invited.EmailAddress, invited.Affiliation, invited.Administrator,
-                    invited.BuiltInRole, invited.ExpiresAt, invited.InvitedBy, null)
+                    invited.BuiltInRole, invited.ExpiresAt, invited.InvitedBy, null,
+                    invited.GuestProgramIds?.ToArray(), invited.GuestExpiresOn)
                 {
                     DeliveryStatus = "pending",
                 };

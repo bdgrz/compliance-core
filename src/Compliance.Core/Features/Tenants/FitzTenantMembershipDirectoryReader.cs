@@ -13,9 +13,14 @@ sealed class FitzTenantMembershipDirectoryReader
       ITenantMembershipDirectoryReader
 {
     readonly IKvClient _client;
+    readonly TimeProvider _clock;
 
-    public FitzTenantMembershipDirectoryReader(IKvClient client)
-        : base(client, TenantMembershipDirectoryKeys.Route, "TenantMembership") => _client = client;
+    public FitzTenantMembershipDirectoryReader(IKvClient client, TimeProvider? clock = null)
+        : base(client, TenantMembershipDirectoryKeys.Route, "TenantMembership")
+    {
+        _client = client;
+        _clock = clock ?? TimeProvider.System;
+    }
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
@@ -26,7 +31,8 @@ sealed class FitzTenantMembershipDirectoryReader
             if (current is null)
             {
                 await TenantMembershipDirectorySchema.Directory.InsertAsync(Transaction,
-                    new TenantMembershipView(registered.UserId, registered.TenantId, registered.Affiliation),
+                    new TenantMembershipView(registered.UserId, registered.TenantId,
+                        registered.Affiliation, MembershipExpiresOn: registered.MembershipExpiresOn),
                     ct).ConfigureAwait(false);
             }
             else if (current.IsDeprovisioned)
@@ -35,6 +41,7 @@ sealed class FitzTenantMembershipDirectoryReader
                     current with
                     {
                         Affiliation = registered.Affiliation,
+                        MembershipExpiresOn = registered.MembershipExpiresOn,
                         IsSuspended = false,
                         IsDeprovisioned = false,
                         SuspendedAt = null,
@@ -110,8 +117,8 @@ sealed class FitzTenantMembershipDirectoryReader
     }
 
     public async ValueTask<bool> IsMemberAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
-        await GetAsync(tenantId, userId, ct).ConfigureAwait(false) is
-        { IsSuspended: false, IsDeprovisioned: false };
+        await GetAsync(tenantId, userId, ct).ConfigureAwait(false) is { } membership &&
+        membership.IsActiveOn(DateOnly.FromDateTime(_clock.GetUtcNow().UtcDateTime));
 
     public async ValueTask<Page<TenantMembershipView>> ListAsync(Uuid tenantId, int limit, string? cursor,
         CancellationToken ct = default)

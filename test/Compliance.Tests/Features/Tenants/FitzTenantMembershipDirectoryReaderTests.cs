@@ -38,6 +38,37 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
     }
 
     [Fact]
+    public async Task ShouldExpireGuestMembershipAfterItsEndDateGivenProjectedRegistration()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var clock = new MutableTimeProvider(new DateTimeOffset(2026, 10, 18, 23, 59, 0,
+            TimeSpan.Zero));
+        var expiresOn = new DateOnly(2026, 10, 18);
+        var reader = new FitzTenantMembershipDirectoryReader(client, clock);
+        var identity = new CheckpointIdentity("TenantMembership",
+            EventStreamPattern.ForPattern(TenantId.ToString()));
+        await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
+                         identity, ProjectionCheckpoint.Start)))
+        {
+            await reader.ApplyAsync(new MemberRegistered(TenantId, Uuid.CreateVersion4(), UserId,
+                "guest", Uuid.CreateVersion4(), expiresOn));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+
+        // Act
+        var activeOnEndDate = await reader.IsMemberAsync(TenantId.ToString(), UserId);
+        clock.UtcNow = new DateTimeOffset(2026, 10, 19, 0, 0, 0, TimeSpan.Zero);
+        var activeAfterEndDate = await reader.IsMemberAsync(TenantId.ToString(), UserId);
+        var membership = await reader.GetAsync(TenantId.ToString(), UserId);
+
+        // Assert
+        Assert.True(activeOnEndDate);
+        Assert.False(activeAfterEndDate);
+        Assert.Equal(expiresOn, membership?.MembershipExpiresOn);
+    }
+
+    [Fact]
     public async Task ShouldRetainSuspensionHistoryButNotCountSuspendedMemberGivenSuspension()
     {
         // Arrange
@@ -202,5 +233,12 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
             await using var tx = await BeginReadAsync(tenantId.ToString());
             return tx.Route;
         }
+    }
+
+    sealed class MutableTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public DateTimeOffset UtcNow { get; set; } = utcNow;
+
+        public override DateTimeOffset GetUtcNow() => UtcNow;
     }
 }

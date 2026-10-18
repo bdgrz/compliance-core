@@ -8,7 +8,9 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Checks the existing accepted assignment path for advisory-note reads.</summary>
 sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActivity tenants,
-    IProgramResourceScopeResolver programScopes, TimeProvider clock)
+    IProgramResourceScopeResolver programScopes, TimeProvider clock,
+    ITenantMembershipDirectoryReader memberships,
+    IAccessGrantPermissionAuthorizer scopedPermissions)
 {
     public async ValueTask<bool> CanReadAsync(Uuid tenantId, Uuid programId, Uuid userId,
         CancellationToken ct = default)
@@ -49,8 +51,13 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
     public async ValueTask<bool> CanReadHandoffAsync(Uuid tenantId, Uuid programId,
         Uuid handoffId, Uuid userId, CancellationToken ct = default)
     {
-        if (handoffId == Uuid.Empty || !await CanReadAsync(tenantId, programId, userId, ct)
-                .ConfigureAwait(false))
+        if (handoffId == Uuid.Empty)
+            return false;
+        var assignedAdvisor = await CanReadAsync(tenantId, programId, userId, ct)
+            .ConfigureAwait(false);
+        var scopedGuest = !assignedAdvisor && await CanReadGuestProgramAsync(tenantId,
+            programId, userId, ct).ConfigureAwait(false);
+        if (!assignedAdvisor && !scopedGuest)
             return false;
 
         var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
@@ -63,7 +70,8 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
         Uuid handoffId, Uuid feedbackId, Uuid userId, CancellationToken ct = default)
     {
         if (handoffId == Uuid.Empty || feedbackId == Uuid.Empty ||
-            !await CanReadAsync(tenantId, programId, userId, ct).ConfigureAwait(false))
+            !await CanReadHandoffAsync(tenantId, programId, handoffId, userId, ct)
+                .ConfigureAwait(false))
             return false;
 
         var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
@@ -79,7 +87,8 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
         CancellationToken ct = default)
     {
         if (handoffId == Uuid.Empty || recordId == Uuid.Empty || recordVersionId == Uuid.Empty ||
-            !await CanReadAsync(tenantId, programId, userId, ct).ConfigureAwait(false))
+            !await CanReadHandoffAsync(tenantId, programId, handoffId, userId, ct)
+                .ConfigureAwait(false))
             return false;
 
         var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
@@ -91,6 +100,26 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
     bool IsSharedHandoff(AdvisorHandoff handoff, Uuid programId) => handoff.IsCreated &&
         handoff.ProgramId == programId && handoff.Status == "ready_for_review" &&
         handoff.ExpiresOn >= DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+
+    async ValueTask<bool> CanReadGuestProgramAsync(Uuid tenantId, Uuid programId,
+        Uuid userId, CancellationToken ct)
+    {
+        if (tenantId == Uuid.Empty || programId == Uuid.Empty || userId == Uuid.Empty ||
+            !await tenants.IsActiveAsync(tenantId, ct).ConfigureAwait(false) ||
+            !await programScopes.IsTenantProgramAsync(tenantId, programId, ct)
+                .ConfigureAwait(false))
+            return false;
+
+        var membership = await memberships.GetAsync(tenantId.ToString(), userId, ct)
+            .ConfigureAwait(false);
+        if (membership is not { Affiliation: "guest", IsSuspended: false, IsDeprovisioned: false } ||
+            membership.TenantId != tenantId || membership.UserId != userId)
+            return false;
+
+        var memberId = RbacIds.Member(tenantId, userId);
+        return await scopedPermissions.IsAllowedAsync(tenantId, userId, memberId, programId,
+            RbacPermissions.TenantAccess, ct).ConfigureAwait(false);
+    }
 
     async ValueTask<bool> MatchesProgramScopeAsync(Uuid tenantId, Uuid programId,
         ServiceEngagementAcceptanceView acceptance, CancellationToken ct)

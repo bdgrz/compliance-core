@@ -297,6 +297,7 @@ The following is a static source inventory, including internal operations. Queri
 - [DeprovisionMember](../../src/Compliance.Common/Features/AccessControl/DeprovisionMember.cs#L6) — `bdgrz.tenant.member.deprovision` v1
 - [EvaluateClientIndependence](../../src/Compliance.Common/Features/AccessControl/EvaluateClientIndependence.cs#L7) — `bdgrz.independence.evaluate` v1
 - [GrantAccess](../../src/Compliance.Common/Features/AccessControl/GrantAccess.cs#L6) — `bdgrz.access-grant.issue` v1
+- [ProvisionGuestProgramAccess](../../src/Compliance.Common/Features/AccessControl/ProvisionGuestProgramAccess.cs#L7) — `bdgrz.access-grant.guest-invitation.provision` v1 (internal reaction)
 - [ProposeServiceEngagementStaff](../../src/Compliance.Common/Features/AccessControl/ProposeServiceEngagementStaff.cs#L6) — `bdgrz.service-engagement.staff.propose` v1
 - [RecordDirectoryIndependenceReevaluation](../../src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs#L7) — `bdgrz.independence.record-directory-reevaluation` v1
 - [RecordNonattestService](../../src/Compliance.Common/Features/AccessControl/RecordNonattestService.cs#L6) — `bdgrz.independence.service.record` v1
@@ -552,6 +553,7 @@ The following is a static source inventory, including internal operations. Queri
 - [ConfirmTenantSlugSurrender](../../src/Compliance.Common/Features/Tenants/ConfirmTenantSlugSurrender.cs#L6) — `bdgrz.tenant-slug-surrender.confirm` v1
 - [GrantPlatformOperator](../../src/Compliance.Common/Features/Tenants/GrantPlatformOperator.cs#L6) — `bdgrz.platform.operator.grant` v1
 - [InviteOrganizationMember](../../src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs#L7) — `bdgrz.organization-member.invite` v1
+- [InviteGuestConsultant](../../src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs#L7) — `bdgrz.tenant.guest-consultant.invite` v1
 - [InviteTenantMember](../../src/Compliance.Common/Features/Tenants/InviteTenantMember.cs#L6) — `bdgrz.tenant-member.invite` v1
 - [OffboardTenant](../../src/Compliance.Common/Features/Tenants/OffboardTenant.cs#L6) — `bdgrz.tenant.offboard` v1
 - [ReactivateTenant](../../src/Compliance.Common/Features/Tenants/ReactivateTenant.cs#L6) — `bdgrz.tenant.reactivate` v2
@@ -2777,6 +2779,7 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/platform/operators` | `ListPlatformOperators` | [registration](../../src/Compliance.App/Program.cs#L500) |
 | POST | `/api/v1/tenants/{tenant_id}/invitations` | `InviteTenantMember` | [registration](../../src/Compliance.App/Program.cs#L503) |
 | POST | `/api/v1/tenants/{tenant_id}/member-invitations` | `InviteOrganizationMember` | [registration](../../src/Compliance.App/Program.cs#L506) |
+| POST | `/api/v1/tenants/{tenant_id}/guest-invitations` | `InviteGuestConsultant` | [registration](../../src/Compliance.App/Program.cs#L532) |
 | GET | `/api/v1/tenants/{tenant_id}/members/{user_id}/access` | `GetMemberAccess` | [registration](../../src/Compliance.App/Program.cs#L513) |
 | POST | `/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions` | `SuspendMember` | [registration](../../src/Compliance.App/Program.cs#L517) |
 | DELETE | `/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions` | `ReinstateMember` | [registration](../../src/Compliance.App/Program.cs#L521) |

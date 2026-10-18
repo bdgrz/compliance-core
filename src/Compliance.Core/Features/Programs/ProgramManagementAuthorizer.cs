@@ -52,6 +52,9 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
         if (membership.Affiliation == "firm_staff")
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Firm staff require an accepted engagement to access client work."));
+        if (membership.Affiliation == "guest")
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Guest members may access only records exposed by an active advisor handoff."));
         if (!await tenants.IsActiveAsync(tenantId, ct).ConfigureAwait(false))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "The tenant is not active."));
         var memberId = RbacIds.Member(tenantId, userId);

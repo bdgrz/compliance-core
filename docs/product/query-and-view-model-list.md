@@ -22,9 +22,10 @@ The 54 planned query contracts and 53 response-view types listed below now have 
 MCP. The handoff view returns its persisted selection, purpose, expiry, lifecycle state, and
 attribution; feedback pages preserve authors, exact record/version references, linked corrections,
 responses, resolution time, and current-versus-historical status. Firm Advisors can read only an
-unexpired `ready_for_review` handoff after current engagement and program-scope checks. The handoff
-directory query remains unwired; source-version resolution and guest membership are still open
-feature gaps, so these reads do not complete R2-08.
+unexpired `ready_for_review` handoff after current engagement or program-scoped guest-grant checks.
+The existing `TenantInvitationView` also carries guest program scopes and the required membership
+end date. The handoff directory query remains unwired, and source-version resolution and approved-
+record reads remain open feature gaps, so these reads do not complete R2-08.
 
 ### Type I engagement — T1-01
 

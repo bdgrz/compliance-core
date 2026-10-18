@@ -115,7 +115,7 @@ public sealed class WeeklyWorkDigest : Aggregate
         if (expectedRevision != Revision)
             return Conflict($"The weekly digest revision is {Revision}.");
         if (reason is not ("member_inactive" or "email_digest_opted_out" or
-                           "verified_email_unavailable") ||
+                           "verified_email_unavailable" or "guest_member") ||
             !ValidActor(suppressedBy, DeliveryProcessId) || suppressedAt == default)
             return Invalid("Digest suppression requires a supported reason and named worker.");
 
@@ -215,7 +215,7 @@ public sealed class WeeklyWorkDigest : Aggregate
             _status is not ("scheduled" or "delivery_failed") ||
             (_attempts.Count > 0 && _attempts[^1].Status != "failed") ||
             ev.Reason is not ("member_inactive" or "email_digest_opted_out" or
-                              "verified_email_unavailable") ||
+                              "verified_email_unavailable" or "guest_member") ||
             !ValidActor(ev.SuppressedBy, DeliveryProcessId) || ev.SuppressedAt == default)
             throw new InvalidOperationException("The weekly digest suppression event is invalid.");
         _suppressionReason = ev.Reason;
