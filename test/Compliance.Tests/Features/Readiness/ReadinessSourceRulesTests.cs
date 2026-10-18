@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Controls;
@@ -250,9 +251,161 @@ public sealed class ReadinessSourceRulesTests
         Assert.NotEqual(before.InputFingerprint, after.InputFingerprint);
     }
 
+    [Fact]
+    public void ShouldChangeFingerprintGivenEffectiveAccessReviewScopeAttributionChanges()
+    {
+        // Arrange
+        var applicationId = Uuid.CreateVersion4();
+        var systemInstanceId = Uuid.CreateVersion4();
+        var decision = new AccessReviewScopeDecisionView(Tenant, applicationId,
+            systemInstanceId, 3, Uuid.CreateVersion4(), 4, "included", "Quarterly review",
+            AsOf.AddDays(-20), AsOf.AddDays(30),
+            ActorReference.ForMember(Uuid.CreateVersion4(), "Avery Reviewer"),
+            AsOf.AddDays(-20), Uuid.CreateVersion4());
+
+        // Act
+        var original = Evaluate(AccessReviewSources(decision));
+        var revisions = new[]
+        {
+            decision with { TenantId = Uuid.CreateVersion4() },
+            decision with { ApplicationId = Uuid.CreateVersion4() },
+            decision with { SystemInstanceId = Uuid.CreateVersion4() },
+            decision with { SystemInstanceRevision = 4 },
+            decision with { DecisionId = Uuid.CreateVersion4() },
+            decision with { Sequence = 5 },
+            decision with { Decision = "excluded" },
+            decision with { Reason = "Annual review" },
+            decision with { EffectiveFrom = AsOf.AddDays(-19) },
+            decision with { ReviewBy = AsOf.AddDays(31) },
+            decision with { ApprovedBy = decision.ApprovedBy with { Kind = "firm_staff" } },
+            decision with { ApprovedBy = decision.ApprovedBy with { Id = Uuid.CreateVersion4().ToString() } },
+            decision with { ApprovedBy = decision.ApprovedBy with { Display = "Jordan Reviewer" } },
+            decision with { DecidedAt = AsOf.AddDays(-19) },
+            decision with { SeparationOfDutiesWaiverId = Uuid.CreateVersion4() },
+        };
+        var changed = revisions.Select(revision => Evaluate(AccessReviewSources(revision)))
+            .ToArray();
+        var sameInstantDifferentOffset = Evaluate(AccessReviewSources(decision with
+        {
+            EffectiveFrom = decision.EffectiveFrom.ToOffset(TimeSpan.FromHours(-5)),
+        }));
+
+        // Assert
+        Assert.All(changed, evaluation =>
+            Assert.NotEqual(original.InputFingerprint, evaluation.InputFingerprint));
+        Assert.Equal(original.InputFingerprint, sameInstantDifferentOffset.InputFingerprint);
+    }
+
+    [Fact]
+    public void ShouldSnapshotEffectiveAccessReviewScopeGivenAsOfBoundaryAndTruncatedPopulation()
+    {
+        // Arrange
+        var applicationId = Uuid.CreateVersion4();
+        var includedId = Uuid.CreateVersion4();
+        var excludedId = Uuid.CreateVersion4();
+        var unresolvedId = Uuid.CreateVersion4();
+        var missingScopeId = Uuid.CreateVersion4();
+        var effective = ScopeDecision(applicationId, includedId, 2, "included",
+            AsOf.AddDays(-5), AsOf, AsOf);
+        var earlier = ScopeDecision(applicationId, includedId, 1, "excluded",
+            AsOf.AddDays(-10), AsOf.AddDays(-1), AsOf.AddDays(-10));
+        var futureEffective = ScopeDecision(applicationId, includedId, 3, "excluded",
+            AsOf.AddTicks(1), null, AsOf.AddDays(-1));
+        var futureDecision = ScopeDecision(applicationId, includedId, 4, "excluded",
+            AsOf.AddDays(-1), null, AsOf.AddTicks(1));
+        var mismatchedApplication = ScopeDecision(Uuid.CreateVersion4(), includedId, 5,
+            "excluded", AsOf.AddDays(-1), null, AsOf.AddDays(-1));
+        var mismatchedTenant = ScopeDecision(applicationId, includedId, 6, "excluded",
+            AsOf.AddDays(-1), null, AsOf.AddDays(-1)) with
+        { TenantId = Uuid.CreateVersion4() };
+        var mismatchedSystemInstance = ScopeDecision(applicationId, includedId, 7, "excluded",
+            AsOf.AddDays(-1), null, AsOf.AddDays(-1)) with
+        {
+            SystemInstanceId = Uuid.CreateVersion4(),
+        };
+        var invalidRevision = ScopeDecision(applicationId, includedId, 8, "excluded",
+            AsOf.AddDays(-1), null, AsOf.AddDays(-1)) with
+        { SystemInstanceRevision = 0 };
+        var excluded = ScopeDecision(applicationId, excludedId, 1, "excluded",
+            AsOf.AddDays(-2), AsOf.AddDays(1), AsOf.AddDays(-2));
+        var unresolvedFuture = ScopeDecision(applicationId, unresolvedId, 1, "included",
+            AsOf.AddDays(1), null, AsOf.AddDays(-1));
+        var inputs = new[]
+        {
+            ScopeInput(applicationId, unresolvedId, unresolvedFuture),
+            ScopeInput(applicationId, excludedId, excluded),
+            ScopeInput(applicationId, includedId, futureEffective, effective, earlier,
+                futureDecision, mismatchedApplication, mismatchedTenant,
+                mismatchedSystemInstance, invalidRevision),
+            new ReadinessAccessReviewScopeInput(missingScopeId, null),
+        };
+        var sources = ReadinessSourceSet.Empty with
+        {
+            AccessReviewScopes = inputs,
+            TruncatedFamilies = ["applications_access_review_scope"],
+        };
+
+        // Act
+        var evaluation = Evaluate(sources);
+        var reordered = Evaluate(sources with { AccessReviewScopes = inputs.Reverse().ToArray() });
+
+        // Assert
+        var rows = evaluation.AccessReviewScopes;
+        Assert.Equal(inputs.Select(input => input.SystemInstanceId.ToString())
+            .Order(StringComparer.Ordinal), rows.Select(row => row.SystemInstanceId.ToString()));
+        var includedRow = Assert.Single(rows, row => row.SystemInstanceId == includedId);
+        Assert.Equal("included", includedRow.Status);
+        Assert.True(includedRow.ReviewOverdue);
+        Assert.Equal(effective, includedRow.EffectiveDecision);
+        var excludedRow = Assert.Single(rows, row => row.SystemInstanceId == excludedId);
+        Assert.Equal("excluded", excludedRow.Status);
+        Assert.False(excludedRow.ReviewOverdue);
+        Assert.Equal(excluded, excludedRow.EffectiveDecision);
+        var unresolvedRow = Assert.Single(rows, row => row.SystemInstanceId == unresolvedId);
+        Assert.Equal("unresolved", unresolvedRow.Status);
+        Assert.False(unresolvedRow.ReviewOverdue);
+        Assert.Null(unresolvedRow.EffectiveDecision);
+        var missingScopeRow = Assert.Single(rows, row => row.SystemInstanceId == missingScopeId);
+        Assert.Equal("unresolved", missingScopeRow.Status);
+        Assert.False(missingScopeRow.ReviewOverdue);
+        Assert.Null(missingScopeRow.EffectiveDecision);
+        Assert.Contains(evaluation.Gaps, gap => gap.Kind == "access_review_scope_unresolved" &&
+            gap.Subject == unresolvedId.ToString());
+        Assert.Contains(evaluation.Gaps, gap => gap.Kind == "access_review_scope_overdue" &&
+            gap.Subject == includedId.ToString());
+        Assert.DoesNotContain(evaluation.Gaps, gap => gap.Subject == excludedId.ToString() &&
+            gap.RuleId is ReadinessRules.AccessReviewScopeResolved or
+                ReadinessRules.AccessReviewScopeCurrent);
+        Assert.Contains(evaluation.Gaps, gap => gap.Kind == "source_truncated" &&
+            gap.Subject == "applications_access_review_scope");
+        Assert.Equal(rows, reordered.AccessReviewScopes);
+        Assert.Equal(evaluation.InputFingerprint, reordered.InputFingerprint);
+    }
+
     static ReadinessEvaluation Evaluate(ReadinessSourceSet sources, DateTimeOffset? asOf = null) =>
         ReadinessRules.Evaluate(Program, asOf ?? AsOf, null, [], [],
             new Dictionary<Uuid, ControlVersionView?>(), sources);
+
+    static ReadinessSourceSet AccessReviewSources(AccessReviewScopeDecisionView decision) =>
+        ReadinessSourceSet.Empty with
+        {
+            AccessReviewScopes = [new ReadinessAccessReviewScopeInput(decision.SystemInstanceId,
+                new AccessReviewScopeRecord(decision.TenantId, decision.ApplicationId,
+                    decision.SystemInstanceId, [decision]))],
+        };
+
+    static ReadinessAccessReviewScopeInput ScopeInput(Uuid applicationId,
+        Uuid systemInstanceId, params AccessReviewScopeDecisionView[] decisions) =>
+        new(systemInstanceId, new AccessReviewScopeRecord(Tenant, applicationId,
+            systemInstanceId, decisions));
+
+    static AccessReviewScopeDecisionView ScopeDecision(Uuid applicationId,
+        Uuid systemInstanceId, long sequence, string decision, DateTimeOffset effectiveFrom,
+        DateTimeOffset? reviewBy, DateTimeOffset decidedAt) =>
+        new(Tenant, applicationId, systemInstanceId, 2, Uuid.CreateVersion4(), sequence,
+            decision, $"decision {sequence}", effectiveFrom, reviewBy,
+            ActorReference.ForMember(Uuid.CreateVersion4(), $"Reviewer {sequence}"), decidedAt,
+            Uuid.CreateVersion4());
 
     static ReadinessBoundaryInput Boundary(
         params (DateTimeOffset EffectiveFrom, DateTimeOffset ApprovedAt)[] approvals)

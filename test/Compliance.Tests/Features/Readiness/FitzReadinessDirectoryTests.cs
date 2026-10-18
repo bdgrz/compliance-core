@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.Readiness;
@@ -31,6 +32,12 @@ public sealed class FitzReadinessDirectoryTests
         };
         var evaluation = ReadinessRules.Evaluate(programId, Now, catalog.Edition.EditionId,
             [], [], new Dictionary<Uuid, ControlVersionView?>(), sources, catalog.Edition);
+        var systemInstanceId = Uuid.CreateVersion4();
+        var scopeDecision = new AccessReviewScopeDecisionView(tenantId, Uuid.CreateVersion4(),
+            systemInstanceId, 1, Uuid.CreateVersion4(), 1, "excluded", "Not material",
+            Now.AddDays(-1), null, actor, Now.AddDays(-1), null);
+        var scopeSnapshot = new ReadinessAccessReviewScopeView(systemInstanceId, "excluded",
+            false, scopeDecision);
         var oldGap = new ReadinessGapView(Uuid.CreateVersion4(), "missing_input", "risks",
             "risk_reviewed", "Original historical explanation.",
             [new ReadinessSourceReference("control_version", Uuid.CreateVersion4(), "1")]);
@@ -42,7 +49,10 @@ public sealed class FitzReadinessDirectoryTests
         var current = new ReadinessAssessmentRecorded(tenantId, programId, 2,
             Uuid.CreateVersion4(), ReadinessRules.Version, Now, catalog.Edition.EditionId,
             evaluation.InputFingerprint, evaluation.Inputs, evaluation.Findings, evaluation.Gaps,
-            runnerId, actor, Now);
+            runnerId, actor, Now)
+        {
+            AccessReviewScopes = [scopeSnapshot],
+        };
         var privacyGap = Assert.Single(current.Gaps, gap => gap.Subject == "privacy|privacy_lifecycle_unsupported");
         var plan = new ReadinessGapPlanned(tenantId, programId, 3,
             new ReadinessGapPlanView(privacyGap.GapId, runnerId, new DateOnly(2027, 3, 31),
@@ -92,6 +102,7 @@ public sealed class FitzReadinessDirectoryTests
         Assert.NotNull(storedCurrent);
         Assert.Equal("readiness-rules/12", storedCurrent.RuleVersion);
         Assert.Equal(evaluation.InputFingerprint, storedCurrent.InputFingerprint);
+        Assert.Equal(scopeSnapshot, Assert.Single(storedCurrent.AccessReviewScopes));
         Assert.Equal(current.Gaps.Count, storedCurrent.GapCount);
         Assert.Equal(6, storedCurrent.Gaps.Count(gap => gap.Kind == "catalog_support_gap"));
         AssertGapEqual(privacyGap with { Plan = plan.Plan }, Assert.Single(filtered.Value.Items));

@@ -2233,6 +2233,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Readiness
 
+- [ReadinessAccessReviewScopeView](../../src/Compliance.Common/Features/Readiness/ReadinessAccessReviewScopeView.cs#L6)
 - [ReadinessAnnotationView](../../src/Compliance.Common/Features/Readiness/ReadinessAnnotationView.cs#L10)
 - [ReadinessAssessmentRegistration](../../src/Compliance.Common/Features/Readiness/ReadinessAssessmentRegistration.cs#L5)
 - [ReadinessAssessmentSummaryView](../../src/Compliance.Common/Features/Readiness/ReadinessAssessmentSummaryView.cs#L6)

@@ -85,7 +85,10 @@ sealed class FitzReadinessDirectory(IKvClient client)
             recorded.Inputs, recorded.Findings, gaps,
             recorded.Findings.Count(static finding => finding.Outcome == ReadinessRules.RuleMet),
             gaps.Length, recorded.RunBy, recorded.RunAt, projection.Decision,
-            projection.TypeIEntryDecision);
+            projection.TypeIEntryDecision)
+        {
+            AccessReviewScopes = recorded.AccessReviewScopes,
+        };
     }
 
     public async ValueTask<Result<Page<ReadinessAssessmentSummaryView>>> ListAssessmentsAsync(

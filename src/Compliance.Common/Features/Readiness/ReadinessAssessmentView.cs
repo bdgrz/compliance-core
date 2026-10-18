@@ -13,4 +13,7 @@ public sealed record ReadinessAssessmentView(Uuid TenantId, Uuid ProgramId, Uuid
     string InputFingerprint, IReadOnlyList<ReadinessInputView> Inputs,
     IReadOnlyList<ReadinessFindingView> Findings, IReadOnlyList<ReadinessGapView> Gaps,
     int RuleMetCount, int GapCount, ActorReference RunBy, DateTimeOffset RunAt,
-    ReadinessDecisionView? Decision, TypeIEntryDecisionView? TypeIEntryDecision = null);
+    ReadinessDecisionView? Decision, TypeIEntryDecisionView? TypeIEntryDecision = null)
+{
+    public IReadOnlyList<ReadinessAccessReviewScopeView> AccessReviewScopes { get; init; } = [];
+}
