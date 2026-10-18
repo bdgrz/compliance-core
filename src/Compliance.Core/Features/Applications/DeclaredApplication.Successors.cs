@@ -193,6 +193,8 @@ public sealed partial class DeclaredApplication
             !ApplicationRelationshipIdentity.IsImpactDigest(ev.ImpactDigest) ||
             ev.ApproverMemberId == Uuid.Empty ||
             string.IsNullOrWhiteSpace(ev.ApproverDisplay) || ev.ApprovedAt == default ||
+            ev.Approver != ActorReference.ForMember(ev.ApproverMemberId,
+                ev.ApproverDisplay) ||
             current.View.ChangedBy.Id == ev.ApproverMemberId.ToString())
             throw new InvalidOperationException("An application successor approval is invalid.");
 
