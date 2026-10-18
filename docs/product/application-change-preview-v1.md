@@ -66,7 +66,8 @@ The 200 result contains `tenant_id`, `application_id`,
 `control_draft_references`, up to 200 approved `approved_control_references`,
 up to 200 direct-Application `policy_references`, up to 200
 `evidence_source_references`, up to 200 currently visible outgoing
-`application_relationships`, up to 200 `access_population_references`,
+`application_relationships`, up to 200 `access_population_references`, and up to
+200 `review_campaign_references`,
 `pending_contexts`, and `complete`. A control
 reference contains the stable control, program, applicability-entry, and
 current draft revision identifiers plus the authored subject and rationale; it
@@ -85,6 +86,11 @@ ID and revision, observation time, population revision and status, plus the
 accepted snapshot ID and time when present. Population facts, source text, and
 attestation are not included. `access_population_references_over_limit` is
 added when the bounded result truncates.
+`review_campaign_references` contains the reviewed-system and campaign IDs,
+campaign status, frozen launch snapshot ID and launch time, plus the final
+snapshot ID and completion time when completed. Campaign names, reviewers, and
+review-item data are omitted. `review_campaign_references_over_limit` is added
+when the bounded result truncates.
 `boundary_references_over_limit` and
 `control_draft_references_over_limit` are added when their respective result
 sets exceed 200, rather than silently presenting a truncated set as complete.
@@ -114,10 +120,9 @@ entry without a governed record ID, or a truncated result keeps `policies`
 pending because this slice cannot resolve those relationships authoritatively.
 The policy and Control projections are read under separate tenant source
 checkpoints; they do not establish a global cross-system snapshot. Other pending
-contexts include `application_relationships`, vendors, evidence sources, access
-review campaigns, open work, readiness, and engagements. Historical discarded
-drafts are not in the current-draft reverse indexes; their source event streams
-retain them.
+contexts include `application_relationships`, vendors, open work, readiness,
+and engagements. Historical discarded drafts are not in the current-draft
+reverse indexes; their source event streams retain them.
 
 Evidence support is joined only when the supported record type is `control` or
 `control_version`; both identify the stable Control aggregate ID. Support for
@@ -137,9 +142,16 @@ after reading. Truncated population histories or an incomplete SystemInstance
 list keep `access_populations` pending; a projection that has not caught up
 returns a retryable 409.
 
+The review-campaign projection independently replays campaign launch and
+completion events, indexing one minimal reference per reviewed SystemInstance.
+It shares a tenant checkpoint for those references and campaign status. A stale
+projection returns a retryable 409; truncated references or an incomplete
+SystemInstance list keep `review_campaigns` pending.
+
 The handler hydrates the tenant Application aggregate, checks its exact
 revision against the Fitz Application projection, and checks the boundary,
-Control, approved-Control-version, policy, evidence-support, and access-population
+Control, approved-Control-version, policy, evidence-support, access-population,
+and review-campaign
 projection checkpoints against their corresponding tenant source streams before
 and after reading references. It rechecks the Application and relationship source revisions after
 the projection reads. A source write
