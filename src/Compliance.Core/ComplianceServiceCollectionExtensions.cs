@@ -765,6 +765,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ProposeSystemDescriptionSuccessorHandler>()
             .AddRequestHandler<SignManagementRepresentationLetterHandler>()
             .AddRequestHandler<CreateAuditPackageHandler>()
+            .AddRequestHandler<AmendAuditPackageHandler>()
             .AddRequestHandler<ApproveAuditPackageDisclosureHandler>()
             .AddRequestHandler<ApproveAuditPackageValidationOverrideHandler>()
             .AddRequestHandler<RecordAuditPackageBuildResultHandler>()
