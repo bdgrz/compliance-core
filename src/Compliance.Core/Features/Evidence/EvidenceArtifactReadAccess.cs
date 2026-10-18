@@ -11,12 +11,21 @@ sealed class EvidenceArtifactReadAccess(ITenantMembershipDirectoryReader members
     public async ValueTask<Result> RequireAsync(IRequestContext context, Uuid tenantId, Uuid artifactId,
         CancellationToken ct)
     {
-        var membership = await RequireMembershipAsync(context, tenantId, ct).ConfigureAwait(false);
+        if (RequestActor.IsSystem(context.Actor) ||
+            !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
+            return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
+                "Artifact metadata requires a canonical personal Bdgrz identity."));
+        return await RequireAsync(tenantId, userId, artifactId, ct).ConfigureAwait(false);
+    }
+
+    public async ValueTask<Result> RequireAsync(Uuid tenantId, Uuid userId, Uuid artifactId,
+        CancellationToken ct)
+    {
+        var membership = await RequireMembershipAsync(tenantId, userId, ct).ConfigureAwait(false);
         if (!membership.IsSuccess)
             return membership;
         if (artifactId == Uuid.Empty)
             return Missing();
-        UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId);
         var scope = new AccessGrantScope(AccessGrantScopeKind.SharedResource, artifactId, EvidenceArtifactResourceTypes.Artifact);
         return await permissions.IsAllowedAtAnyScopeAsync(tenantId, userId, RbacIds.Member(tenantId, userId),
             [scope], RbacPermissions.EvidenceArtifactRead, ct).ConfigureAwait(false) ? Result.Success : Missing();
@@ -28,7 +37,13 @@ sealed class EvidenceArtifactReadAccess(ITenantMembershipDirectoryReader members
         if (RequestActor.IsSystem(context.Actor) || !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
             return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
                 "Artifact metadata requires a canonical personal Bdgrz identity."));
-        if (tenantId == Uuid.Empty)
+        return await RequireMembershipAsync(tenantId, userId, ct).ConfigureAwait(false);
+    }
+
+    public async ValueTask<Result> RequireMembershipAsync(Uuid tenantId, Uuid userId,
+        CancellationToken ct)
+    {
+        if (tenantId == Uuid.Empty || userId == Uuid.Empty)
             return Missing();
         var member = await memberships.GetAsync(tenantId.ToString(), userId, ct).ConfigureAwait(false);
         if (member is not { Affiliation: "client_personnel", IsSuspended: false, IsDeprovisioned: false } ||

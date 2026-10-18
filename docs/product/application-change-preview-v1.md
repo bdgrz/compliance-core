@@ -64,7 +64,8 @@ The 200 result contains `tenant_id`, `application_id`,
 `before` and `after`, up to 200 current draft and approved or historical
 `boundary_references`, up to 200 current direct-Application
 `control_draft_references`, up to 200 approved `approved_control_references`,
-up to 200 direct-Application `policy_references`, up to 200 currently visible outgoing
+up to 200 direct-Application `policy_references`, up to 200
+`evidence_source_references`, up to 200 currently visible outgoing
 `application_relationships`, `pending_contexts`, and `complete`. A control
 reference contains the stable control, program, applicability-entry, and
 current draft revision identifiers plus the authored subject and rationale; it
@@ -72,6 +73,12 @@ does not contain full draft content. `complete` is always `false` in this
 slice. `policy_references` contains policy and program IDs, identifier, title,
 revision or approved version, direct applicability subject, effective interval,
 and successor or retirement state. It never contains policy body text.
+`evidence_source_references` contains support-link, Control, and artifact IDs,
+the exact supported record type and revision, the artifact revision, covered
+period, and purpose. It omits artifact content hashes, sufficiency rationales,
+and actor details. Each row is returned only when the caller has the exact
+`evidence_artifact.read` grant for that artifact. Hidden artifacts are omitted
+without disclosing their IDs or metadata, and keep `evidence_sources` pending.
 `boundary_references_over_limit` and
 `control_draft_references_over_limit` are added when their respective result
 sets exceed 200, rather than silently presenting a truncated set as complete.
@@ -106,11 +113,22 @@ populations, review campaigns, open work, readiness, and engagements. Historical
 discarded drafts are not in the current-draft reverse indexes; their source
 event streams retain them.
 
+Evidence support is joined only when the supported record type is `control` or
+`control_version`; both identify the stable Control aggregate ID. Support for
+`control_occurrence`, `control_evaluation`, or `period` cannot yet be mapped to
+an affected Application control and keeps `evidence_sources` pending. The
+preview reads at most 200 support links, and reports
+`evidence_source_references_over_limit` when it truncates. Incomplete or
+truncated affected-Control references, a missing evidence projection or exact
+artifact access check, and import-worker reads without a personal user identity
+also keep this context pending. Evidence links use their own tenant checkpoint;
+their freshness fence does not create a global cross-system snapshot.
+
 The handler hydrates the tenant Application aggregate, checks its exact
 revision against the Fitz Application projection, and checks the boundary,
-Control, approved-Control-version, and policy reverse-projection checkpoints
-against their corresponding tenant source streams before and after reading
-references. It rechecks the Application and relationship source revisions after
+Control, approved-Control-version, policy, and evidence-support reverse-projection
+checkpoints against their corresponding tenant source streams before and after
+reading references. It rechecks the Application and relationship source revisions after
 the projection reads. A source write
 detected during the read returns a retryable 409. A missing or wrong-tenant Application returns 404
 without disclosing another tenant. Invalid request fields return 400. A stale
