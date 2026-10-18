@@ -161,15 +161,14 @@ public sealed class TypeIIPlan : Aggregate
         if (!ValidActor(approverMemberId, approverDisplay, approvedAt))
             return Invalid("Plan approval requires an attributed executive.");
         rationale = Clean(rationale);
-        approverRole = Clean(approverRole);
+        approverRole = Clean(approverRole).ToLowerInvariant();
         var version = current.Versions.FirstOrDefault(item => item.Version == planVersion);
         if (version is null)
             return CommandFailure.MissingRecord("The Type II plan version was not found.");
         var prior = current.Approvals.FirstOrDefault(item => item.PlanVersion == planVersion);
         if (prior is not null)
             return prior.Rationale == rationale && prior.ApprovedByMemberId == approverMemberId &&
-                   prior.ApproverRole == approverRole && prior.ApproverDisplay == approverDisplay.Trim() &&
-                   prior.ApprovedAt == approvedAt
+                   StringComparer.OrdinalIgnoreCase.Equals(prior.ApproverRole, approverRole)
                 ? null
                 : CommandFailure.StateConflict("A reviewed plan version has one immutable approval.");
         if (expectedRevision != Revision)

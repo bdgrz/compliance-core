@@ -70,6 +70,33 @@ public sealed class TypeIIPlanTests
         Assert.Equal(ApproverId, Assert.Single(plan.Current!.Approvals).ApprovedByMemberId);
     }
 
+    [Fact]
+    public void ShouldTreatRepeatedExecutiveDecisionAsIdempotentGivenLaterRetryTime()
+    {
+        // Arrange
+        var plan = NewPlan();
+        Assert.Null(plan.Review(plan.Revision, 1, "approve",
+            "All owners and opening gaps are assigned", ReviewerId, "Reviewer", Now.AddDays(1)));
+        Assert.Null(plan.Approve(plan.Revision, 1, "Approved controlled start",
+            ApproverId, "CISO", "Executive", Now.AddDays(2)));
+        var revision = plan.Revision;
+
+        // Act
+        var retry = plan.Approve(plan.Revision, 1, "Approved controlled start",
+            ApproverId, "ciso", "Updated executive display", Now.AddDays(3));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(revision, plan.Revision);
+        Assert.Single(plan.Current!.Approvals);
+        Assert.Equal(Now.AddDays(2), plan.Current.Approvals[0].ApprovedAt);
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(plan.Approve(plan.Revision, 1,
+                "Changed the approval rationale", ApproverId, "CISO", "Executive",
+                Now.AddDays(4))).Code);
+        Assert.Equal(revision, plan.Revision);
+    }
+
     static TypeIIPlanAggregate NewPlan()
     {
         var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);
