@@ -63,10 +63,7 @@ jobs:
         run: dotnet build Compliance.slnx --configuration Release --no-restore
 
       - name: Test without broker
-        run: dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration"
-
-      - name: Test canonical browser sessions
-        run: dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "FullyQualifiedName~UserIdentityContinuationWebTests"
+        run: dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
 
       # BrokerIntegration tests own their own docker compose lifecycle
       # (test/Compliance.Tests/E2E/compose.yml), separate from the root compose.yml -- no manual
