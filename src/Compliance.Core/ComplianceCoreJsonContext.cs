@@ -935,6 +935,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(ReadinessDecisionView))]
 [JsonSerializable(typeof(ReadinessFindingView))]
 [JsonSerializable(typeof(ReadinessInputView))]
+[JsonSerializable(typeof(ReadinessAccessReviewScopeView))]
 [JsonSerializable(typeof(ReadinessSourceReference))]
 [JsonSerializable(typeof(ReadinessAssessmentRecorded))]
 [JsonSerializable(typeof(ReadinessGapPlanned))]

@@ -166,7 +166,9 @@ public static class ReadinessRules
         inputs.Add(new ReadinessInputView("controls", "assessed",
             effectiveControls.Values.Count(static control => control is not null),
             "Approved control versions effective on the as-of date for mapped controls."));
-        EvaluateSources(programId, asOf, sources, catalogEdition, inputs, gaps, fingerprint);
+        var accessReviewScopes = new List<ReadinessAccessReviewScopeView>();
+        EvaluateSources(programId, asOf, sources, catalogEdition, inputs, gaps, fingerprint,
+            accessReviewScopes);
         foreach (var family in UnassessedFamilies)
         {
             inputs.Add(new ReadinessInputView(family, "not_assessed", 0,
@@ -178,7 +180,10 @@ public static class ReadinessRules
         }
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(fingerprint.ToString()));
         return new ReadinessEvaluation(inputs, findings, gaps,
-            Convert.ToHexStringLower(hash));
+            Convert.ToHexStringLower(hash))
+        {
+            AccessReviewScopes = accessReviewScopes,
+        };
     }
 
     static void EvaluateCatalogSupport(Uuid programId, CriteriaCatalogEdition edition,
@@ -220,7 +225,8 @@ public static class ReadinessRules
 
     static void EvaluateSources(Uuid programId, DateTimeOffset asOf, ReadinessSourceSet sources,
         CriteriaCatalogEdition? catalogEdition,
-        List<ReadinessInputView> inputs, List<ReadinessGapView> gaps, StringBuilder fingerprint)
+        List<ReadinessInputView> inputs, List<ReadinessGapView> gaps, StringBuilder fingerprint,
+        List<ReadinessAccessReviewScopeView> accessReviewScopes)
     {
         var asOfDate = DateOnly.FromDateTime(asOf.UtcDateTime);
 
@@ -303,7 +309,8 @@ public static class ReadinessRules
         EvaluateWorkforceRosterSnapshot(programId, sources, inputs, gaps, fingerprint);
 
         EvaluateProviders(programId, asOf, sources, inputs, gaps, fingerprint);
-        EvaluateAccessReviewScopes(programId, asOf, sources, inputs, gaps, fingerprint);
+        EvaluateAccessReviewScopes(programId, asOf, sources, inputs, gaps, fingerprint,
+            accessReviewScopes);
         EvaluateTechnologyInventory(programId, asOf, sources, inputs, gaps, fingerprint);
 
         foreach (var family in sources.TruncatedFamilies.Order(StringComparer.Ordinal))
@@ -481,7 +488,8 @@ public static class ReadinessRules
 
     static void EvaluateAccessReviewScopes(Uuid programId, DateTimeOffset asOf,
         ReadinessSourceSet sources, List<ReadinessInputView> inputs,
-        List<ReadinessGapView> gaps, StringBuilder fingerprint)
+        List<ReadinessGapView> gaps, StringBuilder fingerprint,
+        List<ReadinessAccessReviewScopeView> snapshots)
     {
         var scopes = sources.AccessReviewScopes
             .OrderBy(static input => input.SystemInstanceId.ToString(), StringComparer.Ordinal)
@@ -494,28 +502,31 @@ public static class ReadinessRules
         {
             var instanceReference = new ReadinessSourceReference("system_instance",
                 input.SystemInstanceId, null);
-            var scope = input.Scope;
-            var decisions = (scope?.Decisions ?? [])
+            var scope = input.Scope is { } candidate &&
+                        candidate.SystemInstanceId == input.SystemInstanceId
+                ? candidate
+                : null;
+            var effective = (scope?.Decisions ?? [])
                 .Where(decision => scope is not null &&
                                    decision.TenantId == scope.TenantId &&
                                    decision.ApplicationId == scope.ApplicationId &&
-                                   decision.SystemInstanceId == input.SystemInstanceId &&
+                                   decision.SystemInstanceId == scope.SystemInstanceId &&
                                    decision.SystemInstanceRevision > 0 &&
                                    decision.DecidedAt <= asOf && decision.EffectiveFrom <= asOf)
                 .OrderBy(static decision => decision.Sequence)
-                .ToArray();
-            var effective = decisions.LastOrDefault();
-            foreach (var decision in decisions)
-                fingerprint.Append("access-review-scope|").Append(input.SystemInstanceId)
-                    .Append('|').Append(decision.DecisionId).Append('|').Append(decision.Sequence)
-                    .Append('|').Append(decision.SystemInstanceRevision).Append('|')
-                    .Append(decision.Decision).Append('|')
-                    .Append(decision.EffectiveFrom.ToString("O", CultureInfo.InvariantCulture))
-                    .Append('|').Append(decision.ReviewBy?.ToString("O", CultureInfo.InvariantCulture))
-                    .Append('|').Append(decision.DecidedAt.ToString("O", CultureInfo.InvariantCulture))
-                    .Append('\n');
+                .ThenBy(static decision => decision.DecisionId.ToString(), StringComparer.Ordinal)
+                .LastOrDefault();
+            var effectiveDecision = effective is { Decision: "included" or "excluded" }
+                ? effective
+                : null;
+            var status = effectiveDecision?.Decision ?? "unresolved";
+            var reviewOverdue = effectiveDecision?.ReviewBy is { } reviewBy && reviewBy <= asOf;
+            var snapshot = new ReadinessAccessReviewScopeView(input.SystemInstanceId, status,
+                reviewOverdue, effectiveDecision);
+            snapshots.Add(snapshot);
+            AppendAccessReviewScopeFingerprint(fingerprint, snapshot);
 
-            if (effective is null || effective.Decision is not ("included" or "excluded"))
+            if (status == "unresolved")
             {
                 gaps.Add(new ReadinessGapView(GapIdFor(programId, AccessReviewScopeResolved,
                         input.SystemInstanceId.ToString()), "access_review_scope_unresolved",
@@ -526,14 +537,63 @@ public static class ReadinessRules
             }
 
             var decisionReference = new ReadinessSourceReference("access_review_scope_decision",
-                effective.DecisionId, effective.Sequence.ToString(CultureInfo.InvariantCulture));
-            if (effective.ReviewBy is { } reviewBy && reviewBy <= asOf)
+                effectiveDecision!.DecisionId,
+                effectiveDecision.Sequence.ToString(CultureInfo.InvariantCulture));
+            if (reviewOverdue)
                 gaps.Add(new ReadinessGapView(GapIdFor(programId, AccessReviewScopeCurrent,
                         input.SystemInstanceId.ToString()), "access_review_scope_overdue",
                     input.SystemInstanceId.ToString(), AccessReviewScopeCurrent,
-                    $"The effective access-review scope decision for system instance {input.SystemInstanceId} was due for review by {reviewBy:O}.",
+                    $"The effective access-review scope decision for system instance {input.SystemInstanceId} was due for review by {effectiveDecision.ReviewBy:O}.",
                     [instanceReference, decisionReference]));
         }
+    }
+
+    static void AppendAccessReviewScopeFingerprint(StringBuilder fingerprint,
+        ReadinessAccessReviewScopeView snapshot)
+    {
+        fingerprint.Append("access-review-scope-row\n");
+        AppendFingerprintField(fingerprint, snapshot.SystemInstanceId.ToString());
+        AppendFingerprintField(fingerprint, snapshot.Status);
+        AppendFingerprintField(fingerprint, snapshot.ReviewOverdue ? "true" : "false");
+        var decision = snapshot.EffectiveDecision;
+        AppendFingerprintField(fingerprint, decision is null ? null : "present");
+        if (decision is null)
+            return;
+
+        AppendFingerprintField(fingerprint, decision.TenantId.ToString());
+        AppendFingerprintField(fingerprint, decision.ApplicationId.ToString());
+        AppendFingerprintField(fingerprint, decision.SystemInstanceId.ToString());
+        AppendFingerprintField(fingerprint,
+            decision.SystemInstanceRevision.ToString(CultureInfo.InvariantCulture));
+        AppendFingerprintField(fingerprint, decision.DecisionId.ToString());
+        AppendFingerprintField(fingerprint,
+            decision.Sequence.ToString(CultureInfo.InvariantCulture));
+        AppendFingerprintField(fingerprint, decision.Decision);
+        AppendFingerprintField(fingerprint, decision.Reason);
+        AppendFingerprintField(fingerprint, CanonicalTimestamp(decision.EffectiveFrom));
+        AppendFingerprintField(fingerprint, decision.ReviewBy is { } reviewBy
+            ? CanonicalTimestamp(reviewBy)
+            : null);
+        AppendFingerprintField(fingerprint, decision.ApprovedBy.Kind);
+        AppendFingerprintField(fingerprint, decision.ApprovedBy.Id);
+        AppendFingerprintField(fingerprint, decision.ApprovedBy.Display);
+        AppendFingerprintField(fingerprint, CanonicalTimestamp(decision.DecidedAt));
+        AppendFingerprintField(fingerprint, decision.SeparationOfDutiesWaiverId?.ToString());
+    }
+
+    static string CanonicalTimestamp(DateTimeOffset value) =>
+        value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+
+    static void AppendFingerprintField(StringBuilder fingerprint, string? value)
+    {
+        if (value is null)
+        {
+            fingerprint.Append("-1:\n");
+            return;
+        }
+
+        fingerprint.Append(value.Length.ToString(CultureInfo.InvariantCulture)).Append(':')
+            .Append(value).Append('\n');
     }
 
     static bool IsApplicableProviderCsoc(CommitmentVersionView? version) =>

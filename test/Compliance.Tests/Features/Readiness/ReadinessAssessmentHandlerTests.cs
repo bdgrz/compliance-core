@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Criteria;
@@ -48,6 +49,40 @@ public sealed class ReadinessAssessmentHandlerTests
             g.Subject == "evidence");
         Assert.Null(assessment.Decision);
         Assert.Equal(64, assessment.InputFingerprint.Length);
+    }
+
+    [Fact]
+    public async Task ShouldPersistAccessReviewScopeSnapshotGivenReadinessAssessmentRun()
+    {
+        // Arrange
+        var applicationId = Uuid.CreateVersion4();
+        var systemInstanceId = Uuid.CreateVersion4();
+        var approverId = Uuid.CreateVersion4();
+        var fixture = await Fixture.CreateAsync(sourceFactory: (tenantId, _, asOf) =>
+        {
+            var decision = new AccessReviewScopeDecisionView(tenantId,
+                applicationId, systemInstanceId, 2, Uuid.CreateVersion4(), 3, "included",
+                "Quarterly access review", asOf.AddDays(-30), asOf, ActorReference.ForMember(
+                    approverId, "Avery Reviewer"), asOf, Uuid.CreateVersion4());
+            return ReadinessSourceSet.Empty with
+            {
+                AccessReviewScopes = [new ReadinessAccessReviewScopeInput(systemInstanceId,
+                    new AccessReviewScopeRecord(tenantId, applicationId,
+                        systemInstanceId, [decision]))],
+            };
+        });
+
+        // Act
+        var assessment = await fixture.RunAsync(0);
+        var stored = await fixture.GetAsync(assessment.AssessmentId);
+
+        // Assert
+        var row = Assert.Single(assessment.AccessReviewScopes);
+        Assert.Equal(systemInstanceId, row.SystemInstanceId);
+        Assert.Equal("included", row.Status);
+        Assert.True(row.ReviewOverdue);
+        Assert.Equal(approverId.ToString(), row.EffectiveDecision!.ApprovedBy.Id);
+        Assert.Equal(assessment.AccessReviewScopes, stored.AccessReviewScopes);
     }
 
     [Fact]

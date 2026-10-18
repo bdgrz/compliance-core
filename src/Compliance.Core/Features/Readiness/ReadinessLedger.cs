@@ -74,7 +74,10 @@ public sealed class ReadinessLedger : Aggregate
         RaiseEvent(new ReadinessAssessmentRecorded(_tenantId, Id, Revision + 1, assessmentId,
             ReadinessRules.Version, asOf, editionId, evaluation.InputFingerprint,
             evaluation.Inputs, evaluation.Findings, evaluation.Gaps, runnerMemberId,
-            ActorReference.ForMember(runnerMemberId, runnerDisplay), runAt));
+            ActorReference.ForMember(runnerMemberId, runnerDisplay), runAt)
+        {
+            AccessReviewScopes = evaluation.AccessReviewScopes,
+        });
         return null;
     }
 
@@ -292,7 +295,10 @@ public sealed class ReadinessLedger : Aggregate
             ev.RuleVersion, ev.AsOf, ev.EditionId, ev.InputFingerprint, ev.Inputs, ev.Findings,
             gaps, ev.Findings.Count(static finding => finding.Outcome == ReadinessRules.RuleMet),
             gaps.Length, ev.RunBy, ev.RunAt, assessment.Decision,
-            _entryDecisions.Find(decision => decision.AssessmentId == assessmentId));
+            _entryDecisions.Find(decision => decision.AssessmentId == assessmentId))
+        {
+            AccessReviewScopes = ev.AccessReviewScopes,
+        };
     }
 
     public IReadOnlyList<ReadinessGapView>? ReadGaps(Uuid assessmentId) =>
