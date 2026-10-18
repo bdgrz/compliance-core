@@ -762,6 +762,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(AccessReviewScopeRecord))]
 [JsonSerializable(typeof(ApplicationChangePreview))]
 [JsonSerializable(typeof(ApplicationVendorReferenceView))]
+[JsonSerializable(typeof(ApplicationReadinessReferenceView))]
 [JsonSerializable(typeof(ApplicationPolicyReferenceView))]
 [JsonSerializable(typeof(Page<ApplicationPolicyReferenceView>))]
 [JsonSerializable(typeof(ApplicationPolicyReferenceState))]

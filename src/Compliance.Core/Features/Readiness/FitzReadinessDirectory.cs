@@ -91,6 +91,21 @@ sealed class FitzReadinessDirectory(IKvClient client)
         };
     }
 
+    public async ValueTask<Result<Uuid?>> GetLatestAssessmentIdAsync(Uuid tenantId, Uuid programId,
+        CancellationToken ct = default)
+    {
+        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        var program = await ReadinessDirectorySchema.Programs.GetAsync(tx, programId, ct)
+            .ConfigureAwait(false);
+        if (program is null)
+            return Result<Uuid?>.Success(null);
+        if (program.TenantId != tenantId || program.ProgramId != programId ||
+            program.LatestAssessmentId == Uuid.Empty)
+            return Result<Uuid?>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The readiness program projection is inconsistent.", isTransient: true));
+        return Result<Uuid?>.Success(program.LatestAssessmentId);
+    }
+
     public async ValueTask<Result<Page<ReadinessAssessmentSummaryView>>> ListAssessmentsAsync(
         Uuid tenantId, Uuid programId, int? limit, string? cursor,
         CancellationToken ct = default)
