@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -59,6 +61,61 @@ public sealed class ExaminationEngagementCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldReadCurrentEngagementGivenTenantProgramAndEngagementIdentity()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedEngagementAsync();
+        var request = new GetExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId);
+
+        // Act
+        var result = await new GetExaminationEngagementHandler(fixture.Directory)
+            .HandleAsync(fixture.Context(request), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(fixture.TenantId, result.Value.TenantId);
+        Assert.Equal(fixture.ProgramId, result.Value.ProgramId);
+        Assert.Equal(fixture.EngagementId, result.Value.ExaminationEngagementId);
+        Assert.Equal("draft", result.Value.Status);
+        Assert.Equal(1, result.Value.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldReturnNotFoundGivenUnknownEngagement()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var request = new GetExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId);
+
+        // Act
+        var result = await new GetExaminationEngagementHandler(fixture.Directory)
+            .HandleAsync(fixture.Context(request), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldReturnNotFoundGivenEngagementFromDifferentProgram()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedEngagementAsync();
+        var request = new GetExaminationEngagement(fixture.TenantId, Uuid.CreateVersion4(),
+            fixture.EngagementId);
+
+        // Act
+        var result = await new GetExaminationEngagementHandler(fixture.Directory)
+            .HandleAsync(fixture.Context(request), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+    }
+
+    [Fact]
     public async Task ShouldRejectStaleRevisionWithoutAppendingGivenDraftRevision()
     {
         // Arrange
@@ -113,6 +170,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
+        public FitzExaminationEngagementDirectory Directory { get; }
         public TimeProvider Clock { get; } = new FixedTimeProvider(Now);
 
         ClaimsPrincipal Actor => new(new ClaimsIdentity(
@@ -124,6 +182,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(new InMemoryEventStore());
             services.AddPortia();
+            Directory = new FitzExaminationEngagementDirectory(new InMemoryKvClient());
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
@@ -146,6 +205,13 @@ public sealed class ExaminationEngagementCommandHandlerTests
                 new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
                 RbacIds.Member(TenantId, UserId), "Examiner", Now));
             await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
+            var identity = new CheckpointIdentity(FitzExaminationEngagementDirectory.ProjectorName,
+                EventStreamPattern.ForPattern(TenantId.ToString()));
+            await using var batch = await Directory.BeginAsync(new ProjectionBatchContext(identity,
+                ProjectionCheckpoint.Start));
+            await Directory.ApplyAsync(new ExaminationEngagementOpened(TenantId,
+                aggregate.Current!, Now));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
         public async ValueTask DisposeAsync()
