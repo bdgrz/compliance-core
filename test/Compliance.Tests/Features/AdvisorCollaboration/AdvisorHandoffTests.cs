@@ -200,6 +200,25 @@ public sealed class AdvisorHandoffTests
         Assert.Equal("Updated the draft", Assert.Single(feedback.Responses!).Body);
     }
 
+    [Fact]
+    public void ShouldRejectEmptyFeedbackIdentityGivenResolution()
+    {
+        // Arrange
+        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
+        Assert.True(handoff.Create("Review", [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())],
+            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now).IsSuccess);
+        var eventCount = new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents.Count;
+
+        // Act
+        var result = handoff.ResolveFeedback(Uuid.Empty,
+            ActorReference.ForMember(LeadId, "Lead"), Now.AddMinutes(1));
+        var pending = new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents;
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Equal(eventCount, pending.Count);
+    }
+
     [Theory]
     [InlineData("closed")]
     [InlineData("revoked")]

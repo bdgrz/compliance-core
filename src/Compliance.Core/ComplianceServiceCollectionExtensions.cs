@@ -586,6 +586,11 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IAdvisorHandoffDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzAdvisorHandoffDirectory>());
         services.AddScoped<AdvisorHandoffListReadConsistency>();
+        services.AddScoped<FitzAdvisorFeedbackWorkItemDirectory>();
+        services.AddScoped<IAdvisorFeedbackWorkItemProjection>(provider =>
+            provider.GetRequiredService<FitzAdvisorFeedbackWorkItemDirectory>());
+        services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzAdvisorFeedbackWorkItemDirectory>());
         services.AddScoped<AuditorResponseEvidence>();
         services.AddScoped<DirectoryReevaluationDiscovery>();
         services.AddScoped<ProfessionalDutyAdministrationAuthorizer>();
@@ -838,6 +843,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<CloseAdvisorHandoffHandler>()
             .AddRequestHandler<RevokeAdvisorHandoffHandler>()
             .AddRequestHandler<RespondToAdvisorFeedbackHandler>()
+            .AddRequestHandler<ResolveAdvisorFeedbackHandler>()
             .AddRequestHandler<RecordAdvisorFeedbackHandler>()
             .AddRequestHandler<GetAdvisorRequestHandler>()
             .AddRequestHandler<GetAdvisorSharedSourceHandler>()
@@ -1328,6 +1334,8 @@ public static class ComplianceServiceCollectionExtensions
                 FitzExaminationEngagementDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AdvisorHandoffDirectoryProjector>(
                 FitzAdvisorHandoffDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<AdvisorFeedbackWorkItemProjector>(
+                FitzAdvisorFeedbackWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ControlDraftDirectoryV2Projector>("ControlDraftDirectoryV2",
                 WorkloadScope.PerTenant)
             .AddProjector<ControlDraftHistoryDirectoryV1Projector>(

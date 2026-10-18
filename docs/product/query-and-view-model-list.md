@@ -17,7 +17,7 @@ The 55 planned query contracts and 54 response-view types listed below now have 
 | [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorRequest.cs#L9) | [AdvisorRequestView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestView.cs#L6) | One scoped advisor handoff, including selected immutable record versions and lifecycle state. |
 | [GetAdvisorSharedSource](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorSharedSource.cs#L9) | [AdvisorSharedSourceView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorSharedSourceView.cs#L8) | Current content for one exact control, policy, evidence artifact, readiness gap, or boundary question selected in an active handoff. |
 | [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) | `Page<[AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)>` | Scoped handoff directory with status and review readiness. |
-| [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) | `Page<[AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)>` | Feedback and responses for a handoff or its selected records. |
+| [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) | `Page<[AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)>` | Feedback, corrections, responses, and resolution actor/time for a handoff or selected record. |
 
 `GetAdvisorRequest`, `GetAdvisorSharedSource`, `ListAdvisorRequests`, and `ListAdvisorFeedback`
 are available through HTTP and MCP. The handoff directory is a Fitz projection over handoff and
@@ -28,9 +28,11 @@ approved versions, and evidence requires the exact current program support link.
 mark a selected validation historical when its source is superseded or otherwise no longer current.
 Evidence bytes still flow through the governed artifact-download operation, which accepts the exact
 handoff selection and rechecks its authorization. Firm Advisors can read only an unexpired
-`ready_for_review` handoff after current engagement or program-scoped guest-grant checks.
-Feedback-to-work-queue assignment and repeated-handoff change comparison remain story-level R2-08
-gaps.
+`ready_for_review` handoff after current engagement or program-scoped guest-grant checks. Internal
+`comment` and `change_request` feedback appears as program-manager work; response changes its next
+action to resolution, and resolution removes it from active work while preserving feedback history.
+`validated` feedback remains review history, never a work item. Repeated-handoff change comparison
+remains a story-level R2-08 gap.
 
 ### Type I engagement — T1-01
 

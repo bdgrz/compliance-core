@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Tests.Features.Readiness;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Controls;
@@ -31,6 +32,76 @@ namespace Bdgrz.Compliance.Tests.Features.Work;
 
 public sealed class WorkSourceCompositionTests
 {
+    [Fact]
+    public async Task ShouldSurfaceAdvisorFeedbackAsAccountableWorkGivenProjectedHandoffEvents()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var ownedSource = fixture.Provider;
+        var handoffId = Uuid.CreateVersion4();
+        var feedbackId = Uuid.CreateVersion4();
+        var recordId = Uuid.CreateVersion4();
+        var recordVersionId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow.AddMinutes(-2);
+        var manager = ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead");
+        var advisor = ActorReference.ForMember(Uuid.CreateVersion4(), "Assigned Advisor");
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new AdvisorHandoff(fixture.TenantId, fixture.ProgramId, handoffId), handoff =>
+            {
+                Assert.True(handoff.Create("Review control ownership",
+                    [new AdvisorRecordVersion(recordId, recordVersionId)], fixture.Today.AddDays(30),
+                    manager, now).IsSuccess);
+                Assert.True(handoff.MarkReadyForReview(1, manager, now.AddMinutes(1)).IsSuccess);
+                Assert.True(handoff.RecordFeedback(feedbackId, recordId, recordVersionId,
+                    "change_request", "Clarify control ownership.", advisor,
+                    now.AddMinutes(2)).IsSuccess);
+                return Result.Success;
+            });
+
+        await using var provider = CreateProvider(fixture);
+        RequestScenario Scenario() => RequestScenario.For(provider)
+            .GivenActor(ProgramManagementServices.Actor(fixture.LeadUserId));
+        var list = new ListWork(fixture.TenantId, fixture.ProgramId, "all");
+
+        // Act
+        var lag = await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
+        await CatchUpAsync(provider, fixture.TenantId);
+        var pending = await Scenario().When(list).ExpectSuccess();
+        var feedbackWork = Assert.Single(pending.Value.Items,
+            item => item.Kind == WorkSource.AdvisorFeedback);
+        var detail = await Scenario().When(new GetWorkItem(fixture.TenantId,
+            fixture.ProgramId, feedbackWork.WorkItemId)).ExpectSuccess();
+        await using var resolutionScope = provider.CreateAsyncScope();
+        var bus = resolutionScope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var resolve = new ResolveAdvisorFeedback(fixture.TenantId, fixture.ProgramId,
+            handoffId, feedbackId);
+        var outsiderResolution = await bus.DispatchAsync(resolve,
+            new RequestDispatchContext(ProgramManagementServices.Actor(fixture.OutsiderUserId),
+                new HttpInvocation("POST", "/synthetic/advisor-feedback/resolution",
+                    "/synthetic/advisor-feedback/resolution", "synthetic")), CancellationToken.None);
+        var resolution = await bus.DispatchAsync(resolve,
+                new RequestDispatchContext(ProgramManagementServices.Actor(fixture.LeadUserId),
+                    new HttpInvocation("POST", "/synthetic/advisor-feedback/resolution",
+                        "/synthetic/advisor-feedback/resolution", "synthetic")), CancellationToken.None);
+        var resolutionLag = await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
+        await CatchUpAsync(provider, fixture.TenantId);
+        var resolved = await Scenario().When(list).ExpectSuccess();
+
+        // Assert
+        Assert.True(lag.Error!.IsTransient);
+        Assert.Equal(WorkSource.AdvisorFeedback, feedbackWork.Kind);
+        Assert.Equal(feedbackId, feedbackWork.SourceId);
+        Assert.Equal("respond_to_feedback", feedbackWork.NextAction);
+        Assert.Contains($"/feedback/{feedbackId}/responses", feedbackWork.ActionPath,
+            StringComparison.Ordinal);
+        Assert.Equal(feedbackWork, detail.Value.Item);
+        Assert.Equal(RequestErrorKind.Forbidden, outsiderResolution.Error?.Kind);
+        Assert.True(resolution.IsSuccess, resolution.Error?.Message);
+        Assert.True(resolutionLag.Error!.IsTransient);
+        Assert.DoesNotContain(resolved.Value.Items,
+            item => item.WorkItemId == feedbackWork.WorkItemId);
+    }
+
     [Fact]
     public async Task ShouldReconcileCountsDetailsAndSourceActionGivenAllProductionReaders()
     {
@@ -1260,6 +1331,25 @@ public sealed class WorkSourceCompositionTests
         await SeedCommitmentDecisionWorkAsync(fixture);
         await SeedRiskGovernanceWorkAsync(fixture);
         await SeedRiskAcceptanceWorkAsync(fixture);
+        var advisorFeedbackId = Uuid.CreateVersion4();
+        var advisorHandoffId = Uuid.CreateVersion4();
+        var advisorRecordId = Uuid.CreateVersion4();
+        var advisorVersionId = Uuid.CreateVersion4();
+        var advisorNow = DateTimeOffset.UtcNow.AddMinutes(-2);
+        var lead = ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead");
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new AdvisorHandoff(fixture.TenantId, fixture.ProgramId, advisorHandoffId), handoff =>
+            {
+                Assert.True(handoff.Create("Review control ownership",
+                    [new AdvisorRecordVersion(advisorRecordId, advisorVersionId)],
+                    fixture.Today.AddDays(30), lead, advisorNow).IsSuccess);
+                Assert.True(handoff.MarkReadyForReview(1, lead, advisorNow.AddMinutes(1)).IsSuccess);
+                Assert.True(handoff.RecordFeedback(advisorFeedbackId, advisorRecordId,
+                    advisorVersionId, "change_request", "Clarify control ownership.",
+                    ActorReference.ForMember(Uuid.CreateVersion4(), "Assigned Advisor"),
+                    advisorNow.AddMinutes(2)).IsSuccess);
+                return Result.Success;
+            });
         await SeedPolicyCampaignWorkAsync(fixture, "policy");
         await SeedPolicyCampaignWorkAsync(fixture, "training");
         await CatchUpRiskDraftProjectionAsync(provider, fixture.TenantId);
@@ -1389,7 +1479,7 @@ public sealed class WorkSourceCompositionTests
         {
             var pattern = reader.SourcePattern(tenantId);
             var checkpoint = await reader.LoadCheckpointAsync(tenantId);
-            await using var batch = await store.BeginAsync(new ProjectionBatchContext(
+            await using var batch = await ((IProjectionStore)store).BeginAsync(new ProjectionBatchContext(
                 new CheckpointIdentity(reader.ProjectorName, pattern), checkpoint));
             var cursor = checkpoint.Cursor;
             await foreach (var record in events.ReadAsync(pattern, cursor, CancellationToken.None))

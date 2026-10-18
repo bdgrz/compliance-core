@@ -572,6 +572,63 @@ public sealed class AdvisorHandoffCommandHandlerTests
         Assert.Equal(3, saved.Revision);
     }
 
+    [Fact]
+    public async Task ShouldResolveFeedbackOnceGivenPersonalHttpActor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, feedbackId) = await fixture.SeedHandoffWithFeedbackAsync();
+        var request = new ResolveAdvisorFeedback(fixture.TenantId, fixture.ProgramId,
+            handoffId, feedbackId);
+        var handler = new ResolveAdvisorFeedbackHandler(fixture.Executor, fixture.Clock);
+
+        // Act
+        var first = await handler.HandleAsync(Fixture.Context(fixture.UserId, request),
+            CancellationToken.None);
+        var retry = await handler.HandleAsync(Fixture.Context(fixture.UserId, request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+        var listed = await new ListAdvisorFeedbackHandler(fixture.Reader,
+                new AcceptCurrentAdvisorRecordVersions())
+            .HandleAsync(new Cntryl.Portia.RequestContext<ListAdvisorFeedback>(
+                new ListAdvisorFeedback(fixture.TenantId, fixture.ProgramId, handoffId),
+                RequestActor.System), CancellationToken.None);
+
+        // Assert
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        var feedback = Assert.Single(saved.ReadFeedback());
+        Assert.Equal(Now.AddMinutes(2), feedback.ResolvedAt);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId).ToString(),
+            feedback.ResolvedBy?.Id);
+        Assert.Equal(4, saved.Revision);
+        Assert.True(listed.IsSuccess, listed.Error?.Message);
+        Assert.Equal(feedback.ResolvedBy, Assert.Single(listed.Value.Items).ResolvedBy);
+    }
+
+    [Fact]
+    public async Task ShouldRejectSystemDispatchGivenAdvisorFeedbackResolution()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, feedbackId) = await fixture.SeedHandoffWithFeedbackAsync();
+        var request = new ResolveAdvisorFeedback(fixture.TenantId, fixture.ProgramId,
+            handoffId, feedbackId);
+
+        // Act
+        var result = await new ResolveAdvisorFeedbackHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(new Cntryl.Portia.RequestContext<ResolveAdvisorFeedback>(request,
+                RequestActor.System), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Null(Assert.Single(saved.ReadFeedback()).ResolvedAt);
+        Assert.Equal(3, saved.Revision);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;

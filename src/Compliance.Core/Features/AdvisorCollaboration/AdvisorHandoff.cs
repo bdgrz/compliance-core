@@ -111,11 +111,18 @@ public sealed class AdvisorHandoff : Aggregate
         });
         On<AdvisorFeedbackResolved>(ev =>
         {
+            RequireFeedbackScope(ev.TenantId, ev.ProgramId, ev.HandoffId);
+            var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
+            if (ev.FeedbackId == Uuid.Empty || !ValidActor(ev.ResolvedBy) ||
+                ev.ResolvedAt == default || index < 0 || _feedback[index].ResolvedAt is not null)
+                throw new InvalidOperationException("The advisor feedback resolution event is invalid.");
             _revision++;
             _updatedAt = ev.ResolvedAt;
-            var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
-            if (index >= 0)
-                _feedback[index] = _feedback[index] with { ResolvedAt = ev.ResolvedAt };
+            _feedback[index] = _feedback[index] with
+            {
+                ResolvedAt = ev.ResolvedAt,
+                ResolvedBy = ev.ResolvedBy,
+            };
         });
     }
 
@@ -238,6 +245,23 @@ public sealed class AdvisorHandoff : Aggregate
         return Result<bool>.Success(true);
     }
 
+    public Result<bool> ResolveFeedback(Uuid feedbackId, ActorReference resolvedBy,
+        DateTimeOffset resolvedAt)
+    {
+        if (feedbackId == Uuid.Empty || !ValidActor(resolvedBy) || resolvedAt == default)
+            return Failure(RequestErrorKind.Validation,
+                "Resolving advisor feedback requires a feedback identity, actor, and time.");
+        var feedback = _feedback.Find(item => item.FeedbackId == feedbackId);
+        if (feedback is null)
+            return Failure(RequestErrorKind.NotFound, "The advisor feedback to resolve was not found.");
+        if (feedback.ResolvedAt is not null)
+            return Result<bool>.Success(true);
+
+        RaiseEvent(new AdvisorFeedbackResolved(_tenantId, _programId, Id, feedbackId,
+            resolvedBy, resolvedAt));
+        return Result<bool>.Success(true);
+    }
+
     public Result<bool> Close(string rationale, ActorReference closedBy, DateTimeOffset closedAt) =>
         End(rationale, closedBy, closedAt, revoke: false);
 
@@ -307,6 +331,13 @@ public sealed class AdvisorHandoff : Aggregate
         !string.IsNullOrWhiteSpace(actor.Kind) && !string.IsNullOrWhiteSpace(actor.Id) &&
         !string.IsNullOrWhiteSpace(actor.Display);
 
+    void RequireFeedbackScope(Uuid tenantId, Uuid programId, Uuid handoffId)
+    {
+        if (tenantId != _tenantId || programId != _programId || handoffId != Id)
+            throw new InvalidOperationException(
+                "Advisor feedback event scope does not match its handoff stream.");
+    }
+
     static Result<bool> Failure(RequestErrorKind kind, string message) =>
         Result<bool>.Failure(new RequestError(kind, message));
 }
@@ -319,7 +350,10 @@ public sealed record AdvisorFeedbackEntry(Uuid FeedbackId, Uuid RecordId, Uuid R
     IReadOnlyList<AdvisorFeedbackResponse>? Responses = null,
     DateTimeOffset? ResolvedAt = null,
     AdvisorFeedbackDisposition Disposition = AdvisorFeedbackDisposition.Current,
-    AdvisorRecordVersion? SourceVersion = null);
+    AdvisorRecordVersion? SourceVersion = null)
+{
+    public ActorReference? ResolvedBy { get; init; }
+}
 
 public sealed record AdvisorFeedbackCorrection(Uuid CorrectionId, string Body, string Reason,
     ActorReference Actor, DateTimeOffset CorrectedAt);

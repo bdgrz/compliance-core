@@ -22,6 +22,7 @@ cross-stream snapshot.
 | Controls | Draft and retirement reviews/approvals | `controls` | `FitzControlDecisionWorkItemDirectoryTests`, `ControlDecisionWorkTests` |
 | Policy campaigns | Acknowledgements and training completion | `policy-distribution-campaigns` | `FitzPolicyCampaignWorkItemDirectoryTests`, `PolicyCampaignWorkTests`, `TrainingWorkAuthorityTests` |
 | Risk acceptance | Current residual-assessment acceptance | `risk-evaluations` | `RiskAcceptanceWorkTests`, `RiskAcceptanceWorkAuthorityTests`, `RiskAcceptanceWorkCompositionTests` |
+| Advisor collaboration | Attributed comments and change requests awaiting response or client resolution; validation is excluded | `advisor-handoffs` | `FitzAdvisorFeedbackWorkItemDirectoryTests`, `AdvisorHandoffCommandHandlerTests`, `WorkSourceCompositionTests` |
 
 Each production source reader is registered as an accountable-work reader and
 participates in the queue's capture and final confirmation of its own checkpoint.
@@ -37,17 +38,19 @@ proves visible scoped counts under search. A search with no visible match still
 fails with a transient conflict while a required projection is behind.
 
 `WorkSourceCompositionTests` exercises the production `AddCompliance` registration
-with all 15 accountable readers. It replays retained source events through each
+with all 16 accountable readers. It replays retained source events through each
 reader's real transactional store, then reconciles a mixed evidence,
-corrective-action and finding-closure queue through the registered request bus.
+corrective-action, finding-closure, and advisor-feedback queue through the
+registered request bus. Feedback appears after its projector catches up and
+leaves active work after the authorized client resolution is projected.
 Actual source cancellation and independently assigned closure change counts from
 three to two to one; details and visible search agree, outsiders receive empty
 counts and absent details, and each source change conflicts until its required
 checkpoint catches up. This complements each source family's lifecycle tests;
 it does not claim that one mixed-source scenario covers every work kind.
 
-The runtime registration audit resolves 15 distinct checkpoint identities and
-28 current program work kinds, with each kind supplied once. Empty resources
+The runtime registration audit resolves 16 distinct checkpoint identities and
+29 current program work kinds, with each kind supplied once. Empty resources
 load their own start checkpoints and each reader uses a tenant-specific source
 pattern. Campaign routing remains outside that manifest pending #646; it is not
 silently counted as delivered or given an inferred program owner.

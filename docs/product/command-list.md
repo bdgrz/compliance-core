@@ -327,7 +327,7 @@ The source-backed command plan for the product features we have committed to sup
 
 The list below maps directly to accepted feature requirements. P0/P1 manual outcomes are included even when a later slice has prerequisite work; P2 hypotheses and proposed BO scope are not treated as committed commands. A worker result is listed only when a feature requires a durable outcome or replayable external effect.
 
-This pruned plan has 129 feature-backed additions, including five evidence command contracts, one internal identity-provider result callback, and actual-staff revocation already present in source; 122 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
+This pruned plan has 130 feature-backed additions, including five evidence command contracts, one internal identity-provider result callback, actual-staff revocation already present in source, and `ResolveAdvisorFeedback`; 121 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
 
 ### Governed evidence capture and support — [EN-06](backlog.md#en-06-store-governed-artifacts-with-immutable-content-identity), [R2-03](backlog.md#r2-03-request-and-capture-trustworthy-evidence), [R2-04](backlog.md#r2-04-perform-a-control-and-attest-to-the-result), [R2-05](backlog.md#r2-05-review-control-design-implementation-and-evidence), [R1-14](backlog.md#r1-14-evaluate-vendors-and-subservice-organizations)
 
@@ -360,6 +360,7 @@ This pruned plan has 129 feature-backed additions, including five evidence comma
 - **RecordAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs#L7))
 - **CorrectAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs#L7))
 - **RespondToAdvisorFeedback** — coded and handled ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs#L8))
+- **ResolveAdvisorFeedback** — coded and handled; closes the client-owned work raised from feedback ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/ResolveAdvisorFeedback.cs#L9))
 
 
 ### Control operation and recurrence — [R2-01](backlog.md#r2-01-assign-control-ownership-and-operating-cadence), [T2-02](backlog.md#t2-02-operate-a-recurring-control-calendar), R2-04, T2-03; [M0-D19](decisions/m0-d19-periodic-reviews.md)

@@ -79,7 +79,7 @@ public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader,
             item.ResolvedAt, item.Disposition == AdvisorFeedbackDisposition.Current &&
                 currentSources.Contains(item.SourceVersion ??
                     new AdvisorRecordVersion(item.RecordId, item.RecordVersionId)),
-            item.SourceVersion)).ToArray();
+            item.SourceVersion, item.ResolvedBy)).ToArray();
         var nextCursor = hasMore && pageItems.Length > 0
             ? pageItems[^1].AdvisorFeedbackId.ToString()
             : null;

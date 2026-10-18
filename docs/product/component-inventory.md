@@ -74,7 +74,7 @@ These candidates make later scope concrete. They are not established public cont
 - Queries: GetAdvisorRequest; GetAdvisorSharedSource; ListAdvisorRequests; ListAdvisorFeedback.
 - Events: AdvisorHandoffCreated; AdvisorFeedbackRecorded; AdvisorFeedbackCorrected; AdvisorFeedbackResponded; AdvisorFeedbackResolved; AdvisorHandoffSelectionRevised; AdvisorHandoffReadiedForReview; AdvisorHandoffClosed; AdvisorHandoffRevoked.
 - Reactors: AdvisorRequestNotificationReactor.
-- Projectors: AdvisorHandoffDirectoryProjector (implemented); AdvisorFeedbackWorkItemProjector (required for the remaining feedback-to-work-queue assignment).
+- Projectors: AdvisorHandoffDirectoryProjector; AdvisorFeedbackWorkItemProjector (implemented; routes actionable comment and change-request feedback to program-manager work and removes it when resolved).
 - API family: advisory requests, feedback, responses and resolution.
 
 ### Type I engagement — T1-01
@@ -315,6 +315,18 @@ The following is a static source inventory, including internal operations. Queri
 - [SetFirmStaffStatus](../../src/Compliance.Common/Features/AccessControl/SetFirmStaffStatus.cs#L6) — `bdgrz.firm-staff.status.set` v1
 - [SuspendMember](../../src/Compliance.Common/Features/AccessControl/SuspendMember.cs#L6) — `bdgrz.tenant.member.suspend` v1
 - [WithdrawServiceEngagementStaffProposal](../../src/Compliance.Common/Features/AccessControl/WithdrawServiceEngagementStaffProposal.cs#L6) — `bdgrz.service-engagement.staff.withdraw` v1
+
+#### AdvisorCollaboration
+
+- [CloseAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.close-advisor-handoff` v1
+- [CorrectAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs#L7) — `bdgrz.advisor-collaboration.correct-advisor-feedback` v1
+- [CreateAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.create-advisor-handoff` v1
+- [MarkAdvisorHandoffReadyForReview](../../src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs#L7) — `bdgrz.advisor-collaboration.mark-advisor-handoff-ready-for-review` v1
+- [RecordAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs#L7) — `bdgrz.advisor-collaboration.record-advisor-feedback` v1
+- [ResolveAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ResolveAdvisorFeedback.cs#L9) — `bdgrz.advisor-collaboration.resolve-advisor-feedback` v1
+- [RespondToAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs#L8) — `bdgrz.advisor-collaboration.respond-to-advisor-feedback` v1
+- [ReviseAdvisorHandoffSelection](../../src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs#L7) — `bdgrz.advisor-collaboration.revise-advisor-handoff-selection` v1
+- [RevokeAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.revoke-advisor-handoff` v1
 
 #### AccessReviews
 
@@ -2484,6 +2496,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 #### AdvisorCollaboration
 
 - [AdvisorHandoffDirectoryProjector](../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoffDirectoryProjector.cs#L5)
+- [AdvisorFeedbackWorkItemProjector](../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorFeedbackWorkItemProjector.cs#L5)
 
 #### Applications
 
@@ -2817,12 +2830,13 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures` | `CloseAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2378) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations` | `RevokeAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2382) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses` | `RespondToAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2386) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `RecordAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2390) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections` | `CorrectAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2394) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}` | `GetAdvisorRequest` | [registration](../../src/Compliance.App/Program.cs#L2398) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `ListAdvisorRequests` | [registration](../../src/Compliance.App/Program.cs#L2402) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}` | `GetAdvisorSharedSource` | [registration](../../src/Compliance.App/Program.cs#L2406) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `ListAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2410) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `RecordAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2394) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections` | `CorrectAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2398) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions` | `ResolveAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2390) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}` | `GetAdvisorRequest` | [registration](../../src/Compliance.App/Program.cs#L2402) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `ListAdvisorRequests` | [registration](../../src/Compliance.App/Program.cs#L2406) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}` | `GetAdvisorSharedSource` | [registration](../../src/Compliance.App/Program.cs#L2410) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `ListAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2414) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |
