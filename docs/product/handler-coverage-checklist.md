@@ -4,8 +4,8 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 
 ## Current gap
 
-- Required commands in the plan: 127. 60 have handler source; 67 still need one.
-- Required command registration gaps: 67. Required commands without a static test reference: 66.
+- Required commands in the plan: 127. 61 have handler source; 66 still need one.
+- Required command registration gaps: 66. Required commands without a static test reference: 65.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
 
@@ -305,7 +305,7 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `RequestAuditPackageBuild` | present | missing | check | no reference |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `RecordAuditPackageBuildResult` | present | missing | check | no reference |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ValidateAuditPackage` | present | missing | check | no reference |
-| Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ApproveAuditPackageValidationOverride` | present | missing | check | no reference |
+| Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ApproveAuditPackageValidationOverride` | present | present | present | referenced |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ApproveAuditPackageDisclosure` | present | present | present | referenced |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `RecordAuditPackageDelivery` | present | present | present | referenced |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `AmendAuditPackage` | present | missing | check | no reference |

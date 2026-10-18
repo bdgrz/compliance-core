@@ -755,6 +755,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ProposeSystemDescriptionSuccessorHandler>()
             .AddRequestHandler<ApproveAuditPackageDisclosureHandler>()
+            .AddRequestHandler<ApproveAuditPackageValidationOverrideHandler>()
             .AddRequestHandler<RecordAuditPackageDeliveryHandler>()
             .AddRequestHandler<ClassifyAuditPopulationRowHandler>()
             .AddRequestHandler<FreezeAuditPopulationHandler>()

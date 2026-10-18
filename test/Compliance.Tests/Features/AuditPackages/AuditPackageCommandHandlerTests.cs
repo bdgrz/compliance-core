@@ -82,6 +82,31 @@ public sealed class AuditPackageCommandHandlerTests
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
     }
 
+    [Fact]
+    public async Task ShouldOverrideExactBlockingFindingGivenIndependentExecutiveActor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (packageId, findingId) = await fixture.SeedBuiltAndBlockedPackageAsync();
+
+        // Act
+        var result = await fixture.ApproveValidationOverrideHandler().HandleAsync(Fixture.Context(
+            fixture.ApproverUserId, new ApproveAuditPackageValidationOverride(fixture.TenantId,
+                fixture.ProgramId, packageId, 1, findingId.ToString(),
+                "The scoped exception is accepted and disclosed to the auditor.")),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
+            fixture.ProgramId, packageId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var version = Assert.Single(saved.Current!.Versions);
+        Assert.Equal("validated_with_overrides", version.Status);
+        var validation = Assert.Single(version.Validations);
+        Assert.Equal("passed_with_overrides", validation.Status);
+        Assert.Equal(findingId, Assert.Single(validation.Overrides).FindingId);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         static readonly Uuid ArchiveId = Uuid.CreateVersion4();
@@ -120,6 +145,9 @@ public sealed class AuditPackageCommandHandlerTests
         public RecordAuditPackageDeliveryHandler RecordDeliveryHandler() =>
             new(Executor);
 
+        public ApproveAuditPackageValidationOverrideHandler ApproveValidationOverrideHandler() =>
+            new(Executor, _clock);
+
         public async Task<Uuid> SeedBuiltAndValidatedPackageAsync()
         {
             var packageId = Uuid.CreateVersion4();
@@ -139,6 +167,29 @@ public sealed class AuditPackageCommandHandlerTests
                 reviewerMember, "Independent reviewer", Now.AddMinutes(3)));
             await Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
             return packageId;
+        }
+
+        public async Task<(Uuid PackageId, Uuid FindingId)> SeedBuiltAndBlockedPackageAsync()
+        {
+            var packageId = Uuid.CreateVersion4();
+            var package = new AuditPackageAggregate(TenantId, ProgramId, packageId);
+            var leadMember = RbacIds.Member(TenantId, LeadUserId);
+            var reviewerMember = RbacIds.Member(TenantId, ReviewerUserId);
+            Assert.Null(package.Create(Content(packageId), leadMember, "Lead", Now));
+            Assert.Null(package.RequestBuild(package.Revision, "blocked-build-1", leadMember,
+                "Lead", Now.AddMinutes(1)));
+            var manifest = package.Current!.Versions[0].Manifest;
+            var attempt = Assert.Single(package.Current.Versions[0].BuildAttempts);
+            Assert.Null(package.RecordBuildResult(package.Revision, attempt.BuildAttemptId,
+                new AuditPackageBuildOutput(manifest.AuditPackageManifestId,
+                    manifest.ManifestSha256, manifest.Entries, ArchiveId,
+                    new string('f', 64), 4096, null), null, "build-worker", Now.AddMinutes(2)));
+            var finding = new AuditPackageValidationFinding(Uuid.CreateVersion4(), "stale_source",
+                "error", true, true, "A selected governed source requires an authorized override.");
+            Assert.Null(package.RecordValidation(package.Revision, 1, "blocked-validation-1",
+                [finding], reviewerMember, "Independent reviewer", Now.AddMinutes(3)));
+            await Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+            return (packageId, finding.FindingId);
         }
 
         AuditPackageContent Content(Uuid packageId) => new(ExaminationId, "type_i",
