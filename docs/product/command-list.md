@@ -435,7 +435,7 @@ This pruned plan has 129 required additions, including five evidence command con
 
 ### Assertions, representation letters, outcomes and Type II plan — [T1-07](backlog.md#t1-07-record-the-type-i-outcome-and-approve-the-type-ii-plan), [T3-06](backlog.md#t3-06-record-management-sign-off-and-the-type-ii-outcome); [M0-D27](decisions/m0-d27-attest-scope.md)
 
-- **RecordManagementAssertion** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementAssertion.cs#L7))
+- **RecordManagementAssertion** — v2 records wording and signer candidates only when the exact package validation, frozen examination snapshot, approved bound system description, selected support inputs, and inspected wording-source attribution all match ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementAssertion.cs#L8), [handler](../../src/Compliance.Core/Features/Examinations/RecordManagementAssertionHandler.cs#L10))
 - **ApproveManagementAssertion** — coded ([contract](../../src/Compliance.Common/Features/Examinations/ApproveManagementAssertion.cs#L7))
 - **RecordManagementRepresentationLetter** — v2 records an original letter only after resolving its approved assertion, exact delivered package/manifest, inspected auditor-attributed artifact digest, and assertion-bound signer set ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L7), [handler](../../src/Compliance.Core/Features/Examinations/RecordManagementRepresentationLetterHandler.cs#L8))
 - **SignManagementRepresentationLetter** — coded ([contract](../../src/Compliance.Common/Features/Examinations/SignManagementRepresentationLetter.cs#L7))

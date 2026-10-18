@@ -614,8 +614,8 @@ DecideTypeIEntry is a readiness entry decision, not an assertion, representation
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `RecordManagementAssertion` | Build the exact source resolver for the package, system description, criteria, controls, exceptions, wording, and signer authority before creating assertion content. |
-| Present | `ApproveManagementAssertion` | The handler now checks the exact named CEO/CISO signer, current direct client membership, and matching persisted program permission; the assertion source/record command remains missing. |
+| Present | `RecordManagementAssertion` | v2 verifies successful package validation, exact Type I baseline or Type II close snapshot, approved and bound system-description version, supporting inputs in both package and snapshot, and an inspected wording artifact with matching source attribution. |
+| Present | `ApproveManagementAssertion` | The handler checks the exact named CEO/CISO signer, current direct client membership, and matching persisted program permission. |
 | Present | `RecordManagementRepresentationLetter` | v2 verifies the approved assertion, the exact delivered package version and manifest/source snapshot, the inspected auditor-attributed original artifact hash, and the required signer identities from the assertion. |
 | Present | `SignManagementRepresentationLetter` | The handler requires the authenticated named signer and an available inspected signed artifact. The record command is now source-bound; enforcing the complete examination workflow sequence remains incomplete. |
 | Present | `RecordExaminationOutcome` | v2 binds an auditor-supplied code, summary, report reference/date, and optional inspected report artifact to an exact delivered package version and manifest; it rejects dates before package delivery or in the future. |

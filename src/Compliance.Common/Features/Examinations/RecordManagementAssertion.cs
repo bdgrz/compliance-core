@@ -4,6 +4,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Records the record management assertion intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.examinations.record-management-assertion", 1)]
-public sealed record RecordManagementAssertion(Uuid TenantId, Uuid ProgramId, Uuid ExaminationId, Uuid AssertionId, long PackageVersion, long DescriptionVersion, string AssertionText, IReadOnlyList<Uuid> SignerMemberIds) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Records management wording and signer candidates against exact frozen examination inputs.</summary>
+[Discriminator("bdgrz.examinations.record-management-assertion", 2)]
+public sealed record RecordManagementAssertion(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid ExaminationId,
+    Uuid AssertionId,
+    ManagementAssertionContent Content)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;

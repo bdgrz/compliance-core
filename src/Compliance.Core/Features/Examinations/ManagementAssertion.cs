@@ -46,7 +46,7 @@ public sealed class ManagementAssertion : Aggregate
         string actorDisplay, DateTimeOffset createdAt)
     {
         if (_current is { } existing)
-            return SameInitial(existing, content, actorMemberId, actorDisplay, createdAt)
+            return SameInitial(existing, content, actorMemberId, actorDisplay)
                 ? null
                 : CommandFailure.StateConflict("The management assertion already exists with different content.");
         if (!ValidIdentity() || ValidateActor(actorMemberId, actorDisplay, createdAt) is not null)
@@ -293,10 +293,10 @@ public sealed class ManagementAssertion : Aggregate
         SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(value))).ToLowerInvariant();
 
     static bool SameInitial(ManagementAssertionView state, ManagementAssertionContent? content,
-        Uuid actorId, string actorDisplay, DateTimeOffset at) =>
+        Uuid actorId, string actorDisplay) =>
         NormalizeContent(content) is { } normalized && state.CurrentVersion is { } version &&
         SameContent(version.Content, normalized) && version.AuthoredByMemberId == actorId &&
-        version.AuthoredByDisplay == Clean(actorDisplay) && version.AuthoredAt == at;
+        version.AuthoredByDisplay == Clean(actorDisplay);
 
     static bool SameContent(ManagementAssertionContent left, ManagementAssertionContent right) =>
         Digest(left) == Digest(right);

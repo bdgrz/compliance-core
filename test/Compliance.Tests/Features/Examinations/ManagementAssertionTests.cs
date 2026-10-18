@@ -39,6 +39,22 @@ public sealed class ManagementAssertionTests
     }
 
     [Fact]
+    public void ShouldTreatSameAssertionCreationAsIdempotentGivenLaterRetryTime()
+    {
+        // Arrange
+        var content = Content();
+        var assertion = NewAssertion(content);
+
+        // Act
+        var retry = assertion.Create(content, AuthorId, "CEO", Now.AddHours(1));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(1, assertion.Revision);
+        Assert.Equal(Now, assertion.Current!.CurrentVersion!.AuthoredAt);
+    }
+
+    [Fact]
     public void ShouldRequireIndependentCEOOrCISOSignOffGivenExactAssertionVersion()
     {
         // Arrange
