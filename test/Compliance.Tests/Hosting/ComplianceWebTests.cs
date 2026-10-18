@@ -327,6 +327,7 @@ public sealed class ComplianceWebTests
         using var client = factory.CreateClient();
         const string closeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures";
         const string revokeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations";
+        const string responseRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses";
 
         // Act
         using var response = await client.GetAsync("/openapi/v1.json", CancellationToken.None);
@@ -336,7 +337,7 @@ public sealed class ComplianceWebTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var paths = document.RootElement.GetProperty("paths");
-        foreach (var route in new[] { closeRoute, revokeRoute })
+        foreach (var route in new[] { closeRoute, revokeRoute, responseRoute })
         {
             var operation = paths.GetProperty(route).GetProperty("post");
             Assert.True(operation.TryGetProperty("requestBody", out _));
@@ -345,6 +346,8 @@ public sealed class ComplianceWebTests
             Assert.Contains("tenant_id", parameters);
             Assert.Contains("program_id", parameters);
             Assert.Contains("handoff_id", parameters);
+            if (route == responseRoute)
+                Assert.Contains("feedback_id", parameters);
         }
     }
 

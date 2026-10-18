@@ -470,7 +470,8 @@ AdvisorHandoff and its request/event contracts exist, and the aggregate retains 
 | --- | --- | --- |
 | Partial | `CreateAdvisorHandoff`; `ReviseAdvisorHandoffSelection`; `MarkAdvisorHandoffReadyForReview` | The contracts and aggregate retain exact IDs and readiness transitions. Add a resolver that proves tenant, program, exact current version, and shareable status for every supported record kind; restrict readiness to the Compliance Lead. |
 | Implemented | `CloseAdvisorHandoff`; `RevokeAdvisorHandoff` | Tested handlers end access while preserving handoff history; both commands have tenant/program-scoped API routes. The existing program-management authorization remains in force. |
-| Partial | `RecordAdvisorFeedback`; `CorrectAdvisorFeedback`; `RespondToAdvisorFeedback` | The aggregate retains immutable comment/change_request/validated feedback and linked corrections/responses. Add handlers plus M0-D14 internal-advisor and guest authorization; validation never approves a record. |
+| Partial | `RecordAdvisorFeedback`; `CorrectAdvisorFeedback` | The aggregate retains immutable comment/change_request/validated feedback and linked corrections/responses. Add handlers plus M0-D14 internal-advisor and guest authorization; validation never approves a record. |
+| Implemented | `RespondToAdvisorFeedback` | The personal client-member handler addresses the owning handoff directly, records response attribution, and is registered at a tenant/program-scoped HTTP route. |
 | Partial | `InviteOrganizationMember`; `GrantAccess`; `RevokeAccessGrant`; `AssignWorkItem` | Reuse scoped expiring guest membership, grants and source-owned accountability. Add handoff/feedback consumers and authority checks; do not create a second consultant identity or generic task workflow. |
 
 <a id="g04"></a>

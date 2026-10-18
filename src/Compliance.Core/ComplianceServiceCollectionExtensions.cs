@@ -724,6 +724,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<TechnologyInventoryAuthorizer>()
             .AddRequestHandler<CloseAdvisorHandoffHandler>()
             .AddRequestHandler<RevokeAdvisorHandoffHandler>()
+            .AddRequestHandler<RespondToAdvisorFeedbackHandler>()
             .AddRequestHandler<CreateProgramHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()

@@ -358,7 +358,7 @@ This pruned plan has 129 required additions, including five evidence command con
 - **RevokeAdvisorHandoff** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs#L7))
 - **RecordAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs#L7))
 - **CorrectAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs#L7))
-- **RespondToAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs#L7))
+- **RespondToAdvisorFeedback** — coded and handled ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs#L8))
 
 
 ### Control operation and recurrence — [R2-01](backlog.md#r2-01-assign-control-ownership-and-operating-cadence), [T2-02](backlog.md#t2-02-operate-a-recurring-control-calendar), R2-04, T2-03; [M0-D19](decisions/m0-d19-periodic-reviews.md)

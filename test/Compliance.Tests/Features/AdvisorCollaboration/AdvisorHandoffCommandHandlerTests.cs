@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Globalization;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -63,6 +64,53 @@ public sealed class AdvisorHandoffCommandHandlerTests
         Assert.Equal(2, saved.Revision);
     }
 
+    [Fact]
+    public async Task ShouldRecordClientResponseAgainstExplicitHandoffGivenPersonalHttpActor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, feedbackId) = await fixture.SeedHandoffWithFeedbackAsync();
+        var request = new RespondToAdvisorFeedback(fixture.TenantId, fixture.ProgramId,
+            handoffId, feedbackId, "We updated the control draft.");
+
+        // Act
+        var result = await new RespondToAdvisorFeedbackHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var feedback = Assert.Single(saved.ReadFeedback());
+        var response = Assert.Single(feedback.Responses!);
+        Assert.Equal("We updated the control draft.", response.Body);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId),
+            Uuid.Parse(response.Actor.Id, CultureInfo.InvariantCulture));
+        Assert.Equal(Now.AddMinutes(2), response.RespondedAt);
+    }
+
+    [Fact]
+    public async Task ShouldRejectSystemDispatchGivenAdvisorFeedbackResponse()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, feedbackId) = await fixture.SeedHandoffWithFeedbackAsync();
+        var request = new RespondToAdvisorFeedback(fixture.TenantId, fixture.ProgramId,
+            handoffId, feedbackId, "We updated the control draft.");
+
+        // Act
+        var result = await new RespondToAdvisorFeedbackHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(new Cntryl.Portia.RequestContext<RespondToAdvisorFeedback>(request,
+                RequestActor.System), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Empty(Assert.Single(saved.ReadFeedback()).Responses ?? []);
+        Assert.Equal(3, saved.Revision);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -102,6 +150,24 @@ public sealed class AdvisorHandoffCommandHandlerTests
                 Now.AddMinutes(1)).IsSuccess);
             await Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
             return handoffId;
+        }
+
+        public async Task<(Uuid HandoffId, Uuid FeedbackId)> SeedHandoffWithFeedbackAsync()
+        {
+            var handoffId = Uuid.CreateVersion4();
+            var feedbackId = Uuid.CreateVersion4();
+            var recordId = Uuid.CreateVersion4();
+            var versionId = Uuid.CreateVersion4();
+            var handoff = new AdvisorHandoff(TenantId, ProgramId, handoffId);
+            var lead = ActorReference.ForMember(RbacIds.Member(TenantId, UserId), "Compliance lead");
+            Assert.True(handoff.Create("Type I controls", [new(recordId, versionId)],
+                new DateOnly(2026, 12, 31), lead, Now).IsSuccess);
+            Assert.True(handoff.MarkReadyForReview(1, lead, Now.AddMinutes(1)).IsSuccess);
+            Assert.True(handoff.RecordFeedback(feedbackId, recordId, versionId, "comment",
+                "Please clarify the control owner.", ActorReference.ForMember(Uuid.CreateVersion4(),
+                    "Advisor"), Now.AddMinutes(2)).IsSuccess);
+            await Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
+            return (handoffId, feedbackId);
         }
 
         public static Cntryl.Portia.RequestContext<T> Context<T>(Uuid userId, T request)
