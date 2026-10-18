@@ -8,6 +8,40 @@ namespace Bdgrz.Compliance.Tests.Features.Applications;
 public sealed class ApplicationImportRetirementPlanTests
 {
     [Fact]
+    public void ShouldRejectRetirementGivenApprovedControlVersionReference()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var digest = new string('a', 64);
+        var impact = new ApplicationChangePreview(tenantId, applicationId, 1, "retire",
+            [], [], [], true)
+        {
+            ImpactDigest = digest,
+            ApprovedControlReferences = [new ApplicationControlVersionReferenceView(tenantId,
+                "application", applicationId, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+                "AC-01", Uuid.CreateVersion4(), 1, "approved", new DateOnly(2026, 1, 1),
+                null, Uuid.CreateVersion4(), "Payroll", "Approved applicability.", false, null)],
+        };
+        var retirement = new ApplicationImportRetirementRow(Uuid.CreateVersion4(), "payroll",
+            applicationId, Uuid.CreateVersion4(), 1, DateTimeOffset.UtcNow);
+        var frozen = new ApplicationImportPlannedRow(Uuid.CreateVersion4(), "payroll", "retire",
+            applicationId, 1, string.Empty, string.Empty, null)
+        {
+            RetirementImpactDigest = digest,
+        };
+
+        // Act
+        var usable = ApplicationImportRetirementImpact.IsUsable(impact, tenantId, retirement);
+        var matchesFrozen = ApplicationImportRetirementImpact.MatchesFrozen(impact, tenantId,
+            frozen);
+
+        // Assert
+        Assert.False(usable);
+        Assert.False(matchesFrozen);
+    }
+
+    [Fact]
     public void ShouldReject201ProofRowsGiven200SourceRowsAndOneRetirement()
     {
         // Arrange
