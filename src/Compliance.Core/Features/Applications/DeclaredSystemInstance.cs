@@ -22,6 +22,10 @@ public sealed class DeclaredSystemInstance : Aggregate
     public bool IsRetired => _retired;
     public Uuid ApplicationId => _applicationId;
     public long Revision => _revision;
+    public string? Name => _name;
+    public string? Kind => _kind;
+    public string? AccessBoundaryReference => _accessBoundaryReference;
+    public string? SourceIdentifier => _sourceIdentifier;
 
     /// <summary>The member who registered the instance; separation of duties excludes them from scope approval.</summary>
     public Uuid RegisteredByMemberId => _registeredByMemberId;
@@ -47,6 +51,7 @@ public sealed class DeclaredSystemInstance : Aggregate
             _revision = ev.Revision;
             _retired = true;
         });
+        On<SystemInstanceRevised>(ApplyRevision);
     }
 
     /// <summary>Retires the instance from an effective date; its history and scope decisions remain.</summary>
@@ -100,6 +105,68 @@ public sealed class DeclaredSystemInstance : Aggregate
             StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
         });
         return Result<SystemInstanceRegistration>.Success(new SystemInstanceRegistration(Id));
+    }
+
+    public CommandFailure? Revise(long expectedRevision, string name, string? sourceIdentifier,
+        string? accessBoundaryReference, string rationale, Uuid actorMemberId,
+        string actorDisplay, DateTimeOffset changedAt)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The system instance was not found.");
+        if (_retired)
+            return CommandFailure.StateConflict("A retired system instance cannot be revised.");
+
+        name = name?.Trim() ?? string.Empty;
+        sourceIdentifier = NormalizeOptional(sourceIdentifier);
+        accessBoundaryReference = NormalizeOptional(accessBoundaryReference);
+        rationale = rationale?.Trim() ?? string.Empty;
+        actorDisplay = actorDisplay?.Trim() ?? string.Empty;
+        if (_name == name && _sourceIdentifier == sourceIdentifier &&
+            _accessBoundaryReference == accessBoundaryReference)
+            return null;
+        if (expectedRevision != _revision)
+            return CommandFailure.ForVersion(
+                VersionedRecordRules.StaleRevision("system instance", _revision));
+        if (string.IsNullOrWhiteSpace(name) || name.Length > 200 ||
+            sourceIdentifier is { Length: > 1000 } || accessBoundaryReference is { Length: > 2000 } ||
+            string.IsNullOrWhiteSpace(rationale) || rationale.Length > 2000 ||
+            actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay) ||
+            actorDisplay.Length > 200 || changedAt == default)
+            return CommandFailure.InvalidContent(
+                "A system instance revision requires a bounded name, rationale, and named actor.");
+
+        RaiseEvent(new SystemInstanceRevised(_tenantId, _applicationId, Id, _revision + 1,
+            name, _kind!, accessBoundaryReference, sourceIdentifier, rationale,
+            actorMemberId, actorDisplay, changedAt)
+        {
+            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
+        });
+        return null;
+    }
+
+    void ApplyRevision(SystemInstanceRevised ev)
+    {
+        var name = ev.Name?.Trim() ?? string.Empty;
+        var kind = ev.Kind?.Trim() ?? string.Empty;
+        var boundary = NormalizeOptional(ev.AccessBoundaryReference);
+        var source = NormalizeOptional(ev.SourceIdentifier);
+        var rationale = ev.Rationale?.Trim() ?? string.Empty;
+        var actorDisplay = ev.ActorDisplay?.Trim() ?? string.Empty;
+        if (!_created || ev.TenantId != _tenantId || ev.ApplicationId != _applicationId ||
+            ev.SystemInstanceId != Id || ev.Revision != _revision + 1 || _retired ||
+            string.IsNullOrWhiteSpace(name) || name.Length > 200 ||
+            string.IsNullOrWhiteSpace(kind) || kind.Length > 200 ||
+            boundary is { Length: > 2000 } || source is { Length: > 1000 } ||
+            string.IsNullOrWhiteSpace(rationale) || rationale.Length > 2000 ||
+            ev.ActorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay) ||
+            actorDisplay.Length > 200 || ev.ChangedAt == default ||
+            ev.Actor != ActorReference.ForMember(ev.ActorMemberId, actorDisplay))
+            throw new InvalidOperationException("The system instance revision event is invalid.");
+        _name = name;
+        _kind = kind;
+        _accessBoundaryReference = boundary;
+        _sourceIdentifier = source;
+        _revision = ev.Revision;
     }
 
     /// <summary>Compares a recorded declaration with a requested one after normalization.</summary>

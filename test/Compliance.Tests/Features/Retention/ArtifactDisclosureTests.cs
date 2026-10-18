@@ -105,5 +105,5 @@ public sealed class ArtifactDisclosureTests
 
     static ArtifactDisclosureSourceSnapshot Source() => new(
         new ArtifactRetentionSource(TenantId, "evidence_artifact", ArtifactId, new string('a', 64)),
-        12, 4096, "available", "restricted", 3);
+        12, 12, 4096, "available", "restricted", 3);
 }

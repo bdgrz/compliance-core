@@ -5,6 +5,7 @@ public static class RbacPermissions
     public const string EvidenceRedactionPrepare = "evidence_redaction.prepare";
     public const string EvidenceRedactionApprove = "evidence_redaction.approve";
     public const string EvidenceArtifactRead = "evidence_artifact.read";
+    public const string EvidenceArtifactDisclose = "evidence_artifact.disclose";
     public const string TenantAccess = "tenant.access";
     public const string TenantRbacManage = "tenant.rbac.manage";
     public const string ProgramManage = "program.manage";

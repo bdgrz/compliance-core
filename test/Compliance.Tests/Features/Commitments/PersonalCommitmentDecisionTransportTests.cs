@@ -113,6 +113,52 @@ public sealed class PersonalCommitmentDecisionTransportTests
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
     }
 
+    [Theory]
+    [InlineData("direct")]
+    [InlineData("mcp")]
+    public async Task ShouldRefusePersonalCommitmentRetirementGivenNonHttpInvocation(string transport)
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync(approval: true);
+        var approval = await fixture.DecideAsync(approval: true, "http");
+        Assert.True(approval.IsSuccess, approval.Error?.Message);
+        var before = await fixture.ReadAsync();
+
+        // Act
+        var result = await fixture.RetireAsync(transport);
+        var after = await fixture.ReadAsync();
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.False(after.IsRetired);
+    }
+
+    [Fact]
+    public async Task ShouldRetainAttributedCommitmentRetirementGivenNativeHttp()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync(approval: true);
+        var approval = await fixture.DecideAsync(approval: true, "http");
+        Assert.True(approval.IsSuccess, approval.Error?.Message);
+        var before = await fixture.ReadAsync();
+
+        // Act
+        var result = await fixture.RetireAsync("http");
+        var after = await fixture.ReadAsync();
+        var events = await fixture.ReadEventsAsync();
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(before.CommittedStreamPosition + 1, after.CommittedStreamPosition);
+        Assert.True(after.IsRetired);
+        Assert.Equal(new DateOnly(2027, 1, 1), after.RetiredEffectiveOn);
+        var retired = Assert.IsType<CommitmentRetired>(events[^1]);
+        Assert.Equal(RbacIds.Member(fixture.Tenant, fixture.Approver).ToString(), retired.Actor.Id);
+        Assert.Equal("The service commitment was superseded by the current engagement terms.", retired.Rationale);
+    }
+
     internal static async Task HttpAsync(IServiceProvider provider, Uuid user, IRequest request,
         RequestErrorKind? expectedFailure = null)
     {
@@ -233,6 +279,17 @@ public sealed class PersonalCommitmentDecisionTransportTests
                     "Security owner", "applicable", "supported", SourceVerifiedReference: "MSA 4.1", SourceEvidence: "Signed MSA section 4.1");
             return await services.GetRequiredService<IRequestBus>().DispatchAsync(request,
                 Context(user ?? (approval ? Approver : Reviewer), transport), CancellationToken.None);
+        }
+
+        public async Task<Result> RetireAsync(string transport)
+        {
+            var draft = await ReadAsync();
+            await using var scope = _provider.CreateAsyncScope();
+            var request = new RetireCommitment(Tenant, Program, DraftId, draft.Revision,
+                new DateOnly(2027, 1, 1),
+                "The service commitment was superseded by the current engagement terms.");
+            return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
+                Context(Approver, transport), CancellationToken.None);
         }
         public ValueTask DisposeAsync() => _provider.DisposeAsync();
     }

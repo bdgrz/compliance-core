@@ -4,6 +4,7 @@ namespace Bdgrz.Compliance.Features.Retention;
 public sealed record ArtifactDisclosureSourceSnapshot(
     ArtifactRetentionSource Source,
     ulong Position,
+    long ArtifactRevision,
     long ContentLength,
     string ArtifactState,
     string HandlingClass,

@@ -63,8 +63,9 @@ public sealed class ArtifactMetadataAccessTests
         await fixture.InspectAsync(EvidenceInspectionOutcome.Malware);
         await ProgramManagementServices.SeedAsync(fixture.Provider, new EvidenceArtifact(fixture.TenantId, fixture.ArtifactId), artifact =>
         {
-            Assert.Null(artifact.ReleaseQuarantine("Synthetic clean rescan", ActorReference.ForMember(
-                RbacIds.Member(fixture.TenantId, fixture.UserId), "Collector"), Fixture.Now));
+            Assert.Null(artifact.ReleaseQuarantine(artifact.Revision, Uuid.CreateVersion4(),
+                Fixture.Now, "Synthetic clean rescan", ActorReference.ForMember(
+                    RbacIds.Member(fixture.TenantId, fixture.UserId), "Collector"), Fixture.Now));
             return Result.Success;
         });
         var retained = await fixture.HydrateAsync();
@@ -391,7 +392,8 @@ public sealed class ArtifactMetadataAccessTests
         DomainEvent malformed = change switch
         {
             "rejected_release" or "release_pending" => new EvidenceArtifactQuarantineReleased(fixture.TenantId,
-                fixture.ArtifactId, "Cannot change a rejected or pending source", source.Registration!.Collector, Fixture.Now),
+                fixture.ArtifactId, source.Revision + 1, Uuid.CreateVersion4(), "clean", Fixture.Now,
+                "Cannot change a rejected or pending source", source.Registration!.Collector, Fixture.Now),
             "duplicate_registration" => new EvidenceArtifactRegistered(fixture.TenantId, fixture.ArtifactId,
                 source.Content!, source.ContentSha256!, source.ContentLength!.Value, source.Registration!.Collector, Fixture.Now),
             _ => new EvidenceArtifactInspected(change == "foreign_inspection" ? Uuid.CreateVersion4() : fixture.TenantId,

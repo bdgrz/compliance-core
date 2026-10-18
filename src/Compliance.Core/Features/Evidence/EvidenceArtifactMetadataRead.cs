@@ -20,7 +20,16 @@ sealed class EvidenceArtifactMetadataRead(IAggregateReader reader, IDomainEventR
     internal static async ValueTask<Result<EvidenceArtifactMetadataSnapshot>> CaptureAsync(IAggregateReader reader,
         IDomainEventReader events, Uuid tenantId, Uuid artifactId, CancellationToken ct)
     {
-        var artifact = await reader.HydrateAsync(new EvidenceArtifact(tenantId, artifactId), ct).ConfigureAwait(false);
+        EvidenceArtifact artifact;
+        try
+        {
+            artifact = await reader.HydrateAsync(new EvidenceArtifact(tenantId, artifactId), ct)
+                .ConfigureAwait(false);
+        }
+        catch (InvalidOperationException exception) when (IsInvalidEvidenceHistory(exception))
+        {
+            return Missing();
+        }
         if (artifact.Registration is not { } registration || registration.TenantId != tenantId ||
             registration.ArtifactId != artifactId || registration.Metadata.EventId == Uuid.Empty ||
             registration.Metadata.AggregateId != artifactId ||
@@ -56,11 +65,30 @@ sealed class EvidenceArtifactMetadataRead(IAggregateReader reader, IDomainEventR
                     break;
                 case EvidenceArtifactQuarantineReleased ev when ev.TenantId == tenantId && ev.ArtifactId == artifactId &&
                                                                 state == EvidenceArtifactStates.Quarantined && reason == EvidenceArtifactStates.Malware &&
+                                                                ev.Revision == (long)expectedOffset && ev.RequestId != Uuid.Empty &&
+                                                                ev.RescanState == "clean" && ev.RescannedAt != default &&
+                                                                ev.RescannedAt <= ev.DecidedAt && ev.DecidedAt != default &&
                                                                 !string.IsNullOrWhiteSpace(ev.Rationale) && ev.Rationale.Length <= EvidenceRules.MaximumTextLength &&
-                                                                ev.DecidedBy is not null:
+                                                                ev.DecidedBy is { Kind: "member", Id.Length: > 0, Display.Length: > 0 }:
                     state = EvidenceArtifactStates.Available;
                     reason = null;
                     availabilityRecordedAt = ev.DecidedAt;
+                    break;
+                case EvidenceArtifactDownloadIssued ev when ev.TenantId == tenantId && ev.ArtifactId == artifactId &&
+                                                           state == EvidenceArtifactStates.Available && reason is null &&
+                                                           ev.Revision == (long)expectedOffset && ev.RequestId != Uuid.Empty &&
+                                                           ev.ContentSha256 == registration.ContentSha256 &&
+                                                           ev.ContentLength == registration.ContentLength &&
+                                                           !string.IsNullOrWhiteSpace(ev.Purpose) &&
+                                                           ev.Purpose.Trim() == ev.Purpose &&
+                                                           ev.Purpose.Length <= EvidenceRules.MaximumTextLength &&
+                                                           ev.IssuedBy is
+                                                           {
+                                                               Kind: "member", Id.Length: > 0,
+                                                               Display.Length: > 0 and <= 200
+                                                           } &&
+                                                           ev.IssuedAt >= registration.RegisteredAt &&
+                                                           ev.IssuedAt != default:
                     break;
                 default:
                     return Missing();
@@ -96,6 +124,11 @@ sealed class EvidenceArtifactMetadataRead(IAggregateReader reader, IDomainEventR
         EvidenceArtifactStates.Rejected => ev.Reason is EvidenceArtifactStates.SecretDetected or EvidenceArtifactStates.Invalid,
         _ => false
     };
+
+    static bool IsInvalidEvidenceHistory(InvalidOperationException exception) => exception.Message is
+        "The evidence artifact registration event is invalid." or
+        "The evidence artifact inspection event is invalid." or
+        "The evidence quarantine release event is invalid.";
 
     static Result<EvidenceArtifactMetadataSnapshot> Missing() => Result<EvidenceArtifactMetadataSnapshot>.Failure(
         new RequestError(RequestErrorKind.NotFound, "The artifact metadata was not found."));

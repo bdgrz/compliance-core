@@ -330,11 +330,11 @@ This pruned plan has 127 required additions, including five evidence command con
 
 ### Governed evidence capture and support — [EN-06](backlog.md#en-06-store-governed-artifacts-with-immutable-content-identity), [R2-03](backlog.md#r2-03-request-and-capture-trustworthy-evidence), [R2-04](backlog.md#r2-04-perform-a-control-and-attest-to-the-result), [R2-05](backlog.md#r2-05-review-control-design-implementation-and-evidence), [R1-14](backlog.md#r1-14-evaluate-vendors-and-subservice-organizations)
 
-- **CaptureEvidenceArtifact** — contract created ([draft contract](../../src/Compliance.Common/Features/Evidence/CaptureEvidenceArtifact.cs)); handler, API exposure, and upload storage boundary remain to be wired
-- **RecordEvidenceArtifactInspection** — contract created ([internal contract](../../src/Compliance.Common/Features/Evidence/RecordEvidenceArtifactInspection.cs)); trusted inspection handler and durable worker remain to be wired
-- **IssueArtifactDownload** — contract created ([draft contract](../../src/Compliance.Common/Features/Evidence/IssueArtifactDownload.cs)); handler must enforce available-state and exact artifact authorization
-- **LinkEvidenceSupport** — contract created ([draft contract](../../src/Compliance.Common/Features/Evidence/LinkEvidenceSupport.cs)); aggregate, handler, and exact support type validation remain to be wired
-- **ReleaseEvidenceArtifactQuarantine** — contract created ([draft contract](../../src/Compliance.Common/Features/Evidence/ReleaseEvidenceArtifactQuarantine.cs)); handler must require a clean rescan and admin authority
+- **CaptureEvidenceArtifact** — handler wired to governed intake; API exposure and upload storage boundary remain to be wired
+- **RecordEvidenceArtifactInspection** — trusted system-only handler and inspection authorization are wired; durable worker remains to be wired
+- **IssueArtifactDownload** — handler issues a short-lived store delivery only for currently available content after exact artifact-read authorization; records purpose, actor and artifact revision
+- **LinkEvidenceSupport** — handler verifies an available exact artifact, exact current control/version/occurrence/evaluation/period revision and matching period, then records an immutable attributed relationship with the artifact content digest
+- **ReleaseEvidenceArtifactQuarantine** — personal decision handler requires the malware quarantine, current revision, separate retention-admin authorization, a clean rescan, and storage reconciliation; scanner-provider qualification remains open
 
 ### Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md)
 
@@ -342,9 +342,9 @@ This pruned plan has 127 required additions, including five evidence command con
 - **PlaceArtifactEngagementHold** — coded ([contract](../../src/Compliance.Common/Features/Retention/PlaceArtifactEngagementHold.cs#L7))
 - **RecordEngagementReportIssued** — coded ([contract](../../src/Compliance.Common/Features/Retention/RecordEngagementReportIssued.cs#L7))
 - **ReleaseArtifactEngagementHold** — coded ([contract](../../src/Compliance.Common/Features/Retention/ReleaseArtifactEngagementHold.cs#L7))
-- **ApproveArtifactDisclosure** — coded ([contract](../../src/Compliance.Common/Features/Retention/ApproveArtifactDisclosure.cs#L7))
-- **RecordArtifactDisclosureDelivery** — coded ([contract](../../src/Compliance.Common/Features/Retention/RecordArtifactDisclosureDelivery.cs#L7))
-- **RevokeArtifactDisclosure** — coded ([contract](../../src/Compliance.Common/Features/Retention/RevokeArtifactDisclosure.cs#L7))
+- **ApproveArtifactDisclosure** — handler captures the available artifact and reviewed classification at an exact revision; exact read and separate disclosure grants are required
+- **RecordArtifactDisclosureDelivery** — handler records a personal, revision-checked delivery receipt against the current artifact and handling policy
+- **RevokeArtifactDisclosure** — handler records a personal, revision-checked revocation while preserving the delivery history
 - **ApproveArtifactDisposition** — coded ([contract](../../src/Compliance.Common/Features/Retention/ApproveArtifactDisposition.cs#L7))
 - **ExecuteArtifactDisposition** — coded ([contract](../../src/Compliance.Common/Features/Retention/ExecuteArtifactDisposition.cs#L7))
 - **RecordArtifactDispositionResult** — coded ([contract](../../src/Compliance.Common/Features/Retention/RecordArtifactDispositionResult.cs#L7))
@@ -388,8 +388,8 @@ This pruned plan has 127 required additions, including five evidence command con
 
 ### Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot)
 
-- **CreateExaminationEngagement** — coded ([contract](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L7))
-- **ReviseExaminationEngagement** — coded ([contract](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L7))
+- **CreateExaminationEngagement** — personal HTTP handler records the draft Type I terms and attributes the creating member ([contract](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L7))
+- **ReviseExaminationEngagement** — personal HTTP handler preserves management contacts and boundary identity while applying the exact expected revision ([contract](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L7))
 - **FreezeTypeIBaseline** — coded ([contract](../../src/Compliance.Common/Features/Examinations/FreezeTypeIBaseline.cs#L7))
 - **AmendTypeIBaseline** — coded ([contract](../../src/Compliance.Common/Features/Examinations/AmendTypeIBaseline.cs#L7))
 
@@ -460,6 +460,8 @@ This pruned plan has 127 required additions, including five evidence command con
 - **ReviseComplianceIncident** — coded ([contract](../../src/Compliance.Common/Features/Incidents/ReviseComplianceIncident.cs#L7))
 - **AssessComplianceIncident** — coded ([contract](../../src/Compliance.Common/Features/Incidents/AssessComplianceIncident.cs#L7))
 - **RecordComplianceIncidentResolution** — coded ([contract](../../src/Compliance.Common/Features/Incidents/RecordComplianceIncidentResolution.cs#L7))
+
+These commands carry the complete change or incident content accepted by their owning aggregates. The revised payload shapes use discriminator version 2 so handlers do not synthesize missing source, owner, impact, evidence, or resolution facts.
 
 ### Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md)
 

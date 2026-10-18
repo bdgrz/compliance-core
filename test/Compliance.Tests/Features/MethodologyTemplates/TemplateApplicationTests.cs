@@ -16,6 +16,7 @@ public sealed class TemplateApplicationTests
     static readonly Uuid ActorId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 10, 18, 13, 0, 0, TimeSpan.Zero);
     static readonly string[] ExpectedDispositions = ["adapt", "decline"];
+    static readonly string[] ExpectedProposedDispositions = ["adapt", "decline"];
 
     [Fact]
     public void ShouldPinOneApprovedVersionAndCreateOnlyDraftProvenanceGivenApplication()
@@ -58,11 +59,11 @@ public sealed class TemplateApplicationTests
         var secondSuccessor = PublishedTemplateVersion(3);
 
         // Act
-        var rejected = application.ProposeSuccessor(application.Revision, unpublished,
+        var rejected = application.ProposeSuccessor(application.Revision, unpublished, "adopt",
             ActorId, "Client administrator", Now.AddMinutes(1));
-        var proposed = application.ProposeSuccessor(application.Revision, approvedSuccessor,
+        var proposed = application.ProposeSuccessor(application.Revision, approvedSuccessor, "adapt",
             ActorId, "Client administrator", Now.AddMinutes(2));
-        var proposalRetry = application.ProposeSuccessor(application.Revision - 1, approvedSuccessor,
+        var proposalRetry = application.ProposeSuccessor(application.Revision - 1, approvedSuccessor, "adapt",
             ActorId, "Client administrator", Now.AddMinutes(2));
         var disposition = application.RecordSuccessorDisposition(application.Revision, "adapt",
             "Map the updated review cadence to our current quarterly process.", ActorId,
@@ -70,7 +71,7 @@ public sealed class TemplateApplicationTests
         var dispositionRetry = application.RecordSuccessorDisposition(application.Revision - 1, "adapt",
             "Map the updated review cadence to our current quarterly process.", ActorId,
             "Client administrator", Now.AddMinutes(3));
-        var nextProposal = application.ProposeSuccessor(application.Revision, secondSuccessor,
+        var nextProposal = application.ProposeSuccessor(application.Revision, secondSuccessor, "decline",
             ActorId, "Client administrator", Now.AddMinutes(4));
         var nextDisposition = application.RecordSuccessorDisposition(application.Revision, "decline",
             "The successor no longer fits our operating model.", ActorId,
@@ -85,6 +86,8 @@ public sealed class TemplateApplicationTests
         Assert.Null(nextProposal);
         Assert.Null(nextDisposition);
         Assert.Equal(2, application.Current!.SuccessorProposals.Count);
+        Assert.Equal(ExpectedProposedDispositions,
+            application.Current.SuccessorProposals.Select(item => item.ProposedDisposition));
         Assert.Equal(ExpectedDispositions, application.Current.SuccessorDecisions.Select(item => item.Disposition));
         Assert.Equal("draft_pending", application.Current.Drafts[0].Status);
         Assert.False(application.Current.IsActivated);

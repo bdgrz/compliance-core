@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evidence;
@@ -6,7 +7,11 @@ namespace Bdgrz.Compliance.Features.Evidence;
 [Discriminator("bdgrz.evidence.evidence-artifact-download-issued", 1)]
 public sealed record EvidenceArtifactDownloadIssued(
     Uuid TenantId,
-    Uuid SubjectId,
+    Uuid ArtifactId,
     long Revision,
-    Uuid? ActorMemberId,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    Uuid RequestId,
+    string ContentSha256,
+    long ContentLength,
+    string Purpose,
+    ActorReference IssuedBy,
+    DateTimeOffset IssuedAt) : DomainEvent;

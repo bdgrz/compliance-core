@@ -1,7 +1,14 @@
 using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.Retention;
 using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.MethodologyTemplates;
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,6 +54,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(ArtifactContentStoreOptions.FromConfiguration(configuration));
         services.AddSingleton<IArtifactContentStore, LocalArtifactContentStore>();
         services.AddSingleton<IArtifactInspector, UninspectedArtifactInspector>();
+        services.AddScoped<EvidenceIntake>();
         services.AddScoped<EvidenceArtifactStorageReconciler>();
         services.AddScoped<ArtifactRetentionMutation>();
         services.AddScoped<ArtifactRetentionRead>();
@@ -483,6 +491,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceRedactionAccess>();
         services.AddScoped<EvidenceArtifactReadAccess>();
         services.AddScoped<EvidenceArtifactMetadataRead>();
+        services.AddScoped<EvidenceSupportTargetSource>();
+        services.AddScoped<AuditorResponseEvidence>();
         services.AddScoped<DirectoryReevaluationDiscovery>();
         services.AddScoped<FitzActualStaffEngagementLocator>();
         services.AddScoped<IActualStaffEngagementLocatorProjection>(provider =>
@@ -574,6 +584,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<DeclareApplicationHandler>()
             .AddRequestHandler<ReviseApplicationHandler>()
             .AddRequestHandler<DeclareSystemInstanceHandler>()
+            .AddRequestHandler<ReviseSystemInstanceHandler>()
             .AddRequestHandler<GetApplicationHandler>()
             .AddRequestHandler<ListApplicationsHandler>()
             .AddRequestHandler<AddApplicationRelationshipHandler>()
@@ -596,6 +607,14 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListAccessReviewScopesHandler>()
             .AddRequestHandler<PreviewInformationAssetChangeHandler>()
             .AddRequestAuthorizer<ArtifactRetentionAdminAuthorizer>()
+            .AddRequestAuthorizer<ArtifactDisclosureAccess>()
+            .AddRequestHandler<ApproveArtifactDisclosureHandler>()
+            .AddRequestHandler<RecordArtifactDisclosureDeliveryHandler>()
+            .AddRequestHandler<RevokeArtifactDisclosureHandler>()
+            .AddRequestHandler<AssignArtifactHandlingPolicyHandler>()
+            .AddRequestHandler<PlaceArtifactEngagementHoldHandler>()
+            .AddRequestHandler<RecordEngagementReportIssuedHandler>()
+            .AddRequestHandler<ReleaseArtifactEngagementHoldHandler>()
             .AddRequestHandler<RecordArtifactRetentionBasisHandler>()
             .AddRequestHandler<PlaceArtifactLegalHoldHandler>()
             .AddRequestHandler<ReleaseArtifactLegalHoldHandler>()
@@ -729,6 +748,33 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<DecideReadinessHandler>()
             .AddRequestHandler<DecideTypeIEntryHandler>()
             .AddRequestHandler<ListTypeIEntryDecisionsHandler>()
+            .AddRequestHandler<CreateExaminationEngagementHandler>()
+            .AddRequestHandler<ReviseExaminationEngagementHandler>()
+            .AddRequestHandler<RecordAuditorRequestHandler>()
+            .AddRequestHandler<ReviseAuditorRequestHandler>()
+            .AddRequestHandler<AssignAuditorRequestHandler>()
+            .AddRequestHandler<RecordAuditorRequestCommentHandler>()
+            .AddRequestHandler<CreateAuditResponseDraftHandler>()
+            .AddRequestHandler<ReviseAuditResponseDraftHandler>()
+            .AddRequestHandler<SubmitAuditResponseHandler>()
+            .AddRequestHandler<ReviewAuditResponseHandler>()
+            .AddRequestHandler<DeliverAuditResponseHandler>()
+            .AddRequestHandler<RecordAuditorResponseDispositionHandler>()
+            .AddRequestHandler<ResolveAuditorRequestHandler>()
+            .AddRequestHandler<ReopenAuditorRequestHandler>()
+            .AddRequestHandler<RecordSignificantChangeHandler>()
+            .AddRequestHandler<ReviseSignificantChangeHandler>()
+            .AddRequestHandler<AssessSignificantChangeHandler>()
+            .AddRequestHandler<RecordComplianceIncidentHandler>()
+            .AddRequestHandler<ReviseComplianceIncidentHandler>()
+            .AddRequestHandler<AssessComplianceIncidentHandler>()
+            .AddRequestHandler<RecordComplianceIncidentResolutionHandler>()
+            .AddRequestHandler<AmendTypeIIObservationPeriodHandler>()
+            .AddRequestHandler<ReviewSystemDescriptionHandler>()
+            .AddRequestHandler<ApproveSystemDescriptionHandler>()
+            .AddRequestHandler<RecordSystemDescriptionNoChangeDecisionHandler>()
+            .AddRequestHandler<BindSystemDescriptionToExaminationHandler>()
+            .AddRequestHandler<GenerateSystemDescriptionExportHandler>()
             .AddRequestHandler<AnnotateReadinessGapHandler>()
             .AddRequestHandler<ListReadinessAnnotationsHandler>()
             .AddRequestAuthorizer<ReadinessAnnotationCompartmentAuthorizer>()
@@ -757,6 +803,13 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.OpenEvidenceRequestHandler>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.FulfilEvidenceRequestHandler>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.CancelEvidenceRequestHandler>()
+            .AddRequestHandler<CaptureEvidenceArtifactHandler>()
+            .AddRequestAuthorizer<EvidenceArtifactDownloadAccess>()
+            .AddRequestHandler<IssueArtifactDownloadHandler>()
+            .AddRequestHandler<LinkEvidenceSupportHandler>()
+            .AddRequestAuthorizer<EvidenceArtifactInspectionAuthorizer>()
+            .AddRequestHandler<RecordEvidenceArtifactInspectionHandler>()
+            .AddRequestHandler<ReleaseEvidenceArtifactQuarantineHandler>()
             .AddRequestHandler<GetEvidenceRedactionHandler>()
             .AddRequestAuthorizer<EvidenceRedactionWaiverScopeAuthorizer>()
             .AddRequestHandler<ApproveEvidenceRedactionHandler>()
@@ -828,6 +881,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GetCommitmentDraftRevisionHandler>()
             .AddRequestHandler<ReviewCommitmentDraftHandler>()
             .AddRequestHandler<ApproveCommitmentDraftHandler>()
+            .AddRequestHandler<RetireCommitmentHandler>()
             .AddRequestHandler<PreviewCommitmentImpactHandler>()
             .AddRequestHandler<GetCommitmentVersionHandler>()
             .AddRequestHandler<GetEffectiveCommitmentVersionHandler>()
@@ -890,6 +944,17 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviewRiskTreatmentActionCompletionHandler>()
             .AddRequestHandler<RaiseRiskReassessmentTriggersHandler>()
             .AddRequestAuthorizer<RiskReassessmentReactionAuthorizer>()
+            .AddRequestHandler<CreateMethodologyTemplateHandler>()
+            .AddRequestHandler<ReviseMethodologyTemplateDraftHandler>()
+            .AddRequestHandler<ReviewMethodologyTemplateHandler>()
+            .AddRequestHandler<ApproveMethodologyTemplateVersionHandler>()
+            .AddRequestHandler<RetireMethodologyTemplateHandler>()
+            .AddRequestHandler<ApplyMethodologyTemplateHandler>()
+            .AddRequestHandler<ProposeTemplateSuccessorAdoptionHandler>()
+            .AddRequestHandler<RecordTemplateSuccessorDispositionHandler>()
+            .AddRequestHandler<ProposeDeidentifiedTemplateContributionHandler>()
+            .AddRequestHandler<ReviewTemplateContributionHandler>()
+            .AddRequestHandler<AcceptTemplateContributionHandler>()
             .AddRequestHandler<ReviseProgramHandler>()
             .AddRequestHandler<SelectProgramCriteriaEditionHandler>()
             .AddRequestHandler<GetProgramHandler>()

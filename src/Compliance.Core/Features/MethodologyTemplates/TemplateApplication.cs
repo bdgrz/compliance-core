@@ -94,16 +94,18 @@ public sealed class TemplateApplication : Aggregate
     }
 
     public CommandFailure? ProposeSuccessor(long expectedRevision,
-        MethodologyTemplateVersionView successor, Uuid actorMemberId,
+        MethodologyTemplateVersionView successor, string proposedDisposition, Uuid actorMemberId,
         string actorDisplay, DateTimeOffset proposedAt)
     {
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The template application was not found.");
         var normalized = NormalizePublishedVersion(successor);
+        proposedDisposition = Clean(proposedDisposition).ToLowerInvariant();
         if (normalized is not null && current.SuccessorProposals.FirstOrDefault(item =>
                 item.Version.VersionId == normalized.VersionId) is { } existingProposal)
             return Digest(existingProposal.Version) == Digest(normalized) &&
                 existingProposal.ContentSha256 == normalized.ContentSha256 &&
+                existingProposal.ProposedDisposition == proposedDisposition &&
                 existingProposal.ProposedByMemberId == actorMemberId &&
                 existingProposal.ProposedByDisplay == Clean(actorDisplay) &&
                 existingProposal.ProposedAt == proposedAt
@@ -114,14 +116,14 @@ public sealed class TemplateApplication : Aggregate
         var pending = priorProposal is not null && !current.SuccessorDecisions.Any(item =>
             item.TemplateVersionId == priorProposal.Version.VersionId);
         if (current.Status is not ("applied" or "drafts_created") || pending ||
-            normalized is null ||
+            normalized is null || proposedDisposition is not ("adopt" or "adapt" or "decline") ||
             normalized.TemplateId != current.TemplateId ||
             normalized.VersionNumber <= (priorProposal?.Version.VersionNumber ?? current.TemplateVersionNumber) ||
             current.SuccessorProposals.Any(item => item.Version.VersionId == normalized.VersionId) ||
             !ValidActor(actorMemberId, actorDisplay, proposedAt) || proposedAt < current.UpdatedAt)
             return CommandFailure.StateConflict("A successor proposal must be a later published version of the same platform template.");
         var proposal = new TemplateApplicationSuccessorProposalView(normalized,
-            normalized.ContentSha256, actorDisplay.Trim(), actorMemberId, proposedAt);
+            normalized.ContentSha256, proposedDisposition, actorDisplay.Trim(), actorMemberId, proposedAt);
         var proposals = Append(current.SuccessorProposals, proposal);
         var state = State(current, current.Status, current.Drafts, proposals, current.SuccessorDecisions,
             actorMemberId, actorDisplay.Trim(), proposedAt);
@@ -286,6 +288,7 @@ public sealed class TemplateApplication : Aggregate
         TemplateApplicationView state) => proposal is not null &&
         NormalizePublishedVersion(proposal.Version) is { } version && version.TemplateId == state.TemplateId &&
         version.VersionNumber > state.TemplateVersionNumber && proposal.ContentSha256 == version.ContentSha256 &&
+        proposal.ProposedDisposition is "adopt" or "adapt" or "decline" &&
         ValidActor(proposal.ProposedByMemberId, proposal.ProposedByDisplay, proposal.ProposedAt) &&
         proposal.ProposedAt >= state.RequestedAt;
 

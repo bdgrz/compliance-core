@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
@@ -6,7 +8,22 @@ namespace Bdgrz.Compliance.Features.Applications;
 [Discriminator("bdgrz.applications.system-instance-revised", 1)]
 public sealed record SystemInstanceRevised(
     Uuid TenantId,
-    Uuid SubjectId,
+    Uuid ApplicationId,
+    Uuid SystemInstanceId,
     long Revision,
-    Uuid? ActorMemberId,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    string Name,
+    string Kind,
+    string? AccessBoundaryReference,
+    string? SourceIdentifier,
+    string Rationale,
+    Uuid ActorMemberId,
+    string ActorDisplay,
+    DateTimeOffset ChangedAt) : DomainEvent
+{
+    [JsonPropertyName("actor")]
+    public ActorReference? StoredActor { get; init; }
+
+    [JsonIgnore]
+    public ActorReference Actor => StoredActor ?? ActorReference.ForMember(
+        ActorMemberId, ActorDisplay);
+}

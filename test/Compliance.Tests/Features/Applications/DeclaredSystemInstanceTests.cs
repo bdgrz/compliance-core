@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -106,5 +107,64 @@ public sealed class DeclaredSystemInstanceTests
         Assert.Equal(instanceId, retry.Value.SystemInstanceId);
         Assert.Equal(1, instance.Revision);
         Assert.Empty(new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldReviseInstanceWithoutChangingItsParentGivenCurrentRevision()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var instanceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var instance = new DeclaredSystemInstance(tenantId, instanceId);
+        Assert.True(instance.Declare(applicationId, "Production", "production", "Boundary v1",
+            "payroll-prod", actorId, "Manager", now).IsSuccess);
+
+        // Act
+        var revised = instance.Revise(1, "Production east", "payroll-prod-east", "Boundary v2",
+            "The production region moved to the east network zone.", actorId, "Manager", now.AddMinutes(1));
+        var events = new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents.ToArray();
+        var replay = new AggregateScenario<DeclaredSystemInstance>(
+            new DeclaredSystemInstance(tenantId, instanceId)).Given(events).Aggregate;
+
+        // Assert
+        Assert.Null(revised);
+        Assert.Equal(applicationId, instance.ApplicationId);
+        Assert.Equal(2, instance.Revision);
+        Assert.Equal("Production east", instance.Name);
+        Assert.Equal("payroll-prod-east", instance.SourceIdentifier);
+        Assert.Equal("Boundary v2", instance.AccessBoundaryReference);
+        var ev = Assert.IsType<SystemInstanceRevised>(events[^1]);
+        Assert.Equal(applicationId, ev.ApplicationId);
+        Assert.Equal("The production region moved to the east network zone.", ev.Rationale);
+        Assert.Equal(ActorReference.ForMember(actorId, "Manager"), ev.Actor);
+        Assert.Equal(instance.Name, replay.Name);
+        Assert.Equal(instance.SourceIdentifier, replay.SourceIdentifier);
+        Assert.Equal(instance.AccessBoundaryReference, replay.AccessBoundaryReference);
+    }
+
+    [Fact]
+    public void ShouldRejectStaleInstanceRevisionGivenChangedContent()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var instance = new DeclaredSystemInstance(tenantId, Uuid.CreateVersion4());
+        Assert.True(instance.Declare(applicationId, "Production", "production", "Boundary v1",
+            "payroll-prod", actorId, "Manager", now).IsSuccess);
+
+        // Act
+        var failure = instance.Revise(0, "Production east", "payroll-prod-east", "Boundary v2",
+            "The production region moved.", actorId, "Manager", now.AddMinutes(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Equal(1, instance.Revision);
+        Assert.Equal("Production", instance.Name);
+        Assert.Single(new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents);
     }
 }
