@@ -11,6 +11,83 @@ Handler status `partial` means the command has a registered handler for only par
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
 
+## Assembly-line checklist
+
+Work the layers in order. A command is complete only when its source and authority checks are implemented, its aggregate transition is exercised by a red-to-green behavior test, the handler is registered and host-dispatched, and the owning API authorization is verified. Update the table below as each item closes; do not move into projectors while any active handler is missing or partial.
+
+### Handlers — 29 active open items (21 missing, 8 partial)
+
+Evidence handling:
+
+- [ ] `ApproveArtifactDisposition` — exact eligibility snapshot, holds, historical reliance, and storage readiness.
+- [ ] `ExecuteArtifactDisposition` — durable deletion provider and exact execution outcome.
+
+Advisor collaboration:
+
+- [ ] `CreateAdvisorHandoff` — exact version resolver for every supported record family and Compliance Lead authorization.
+- [ ] `ReviseAdvisorHandoffSelection` — resolve every selected exact version and recheck shareable status.
+- [ ] `MarkAdvisorHandoffReadyForReview` — recheck the complete selection and Compliance Lead authority at sharing time.
+- [ ] `RecordAdvisorFeedback` — scoped advisor/guest authorization and actual member attribution.
+- [ ] `CorrectAdvisorFeedback` — scoped author/Compliance Lead correction authority and linked attribution.
+- [ ] `RespondToAdvisorFeedback` — scoped client-member authority and response attribution.
+
+Type I baseline:
+
+- [ ] `FreezeTypeIBaseline` — authoritative source-complete preview and frozen point-in-time snapshot.
+- [ ] `AmendTypeIBaseline` — complete amendment snapshot and package-impact evidence.
+
+Audit packages and Type II close:
+
+- [ ] `CreateAuditPackage` — complete deterministic package assembly and worker path.
+- [ ] `ValidateAuditPackage` — canonical source metadata and complete validation coverage.
+- [ ] `AmendAuditPackage` — complete deterministic package assembly and worker path.
+- [ ] `AmendTypeIIPeriodClose` — source-complete amendment content and changed-record/package-impact validation.
+- [ ] `FreezeTypeIIPeriodClose` — source-backed close validation and expected-versus-actual occurrence reconciliation.
+
+Type II operating plan and period:
+
+- [ ] `ProposeTypeIIOperatingPlan` — remaining finding, policy, risk, vendor, evidence, ownership, and cadence sources.
+- [ ] `StartTypeIIObservationPeriod` — complete carried-forward finding, policy, risk, vendor, expected-evidence, and nonmember-owner resolution.
+
+Professional authority:
+
+- [ ] `AcceptServiceEngagement` — verified partner authority, current directory facts, ratified rules, boundary approvals, and management acknowledgement.
+- [ ] `AssignServiceEngagementStaff` — current firm-staff identity, independence, and effective-date assignment behavior.
+- [ ] `RevokeServiceEngagementStaff` — exact current assignment, effective-date revocation, and access reevaluation.
+- [ ] `RatifyIndependenceRuleVersion` — trusted quality-partner authority and ratification policy.
+- [ ] `RecordPartnerIndependenceEvaluation` — verified partner identity and exact current independence inputs.
+
+Exports and offboarding:
+
+- [ ] `RequestClientExport` — complete source builder and deterministic export request.
+- [ ] `RequestOwnAttestRecordPackage` — own-attest source builder and eligibility proof.
+- [ ] `RecordOwnAttestRecordPackageResult` — named worker callback bound to the persisted attempt.
+- [ ] `RecordOwnAttestRecordDelivery` — durable encrypted storage and independently verifiable delivery receipt.
+- [ ] `CompleteTenantOffboarding` — bounded coordinator verifying all export and retention obligations.
+
+Identity provider:
+
+- [ ] `ConfigureTenantIdentityProvider` — secure vault resolution and tested-provider transition.
+- [ ] `RotateTenantIdentityProviderCredentials` — secure vault resolution, current provider test, and atomic credential transition.
+
+### Projectors
+
+- [ ] Reconcile the feature-backed projector inventory with each domain event and view-model requirement.
+- [ ] Add missing projections with pure event-to-write behavior tests, atomic batch/checkpoint tests, and generated registration.
+- [ ] Verify replay, duplicate delivery, ordering, tenant partitioning, and stale-event behavior for each projection.
+
+### Reactors
+
+- [ ] Reconcile the feature-backed reactor inventory with accepted external effects and internal follow-up workflows.
+- [ ] Add missing reactors with effect-boundary, retry, idempotency, failure, and callback tests.
+- [ ] Verify durable checkpoints, at-least-once delivery, current authorization/source rechecks, and worker registration.
+
+### Layer gates
+
+- [ ] All 124 active handlers are complete; five readiness-import commands remain deferred by M0-D04/EN-05.
+- [ ] All required projectors are implemented and verified before starting reactor work.
+- [ ] All required reactors are implemented and verified; document any requirement that remains explicitly deferred by an accepted decision.
+
 | Requirement group | Command | Contract | Handler | Registration | Test reference |
 |---|---|---:|---:|---:|---:|
 | AccessControl | `AcknowledgeEngagementManagement` | present | present | present | referenced |
