@@ -769,6 +769,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(ApplicationEvidenceSourceReferenceView))]
 [JsonSerializable(typeof(Page<ApplicationEvidenceSourceReferenceView>))]
 [JsonSerializable(typeof(ApplicationEvidenceSourceReferenceCoverage))]
+[JsonSerializable(typeof(ApplicationAccessPopulationReferenceView))]
 [JsonSerializable(typeof(ApplicationFieldChange))]
 [JsonSerializable(typeof(ApplicationRegistration))]
 [JsonSerializable(typeof(StageApplicationImport))]

@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.AccessReviews;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
@@ -21,7 +22,9 @@ public sealed class PreviewApplicationChangeHandler(
     ApplicationPolicyReferenceReadConsistency? policyReferenceConsistency = null,
     IApplicationEvidenceSourceReferenceDirectory? evidenceSources = null,
     ApplicationEvidenceSourceReferenceReadConsistency? evidenceSourceConsistency = null,
-    IApplicationEvidenceSourceAccess? evidenceSourceAccess = null)
+    IApplicationEvidenceSourceAccess? evidenceSourceAccess = null,
+    IAccessPopulationDirectoryReader? accessPopulations = null,
+    ApplicationAccessPopulationReadConsistency? accessPopulationConsistency = null)
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
@@ -32,6 +35,7 @@ public sealed class PreviewApplicationChangeHandler(
     const int MaximumApplicationPolicyReferences = 200;
     const int MaximumSystemInstancePolicyReferences = 200;
     const int MaximumApplicationEvidenceSourceReferences = 200;
+    const int MaximumApplicationAccessPopulationReferences = 200;
 
     public PreviewApplicationChangeHandler(IAggregateReader aggregates,
         IApplicationDirectoryReader applications,
@@ -50,7 +54,7 @@ public sealed class PreviewApplicationChangeHandler(
         ["vendors"];
 
     static readonly string[] MissingContextsAfterSystemInstanceControls =
-        ["access_populations", "review_campaigns", "open_work",
+        ["review_campaigns", "open_work",
             "readiness", "engagements", "cross_source_manual_reliance"];
 
     public async ValueTask<Result<ApplicationChangePreview>> HandleAsync(
@@ -88,6 +92,9 @@ public sealed class PreviewApplicationChangeHandler(
         if ((evidenceSources is null) != (evidenceSourceConsistency is null))
             throw new InvalidOperationException(
                 "The evidence-source reader and consistency fence must be registered together.");
+        if ((accessPopulations is null) != (accessPopulationConsistency is null))
+            throw new InvalidOperationException(
+                "The access-population reader and consistency fence must be registered together.");
 
         var inputError = Validate(request);
         if (inputError is not null)
@@ -222,6 +229,15 @@ public sealed class PreviewApplicationChangeHandler(
             if (!capturedEvidenceSources.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(capturedEvidenceSources.Error);
             evidenceSourceFence = capturedEvidenceSources.Value;
+        }
+        ProjectionCheckpoint? accessPopulationFence = null;
+        if (accessPopulationConsistency is not null)
+        {
+            var capturedPopulations = await accessPopulationConsistency.CaptureAsync(
+                request.TenantId, ct).ConfigureAwait(false);
+            if (!capturedPopulations.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(capturedPopulations.Error);
+            accessPopulationFence = capturedPopulations.Value;
         }
         ProjectionCheckpoint? instanceFence = null;
         if (instanceConsistency is not null)
@@ -547,6 +563,49 @@ public sealed class PreviewApplicationChangeHandler(
             }
         }
 
+        var accessPopulationReferenceItems =
+            new List<ApplicationAccessPopulationReferenceView>();
+        var accessPopulationReferencesOverLimit = instancePage.NextCursor is not null;
+        var accessPopulationSourcesIncomplete = instanceConsistency is null ||
+            instancePage.NextCursor is not null;
+        if (accessPopulations is not null && instanceConsistency is not null)
+        {
+            var scannedPopulationReferences = 0;
+            foreach (var instance in instancePage.Items)
+            {
+                var remaining = MaximumApplicationAccessPopulationReferences -
+                    scannedPopulationReferences;
+                if (remaining == 0)
+                {
+                    accessPopulationReferencesOverLimit = true;
+                    break;
+                }
+
+                var populationPage = await accessPopulations.ListAsync(request.TenantId,
+                    instance.SystemInstanceId, remaining, null, ct).ConfigureAwait(false);
+                if (populationPage.Items.Count > remaining || populationPage.Items.Any(population =>
+                        !IsValidAccessPopulation(population, request.TenantId, request.ApplicationId,
+                            instance.SystemInstanceId, instance.Revision)))
+                    return Result<ApplicationChangePreview>.Failure(new RequestError(
+                        RequestErrorKind.Conflict,
+                        "The application access-population projection is inconsistent.",
+                        isTransient: true));
+
+                scannedPopulationReferences += populationPage.Items.Count;
+                foreach (var population in populationPage.Items)
+                    accessPopulationReferenceItems.Add(new ApplicationAccessPopulationReferenceView(
+                        population.TenantId, population.ApplicationId, population.SystemInstanceId,
+                        population.PopulationId, population.SystemInstanceRevision,
+                        population.ObservedAt, population.Revision, population.Status,
+                        population.SnapshotId, population.AcceptedAt));
+                if (populationPage.NextCursor is not null)
+                {
+                    accessPopulationReferencesOverLimit = true;
+                    break;
+                }
+            }
+        }
+
         var boundaryConfirmed = await boundaryConsistency.ConfirmUnchangedAndCaughtUpAsync(
             request.TenantId, boundaryFence.Value, ct).ConfigureAwait(false);
         if (!boundaryConfirmed.IsSuccess)
@@ -595,6 +654,14 @@ public sealed class PreviewApplicationChangeHandler(
             if (!evidenceSourcesConfirmed.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(evidenceSourcesConfirmed.Error);
         }
+        if (accessPopulationFence is { } capturedAccessPopulationFence)
+        {
+            var populationsConfirmed = await accessPopulationConsistency!
+                .ConfirmUnchangedAndCaughtUpAsync(request.TenantId,
+                    capturedAccessPopulationFence, ct).ConfigureAwait(false);
+            if (!populationsConfirmed.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(populationsConfirmed.Error);
+        }
 
         // Source rechecks catch a pending application or relationship write that raced the reads.
         var latest = await aggregates.HydrateApplicationAsync(request.TenantId, request.ApplicationId, ct).ConfigureAwait(false);
@@ -641,6 +708,11 @@ public sealed class PreviewApplicationChangeHandler(
             pending.Add("evidence_sources");
         if (evidenceSourceReferencesOverLimit)
             pending.Add("evidence_source_references_over_limit");
+        if (accessPopulations is null || accessPopulationConsistency is null ||
+            accessPopulationSourcesIncomplete || accessPopulationReferencesOverLimit)
+            pending.Add("access_populations");
+        if (accessPopulationReferencesOverLimit)
+            pending.Add("access_population_references_over_limit");
         pending.AddRange(MissingContextsAfterSystemInstanceControls);
         var preview = new ApplicationChangePreview(
             request.TenantId, request.ApplicationId, source.Revision, request.ChangeKind,
@@ -677,6 +749,11 @@ public sealed class PreviewApplicationChangeHandler(
                 .ThenBy(static item => item.SupportedRecordType, StringComparer.Ordinal)
                 .ThenBy(static item => item.SupportedRecordRevision)
                 .ThenBy(static item => item.EvidenceSupportId.ToString(), StringComparer.Ordinal)
+                .ToArray(),
+            AccessPopulationReferences = accessPopulationReferenceItems
+                .OrderBy(static item => item.SystemInstanceId.ToString(), StringComparer.Ordinal)
+                .ThenByDescending(static item => item.ObservedAt)
+                .ThenBy(static item => item.PopulationId.ToString(), StringComparer.Ordinal)
                 .ToArray(),
         };
         return Result<ApplicationChangePreview>.Success(preview with
@@ -799,6 +876,26 @@ public sealed class PreviewApplicationChangeHandler(
         reference.PeriodEnd != default && reference.PeriodStart <= reference.PeriodEnd &&
         !string.IsNullOrWhiteSpace(reference.Purpose) &&
         reference.Purpose == reference.Purpose.Trim() && reference.Purpose.Length <= 2000;
+
+    static bool IsValidAccessPopulation(AccessPopulationSummaryView population, Uuid tenantId,
+        Uuid applicationId, Uuid systemInstanceId, long currentSystemInstanceRevision)
+    {
+        if (population.TenantId != tenantId || population.ApplicationId != applicationId ||
+            population.SystemInstanceId != systemInstanceId || population.PopulationId == Uuid.Empty ||
+            population.SystemInstanceRevision < 1 || population.ObservedAt == default ||
+            population.Revision < 1 ||
+            population.SystemInstanceRevision > currentSystemInstanceRevision)
+            return false;
+
+        if (population.Status == AccessPopulation.Draft)
+            return population.SnapshotId is null && population.ContentSha256 is null &&
+                   population.AcceptedAt is null;
+        return population.Status == AccessPopulation.Accepted &&
+            population.SnapshotId is { } snapshotId && snapshotId != Uuid.Empty &&
+            population.ContentSha256 is { Length: 64 } contentSha256 &&
+            contentSha256.All(Uri.IsHexDigit) && population.AcceptedAt is { } acceptedAt &&
+            acceptedAt != default && acceptedAt >= population.ObservedAt;
+    }
 
     static bool IsValidSystemInstanceBoundaryReference(
         ApplicationBoundaryReferenceView reference, Uuid tenantId, Uuid systemInstanceId) =>

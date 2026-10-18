@@ -92,6 +92,31 @@ public sealed class ApplicationImportRetirementPlanTests
     }
 
     [Fact]
+    public void ShouldRejectRetirementGivenAccessPopulationReference()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var impact = new ApplicationChangePreview(tenantId, applicationId, 1, "retire",
+            [], [], [], true)
+        {
+            ImpactDigest = new string('d', 64),
+            AccessPopulationReferences = [new ApplicationAccessPopulationReferenceView(tenantId,
+                applicationId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1,
+                DateTimeOffset.UtcNow.AddDays(-7), 2, "accepted", Uuid.CreateVersion4(),
+                DateTimeOffset.UtcNow.AddDays(-6))],
+        };
+        var retirement = new ApplicationImportRetirementRow(Uuid.CreateVersion4(), "payroll",
+            applicationId, Uuid.CreateVersion4(), 1, DateTimeOffset.UtcNow);
+
+        // Act
+        var usable = ApplicationImportRetirementImpact.IsUsable(impact, tenantId, retirement);
+
+        // Assert
+        Assert.False(usable);
+    }
+
+    [Fact]
     public void ShouldReject201ProofRowsGiven200SourceRowsAndOneRetirement()
     {
         // Arrange

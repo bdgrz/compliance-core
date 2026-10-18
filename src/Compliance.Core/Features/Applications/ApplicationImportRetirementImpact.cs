@@ -42,6 +42,7 @@ static class ApplicationImportRetirementImpact
         impact.ApprovedControlReferences is { Count: 0 } &&
         impact.PolicyReferences is { Count: 0 } &&
         impact.EvidenceSourceReferences is { Count: 0 } &&
+        impact.AccessPopulationReferences is { Count: 0 } &&
         impact.SystemInstanceReferences is { Count: 0 };
 
     static bool IsDigest(string value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);

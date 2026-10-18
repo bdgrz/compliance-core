@@ -18,6 +18,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(ApplicationControlVersionReferenceView))]
 [JsonSerializable(typeof(ApplicationPolicyReferenceView))]
 [JsonSerializable(typeof(ApplicationEvidenceSourceReferenceView))]
+[JsonSerializable(typeof(ApplicationAccessPopulationReferenceView))]
 [JsonSerializable(typeof(ReadinessAssessmentView))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(bool))]
