@@ -64,6 +64,35 @@ public sealed class FitzAdvisorHandoffDirectoryTests
     }
 
     [Fact]
+    public async Task ShouldRetainComparisonLineageGivenRepeatedHandoffProjection()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var handoffId = Uuid.CreateVersion4();
+        var comparedToId = Uuid.CreateVersion4();
+        var created = WithMetadata(new AdvisorHandoffCreated(tenantId, programId, handoffId,
+            [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Follow-up review",
+            new DateOnly(2026, 12, 31), ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"),
+            Now, comparedToId), handoffId, 1);
+        var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
+        var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
+            EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
+
+        // Act
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(created);
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var page = await directory.ListProgramAsync(tenantId, programId, 25, null);
+
+        // Assert
+        Assert.Equal(comparedToId, Assert.Single(page.Items).ComparedToHandoffId);
+    }
+
+    [Fact]
     public async Task ShouldRejectLifecycleEventBeforeCreationGivenOutOfOrderProjection()
     {
         // Arrange

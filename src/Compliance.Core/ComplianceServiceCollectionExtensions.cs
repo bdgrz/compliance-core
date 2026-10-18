@@ -847,6 +847,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordAdvisorFeedbackHandler>()
             .AddRequestHandler<GetAdvisorRequestHandler>()
             .AddRequestHandler<GetAdvisorSharedSourceHandler>()
+            .AddRequestHandler<PreviewAdvisorHandoffHandler>()
             .AddRequestHandler<ListAdvisorRequestsHandler>()
             .AddRequestHandler<ListAdvisorFeedbackHandler>()
             .AddRequestHandler<CorrectAdvisorFeedbackHandler>()

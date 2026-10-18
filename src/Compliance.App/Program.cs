@@ -328,6 +328,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<RegenerateWorkforceRosterSnapshotManifest>(tool => tool.ReadOnly())
         .AddMcpTool<GetReadinessAssessment>(tool => tool.ReadOnly())
         .AddMcpTool<GetAdvisorRequest>(tool => tool.ReadOnly())
+        .AddMcpTool<PreviewAdvisorHandoff>(tool => tool.ReadOnly())
         .AddMcpTool<GetAdvisorSharedSource>(tool => tool.ReadOnly())
         .AddMcpTool<ListAdvisorRequests>(tool => tool.ReadOnly())
         .AddMcpTool<ListAdvisorFeedback>(tool => tool.ReadOnly())
@@ -2409,6 +2410,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Advisor collaboration");
     app.MapPortiaGet<GetAdvisorSharedSource, AdvisorSharedSourceView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaGet<PreviewAdvisorHandoff, AdvisorHandoffPreviewView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/preview")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
     app.MapPortiaGet<ListAdvisorFeedback, Cntryl.Fitz.Extensions.Page<AdvisorFeedbackView>>(

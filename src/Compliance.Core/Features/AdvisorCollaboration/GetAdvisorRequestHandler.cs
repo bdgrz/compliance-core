@@ -29,6 +29,6 @@ public sealed class GetAdvisorRequestHandler(IAggregateReader reader)
         return Result<AdvisorRequestView>.Success(new AdvisorRequestView(request.TenantId,
             request.ProgramId, request.AdvisorRequestId, handoff.Selection, purpose,
             handoff.ExpiresOn, handoff.Status, handoff.Revision, createdBy, createdAt,
-            updatedAt));
+            updatedAt, handoff.ComparedToHandoffId));
     }
 }

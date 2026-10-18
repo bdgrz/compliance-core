@@ -71,7 +71,7 @@ These candidates make later scope concrete. They are not established public cont
 
 - Aggregate/model candidates: AdvisorRequest; AdvisorFeedback; AdvisoryReadinessNote; FeedbackResponse.
 - Commands: OpenAdvisorRequest; RecordAdvisorFeedback; RespondToAdvisorFeedback; ResolveAdvisorFeedback; WithdrawAdvisorRequest.
-- Queries: GetAdvisorRequest; GetAdvisorSharedSource; ListAdvisorRequests; ListAdvisorFeedback.
+- Queries: GetAdvisorRequest; GetAdvisorSharedSource; PreviewAdvisorHandoff; ListAdvisorRequests; ListAdvisorFeedback.
 - Events: AdvisorHandoffCreated; AdvisorFeedbackRecorded; AdvisorFeedbackCorrected; AdvisorFeedbackResponded; AdvisorFeedbackResolved; AdvisorHandoffSelectionRevised; AdvisorHandoffReadiedForReview; AdvisorHandoffClosed; AdvisorHandoffRevoked.
 - Reactors: AdvisorRequestNotificationReactor.
 - Projectors: AdvisorHandoffDirectoryProjector; AdvisorFeedbackWorkItemProjector (implemented; routes actionable comment and change-request feedback to program-manager work and removes it when resolved).
@@ -270,13 +270,13 @@ The following is a static source inventory, including internal operations. Queri
 | Category | Unique feature/type names |
 | --- | ---: |
 | Commands | 231 |
-| Queries | 271 |
+| Queries | 272 |
 | Events | 374 |
 | Aggregates | 83 |
-| Models and supporting contracts | 562 |
+| Models and supporting contracts | 564 |
 | Reactors | 30 |
 | Projectors | 66 |
-| Explicit MapPortia HTTP route registrations | 439 |
+| Explicit MapPortia HTTP route registrations | 440 |
 
 ### Existing commands
 
@@ -924,6 +924,7 @@ The following is a static source inventory, including internal operations. Queri
 
 - [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorRequest.cs#L9) — `bdgrz.advisor-collaboration.get-advisor-request` v1
 - [GetAdvisorSharedSource](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorSharedSource.cs#L9) — `bdgrz.advisor-collaboration.get-shared-source` v1
+- [PreviewAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/PreviewAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.preview-advisor-handoff` v1
 - [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-requests` v1
 - [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-feedback` v1
 
@@ -2618,6 +2619,8 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)
 - [AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)
 - [AdvisorSharedSourceView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorSharedSourceView.cs#L8)
+- [AdvisorHandoffPreviewView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewView.cs#L6)
+- [AdvisorHandoffPreviewItemView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewItemView.cs#L4)
 
 ##### Examinations
 
@@ -2834,6 +2837,7 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections` | `CorrectAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2398) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions` | `ResolveAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2390) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}` | `GetAdvisorRequest` | [registration](../../src/Compliance.App/Program.cs#L2402) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/preview` | `PreviewAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2415) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `ListAdvisorRequests` | [registration](../../src/Compliance.App/Program.cs#L2406) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}` | `GetAdvisorSharedSource` | [registration](../../src/Compliance.App/Program.cs#L2410) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `ListAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2414) |
@@ -3430,9 +3434,10 @@ These source lines identify raw routes, health routes and MCP configuration. Fol
 - [Program.cs:316](../../src/Compliance.App/Program.cs#L316): `.AddMcpTool<RegenerateWorkforceRosterSnapshotManifest>(tool => tool.ReadOnly())`
 - [Program.cs:317](../../src/Compliance.App/Program.cs#L317): `.AddMcpTool<GetReadinessAssessment>(tool => tool.ReadOnly())`
 - [Program.cs:330](../../src/Compliance.App/Program.cs#L330): `.AddMcpTool<GetAdvisorRequest>(tool => tool.ReadOnly())`
-- [Program.cs:331](../../src/Compliance.App/Program.cs#L331): `.AddMcpTool<GetAdvisorSharedSource>(tool => tool.ReadOnly())`
-- [Program.cs:332](../../src/Compliance.App/Program.cs#L332): `.AddMcpTool<ListAdvisorRequests>(tool => tool.ReadOnly())`
-- [Program.cs:333](../../src/Compliance.App/Program.cs#L333): `.AddMcpTool<ListAdvisorFeedback>(tool => tool.ReadOnly())`
+- [Program.cs:331](../../src/Compliance.App/Program.cs#L331): `.AddMcpTool<PreviewAdvisorHandoff>(tool => tool.ReadOnly())`
+- [Program.cs:332](../../src/Compliance.App/Program.cs#L332): `.AddMcpTool<GetAdvisorSharedSource>(tool => tool.ReadOnly())`
+- [Program.cs:333](../../src/Compliance.App/Program.cs#L333): `.AddMcpTool<ListAdvisorRequests>(tool => tool.ReadOnly())`
+- [Program.cs:334](../../src/Compliance.App/Program.cs#L334): `.AddMcpTool<ListAdvisorFeedback>(tool => tool.ReadOnly())`
 - [Program.cs:318](../../src/Compliance.App/Program.cs#L318): `.AddMcpTool<ListReadinessAssessments>(tool => tool.ReadOnly())`
 - [Program.cs:319](../../src/Compliance.App/Program.cs#L319): `.AddMcpTool<ListReadinessGaps>(tool => tool.ReadOnly())`
 - [Program.cs:320](../../src/Compliance.App/Program.cs#L320): `.AddMcpTool<ListTypeIEntryDecisions>(tool => tool.ReadOnly())`

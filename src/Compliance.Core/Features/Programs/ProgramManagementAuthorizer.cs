@@ -173,5 +173,6 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
     }
 
     static bool RequiresComplianceLead(IProgramManagementRequest request) => request is
-        CreateAdvisorHandoff or ReviseAdvisorHandoffSelection or MarkAdvisorHandoffReadyForReview;
+        CreateAdvisorHandoff or ReviseAdvisorHandoffSelection or MarkAdvisorHandoffReadyForReview or
+        PreviewAdvisorHandoff;
 }

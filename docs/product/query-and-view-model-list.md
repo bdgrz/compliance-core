@@ -4,11 +4,11 @@ This is the requirement-backed read-layer plan for the committed product scope. 
 
 ## Existing inventory
 
-Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **271 query contracts** (216 existing plus 55 added here) and **493 model/supporting contracts** (436 existing, 54 response views added here, two advisor-feedback history views, and `EvidenceSupportView`). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
+Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **272 query contracts** (216 existing plus 56 added here) and **495 model/supporting contracts** (436 existing, 56 response views added here, two advisor-feedback history views, and `EvidenceSupportView`). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
 
 ## Required read workflows to backfill
 
-The 55 planned query contracts and 54 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Wiring and behavior status varies by query; a contract alone does not prove handler, read-model, API/MCP, or story-level authorization coverage. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
+The 56 planned query contracts and 56 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Wiring and behavior status varies by query; a contract alone does not prove handler, read-model, API/MCP, or story-level authorization coverage. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
 
 ### Advisor collaboration — R2-08
 
@@ -16,11 +16,16 @@ The 55 planned query contracts and 54 response-view types listed below now have 
 | --- | --- | --- |
 | [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorRequest.cs#L9) | [AdvisorRequestView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestView.cs#L6) | One scoped advisor handoff, including selected immutable record versions and lifecycle state. |
 | [GetAdvisorSharedSource](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorSharedSource.cs#L9) | [AdvisorSharedSourceView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorSharedSourceView.cs#L8) | Current content for one exact control, policy, evidence artifact, readiness gap, or boundary question selected in an active handoff. |
-| [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) | `Page<[AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)>` | Scoped handoff directory with status and review readiness. |
+| [PreviewAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/PreviewAdvisorHandoff.cs#L7) | [AdvisorHandoffPreviewView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewView.cs#L6), [AdvisorHandoffPreviewItemView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewItemView.cs#L4) | Compliance Lead-only exact-content preview of a draft handoff, including new/changed versions and source versions removed from an explicitly selected ended shared handoff. |
+| [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) | `Page<[AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)>` | Scoped handoff directory with status, review readiness, and optional comparison baseline. |
 | [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) | `Page<[AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)>` | Feedback, corrections, responses, and resolution actor/time for a handoff or selected record. |
 
-`GetAdvisorRequest`, `GetAdvisorSharedSource`, `ListAdvisorRequests`, and `ListAdvisorFeedback`
-are available through HTTP and MCP. The handoff directory is a Fitz projection over handoff and
+`GetAdvisorRequest`, `GetAdvisorSharedSource`, `PreviewAdvisorHandoff`, `ListAdvisorRequests`, and `ListAdvisorFeedback`
+are available through HTTP and MCP. `PreviewAdvisorHandoff` is limited to the Compliance Lead,
+loads the exact selected content, validates current source versions, and checks the draft revision
+again after loading. Repeated handoffs name a prior shared handoff that has ended; exact unchanged
+sources are excluded, changed/new content is previewed, and removed source versions are listed
+separately. The handoff directory is a Fitz projection over handoff and
 feedback events, with tenant-partitioned program indexes, stable cursor ordering, and a read-freshness
 fence against its source event stream. Shared-source reads revalidate the selected native version
 before and after loading content; approved control and policy versions must still be the latest
@@ -31,8 +36,8 @@ handoff selection and rechecks its authorization. Firm Advisors can read only an
 `ready_for_review` handoff after current engagement or program-scoped guest-grant checks. Internal
 `comment` and `change_request` feedback appears as program-manager work; response changes its next
 action to resolution, and resolution removes it from active work while preserving feedback history.
-`validated` feedback remains review history, never a work item. Repeated-handoff change comparison
-remains a story-level R2-08 gap.
+`validated` feedback remains review history, never a work item. The firm Advisor engagement path
+remains blocked on the accepted authority prerequisite in #269.
 
 ### Type I engagement — T1-01
 

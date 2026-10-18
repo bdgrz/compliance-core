@@ -7,4 +7,4 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 public sealed record AdvisorRequestView(Uuid TenantId, Uuid ProgramId, Uuid AdvisorRequestId,
     IReadOnlyList<AdvisorRecordVersion> RecordVersions, string Purpose, DateOnly ExpiresOn,
     string Status, long Revision, ActorReference CreatedBy, DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt, Uuid? ComparedToHandoffId = null);

@@ -120,6 +120,8 @@ sealed class FitzAdvisorHandoffDirectory(IKvClient client)
         if (!ValidIdentity(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.CreatedAt) ||
             string.IsNullOrWhiteSpace(ev.Purpose) || ev.Purpose.Trim() != ev.Purpose ||
             !ValidSelection(ev.RecordVersions) ||
+            (ev.ComparedToHandoffId is { } comparedTo &&
+             (comparedTo == Uuid.Empty || comparedTo == ev.HandoffId)) ||
             ev.ExpiresOn < DateOnly.FromDateTime(ev.CreatedAt.UtcDateTime) || !ValidActor(ev.CreatedBy))
             throw InvalidEvent();
         var metadata = ev.Metadata;
@@ -141,7 +143,7 @@ sealed class FitzAdvisorHandoffDirectory(IKvClient client)
             new AdvisorHandoffDirectoryEntry(ev.TenantId, ev.ProgramId, ev.HandoffId,
                 ev.Purpose, "draft", ev.CreatedAt, ev.ExpiresOn, 1,
                 ev.RecordVersions.ToArray(), [], metadata.EventId,
-                metadata.AggregateVersion), ct)
+                metadata.AggregateVersion, ev.ComparedToHandoffId), ct)
             .ConfigureAwait(false);
     }
 
@@ -283,7 +285,8 @@ sealed class FitzAdvisorHandoffDirectory(IKvClient client)
             .ConfigureAwait(false);
         return new Page<AdvisorRequestSummaryView>(page.Items.Select(static item =>
             new AdvisorRequestSummaryView(item.TenantId, item.ProgramId, item.AdvisorRequestId,
-                item.Name, item.Status, item.UpdatedAt)).ToArray(), page.NextCursor);
+                item.Name, item.Status, item.UpdatedAt, item.ComparedToHandoffId)).ToArray(),
+            page.NextCursor);
     }
 
     static bool ValidIdentity(Uuid tenantId, Uuid programId, Uuid handoffId,

@@ -24,8 +24,10 @@ public sealed class AdvisorHandoff : Aggregate
     ActorReference? _createdBy;
     DateTimeOffset? _createdAt;
     DateTimeOffset? _updatedAt;
+    Uuid? _comparedToHandoffId;
     string _status = "missing";
     long _revision;
+    bool _wasReadyForReview;
 
     public bool IsCreated => _created;
     public Uuid ProgramId => _programId;
@@ -36,6 +38,8 @@ public sealed class AdvisorHandoff : Aggregate
     public ActorReference? CreatedBy => _createdBy;
     public DateTimeOffset? CreatedAt => _createdAt;
     public DateTimeOffset? UpdatedAt => _updatedAt;
+    public Uuid? ComparedToHandoffId => _comparedToHandoffId;
+    public bool WasReadyForReview => _wasReadyForReview;
     public IReadOnlyList<AdvisorRecordVersion> Selection => _selection.ToArray();
 
     public AdvisorHandoff(Uuid tenantId, Uuid programId, Uuid handoffId)
@@ -46,6 +50,10 @@ public sealed class AdvisorHandoff : Aggregate
         _programId = programId;
         On<AdvisorHandoffCreated>(ev =>
         {
+            if (ev.ComparedToHandoffId is { } comparedTo &&
+                (comparedTo == Uuid.Empty || comparedTo == Id))
+                throw new InvalidOperationException(
+                    "An advisor handoff cannot compare its selection to itself or an empty handoff.");
             _created = true;
             _programId = ev.ProgramId;
             _revision = 1;
@@ -54,6 +62,7 @@ public sealed class AdvisorHandoff : Aggregate
             _createdBy = ev.CreatedBy;
             _createdAt = ev.CreatedAt;
             _updatedAt = ev.CreatedAt;
+            _comparedToHandoffId = ev.ComparedToHandoffId;
             _selection.AddRange(ev.RecordVersions);
             _status = "draft";
         });
@@ -70,6 +79,7 @@ public sealed class AdvisorHandoff : Aggregate
             _revision = ev.Revision;
             _updatedAt = ev.ReadiedAt;
             _status = "ready_for_review";
+            _wasReadyForReview = true;
         });
         On<AdvisorHandoffClosed>(ev =>
         {
@@ -127,20 +137,24 @@ public sealed class AdvisorHandoff : Aggregate
     }
 
     public Result<bool> Create(string purpose, IReadOnlyList<AdvisorRecordVersion> recordVersions,
-        DateOnly expiresOn, ActorReference createdBy, DateTimeOffset createdAt)
+        DateOnly expiresOn, ActorReference createdBy, DateTimeOffset createdAt,
+        Uuid? comparedToHandoffId = null)
     {
         if (_tenantId == Uuid.Empty || _programId == Uuid.Empty || Id == Uuid.Empty ||
             string.IsNullOrWhiteSpace(purpose) || !ValidSelection(recordVersions) ||
-            !ValidActor(createdBy) || expiresOn < DateOnly.FromDateTime(createdAt.UtcDateTime))
+            !ValidActor(createdBy) || expiresOn < DateOnly.FromDateTime(createdAt.UtcDateTime) ||
+            comparedToHandoffId is { } compareId &&
+            (compareId == Uuid.Empty || compareId == Id))
             return Failure(RequestErrorKind.Validation, "A handoff requires purpose, exact selected versions, an actor, and a valid expiry.");
         if (_created)
             return _purpose == purpose.Trim() && _expiresOn == expiresOn &&
-                   _selection.SequenceEqual(recordVersions)
+                   _selection.SequenceEqual(recordVersions) &&
+                   _comparedToHandoffId == comparedToHandoffId
                 ? Result<bool>.Success(true)
                 : Failure(RequestErrorKind.Conflict, "The handoff already exists with different content.");
 
         RaiseEvent(new AdvisorHandoffCreated(_tenantId, _programId, Id, recordVersions.ToArray(),
-            purpose.Trim(), expiresOn, createdBy, createdAt));
+            purpose.Trim(), expiresOn, createdBy, createdAt, comparedToHandoffId));
         return Result<bool>.Success(true);
     }
 

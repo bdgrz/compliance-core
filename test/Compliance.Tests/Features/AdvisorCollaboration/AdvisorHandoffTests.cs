@@ -33,6 +33,32 @@ public sealed class AdvisorHandoffTests
     }
 
     [Fact]
+    public void ShouldRetainComparisonBaselineGivenARepeatedHandoff()
+    {
+        // Arrange
+        var comparisonId = Uuid.CreateVersion4();
+        var selected = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
+
+        // Act
+        var created = handoff.Create("Review changed controls", [selected],
+            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now,
+            comparisonId);
+        Assert.True(created.IsSuccess, created.Error?.Message);
+        Assert.True(handoff.MarkReadyForReview(1, ActorReference.ForMember(LeadId, "Lead"),
+            Now.AddMinutes(1)).IsSuccess);
+        var replay = new AggregateScenario<AdvisorHandoff>(new AdvisorHandoff(TenantId,
+            ProgramId, HandoffId)).Given(new AggregateScenario<AdvisorHandoff>(handoff)
+            .PendingEvents.ToArray()).Aggregate;
+
+        // Assert
+        Assert.Equal(comparisonId, handoff.ComparedToHandoffId);
+        Assert.True(handoff.WasReadyForReview);
+        Assert.Equal(comparisonId, replay.ComparedToHandoffId);
+        Assert.True(replay.WasReadyForReview);
+    }
+
+    [Fact]
     public void ShouldSelectMultipleQuestionsFromOneBoundaryGivenExactBoundaryVersion()
     {
         // Arrange

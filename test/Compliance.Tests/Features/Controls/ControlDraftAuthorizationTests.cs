@@ -44,6 +44,8 @@ public sealed class ControlDraftAuthorizationTests
     [InlineData("revise", "ciso", false)]
     [InlineData("ready", "compliance_lead", true)]
     [InlineData("ready", null, false)]
+    [InlineData("preview", "compliance_lead", true)]
+    [InlineData("preview", "ceo", false)]
     public async Task ShouldRequireComplianceLeadGivenAdvisorHandoffMutation(string operation,
         string? role, bool allowed)
     {
@@ -68,6 +70,8 @@ public sealed class ControlDraftAuthorizationTests
                 [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Updated selection"),
             "ready" => new MarkAdvisorHandoffReadyForReview(tenantId, programId,
                 Uuid.CreateVersion4(), 1),
+            "preview" => new PreviewAdvisorHandoff(tenantId, programId,
+                Uuid.CreateVersion4()),
             _ => throw new InvalidOperationException()
         };
 

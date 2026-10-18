@@ -4,7 +4,7 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>Replaces a handoff's selected versions under an optimistic revision check.</summary>
 public sealed class ReviseAdvisorHandoffSelectionHandler(IAggregateExecutor executor,
-    IAdvisorRecordVersionResolver recordVersions, TimeProvider clock)
+    IAggregateReader reader, IAdvisorRecordVersionResolver recordVersions, TimeProvider clock)
     : IRequestHandler<ReviseAdvisorHandoffSelection>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<ReviseAdvisorHandoffSelection> context,
@@ -22,6 +22,27 @@ public sealed class ReviseAdvisorHandoffSelectionHandler(IAggregateExecutor exec
             request.ProgramId, request.RecordVersions, ct).ConfigureAwait(false);
         if (!exactSources.IsSuccess)
             return exactSources;
+
+        var current = await reader.HydrateAsync(new AdvisorHandoff(request.TenantId,
+            request.ProgramId, request.HandoffId), ct).ConfigureAwait(false);
+        if (!current.IsCreated || current.ProgramId != request.ProgramId)
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                "The advisor handoff was not found in the requested program."));
+        if (current.ComparedToHandoffId is { } comparedToId)
+        {
+            var previous = await reader.HydrateAsync(new AdvisorHandoff(request.TenantId,
+                request.ProgramId, comparedToId), ct).ConfigureAwait(false);
+            if (!previous.IsCreated || previous.ProgramId != request.ProgramId ||
+                !previous.WasReadyForReview ||
+                previous.Status is not ("closed" or "revoked"))
+                return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The handoff comparison baseline is no longer available."));
+            if (request.RecordVersions.Any(selected =>
+                    AdvisorHandoffSelectionComparison.Classify(selected, previous.Selection) ==
+                    AdvisorHandoffSourceChange.Unchanged))
+                return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                    "A repeated handoff may include only new or changed source versions."));
+        }
 
         return await executor.ExecuteAsync(new AdvisorHandoff(request.TenantId, request.ProgramId,
                 request.HandoffId), handoff =>

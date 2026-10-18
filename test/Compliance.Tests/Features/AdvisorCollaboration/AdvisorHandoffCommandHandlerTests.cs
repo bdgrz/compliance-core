@@ -54,8 +54,8 @@ public sealed class AdvisorHandoffCommandHandlerTests
             [new(recordId, versionId)], "  Type I controls  ", new DateOnly(2026, 12, 31));
 
         // Act
-        var result = await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Resolver,
-                fixture.Clock)
+        var result = await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Reader,
+                fixture.Resolver, fixture.Clock)
             .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
         var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
             fixture.ProgramId, handoffId));
@@ -74,6 +74,104 @@ public sealed class AdvisorHandoffCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldRejectPreviouslySharedSourceGivenRepeatedHandoff()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (previousId, recordId, versionId) = await fixture.SeedOpenHandoffWithSelectionAsync();
+        await fixture.CloseHandoffAsync(previousId);
+        var request = new CreateAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
+            Uuid.CreateVersion4(), [new(recordId, versionId)], "Follow-up review",
+            new DateOnly(2026, 12, 31), previousId);
+
+        // Act
+        var result = await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Reader,
+                fixture.Resolver, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, request.HandoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.False(saved.IsCreated);
+    }
+
+    [Fact]
+    public async Task ShouldCreateChangedSourceGivenRepeatedHandoff()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (previousId, recordId, previousVersionId) =
+            await fixture.SeedOpenHandoffWithSelectionAsync();
+        await fixture.CloseHandoffAsync(previousId);
+        var request = new CreateAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
+            Uuid.CreateVersion4(), [new(recordId, Uuid.CreateVersion4())], "Follow-up review",
+            new DateOnly(2026, 12, 31), previousId);
+
+        // Act
+        var result = await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Reader,
+                fixture.Resolver, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, request.HandoffId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.NotEqual(previousVersionId, Assert.Single(saved.Selection).VersionId);
+        Assert.Equal(previousId, saved.ComparedToHandoffId);
+    }
+
+    [Fact]
+    public async Task ShouldRejectComparisonAgainstAnUnfinishedHandoffGivenRepeatSelection()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (previousId, recordId, _) = await fixture.SeedOpenHandoffWithSelectionAsync();
+        var request = new CreateAdvisorHandoff(fixture.TenantId, fixture.ProgramId,
+            Uuid.CreateVersion4(), [new(recordId, Uuid.CreateVersion4())], "Follow-up review",
+            new DateOnly(2026, 12, 31), previousId);
+
+        // Act
+        var result = await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Reader,
+                fixture.Resolver, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldRejectPreviouslySharedSourceGivenRepeatedHandoffSelectionRevision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (previousId, recordId, previousVersionId) =
+            await fixture.SeedOpenHandoffWithSelectionAsync();
+        await fixture.CloseHandoffAsync(previousId);
+        var handoffId = Uuid.CreateVersion4();
+        var draft = new AdvisorHandoff(fixture.TenantId, fixture.ProgramId, handoffId);
+        Assert.True(draft.Create("Follow-up review",
+            [new(recordId, Uuid.CreateVersion4())], new DateOnly(2026, 12, 31),
+            ActorReference.ForMember(RbacIds.Member(fixture.TenantId, fixture.UserId),
+                "Compliance lead"), Now.AddMinutes(3), previousId).IsSuccess);
+        await fixture.Writer.SaveAsync(draft, new RequestDispatchContext(RequestActor.System));
+        var request = new ReviseAdvisorHandoffSelection(fixture.TenantId, fixture.ProgramId,
+            handoffId, 1, [new(recordId, previousVersionId)], "Restoring the prior version");
+
+        // Act
+        var result = await new ReviseAdvisorHandoffSelectionHandler(fixture.Executor,
+                fixture.Reader, fixture.Resolver, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Equal(1, saved.Revision);
+        Assert.NotEqual(previousVersionId, Assert.Single(saved.Selection).VersionId);
+    }
+
+    [Fact]
     public async Task ShouldNotCreateHandoffGivenSystemDispatch()
     {
         // Arrange
@@ -83,8 +181,8 @@ public sealed class AdvisorHandoffCommandHandlerTests
             [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Review", new DateOnly(2026, 12, 31));
 
         // Act
-        var result = await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Resolver,
-                fixture.Clock)
+        var result = await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Reader,
+                fixture.Resolver, fixture.Clock)
             .HandleAsync(new Cntryl.Portia.RequestContext<CreateAdvisorHandoff>(request,
                 RequestActor.System), CancellationToken.None);
         var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
@@ -108,7 +206,7 @@ public sealed class AdvisorHandoffCommandHandlerTests
 
         // Act
         var result = await new ReviseAdvisorHandoffSelectionHandler(fixture.Executor,
-                fixture.Resolver, fixture.Clock)
+                fixture.Reader, fixture.Resolver, fixture.Clock)
             .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
         var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
             fixture.ProgramId, handoffId));
@@ -132,7 +230,7 @@ public sealed class AdvisorHandoffCommandHandlerTests
 
         // Act
         var result = await new ReviseAdvisorHandoffSelectionHandler(fixture.Executor,
-                fixture.Resolver, fixture.Clock)
+                fixture.Reader, fixture.Resolver, fixture.Clock)
             .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
         var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
             fixture.ProgramId, handoffId));
@@ -241,12 +339,12 @@ public sealed class AdvisorHandoffCommandHandlerTests
         // Act
         var result = operation switch
         {
-            "create" => await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Resolver,
-                fixture.Clock)
+            "create" => await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Reader,
+                fixture.Resolver, fixture.Clock)
                 .HandleAsync(Fixture.Context(fixture.UserId, (CreateAdvisorHandoff)request),
                     CancellationToken.None),
             "revise" => await new ReviseAdvisorHandoffSelectionHandler(fixture.Executor,
-                fixture.Resolver, fixture.Clock).HandleAsync(Fixture.Context(fixture.UserId,
+                fixture.Reader, fixture.Resolver, fixture.Clock).HandleAsync(Fixture.Context(fixture.UserId,
                     (ReviseAdvisorHandoffSelection)request), CancellationToken.None),
             "ready" => await new MarkAdvisorHandoffReadyForReviewHandler(fixture.Executor,
                 fixture.Reader, fixture.Resolver, fixture.Clock).HandleAsync(Fixture.Context(fixture.UserId,
@@ -292,12 +390,12 @@ public sealed class AdvisorHandoffCommandHandlerTests
         // Act
         var result = operation switch
         {
-            "create" => await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Resolver,
-                fixture.Clock)
+            "create" => await new CreateAdvisorHandoffHandler(fixture.Executor, fixture.Reader,
+                fixture.Resolver, fixture.Clock)
                 .HandleAsync(Fixture.Context((CreateAdvisorHandoff)request, dispatch),
                     CancellationToken.None),
             "revise" => await new ReviseAdvisorHandoffSelectionHandler(fixture.Executor,
-                fixture.Resolver, fixture.Clock).HandleAsync(Fixture.Context(
+                fixture.Reader, fixture.Resolver, fixture.Clock).HandleAsync(Fixture.Context(
                     (ReviseAdvisorHandoffSelection)request, dispatch), CancellationToken.None),
             "ready" => await new MarkAdvisorHandoffReadyForReviewHandler(fixture.Executor,
                 fixture.Reader, fixture.Resolver, fixture.Clock).HandleAsync(Fixture.Context(
@@ -696,6 +794,16 @@ public sealed class AdvisorHandoffCommandHandlerTests
             Assert.True(handoff.MarkReadyForReview(1, lead, Now.AddMinutes(1)).IsSuccess);
             await Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
             return (handoffId, recordId, recordVersionId);
+        }
+
+        public async Task CloseHandoffAsync(Uuid handoffId)
+        {
+            var handoff = await Reader.HydrateAsync(new AdvisorHandoff(TenantId, ProgramId,
+                handoffId));
+            Assert.True(handoff.Close("The prior review is complete",
+                ActorReference.ForMember(RbacIds.Member(TenantId, UserId), "Compliance lead"),
+                Now.AddMinutes(2)).IsSuccess);
+            await Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
         }
 
         public async Task<(Uuid HandoffId, Uuid FeedbackId)> SeedHandoffWithFeedbackAsync()

@@ -466,14 +466,15 @@ Retention supports evidence artifacts and application import sources, one retent
 
 Scope: **R2-08**. Requirement source: [decisions/m0-d14-advisor-collaboration](decisions/m0-d14-advisor-collaboration.md).
 
-AdvisorHandoff and its request/event contracts exist, and the aggregate retains exact selected versions, readiness state, and feedback history. Close and revoke handlers are registered and exposed through tenant/program-scoped API routes. Creation, selection, readiness, and feedback are not fully wired because the system still needs an exact source-version resolver and the accepted internal-advisor/guest authority model; AnnotateReadinessGap remains a separate readiness annotation.
+AdvisorHandoff retains exact native selected versions, explicit repeated-handoff lineage, readiness history, and feedback history. Create, revise, ready, close, revoke, feedback, correction, response, and resolution handlers are registered and tested. Their source resolvers enforce current exact versions; preview reads exact content under Compliance Lead authorization and lists changed, new, and removed sources against an explicitly selected ended handoff. `AnnotateReadinessGap` remains a separate readiness annotation. The internal firm Advisor path still depends on the accepted authority work tracked by #269.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Partial | `CreateAdvisorHandoff`; `ReviseAdvisorHandoffSelection`; `MarkAdvisorHandoffReadyForReview` | The contracts and aggregate retain exact IDs and readiness transitions. Add a resolver that proves tenant, program, exact current version, and shareable status for every supported record kind; restrict readiness to the Compliance Lead. |
+| Implemented | `CreateAdvisorHandoff`; `ReviseAdvisorHandoffSelection`; `MarkAdvisorHandoffReadyForReview` | Exact versions resolve to current supported source records, and selection/readiness mutations require the Compliance Lead. Repeated handoffs bind a shared closed/revoked baseline and reject unchanged sources. |
 | Implemented | `CloseAdvisorHandoff`; `RevokeAdvisorHandoff` | Tested handlers end access while preserving handoff history; both commands have tenant/program-scoped API routes. The existing program-management authorization remains in force. |
-| Partial | `RecordAdvisorFeedback`; `CorrectAdvisorFeedback` | The aggregate retains immutable comment/change_request/validated feedback and linked corrections/responses. Add handlers plus M0-D14 internal-advisor and guest authorization; validation never approves a record. |
+| Implemented | `RecordAdvisorFeedback`; `CorrectAdvisorFeedback` | The aggregate retains immutable comment/change_request/validated feedback and linked corrections; author attribution and M0-D14 access checks are enforced, and validation never approves a record. |
 | Implemented | `RespondToAdvisorFeedback` | The personal client-member handler addresses the owning handoff directly, records response attribution, and is registered at a tenant/program-scoped HTTP route. |
+| Implemented | `ResolveAdvisorFeedback` | An authorized personal client actor resolves feedback once; the event removes it from active manager work while preserving its history. |
 | Partial | `InviteGuestConsultant`; `GrantAccess`; `RevokeAccessGrant`; `AssignWorkItem` | Guest invitation now captures program scopes and a required end date, acceptance provisions expiring Viewer grants, and reads/feedback are constrained to active handoffs. Still add expiry/revocation lifecycle evidence and approved-record access through explicit program grants; do not create a second consultant identity or generic task workflow. |
 
 <a id="g04"></a>

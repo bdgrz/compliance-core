@@ -46,6 +46,31 @@ public sealed class AdvisorHandoffQueryHandlerTests
     }
 
     [Fact]
+    public async Task ShouldReturnComparisonLineageGivenRepeatedHandoff()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var priorHandoffId = Uuid.CreateVersion4();
+        var handoffId = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(RbacIds.Member(fixture.TenantId, fixture.UserId),
+            "Compliance lead");
+        var handoff = new AdvisorHandoff(fixture.TenantId, fixture.ProgramId, handoffId);
+        Assert.True(handoff.Create("Follow-up review",
+            [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], new DateOnly(2026, 12, 31),
+            actor, CreatedAt, priorHandoffId).IsSuccess);
+        await fixture.Writer.SaveAsync(handoff, new RequestDispatchContext(RequestActor.System));
+
+        // Act
+        var result = await new GetAdvisorRequestHandler(fixture.Reader).HandleAsync(
+            new RequestContext<GetAdvisorRequest>(new GetAdvisorRequest(fixture.TenantId,
+                fixture.ProgramId, handoffId), new ClaimsPrincipal()), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(priorHandoffId, result.Value.ComparedToHandoffId);
+    }
+
+    [Fact]
     public async Task ShouldNotDiscloseHandoffGivenDifferentProgramScope()
     {
         // Arrange

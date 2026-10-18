@@ -26,7 +26,7 @@ Evidence handling:
 
 Advisor collaboration:
 
-- Exact native source-version validation, active source reads, typed feedback identity, current-versus-historical feedback reads, the projected handoff directory, and internal feedback work-item response and resolution are covered by `AdvisorRecordVersionResolverTests`, `GetAdvisorSharedSourceHandlerTests`, `AdvisorHandoffCommandHandlerTests`, `ListAdvisorFeedbackHandlerTests`, `ListAdvisorRequestsHandlerTests`, `FitzAdvisorHandoffDirectoryTests`, `FitzAdvisorFeedbackWorkItemDirectoryTests`, and `WorkSourceCompositionTests`. Repeated-handoff change comparison remains open R2-08 work.
+- Exact native source-version validation, active source reads, typed feedback identity, current-versus-historical feedback reads, the projected handoff directory, internal feedback work-item response and resolution, and change-aware handoff previews are covered by `AdvisorRecordVersionResolverTests`, `GetAdvisorSharedSourceHandlerTests`, `AdvisorHandoffCommandHandlerTests`, `PreviewAdvisorHandoffHandlerTests`, `ListAdvisorFeedbackHandlerTests`, `ListAdvisorRequestsHandlerTests`, `FitzAdvisorHandoffDirectoryTests`, `FitzAdvisorFeedbackWorkItemDirectoryTests`, and `WorkSourceCompositionTests`. Firm Advisor engagement authorization remains blocked on #269.
 
 Type I baseline:
 
