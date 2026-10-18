@@ -602,7 +602,7 @@ AuditPackage contracts and an aggregate exist, but the source-complete package c
 | --- | --- | --- |
 | Partial | `RequestAuditPackageBuild`; `RecordAuditPackageBuildResult` | Build-request and exact worker-result handlers persist an attempt and verify its request event. Still generate deterministic exact-version package/index/control-matrix/evidence-index outputs from frozen sources and store immutable bytes; internal completion remains distinct from human approval. |
 | Partial | `ValidateAuditPackage`; `ApproveAuditPackageValidationOverride` | The override handler retains an independent decision; validation still needs source-backed findings against the exact manifest/version. Missing or unauthorized artifacts cannot be hidden by a clean result. |
-| Partial | `ApproveAuditPackageDisclosure`; `RecordAuditPackageDelivery`; `AmendAuditPackage` | Disclosure and delivery handlers bind recipient/receipt to a package version; package creation/build output and amendment selection snapshots remain incomplete. Reuse general artifact disclosure where semantics match rather than create two approval authorities. |
+| Partial | `ApproveAuditPackageDisclosure`; `RecordAuditPackageDelivery`; `AmendAuditPackage` | Disclosure and delivery handlers bind recipient/receipt to a package version. AmendAuditPackage v2 carries a complete selection and frozen source snapshot, enabling exact-source additions/removals while preserving package lineage; canonical source metadata still requires a trusted resolver. Package creation/build output remain incomplete. Reuse general artifact disclosure where semantics match rather than create two approval authorities. |
 
 <a id="g13"></a>
 

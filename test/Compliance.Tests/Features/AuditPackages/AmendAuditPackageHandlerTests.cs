@@ -70,6 +70,58 @@ public sealed class AmendAuditPackageHandlerTests
     }
 
     [Fact]
+    public async Task ShouldAddExactFrozenSourceGivenCompleteAmendmentSelection()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var baseline = await fixture.SeedBaselineAsync();
+        var packageId = Uuid.CreateVersion4();
+        var completeContent = fixture.Content(baseline);
+        await fixture.SeedBuiltPackageAsync(packageId, baseline,
+            selectedContent: [completeContent.SelectedContent[0]]);
+        var request = new AmendAuditPackage(fixture.TenantId, fixture.ProgramId, packageId, 3,
+            "Include the additional exact baseline source.", null, completeContent);
+
+        // Act
+        var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
+            request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
+            fixture.ProgramId, packageId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(4, saved.Revision);
+        Assert.Equal(2, saved.Current!.CurrentVersion);
+        Assert.Equal(completeContent.SelectedContent.Select(item => item.SourceRecordId),
+            saved.Current.Versions[1].SelectedContent.Select(item => item.SourceRecordId));
+        Assert.Equal(baseline.TypeIBaselineId, saved.Current.Versions[1].SourceSnapshotId);
+    }
+
+    [Fact]
+    public async Task ShouldRejectChangedPackageIdentityGivenCompleteAmendmentSelection()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var baseline = await fixture.SeedBaselineAsync();
+        var packageId = Uuid.CreateVersion4();
+        await fixture.SeedBuiltPackageAsync(packageId, baseline);
+        var content = fixture.Content(baseline) with { Name = "Attacker-selected package name" };
+        var request = new AmendAuditPackage(fixture.TenantId, fixture.ProgramId, packageId, 3,
+            "Try to change package identity.", null, content);
+
+        // Act
+        var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
+            request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
+            fixture.ProgramId, packageId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(3, saved.Revision);
+        Assert.Equal(1, saved.Current!.CurrentVersion);
+    }
+
+    [Fact]
     public async Task ShouldRejectSystemActorGivenPackageAmendment()
     {
         // Arrange
@@ -151,11 +203,14 @@ public sealed class AmendAuditPackageHandlerTests
 
         public async Task SeedBuiltPackageAsync(Uuid packageId, TypeIBaselineView baseline,
             string? firstSourceHash = null, bool storeArchive = true,
-            bool corruptArchiveEntry = false)
+            bool corruptArchiveEntry = false,
+            IReadOnlyList<AuditPackageSelectionEntry>? selectedContent = null)
         {
             var package = new AuditPackageAggregate(TenantId, ProgramId, packageId);
             var memberId = RbacIds.Member(TenantId, UserId);
-            Assert.Null(package.Create(Content(baseline, firstSourceHash), memberId,
+            var content = Content(baseline, firstSourceHash) with
+            { SelectedContent = selectedContent ?? Content(baseline, firstSourceHash).SelectedContent };
+            Assert.Null(package.Create(content, memberId,
                 "Package author", Now));
             Assert.Null(package.RequestBuild(package.Revision, "build-key-1", memberId,
                 "Package author", Now.AddMinutes(2)));
@@ -203,7 +258,7 @@ public sealed class AmendAuditPackageHandlerTests
             return buffer.ToArray();
         }
 
-        AuditPackageContent Content(TypeIBaselineView baseline, string? firstSourceHash = null) => new(ExaminationId,
+        public AuditPackageContent Content(TypeIBaselineView baseline, string? firstSourceHash = null) => new(ExaminationId,
             "type_i", "type_i_baseline", baseline.TypeIBaselineId, baseline.ContentSha256,
             "SOC 2 Type I", [
                 Selection(SourceRecord1, SourceVersion1, 3, firstSourceHash ?? SourceHash1),

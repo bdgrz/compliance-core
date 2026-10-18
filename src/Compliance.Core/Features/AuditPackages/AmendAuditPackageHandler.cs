@@ -16,10 +16,14 @@ public sealed class AmendAuditPackageHandler(IAggregateExecutor executor, IAggre
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Audit package amendment requires a personal HTTP actor."));
         if (request.PackageId == Uuid.Empty || request.ExpectedRevision < 0 ||
-            request.IncludedRecordIds is null || request.IncludedRecordIds.Count is < 1 or > 256 ||
-            request.IncludedRecordIds.Any(id => id == Uuid.Empty) ||
-            request.IncludedRecordIds.Distinct().Count() != request.IncludedRecordIds.Count)
-            return Invalid("An amendment requires a package, expected revision, and unique bounded source selection.");
+            (request.Content is null) == (request.IncludedRecordIds is null))
+            return Invalid("An amendment requires one complete source selection or a legacy retained-record selection.");
+        if (request.IncludedRecordIds is { } includedRecordIds &&
+            (includedRecordIds.Count is < 1 or > 256 || includedRecordIds.Any(id => id == Uuid.Empty) ||
+             includedRecordIds.Distinct().Count() != includedRecordIds.Count))
+            return Invalid("A retained-record amendment requires a unique bounded source selection.");
+        if (request.Content is { } requestedContent && !ValidSelection(requestedContent))
+            return Invalid("A complete amendment requires a unique bounded frozen source selection.");
 
         var aggregateId = new AuditPackage(request.TenantId, request.ProgramId, request.PackageId);
         var loaded = await reader.HydrateAsync(aggregateId, ct).ConfigureAwait(false);
@@ -33,15 +37,36 @@ public sealed class AmendAuditPackageHandler(IAggregateExecutor executor, IAggre
             version.PackageVersion == current.CurrentVersion);
         if (prior is null)
             return Conflict("The current package version is unavailable for amendment.");
-        var requestedIds = request.IncludedRecordIds.ToHashSet();
-        var selection = prior.SelectedContent.Where(item => requestedIds.Contains(item.SourceRecordId))
-            .ToArray();
-        if (selection.Length != requestedIds.Count)
-            return Conflict("An amendment can retain only source records already selected by the current package version.");
+        AuditPackageContent content;
+        if (request.Content is { } completeContent)
+        {
+            var expectedSnapshotKind = current.PackageKind switch
+            {
+                "type_i" => "type_i_baseline",
+                "type_ii" => "type_ii_close_snapshot",
+                _ => null,
+            };
+            if (expectedSnapshotKind is null || completeContent.ExaminationId != current.ExaminationId ||
+                completeContent.PackageKind != current.PackageKind || completeContent.Name != current.Name ||
+                completeContent.SourceSnapshotKind != expectedSnapshotKind ||
+                completeContent.SourcePeriodId != prior.SourcePeriodId ||
+                prior.SourceSnapshotKind != expectedSnapshotKind)
+                return Conflict("An amendment must preserve package identity and use its supported frozen source type and period.");
+            content = completeContent;
+        }
+        else
+        {
+            var requestedIds = request.IncludedRecordIds!.ToHashSet();
+            var selection = prior.SelectedContent.Where(item => requestedIds.Contains(item.SourceRecordId))
+                .ToArray();
+            if (selection.Length != requestedIds.Count)
+                return Conflict("A legacy amendment can retain only source records already selected by the current package version.");
 
-        var content = new AuditPackageContent(current.ExaminationId, current.PackageKind,
-            prior.SourceSnapshotKind, prior.SourceSnapshotId, prior.SourceSnapshotSha256,
-            current.Name, selection, prior.SourcePeriodId);
+            content = new AuditPackageContent(current.ExaminationId, current.PackageKind,
+                prior.SourceSnapshotKind, prior.SourceSnapshotId, prior.SourceSnapshotSha256,
+                current.Name, selection, prior.SourcePeriodId);
+        }
+
         var resolved = await sources.ResolveAsync(request.TenantId, request.ProgramId, content, ct)
             .ConfigureAwait(false);
         if (!resolved.IsSuccess)
@@ -60,4 +85,10 @@ public sealed class AmendAuditPackageHandler(IAggregateExecutor executor, IAggre
 
     static Result Conflict(string message) =>
         Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
+
+    static bool ValidSelection(AuditPackageContent content) =>
+        content.SelectedContent is { Count: >= 1 and <= 256 } selected &&
+        selected.All(item => item is not null && item.SourceRecordId != Uuid.Empty) &&
+        selected.Select(item => (item.SourceType, item.SourceRecordId, item.SourceVersion))
+            .Distinct().Count() == selected.Count;
 }

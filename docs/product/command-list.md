@@ -431,7 +431,7 @@ This pruned plan has 129 required additions, including five evidence command con
 - **ApproveAuditPackageValidationOverride** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageValidationOverride.cs#L7))
 - **ApproveAuditPackageDisclosure** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageDisclosure.cs#L7))
 - **RecordAuditPackageDelivery** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageDelivery.cs#L7))
-- **AmendAuditPackage** — Type I/II subset amendments are handled ([contract](../../src/Compliance.Common/Features/AuditPackages/AmendAuditPackage.cs#L7), [handler](../../src/Compliance.Core/Features/AuditPackages/AmendAuditPackageHandler.cs#L8)); adding sources and changing the frozen snapshot remain unsupported until the command carries a complete selection snapshot.
+- **AmendAuditPackage** — v2 accepts a complete desired selection and exact frozen source snapshot; the handler preserves package lineage and verifies every selected source against the Type I baseline or latest Type II close snapshot ([contract](../../src/Compliance.Common/Features/AuditPackages/AmendAuditPackage.cs#L7), [handler](../../src/Compliance.Core/Features/AuditPackages/AmendAuditPackageHandler.cs#L8)). Legacy retained-record requests remain supported. Canonical source metadata still needs a trusted resolver.
 
 ### Assertions, representation letters, outcomes and Type II plan — [T1-07](backlog.md#t1-07-record-the-type-i-outcome-and-approve-the-type-ii-plan), [T3-06](backlog.md#t3-06-record-management-sign-off-and-the-type-ii-outcome); [M0-D27](decisions/m0-d27-attest-scope.md)
 
