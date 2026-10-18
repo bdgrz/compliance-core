@@ -268,7 +268,8 @@ static class TypeIIPlanSourceValidator
     static bool ValidBaseline(TypeIBaselineView baseline)
     {
         var preview = TypeIBaselinePreview.Create(baseline.TenantId, baseline.ProgramId,
-            baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences);
+            baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences,
+            baseline.SourceCoverage);
         return HashEquals(preview.ContentSha256, baseline.ContentSha256) &&
             preview.CanonicalManifest == baseline.CanonicalManifest;
     }

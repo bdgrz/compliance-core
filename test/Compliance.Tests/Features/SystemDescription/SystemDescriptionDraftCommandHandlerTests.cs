@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Tests.Features.Examinations;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -338,7 +339,7 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
             if (includeAdditionalSource)
                 sources.Add(new TypeIBaselineSourceReference("approved_control",
                     AdditionalSourceRecordId, AdditionalSourceVersionId, 1, new string('b', 64)));
-            var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, ExaminationId,
+            var preview = TypeIBaselinePreviewTestFactory.Create(TenantId, ProgramId, ExaminationId,
                 sources);
             Assert.Null(aggregate.FreezeBaseline(1, BaselineId, preview,
                 "The initial source manifest is complete.", UserMemberId, "Examiner", Now.AddMinutes(1)));

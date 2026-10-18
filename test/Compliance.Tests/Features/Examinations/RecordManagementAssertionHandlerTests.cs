@@ -241,7 +241,7 @@ public sealed class RecordManagementAssertionHandlerTests
                     Uuid.CreateVersion4(), 1, Hash('b')),
                 .. baselineSources,
             ];
-            var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, ExaminationId,
+            var preview = TypeIBaselinePreviewTestFactory.Create(TenantId, ProgramId, ExaminationId,
                 baselineSources);
             Assert.Null(engagement.FreezeBaseline(engagement.Revision, BaselineId, preview,
                 "Confirmed the exact examination source population.", AuthorMemberId,

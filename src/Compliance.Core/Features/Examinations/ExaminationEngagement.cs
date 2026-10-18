@@ -141,7 +141,10 @@ public sealed class ExaminationEngagement : Aggregate
         var differences = FreezeText(preview.ScopeDifferences);
         var frozen = new TypeIBaselineView(_tenantId, _programId, Id, baselineId, "frozen", 1,
             sources, differences, preview.CanonicalManifest, preview.ContentSha256, frozenAt,
-            actorMemberId, actorDisplay.Trim(), confirmationRationale, null, null, [], [], 0);
+            actorMemberId, actorDisplay.Trim(), confirmationRationale, null, null, [], [], 0)
+        {
+            SourceCoverage = FreezeCoverage(preview.SourceCoverage),
+        };
         var engagement = _current with
         {
             Status = "baseline_frozen",
@@ -217,7 +220,10 @@ public sealed class ExaminationEngagement : Aggregate
             preview.ContentSha256, amendedAt, approverMemberId, approverDisplay.Trim(),
             _baseline.ConfirmationRationale, _baseline.TypeIBaselineId, reason,
             Array.AsReadOnly(suppliedChanges), FreezeIds(affectedPackageMaterialIds),
-            _baseline.AmendmentDepth + 1);
+            _baseline.AmendmentDepth + 1)
+        {
+            SourceCoverage = FreezeCoverage(preview.SourceCoverage),
+        };
         var engagement = _current with
         {
             Revision = Revision + 1,
@@ -311,7 +317,8 @@ public sealed class ExaminationEngagement : Aggregate
     static CommandFailure? ValidatePreview(TypeIBaselinePreview preview, Uuid expectedBoundaryId)
     {
         if (preview.Sources is null || preview.Sources.Count is 0 or > MaximumSources ||
-            preview.ScopeDifferences is null || preview.ScopeDifferences.Count > 1000)
+            preview.ScopeDifferences is null || preview.ScopeDifferences.Count > 1000 ||
+            !ValidSourceCoverage(preview.SourceCoverage))
             return InvalidPreview("A Type I baseline requires a bounded, complete source manifest.");
         var identities = new HashSet<(string Kind, Uuid RecordId)>();
         foreach (var source in preview.Sources)
@@ -338,8 +345,11 @@ public sealed class ExaminationEngagement : Aggregate
         {
             if (!HasExactApprovedBoundary(baseline.Sources, expectedBoundaryId))
                 return false;
+            if (!ValidSourceCoverage(baseline.SourceCoverage))
+                return false;
             var preview = TypeIBaselinePreview.Create(baseline.TenantId, baseline.ProgramId,
-                baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences);
+                baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences,
+                baseline.SourceCoverage);
             return preview.ContentSha256 == baseline.ContentSha256 &&
                    preview.CanonicalManifest == baseline.CanonicalManifest &&
                    ValidDigest(baseline.ContentSha256) && baseline.Sources.Count is > 0 and <= MaximumSources &&
@@ -458,6 +468,7 @@ public sealed class ExaminationEngagement : Aggregate
     static TypeIBaselineView FreezeBaselineView(TypeIBaselineView baseline) => baseline with
     {
         Sources = Freeze(baseline.Sources),
+        SourceCoverage = FreezeCoverage(baseline.SourceCoverage),
         ScopeDifferences = FreezeText(baseline.ScopeDifferences),
         ChangedRecordIds = FreezeIds(baseline.ChangedRecordIds),
         AffectedPackageMaterialIds = FreezeIds(baseline.AffectedPackageMaterialIds),
@@ -467,6 +478,10 @@ public sealed class ExaminationEngagement : Aggregate
         IReadOnlyList<TypeIBaselineSourceReference> sources) => Array.AsReadOnly(sources
         .OrderBy(static source => source.Kind, StringComparer.Ordinal)
         .ThenBy(static source => source.RecordId.ToString(), StringComparer.Ordinal).ToArray());
+
+    static ReadOnlyCollection<TypeIBaselineSourceCoverage> FreezeCoverage(
+        IReadOnlyList<TypeIBaselineSourceCoverage> coverage) => Array.AsReadOnly(coverage
+        .OrderBy(static family => family.Family, StringComparer.Ordinal).ToArray());
 
     static ReadOnlyCollection<string> FreezeText(IReadOnlyList<string> values) => Array.AsReadOnly(values
         .Select(static value => value.Trim().Normalize(NormalizationForm.FormC))
@@ -481,6 +496,23 @@ public sealed class ExaminationEngagement : Aggregate
 
     static bool ValidDigest(string? value) => value is { Length: 64 } && value.All(static character =>
         character is >= '0' and <= '9' or >= 'a' and <= 'f');
+
+    static bool ValidSourceCoverage(IReadOnlyList<TypeIBaselineSourceCoverage>? coverage)
+    {
+        if (coverage is null || coverage.Count != TypeIBaselineSourceFamilies.Required.Count)
+            return false;
+        var families = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var item in coverage)
+        {
+            if (item is null || item.RecordCount is < 0 or > MaximumSources ||
+                !ValidDigest(item.ContentSha256) ||
+                !families.Add(item.Family) ||
+                !TypeIBaselineSourceFamilies.Required.Contains(item.Family,
+                    StringComparer.Ordinal))
+                return false;
+        }
+        return families.SetEquals(TypeIBaselineSourceFamilies.Required);
+    }
 
     static bool BoundedText(string value, int maximumLength) =>
         !string.IsNullOrWhiteSpace(value) && value.Length <= maximumLength;

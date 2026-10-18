@@ -119,6 +119,29 @@ public sealed class ExaminationEngagementTests
     }
 
     [Fact]
+    public void ShouldRequireEverySourceFamilyToBeCoveredGivenFreeze()
+    {
+        // Arrange
+        var engagement = NewEngagement();
+        var completePreview = ValidPreview();
+        var incompletePreview = completePreview with
+        {
+            SourceCoverage = completePreview.SourceCoverage
+                .Where(static coverage => coverage.Family == "approved_boundary").ToArray(),
+        };
+
+        // Act
+        var failure = engagement.FreezeBaseline(1, BaselineId, incompletePreview,
+            "Scope confirmed", MemberId, "Lead", Now.AddDays(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent,
+            Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Null(engagement.Baseline);
+        Assert.Single(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+    }
+
+    [Fact]
     public void ShouldRejectFrozenEventWithoutExactBoundaryGivenReplay()
     {
         // Arrange
@@ -240,7 +263,7 @@ public sealed class ExaminationEngagementTests
         var control = new TypeIBaselineSourceReference("control",
             recordId ?? Uuid.CreateVersion4(), versionId ?? Uuid.CreateVersion4(), 3,
             new string('b', 64));
-        return TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId,
+        return TypeIBaselinePreviewTestFactory.Create(TenantId, ProgramId, EngagementId,
             [boundary, control]);
     }
 }

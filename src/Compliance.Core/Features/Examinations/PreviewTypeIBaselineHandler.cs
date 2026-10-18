@@ -1,0 +1,76 @@
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.Examinations;
+
+public sealed class PreviewTypeIBaselineHandler(IAggregateReader aggregateReader,
+    IExaminationEngagementDirectoryReader directory, ITypeIBaselinePreviewReader previews)
+    : IRequestHandler<PreviewTypeIBaseline, TypeIBaselinePreviewView>
+{
+    public async ValueTask<Result<TypeIBaselinePreviewView>> HandleAsync(
+        IRequestContext<PreviewTypeIBaseline> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
+            request.ExaminationId == Uuid.Empty)
+            return Failure(RequestErrorKind.Validation,
+                "Tenant, program, and examination identities are required.");
+
+        var projected = await directory.GetAsync(request.TenantId, request.ExaminationId, ct)
+            .ConfigureAwait(false);
+        if (projected is null || projected.TenantId != request.TenantId ||
+            projected.ProgramId != request.ProgramId ||
+            projected.ExaminationEngagementId != request.ExaminationId)
+            return Failure(RequestErrorKind.NotFound, "The examination engagement was not found.");
+
+        var aggregate = await aggregateReader.HydrateAsync(new ExaminationEngagement(
+            request.TenantId, projected.ProgramId, request.ExaminationId), ct)
+            .ConfigureAwait(false);
+        if (aggregate.Current is not { } current)
+            return Failure(RequestErrorKind.Conflict,
+                "The examination engagement source has not reached its projection.", true);
+        if (!SameEngagement(projected, current))
+            return Failure(RequestErrorKind.Conflict,
+                "The examination engagement projection changed or has not caught up. Retry the preview.",
+                true);
+
+        var preview = await previews.ReadAsync(current, ct).ConfigureAwait(false);
+        if (!preview.IsSuccess)
+            return Result<TypeIBaselinePreviewView>.Failure(preview.Error);
+        if (preview.Value.TenantId != request.TenantId ||
+            preview.Value.ProgramId != request.ProgramId ||
+            preview.Value.ExaminationEngagementId != request.ExaminationId)
+            return Failure(RequestErrorKind.Conflict,
+                "The baseline source reader returned a preview for a different engagement.");
+
+        var confirmed = await aggregateReader.HydrateAsync(new ExaminationEngagement(
+            request.TenantId, projected.ProgramId, request.ExaminationId), ct)
+            .ConfigureAwait(false);
+        if (confirmed.Current is not { } afterRead || !SameEngagement(current, afterRead))
+            return Failure(RequestErrorKind.Conflict,
+                "The examination engagement changed while its baseline preview was being read. Retry the preview.",
+                true);
+
+        return Result<TypeIBaselinePreviewView>.Success(new TypeIBaselinePreviewView(
+            preview.Value.TenantId, preview.Value.ProgramId,
+            preview.Value.ExaminationEngagementId, current.Revision, current.PeriodStart,
+            Array.AsReadOnly(preview.Value.Sources.ToArray()),
+            Array.AsReadOnly(preview.Value.SourceCoverage.ToArray()),
+            Array.AsReadOnly(preview.Value.Blockers.ToArray()),
+            Array.AsReadOnly(preview.Value.ScopeDifferences.ToArray()),
+            preview.Value.CanonicalManifest, preview.Value.ContentSha256));
+    }
+
+    static bool SameEngagement(ExaminationEngagementView left, ExaminationEngagementView right) =>
+        left.TenantId == right.TenantId && left.ProgramId == right.ProgramId &&
+        left.ExaminationEngagementId == right.ExaminationEngagementId &&
+        left.Revision == right.Revision && left.UpdatedAt == right.UpdatedAt &&
+        left.BoundaryId == right.BoundaryId && left.PeriodStart == right.PeriodStart &&
+        left.PeriodEnd == right.PeriodEnd && left.EngagementType == right.EngagementType &&
+        left.AuditFirm == right.AuditFirm &&
+        left.TrustServicesCategories.SequenceEqual(right.TrustServicesCategories) &&
+        left.ManagementContactMemberIds.SequenceEqual(right.ManagementContactMemberIds);
+
+    static Result<TypeIBaselinePreviewView> Failure(RequestErrorKind kind, string message,
+        bool transient = false) => Result<TypeIBaselinePreviewView>.Failure(
+        new RequestError(kind, message, isTransient: transient));
+}

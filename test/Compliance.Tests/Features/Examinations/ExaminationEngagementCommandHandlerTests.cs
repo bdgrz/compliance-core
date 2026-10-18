@@ -364,12 +364,14 @@ public sealed class ExaminationEngagementCommandHandlerTests
             var engagement = await Directory.GetAsync(TenantId, EngagementId);
             var source = new TypeIBaselineSourceReference("approved_boundary", BoundaryId,
                 Uuid.CreateVersion4(), 1, new string('b', 64));
-            var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId, [source]);
+            var preview = TypeIBaselinePreviewTestFactory.Create(TenantId, ProgramId,
+                EngagementId, [source]);
             var frozenAt = Now.AddMinutes(1);
             var baseline = new TypeIBaselineView(TenantId, ProgramId, EngagementId, BaselineId,
                 "frozen", 1, preview.Sources, [], preview.CanonicalManifest, preview.ContentSha256,
                 frozenAt, RbacIds.Member(TenantId, UserId), "Examiner", "Confirmed", null,
-                null, [], [], 0);
+                null, [], [], 0)
+            { SourceCoverage = preview.SourceCoverage };
             var current = engagement ?? throw new InvalidOperationException(
                 "The seeded examination engagement was not projected.");
             var frozenEngagement = current with

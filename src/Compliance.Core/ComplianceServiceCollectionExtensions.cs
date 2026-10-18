@@ -544,6 +544,8 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
         services.AddScoped<IExaminationEngagementDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
+        services.AddScoped<ITypeIBaselineSourceContributor, BoundaryTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselinePreviewReader, TypeIBaselinePreviewReader>();
         services.AddScoped<IReadinessReadModel, FitzReadinessReadModel>();
         services.AddScoped<ReadinessProjectionReadConsistency>();
         services.AddScoped<IApplicationReadinessImpactReader, ApplicationReadinessImpactReader>();
@@ -869,6 +871,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviseExaminationEngagementHandler>()
             .AddRequestHandler<GetExaminationEngagementHandler>()
             .AddRequestHandler<GetTypeIBaselineHandler>()
+            .AddRequestHandler<PreviewTypeIBaselineHandler>()
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ProposeTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ApproveTypeIIOperatingPlanHandler>()

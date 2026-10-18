@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Tests.Features.Examinations;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -205,7 +206,7 @@ public sealed class CreateAuditPackageHandlerTests
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i",
                 "Independent Audit LLP", new DateOnly(2026, 9, 30), null, ["security"],
                 boundaryId, [memberId]), memberId, "Engagement lead", Now));
-            var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, ExaminationId,
+            var preview = TypeIBaselinePreviewTestFactory.Create(TenantId, ProgramId, ExaminationId,
             [new TypeIBaselineSourceReference("approved_boundary", boundaryId,
                 Uuid.CreateVersion4(), 1, SourceSha256),
              new TypeIBaselineSourceReference("system_description", SourceRecordId,

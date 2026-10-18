@@ -22,4 +22,7 @@ public sealed record TypeIBaselineView(
     string? AmendmentReason,
     IReadOnlyList<Uuid> ChangedRecordIds,
     IReadOnlyList<Uuid> AffectedPackageMaterialIds,
-    int AmendmentDepth);
+    int AmendmentDepth)
+{
+    public IReadOnlyList<TypeIBaselineSourceCoverage> SourceCoverage { get; init; } = [];
+}
