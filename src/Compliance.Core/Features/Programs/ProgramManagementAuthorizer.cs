@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.Readiness;
@@ -20,6 +21,14 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
             return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
                 "Program administration requires a Bdgrz user identity."));
         var tenantId = context.Request.TenantId;
+        if (context.Request is GetAdvisorRequest handoff && professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.CanReadHandoffAsync(tenantId, handoff.ProgramId,
+                handoff.AdvisorRequestId, userId, ct).ConfigureAwait(false))
+            return Result.Success;
+        if (context.Request is ListAdvisorFeedback feedback && professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.CanReadHandoffAsync(tenantId, feedback.ProgramId,
+                feedback.HandoffId, userId, ct).ConfigureAwait(false))
+            return Result.Success;
         if (context.Request is ListReadinessAnnotations annotations && professionalAdvisoryRead is not null &&
             await professionalAdvisoryRead.CanReadAsync(tenantId, annotations.ProgramId, userId, ct)
                 .ConfigureAwait(false))

@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
@@ -42,6 +43,21 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
         }
 
         return false;
+    }
+
+    /// <summary>Draft selections become visible to an assigned Advisor only while actively shared.</summary>
+    public async ValueTask<bool> CanReadHandoffAsync(Uuid tenantId, Uuid programId,
+        Uuid handoffId, Uuid userId, CancellationToken ct = default)
+    {
+        if (handoffId == Uuid.Empty || !await CanReadAsync(tenantId, programId, userId, ct)
+                .ConfigureAwait(false))
+            return false;
+
+        var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
+            handoffId), ct).ConfigureAwait(false);
+        return handoff.IsCreated && handoff.ProgramId == programId &&
+               handoff.Status == "ready_for_review" &&
+               handoff.ExpiresOn >= DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
     }
 
     async ValueTask<bool> MatchesProgramScopeAsync(Uuid tenantId, Uuid programId,

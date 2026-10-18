@@ -4,7 +4,7 @@ This is the requirement-backed read-layer plan for the committed product scope. 
 
 ## Existing inventory
 
-Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **270 query contracts** (216 existing plus 54 added here) and **489 model/supporting contracts** (436 existing plus 53 response views added here). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
+Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **270 query contracts** (216 existing plus 54 added here) and **491 model/supporting contracts** (436 existing, 53 response views added here, and two advisor-feedback history views). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
 
 ## Required read workflows to backfill
 
@@ -17,6 +17,14 @@ The 54 planned query contracts and 53 response-view types listed below now have 
 | [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorRequest.cs#L9) | [AdvisorRequestView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestView.cs#L6) | One scoped advisor handoff, including selected immutable record versions and lifecycle state. |
 | [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) | `Page<[AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)>` | Scoped handoff directory with status and review readiness. |
 | [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) | `Page<[AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)>` | Feedback and responses for a handoff or its selected records. |
+
+`GetAdvisorRequest` and `ListAdvisorFeedback` read their owning handoff stream through HTTP and
+MCP. The handoff view returns its persisted selection, purpose, expiry, lifecycle state, and
+attribution; feedback pages preserve authors, exact record/version references, linked corrections,
+responses, resolution time, and current-versus-historical status. Firm Advisors can read only an
+unexpired `ready_for_review` handoff after current engagement and program-scope checks. The handoff
+directory query remains unwired; source-version resolution and guest membership are still open
+feature gaps, so these reads do not complete R2-08.
 
 ### Type I engagement — T1-01
 

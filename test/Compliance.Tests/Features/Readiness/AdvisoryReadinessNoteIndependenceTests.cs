@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Readiness;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Tenants;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
@@ -95,6 +96,71 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         // Assert
         Assert.True(notes.IsSuccess, notes.Error?.Message);
         Assert.Equal("Advisor working feedback", Assert.Single(notes.Value!.Items).Body);
+    }
+
+    [Theory]
+    [InlineData("draft", false, false)]
+    [InlineData("ready_for_review", false, true)]
+    [InlineData("closed", false, false)]
+    [InlineData("ready_for_review", true, false)]
+    public async Task ShouldEnforceAdvisorHandoffReadVisibilityGivenHandoffStatusAndExpiry(
+        string status, bool expired, bool expectedAllowed)
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var staff = await AttestAssignmentHistoryFixture.SeedAndReturnAsync(fixture.Provider,
+            fixture.Tenant, fixture.User, practice: "advisory");
+        await fixture.SeedStaffDirectoryAsync(staff);
+        fixture.Memberships.State = "absent";
+        fixture.Permissions.Allowed = false;
+        var handoffId = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant,
+            Uuid.CreateVersion4()), "Compliance lead");
+        var createdAt = fixture.Clock.GetUtcNow().AddDays(-2);
+        var expiresOn = DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime)
+            .AddDays(expired ? -1 : 30);
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
+            {
+                Assert.True(handoff.Create("Readiness review",
+                    [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], expiresOn,
+                    actor, createdAt).IsSuccess);
+                if (status is "ready_for_review" or "closed")
+                    Assert.True(handoff.MarkReadyForReview(1, actor,
+                        createdAt.AddMinutes(1)).IsSuccess);
+                if (status == "closed")
+                    Assert.True(handoff.Close("Review complete", actor,
+                        createdAt.AddMinutes(2)).IsSuccess);
+                return Result.Success;
+            });
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
+            scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
+            scope.ServiceProvider.GetRequiredService<IProgramResourceScopeResolver>(),
+            scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        IProgramManagementRequest handoffRequest = new GetAdvisorRequest(fixture.Tenant,
+            fixture.Program, handoffId);
+        IProgramManagementRequest feedbackRequest = new ListAdvisorFeedback(fixture.Tenant,
+            fixture.Program, handoffId);
+
+        // Act
+        var principal = ProgramManagementServices.Actor(fixture.User);
+        var handoffResult = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(handoffRequest, principal), CancellationToken.None);
+        var feedbackResult = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(feedbackRequest, principal), CancellationToken.None);
+
+        // Assert
+        if (expectedAllowed)
+        {
+            Assert.True(handoffResult.IsSuccess, handoffResult.Error?.Message);
+            Assert.True(feedbackResult.IsSuccess, feedbackResult.Error?.Message);
+        }
+        else
+        {
+            Assert.Equal(RequestErrorKind.NotFound, handoffResult.Error?.Kind);
+            Assert.Equal(RequestErrorKind.NotFound, feedbackResult.Error?.Kind);
+        }
     }
 
     [Fact]

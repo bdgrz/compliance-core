@@ -8,6 +8,8 @@ namespace Bdgrz.Compliance;
 
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorRecordVersion))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorFeedbackView))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorFeedbackCorrectionView))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorFeedbackResponseView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorRequestSummaryView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorRequestView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.GetAdvisorRequest))]

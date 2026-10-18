@@ -823,6 +823,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<CloseAdvisorHandoffHandler>()
             .AddRequestHandler<RevokeAdvisorHandoffHandler>()
             .AddRequestHandler<RespondToAdvisorFeedbackHandler>()
+            .AddRequestHandler<GetAdvisorRequestHandler>()
+            .AddRequestHandler<ListAdvisorFeedbackHandler>()
             .AddRequestHandler<CreateProgramHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()

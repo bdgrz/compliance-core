@@ -13,20 +13,27 @@ public sealed class AdvisorHandoff : Aggregate
         { "comment", "change_request", "validated" };
 
     readonly Uuid _tenantId;
-    readonly Uuid _programId;
+    Uuid _programId;
     readonly List<AdvisorRecordVersion> _selection = [];
     readonly List<AdvisorFeedbackEntry> _feedback = [];
     bool _created;
     string? _purpose;
     DateOnly _expiresOn;
+    ActorReference? _createdBy;
+    DateTimeOffset? _createdAt;
+    DateTimeOffset? _updatedAt;
     string _status = "missing";
     long _revision;
 
     public bool IsCreated => _created;
+    public Uuid ProgramId => _programId;
     public string Status => _status;
     public long Revision => _revision;
     public string? Purpose => _purpose;
     public DateOnly ExpiresOn => _expiresOn;
+    public ActorReference? CreatedBy => _createdBy;
+    public DateTimeOffset? CreatedAt => _createdAt;
+    public DateTimeOffset? UpdatedAt => _updatedAt;
     public IReadOnlyList<AdvisorRecordVersion> Selection => _selection.ToArray();
 
     public AdvisorHandoff(Uuid tenantId, Uuid programId, Uuid handoffId)
@@ -38,15 +45,20 @@ public sealed class AdvisorHandoff : Aggregate
         On<AdvisorHandoffCreated>(ev =>
         {
             _created = true;
+            _programId = ev.ProgramId;
             _revision = 1;
             _purpose = ev.Purpose;
             _expiresOn = ev.ExpiresOn;
+            _createdBy = ev.CreatedBy;
+            _createdAt = ev.CreatedAt;
+            _updatedAt = ev.CreatedAt;
             _selection.AddRange(ev.RecordVersions);
             _status = "draft";
         });
         On<AdvisorHandoffSelectionRevised>(ev =>
         {
             _revision = ev.Revision;
+            _updatedAt = ev.RevisedAt;
             _selection.Clear();
             _selection.AddRange(ev.RecordVersions);
             _status = "draft";
@@ -54,27 +66,32 @@ public sealed class AdvisorHandoff : Aggregate
         On<AdvisorHandoffReadiedForReview>(ev =>
         {
             _revision = ev.Revision;
+            _updatedAt = ev.ReadiedAt;
             _status = "ready_for_review";
         });
         On<AdvisorHandoffClosed>(ev =>
         {
             _revision = ev.Revision;
+            _updatedAt = ev.ClosedAt;
             _status = "closed";
         });
         On<AdvisorHandoffRevoked>(ev =>
         {
             _revision = ev.Revision;
+            _updatedAt = ev.RevokedAt;
             _status = "revoked";
         });
         On<AdvisorFeedbackRecorded>(ev =>
         {
             _revision++;
+            _updatedAt = ev.CreatedAt;
             _feedback.Add(new AdvisorFeedbackEntry(ev.FeedbackId, ev.RecordId,
                 ev.RecordVersionId, ev.Kind, ev.Body, ev.Author, ev.CreatedAt));
         });
         On<AdvisorFeedbackCorrected>(ev =>
         {
             _revision++;
+            _updatedAt = ev.CorrectedAt;
             var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
             if (index >= 0)
                 _feedback[index] = _feedback[index] with
@@ -87,6 +104,7 @@ public sealed class AdvisorHandoff : Aggregate
         On<AdvisorFeedbackResponded>(ev =>
         {
             _revision++;
+            _updatedAt = ev.RespondedAt;
             var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
             if (index >= 0)
                 _feedback[index] = _feedback[index] with
@@ -98,6 +116,7 @@ public sealed class AdvisorHandoff : Aggregate
         On<AdvisorFeedbackResolved>(ev =>
         {
             _revision++;
+            _updatedAt = ev.ResolvedAt;
             var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
             if (index >= 0)
                 _feedback[index] = _feedback[index] with { ResolvedAt = ev.ResolvedAt };

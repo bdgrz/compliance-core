@@ -10,7 +10,7 @@ Reconciled 2026-10-18 against `src/Compliance.Common` and `src/Compliance.Core`.
 | Query contracts | 271 (216 existing + 55 backfilled contracts) | [Existing queries](component-inventory.md#existing-queries) and [required query/view-model backfill](query-and-view-model-list.md) |
 | Domain events | 392 declared source types; 381 in the tracked feature-backed universe, with 11 declarations to reconcile | [Existing events](component-inventory.md#existing-events) and [required event backfill](domain-event-list.md) |
 | Aggregates | 85 (68 existing + 17 TDD-backed aggregates) | [Existing aggregates](component-inventory.md#existing-aggregates) |
-| Models, views, and supporting contracts | 565 (436 existing + 55 response/receipt views + 74 aggregate payload/support models) | [Existing models](component-inventory.md#existing-models-and-supporting-contracts) and [required query/view-model backfill](query-and-view-model-list.md) |
+| Models, views, and supporting contracts | 567 (436 existing + 57 response/receipt views + 74 aggregate payload/support models) | [Existing models](component-inventory.md#existing-models-and-supporting-contracts) and [required query/view-model backfill](query-and-view-model-list.md) |
 
 All source links in those existing inventories resolve to files. The command list separates existing contracts from additional candidates and internal operations. The component inventory contains the proposed future queries, events, aggregate/model candidates, reactors, and projectors.
 
