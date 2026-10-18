@@ -766,6 +766,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<SignManagementRepresentationLetterHandler>()
             .AddRequestHandler<CreateAuditPackageHandler>()
             .AddRequestHandler<AmendAuditPackageHandler>()
+            .AddRequestHandler<ValidateAuditPackageHandler>()
             .AddRequestHandler<ApproveAuditPackageDisclosureHandler>()
             .AddRequestHandler<ApproveAuditPackageValidationOverrideHandler>()
             .AddRequestHandler<RecordAuditPackageBuildResultHandler>()

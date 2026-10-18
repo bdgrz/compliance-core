@@ -2199,6 +2199,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Audit packages");
+    app.MapPortiaPost<ValidateAuditPackage>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Audit packages");
     app.MapMethods(
         "/api/{**path}",
         ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],

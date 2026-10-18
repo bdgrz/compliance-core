@@ -82,7 +82,7 @@ public sealed class AmendAuditPackageHandlerTests
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
     }
 
-    sealed class Fixture : IAsyncDisposable
+    internal sealed class Fixture : IAsyncDisposable
     {
         static readonly Uuid ArchiveId = Uuid.CreateVersion4();
         static readonly string SourceHash1 = new('b', 64);
@@ -136,11 +136,13 @@ public sealed class AmendAuditPackageHandlerTests
             return engagement.Baseline!;
         }
 
-        public async Task SeedBuiltPackageAsync(Uuid packageId, TypeIBaselineView baseline)
+        public async Task SeedBuiltPackageAsync(Uuid packageId, TypeIBaselineView baseline,
+            string? firstSourceHash = null)
         {
             var package = new AuditPackageAggregate(TenantId, ProgramId, packageId);
             var memberId = RbacIds.Member(TenantId, UserId);
-            Assert.Null(package.Create(Content(baseline), memberId, "Package author", Now));
+            Assert.Null(package.Create(Content(baseline, firstSourceHash), memberId,
+                "Package author", Now));
             Assert.Null(package.RequestBuild(package.Revision, "build-key-1", memberId,
                 "Package author", Now.AddMinutes(2)));
             var manifest = package.Current!.Versions[0].Manifest;
@@ -152,10 +154,10 @@ public sealed class AmendAuditPackageHandlerTests
             await Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
         }
 
-        AuditPackageContent Content(TypeIBaselineView baseline) => new(ExaminationId,
+        AuditPackageContent Content(TypeIBaselineView baseline, string? firstSourceHash = null) => new(ExaminationId,
             "type_i", "type_i_baseline", baseline.TypeIBaselineId, baseline.ContentSha256,
             "SOC 2 Type I", [
-                Selection(SourceRecord1, 3, SourceHash1),
+                Selection(SourceRecord1, 3, firstSourceHash ?? SourceHash1),
                 Selection(SourceRecord2, 4, SourceHash2),
             ]);
 

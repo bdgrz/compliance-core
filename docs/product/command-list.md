@@ -427,7 +427,7 @@ This pruned plan has 128 required additions, including five evidence command con
 - **CreateAuditPackage** — Type I creation handler coded ([contract](../../src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs#L9), [handler](../../src/Compliance.Core/Features/AuditPackages/CreateAuditPackageHandler.cs#L8)); the source builder checks the frozen baseline and exact selected source versions. Type II close-snapshot resolution remains open, so handler coverage is partial.
 - **RequestAuditPackageBuild** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RequestAuditPackageBuild.cs#L7))
 - **RecordAuditPackageBuildResult** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs#L7))
-- **ValidateAuditPackage** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs#L7))
+- **ValidateAuditPackage** — Type I source resolution and manifest-linked validation are handled ([contract](../../src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs#L7), [handler](../../src/Compliance.Core/Features/AuditPackages/ValidateAuditPackageHandler.cs#L8)); Type II source resolution and archive-content verification remain open.
 - **ApproveAuditPackageValidationOverride** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageValidationOverride.cs#L7))
 - **ApproveAuditPackageDisclosure** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageDisclosure.cs#L7))
 - **RecordAuditPackageDelivery** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageDelivery.cs#L7))
