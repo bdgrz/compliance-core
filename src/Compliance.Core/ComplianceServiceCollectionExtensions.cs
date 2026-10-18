@@ -527,6 +527,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GetEmailChallengeStatusHandler>()
             .AddRequestHandler<GetEmailAddressHandler>()
             .AddRequestHandler<ListEmailAddressesHandler>()
+            .AddRequestHandler<DisableTenantIdentityProviderHandler>()
             .AddRequestAuthorizer<EmailOwnershipAuthorizer>()
             .AddRequestHandler<ReviseIndependenceRulesHandler>()
             .AddRequestHandler<GetIndependenceRuleVersionsHandler>()

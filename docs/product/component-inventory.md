@@ -558,12 +558,16 @@ The following is a static source inventory, including internal operations. Queri
 
 - [CompleteEmailChallenge](../../src/Compliance.Common/Features/UserIdentities/CompleteEmailChallenge.cs#L6) — `bdgrz.email-address.complete-challenge` v1
 - [CompleteIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/CompleteIdentityRecovery.cs#L6) — `bdgrz.user-identity.complete-recovery` v1
+- [ConfigureTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/ConfigureTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.configure-tenant-identity-provider` v1
 - [ContinueWithDeveloperIdentity](../../src/Compliance.Common/Features/UserIdentities/ContinueWithDeveloperIdentity.cs#L7) — `bdgrz.developer-identity.continue` v1
 - [ContinueWithOidcProvider](../../src/Compliance.Common/Features/UserIdentities/ContinueWithOidcProvider.cs#L7) — `bdgrz.oidc-provider.continue` v1
+- [DisableTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/DisableTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.disable-tenant-identity-provider` v1
 - [IssueEmailChallenge](../../src/Compliance.Common/Features/UserIdentities/IssueEmailChallenge.cs#L6) — `bdgrz.email-address.issue-challenge` v1
 - [LinkOidcProviderIdentity](../../src/Compliance.Common/Features/UserIdentities/LinkOidcProviderIdentity.cs#L7) — `bdgrz.oidc-provider.link` v1
 - [ReserveEmail](../../src/Compliance.Common/Features/UserIdentities/ReserveEmail.cs#L6) — `bdgrz.email-address.reserve` v1
+- [RotateTenantIdentityProviderCredentials](../../src/Compliance.Common/Features/UserIdentities/RotateTenantIdentityProviderCredentials.cs#L7) — `bdgrz.user-identities.rotate-tenant-identity-provider-credentials` v1
 - [StartIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/StartIdentityRecovery.cs#L6) — `bdgrz.user-identity.start-recovery` v1
+- [TestTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/TestTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.test-tenant-identity-provider` v1
 
 #### Work
 
@@ -2733,6 +2737,7 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/invitations/acceptance` | `AcceptTenantInvitation` | [registration](../../src/Compliance.App/Program.cs#L537) |
 | GET | `/api/v1/tenants/{tenant_id}` | `GetTenant` | [registration](../../src/Compliance.App/Program.cs#L540) |
 | GET | `/api/v1/tenants/{tenant_id}/provisioning-status` | `GetTenantProvisioningStatus` | [registration](../../src/Compliance.App/Program.cs#L543) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |
 | POST | `/api/v1/tenants/{tenant_id}/programs` | `CreateProgram` | [registration](../../src/Compliance.App/Program.cs#L559) |

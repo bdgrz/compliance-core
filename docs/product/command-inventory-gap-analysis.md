@@ -704,7 +704,7 @@ Deployment OIDC/session/link/recovery operations exist. There is no TrustedIssue
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `ConfigureTenantIdentityProvider`; `TestTenantIdentityProvider`; `DisableTenantIdentityProvider`; `RotateTenantIdentityProviderCredentials` | Persist per-tenant issuer trust and safe lifecycle, test configuration without granting membership, immediately block new sign-ins when disabled, preserve subject/history and secret custody. Test command is a retained explicit configuration test, not a normal read. |
+| Partial | `ConfigureTenantIdentityProvider`; `TestTenantIdentityProvider`; `RotateTenantIdentityProviderCredentials` | `DisableTenantIdentityProvider` now records an administrator-attributed disable transition. The remaining lifecycle needs encrypted tenant credential custody, a provider test/rotation adapter with verifiable outcomes, and sign-in routing that rejects disabled connections while preserving subject/history. Test command is a retained explicit configuration test, not a normal read. |
 | Decision | `ConfigureTenantIdentityGroupMapping`; `RevokeTenantIdentityGroupMapping` | Use only if the approved IdP group-mapping slice is selected; preserve explicit organization grants and never grant membership from email/domain alone. |
 
 <a id="g20"></a>

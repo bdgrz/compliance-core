@@ -4,8 +4,8 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 
 ## Current gap
 
-- Required commands in the plan: 127. 68 have handler source; 59 still need one.
-- Required command registration gaps: 59. Required commands without a static test reference: 59.
+- Required commands in the plan: 127. 69 have handler source; 58 still need one.
+- Required command registration gaps: 58. Required commands without a static test reference: 58.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
 
@@ -355,7 +355,7 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 | Own-attest delivery and organization offboarding — [F1-01](backlog.md#f1-01-onboard-suspend-and-offboard-client-organizations), [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks); [M0-D27](decisions/m0-d27-attest-scope.md) | `CompleteTenantOffboarding` | present | missing | check | no reference |
 | Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `ConfigureTenantIdentityProvider` | present | missing | check | no reference |
 | Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `TestTenantIdentityProvider` | present | missing | check | no reference |
-| Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `DisableTenantIdentityProvider` | present | missing | check | no reference |
+| Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `DisableTenantIdentityProvider` | present | present | present | referenced |
 | Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `RotateTenantIdentityProviderCredentials` | present | missing | check | no reference |
 | Methodology templates — [F1-04](backlog.md#f1-04-maintain-a-reusable-template-library-and-apply-it-to-clients) | `CreateMethodologyTemplate` | present | present | present | referenced |
 | Methodology templates — [F1-04](backlog.md#f1-04-maintain-a-reusable-template-library-and-apply-it-to-clients) | `ReviseMethodologyTemplateDraft` | present | present | present | referenced |
@@ -390,7 +390,7 @@ These are implementation dependencies found in the existing contracts, aggregate
 | `AcceptServiceEngagement`, `AssignServiceEngagementStaff`, `RevokeServiceEngagementStaff` | Add verified partner authority, current firm-staff directory snapshots, ratified rule versions, exact boundary approvals, and management acknowledgements. Assignment and revocation also need the authoritative effective-date staff source. |
 | `RatifyIndependenceRuleVersion`, `RecordPartnerIndependenceEvaluation` | Resolve the still-open professional ratification policy in [M0-D26](decisions/m0-d26-independence.md) / issue #343 and model trusted quality-partner authority. An `IPlatformOperatorRequest` does not establish firm quality-partner authority. Evaluation also needs verified partner identity and the exact current source set. |
 | `RequestClientExport`, `RecordClientExportBuildResult`, `RecordClientExportDelivery`, `RequestOwnAttestRecordPackage`, `RecordOwnAttestRecordPackageResult`, `RecordOwnAttestRecordDelivery`, `CompleteTenantOffboarding` | Add source-complete export/package builders, durable encrypted artifact storage and delivery receipts, plus a bounded offboarding coordinator that verifies all export and retention obligations before completion. |
-| `ConfigureTenantIdentityProvider`, `TestTenantIdentityProvider`, `DisableTenantIdentityProvider`, `RotateTenantIdentityProviderCredentials` | Add encrypted tenant credential storage and a provider test/rotation adapter with verifiable outcomes. The command contracts alone cannot safely test or rotate secrets. |
+| `ConfigureTenantIdentityProvider`, `TestTenantIdentityProvider`, `RotateTenantIdentityProviderCredentials` | Add encrypted tenant credential storage and a provider test/rotation adapter with verifiable outcomes. `DisableTenantIdentityProvider` now records an administrator-attributed disable transition; sign-in routing must consume that state before F1-06 is complete. |
 
 ## Order of work
 

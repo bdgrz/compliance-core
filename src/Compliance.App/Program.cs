@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
@@ -2114,6 +2115,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListMyTenants, Page<TenantMembershipSummary>>("/api/v1/tenants/mine")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
+    app.MapPortiaPost<DisableTenantIdentityProvider>(
+            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Identity federation");
     app.MapPortiaPost<DefineTeam>("/api/v1/tenants/{tenant_id}/teams/{team_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
