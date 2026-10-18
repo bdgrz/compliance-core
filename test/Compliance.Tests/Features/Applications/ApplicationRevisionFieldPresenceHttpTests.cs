@@ -22,6 +22,7 @@ using Microsoft.Extensions.Hosting;
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 
 /// <summary>Exercises production HTTP and registered MCP binding with local event and permission observations.</summary>
+[Trait("Category", "WebIntegration")]
 public sealed class ApplicationRevisionFieldPresenceHttpTests
 {
     [Fact]
@@ -635,7 +636,12 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
                 ProjectionCheckpoint.Start));
             foreach (var record in await EventsAsync())
                 await directory.ApplyAsync(record.Event);
-            await batch.CommitAsync(ProjectionCheckpoint.Start);
+            var cursor = EventCursor.Start;
+            await foreach (var record in _events.ReadAsync(
+                               EventStreamPattern.ForPattern(Tenant.ToString()), cursor,
+                               CancellationToken.None))
+                cursor = record.NextCursor;
+            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
 
         public async Task<HttpResponseMessage> ReviseAsync(long revision, string fields = "")
