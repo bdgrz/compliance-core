@@ -29,6 +29,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.AuditPackageBuildProgressRecorded))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.AuditPackageCreated))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.AuditPackageContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.CreateAuditPackage))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.AuditPackageDelivered))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.AuditPackageDisclosureApprovalView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AuditPackages.AuditPackageDisclosureApproved))]

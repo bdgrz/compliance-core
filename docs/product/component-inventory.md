@@ -110,7 +110,7 @@ These candidates make later scope concrete. They are not established public cont
 ### Audit packages — T1-05, T3-05
 
 - Aggregate/model candidates: AuditPackage; AuditPackageManifest; PackageValidation; PackageDelivery.
-- Commands: RequestAuditPackageBuild; ValidateAuditPackage; ApproveAuditPackageDisclosure; DeliverAuditPackage; AmendAuditPackage.
+- Commands: CreateAuditPackage; RequestAuditPackageBuild; ValidateAuditPackage; ApproveAuditPackageDisclosure; DeliverAuditPackage; AmendAuditPackage.
 - Queries: GetAuditPackage; ListAuditPackages; GetAuditPackageManifest; GetAuditPackageValidation; GetAuditPackageDelivery.
 - Events: AuditPackageCreated; AuditPackageBuildRequested; AuditPackageBuildProgressRecorded; AuditPackageBuilt; AuditPackageBuildFailed; AuditPackageValidated; AuditPackageValidationOverrideApproved; AuditPackageDisclosureApproved; AuditPackageDelivered; AuditPackageAmended.
 - Reactors: AuditPackageBuildReactor; AuditPackageDeliveryReactor.
@@ -2591,7 +2591,7 @@ These 131 requirement-backed event contracts have been added since the existing-
 
 - [AuditPackageBuildOutput](../../src/Compliance.Core/Features/AuditPackages/AuditPackageBuildOutput.cs#L6)
 - [AuditPackageBuildAttemptView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildAttemptView.cs#L6)
-- [AuditPackageContent](../../src/Compliance.Core/Features/AuditPackages/AuditPackageContent.cs#L6)
+- [AuditPackageContent](../../src/Compliance.Common/Features/AuditPackages/AuditPackageContent.cs#L6)
 - [AuditPackageDisclosureApprovalView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageDisclosureApprovalView.cs#L6)
 - [AuditPackageManifestEntryView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageManifestEntryView.cs#L6)
 - [AuditPackageSelectionEntry](../../src/Compliance.Common/Features/AuditPackages/AuditPackageSelectionEntry.cs#L6)

@@ -424,7 +424,7 @@ This pruned plan has 128 required additions, including five evidence command con
 
 ### Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md)
 
-- **CreateAuditPackage** — required by T1-05/T3-05, but the command contract and source-backed selection builder are missing. `AuditPackage.Create` has no request path; creation must bind a frozen baseline or period snapshot to explicitly selected, resolved record versions.
+- **CreateAuditPackage** — contract coded ([contract](../../src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs#L9)); the source-backed selection builder and handler remain. Creation must bind a frozen baseline or period snapshot to explicitly selected, resolved record versions.
 - **RequestAuditPackageBuild** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RequestAuditPackageBuild.cs#L7))
 - **RecordAuditPackageBuildResult** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs#L7))
 - **ValidateAuditPackage** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs#L7))
