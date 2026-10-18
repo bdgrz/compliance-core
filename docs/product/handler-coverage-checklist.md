@@ -4,10 +4,12 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 
 Handler status `partial` means the command has a registered handler for only part of its accepted feature scope and remains unfinished.
 
+Keep the layer boundary explicit: when a handler durably records valid intent and exact source identity, missing asynchronous work belongs to the reactor checklist. Do not hold a tested request handler open only because its worker or provider effect is still absent.
+
 ## Current gap
 
-- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 95 have complete handler coverage, 8 have partial handler coverage, and 21 still have no handler.
-- Active command registration gaps: 21. Active commands without a handler test reference: 21. The eight partial handlers are registered and tested but do not yet cover their accepted feature scope.
+- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 100 have complete handler coverage, 3 have partial handler coverage, and 21 still have no handler.
+- Active command registration gaps: 21. Active commands without a handler test reference: 21. The three partial handlers are registered and tested but do not yet cover their accepted feature scope.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
 
@@ -15,7 +17,7 @@ Handler status `partial` means the command has a registered handler for only par
 
 Work the layers in order. A command is complete only when its source and authority checks are implemented, its aggregate transition is exercised by a red-to-green behavior test, the handler is registered and host-dispatched, and the owning API authorization is verified. Update the table below as each item closes; do not move into projectors while any active handler is missing or partial.
 
-### Handlers — 29 active open items (21 missing, 8 partial)
+### Handlers — 24 active open items (21 missing, 3 partial)
 
 Evidence handling:
 
@@ -38,16 +40,13 @@ Type I baseline:
 
 Audit packages and Type II close:
 
-- [ ] `CreateAuditPackage` — complete deterministic package assembly and worker path.
-- [ ] `ValidateAuditPackage` — canonical source metadata and complete validation coverage.
-- [ ] `AmendAuditPackage` — complete deterministic package assembly and worker path.
 - [ ] `AmendTypeIIPeriodClose` — source-complete amendment content and changed-record/package-impact validation.
-- [ ] `FreezeTypeIIPeriodClose` — source-backed close validation and expected-versus-actual occurrence reconciliation.
 
 Type II operating plan and period:
 
-- [ ] `ProposeTypeIIOperatingPlan` — remaining finding, policy, risk, vendor, evidence, ownership, and cadence sources.
-- [ ] `StartTypeIIObservationPeriod` — complete carried-forward finding, policy, risk, vendor, expected-evidence, and nonmember-owner resolution.
+- [ ] `ProposeTypeIIOperatingPlan` (partial) — remaining finding, policy, risk, vendor, evidence, ownership, and cadence sources.
+- [ ] `StartTypeIIObservationPeriod` (partial) — complete carried-forward finding, policy, risk, vendor, expected-evidence, and nonmember-owner resolution.
+- [ ] `FreezeTypeIIPeriodClose` (partial) — source-backed close validation and expected-versus-actual occurrence reconciliation.
 
 Professional authority:
 
@@ -60,15 +59,14 @@ Professional authority:
 Exports and offboarding:
 
 - [ ] `RequestClientExport` — complete source builder and deterministic export request.
-- [ ] `RequestOwnAttestRecordPackage` — own-attest source builder and eligibility proof.
+- [ ] `RequestOwnAttestRecordPackage` — first model the missing package aggregate, then add a source-complete builder and eligibility proof. The current request/event/view contracts have no Core aggregate or handler, and no host route.
 - [ ] `RecordOwnAttestRecordPackageResult` — named worker callback bound to the persisted attempt.
 - [ ] `RecordOwnAttestRecordDelivery` — durable encrypted storage and independently verifiable delivery receipt.
 - [ ] `CompleteTenantOffboarding` — bounded coordinator verifying all export and retention obligations.
 
 Identity provider:
 
-- [ ] `ConfigureTenantIdentityProvider` — secure vault resolution and tested-provider transition.
-- [ ] `RotateTenantIdentityProviderCredentials` — secure vault resolution, current provider test, and atomic credential transition.
+- Handler registration, authorization, persistence, and behavior tests are complete; the provider test and secret-resolution effects remain in the reactor layer.
 
 ### Projectors
 
@@ -81,6 +79,12 @@ Identity provider:
 - [ ] Reconcile the feature-backed reactor inventory with accepted external effects and internal follow-up workflows.
 - [ ] Add missing reactors with effect-boundary, retry, idempotency, failure, and callback tests.
 - [ ] Verify durable checkpoints, at-least-once delivery, current authorization/source rechecks, and worker registration.
+- [ ] `AuditPackageBuildReactor` — deterministically assemble exact selected package content and persist the manifest-bound worker outcome.
+- [ ] `ArtifactDispositionReactor` — perform durable deletion and persist the exact provider outcome.
+- [ ] `ClientExportBuildReactor` and delivery adapter — build from the frozen source set and verify storage and delivery receipts.
+- [ ] `OwnAttestRecordPackageReactor` and `AttestRecordDeliveryReactor` — build the complete engagement record package and verify its delivery.
+- [ ] Weekly work-digest delivery reactor — resolve current authorized recipients and persist trusted provider outcomes.
+- [ ] Tenant identity-provider test and credential-rotation reactors — resolve secrets through the secure vault, test the provider, and persist only exact worker callbacks.
 
 ### Layer gates
 
@@ -335,7 +339,7 @@ Identity provider:
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `ApproveArtifactDisposition` | present | missing | check | no reference |
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `ExecuteArtifactDisposition` | present | missing | check | no reference |
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `RecordArtifactDispositionResult` | present | present | present | `RecordArtifactDispositionResultHandlerTests` |
-| Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `CreateAuditPackage` | present | partial | present | `CreateAuditPackageHandlerTests` |
+| Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `CreateAuditPackage` | present | present | present | `CreateAuditPackageHandlerTests` |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CreateAdvisorHandoff` | present | missing | check | no reference |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `ReviseAdvisorHandoffSelection` | present | missing | check | no reference |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `MarkAdvisorHandoffReadyForReview` | present | missing | check | no reference |
@@ -384,11 +388,11 @@ Identity provider:
 | Auditor requests, responses and samples — [T1-04](backlog.md#t1-04-respond-to-auditor-requests-and-samples), [T3-03](backlog.md#t3-03-fulfill-type-ii-sample-and-evidence-requests); [M0-D17](decisions/m0-d17-audit-deliverables.md), [M0-D27](decisions/m0-d27-attest-scope.md) | `AmendSampleSelection` | present | present | present | referenced |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `RequestAuditPackageBuild` | present | present | present | `AuditPackageCommandHandlerTests` |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `RecordAuditPackageBuildResult` | present | present | present | `RecordAuditPackageBuildResultHandlerTests` |
-| Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ValidateAuditPackage` | present | partial | present | `ValidateAuditPackageHandlerTests` |
+| Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ValidateAuditPackage` | present | present | present | `ValidateAuditPackageHandlerTests` |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ApproveAuditPackageValidationOverride` | present | present | present | referenced |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `ApproveAuditPackageDisclosure` | present | present | present | referenced |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `RecordAuditPackageDelivery` | present | present | present | referenced |
-| Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `AmendAuditPackage` | present | partial | present | `AmendAuditPackageHandlerTests` |
+| Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `AmendAuditPackage` | present | present | present | `AmendAuditPackageHandlerTests` |
 | Assertions, representation letters, outcomes and Type II plan — [T1-07](backlog.md#t1-07-record-the-type-i-outcome-and-approve-the-type-ii-plan), [T3-06](backlog.md#t3-06-record-management-sign-off-and-the-type-ii-outcome); [M0-D27](decisions/m0-d27-attest-scope.md) | `RecordManagementAssertion` | present | present | present | `RecordManagementAssertionHandlerTests` |
 | Assertions, representation letters, outcomes and Type II plan — [T1-07](backlog.md#t1-07-record-the-type-i-outcome-and-approve-the-type-ii-plan), [T3-06](backlog.md#t3-06-record-management-sign-off-and-the-type-ii-outcome); [M0-D27](decisions/m0-d27-attest-scope.md) | `ApproveManagementAssertion` | present | present | present | `ApproveManagementAssertionHandlerTests` |
 | Assertions, representation letters, outcomes and Type II plan — [T1-07](backlog.md#t1-07-record-the-type-i-outcome-and-approve-the-type-ii-plan), [T3-06](backlog.md#t3-06-record-management-sign-off-and-the-type-ii-outcome); [M0-D27](decisions/m0-d27-attest-scope.md) | `RecordManagementRepresentationLetter` | present | present | present | `RecordManagementRepresentationLetterHandlerTests` |
@@ -433,11 +437,11 @@ Identity provider:
 | Own-attest delivery and organization offboarding — [F1-01](backlog.md#f1-01-onboard-suspend-and-offboard-client-organizations), [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks); [M0-D27](decisions/m0-d27-attest-scope.md) | `RecordOwnAttestRecordPackageResult` | present | missing | check | no reference |
 | Own-attest delivery and organization offboarding — [F1-01](backlog.md#f1-01-onboard-suspend-and-offboard-client-organizations), [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks); [M0-D27](decisions/m0-d27-attest-scope.md) | `RecordOwnAttestRecordDelivery` | present | missing | check | no reference |
 | Own-attest delivery and organization offboarding — [F1-01](backlog.md#f1-01-onboard-suspend-and-offboard-client-organizations), [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks); [M0-D27](decisions/m0-d27-attest-scope.md) | `CompleteTenantOffboarding` | present | missing | check | no reference |
-| Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `ConfigureTenantIdentityProvider` | present | partial | present | `TenantIdentityProviderCommandHandlerTests` |
+| Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `ConfigureTenantIdentityProvider` | present | present | present | `TenantIdentityProviderCommandHandlerTests` |
 | Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `TestTenantIdentityProvider` | present | present | present | `TenantIdentityProviderCommandHandlerTests` |
 | Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `RecordTenantIdentityProviderTestResult` | present | present | present | `TenantIdentityProviderCommandHandlerTests` |
 | Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `DisableTenantIdentityProvider` | present | present | present | referenced |
-| Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `RotateTenantIdentityProviderCredentials` | present | partial | present | `TenantIdentityProviderCommandHandlerTests` |
+| Client-specific federation — [F1-06](backlog.md#f1-06-let-client-users-sign-in-through-their-own-identity-providers), [EN-01](backlog.md#en-01-provide-shared-authorization-and-actor-reference-foundations), [M0-A07](../architecture/decisions/0009-tenant-identity-federation-and-context.md) | `RotateTenantIdentityProviderCredentials` | present | present | present | `TenantIdentityProviderCommandHandlerTests` |
 | Methodology templates — [F1-04](backlog.md#f1-04-maintain-a-reusable-template-library-and-apply-it-to-clients) | `CreateMethodologyTemplate` | present | present | present | referenced |
 | Methodology templates — [F1-04](backlog.md#f1-04-maintain-a-reusable-template-library-and-apply-it-to-clients) | `ReviseMethodologyTemplateDraft` | present | present | present | referenced |
 | Methodology templates — [F1-04](backlog.md#f1-04-maintain-a-reusable-template-library-and-apply-it-to-clients) | `ReviewMethodologyTemplate` | present | present | present | referenced |
@@ -461,13 +465,10 @@ These dependencies are found in the existing contracts, aggregates, and accepted
 | Commands | Prerequisite before a correct handler can be wired |
 |---|---|
 | `ApproveArtifactDisposition`, `ExecuteArtifactDisposition` | Build a tenant-scoped eligibility reader that binds the exact artifact, retention basis, handling policy, active legal and engagement holds, historical reliance, and storage readiness. Execution also needs a durable deletion provider. `ArtifactDisposition` already rejects missing or changed eligibility snapshots. |
-| `RecordArtifactDispositionResult` reactor integration | The handler now accepts results only from the named internal worker, bound to the exact execution-request event and attempt number. The storage deletion reactor and its durable provider outcome remain to be implemented in the reactor layer. |
 | `CreateAdvisorHandoff`, `ReviseAdvisorHandoffSelection`, `MarkAdvisorHandoffReadyForReview` | Add a resolver for every supported record kind that proves tenant, program, current exact version, and shareable status. The aggregate accepts IDs but cannot establish those source facts. Readiness must be restricted to the Compliance Lead as required by [M0-D14](decisions/m0-d14-advisor-collaboration.md). |
 | `RecordAdvisorFeedback`, `CorrectAdvisorFeedback`, `RespondToAdvisorFeedback` | Add the M0-D14 scoped advisor/guest authorization model, including accepted firm-staff assignments, program-scoped expiring guest grants, and attribution rules. The current commands use ordinary client-management authorization, which cannot authorize the specified advisor actors. |
-| Weekly digest reactor | Bounded membership-page scheduling, stable per-member/week state, current membership/opt-out/verified-address checks, exact attempt callbacks, suppression, and retry identity are implemented and tested. The delivery reactor still needs a current authorized work snapshot and a trusted email adapter that records durable provider outcomes. |
 | `FreezeTypeIBaseline`, `AmendTypeIBaseline` | Add the authoritative baseline preview/source builder and a complete amendment snapshot. A handler cannot freeze or amend a baseline from a date and an opaque revision alone. |
 | System-description Type II successor scope — T1-02, T2-07, T3-01 | Draft creation and revision accept structured sections; source refresh verifies the complete Type I baseline or exact approved Type II plan and frozen close manifest. The aggregate successor path still preserves its existing scope and cannot create a Type II period version; add a period-scoped successor transition before this part of the feature is complete. |
-| `CreateAuditPackage`, `ValidateAuditPackage`, `AmendAuditPackage` | Type I baseline and latest Type II close-snapshot resolution verify exact source type, record ID, version ID, revision, and content hash. AmendAuditPackage v2 carries the complete desired selection and exact frozen snapshot, allowing validated additions/removals and a move to the latest Type II close snapshot while preserving package examination, kind, name, and period lineage; the legacy retained-record request remains supported. Validation verifies the stored archive digest and exact ZIP paths, lengths, and member hashes against the manifest, and records non-overridable findings for source or archive mismatches. Canonical source metadata remains open. The build request and exact worker-result handlers persist a manifest-bound attempt and callback; deterministic package-content assembly and the build worker reactor remain required for the full feature. |
 | `ProposeTypeIIOperatingPlan` | The handler requires complete content and validates the current baseline manifest, auditor outcome, approved and bound system description, every carried-forward baseline reference, all approved controls, active member owners, approved control operating plans, cadence, effective range, and required-change source IDs. The plan contract still cannot carry expected evidence or person/team owners; current open-finding state, policy/risk/vendor source aggregates, finding priority/ownership, and control cadence due-day semantics also lack resolvers. `RecordManagementExaminationReview` v2 now validates an authorized executive against the exact delivered package and manifest, frozen Type I or Type II close snapshot, approved assertion and supporting references, signed representation letter and retained artifacts, auditor outcome, and management commitments before persisting the immutable sign-off. |
 | `StartTypeIIObservationPeriod` | Implemented as a partial source-bound handler: derives the opening manifest from the current approved plan, current frozen Type I baseline, recorded auditor outcome, and approved system description bound to that baseline. It shares the Type II source validator, which also verifies all carried-forward references, exact planned controls, active member owners, operating-plan cadence, and effective range. The program calendar is bootstrapped from committed period streams and serializes inclusive date reservations; period amendments reserve replacement ranges until the period stream update completes. Current finding state/ownership, policy/risk/vendor resolvers, expected evidence, and nonmember owners still limit proposal completeness. |
 | `ProposeProgramRollover` | Implemented and tested. Proposals bind the exact frozen close snapshot and recorded auditor outcome, validate the carry-forward content and bounded rationale, and preserve same-intent retries. |
@@ -479,7 +480,6 @@ These dependencies are found in the existing contracts, aggregates, and accepted
 | `AcceptServiceEngagement`, `AssignServiceEngagementStaff`, `RevokeServiceEngagementStaff` | Add verified partner authority, current firm-staff directory snapshots, ratified rule versions, exact boundary approvals, and management acknowledgements. Assignment and revocation also need the authoritative effective-date staff source. |
 | `RatifyIndependenceRuleVersion`, `RecordPartnerIndependenceEvaluation` | Resolve the still-open professional ratification policy in [M0-D26](decisions/m0-d26-independence.md) / issue #343 and model trusted quality-partner authority. An `IPlatformOperatorRequest` does not establish firm quality-partner authority. Evaluation also needs verified partner identity and the exact current source set. |
 | `RequestClientExport`, `RequestOwnAttestRecordPackage`, `RecordOwnAttestRecordPackageResult`, `RecordOwnAttestRecordDelivery`, `CompleteTenantOffboarding` | Add source-complete export/package builders, durable encrypted artifact storage and delivery receipts, plus a bounded offboarding coordinator that verifies all export and retention obligations before completion. `RecordClientExportBuildResult` now accepts only the named worker, binds the callback to the persisted initial request or exact prior failure event, verifies the frozen source snapshot and deterministic attempt identity, and records the worker as a system process. `RecordClientExportDelivery` records a revision-fenced, member-attributed receipt after a successful build and any required attest-package deliveries; it does not verify the storage provider's encryption or delivery itself. |
-| `ConfigureTenantIdentityProvider`, `TestTenantIdentityProvider`, `RecordTenantIdentityProviderTestResult`, `RotateTenantIdentityProviderCredentials` | Configure and rotation persist the supplied opaque credential reference and require a follow-up test before the connection becomes enabled. `TestTenantIdentityProvider` records a revision-fenced administrator request, and the internal result handler accepts only the named worker's callback caused by that exact persisted event. The secure vault resolver and provider test/rotation reactor remain. `DisableTenantIdentityProvider` records an administrator-attributed transition; sign-in routing must consume that state before F1-06 is complete. |
 
 ## Order of work
 
