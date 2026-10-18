@@ -24,6 +24,10 @@ static class ApplicationChangeImpactDigest
                 .ThenBy(static item => item.RelationshipType, StringComparer.Ordinal)
                 .ThenBy(static item => item.RelationshipId.ToString(), StringComparer.Ordinal)
                 .ToArray(),
+            IncomingApplicationRelationships = preview.IncomingApplicationRelationships
+                .OrderBy(static item => item.SourceApplicationId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.RelationshipId.ToString(), StringComparer.Ordinal)
+                .ToArray(),
             ControlDraftReferences = preview.ControlDraftReferences
                 .OrderBy(static item => item.ControlId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),

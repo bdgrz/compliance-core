@@ -80,6 +80,7 @@ public sealed class ApplicationChangePreviewTests
         var aggregateReader = new ApplicationMapReader(source, visibleTarget, restrictedTarget);
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
+        var incomingRelationships = new FitzApplicationIncomingRelationshipDirectory(kv);
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();
@@ -88,7 +89,10 @@ public sealed class ApplicationChangePreviewTests
         var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
             controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
-            RestrictedApplicationVisibilityFixture.Create(aggregateReader));
+            RestrictedApplicationVisibilityFixture.Create(aggregateReader),
+            incomingRelationshipDirectory: incomingRelationships,
+            incomingRelationshipConsistency: new ApplicationIncomingRelationshipReadConsistency(
+                incomingRelationships, events));
         var request = changeKind == "revise"
             ? new PreviewApplicationChange(tenantId, applicationId, 1, changeKind,
                 "Application v2", "Purpose")
@@ -108,6 +112,7 @@ public sealed class ApplicationChangePreviewTests
         Assert.DoesNotContain(result.Value.ApplicationRelationships,
             relationship => relationship.RelationshipId == removedId ||
                             relationship.RelationshipId == hiddenTargetRelationshipId);
+        Assert.Empty(result.Value.IncomingApplicationRelationships);
         Assert.False(result.Value.Complete);
         Assert.Equal(
             ["application_relationships", "vendors", "approved_control_versions_and_lifecycle_impact",
@@ -115,6 +120,314 @@ public sealed class ApplicationChangePreviewTests
                 "access_populations", "review_campaigns", "open_work", "readiness", "engagements",
                 "cross_source_manual_reliance"],
             result.Value.PendingContexts);
+    }
+
+    [Fact]
+    public async Task ShouldReturnVisibleActiveIncomingRelationshipsAndOmitRemovedAndRestrictedSourcesGivenChangePreview()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var visibleSourceId = Uuid.CreateVersion4();
+        var approvedSourceId = Uuid.CreateVersion4();
+        var legacySourceId = Uuid.CreateVersion4();
+        var restrictedSourceId = Uuid.CreateVersion4();
+        var removedSourceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var approverId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var target = DeclaredApplicationForTest(tenantId, targetId, actorId, now);
+        var visibleSource = DeclaredApplicationForTest(tenantId, visibleSourceId, actorId, now);
+        var approvedSource = DeclaredApplicationForTest(tenantId, approvedSourceId, actorId, now);
+        var legacySource = DeclaredApplicationForTest(tenantId, legacySourceId, actorId, now);
+        var restrictedSource = new DeclaredApplication(tenantId, restrictedSourceId);
+        Assert.True(restrictedSource.Declare("Restricted", "Purpose", null, actorId,
+            "Owner", now, isRestricted: true).IsSuccess);
+        var removedSource = DeclaredApplicationForTest(tenantId, removedSourceId, actorId, now);
+        var aggregateReader = new ApplicationMapReader(target, visibleSource, approvedSource,
+            legacySource, restrictedSource, removedSource);
+        var kv = new InMemoryKvClient();
+        var applications = new FitzApplicationDirectory(kv);
+        await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
+            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+        var relationshipDirectory = new FitzApplicationIncomingRelationshipDirectory(kv);
+        var relationshipId = RelationshipId(visibleSourceId, "depends_on", targetId);
+        var approvedRelationshipId = RelationshipId(approvedSourceId, "replaces", targetId);
+        var legacyRelationshipId = Uuid.CreateVersion4();
+        var restrictedRelationshipId = RelationshipId(restrictedSourceId, "depends_on", targetId);
+        var removedRelationshipId = RelationshipId(removedSourceId, "depends_on", targetId);
+        var relationshipEvents = new DomainEvent[]
+        {
+            new ApplicationRelationshipRecorded(tenantId, relationshipId, visibleSourceId,
+                targetId, "depends_on", 1, "active", 1, 1, actorId, "Visible owner", now),
+            new ApplicationRelationshipRecorded(tenantId, approvedRelationshipId,
+                approvedSourceId, targetId, "replaces", 1, "proposed", 1, 1, actorId,
+                "Proposer", now),
+            new ApplicationRelationshipApproved(tenantId, approvedRelationshipId,
+                approvedSourceId, targetId, 2, 1, 1, new string('a', 64), approverId,
+                "Approver", now.AddMinutes(1)),
+            new ApplicationRelationshipAdded(tenantId, legacySourceId, legacyRelationshipId,
+                1, targetId, "depends_on", actorId, "Legacy owner", now),
+            new ApplicationRelationshipRecorded(tenantId, restrictedRelationshipId,
+                restrictedSourceId, targetId, "depends_on", 1, "active", 1, 1, actorId,
+                "Hidden owner", now),
+            new ApplicationRelationshipRecorded(tenantId, removedRelationshipId,
+                removedSourceId, targetId, "depends_on", 1, "active", 1, 1, actorId,
+                "Former owner", now),
+            new ApplicationRelationshipGovernedRemoved(tenantId, removedRelationshipId,
+                removedSourceId, targetId, "depends_on", 2, "No longer needed", actorId,
+                "Former owner", now.AddMinutes(2)),
+        };
+        await ProjectRelationshipsAsync(relationshipDirectory, tenantId, relationshipEvents);
+        var events = new InMemoryEventStore();
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
+            boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
+            controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
+            RestrictedApplicationVisibilityFixture.Create(aggregateReader),
+            incomingRelationshipDirectory: relationshipDirectory,
+            incomingRelationshipConsistency: new ApplicationIncomingRelationshipReadConsistency(
+                relationshipDirectory, events));
+        var actor = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "test"));
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<PreviewApplicationChange>(
+            new PreviewApplicationChange(tenantId, targetId, 1, "retire"), actor),
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var incoming = result.Value.IncomingApplicationRelationships;
+        Assert.Equal(new[] { visibleSourceId, approvedSourceId, legacySourceId }
+            .OrderBy(static id => id.ToString(), StringComparer.Ordinal),
+            incoming.Select(static item => item.SourceApplicationId));
+        var bySource = incoming.ToDictionary(static item => item.SourceApplicationId);
+        Assert.Equal(relationshipId, bySource[visibleSourceId].RelationshipId);
+        Assert.Equal("depends_on", bySource[visibleSourceId].RelationshipType);
+        Assert.Equal(approverId, bySource[approvedSourceId].ActorMemberId);
+        Assert.Equal("replaces", bySource[approvedSourceId].RelationshipType);
+        Assert.Equal(legacyRelationshipId, bySource[legacySourceId].RelationshipId);
+        Assert.DoesNotContain(incoming, item => item.SourceApplicationId == restrictedSourceId ||
+            item.SourceApplicationId == removedSourceId);
+        Assert.Contains("application_relationships", result.Value.PendingContexts);
+        Assert.DoesNotContain("application_relationships_over_limit",
+            result.Value.PendingContexts);
+        Assert.False(result.Value.Complete);
+    }
+
+    [Fact]
+    public async Task ShouldBoundIncomingCandidatesAndKeepRelationshipContextPendingGivenMoreThanTwoHundredVisibleSources()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var sourceIds = Enumerable.Range(0, 201)
+            .Select(index => Uuid.CreateVersion5(targetId, $"incoming-source:{index}"))
+            .OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray();
+        var target = DeclaredApplicationForTest(tenantId, targetId, actorId, now);
+        var sources = sourceIds.Select(id => DeclaredApplicationForTest(tenantId, id,
+            actorId, now)).ToArray();
+        var aggregateReader = new ApplicationMapReader([target, .. sources]);
+        var kv = new InMemoryKvClient();
+        var applications = new FitzApplicationDirectory(kv);
+        await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
+            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+        var relationshipDirectory = new FitzApplicationIncomingRelationshipDirectory(kv);
+        var relationshipEvents = sourceIds.Select(sourceId => (DomainEvent)
+            new ApplicationRelationshipRecorded(tenantId,
+                RelationshipId(sourceId, "depends_on", targetId), sourceId, targetId,
+                "depends_on", 1, "active", 1, 1, actorId, "Owner", now)).ToArray();
+        await ProjectRelationshipsAsync(relationshipDirectory, tenantId, relationshipEvents);
+        var events = new InMemoryEventStore();
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
+            boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
+            controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
+            RestrictedApplicationVisibilityFixture.Create(aggregateReader),
+            incomingRelationshipDirectory: relationshipDirectory,
+            incomingRelationshipConsistency: new ApplicationIncomingRelationshipReadConsistency(
+                relationshipDirectory, events));
+        var actor = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "test"));
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<PreviewApplicationChange>(
+            new PreviewApplicationChange(tenantId, targetId, 1, "retire"), actor),
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(sourceIds.Take(200), result.Value.IncomingApplicationRelationships
+            .Select(static relationship => relationship.SourceApplicationId));
+        Assert.Equal(200, result.Value.IncomingApplicationRelationships.Count);
+        Assert.Contains("application_relationships", result.Value.PendingContexts);
+        Assert.DoesNotContain("application_relationships_over_limit",
+            result.Value.PendingContexts);
+        Assert.False(result.Value.Complete);
+    }
+
+    [Fact]
+    public async Task ShouldReturnTransientConflictGivenIncomingProjectionBehindSourceAndRecoverAfterCatchup()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var sourceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var target = DeclaredApplicationForTest(tenantId, targetId, actorId, now);
+        var source = DeclaredApplicationForTest(tenantId, sourceId, actorId, now);
+        var aggregateReader = new ApplicationMapReader(target, source);
+        var kv = new InMemoryKvClient();
+        var applications = new FitzApplicationDirectory(kv);
+        await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
+            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+        var relationshipDirectory = new FitzApplicationIncomingRelationshipDirectory(kv);
+        var events = new InMemoryEventStore();
+        var relationshipId = RelationshipId(sourceId, "depends_on", targetId);
+        DomainEvent recorded = new ApplicationRelationshipRecorded(tenantId, relationshipId,
+            sourceId, targetId, "depends_on", 1, "active", 1, 1, actorId, "Owner", now);
+        recorded.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), sourceId, 1, now));
+        var stream = new EventStreamAddress(tenantId.ToString(), "applications", sourceId.ToString());
+        await events.AppendAsync(stream, 0, [recorded]);
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var consistency = new ApplicationIncomingRelationshipReadConsistency(
+            relationshipDirectory, events);
+        var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
+            boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
+            controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
+            RestrictedApplicationVisibilityFixture.Create(aggregateReader),
+            incomingRelationshipDirectory: relationshipDirectory,
+            incomingRelationshipConsistency: consistency);
+        var request = new RequestContext<PreviewApplicationChange>(
+            new PreviewApplicationChange(tenantId, targetId, 1, "retire"),
+            new ClaimsPrincipal());
+
+        // Act
+        var lagged = await handler.HandleAsync(request, CancellationToken.None);
+        await using (var cursor = events.ReadAsync(
+                         EventStreamPattern.ForPattern(tenantId.ToString(), "applications"),
+                         EventCursor.Start, CancellationToken.None).GetAsyncEnumerator())
+        {
+            Assert.True(await cursor.MoveNextAsync());
+            await using var batch = await relationshipDirectory.BeginAsync(
+                new ProjectionBatchContext(new CheckpointIdentity(
+                    ApplicationIncomingRelationshipProjector.ProjectorName,
+                    EventStreamPattern.ForPattern(tenantId.ToString(), "applications")),
+                    ProjectionCheckpoint.Start));
+            await relationshipDirectory.ApplyAsync(cursor.Current.Event);
+            await batch.CommitAsync(new ProjectionCheckpoint(cursor.Current.NextCursor));
+        }
+        var recovered = await handler.HandleAsync(request, CancellationToken.None);
+
+        // Assert
+        var lagError = Assert.IsType<RequestError>(lagged.Error);
+        Assert.Equal(RequestErrorKind.Conflict, lagError.Kind);
+        Assert.True(lagError.IsTransient);
+        Assert.True(recovered.IsSuccess, recovered.Error?.Message);
+        Assert.Equal(relationshipId,
+            Assert.Single(recovered.Value.IncomingApplicationRelationships).RelationshipId);
+    }
+
+    [Fact]
+    public async Task ShouldReturnTransientConflictGivenIncomingSourceChangesDuringPreviewRead()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var sourceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var target = DeclaredApplicationForTest(tenantId, targetId, actorId, now);
+        var source = DeclaredApplicationForTest(tenantId, sourceId, actorId, now);
+        var aggregateReader = new ApplicationMapReader(target, source);
+        var kv = new InMemoryKvClient();
+        var applications = new FitzApplicationDirectory(kv);
+        await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
+            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+        var relationshipDirectory = new FitzApplicationIncomingRelationshipDirectory(kv);
+        var events = new InMemoryEventStore();
+        var relationshipId = RelationshipId(sourceId, "depends_on", targetId);
+        DomainEvent arriving = new ApplicationRelationshipRecorded(tenantId, relationshipId,
+            sourceId, targetId, "depends_on", 1, "active", 1, 1, actorId, "Owner", now);
+        arriving.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), sourceId, 1, now));
+        var stream = new EventStreamAddress(tenantId.ToString(), "applications", sourceId.ToString());
+        var incoming = new InterleavingIncomingRelationshipDirectory(relationshipDirectory,
+            ct => events.AppendAsync(stream, 0, [arriving], ct));
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
+            boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
+            controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
+            RestrictedApplicationVisibilityFixture.Create(aggregateReader),
+            incomingRelationshipDirectory: incoming,
+            incomingRelationshipConsistency: new ApplicationIncomingRelationshipReadConsistency(
+                incoming, events));
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<PreviewApplicationChange>(
+            new PreviewApplicationChange(tenantId, targetId, 1, "retire"),
+            new ClaimsPrincipal()), CancellationToken.None);
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.True(error.IsTransient);
+    }
+
+    [Fact]
+    public async Task ShouldReturnTransientConflictGivenCrossTenantIncomingProjectionRow()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var sourceId = Uuid.CreateVersion4();
+        var actorId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var target = DeclaredApplicationForTest(tenantId, targetId, actorId, now);
+        var source = DeclaredApplicationForTest(tenantId, sourceId, actorId, now);
+        var aggregateReader = new ApplicationMapReader(target, source);
+        var kv = new InMemoryKvClient();
+        var applications = new FitzApplicationDirectory(kv);
+        await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
+            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+        var relationshipId = RelationshipId(sourceId, "depends_on", targetId);
+        var corruptRow = new ApplicationRelationshipView(relationshipId, targetId,
+            "depends_on", actorId, "Owner", now)
+        {
+            TenantId = Uuid.CreateVersion4(),
+            SourceApplicationId = sourceId,
+        };
+        var incoming = new StubIncomingRelationshipDirectory(
+            new Page<ApplicationRelationshipView>([corruptRow], null));
+        var events = new InMemoryEventStore();
+        var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
+            boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
+            controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
+            RestrictedApplicationVisibilityFixture.Create(aggregateReader),
+            incomingRelationshipDirectory: incoming,
+            incomingRelationshipConsistency: new ApplicationIncomingRelationshipReadConsistency(
+                incoming, events));
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<PreviewApplicationChange>(
+            new PreviewApplicationChange(tenantId, targetId, 1, "retire"),
+            new ClaimsPrincipal()), CancellationToken.None);
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.True(error.IsTransient);
     }
 
     [Fact]
@@ -714,6 +1027,32 @@ public sealed class ApplicationChangePreviewTests
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 
+    static async Task ProjectRelationshipsAsync(
+        FitzApplicationIncomingRelationshipDirectory directory,
+        Uuid tenantId, IReadOnlyList<DomainEvent> domainEvents)
+    {
+        await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
+            new CheckpointIdentity(ApplicationIncomingRelationshipProjector.ProjectorName,
+                EventStreamPattern.ForPattern(tenantId.ToString(), "applications")),
+            ProjectionCheckpoint.Start));
+        foreach (var domainEvent in domainEvents)
+            await directory.ApplyAsync(domainEvent);
+        await batch.CommitAsync(ProjectionCheckpoint.Start);
+    }
+
+    static DeclaredApplication DeclaredApplicationForTest(Uuid tenantId, Uuid applicationId,
+        Uuid actorId, DateTimeOffset now)
+    {
+        var application = new DeclaredApplication(tenantId, applicationId);
+        Assert.True(application.Declare("Application", "Purpose", null, actorId,
+            "Owner", now).IsSuccess);
+        return application;
+    }
+
+    static Uuid RelationshipId(Uuid sourceId, string relationshipType, Uuid targetId) =>
+        Uuid.CreateVersion5(sourceId,
+            $"application-relationship:{relationshipType}:{targetId}");
+
     static ApplicationControlDraftReferenceView ControlReference(Uuid tenantId,
         Uuid applicationId) => new(tenantId, "application", applicationId,
         Uuid.CreateVersion4(), Uuid.CreateVersion4(), "AC-01", 1, Uuid.CreateVersion4(),
@@ -757,6 +1096,41 @@ public sealed class ApplicationChangePreviewTests
 
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
             CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+    }
+
+    sealed class StubIncomingRelationshipDirectory(
+        Page<ApplicationRelationshipView> page) : IApplicationIncomingRelationshipDirectory
+    {
+        public ValueTask<Page<ApplicationRelationshipView>> ListActiveIncomingAsync(Uuid tenantId,
+            Uuid targetApplicationId, int limit, string? cursor, CancellationToken ct = default) =>
+            ValueTask.FromResult(page);
+
+        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+    }
+
+    sealed class InterleavingIncomingRelationshipDirectory(
+        IApplicationIncomingRelationshipDirectory inner,
+        Func<CancellationToken, ValueTask> beforeListAsync)
+        : IApplicationIncomingRelationshipDirectory
+    {
+        bool _interleaved;
+
+        public async ValueTask<Page<ApplicationRelationshipView>> ListActiveIncomingAsync(
+            Uuid tenantId, Uuid targetApplicationId, int limit, string? cursor,
+            CancellationToken ct = default)
+        {
+            if (!_interleaved)
+            {
+                _interleaved = true;
+                await beforeListAsync(ct).ConfigureAwait(false);
+            }
+            return await inner.ListActiveIncomingAsync(tenantId, targetApplicationId, limit,
+                cursor, ct).ConfigureAwait(false);
+        }
+
+        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default) => inner.LoadCheckpointAsync(tenantId, ct);
     }
 
     sealed class InterleavingApplicationDirectory(IApplicationDirectoryReader inner,

@@ -507,14 +507,29 @@ public sealed class ApplicationRevisionPreviewContractTests
             await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
                 new CheckpointIdentity("ApplicationDirectoryV2", EventStreamPattern.ForPattern(Tenant.ToString())),
                 ProjectionCheckpoint.Start));
+            var incomingRelationships = _scope.ServiceProvider
+                .GetRequiredService<FitzApplicationIncomingRelationshipDirectory>();
+            var incomingPattern = EventStreamPattern.ForPattern(Tenant.ToString(), "applications");
+            await using var incomingBatch = await incomingRelationships.BeginAsync(
+                new ProjectionBatchContext(new CheckpointIdentity(
+                    ApplicationIncomingRelationshipProjector.ProjectorName, incomingPattern),
+                    ProjectionCheckpoint.Start));
             foreach (var record in await EventsAsync())
+            {
                 await directory.ApplyAsync(record.Event);
+                await incomingRelationships.ApplyAsync(record.Event);
+            }
             var cursor = EventCursor.Start;
             await foreach (var record in _events.ReadAsync(
                                EventStreamPattern.ForPattern(Tenant.ToString()), cursor,
                                CancellationToken.None))
                 cursor = record.NextCursor;
             await batch.CommitAsync(new ProjectionCheckpoint(cursor));
+            var incomingCursor = EventCursor.Start;
+            await foreach (var record in _events.ReadAsync(incomingPattern, incomingCursor,
+                               CancellationToken.None))
+                incomingCursor = record.NextCursor;
+            await incomingBatch.CommitAsync(new ProjectionCheckpoint(incomingCursor));
         }
 
         public async Task RecordPersonAsync(Uuid id, Uuid? tenant = null)

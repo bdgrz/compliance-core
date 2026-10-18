@@ -146,6 +146,25 @@ public sealed class ApplicationImportCompositionTests
                     break;
                 checkpoint = next;
             }
+
+            var incomingRegistration = Assert.Single(services.GetServices<WorkloadRegistration>(),
+                candidate => candidate.Name == ApplicationIncomingRelationshipProjector.ProjectorName);
+            var incomingProjector = (Projector)services.GetRequiredService(
+                incomingRegistration.ComponentType);
+            await new ProjectorScenario(new TenantId(Tenant.ToString()))
+                .RunAsync(incomingProjector);
+            var incomingDirectory = services.GetRequiredService<
+                IApplicationIncomingRelationshipDirectory>();
+            var incomingRunner = new ProjectorRunner(
+                services.GetRequiredService<IDomainEventReader>());
+            var incomingCheckpoint = await incomingDirectory.LoadCheckpointAsync(Tenant);
+            while (true)
+            {
+                var next = await incomingRunner.RunAsync(incomingProjector, incomingCheckpoint);
+                if (next == incomingCheckpoint)
+                    break;
+                incomingCheckpoint = next;
+            }
         }
 
         public async ValueTask DisposeAsync()
