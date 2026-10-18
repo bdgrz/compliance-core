@@ -98,6 +98,31 @@ public sealed class ManagementAssertionTests
         Assert.Equal(ApproverId, Assert.Single(replay.Current.Approvals).ApprovedByMemberId);
     }
 
+    [Fact]
+    public void ShouldTreatRepeatedSameSignerDecisionAsIdempotentGivenLaterRetryTime()
+    {
+        // Arrange
+        var assertion = NewAssertion(Content());
+        Assert.Null(assertion.Approve(assertion.Revision, 1, "approve",
+            "Reviewed the exact assertion", ApproverId, "CISO", "Approver", Now.AddDays(1)));
+        var revision = assertion.Revision;
+
+        // Act
+        var retry = assertion.Approve(assertion.Revision, 1, "approve",
+            "Reviewed the exact assertion", ApproverId, "ciso", "Approver", Now.AddDays(2));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(revision, assertion.Revision);
+        Assert.Single(assertion.Current!.Approvals);
+        Assert.Equal(Now.AddDays(1), assertion.Current.Approvals[0].ApprovedAt);
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(assertion.Approve(assertion.Revision, 1, "approve",
+                "Changed the decision rationale", ApproverId, "CISO", "Approver",
+                Now.AddDays(3))).Code);
+        Assert.Equal(revision, assertion.Revision);
+    }
+
     static ManagementAssertionAggregate NewAssertion(ManagementAssertionContent content)
     {
         var assertion = new ManagementAssertionAggregate(TenantId, ProgramId, AssertionId);

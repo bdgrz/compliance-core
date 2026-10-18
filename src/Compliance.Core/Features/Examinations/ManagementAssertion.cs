@@ -108,15 +108,15 @@ public sealed class ManagementAssertion : Aggregate
             return actorFailure;
         outcome = Clean(outcome).ToLowerInvariant();
         rationale = Clean(rationale);
-        approverRole = Clean(approverRole);
+        approverRole = Clean(approverRole).ToLowerInvariant();
         var version = current.Versions.FirstOrDefault(item => item.Version == assertionVersion);
         if (version is null)
             return CommandFailure.MissingRecord("The assertion version was not found.");
         var prior = current.Approvals.FirstOrDefault(item => item.AssertionVersion == assertionVersion);
         if (prior is not null)
             return prior.Outcome == outcome && prior.Rationale == rationale &&
-                   prior.ApprovedByMemberId == approverMemberId && prior.ApproverRole == approverRole &&
-                   prior.ApproverDisplay == approverDisplay.Trim() && prior.ApprovedAt == approvedAt
+                   prior.ApprovedByMemberId == approverMemberId &&
+                   StringComparer.OrdinalIgnoreCase.Equals(prior.ApproverRole, approverRole)
                 ? null
                 : CommandFailure.StateConflict("An assertion version has one immutable management decision.");
         if (expectedRevision != Revision)

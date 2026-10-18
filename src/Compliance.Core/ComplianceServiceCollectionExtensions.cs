@@ -446,6 +446,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<RestrictedApplicationVisibility>();
         services.AddScoped<TechnologyInventoryRestrictedVisibility>();
         services.AddScoped<OperatingAuthority>();
+        services.AddScoped<ManagementExecutiveAuthority>();
         services.AddScoped<ClientManagementIndependenceGuard>();
         services.AddScoped<ClientCompartmentIndependenceGuard>();
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
@@ -768,6 +769,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviseExaminationEngagementHandler>()
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ProposeSystemDescriptionSuccessorHandler>()
+            .AddRequestHandler<ApproveManagementAssertionHandler>()
             .AddRequestHandler<SignManagementRepresentationLetterHandler>()
             .AddRequestHandler<CreateAuditPackageHandler>()
             .AddRequestHandler<AmendAuditPackageHandler>()
