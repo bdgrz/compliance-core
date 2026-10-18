@@ -772,6 +772,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ApproveTypeIIOperatingPlanHandler>()
             .AddRequestHandler<StartTypeIIObservationPeriodHandler>()
             .AddRequestHandler<ApproveTypeIIPeriodCloseHandler>()
+            .AddRequestHandler<FreezeTypeIIPeriodCloseHandler>()
             .AddRequestHandler<ProposeSystemDescriptionSuccessorHandler>()
             .AddRequestHandler<RecordManagementAssertionHandler>()
             .AddRequestHandler<ApproveManagementAssertionHandler>()

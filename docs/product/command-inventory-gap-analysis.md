@@ -657,12 +657,13 @@ No SignificantChange or ComplianceIncident write contracts/handlers exist. Incid
 
 Scope: **T3-01/02**. Requirement source: [backlog](backlog.md).
 
-Access populations and workforce snapshots are bounded reusable records; no TypeIIPeriodCloseSnapshot or general AuditPopulation write workflow exists.
+The period aggregate already owns immutable close snapshots, and AuditPopulation supports its versioned fact, reconciliation, freeze, amendment, and export workflow. The remaining close gap is the source-backed validation transition that verifies references and reconciles occurrences before approval and freeze.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
 | Partial | `ApproveTypeIIPeriodClose` | The v2 command and handler require an explicit unresolved-item acknowledgement set and current CEO/CISO permission. The aggregate can record close validation, but there is no public validation command/handler. |
-| Missing | `FreezeTypeIIPeriodClose`; `AmendTypeIIPeriodClose` | Build and verify the exact complete examination boundary before freezing; amendments preserve original content and identify affected material. |
+| Partial | `FreezeTypeIIPeriodClose` | The handler freezes the persisted ready validation's exact source references and occurrence identities with the approved acknowledgement set, then releases the program calendar reservation using the persisted snapshot ID and hash. It depends on the still-missing source-backed close-validation command. |
+| Missing | `AmendTypeIIPeriodClose` | Build and verify the exact complete examination boundary before amending; the current command lacks new source references, changed-record identities, and affected-material identities. |
 | Missing | `RecordTypeIIPeriodCloseValidation` (required by T3-01; absent from the current command list) | Reconcile expected and actual occurrences, missing work, unresolved material items, and exact source versions. Expose the aggregate's close-validation transition only after a source-backed builder exists. |
 | Missing | `DefineAuditPopulation`; `ReviseAuditPopulationDefinition` | Version source universe, covered period, inclusion/exclusion, completeness evidence, permitted fields and control relationships. |
 | Missing | `RecordAuditPopulationFacts`; `ClassifyAuditPopulationRow`; `ReconcileAuditPopulation` | Allow manual source facts and classify included/excluded/duplicate/missing/rejected/unresolved rows; preserve source identity and explain exact totals. |

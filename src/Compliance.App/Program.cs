@@ -2223,6 +2223,18 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Observation periods");
+    app.MapPortiaPost<AmendTypeIIObservationPeriod>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/amendments")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Observation periods");
+    app.MapPortiaPost<ApproveTypeIIPeriodClose>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-approvals")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Observation periods");
+    app.MapPortiaPost<FreezeTypeIIPeriodClose>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/freezes")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Observation periods");
     app.MapPortiaPost<ProposeProgramRollover>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

@@ -163,6 +163,110 @@ public sealed class TypeIIPeriodCommandHandlerTests
         Assert.Equal(fixture.CloseValidationAt.AddHours(1), approval.ApprovedAt);
     }
 
+    [Fact]
+    public async Task ShouldFreezeExactApprovedCloseAndReleaseCalendarGivenAuthorizedExecutive()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.RegisterActorAsync();
+        await fixture.SeedCloseReadyPeriodAsync();
+        var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
+                fixture.ProgramId, fixture.PeriodId, 2,
+                "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
+        var closeSnapshotId = Uuid.CreateVersion4();
+        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId, closeSnapshotId, 3);
+
+        // Act
+        var result = await fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso)
+            .HandleAsync(fixture.Context(request), CancellationToken.None);
+        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+        var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
+            fixture.TenantId, fixture.ProgramId));
+        var calendarEvents = new List<DomainEventRecord>();
+        await foreach (var record in fixture.Events.ReadAsync(
+                           new TypeIIObservationCalendar(fixture.TenantId, fixture.ProgramId).Stream,
+                           0, CancellationToken.None))
+            calendarEvents.Add(record);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var snapshot = Assert.Single(period.Current!.CloseSnapshots);
+        Assert.Equal(closeSnapshotId, snapshot.CloseSnapshotId);
+        Assert.Equal("closed", period.Current.Status);
+        Assert.False(Assert.Single(calendar.Current!.Periods).IsActive);
+        Assert.Equal(2, calendar.Revision);
+        var releaseRecord = Assert.Single(calendarEvents,
+            item => item.Event is ObservationPeriodReservationReleased);
+        var release = Assert.IsType<ObservationPeriodReservationReleased>(releaseRecord.Event);
+        Assert.Equal(closeSnapshotId, release.CloseSnapshotId);
+        Assert.Equal(snapshot.ContentSha256, release.CloseSnapshotSha256);
+        Assert.Equal(fixture.ActorMemberId, release.ActorMemberId);
+    }
+
+    [Fact]
+    public async Task ShouldCompleteCalendarReleaseGivenCloseFreezeRetryAfterClockAdvances()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.RegisterActorAsync();
+        await fixture.SeedCloseReadyPeriodAsync();
+        var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
+                fixture.ProgramId, fixture.PeriodId, 2,
+                "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
+        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId, Uuid.CreateVersion4(), 3);
+        var handler = fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso);
+        var context = fixture.Context(request);
+        Assert.True((await handler.HandleAsync(context, CancellationToken.None)).IsSuccess);
+        fixture.CloseClock.Set(fixture.CloseClock.GetUtcNow().AddDays(1));
+
+        // Act
+        var retry = await handler.HandleAsync(context, CancellationToken.None);
+        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+        var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
+            fixture.TenantId, fixture.ProgramId));
+
+        // Assert
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(4, period.Revision);
+        Assert.Single(period.Current!.CloseSnapshots);
+        Assert.Equal(2, calendar.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRequireCurrentExecutivePermissionGivenApprovedClose()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.RegisterActorAsync();
+        await fixture.SeedCloseReadyPeriodAsync();
+        var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
+                fixture.ProgramId, fixture.PeriodId, 2,
+                "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
+        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId, Uuid.CreateVersion4(), 3);
+
+        // Act
+        var result = await fixture.FreezeHandler().HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal("close_approved", period.Current!.Status);
+        Assert.Empty(period.Current.CloseSnapshots);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -229,6 +333,10 @@ public sealed class TypeIIPeriodCommandHandlerTests
 
         public ApproveTypeIIPeriodCloseHandler ApproveHandler(params string[] permissions) =>
             new(Executor, new ManagementExecutiveAuthority(Reader,
+                new ExecutivePermissions(permissions)), CloseClock);
+
+        public FreezeTypeIIPeriodCloseHandler FreezeHandler(params string[] permissions) =>
+            new(Executor, Reader, Events, new ManagementExecutiveAuthority(Reader,
                 new ExecutivePermissions(permissions)), CloseClock);
 
         public async Task RegisterActorAsync()

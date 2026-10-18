@@ -264,6 +264,9 @@ public sealed class ComplianceWebTests
         await using var factory = CreateBrokerFreeFactory("Development");
         using var client = factory.CreateClient();
         const string route = "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts";
+        const string amendmentRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/amendments";
+        const string closeApprovalRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-approvals";
+        const string closeFreezeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/freezes";
 
         // Act
         using var response = await client.GetAsync("/openapi/v1.json", CancellationToken.None);
@@ -281,6 +284,13 @@ public sealed class ComplianceWebTests
         Assert.Contains("program_id", parameters);
         Assert.Contains("examination_id", parameters);
         Assert.Contains("period_id", parameters);
+        var paths = document.RootElement.GetProperty("paths");
+        Assert.True(paths.GetProperty(amendmentRoute).TryGetProperty("post", out _));
+        Assert.True(paths.GetProperty(closeApprovalRoute).TryGetProperty("post", out _));
+        var closeFreeze = paths.GetProperty(closeFreezeRoute).GetProperty("post");
+        Assert.True(closeFreeze.TryGetProperty("requestBody", out _));
+        Assert.Contains("close_snapshot_id", closeFreeze.GetProperty("parameters")
+            .EnumerateArray().Select(parameter => parameter.GetProperty("name").GetString()));
     }
 
     [Fact]
