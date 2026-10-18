@@ -188,6 +188,38 @@ public sealed class ApplicationRelationshipTests
     }
 
     [Fact]
+    public void ShouldRejectMismatchedApproverSnapshotGivenApprovalEventReplay()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var sourceId = Uuid.CreateVersion4();
+        var targetId = Uuid.CreateVersion4();
+        var proposerId = Uuid.CreateVersion4();
+        var approverId = Uuid.CreateVersion4();
+        var source = NewApplication(tenantId, sourceId, proposerId, DateTimeOffset.UtcNow);
+        var proposal = source.RecordRelationship(targetId, 1, 1, "replaces", proposerId,
+            "Proposer", DateTimeOffset.UtcNow.AddMinutes(1));
+        Assert.True(proposal.IsSuccess);
+        Assert.Null(source.ApproveSuccessor(targetId, 1, proposal.Value.Revision, 1,
+            new string('a', 64), approverId, "Approver", DateTimeOffset.UtcNow.AddMinutes(2)));
+        var history = new AggregateScenario<DeclaredApplication>(source).PendingEvents
+            .Select(ev => ev is ApplicationRelationshipApproved approved
+                ? approved with
+                {
+                    StoredApprover = ActorReference.ForMember(Uuid.CreateVersion4(), "Other"),
+                }
+                : ev).ToArray();
+        var replay = new DeclaredApplication(tenantId, sourceId);
+
+        // Act
+        var error = Record.Exception(() =>
+            new AggregateScenario<DeclaredApplication>(replay).Given(history));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(error);
+    }
+
+    [Fact]
     public void ShouldRejectPayloadReuseAndUnsupportedIdentityGivenRelationshipId()
     {
         // Arrange

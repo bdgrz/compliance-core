@@ -181,6 +181,29 @@ public sealed class ApplicationInventoryAuthorizerTests
     }
 
     [Fact]
+    public async Task ShouldRequireInventoryManageGivenSuccessorApproval()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var permissions = new RecordingPermissionAuthorizer(true);
+        var authorizer = new ApplicationInventoryAuthorizer(
+            new FixedMembershipDirectory(true), new ActiveTenant(), permissions,
+            new FixedScopedPermissions(false));
+        var context = new RequestContext<IApplicationInventoryRequest>(
+            new ApproveApplicationSuccessor(tenantId, Uuid.CreateVersion4(),
+                Uuid.CreateVersion4(), 1, 1, 1, new string('a', 64)), BdgrzActor(userId));
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal([RbacPermissions.ApplicationInventoryManage], permissions.Permissions);
+        Assert.Equal(RbacIds.Member(tenantId, userId), Assert.Single(permissions.MemberIds));
+    }
+
+    [Fact]
     public async Task ShouldAllowReadGivenActiveMemberWithRestrictedReadScopeOnly()
     {
         // Arrange

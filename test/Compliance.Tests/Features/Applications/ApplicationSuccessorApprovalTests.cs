@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 
@@ -46,6 +47,97 @@ public sealed class ApplicationSuccessorApprovalTests
         Assert.Equal(RequestErrorKind.Conflict, error.Kind);
         Assert.False(executor.Called);
         Assert.Equal(scenario.SourceEventCount, scenario.PendingSourceEvents());
+    }
+
+    [Fact]
+    public async Task ShouldPersistAttributedApprovalGivenCurrentCompleteImpact()
+    {
+        // Arrange
+        var events = new InMemoryEventStore();
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventStore>(events);
+        services.AddSingleton(TimeProvider.System);
+        services.AddPortia();
+        await using var provider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateScopes = true });
+        await using var scope = provider.CreateAsyncScope();
+        var service = scope.ServiceProvider;
+        var tenantId = Uuid.CreateVersion4();
+        var predecessorId = Uuid.CreateVersion4();
+        var successorId = Uuid.CreateVersion4();
+        var proposerUserId = Uuid.CreateVersion4();
+        var approverUserId = Uuid.CreateVersion4();
+        var proposerMemberId = RbacIds.Member(tenantId, proposerUserId);
+        var approverMemberId = RbacIds.Member(tenantId, approverUserId);
+        var now = DateTimeOffset.UtcNow;
+        var predecessor = new DeclaredApplication(tenantId, predecessorId);
+        var successor = new DeclaredApplication(tenantId, successorId);
+        Assert.True(predecessor.Declare("Payroll", "Payroll processing", null,
+            proposerMemberId, "Proposer", now).IsSuccess);
+        Assert.True(successor.Declare("Payroll successor", "Payroll processing", null,
+            approverMemberId, "Approver", now).IsSuccess);
+        var proposal = predecessor.RecordRelationship(successorId, 1, 1, "replaces",
+            proposerMemberId, "Proposer", now.AddMinutes(1));
+        Assert.True(proposal.IsSuccess);
+        var writer = service.GetRequiredService<IAggregateWriter>();
+        await writer.SaveAsync(predecessor, new RequestDispatchContext(RequestActor.System),
+            CancellationToken.None);
+        await writer.SaveAsync(successor, new RequestDispatchContext(RequestActor.System),
+            CancellationToken.None);
+        var digest = new string('b', 64);
+        var impact = new ApplicationChangePreview(tenantId, predecessorId, 1, "retire",
+            [], [], [], true)
+        {
+            ImpactDigest = digest,
+        };
+        var reader = service.GetRequiredService<IAggregateReader>();
+        var handler = new ApproveApplicationSuccessorHandler(
+            service.GetRequiredService<IAggregateExecutor>(), reader, new ImpactReader(impact),
+            TimeProvider.System);
+        var request = new ApproveApplicationSuccessor(tenantId, predecessorId, successorId,
+            1, 1, proposal.Value.Revision, digest);
+        var actor = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim("iss", "bdgrz"),
+            new Claim("sub", approverUserId.ToString()),
+            new Claim("email", "approver@example.com"),
+        ], "BdgrzSession"));
+        var context = new InvocationContext<ApproveApplicationSuccessor>(request, actor,
+            new HttpInvocation("POST", "/synthetic/successor/approve",
+                "/synthetic/successor/approve", "synthetic"));
+
+        // Act
+        var result = await handler.HandleAsync(context, CancellationToken.None);
+        var persisted = await reader.HydrateAsync(
+            new DeclaredApplication(tenantId, predecessorId));
+        var records = new List<DomainEventRecord>();
+        await foreach (var record in events.ReadAsync(new EventStreamAddress(
+                           tenantId.ToString(), "applications", predecessorId.ToString()), 0,
+                           CancellationToken.None))
+            records.Add(record);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var approved = Assert.IsType<ApplicationRelationshipApproved>(
+            Assert.Single(records, record => record.Event is ApplicationRelationshipApproved).Event);
+        Assert.Equal(tenantId, approved.TenantId);
+        Assert.Equal(proposal.Value.RelationshipId, approved.RelationshipId);
+        Assert.Equal(predecessorId, approved.SourceApplicationId);
+        Assert.Equal(successorId, approved.TargetApplicationId);
+        Assert.Equal(2, approved.Revision);
+        Assert.Equal(1, approved.SourceApplicationRevision);
+        Assert.Equal(1, approved.TargetApplicationRevision);
+        Assert.Equal(digest, approved.ImpactDigest);
+        Assert.Equal(approverMemberId, approved.ApproverMemberId);
+        Assert.Equal("approver@example.com", approved.ApproverDisplay);
+        Assert.Equal(ActorReference.ForMember(approverMemberId, "approver@example.com"),
+            approved.Approver);
+        var relationship = Assert.IsType<ApplicationRelationshipView>(
+            persisted.Relationship("replaces", successorId));
+        Assert.Equal("approved", relationship.Status);
+        Assert.Equal(approved.Approver, Assert.IsType<ApplicationRelationshipApproval>(
+            relationship.Approval).Approver);
+        Assert.Equal(digest, relationship.Approval.ImpactDigest);
     }
 
     static ImpactReader IncompleteRelationshipImpactReader() => new(new ApplicationChangePreview(

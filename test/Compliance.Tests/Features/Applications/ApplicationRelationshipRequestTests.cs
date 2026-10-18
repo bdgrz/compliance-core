@@ -15,6 +15,7 @@ public sealed class ApplicationRelationshipRequestTests
     [InlineData("add")]
     [InlineData("remove")]
     [InlineData("list")]
+    [InlineData("approve")]
     public async Task ShouldRequireInventoryManageGivenRelationshipRequest(string operation)
     {
         // Arrange
@@ -27,6 +28,8 @@ public sealed class ApplicationRelationshipRequestTests
                 Uuid.CreateVersion4(), 0, Uuid.CreateVersion4(), "depends_on"),
             "remove" => new RemoveApplicationRelationship(tenantId, applicationId,
                 Uuid.CreateVersion4(), 0),
+            "approve" => new ApproveApplicationSuccessor(tenantId, applicationId,
+                Uuid.CreateVersion4(), 1, 1, 1, new string('a', 64)),
             _ => new ListApplicationRelationships(tenantId, applicationId),
         };
         var permissions = new RecordingPermissionAuthorizer(allowed: false);
