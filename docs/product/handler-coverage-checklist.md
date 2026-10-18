@@ -71,7 +71,7 @@ Handler status `partial` means the command has a registered handler for only par
 | Applications | `FreezeApplicationImportOmissionProposal` | present | present | present | referenced |
 | Applications | `RemoveApplicationRelationship` | present | present | present | referenced |
 | Applications | `RetireApplication` | present | present | present | referenced |
-| Applications | `RetireSystemInstance` | present | present | present | no reference |
+| Applications | `RetireSystemInstance` | present | present | present | referenced |
 | Applications | `ReviseApplication` | present | present | present | referenced |
 | Applications | `ReviseApplicationMcpInput` | present | present | present | referenced |
 | Applications | `StageApplicationImport` | present | present | present | referenced |

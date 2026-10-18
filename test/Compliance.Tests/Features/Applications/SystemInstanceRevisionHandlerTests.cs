@@ -59,6 +59,35 @@ public sealed class SystemInstanceRevisionHandlerTests : IAsyncDisposable
         Assert.Equal(_systemInstanceId, request.SystemInstanceId);
     }
 
+    [Fact]
+    public async Task ShouldRejectUnspecifiedEffectiveDateGivenSystemInstanceRetirement()
+    {
+        // Arrange
+        await using var scope = _provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var writer = services.GetRequiredService<IAggregateWriter>();
+        var instance = new DeclaredSystemInstance(_tenantId, _systemInstanceId);
+        Assert.True(instance.Declare(_applicationId, "Production", "production", "Boundary v1",
+            "payroll-prod", Uuid.CreateVersion4(), "Original manager", _now).IsSuccess);
+        await writer.SaveAsync(instance, new RequestDispatchContext(RequestActor.System),
+            CancellationToken.None);
+        var request = new RetireSystemInstance(_tenantId, _applicationId, _systemInstanceId, 1,
+            default, "The production instance was decommissioned.");
+        var handler = new RetireSystemInstanceHandler(services.GetRequiredService<IAggregateExecutor>(),
+            services.GetRequiredService<TimeProvider>());
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<RetireSystemInstance>(request,
+            Actor(_userId)), CancellationToken.None);
+        var retired = await services.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new DeclaredSystemInstance(_tenantId, _systemInstanceId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.False(retired.IsRetired);
+        Assert.Equal(1, retired.Revision);
+    }
+
     static ClaimsPrincipal Actor(Uuid userId) => new(new ClaimsIdentity(
         [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString()),
             new Claim("email", "inventory@example.test")], "BdgrzSession"));

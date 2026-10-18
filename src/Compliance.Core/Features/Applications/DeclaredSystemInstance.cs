@@ -46,11 +46,7 @@ public sealed class DeclaredSystemInstance : Aggregate
             _revision = ev.Revision;
             _registeredByMemberId = ev.ActorMemberId;
         });
-        On<SystemInstanceRetired>(ev =>
-        {
-            _revision = ev.Revision;
-            _retired = true;
-        });
+        On<SystemInstanceRetired>(ApplyRetirement);
         On<SystemInstanceRevised>(ApplyRevision);
     }
 
@@ -65,11 +61,14 @@ public sealed class DeclaredSystemInstance : Aggregate
         if (expectedRevision != _revision)
             return CommandFailure.ForVersion(
                 VersionedRecordRules.StaleRevision("system instance", _revision));
-        if (string.IsNullOrWhiteSpace(reason) || reason.Length > 2000)
+        reason = reason?.Trim() ?? string.Empty;
+        actorDisplay = actorDisplay?.Trim() ?? string.Empty;
+        if (effectiveAt == default || reason.Length is 0 or > 2000 || actorMemberId == Uuid.Empty ||
+            actorDisplay.Length is 0 or > 200 || changedAt == default)
             return CommandFailure.InvalidContent(
-                "A retirement requires a reason of at most 2000 characters.");
+                "A retirement requires an effective date, bounded reason, and attributed actor.");
         RaiseEvent(new SystemInstanceRetired(_tenantId, _applicationId, Id, _revision + 1,
-            effectiveAt, reason.Trim(), actorMemberId, actorDisplay, changedAt)
+            effectiveAt, reason, actorMemberId, actorDisplay, changedAt)
         {
             StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
         });
@@ -142,6 +141,20 @@ public sealed class DeclaredSystemInstance : Aggregate
             StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
         });
         return null;
+    }
+
+    void ApplyRetirement(SystemInstanceRetired ev)
+    {
+        var reason = ev.Reason?.Trim() ?? string.Empty;
+        var actorDisplay = ev.ActorDisplay?.Trim() ?? string.Empty;
+        if (!_created || _retired || ev.TenantId != _tenantId || ev.ApplicationId != _applicationId ||
+            ev.SystemInstanceId != Id || ev.Revision != _revision + 1 || ev.EffectiveAt == default ||
+            reason.Length is 0 or > 2000 || ev.Reason != reason || ev.ActorMemberId == Uuid.Empty ||
+            actorDisplay.Length is 0 or > 200 || ev.ActorDisplay != actorDisplay || ev.ChangedAt == default ||
+            ev.Actor != ActorReference.ForMember(ev.ActorMemberId, actorDisplay))
+            throw new InvalidOperationException("The system instance retirement event is invalid.");
+        _revision = ev.Revision;
+        _retired = true;
     }
 
     void ApplyRevision(SystemInstanceRevised ev)
