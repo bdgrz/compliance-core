@@ -6,8 +6,8 @@ Handler status `partial` means the command has a registered handler for only par
 
 ## Current gap
 
-- The plan contains 127 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 122 active commands, 76 have complete handler coverage and 46 still need a handler.
-- Active command registration gaps: 46. Active commands without a handler test reference: 46.
+- The plan contains 127 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 122 active commands, 75 have complete handler coverage and 47 still need a handler.
+- Active command registration gaps: 47. Active commands without a handler test reference: 47.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
 
