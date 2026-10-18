@@ -546,6 +546,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IExaminationEngagementDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
         services.AddScoped<ITypeIBaselineSourceContributor, BoundaryTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, CriteriaTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, WorkforceTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselinePreviewReader, TypeIBaselinePreviewReader>();
         services.AddScoped<IReadinessReadModel, FitzReadinessReadModel>();
