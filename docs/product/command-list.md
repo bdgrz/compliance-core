@@ -326,7 +326,7 @@ The source-backed command plan for the product features we have committed to sup
 
 The list below maps directly to accepted feature requirements. P0/P1 manual outcomes are included even when a later slice has prerequisite work; P2 hypotheses and proposed BO scope are not treated as committed commands. A worker result is listed only when a feature requires a durable outcome or replayable external effect.
 
-This pruned plan has 129 required additions, including five evidence command contracts and one internal identity-provider result callback already present in source; 123 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
+This pruned plan has 129 feature-backed additions, including five evidence command contracts, one internal identity-provider result callback, and actual-staff revocation already present in source; 122 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
 
 ### Governed evidence capture and support — [EN-06](backlog.md#en-06-store-governed-artifacts-with-immutable-content-identity), [R2-03](backlog.md#r2-03-request-and-capture-trustworthy-evidence), [R2-04](backlog.md#r2-04-perform-a-control-and-attest-to-the-result), [R2-05](backlog.md#r2-05-review-control-design-implementation-and-evidence), [R1-14](backlog.md#r1-14-evaluate-vendors-and-subservice-organizations)
 
@@ -483,7 +483,7 @@ These commands carry the complete change or incident content accepted by their o
 
 - **AcceptServiceEngagement** — extend existing internal behavior
 - **AssignServiceEngagementStaff** — coded ([contract](../../src/Compliance.Common/Features/AccessControl/AssignServiceEngagementStaff.cs#L7))
-- **RevokeServiceEngagementStaff** — extend existing internal behavior
+- **RevokeServiceEngagementActualStaff** — implemented through the exact-assignment handler and HTTP/MCP registrations ([contract](../../src/Compliance.Common/Features/AccessControl/RevokeServiceEngagementActualStaff.cs#L5), [handler](../../src/Compliance.Core/Features/AccessControl/RevokeServiceEngagementActualStaffHandler.cs#L5))
 
 ### Independence authority — [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md)
 

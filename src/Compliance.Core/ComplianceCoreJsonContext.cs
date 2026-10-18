@@ -428,7 +428,6 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.AssignServiceEngagementStaff))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.RatifyIndependenceRuleVersion))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.RecordPartnerIndependenceEvaluation))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.RevokeServiceEngagementStaff))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.CloseAdvisorHandoff))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.CorrectAdvisorFeedback))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.CreateAdvisorHandoff))]

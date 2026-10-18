@@ -8,16 +8,16 @@ Keep the layer boundary explicit: when a handler durably records valid intent an
 
 ## Current gap
 
-- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 101 have complete handler coverage, 3 have partial handler coverage, and 20 still have no handler.
-- Active command registration gaps: 20. Active commands without a handler test reference: 20. The three partial handlers are registered and tested but do not yet cover their accepted feature scope.
+- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 102 have complete handler coverage, 3 have partial handler coverage, and 19 still have no handler.
+- Active command registration gaps: 19. Active commands without a handler test reference: 19. The three partial handlers are registered and tested but do not yet cover their accepted feature scope.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
-- Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
+- Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Then implement reactors, with projectors as the final layer.
 
 ## Assembly-line checklist
 
-Work the layers in order. A command is complete only when its source and authority checks are implemented, its aggregate transition is exercised by a red-to-green behavior test, the handler is registered and host-dispatched, and the owning API authorization is verified. Update the table below as each item closes; do not move into projectors while any active handler is missing or partial.
+Work the layers in order. A command is complete only when its source and authority checks are implemented, its aggregate transition is exercised by a red-to-green behavior test, the handler is registered and host-dispatched, and the owning API authorization is verified. Update the table below as each item closes; do not move into reactors while any active handler is missing or partial.
 
-### Handlers — 23 active open items (20 missing, 3 partial)
+### Handlers — 22 active open items (19 missing, 3 partial)
 
 Evidence handling:
 
@@ -51,7 +51,6 @@ Professional authority:
 
 - [ ] `AcceptServiceEngagement` — verified partner authority, current directory facts, ratified rules, boundary approvals, and management acknowledgement.
 - [ ] `AssignServiceEngagementStaff` — current firm-staff identity, independence, and effective-date assignment behavior.
-- [ ] `RevokeServiceEngagementStaff` — exact current assignment, effective-date revocation, and access reevaluation.
 - [ ] `RatifyIndependenceRuleVersion` — trusted quality-partner authority and ratification policy.
 - [ ] `RecordPartnerIndependenceEvaluation` — verified partner identity and exact current independence inputs.
 
@@ -67,12 +66,6 @@ Identity provider:
 
 - Handler registration, authorization, persistence, and behavior tests are complete; the provider test and secret-resolution effects remain in the reactor layer.
 
-### Projectors
-
-- [ ] Reconcile the feature-backed projector inventory with each domain event and view-model requirement.
-- [ ] Add missing projections with pure event-to-write behavior tests, atomic batch/checkpoint tests, and generated registration.
-- [ ] Verify replay, duplicate delivery, ordering, tenant partitioning, and stale-event behavior for each projection.
-
 ### Reactors
 
 - [ ] Reconcile the feature-backed reactor inventory with accepted external effects and internal follow-up workflows.
@@ -85,11 +78,17 @@ Identity provider:
 - [ ] Weekly work-digest delivery reactor — resolve current authorized recipients and persist trusted provider outcomes.
 - [ ] Tenant identity-provider test and credential-rotation reactors — resolve secrets through the secure vault, test the provider, and persist only exact worker callbacks.
 
+### Projectors
+
+- [ ] Reconcile the feature-backed projector inventory with each domain event and view-model requirement.
+- [ ] Add missing projections with pure event-to-write behavior tests, atomic batch/checkpoint tests, and generated registration.
+- [ ] Verify replay, duplicate delivery, ordering, tenant partitioning, and stale-event behavior for each projection.
+
 ### Layer gates
 
 - [ ] All 124 active handlers are complete; five readiness-import commands remain deferred by M0-D04/EN-05.
-- [ ] All required projectors are implemented and verified before starting reactor work.
-- [ ] All required reactors are implemented and verified; document any requirement that remains explicitly deferred by an accepted decision.
+- [ ] All required reactors are implemented and verified before starting projectors.
+- [ ] All required projectors are implemented and verified as the final backend layer; document any requirement that remains explicitly deferred by an accepted decision.
 
 | Requirement group | Command | Contract | Handler | Registration | Test reference |
 |---|---|---:|---:|---:|---:|
@@ -426,7 +425,7 @@ Identity provider:
 | Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `GenerateAuditPopulationExport` | present | present | present | `GenerateAuditPopulationExportHandlerTests` |
 | Professional authority and actual assignments — [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md) | `AcceptServiceEngagement` | present | missing | check | no reference |
 | Professional authority and actual assignments — [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md) | `AssignServiceEngagementStaff` | present | missing | check | no reference |
-| Professional authority and actual assignments — [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md) | `RevokeServiceEngagementStaff` | present | missing | check | no reference |
+| Professional authority and actual assignments — [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md) | `RevokeServiceEngagementActualStaff` | present | present | present | `AssignmentIndependenceReevaluationTests` |
 | Independence authority — [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md) | `RatifyIndependenceRuleVersion` | present | missing | check | no reference |
 | Independence authority — [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks), [F1-08](backlog.md#f1-08-enforce-independence-walls-between-advisory-and-attest-work); [M0-D26](decisions/m0-d26-independence.md) | `RecordPartnerIndependenceEvaluation` | present | missing | check | no reference |
 | Own-attest delivery and organization offboarding — [F1-01](backlog.md#f1-01-onboard-suspend-and-offboard-client-organizations), [F1-07](backlog.md#f1-07-record-client-engagements-and-accept-them-after-independence-checks); [M0-D27](decisions/m0-d27-attest-scope.md) | `RequestClientExport` | present | missing | check | no reference |
@@ -476,7 +475,7 @@ These dependencies are found in the existing contracts, aggregates, and accepted
 | `FreezeTypeIIPeriodClose` | Implemented as a partial handler: freezes the persisted ready validation's exact source references and occurrence identities with the approved acknowledgement set, requires the same currently authorized CEO/CISO who approved the close, and releases the calendar reservation against the persisted close snapshot ID/hash. Full T3-01 coverage still requires the source-backed close-validation command and builder, which must verify source references and reconcile occurrences before approval. |
 | `AmendTypeIIPeriodClose` | Add a complete amendment snapshot builder and contract inputs for the new source references, exact changed-record set, and affected examination material. The current command carries only snapshot identity, revision, and reason, so the handler cannot construct a valid attributable amendment. |
 | T3-01 close validation transition | The aggregate has `RecordCloseValidation`, but no public command or handler exposes the source-backed close preview and expected-versus-actual reconciliation required by T3-01. Add the validation command and builder before the close workflow is externally reachable. |
-| `AcceptServiceEngagement`, `AssignServiceEngagementStaff`, `RevokeServiceEngagementStaff` | Add verified partner authority, current firm-staff directory snapshots, ratified rule versions, exact boundary approvals, and management acknowledgements. Assignment and revocation also need the authoritative effective-date staff source. |
+| `AcceptServiceEngagement`, `AssignServiceEngagementStaff` | Add verified partner authority, current firm-staff directory snapshots, ratified rule versions, exact boundary approvals, and management acknowledgements. Assignment also needs the authoritative effective-date staff source. |
 | `RatifyIndependenceRuleVersion`, `RecordPartnerIndependenceEvaluation` | Resolve the still-open professional ratification policy in [M0-D26](decisions/m0-d26-independence.md) / issue #343 and model trusted quality-partner authority. An `IPlatformOperatorRequest` does not establish firm quality-partner authority. Evaluation also needs verified partner identity and the exact current source set. |
 | `RequestClientExport`, `RequestOwnAttestRecordPackage`, `RecordOwnAttestRecordPackageResult`, `RecordOwnAttestRecordDelivery`, `CompleteTenantOffboarding` | Add source-complete export/package builders, durable encrypted artifact storage and delivery receipts, plus a bounded offboarding coordinator that verifies all export and retention obligations before completion. `RecordClientExportBuildResult` now accepts only the named worker, binds the callback to the persisted initial request or exact prior failure event, verifies the frozen source snapshot and deterministic attempt identity, and records the worker as a system process. `RecordClientExportDelivery` records a revision-fenced, member-attributed receipt after a successful build and any required attest-package deliveries; it does not verify the storage provider's encryption or delivery itself. |
 
