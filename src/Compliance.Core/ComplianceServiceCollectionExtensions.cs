@@ -510,6 +510,8 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
         services.AddScoped<IAccessGrantScopePermissionAuthorizer>(provider =>
             provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
+        services.AddScoped<IAccessGrantRolePermissionAuthorizer>(provider =>
+            provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
         services.AddScoped<RestrictedApplicationVisibility>();
         services.AddScoped<TechnologyInventoryRestrictedVisibility>();
         services.AddScoped<OperatingAuthority>();

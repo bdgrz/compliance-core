@@ -11,7 +11,8 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
     ITenantActivity tenants,
     IAccessGrantPermissionAuthorizer scopedPermissions,
     IProgramResourceScopeResolver resourceScopes,
-    ProfessionalAdvisoryReadAccess? professionalAdvisoryRead = null)
+    ProfessionalAdvisoryReadAccess? professionalAdvisoryRead = null,
+    IAccessGrantRolePermissionAuthorizer? rolePermissions = null)
     : IRequestAuthorizer<IProgramManagementRequest>
 {
     public async ValueTask<Result> AuthorizeAsync(IRequestContext<IProgramManagementRequest> context,
@@ -65,6 +66,17 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
                     .ConfigureAwait(false))
                 return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                     "The program was not found."));
+            if (RequiresComplianceLead(context.Request))
+            {
+                var complianceLead = rolePermissions is not null &&
+                    await rolePermissions.IsAllowedAsRoleAsync(tenantId, userId, memberId,
+                        scoped.ProgramId, BuiltInRbac.ComplianceManagementRoleId(tenantId),
+                        scoped.RequiredPermission, ct).ConfigureAwait(false);
+                return complianceLead
+                    ? Result.Success
+                    : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                        "This advisor handoff operation requires a current Compliance Lead grant."));
+            }
             var scopedAllowed = await scopedPermissions.IsAllowedAsync(tenantId, userId, memberId,
                     scoped.ProgramId, scoped.RequiredPermission, ct)
                 .ConfigureAwait(false);
@@ -151,4 +163,7 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
         return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
             "The request does not identify an authorized program scope."));
     }
+
+    static bool RequiresComplianceLead(IProgramManagementRequest request) => request is
+        CreateAdvisorHandoff or ReviseAdvisorHandoffSelection or MarkAdvisorHandoffReadyForReview;
 }

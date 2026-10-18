@@ -35,6 +35,43 @@ public sealed class AccessGrantPermissionAuthorizerTests
     }
 
     [Fact]
+    public async Task ShouldAllowExactComplianceLeadRoleGivenProgramManagementGrant()
+    {
+        // Arrange
+        var complianceLeadRoleId = BuiltInRbac.ComplianceManagementRoleId(TenantId);
+        var grant = Grant(new AccessGrantScope(AccessGrantScopeKind.Program, ProgramId),
+            roleId: complianceLeadRoleId);
+        var authorizer = Authorizer(new GrantDirectory(grant), "client_personnel",
+            [RbacPermissions.ProgramManage]);
+
+        // Act
+        var allowed = await authorizer.IsAllowedAsRoleAsync(TenantId, UserId, MemberId,
+            ProgramId, complianceLeadRoleId, RbacPermissions.ProgramManage);
+
+        // Assert
+        Assert.True(allowed);
+    }
+
+    [Fact]
+    public async Task ShouldDenyOrganizationAdministratorGivenComplianceLeadRoleRequirement()
+    {
+        // Arrange
+        var administratorRoleId = BuiltInRbac.TenantAdministrationRoleId(TenantId);
+        var grant = Grant(new AccessGrantScope(AccessGrantScopeKind.Program, ProgramId),
+            roleId: administratorRoleId);
+        var authorizer = Authorizer(new GrantDirectory(grant), "client_personnel",
+            [RbacPermissions.ProgramManage]);
+
+        // Act
+        var allowed = await authorizer.IsAllowedAsRoleAsync(TenantId, UserId, MemberId,
+            ProgramId, BuiltInRbac.ComplianceManagementRoleId(TenantId),
+            RbacPermissions.ProgramManage);
+
+        // Assert
+        Assert.False(allowed);
+    }
+
+    [Fact]
     public async Task ShouldAllowGuestViewerOnlyAtGrantedProgramGivenUnexpiredProgramGrant()
     {
         // Arrange

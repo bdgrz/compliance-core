@@ -38,18 +38,26 @@ public sealed class ControlDraftAuthorizationTests
     }
 
     [Theory]
-    [InlineData("create", false)]
-    [InlineData("revise", true)]
-    [InlineData("ready", false)]
-    public async Task ShouldRequireProgramManagementGivenAdvisorHandoffMutation(string operation,
-        bool allowed)
+    [InlineData("create", "compliance_lead", true)]
+    [InlineData("create", "ceo", false)]
+    [InlineData("revise", "compliance_lead", true)]
+    [InlineData("revise", "ciso", false)]
+    [InlineData("ready", "compliance_lead", true)]
+    [InlineData("ready", null, false)]
+    public async Task ShouldRequireComplianceLeadGivenAdvisorHandoffMutation(string operation,
+        string? role, bool allowed)
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var scoped = new RecordingAccessGrantPermissionAuthorizer(allowed);
+        var userId = Uuid.CreateVersion4();
+        var roleAllowsHandoff = role == BuiltInRbac.ComplianceLeadRole;
+        Assert.Equal(allowed, roleAllowsHandoff);
+        var authority = new FixedAccessGrantRolePermissionAuthorizer(roleAllowsHandoff);
         var authorizer = new ProgramManagementAuthorizer(new FixedMembershipDirectory(true),
-            new ActiveTenant(), scoped, ProgramManagementServices.ResourceScopes());
+            new ActiveTenant(), scoped, ProgramManagementServices.ResourceScopes(),
+            rolePermissions: authority);
         IProgramManagementRequest request = operation switch
         {
             "create" => new CreateAdvisorHandoff(tenantId, programId, Uuid.CreateVersion4(),
@@ -65,15 +73,42 @@ public sealed class ControlDraftAuthorizationTests
 
         // Act
         var result = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
-            request, ProgramManagementServices.Actor(Uuid.CreateVersion4())),
+            request, ProgramManagementServices.Actor(userId)),
             CancellationToken.None);
 
         // Assert
         Assert.Equal(allowed, result.IsSuccess);
         if (!allowed)
             Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
-        Assert.Equal(programId, scoped.ProgramId);
-        Assert.Equal(RbacPermissions.ProgramManage, scoped.Permission);
+        Assert.Equal(tenantId, authority.TenantId);
+        Assert.Equal(programId, authority.ProgramId);
+        Assert.Equal(userId, authority.UserId);
+        Assert.Equal(RbacIds.Member(tenantId, userId), authority.MemberId);
+        Assert.Equal(BuiltInRbac.ComplianceManagementRoleId(tenantId), authority.RoleId);
+        Assert.Equal(RbacPermissions.ProgramManage, authority.Permission);
+    }
+
+    sealed class FixedAccessGrantRolePermissionAuthorizer(bool allowed)
+        : IAccessGrantRolePermissionAuthorizer
+    {
+        public Uuid TenantId { get; private set; }
+        public Uuid ProgramId { get; private set; }
+        public Uuid UserId { get; private set; }
+        public Uuid MemberId { get; private set; }
+        public Uuid RoleId { get; private set; }
+        public string? Permission { get; private set; }
+
+        public ValueTask<bool> IsAllowedAsRoleAsync(Uuid tenantId, Uuid userId, Uuid memberId,
+            Uuid programId, Uuid roleId, string permission, CancellationToken ct = default)
+        {
+            TenantId = tenantId;
+            ProgramId = programId;
+            UserId = userId;
+            MemberId = memberId;
+            RoleId = roleId;
+            Permission = permission;
+            return ValueTask.FromResult(allowed);
+        }
     }
 
     [Fact]
