@@ -11,6 +11,8 @@ public sealed class ExaminationEngagementTests
     static readonly Uuid ProgramId = Uuid.CreateVersion4();
     static readonly Uuid EngagementId = Uuid.CreateVersion4();
     static readonly Uuid MemberId = Uuid.CreateVersion4();
+    static readonly Uuid BoundaryId = Uuid.CreateVersion4();
+    static readonly Uuid BoundaryVersionId = Uuid.CreateVersion4();
     static readonly Uuid BaselineId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 10, 17, 15, 0, 0, TimeSpan.Zero);
 
@@ -77,6 +79,78 @@ public sealed class ExaminationEngagementTests
     }
 
     [Fact]
+    public void ShouldRequireApprovedBoundaryReferenceGivenFreeze()
+    {
+        // Arrange
+        var engagement = NewEngagement();
+        var source = new TypeIBaselineSourceReference("control", Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), 1, new string('a', 64));
+        var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId, [source]);
+
+        // Act
+        var failure = engagement.FreezeBaseline(1, BaselineId, preview, "Scope confirmed",
+            MemberId, "Lead", Now.AddDays(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent,
+            Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Null(engagement.Baseline);
+        Assert.Single(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldBindApprovedBoundaryReferenceToEngagementGivenFreeze()
+    {
+        // Arrange
+        var engagement = NewEngagement();
+        var source = new TypeIBaselineSourceReference("approved_boundary", Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), 1, new string('a', 64));
+        var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId, [source]);
+
+        // Act
+        var failure = engagement.FreezeBaseline(1, BaselineId, preview, "Scope confirmed",
+            MemberId, "Lead", Now.AddDays(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent,
+            Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Null(engagement.Baseline);
+        Assert.Single(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectFrozenEventWithoutExactBoundaryGivenReplay()
+    {
+        // Arrange
+        var openedAggregate = NewEngagement();
+        var opened = Assert.IsType<ExaminationEngagementOpened>(
+            Assert.Single(new AggregateScenario<ExaminationEngagement>(openedAggregate)
+                .PendingEvents));
+        var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId,
+            [new TypeIBaselineSourceReference("control", Uuid.CreateVersion4(),
+                Uuid.CreateVersion4(), 1, new string('a', 64))]);
+        var frozenAt = Now.AddDays(1);
+        var frozenEngagement = openedAggregate.Current! with
+        {
+            Status = "baseline_frozen",
+            Revision = openedAggregate.Revision + 1,
+            UpdatedAt = frozenAt,
+        };
+        var baseline = new TypeIBaselineView(TenantId, ProgramId, EngagementId, BaselineId,
+            "frozen", 1, preview.Sources, [], preview.CanonicalManifest,
+            preview.ContentSha256, frozenAt, MemberId, "Lead", "Scope confirmed", null,
+            null, [], [], 0);
+        var frozen = new TypeIBaselineFrozen(TenantId, frozenEngagement, baseline, frozenAt);
+
+        // Act
+        var replay = () => new AggregateScenario<ExaminationEngagement>(
+            new ExaminationEngagement(TenantId, ProgramId, EngagementId)).Given(opened, frozen);
+
+        // Assert
+        Assert.Throws<InvalidOperationException>(replay);
+    }
+
+    [Fact]
     public void ShouldFreezeExactBaselineAndPreserveItGivenLaterSourceChange()
     {
         // Arrange
@@ -108,13 +182,13 @@ public sealed class ExaminationEngagementTests
         Assert.Null(engagement.FreezeBaseline(1, BaselineId, ValidPreview(), "Confirmed",
             MemberId, "Lead", Now.AddDays(1)));
         var current = engagement.Baseline!;
-        var amended = ValidPreview(Uuid.CreateVersion4(), current.Sources[0].RecordId);
+        var amended = ValidPreview(Uuid.CreateVersion4(), current.Sources[1].RecordId);
 
         // Act
         var missingReason = engagement.AmendBaseline(2, Uuid.CreateVersion4(), amended, [], [],
             " ", MemberId, "Approver", Now.AddDays(2));
         var valid = engagement.AmendBaseline(2, Uuid.CreateVersion4(), amended,
-            [amended.Sources[0].RecordId], [], "Corrected scope source", MemberId,
+            [amended.Sources[1].RecordId], [], "Corrected scope source", MemberId,
             "Approver", Now.AddDays(2));
 
         // Assert
@@ -157,13 +231,16 @@ public sealed class ExaminationEngagementTests
     }
 
     static ExaminationEngagementContent ValidContent() => new("type_i", "Audit Firm",
-        new DateOnly(2026, 9, 30), null, ["security"], Uuid.CreateVersion4(), [MemberId]);
+        new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, [MemberId]);
 
     static TypeIBaselinePreview ValidPreview(Uuid? versionId = null, Uuid? recordId = null)
     {
-        var reference = new TypeIBaselineSourceReference("approved_boundary",
-            recordId ?? Uuid.CreateVersion4(),
-            versionId ?? Uuid.CreateVersion4(), 3, new string('a', 64));
-        return TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId, [reference]);
+        var boundary = new TypeIBaselineSourceReference("approved_boundary", BoundaryId,
+            BoundaryVersionId, 3, new string('a', 64));
+        var control = new TypeIBaselineSourceReference("control",
+            recordId ?? Uuid.CreateVersion4(), versionId ?? Uuid.CreateVersion4(), 3,
+            new string('b', 64));
+        return TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId,
+            [boundary, control]);
     }
 }

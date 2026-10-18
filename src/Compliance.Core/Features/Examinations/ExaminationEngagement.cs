@@ -134,7 +134,7 @@ public sealed class ExaminationEngagement : Aggregate
                 "The baseline cannot be frozen while source blockers remain.");
         if (!PreviewMatchesEngagement(preview))
             return InvalidPreview("The baseline preview does not match this engagement.");
-        if (ValidatePreview(preview) is { } previewFailure)
+        if (ValidatePreview(preview, _current.BoundaryId) is { } previewFailure)
             return previewFailure;
 
         var sources = Freeze(preview.Sources);
@@ -192,7 +192,7 @@ public sealed class ExaminationEngagement : Aggregate
                 "The baseline amendment cannot include unresolved source blockers.");
         if (!PreviewMatchesEngagement(preview))
             return InvalidPreview("The baseline amendment preview does not match this engagement.");
-        if (ValidatePreview(preview) is { } previewFailure)
+        if (ValidatePreview(preview, _current.BoundaryId) is { } previewFailure)
             return previewFailure;
         if (baselineId == _baseline.TypeIBaselineId ||
             _baselineHistory.Any(item => item.TypeIBaselineId == baselineId))
@@ -271,7 +271,7 @@ public sealed class ExaminationEngagement : Aggregate
             ev.Baseline.ExaminationEngagementId != Id || ev.Baseline.Status != "frozen" ||
             ev.Baseline.Revision != 1 || ev.Baseline.AmendsBaselineId is not null ||
             ev.Baseline.UpdatedAt != ev.OccurredAt || ev.Baseline.ActorMemberId != ev.Engagement.ActorMemberId ||
-            !BaselineMatchesManifest(ev.Baseline) ||
+            !BaselineMatchesManifest(ev.Baseline, ev.Engagement.BoundaryId) ||
             ValidateActor(ev.Baseline.ActorMemberId, ev.Baseline.ActorDisplay,
                 ev.OccurredAt) is not null)
             throw new InvalidOperationException("The Type I baseline freeze event is invalid.");
@@ -292,7 +292,7 @@ public sealed class ExaminationEngagement : Aggregate
             ev.Baseline.AmendsBaselineId != _baseline.TypeIBaselineId ||
             ev.Baseline.AmendmentDepth != _baseline.AmendmentDepth + 1 ||
             ev.Baseline.UpdatedAt != ev.OccurredAt ||
-            !BaselineMatchesManifest(ev.Baseline) ||
+            !BaselineMatchesManifest(ev.Baseline, ev.Engagement.BoundaryId) ||
             ValidateActor(ev.Baseline.ActorMemberId, ev.Baseline.ActorDisplay,
                 ev.OccurredAt) is not null ||
             !ChangedRecords(_baseline.Sources, ev.Baseline.Sources)
@@ -308,7 +308,7 @@ public sealed class ExaminationEngagement : Aggregate
         preview.TenantId == _tenantId && preview.ProgramId == _programId &&
         preview.ExaminationEngagementId == Id;
 
-    static CommandFailure? ValidatePreview(TypeIBaselinePreview preview)
+    static CommandFailure? ValidatePreview(TypeIBaselinePreview preview, Uuid expectedBoundaryId)
     {
         if (preview.Sources is null || preview.Sources.Count is 0 or > MaximumSources ||
             preview.ScopeDifferences is null || preview.ScopeDifferences.Count > 1000)
@@ -323,16 +323,21 @@ public sealed class ExaminationEngagement : Aggregate
                 return InvalidPreview(
                     "Every baseline source must have one exact, unique version and content digest.");
         }
+        if (!HasExactApprovedBoundary(preview.Sources, expectedBoundaryId))
+            return InvalidPreview(
+                "The Type I baseline must bind the engagement's exact approved boundary.");
         if (preview.ScopeDifferences.Any(difference =>
                 !BoundedText(difference?.Trim() ?? string.Empty, MaximumScopeDifferenceLength)))
             return InvalidPreview("Scope differences must be described with bounded text.");
         return null;
     }
 
-    static bool BaselineMatchesManifest(TypeIBaselineView baseline)
+    static bool BaselineMatchesManifest(TypeIBaselineView baseline, Uuid expectedBoundaryId)
     {
         try
         {
+            if (!HasExactApprovedBoundary(baseline.Sources, expectedBoundaryId))
+                return false;
             var preview = TypeIBaselinePreview.Create(baseline.TenantId, baseline.ProgramId,
                 baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences);
             return preview.ContentSha256 == baseline.ContentSha256 &&
@@ -345,6 +350,23 @@ public sealed class ExaminationEngagement : Aggregate
         {
             return false;
         }
+    }
+
+    static bool HasExactApprovedBoundary(
+        IReadOnlyList<TypeIBaselineSourceReference>? sources, Uuid expectedBoundaryId)
+    {
+        if (sources is null || expectedBoundaryId == Uuid.Empty)
+            return false;
+        TypeIBaselineSourceReference? boundary = null;
+        foreach (var source in sources)
+        {
+            if (source is null || source.Kind != "approved_boundary")
+                continue;
+            if (boundary is not null)
+                return false;
+            boundary = source;
+        }
+        return boundary?.RecordId == expectedBoundaryId;
     }
 
     bool SameFreeze(TypeIBaselineView existing, Uuid baselineId, TypeIBaselinePreview preview,

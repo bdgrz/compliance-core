@@ -186,11 +186,14 @@ public sealed class AmendAuditPackageHandlerTests
         {
             var memberId = RbacIds.Member(TenantId, UserId);
             var engagement = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
+            var boundaryId = Uuid.CreateVersion4();
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i",
                 "Independent Audit LLP", new DateOnly(2026, 9, 30), null, ["security"],
-                Uuid.CreateVersion4(), [memberId]), memberId, "Engagement lead", Now));
+                boundaryId, [memberId]), memberId, "Engagement lead", Now));
             var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, ExaminationId,
-            [new TypeIBaselineSourceReference("system_description", SourceRecord1,
+            [new TypeIBaselineSourceReference("approved_boundary", boundaryId,
+                Uuid.CreateVersion4(), 1, SourceHash1),
+             new TypeIBaselineSourceReference("system_description", SourceRecord1,
                 SourceVersion1, 3, SourceHash1),
              new TypeIBaselineSourceReference("system_description", SourceRecord2,
                 SourceVersion2, 4, SourceHash2)]);

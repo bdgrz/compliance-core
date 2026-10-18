@@ -201,11 +201,14 @@ public sealed class CreateAuditPackageHandlerTests
         {
             var engagement = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
             var memberId = RbacIds.Member(TenantId, UserId);
+            var boundaryId = Uuid.CreateVersion4();
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i",
                 "Independent Audit LLP", new DateOnly(2026, 9, 30), null, ["security"],
-                Uuid.CreateVersion4(), [memberId]), memberId, "Engagement lead", Now));
+                boundaryId, [memberId]), memberId, "Engagement lead", Now));
             var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, ExaminationId,
-            [new TypeIBaselineSourceReference("system_description", SourceRecordId,
+            [new TypeIBaselineSourceReference("approved_boundary", boundaryId,
+                Uuid.CreateVersion4(), 1, SourceSha256),
+             new TypeIBaselineSourceReference("system_description", SourceRecordId,
                 SourceVersionId, SourceRevision, SourceSha256)]);
             Assert.Null(engagement.FreezeBaseline(engagement.Revision, BaselineId, preview,
                 "Confirmed the exact Type I source snapshot.", memberId, "Engagement lead",
