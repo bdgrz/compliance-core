@@ -129,7 +129,7 @@ These candidates make later scope concrete. They are not established public cont
 
 ### Observation periods and recurrence — T2-01/02/03
 
-- Aggregate/model candidates: ObservationPeriod; ControlSchedule; OccurrenceGenerationCheckpoint.
+- Aggregate/model candidates: TypeIIPeriod (expected population and generation batches); ControlOperationsLedger (materialized occurrences).
 - Commands: StartObservationPeriod; ReviseFutureControlSchedule; GenerateDueControlOccurrences; RecordMissingOccurrence; EndObservationPeriod.
 - Queries: GetObservationPeriod; ListObservationPeriods; GetControlCalendar; ListMissingOccurrences.
 - Events: ObservationPeriodStarted; FutureControlScheduleRevised; DueControlOccurrencesGenerated; MissingOccurrenceRecorded; ObservationPeriodEnded.

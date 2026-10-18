@@ -788,6 +788,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<AssessComplianceIncidentHandler>()
             .AddRequestHandler<RecordComplianceIncidentResolutionHandler>()
             .AddRequestHandler<AmendTypeIIObservationPeriodHandler>()
+            .AddRequestHandler<GenerateDueControlOccurrencesHandler>()
             .AddRequestHandler<ReviewSystemDescriptionHandler>()
             .AddRequestHandler<ApproveSystemDescriptionHandler>()
             .AddRequestHandler<RecordSystemDescriptionNoChangeDecisionHandler>()

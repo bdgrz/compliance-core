@@ -494,11 +494,11 @@ RunReadinessAssessment persists versioned inputs/results; ReadinessRules explici
 
 Scope: **R2-01/04, T2-02/03/06/09**. Requirement source: [control-operation-v1](control-operation-v1.md).
 
-Operating plans calculate expected cadence and OpenControlOccurrence retains deterministic occurrences. The repository contains no registered recurring-occurrence scheduling command. ReviewControlOccurrence already supports approved/action_requested/deferred; the finding reactor routes requested actions.
+Operating plans calculate expected cadence. `GenerateDueControlOccurrences` now persists period-bound generation batches and exact occurrence identities; the scheduling reactor that materializes those batches into the control operations ledger remains required before T2-02 is complete. ReviewControlOccurrence already supports approved/action_requested/deferred; the finding reactor routes requested actions.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `GenerateDueControlOccurrences` | Materialize approved recurring occurrences with deterministic identities and durable generation provenance across retries/restarts. Reuse OpenControlOccurrence; event-driven/ad hoc opening already exists. |
+| Partial | `GenerateDueControlOccurrences` | The registered handler records deterministic, period-bound batches and is replay-safe. The scheduling reactor must materialize the retained occurrence identities in the shared control operations ledger; event-driven/ad hoc opening already exists. |
 | Partial | `ProposeControlOperatingPlan`; `ApproveControlOperatingPlan` | Extend period-aware future schedule changes and reconcile added/retained/removed work when TypeIIPeriod exists; retain recorded reassignments and historical work. |
 | Partial | `AttestControlOccurrence`; `ReviewControlOccurrence`; `RaiseOccurrenceFinding` | Bind management-review submissions to exact readiness/monitoring versions and agenda/minutes artifacts; route requested actions through existing findings. No separate ManagementReviewSnapshot or governance-review approval command. |
 | Decision | `RaiseOccurrenceFinding`; `RaiseEvaluationDeviationFinding` | Ratify or replace the existing automatic severity/deadline/fallback-owner defaults (#274/#279); these names already exist, so this is a policy gap, not missing command code. |

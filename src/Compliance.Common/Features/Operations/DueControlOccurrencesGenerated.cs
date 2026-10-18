@@ -2,11 +2,15 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
-/// <summary>Records the DueControlOccurrencesGenerated domain fact for one tenant-owned subject revision.</summary>
-[Discriminator("bdgrz.operations.due-control-occurrences-generated", 1)]
+/// <summary>Records a deterministic, replay-safe batch of due Type II occurrence identities.</summary>
+[Discriminator("bdgrz.operations.due-control-occurrences-generated", 2)]
 public sealed record DueControlOccurrencesGenerated(
     Uuid TenantId,
     Uuid SubjectId,
     long Revision,
+    string GenerationKey,
+    DateOnly ThroughDate,
+    IReadOnlyList<Uuid> OccurrenceIds,
     Uuid? ActorMemberId,
+    string ActorDisplay,
     DateTimeOffset OccurredAt) : DomainEvent;

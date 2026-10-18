@@ -18,6 +18,7 @@ public sealed class TypeIIPeriod : Aggregate
     const int MaximumSources = 1000;
     const int MaximumOccurrences = 10000;
     const int MaximumAmendments = 64;
+    const int MaximumOccurrenceGenerationBatches = 256;
     const int MaximumEventBytes = 512 * 1024;
     const int MaximumTextLength = 2000;
     static readonly HashSet<string> ExecutiveRoles = new(StringComparer.OrdinalIgnoreCase)
@@ -29,9 +30,13 @@ public sealed class TypeIIPeriod : Aggregate
     readonly Uuid _tenantId;
     readonly Uuid _programId;
     TypeIIPeriodView? _current;
+    IReadOnlyList<OccurrenceGenerationBatchView> _occurrenceGenerationBatches =
+        Array.Empty<OccurrenceGenerationBatchView>();
 
     public long Revision => _current?.Revision ?? 0;
     public TypeIIPeriodView? Current => _current;
+    public IReadOnlyList<OccurrenceGenerationBatchView> OccurrenceGenerationBatches =>
+        _occurrenceGenerationBatches;
 
     public TypeIIPeriod(Uuid tenantId, Uuid programId, Uuid periodId)
         : base(periodId, new EventStreamAddress(tenantId.ToString(), "type-ii-periods",
@@ -41,6 +46,7 @@ public sealed class TypeIIPeriod : Aggregate
         _programId = programId;
         On<ObservationPeriodStarted>(Apply);
         On<ObservationPeriodAmended>(Apply);
+        On<DueControlOccurrencesGenerated>(Apply);
         On<ObservationPeriodCloseProposed>(Apply);
         On<TypeIIPeriodCloseApproved>(Apply);
         On<ObservationPeriodCloseFrozen>(Apply);
@@ -105,6 +111,10 @@ public sealed class TypeIIPeriod : Aggregate
         if (current.ExpectedOccurrences.Any(item => item.DueOn is { } due &&
                 (due < periodStart || due > periodEnd)))
             return CommandFailure.StateConflict("A period amendment cannot exclude an approved expected occurrence.");
+        if (_occurrenceGenerationBatches.Any(batch => batch.ThroughDate < periodStart ||
+                batch.ThroughDate > periodEnd))
+            return CommandFailure.StateConflict(
+                "A period amendment cannot move its boundaries outside a recorded generation batch.");
 
         var amendment = new TypeIIPeriodAmendmentView(current.PeriodStart, current.PeriodEnd,
             periodStart, periodEnd, reason, actorMemberId, actorDisplay.Trim(), amendedAt);
@@ -122,6 +132,48 @@ public sealed class TypeIIPeriod : Aggregate
             static (tenant, subject, revision, actor, snapshot, at) =>
                 new ObservationPeriodAmended(tenant, subject, revision, actor, snapshot, at),
             "period_amendment");
+    }
+
+    /// <summary>
+    /// Records the exact due expected occurrence identities selected by a durable generation key.
+    /// The downstream scheduler can safely materialize each identity from this retained batch.
+    /// </summary>
+    public CommandFailure? GenerateDueOccurrences(string generationKey, DateOnly throughDate,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset generatedAt)
+    {
+        if (_current is not { } current)
+            return CommandFailure.MissingRecord("The Type II observation period was not found.");
+
+        generationKey = Clean(generationKey);
+        var prior = _occurrenceGenerationBatches.FirstOrDefault(batch =>
+            batch.GenerationKey == generationKey);
+        if (prior is not null)
+            return prior.ThroughDate == throughDate && prior.ActorMemberId == actorMemberId &&
+                   prior.ActorDisplay == Clean(actorDisplay)
+                ? null
+                : CommandFailure.StateConflict(
+                    "A generation key cannot be reused for another date or actor.");
+
+        if (current.Status != "active")
+            return CommandFailure.StateConflict("Occurrences can only be generated for an active period.");
+        if (!Token(generationKey, 200) || throughDate < current.PeriodStart ||
+            throughDate > current.PeriodEnd || !ValidActor(actorMemberId, actorDisplay, generatedAt) ||
+            generatedAt < current.UpdatedAt ||
+            _occurrenceGenerationBatches.Count >= MaximumOccurrenceGenerationBatches)
+            return Invalid("Occurrence generation requires a bounded key, an in-period date, and an attributed actor.");
+
+        var alreadyGenerated = _occurrenceGenerationBatches
+            .SelectMany(static batch => batch.OccurrenceIds).ToHashSet();
+        var ids = DueOccurrenceIds(current, throughDate, alreadyGenerated);
+        var batch = new OccurrenceGenerationBatchView(current.Revision + 1, generationKey,
+            throughDate, ids, actorMemberId, actorDisplay.Trim(), generatedAt);
+        var ev = new DueControlOccurrencesGenerated(_tenantId, Id, current.Revision + 1,
+            generationKey, throughDate, ids, actorMemberId, actorDisplay.Trim(), generatedAt);
+        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+            return Invalid("The occurrence generation batch exceeds the bounded event payload.");
+
+        RaiseEvent(ev);
+        return null;
     }
 
     public CommandFailure? RecordCloseValidation(long expectedRevision,
@@ -313,6 +365,34 @@ public sealed class TypeIIPeriod : Aggregate
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, true, "start");
     void Apply(ObservationPeriodAmended ev) => ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "period_amendment");
+    void Apply(DueControlOccurrencesGenerated ev)
+    {
+        if (_current is not { } current || ev.TenantId != _tenantId || ev.SubjectId != Id ||
+            ev.Revision != Revision + 1 || ev.ActorMemberId is not { } actorMemberId ||
+            actorMemberId == Uuid.Empty || ev.OccurredAt == default ||
+            current.Status != "active" || ev.OccurredAt < current.UpdatedAt ||
+            !Token(ev.GenerationKey, 200) || ev.GenerationKey != Clean(ev.GenerationKey) ||
+            ev.ThroughDate < current.PeriodStart || ev.ThroughDate > current.PeriodEnd ||
+            !ValidActor(actorMemberId, ev.ActorDisplay, ev.OccurredAt) ||
+            _occurrenceGenerationBatches.Count >= MaximumOccurrenceGenerationBatches ||
+            _occurrenceGenerationBatches.Any(batch => batch.GenerationKey == ev.GenerationKey))
+            throw new InvalidOperationException("The occurrence generation event is invalid.");
+
+        var alreadyGenerated = _occurrenceGenerationBatches
+            .SelectMany(static batch => batch.OccurrenceIds).ToHashSet();
+        var ids = NormalizeIds(ev.OccurrenceIds);
+        if (ids is null || !ids.SequenceEqual(ev.OccurrenceIds) ||
+            !ids.SequenceEqual(DueOccurrenceIds(current, ev.ThroughDate, alreadyGenerated)))
+            throw new InvalidOperationException("The occurrence generation event does not match its due period population.");
+
+        var batch = new OccurrenceGenerationBatchView(ev.Revision, ev.GenerationKey,
+            ev.ThroughDate, ids, actorMemberId, ev.ActorDisplay.Trim(), ev.OccurredAt);
+        var next = current with { Revision = ev.Revision };
+        if (ValidateState(next) is not null)
+            throw new InvalidOperationException("The occurrence generation event is invalid.");
+        _occurrenceGenerationBatches = Append(_occurrenceGenerationBatches, batch);
+        _current = Freeze(next);
+    }
     void Apply(ObservationPeriodCloseProposed ev) => ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "validation");
     void Apply(TypeIIPeriodCloseApproved ev) => ApplyState(ev.TenantId, ev.SubjectId,
@@ -780,4 +860,12 @@ public sealed class TypeIIPeriod : Aggregate
             AffectedExaminationMaterialIds = Freeze(item.AffectedExaminationMaterialIds.ToArray()),
         }).ToArray()),
     };
+
+    static Uuid[] DueOccurrenceIds(TypeIIPeriodView state, DateOnly throughDate,
+        HashSet<Uuid> alreadyGenerated) => state.ExpectedOccurrences
+        .Where(item => item.DueOn is { } due && due <= throughDate &&
+            !alreadyGenerated.Contains(item.OccurrenceId))
+        .Select(static item => item.OccurrenceId)
+        .OrderBy(IdKey, StringComparer.Ordinal)
+        .ToArray();
 }

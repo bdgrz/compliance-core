@@ -4,8 +4,8 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 
 ## Current gap
 
-- Required commands in the plan: 127. 67 have handler source; 60 still need one.
-- Required command registration gaps: 60. Required commands without a static test reference: 60.
+- Required commands in the plan: 127. 68 have handler source; 59 still need one.
+- Required command registration gaps: 59. Required commands without a static test reference: 59.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Only then start projectors.
 
@@ -264,7 +264,7 @@ Derived from every command in [the feature-backed command plan](command-list.md)
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RecordAdvisorFeedback` | present | missing | check | no reference |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CorrectAdvisorFeedback` | present | missing | check | no reference |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RespondToAdvisorFeedback` | present | missing | check | no reference |
-| Control operation and recurrence — [R2-01](backlog.md#r2-01-assign-control-ownership-and-operating-cadence), [T2-02](backlog.md#t2-02-operate-a-recurring-control-calendar), R2-04, T2-03; [M0-D19](decisions/m0-d19-periodic-reviews.md) | `GenerateDueControlOccurrences` | present | missing | check | no reference |
+| Control operation and recurrence — [R2-01](backlog.md#r2-01-assign-control-ownership-and-operating-cadence), [T2-02](backlog.md#t2-02-operate-a-recurring-control-calendar), R2-04, T2-03; [M0-D19](decisions/m0-d19-periodic-reviews.md) | `GenerateDueControlOccurrences` | present | present | present | referenced |
 | Inventory and commitment lifecycle — [R1-10](backlog.md#r1-10-establish-the-application-inventory-and-review-scope), [R1-13](backlog.md#r1-13-record-service-commitments-system-requirements-and-user-responsibilities) | `ReviseSystemInstance` | present | present | present | referenced |
 | Inventory and commitment lifecycle — [R1-10](backlog.md#r1-10-establish-the-application-inventory-and-review-scope), [R1-13](backlog.md#r1-13-record-service-commitments-system-requirements-and-user-responsibilities) | `RetireCommitment` | present | present | present | referenced |
 | Readiness-material import — [R1-09](backlog.md#r1-09-bring-existing-readiness-work-into-the-program), [EN-05](backlog.md#en-05-import-with-preview-reconciliation-and-safe-replay) (deferred until prerequisites are met) | `StageReadinessMaterialImport` | present | missing | check | no reference |
@@ -378,7 +378,6 @@ These are implementation dependencies found in the existing contracts, aggregate
 | `ApproveArtifactDisposition`, `ExecuteArtifactDisposition`, `RecordArtifactDispositionResult` | Build a tenant-scoped eligibility reader that binds the exact artifact, retention basis, handling policy, active legal and engagement holds, historical reliance, and storage readiness. Execution also needs a durable deletion provider and trusted worker identity. `ArtifactDisposition` already rejects missing or changed eligibility snapshots. |
 | `CreateAdvisorHandoff`, `ReviseAdvisorHandoffSelection`, `MarkAdvisorHandoffReadyForReview` | Add a resolver for every supported record kind that proves tenant, program, current exact version, and shareable status. The aggregate accepts IDs but cannot establish those source facts. Readiness must be restricted to the Compliance Lead as required by [M0-D14](decisions/m0-d14-advisor-collaboration.md). |
 | `RecordAdvisorFeedback`, `CorrectAdvisorFeedback`, `RespondToAdvisorFeedback` | Add the M0-D14 scoped advisor/guest authorization model, including accepted firm-staff assignments, program-scoped expiring guest grants, and attribution rules. The current commands use ordinary client-management authorization, which cannot authorize the specified advisor actors. |
-| `GenerateDueControlOccurrences` | Add a deterministic recurrence batch operation that binds `PeriodId` and `GenerationKey`, creates stable occurrence identities, and is replay-safe. The existing ledger can read expected occurrences but has no generation command operation. |
 | `StageReadinessMaterialImport`, `ResolveReadinessMaterialImportRow`, `AcceptReadinessMaterialImport`, `CancelReadinessMaterialImport`, `ExecuteReadinessMaterialImport` | Readiness import remains deferred until the EN-05 prerequisites exist: a source preview builder, durable row reconciliation, an accepted immutable plan, and safe idempotent target execution. |
 | `ScheduleWeeklyWorkDigest`, `DeliverWeeklyWorkDigest`, `RecordWorkDigestDelivery` | Add a bounded weekly recipient/snapshot source, stable digest attempt identity, and a trusted email delivery adapter with durable outcome callbacks. The existing digest query and preference do not provide delivery state. |
 | `FreezeTypeIBaseline`, `AmendTypeIBaseline` | Add the authoritative baseline preview/source builder and a complete amendment snapshot. A handler cannot freeze or amend a baseline from a date and an opaque revision alone. |
