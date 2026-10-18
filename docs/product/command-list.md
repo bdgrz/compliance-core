@@ -437,7 +437,7 @@ This pruned plan has 129 required additions, including five evidence command con
 
 - **RecordManagementAssertion** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementAssertion.cs#L7))
 - **ApproveManagementAssertion** — coded ([contract](../../src/Compliance.Common/Features/Examinations/ApproveManagementAssertion.cs#L7))
-- **RecordManagementRepresentationLetter** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L7))
+- **RecordManagementRepresentationLetter** — v2 records an original letter only after resolving its approved assertion, exact delivered package/manifest, inspected auditor-attributed artifact digest, and assertion-bound signer set ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L7), [handler](../../src/Compliance.Core/Features/Examinations/RecordManagementRepresentationLetterHandler.cs#L8))
 - **SignManagementRepresentationLetter** — coded ([contract](../../src/Compliance.Common/Features/Examinations/SignManagementRepresentationLetter.cs#L7))
 - **RecordExaminationOutcome** — v2 handler records only auditor-supplied outcomes bound to an exact delivered package version and, when supplied, an available inspected report artifact ([contract](../../src/Compliance.Common/Features/Examinations/RecordExaminationOutcome.cs#L7), [handler](../../src/Compliance.Core/Features/Examinations/RecordExaminationOutcomeHandler.cs#L8))
 - **RecordManagementExaminationReview** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementExaminationReview.cs#L7))

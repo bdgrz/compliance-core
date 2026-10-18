@@ -415,6 +415,10 @@ The following is a static source inventory, including internal operations. Queri
 - [OpenEvidenceRequest](../../src/Compliance.Common/Features/Evidence/OpenEvidenceRequest.cs#L9) — `bdgrz.evidence.request.open` v1
 - [PrepareEvidenceRedaction](../../src/Compliance.Common/Features/Evidence/PrepareEvidenceRedaction.cs#L6) — `bdgrz.evidence.redaction.prepare` v1
 
+#### Examinations
+
+- [RecordManagementRepresentationLetter](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L6) — `bdgrz.examinations.record-management-representation-letter` v2
+
 #### Operations
 
 - [ApproveControlOperatingPlan](../../src/Compliance.Common/Features/Operations/ApproveControlOperatingPlan.cs#L12) — `bdgrz.control.operating_plan.approve` v1
@@ -2768,7 +2772,8 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}` | `CreateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2198) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments` | `AmendAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2202) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations` | `ValidateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2206) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2210) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/representation-letters/{letter_id}` | `RecordManagementRepresentationLetter` | [registration](../../src/Compliance.App/Program.cs#L2210) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2214) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |
