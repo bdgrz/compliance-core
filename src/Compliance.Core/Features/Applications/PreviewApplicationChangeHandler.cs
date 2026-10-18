@@ -14,12 +14,16 @@ public sealed class PreviewApplicationChangeHandler(
     ApplicationGovernedRevisionGate? gate = null,
     SystemInstanceReadConsistency? instanceConsistency = null,
     IApplicationIncomingRelationshipDirectory? incomingRelationshipDirectory = null,
-    ApplicationIncomingRelationshipReadConsistency? incomingRelationshipConsistency = null)
+    ApplicationIncomingRelationshipReadConsistency? incomingRelationshipConsistency = null,
+    IApplicationControlVersionReferenceDirectory? controlVersions = null,
+    ApplicationControlVersionReferenceReadConsistency? controlVersionConsistency = null)
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
     const int MaximumSystemInstanceBoundaryReferences = 200;
     const int MaximumSystemInstanceControlDraftReferences = 200;
+    const int MaximumApplicationControlVersionReferences = 200;
+    const int MaximumSystemInstanceControlVersionReferences = 200;
 
     public PreviewApplicationChangeHandler(IAggregateReader aggregates,
         IApplicationDirectoryReader applications,
@@ -35,7 +39,7 @@ public sealed class PreviewApplicationChangeHandler(
     }
 
     static readonly string[] MissingContextsBeforeSystemInstanceControls =
-        ["vendors", "approved_control_versions_and_lifecycle_impact"];
+        ["vendors"];
 
     static readonly string[] MissingContextsAfterSystemInstanceControls =
         ["policies", "evidence_sources", "access_populations", "review_campaigns",
@@ -67,6 +71,9 @@ public sealed class PreviewApplicationChangeHandler(
             (incomingRelationshipConsistency is null))
             throw new InvalidOperationException(
                 "The incoming application relationship reader and consistency fence must be registered together.");
+        if ((controlVersions is null) != (controlVersionConsistency is null))
+            throw new InvalidOperationException(
+                "The approved control-version reader and consistency fence must be registered together.");
 
         var inputError = Validate(request);
         if (inputError is not null)
@@ -175,6 +182,15 @@ public sealed class PreviewApplicationChangeHandler(
             .ConfigureAwait(false);
         if (!controlFence.IsSuccess)
             return Result<ApplicationChangePreview>.Failure(controlFence.Error);
+        ProjectionCheckpoint? controlVersionFence = null;
+        if (controlVersionConsistency is not null)
+        {
+            var capturedControlVersions = await controlVersionConsistency.CaptureAsync(
+                request.TenantId, ct).ConfigureAwait(false);
+            if (!capturedControlVersions.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(capturedControlVersions.Error);
+            controlVersionFence = capturedControlVersions.Value;
+        }
         ProjectionCheckpoint? instanceFence = null;
         if (instanceConsistency is not null)
         {
@@ -287,6 +303,62 @@ public sealed class PreviewApplicationChangeHandler(
             }
         }
 
+        var approvedControlReferences = new List<ApplicationControlVersionReferenceView>();
+        var approvedApplicationReferencesOverLimit = false;
+        var approvedSystemInstanceReferencesOverLimit = instancePage.NextCursor is not null;
+        if (controlVersions is not null)
+        {
+            var applicationControlVersions = await controlVersions.ListAsync(request.TenantId,
+                "application", request.ApplicationId, MaximumApplicationControlVersionReferences,
+                null, ct).ConfigureAwait(false);
+            if (applicationControlVersions.Items.Count > MaximumApplicationControlVersionReferences ||
+                applicationControlVersions.Items.Any(reference =>
+                    !IsValidApprovedControlReference(reference, request.TenantId, "application",
+                        request.ApplicationId)))
+                return Result<ApplicationChangePreview>.Failure(new RequestError(
+                    RequestErrorKind.Conflict,
+                    "The approved application control-version projection is inconsistent.",
+                    isTransient: true));
+            approvedApplicationReferencesOverLimit =
+                applicationControlVersions.NextCursor is not null;
+            approvedControlReferences.AddRange(applicationControlVersions.Items);
+
+            if (instanceConsistency is not null)
+            {
+                var systemInstanceReferenceCount = 0;
+                foreach (var instance in instancePage.Items)
+                {
+                    var remaining = MaximumSystemInstanceControlVersionReferences -
+                        systemInstanceReferenceCount;
+                    if (remaining == 0)
+                    {
+                        approvedSystemInstanceReferencesOverLimit = true;
+                        break;
+                    }
+
+                    var instanceControlVersions = await controlVersions.ListAsync(request.TenantId,
+                        "system_instance", instance.SystemInstanceId, Math.Min(200, remaining),
+                        null, ct).ConfigureAwait(false);
+                    if (instanceControlVersions.Items.Count > remaining ||
+                        instanceControlVersions.Items.Any(reference =>
+                            !IsValidApprovedControlReference(reference, request.TenantId,
+                                "system_instance", instance.SystemInstanceId)))
+                        return Result<ApplicationChangePreview>.Failure(new RequestError(
+                            RequestErrorKind.Conflict,
+                            "The approved system-instance control-version projection is inconsistent.",
+                            isTransient: true));
+
+                    approvedControlReferences.AddRange(instanceControlVersions.Items);
+                    systemInstanceReferenceCount += instanceControlVersions.Items.Count;
+                    if (instanceControlVersions.NextCursor is not null)
+                    {
+                        approvedSystemInstanceReferencesOverLimit = true;
+                        break;
+                    }
+                }
+            }
+        }
+
         var boundaryConfirmed = await boundaryConsistency.ConfirmUnchangedAndCaughtUpAsync(
             request.TenantId, boundaryFence.Value, ct).ConfigureAwait(false);
         if (!boundaryConfirmed.IsSuccess)
@@ -311,6 +383,14 @@ public sealed class PreviewApplicationChangeHandler(
             if (!relationshipsConfirmed.IsSuccess)
                 return Result<ApplicationChangePreview>.Failure(relationshipsConfirmed.Error);
         }
+        if (controlVersionFence is { } capturedControlVersionFence)
+        {
+            var controlVersionsConfirmed = await controlVersionConsistency!
+                .ConfirmUnchangedAndCaughtUpAsync(request.TenantId,
+                    capturedControlVersionFence, ct).ConfigureAwait(false);
+            if (!controlVersionsConfirmed.IsSuccess)
+                return Result<ApplicationChangePreview>.Failure(controlVersionsConfirmed.Error);
+        }
 
         // Source rechecks catch a pending application or relationship write that raced the reads.
         var latest = await aggregates.HydrateApplicationAsync(request.TenantId, request.ApplicationId, ct).ConfigureAwait(false);
@@ -330,6 +410,12 @@ public sealed class PreviewApplicationChangeHandler(
         if (relationships.HasMore || incomingRelationshipsOverLimit)
             pending.Add("application_relationships_over_limit");
         pending.AddRange(MissingContextsBeforeSystemInstanceControls);
+        if (controlVersions is null || controlVersionConsistency is null ||
+            instanceConsistency is null || approvedApplicationReferencesOverLimit ||
+            approvedSystemInstanceReferencesOverLimit)
+            pending.Add("approved_control_versions_and_lifecycle_impact");
+        if (approvedApplicationReferencesOverLimit || approvedSystemInstanceReferencesOverLimit)
+            pending.Add("approved_control_versions_and_lifecycle_impact_over_limit");
         if (incomingRelationshipDirectory is null)
             pending.Add("application_relationships");
         if (instanceConsistency is null)
@@ -357,6 +443,12 @@ public sealed class PreviewApplicationChangeHandler(
                 .ThenBy(static item => item.ControlId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
             SystemInstanceReferences = instancePage.Items,
+            ApprovedControlReferences = approvedControlReferences
+                .OrderBy(static item => item.SubjectType, StringComparer.Ordinal)
+                .ThenBy(static item => item.GovernedRecordId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.ControlId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.VersionId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
         };
         return Result<ApplicationChangePreview>.Success(preview with
         {
@@ -410,6 +502,27 @@ public sealed class PreviewApplicationChangeHandler(
         reference.GovernedRecordId == systemInstanceId && reference.ProgramId != Uuid.Empty &&
         reference.ControlId != Uuid.Empty && reference.EntryId != Uuid.Empty &&
         reference.Revision > 0 && !string.IsNullOrWhiteSpace(reference.Identifier) &&
+        !string.IsNullOrWhiteSpace(reference.Subject) &&
+        !string.IsNullOrWhiteSpace(reference.Rationale);
+
+    static bool IsValidApprovedControlReference(
+        ApplicationControlVersionReferenceView reference, Uuid tenantId, string subjectType,
+        Uuid governedRecordId) =>
+        reference.TenantId == tenantId && reference.SubjectType == subjectType &&
+        reference.GovernedRecordId == governedRecordId &&
+        reference.ProgramId != Uuid.Empty && reference.ControlId != Uuid.Empty &&
+        reference.VersionId != Uuid.Empty && reference.EntryId != Uuid.Empty &&
+        reference.Revision > 0 && !string.IsNullOrWhiteSpace(reference.Identifier) &&
+        reference.Status is "approved" or "superseded" or "retired" &&
+        reference.EffectiveFrom != default &&
+        (reference.Status == "approved" ? reference.EffectiveUntil is null :
+            reference.EffectiveUntil is { } effectiveUntil &&
+            effectiveUntil > reference.EffectiveFrom) &&
+        (reference.PendingRetirementEffectiveUntil is null ||
+            reference.PendingRetirementEffectiveUntil > reference.EffectiveFrom) &&
+        (reference.Status == "approved" ||
+            (!reference.HasPendingSuccessor &&
+             reference.PendingRetirementEffectiveUntil is null)) &&
         !string.IsNullOrWhiteSpace(reference.Subject) &&
         !string.IsNullOrWhiteSpace(reference.Rationale);
 

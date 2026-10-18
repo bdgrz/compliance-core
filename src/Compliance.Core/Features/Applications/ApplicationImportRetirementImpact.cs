@@ -38,7 +38,9 @@ static class ApplicationImportRetirementImpact
     static bool IsCompleteWithoutKnownReferences(ApplicationChangePreview impact) =>
         impact.ChangeKind == "retire" && impact.Complete && impact.PendingContexts is { Count: 0 } &&
         impact.Changes is { Count: 0 } && impact.BoundaryReferences is { Count: 0 } &&
-        impact.ControlDraftReferences is { Count: 0 } && impact.SystemInstanceReferences is { Count: 0 };
+        impact.ControlDraftReferences is { Count: 0 } &&
+        impact.ApprovedControlReferences is { Count: 0 } &&
+        impact.SystemInstanceReferences is { Count: 0 };
 
     static bool IsDigest(string value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
 }
