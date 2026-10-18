@@ -97,6 +97,25 @@ public sealed class TypeIIPlanTests
         Assert.Equal(revision, plan.Revision);
     }
 
+    [Fact]
+    public void ShouldPreserveFirstProposalTimeGivenSameIntentRetriedLater()
+    {
+        // Arrange
+        var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);
+        var content = Content();
+        Assert.Null(plan.Propose(content, ProposerId, "Compliance lead", Now));
+        var revision = plan.Revision;
+
+        // Act
+        var retry = plan.Propose(content, ProposerId, "Compliance lead", Now.AddDays(1));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(revision, plan.Revision);
+        Assert.Equal(Now, plan.Current!.Current!.ProposedAt);
+        Assert.Single(plan.Current.Versions);
+    }
+
     static TypeIIPlanAggregate NewPlan()
     {
         var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);

@@ -397,7 +397,7 @@ public sealed class TypeIIPlan : Aggregate
         Uuid actor, string display, DateTimeOffset at) =>
         NormalizeContent(content) is { } normalized && state.Current is { } version &&
         Digest(normalized) == version.ContentSha256 && version.ProposedByMemberId == actor &&
-        version.ProposedByDisplay == display.Trim() && version.ProposedAt == at;
+        version.ProposedByDisplay == display.Trim() && at != default && at >= version.ProposedAt;
 
     static string Digest<T>(T value) => Convert.ToHexString(
         SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(value))).ToLowerInvariant();
