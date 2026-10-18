@@ -26,7 +26,7 @@ public sealed class DelegateWorkItemHandler(IAggregateExecutor executor, WorkQue
                         "The source workflow would not accept this member for the work, including its separation of duties.");
                 return await WorkCommands.ExecuteAsync(executor, context, request.TenantId,
                     request.ProgramId, entry, snapshot.Today, ledger => ledger.AssignTo(
-                        request.WorkItemId, request.ExpectedRevision, WorkAssignmentLedger.Delegate,
+                        request.ExpectedRevision, WorkItemAssignment.Delegate,
                         request.AssigneeMemberId, actor.MemberId, request.Reason,
                         ActorReference.ForMember(actor.MemberId, actor.Display),
                         clock.GetUtcNow()), ct).ConfigureAwait(false);

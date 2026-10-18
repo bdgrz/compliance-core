@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Commitments;
@@ -6,7 +8,19 @@ namespace Bdgrz.Compliance.Features.Commitments;
 [Discriminator("bdgrz.commitments.commitment-retired", 1)]
 public sealed record CommitmentRetired(
     Uuid TenantId,
+    Uuid ProgramId,
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    string ActorDisplay,
+    DateOnly EffectiveOn,
+    string Rationale,
+    DateTimeOffset OccurredAt) : DomainEvent
+{
+    [JsonPropertyName("actor")]
+    public ActorReference? StoredActor { get; init; }
+
+    [JsonIgnore]
+    public ActorReference Actor => StoredActor ?? ActorReference.ForMember(ActorMemberId ?? Uuid.Empty,
+        ActorDisplay);
+}

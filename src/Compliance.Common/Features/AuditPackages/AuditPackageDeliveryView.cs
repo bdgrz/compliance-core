@@ -2,5 +2,21 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
-/// <summary>Attributed delivery attempt and recipient/provider receipt.</summary>
-public sealed record AuditPackageDeliveryView(Uuid TenantId, Uuid ProgramId, Uuid AuditPackageDeliveryId, string Status, long Revision, DateTimeOffset UpdatedAt, Uuid? ManifestId);
+/// <summary>Attributed delivery of the exact retained archive and manifest to one approved recipient.</summary>
+public sealed record AuditPackageDeliveryView(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid AuditPackageDeliveryId,
+    Uuid AuditPackageId,
+    int PackageVersion,
+    Uuid ManifestId,
+    string ManifestSha256,
+    Uuid ArchiveArtifactId,
+    string ArchiveSha256,
+    string Recipient,
+    string DeliveryReference,
+    string Status,
+    long Revision,
+    DateTimeOffset UpdatedAt,
+    Uuid? ActorMemberId,
+    string ActorDisplay);

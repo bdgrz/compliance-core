@@ -559,7 +559,8 @@ public sealed class EvidenceArtifactInspectionEffectsReactorTests
             await using var scope = _provider.CreateAsyncScope();
             var artifact = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
                 .HydrateAsync(new EvidenceArtifact(target.Content.TenantId, target.Id));
-            Assert.Null(artifact.ReleaseQuarantine("False positive cleared.", Collector, Now.AddMinutes(2)));
+            Assert.Null(artifact.ReleaseQuarantine(artifact.Revision, Uuid.CreateVersion4(),
+                Now.AddMinutes(1), "False positive cleared.", Collector, Now.AddMinutes(2)));
             await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(artifact, Dispatch());
         }
 

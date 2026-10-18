@@ -4,6 +4,18 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-/// <summary>Records the record examination outcome intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.examinations.record-examination-outcome", 1)]
-public sealed record RecordExaminationOutcome(Uuid TenantId, Uuid ProgramId, Uuid ExaminationId, string Outcome, string IssuedReportReference, Uuid? ReportArtifactId, DateOnly IssuedOn) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Records an auditor-supplied result against one exact delivered package version.</summary>
+[Discriminator("bdgrz.examinations.record-examination-outcome", 2)]
+public sealed record RecordExaminationOutcome(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid ExaminationId,
+    Uuid OutcomeId,
+    Uuid PackageId,
+    int PackageVersion,
+    string OutcomeCode,
+    string OutcomeSummary,
+    string IssuedReportReference,
+    Uuid? ReportArtifactId,
+    DateOnly IssuedOn)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;

@@ -4,6 +4,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPopulations;
 
-/// <summary>Records the define audit population intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.audit-populations.define-audit-population", 1)]
-public sealed record DefineAuditPopulation(Uuid TenantId, Uuid ProgramId, Uuid DefinitionId, Uuid PeriodCloseId, string Name, string SourceBoundary, DateOnly PeriodStart, DateOnly PeriodEnd) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Defines a population against one exact frozen Type II period close.</summary>
+[Discriminator("bdgrz.audit-populations.define-audit-population", 2)]
+public sealed record DefineAuditPopulation(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid DefinitionId,
+    Uuid PeriodId,
+    Uuid PeriodCloseId,
+    AuditPopulationDefinitionContent Definition) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;

@@ -2,11 +2,14 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
-/// <summary>Records the TenantIdentityProviderCredentialsRotated domain fact for one tenant-owned subject revision.</summary>
-[Discriminator("bdgrz.useridentities.tenant-identity-provider-credentials-rotated", 1)]
+/// <summary>Retains credential reference rotation and forces a fresh connection test.</summary>
+[Discriminator("bdgrz.useridentities.tenant-identity-provider-credentials-rotated", 2)]
 public sealed record TenantIdentityProviderCredentialsRotated(
     Uuid TenantId,
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    string EncryptedCredentialReference,
+    string RotationReference,
+    TenantIdentityProviderView State,
     DateTimeOffset OccurredAt) : DomainEvent;

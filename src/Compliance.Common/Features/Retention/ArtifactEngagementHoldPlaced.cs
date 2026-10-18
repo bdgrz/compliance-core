@@ -9,4 +9,5 @@ public sealed record ArtifactEngagementHoldPlaced(
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    ArtifactEngagementHoldView State,
     DateTimeOffset OccurredAt) : DomainEvent;

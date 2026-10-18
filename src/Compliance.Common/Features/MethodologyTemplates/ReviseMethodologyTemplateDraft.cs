@@ -3,6 +3,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
-/// <summary>Records the revise methodology template draft intent required by the owning feature workflow.</summary>
+/// <summary>Revises the current methodology-template draft with an explicit content revision.</summary>
 [Discriminator("bdgrz.methodology-templates.revise-methodology-template-draft", 1)]
-public sealed record ReviseMethodologyTemplateDraft(Uuid TemplateId, long ExpectedRevision, string Content, string ChangeNotes) : IRequest, IPlatformOperatorRequest, ICallable;
+public sealed record ReviseMethodologyTemplateDraft(Uuid TemplateId, long ExpectedRevision,
+    MethodologyTemplateContent Content, string ChangeNotes) : IRequest, IPlatformOperatorRequest, ICallable;

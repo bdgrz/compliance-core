@@ -1,0 +1,13 @@
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.Programs;
+
+/// <summary>Records an explicit rejection of a carry-forward proposal version.</summary>
+[Discriminator("bdgrz.programs.program-rollover-decision-recorded", 1)]
+public sealed record ProgramRolloverDecisionRecorded(
+    Uuid TenantId,
+    Uuid SubjectId,
+    long Revision,
+    Uuid? ActorMemberId,
+    ProgramRolloverView State,
+    DateTimeOffset OccurredAt) : DomainEvent;

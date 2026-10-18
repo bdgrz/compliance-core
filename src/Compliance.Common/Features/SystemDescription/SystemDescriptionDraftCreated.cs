@@ -2,11 +2,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-/// <summary>Records the SystemDescriptionDraftCreated domain fact for one tenant-owned subject revision.</summary>
+/// <summary>Persists the first complete authored version of a system description.</summary>
 [Discriminator("bdgrz.systemdescription.system-description-draft-created", 1)]
 public sealed record SystemDescriptionDraftCreated(
     Uuid TenantId,
-    Uuid SubjectId,
-    long Revision,
-    Uuid? ActorMemberId,
+    Uuid ProgramId,
+    Uuid SystemDescriptionId,
+    long AggregateRevision,
+    SystemDescriptionVersionView Version,
     DateTimeOffset OccurredAt) : DomainEvent;

@@ -26,12 +26,13 @@ static class WorkCommands
     public static async ValueTask<Result<WorkItemDetailView>> ExecuteAsync<TRequest>(
         IAggregateExecutor executor, IRequestContext<TRequest> context, Uuid tenantId,
         Uuid programId, WorkQueueEntry entry, DateOnly today,
-        Func<WorkAssignmentLedger, CommandFailure?> command, CancellationToken ct)
+        Func<WorkItemAssignment, CommandFailure?> command, CancellationToken ct)
         where TRequest : IRequestBase =>
-        await executor.ExecuteAsync(new WorkAssignmentLedger(tenantId, programId), ledger =>
+        await executor.ExecuteAsync(new WorkItemAssignment(tenantId, programId,
+            entry.Candidate.WorkItemId), assignment =>
         {
-            var failure = command(ledger);
-            var state = ledger.Read(entry.Candidate.WorkItemId);
+            var failure = assignment.ImportLegacy(entry.LegacyState) ?? command(assignment);
+            var state = assignment.Read();
             // A newly recorded assignee was validated as eligible; otherwise accountability is
             // unchanged from the read.
             var assignee = state.AssigneeMemberId != entry.State.AssigneeMemberId

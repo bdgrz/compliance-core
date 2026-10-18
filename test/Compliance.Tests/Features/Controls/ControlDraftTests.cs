@@ -139,6 +139,27 @@ public sealed class ControlDraftTests
     }
 
     [Fact]
+    public void ShouldPreserveDraftRevisionGivenUnchangedNormalizedContent()
+    {
+        // Arrange
+        var scenario = Scenario("AC-NOOP");
+        Assert.True(scenario.When(control => AggregateOutcome.CommitOnSuccess(control.Create(
+            ProgramId, Uuid.CreateVersion4(), "AC-NOOP", Content(), AuthorId, "Author", Now)))
+            .IsSuccess);
+
+        // Act
+        var result = scenario.When(control => CommandFailureRequestAdapter.ToOutcome(control.Revise(
+            ProgramId, 1, Content() with { Title = " Access review " }, AuthorId, "Author",
+            Now.AddMinutes(1))));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(1, scenario.Aggregate.Revision);
+        Assert.Equal(1UL, scenario.CommittedEventCount);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
     public void ShouldPreserveDeclaredOwnerAndExplicitUnresolvedApplicabilityGivenDraft()
     {
         // Arrange

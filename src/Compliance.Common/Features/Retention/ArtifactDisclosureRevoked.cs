@@ -9,4 +9,5 @@ public sealed record ArtifactDisclosureRevoked(
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
+    ArtifactDisclosureView State,
     DateTimeOffset OccurredAt) : DomainEvent;

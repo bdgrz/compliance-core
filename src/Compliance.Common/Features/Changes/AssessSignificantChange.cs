@@ -5,5 +5,5 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Changes;
 
 /// <summary>Records the assess significant change intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.changes.assess-significant-change", 1)]
-public sealed record AssessSignificantChange(Uuid TenantId, Uuid ProgramId, Uuid ChangeId, long Version, IReadOnlyList<Uuid> AffectedRecordIds, string Significance, string Rationale) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+[Discriminator("bdgrz.changes.assess-significant-change", 2)]
+public sealed record AssessSignificantChange(Uuid TenantId, Uuid ProgramId, Uuid ChangeId, long ExpectedRevision, SignificantChangeImpactContent Content) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;

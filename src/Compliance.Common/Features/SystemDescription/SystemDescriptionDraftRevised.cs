@@ -2,11 +2,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
-/// <summary>Records the SystemDescriptionDraftRevised domain fact for one tenant-owned subject revision.</summary>
+/// <summary>Persists a new immutable successor draft version.</summary>
 [Discriminator("bdgrz.systemdescription.system-description-draft-revised", 1)]
 public sealed record SystemDescriptionDraftRevised(
     Uuid TenantId,
-    Uuid SubjectId,
-    long Revision,
-    Uuid? ActorMemberId,
+    Uuid ProgramId,
+    Uuid SystemDescriptionId,
+    long AggregateRevision,
+    SystemDescriptionVersionView Version,
     DateTimeOffset OccurredAt) : DomainEvent;

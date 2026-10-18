@@ -21,6 +21,11 @@ public sealed class CommitmentDraft : Aggregate
     long _revision;
     Uuid _createRequestId;
     Uuid? _providerId;
+    bool _retired;
+    Uuid? _retiredByMemberId;
+    string? _retirementRationale;
+    DateOnly? _retiredEffectiveOn;
+    DateTimeOffset? _retiredAt;
     string? _initialStatement;
     string? _initialContext;
     string? _initialSourceReference;
@@ -46,6 +51,9 @@ public sealed class CommitmentDraft : Aggregate
     public string? Identifier { get; private set; }
     public long EffectiveVersionCount => _versions.Count;
     public long? LatestEffectiveRevision => _versions.Count == 0 ? null : _versions[^1].Revision;
+    public bool IsRetired => _retired;
+    public DateOnly? RetiredEffectiveOn => _retiredEffectiveOn;
+    public string? RetirementRationale => _retirementRationale;
 
     /// <summary>The effective version on a date, or null before the first effective date.</summary>
     public long? EffectiveVersionOn(DateOnly date)
@@ -107,6 +115,22 @@ public sealed class CommitmentDraft : Aggregate
                 ResponsibilityType.PolicyApprover, ev.DecidedAt, ev.SeparationOfDutiesWaiverId);
             _versions.Add((ev.Version, ev.Revision, ev.EffectiveFrom));
             _acceptedReview = null;
+        });
+        On<CommitmentRetired>(ev =>
+        {
+            if (!_created || ev.TenantId != _tenantId || ev.ProgramId != ProgramId ||
+                ev.SubjectId != Id || ev.Revision != _revision || _retired ||
+                ev.ActorMemberId is not { } actor || actor == Uuid.Empty ||
+                string.IsNullOrWhiteSpace(ev.ActorDisplay) || ev.ActorDisplay.Length > 200 ||
+                _versions.Count == 0 || ev.EffectiveOn <= _versions[^1].EffectiveFrom ||
+                string.IsNullOrWhiteSpace(ev.Rationale) || ev.Rationale.Length > 4000 ||
+                ev.EffectiveOn == default || ev.OccurredAt == default)
+                throw new InvalidOperationException("The commitment retirement event is invalid.");
+            _retired = true;
+            _retiredByMemberId = actor;
+            _retirementRationale = ev.Rationale;
+            _retiredEffectiveOn = ev.EffectiveOn;
+            _retiredAt = ev.OccurredAt;
         });
         On<ResponsibilityAssigned>(ev => GetResponsibilitySet(ev.Scope).Apply(ev));
         On<ResponsibilityRevoked>(ev => GetResponsibilitySet(ev.Scope).Apply(ev));
@@ -174,6 +198,8 @@ public sealed class CommitmentDraft : Aggregate
     {
         if (!_created || ProgramId != programId)
             return CommandFailure.MissingRecord("The draft was not found.");
+        if (_retired)
+            return CommandFailure.StateConflict("A retired commitment cannot be changed.");
         if (expectedRevision != _revision)
             return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision(
                 "commitment draft", _revision));
@@ -302,10 +328,41 @@ public sealed class CommitmentDraft : Aggregate
         return null;
     }
 
+    public CommandFailure? Retire(Uuid programId, long expectedRevision, DateOnly effectiveOn,
+        string rationale, Uuid actorMemberId, string actorDisplay, DateTimeOffset retiredAt)
+    {
+        rationale = rationale?.Trim() ?? string.Empty;
+        actorDisplay = actorDisplay?.Trim() ?? string.Empty;
+        if (_retired)
+            return _retiredEffectiveOn == effectiveOn && _retirementRationale == rationale &&
+                   _retiredByMemberId == actorMemberId && _retiredAt == retiredAt
+                ? null
+                : CommandFailure.StateConflict("A commitment retirement decision is immutable.");
+        if (CheckTarget(programId, expectedRevision) is { } target)
+            return target;
+        if (_versions.Count == 0)
+            return CommandFailure.StateConflict("Only an effective commitment can be retired.");
+        if (effectiveOn == default || effectiveOn <= _versions[^1].EffectiveFrom ||
+            actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay) ||
+            actorDisplay.Length > 200 || string.IsNullOrWhiteSpace(rationale) || rationale.Length > 4000 ||
+            retiredAt == default)
+            return CommandFailure.InvalidContent(
+                "Retirement requires a later effective date, a bounded rationale, and a named actor.");
+
+        RaiseEvent(new CommitmentRetired(_tenantId, ProgramId, Id, _revision, actorMemberId,
+            actorDisplay, effectiveOn, rationale, retiredAt)
+        {
+            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
+        });
+        return null;
+    }
+
     CommandFailure? CheckTarget(Uuid programId, long expectedRevision)
     {
         if (!_created || ProgramId != programId)
             return CommandFailure.MissingRecord("The draft was not found.");
+        if (_retired)
+            return CommandFailure.StateConflict("A retired commitment cannot be changed.");
         return expectedRevision != _revision
             ? CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("commitment draft",
                 _revision))
@@ -373,7 +430,7 @@ public sealed class CommitmentDraft : Aggregate
 
     /// <summary>Responsibilities target the current exact draft revision; the version ID is the draft ID.</summary>
     public bool IsCurrentResponsibilityScope(ResponsibilityScope scope) =>
-        scope is not null && _created &&
+        scope is not null && _created && !_retired &&
         StringComparer.Ordinal.Equals(scope.RecordType, SeparationOfDutiesRecordTypes.Commitment) &&
         scope.RecordId == Id && scope.VersionId == Id && scope.Revision == _revision &&
         LatestEffectiveRevision != _revision;

@@ -27,7 +27,7 @@ public sealed class ClaimWorkItemHandler(IAggregateExecutor executor, WorkQueueR
                         "Only an eligible member of the holding team may claim this work.");
                 return await WorkCommands.ExecuteAsync(executor, context, request.TenantId,
                     request.ProgramId, entry, snapshot.Today, ledger => ledger.AssignTo(
-                        request.WorkItemId, request.ExpectedRevision, WorkAssignmentLedger.Claim,
+                        request.ExpectedRevision, WorkItemAssignment.Claim,
                         actor.MemberId, null, null,
                         ActorReference.ForMember(actor.MemberId, actor.Display),
                         clock.GetUtcNow()), ct).ConfigureAwait(false);

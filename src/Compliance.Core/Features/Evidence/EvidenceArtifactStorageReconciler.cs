@@ -41,8 +41,18 @@ public sealed class EvidenceArtifactStorageReconciler(IArtifactContentStore stor
                     return Failure("The rejected evidence content could not be purged.");
                 break;
             case EvidenceArtifactStates.PendingInspection:
-            case EvidenceArtifactStates.Available:
             case EvidenceArtifactStates.Disposed:
+                break;
+            case EvidenceArtifactStates.Available when artifact.QuarantineReleaseRequestId is not null:
+                if (!await store.ReleaseQuarantineAsync(reference, ct).ConfigureAwait(false))
+                {
+                    await using var verified = await store.OpenVerifiedAsync(reference, ct)
+                        .ConfigureAwait(false);
+                    if (verified is null)
+                        return Failure("The cleanly rescanned evidence content could not be released from quarantine.");
+                }
+                break;
+            case EvidenceArtifactStates.Available:
                 break;
             default:
                 return Failure("The evidence artifact has an unrecognized inspection state or reason.");

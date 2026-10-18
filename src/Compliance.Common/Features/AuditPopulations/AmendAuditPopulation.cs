@@ -4,6 +4,13 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPopulations;
 
-/// <summary>Records the amend audit population intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.audit-populations.amend-audit-population", 1)]
-public sealed record AmendAuditPopulation(Uuid TenantId, Uuid ProgramId, Uuid PopulationId, long ExpectedRevision, string AmendmentReason, IReadOnlyList<Uuid> ChangedRowIds) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Amends a frozen population with a new source snapshot and complete changed-row content.</summary>
+[Discriminator("bdgrz.audit-populations.amend-audit-population", 2)]
+public sealed record AmendAuditPopulation(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid PopulationId,
+    long ExpectedRevision,
+    string AmendmentReason,
+    AuditPopulationSourceSnapshotContent SourceSnapshot,
+    IReadOnlyList<AuditPopulationRowContent> ChangedRows) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;

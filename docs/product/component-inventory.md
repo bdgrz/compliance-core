@@ -1,6 +1,6 @@
 # Required component inventory
 
-Planning baseline: local product contracts and backend source inspected 2026-10-17.
+Planning baseline: local product contracts and backend source inspected 2026-10-18.
 
 For the reconciled command list, requirement coverage and remaining work, use [System command list](command-list.md), with rationale in the [command gap analysis](command-inventory-gap-analysis.md). Its command conclusions supersede the provisional completion suggestions below, including periodic-review subsystems and external-auditor account proposals.
 
@@ -72,7 +72,7 @@ These candidates make later scope concrete. They are not established public cont
 - Aggregate/model candidates: AdvisorRequest; AdvisorFeedback; AdvisoryReadinessNote; FeedbackResponse.
 - Commands: OpenAdvisorRequest; RecordAdvisorFeedback; RespondToAdvisorFeedback; ResolveAdvisorFeedback; WithdrawAdvisorRequest.
 - Queries: GetAdvisorRequest; ListAdvisorRequests; ListAdvisorFeedback.
-- Events: AdvisorRequestOpened; AdvisorFeedbackRecorded; AdvisorFeedbackResponded; AdvisorFeedbackResolved; AdvisorRequestWithdrawn.
+- Events: AdvisorHandoffCreated; AdvisorFeedbackRecorded; AdvisorFeedbackCorrected; AdvisorFeedbackResponded; AdvisorFeedbackResolved; AdvisorHandoffSelectionRevised; AdvisorHandoffReadiedForReview; AdvisorHandoffClosed; AdvisorHandoffRevoked.
 - Reactors: AdvisorRequestNotificationReactor.
 - Projectors: AdvisorRequestDirectoryProjector; AdvisorFeedbackWorkItemProjector.
 - API family: advisory requests, feedback, responses and resolution.
@@ -110,9 +110,9 @@ These candidates make later scope concrete. They are not established public cont
 ### Audit packages — T1-05, T3-05
 
 - Aggregate/model candidates: AuditPackage; AuditPackageManifest; PackageValidation; PackageDelivery.
-- Commands: RequestAuditPackageBuild; ValidateAuditPackage; ApproveAuditPackageDisclosure; DeliverAuditPackage; AmendAuditPackage.
+- Commands: CreateAuditPackage; RequestAuditPackageBuild; ValidateAuditPackage; ApproveAuditPackageDisclosure; DeliverAuditPackage; AmendAuditPackage.
 - Queries: GetAuditPackage; ListAuditPackages; GetAuditPackageManifest; GetAuditPackageValidation; GetAuditPackageDelivery.
-- Events: AuditPackageBuildRequested; AuditPackageBuilt; AuditPackageBuildFailed; AuditPackageValidated; AuditPackageDisclosureApproved; AuditPackageDelivered; AuditPackageAmended.
+- Events: AuditPackageCreated; AuditPackageBuildRequested; AuditPackageBuildProgressRecorded; AuditPackageBuilt; AuditPackageBuildFailed; AuditPackageValidated; AuditPackageValidationOverrideApproved; AuditPackageDisclosureApproved; AuditPackageDelivered; AuditPackageAmended.
 - Reactors: AuditPackageBuildReactor; AuditPackageDeliveryReactor.
 - Projectors: AuditPackageDirectoryProjector; AuditPackageValidationProjector; PackageDeliveryProjector.
 - API family: packages, manifests, validation, disclosure and delivery.
@@ -129,10 +129,10 @@ These candidates make later scope concrete. They are not established public cont
 
 ### Observation periods and recurrence — T2-01/02/03
 
-- Aggregate/model candidates: ObservationPeriod; ControlSchedule; OccurrenceGenerationCheckpoint.
-- Commands: StartObservationPeriod; ReviseFutureControlSchedule; GenerateDueControlOccurrences; RecordMissingOccurrence; EndObservationPeriod.
+- Aggregate/model candidates: TypeIIPeriod (approved opening, expected population and generation batches); TypeIIObservationCalendar (program-wide reserved ranges); ControlOperationsLedger (materialized occurrences).
+- Commands: StartTypeIIObservationPeriod; AmendTypeIIObservationPeriod; ReviseFutureControlSchedule; GenerateDueControlOccurrences; RecordMissingOccurrence; EndObservationPeriod.
 - Queries: GetObservationPeriod; ListObservationPeriods; GetControlCalendar; ListMissingOccurrences.
-- Events: ObservationPeriodStarted; FutureControlScheduleRevised; DueControlOccurrencesGenerated; MissingOccurrenceRecorded; ObservationPeriodEnded.
+- Events: ObservationPeriodStarted; ObservationPeriodAmended; ObservationPeriodReserved; ObservationPeriodAmendmentReserved; ObservationPeriodAmendmentCompleted; ObservationPeriodAmendmentCancelled; ObservationPeriodReservationReleased; FutureControlScheduleRevised; DueControlOccurrencesGenerated; MissingOccurrenceRecorded; ObservationPeriodEnded.
 - Reactors: ControlOccurrenceSchedulingReactor; MissingOccurrenceDetectionReactor.
 - Projectors: ObservationPeriodDirectoryProjector; ControlCalendarProjector; OccurrenceCompletenessProjector.
 - API family: periods, control calendar and occurrence completeness.
@@ -269,14 +269,14 @@ The following is a static source inventory, including internal operations. Queri
 
 | Category | Unique feature/type names |
 | --- | ---: |
-| Commands | 230 |
+| Commands | 232 |
 | Queries | 271 |
-| Events | 364 |
-| Aggregates | 68 |
-| Models and supporting contracts | 490 |
+| Events | 374 |
+| Aggregates | 83 |
+| Models and supporting contracts | 562 |
 | Reactors | 30 |
 | Projectors | 66 |
-| Explicit MapPortia HTTP route registrations | 327 |
+| Explicit MapPortia HTTP route registrations | 439 |
 
 ### Existing commands
 
@@ -351,6 +351,10 @@ The following is a static source inventory, including internal operations. Queri
 - [ReviseApplicationMcpInput](../../src/Compliance.App/Features/Applications/ReviseApplicationMcpInput.cs#L7) — `bdgrz.application.revise.mcp-input` v1
 - [StageApplicationImport](../../src/Compliance.Common/Features/Applications/StageApplicationImport.cs#L6) — `bdgrz.application_import.stage` v1
 
+#### AuditPackages
+
+- [CreateAuditPackage](../../src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs#L9) — `bdgrz.audit-packages.create-audit-package` v1
+
 #### Boundaries
 
 - [ApproveBoundary](../../src/Compliance.Common/Features/Boundaries/ApproveBoundary.cs#L7) — `bdgrz.boundary.approve` v1
@@ -411,6 +415,11 @@ The following is a static source inventory, including internal operations. Queri
 - [OpenEvidenceRequest](../../src/Compliance.Common/Features/Evidence/OpenEvidenceRequest.cs#L9) — `bdgrz.evidence.request.open` v1
 - [PrepareEvidenceRedaction](../../src/Compliance.Common/Features/Evidence/PrepareEvidenceRedaction.cs#L6) — `bdgrz.evidence.redaction.prepare` v1
 
+#### Examinations
+
+- [RecordManagementAssertion](../../src/Compliance.Common/Features/Examinations/RecordManagementAssertion.cs#L8) — `bdgrz.examinations.record-management-assertion` v2; [handler](../../src/Compliance.Core/Features/Examinations/RecordManagementAssertionHandler.cs#L10) binds assertion wording to exact validated package and approved examination inputs
+- [RecordManagementRepresentationLetter](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L6) — `bdgrz.examinations.record-management-representation-letter` v2
+
 #### Operations
 
 - [ApproveControlOperatingPlan](../../src/Compliance.Common/Features/Operations/ApproveControlOperatingPlan.cs#L12) — `bdgrz.control.operating_plan.approve` v1
@@ -448,6 +457,8 @@ The following is a static source inventory, including internal operations. Queri
 
 - [CreateClientService](../../src/Compliance.Common/Features/Programs/CreateClientService.cs#L7) — `bdgrz.client-service.create` v2
 - [CreateProgram](../../src/Compliance.Common/Features/Programs/CreateProgram.cs#L7) — `bdgrz.program.create` v1
+- [ProposeProgramRollover](../../src/Compliance.Common/Features/Programs/ProposeProgramRollover.cs#L7) — `bdgrz.programs.propose-program-rollover` v2; [handler](../../src/Compliance.Core/Features/Programs/ProposeProgramRolloverHandler.cs#L8) binds full rollover content to the exact closed-period snapshot and auditor outcome
+- [ApproveProgramRollover](../../src/Compliance.Common/Features/Programs/ApproveProgramRollover.cs#L7) — `bdgrz.programs.approve-program-rollover` v1
 - [RetireClientService](../../src/Compliance.Common/Features/Programs/RetireClientService.cs#L7) — `bdgrz.client-service.retire` v1
 - [ReviseClientService](../../src/Compliance.Common/Features/Programs/ReviseClientService.cs#L7) — `bdgrz.client-service.revise` v1
 - [ReviseProgram](../../src/Compliance.Common/Features/Programs/ReviseProgram.cs#L7) — `bdgrz.program.revise` v1
@@ -558,12 +569,17 @@ The following is a static source inventory, including internal operations. Queri
 
 - [CompleteEmailChallenge](../../src/Compliance.Common/Features/UserIdentities/CompleteEmailChallenge.cs#L6) — `bdgrz.email-address.complete-challenge` v1
 - [CompleteIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/CompleteIdentityRecovery.cs#L6) — `bdgrz.user-identity.complete-recovery` v1
+- [ConfigureTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/ConfigureTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.configure-tenant-identity-provider` v1
 - [ContinueWithDeveloperIdentity](../../src/Compliance.Common/Features/UserIdentities/ContinueWithDeveloperIdentity.cs#L7) — `bdgrz.developer-identity.continue` v1
 - [ContinueWithOidcProvider](../../src/Compliance.Common/Features/UserIdentities/ContinueWithOidcProvider.cs#L7) — `bdgrz.oidc-provider.continue` v1
+- [DisableTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/DisableTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.disable-tenant-identity-provider` v1
 - [IssueEmailChallenge](../../src/Compliance.Common/Features/UserIdentities/IssueEmailChallenge.cs#L6) — `bdgrz.email-address.issue-challenge` v1
 - [LinkOidcProviderIdentity](../../src/Compliance.Common/Features/UserIdentities/LinkOidcProviderIdentity.cs#L7) — `bdgrz.oidc-provider.link` v1
 - [ReserveEmail](../../src/Compliance.Common/Features/UserIdentities/ReserveEmail.cs#L6) — `bdgrz.email-address.reserve` v1
+- [RotateTenantIdentityProviderCredentials](../../src/Compliance.Common/Features/UserIdentities/RotateTenantIdentityProviderCredentials.cs#L7) — `bdgrz.user-identities.rotate-tenant-identity-provider-credentials` v1
+- [RecordTenantIdentityProviderTestResult](../../src/Compliance.Common/Features/UserIdentities/RecordTenantIdentityProviderTestResult.cs#L7) — `bdgrz.user-identities.record-tenant-identity-provider-test-result` v1
 - [StartIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/StartIdentityRecovery.cs#L6) — `bdgrz.user-identity.start-recovery` v1
+- [TestTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/TestTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.test-tenant-identity-provider` v2
 
 #### Work
 
@@ -572,6 +588,9 @@ The following is a static source inventory, including internal operations. Queri
 - [DelegateWorkItem](../../src/Compliance.Common/Features/Work/DelegateWorkItem.cs#L8) — `bdgrz.work.delegate` v1
 - [EscalateWorkItem](../../src/Compliance.Common/Features/Work/EscalateWorkItem.cs#L8) — `bdgrz.work.escalate` v1
 - [SetWorkDigestPreference](../../src/Compliance.Common/Features/Work/SetWorkDigestPreference.cs#L8) — `bdgrz.work.digest_preference.set` v1
+- [ScheduleWeeklyWorkDigest](../../src/Compliance.Common/Features/Work/ScheduleWeeklyWorkDigest.cs#L7) — `bdgrz.work.schedule-weekly-work-digest` v2
+- [DeliverWeeklyWorkDigest](../../src/Compliance.Common/Features/Work/DeliverWeeklyWorkDigest.cs#L7) — `bdgrz.work.deliver-weekly-work-digest` v2
+- [RecordWorkDigestDelivery](../../src/Compliance.Common/Features/Work/RecordWorkDigestDelivery.cs#L7) — `bdgrz.work.record-work-digest-delivery` v2
 
 #### Workforce
 
@@ -985,7 +1004,7 @@ The following is a static source inventory, including internal operations. Queri
 
 ### Backfilled event contracts
 
-These 128 requirement-backed event contracts have been added since the existing-event inventory below was captured. The eight readiness-import events remain deferred. Contract presence does not mean command handlers emit them or projectors consume them.
+These 140 requirement-backed event contracts have been added since the existing-event inventory below was captured. The eight readiness-import events remain deferred. Contract presence does not mean command handlers emit them or projectors consume them.
 
 #### AccessControl
 
@@ -1015,8 +1034,7 @@ These 128 requirement-backed event contracts have been added since the existing-
 
 - [AdvisorHandoffSelectionRevised](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffSelectionRevised.cs#L6)
 
-- [AdvisorRequestOpened](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestOpened.cs#L6)
-
+- [AdvisorHandoffCreated](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffCreated.cs#L8)
 
 
 #### Applications
@@ -1046,6 +1064,10 @@ These 128 requirement-backed event contracts have been added since the existing-
 
 
 #### AuditPackages
+
+- [AuditPackageBuildProgressRecorded](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildProgressRecorded.cs#L6)
+
+- [AuditPackageCreated](../../src/Compliance.Common/Features/AuditPackages/AuditPackageCreated.cs#L6)
 
 - [AuditPackageAmended](../../src/Compliance.Common/Features/AuditPackages/AuditPackageAmended.cs#L6)
 
@@ -1161,6 +1183,12 @@ These 128 requirement-backed event contracts have been added since the existing-
 
 - [AuditOutcomeRecorded](../../src/Compliance.Common/Features/Examinations/AuditOutcomeRecorded.cs#L6)
 
+- [ManagementAssertionApproved](../../src/Compliance.Common/Features/Examinations/ManagementAssertionApproved.cs#L6)
+
+- [ManagementAssertionRevised](../../src/Compliance.Common/Features/Examinations/ManagementAssertionRevised.cs#L6)
+
+- [ManagementRepresentationLetterSigned](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterSigned.cs#L6)
+
 - [ExaminationEngagementOpened](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementOpened.cs#L6)
 
 - [ExaminationEngagementRevised](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementRevised.cs#L6)
@@ -1178,6 +1206,10 @@ These 128 requirement-backed event contracts have been added since the existing-
 - [TypeIIPlanApproved](../../src/Compliance.Common/Features/Examinations/TypeIIPlanApproved.cs#L6)
 
 - [TypeIIPlanProposed](../../src/Compliance.Common/Features/Examinations/TypeIIPlanProposed.cs#L6)
+
+- [TypeIIPlanReviewed](../../src/Compliance.Common/Features/Examinations/TypeIIPlanReviewed.cs#L6)
+
+- [TypeIIPlanRevised](../../src/Compliance.Common/Features/Examinations/TypeIIPlanRevised.cs#L6)
 
 
 
@@ -1233,11 +1265,21 @@ These 128 requirement-backed event contracts have been added since the existing-
 
 - [MissingOccurrenceRecorded](../../src/Compliance.Common/Features/Operations/MissingOccurrenceRecorded.cs#L6)
 
+- [ObservationPeriodAmendmentCancelled](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentCancelled.cs#L6)
+
+- [ObservationPeriodAmendmentCompleted](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentCompleted.cs#L6)
+
+- [ObservationPeriodAmendmentReserved](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentReserved.cs#L6)
+
+- [ObservationPeriodReservationReleased](../../src/Compliance.Common/Features/Operations/ObservationPeriodReservationReleased.cs#L6)
+
 - [ObservationPeriodAmended](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmended.cs#L6)
 
 - [ObservationPeriodEnded](../../src/Compliance.Common/Features/Operations/ObservationPeriodEnded.cs#L6)
 
 - [ObservationPeriodStarted](../../src/Compliance.Common/Features/Operations/ObservationPeriodStarted.cs#L6)
+
+- [ObservationPeriodReserved](../../src/Compliance.Common/Features/Operations/ObservationPeriodReserved.cs#L6)
 
 - [TypeIIOperatingPlanApproved](../../src/Compliance.Common/Features/Operations/TypeIIOperatingPlanApproved.cs#L6)
 
@@ -1278,6 +1320,8 @@ These 128 requirement-backed event contracts have been added since the existing-
 - [ArtifactEngagementHoldReleased](../../src/Compliance.Common/Features/Retention/ArtifactEngagementHoldReleased.cs#L6)
 
 - [ArtifactHandlingPolicyAssigned](../../src/Compliance.Common/Features/Retention/ArtifactHandlingPolicyAssigned.cs#L6)
+
+- [ArtifactHandlingPolicyRevised](../../src/Compliance.Common/Features/Retention/ArtifactHandlingPolicyRevised.cs#L6)
 
 - [EngagementReportIssued](../../src/Compliance.Common/Features/Retention/EngagementReportIssued.cs#L6)
 
@@ -1320,6 +1364,17 @@ These 128 requirement-backed event contracts have been added since the existing-
 - [TenantIdentityProviderDisabled](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderDisabled.cs#L6)
 
 - [TenantIdentityProviderTested](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTested.cs#L6)
+
+- [TenantIdentityProviderTestRequested](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestRequested.cs#L6)
+
+- [TenantIdentityProviderTestedV2](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestedV2.cs#L6)
+
+#### Work
+
+- [WeeklyWorkDigestScheduled](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestScheduled.cs#L7)
+- [WeeklyWorkDigestDeliveryRequested](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRequested.cs#L7)
+- [WeeklyWorkDigestDeliveryRecorded](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRecorded.cs#L7)
+- [WeeklyWorkDigestDeliverySuppressed](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliverySuppressed.cs#L7)
 
 
 ### Incidents
@@ -1668,6 +1723,18 @@ These 128 requirement-backed event contracts have been added since the existing-
 - [AccessReviewCampaign](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs#L11)
 - [AccessReviewSystemLedger](../../src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs#L10)
 
+#### AdvisorCollaboration
+
+- [AdvisorHandoff](../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs#L9)
+
+#### AuditorRequests
+
+- [AuditorRequest](../../src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs#L13)
+
+#### AuditPackages
+
+- [AuditPackage](../../src/Compliance.Core/Features/AuditPackages/AuditPackage.cs#L17)
+
 #### Applications
 
 - [ApplicationImportLedger](../../src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs#L8)
@@ -1708,9 +1775,24 @@ These 128 requirement-backed event contracts have been added since the existing-
 - [EvidenceRedaction](../../src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs#L9)
 - [EvidenceRequestLedger](../../src/Compliance.Core/Features/Evidence/EvidenceRequestLedger.cs#L11)
 
+#### Examinations
+
+- [ExaminationEngagement](../../src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs#L13)
+- [ManagementAssertion](../../src/Compliance.Core/Features/Examinations/ManagementAssertion.cs#L12)
+- [ManagementRepresentationLetter](../../src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs#L10)
+- [AuditOutcome](../../src/Compliance.Core/Features/Examinations/AuditOutcome.cs#L10)
+- [ExaminationSignOff](../../src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs#L11)
+- [TypeIIPlan](../../src/Compliance.Core/Features/Examinations/TypeIIPlan.cs#L14)
+
+#### SystemDescription
+
+- [SystemDescription](../../src/Compliance.Core/Features/SystemDescription/SystemDescription.cs#L11)
+
 #### Operations
 
 - [ControlOperationsLedger](../../src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs#L13)
+- [TypeIIPeriod](../../src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L17)
+- [TypeIIObservationCalendar](../../src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs#L8)
 
 #### Policies
 
@@ -1741,7 +1823,11 @@ These 128 requirement-backed event contracts have been added since the existing-
 
 #### Retention
 
+- [ArtifactDisclosure](../../src/Compliance.Core/Features/Retention/ArtifactDisclosure.cs#L10)
+- [ArtifactDisposition](../../src/Compliance.Core/Features/Retention/ArtifactDisposition.cs#L11)
+- [ArtifactEngagementHold](../../src/Compliance.Core/Features/Retention/ArtifactEngagementHold.cs#L9)
 - [ArtifactRetention](../../src/Compliance.Core/Features/Retention/ArtifactRetention.cs#L7)
+- [EvidenceHandlingPolicy](../../src/Compliance.Core/Features/Retention/EvidenceHandlingPolicy.cs#L10)
 
 #### Risks
 
@@ -1779,8 +1865,10 @@ These 128 requirement-backed event contracts have been added since the existing-
 
 #### Work
 
-- [WorkAssignmentLedger](../../src/Compliance.Core/Features/Work/WorkAssignmentLedger.cs#L12)
+- [WorkItemAssignment](../../src/Compliance.Core/Features/Work/WorkItemAssignment.cs#L10)
+- [LegacyWorkAssignmentLedger](../../src/Compliance.Core/Features/Work/LegacyWorkAssignmentLedger.cs#L6) (read-only legacy stream adapter)
 - [WorkDigestPreference](../../src/Compliance.Core/Features/Work/WorkDigestPreference.cs#L9)
+- [WeeklyWorkDigest](../../src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs#L11)
 
 #### Workforce
 
@@ -2277,6 +2365,9 @@ These 128 requirement-backed event contracts have been added since the existing-
 - [WorkCountsView](../../src/Compliance.Common/Features/Work/WorkCountsView.cs#L4)
 - [WorkDigestPreferenceView](../../src/Compliance.Common/Features/Work/WorkDigestPreferenceView.cs#L4)
 - [WorkDigestView](../../src/Compliance.Common/Features/Work/WorkDigestView.cs#L9)
+- [WeeklyWorkDigestView](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestView.cs#L7)
+- [WorkDigestDeliveryAttemptView](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestView.cs#L20)
+- [WorkDigestSchedulePageView](../../src/Compliance.Common/Features/Work/WorkDigestSchedulePageView.cs#L4)
 - [WorkItemDetailView](../../src/Compliance.Common/Features/Work/WorkItemDetailView.cs#L4)
 - [WorkQueueItemView](../../src/Compliance.Common/Features/Work/WorkQueueItemView.cs#L15)
 - [WorkQueueView](../../src/Compliance.Common/Features/Work/WorkQueueView.cs#L4)
@@ -2523,8 +2614,32 @@ These 128 requirement-backed event contracts have been added since the existing-
 - [SampleSelectionView](../../src/Compliance.Common/Features/AuditorRequests/SampleSelectionView.cs#L6)
 - [AuditorRequestResponseView](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestResponseView.cs#L6)
 
+#### TDD-backed aggregate payload and support models added 2026-10-17
+
+##### AuditorRequests
+
+- [AuditorRequestContent](../../src/Compliance.Core/Features/AuditorRequests/AuditorRequestContent.cs#L6)
+- [AuditorRequestTermsVersion](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestTermsVersion.cs#L6)
+- [AuditorRequestCommentView](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestCommentView.cs#L6)
+- [AuditorRequestHistoryEntry](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestHistoryEntry.cs#L6)
+- [AuditorRequestResponseHistoryView](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestResponseHistoryView.cs#L6)
+- [AuditorResponseVersionView](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseVersionView.cs#L6)
+- [AuditorResponseReviewView](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseReviewView.cs#L6)
+- [AuditorResponseDeliveryView](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseDeliveryView.cs#L6)
+- [AuditorResponseDispositionView](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseDispositionView.cs#L6)
+- [AuditorSampleSelectionView](../../src/Compliance.Common/Features/AuditorRequests/AuditorSampleSelectionView.cs#L6)
+
 ##### AuditPackages
 
+- [AuditPackageBuildOutput](../../src/Compliance.Core/Features/AuditPackages/AuditPackageBuildOutput.cs#L6)
+- [AuditPackageBuildAttemptView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildAttemptView.cs#L6)
+- [AuditPackageContent](../../src/Compliance.Common/Features/AuditPackages/AuditPackageContent.cs#L6)
+- [AuditPackageDisclosureApprovalView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageDisclosureApprovalView.cs#L6)
+- [AuditPackageManifestEntryView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageManifestEntryView.cs#L6)
+- [AuditPackageSelectionEntry](../../src/Compliance.Common/Features/AuditPackages/AuditPackageSelectionEntry.cs#L6)
+- [AuditPackageValidationFinding](../../src/Compliance.Common/Features/AuditPackages/AuditPackageValidationFinding.cs#L6)
+- [AuditPackageValidationOverrideView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageValidationOverrideView.cs#L6)
+- [AuditPackageVersionView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageVersionView.cs#L6)
 - [AuditPackageView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageView.cs#L6)
 - [AuditPackageSummaryView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageSummaryView.cs#L6)
 - [AuditPackageManifestView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageManifestView.cs#L6)
@@ -2535,14 +2650,58 @@ These 128 requirement-backed event contracts have been added since the existing-
 
 - [AuditObservationView](../../src/Compliance.Common/Features/Examinations/AuditObservationView.cs#L6)
 - [AuditOutcomeView](../../src/Compliance.Common/Features/Examinations/AuditOutcomeView.cs#L6)
+- [AuditOutcomeContent](../../src/Compliance.Common/Features/Examinations/AuditOutcomeContent.cs#L6)
+- [ExaminationContentReference](../../src/Compliance.Common/Features/Examinations/ExaminationContentReference.cs#L6)
+- [ExaminationSignOffContent](../../src/Compliance.Common/Features/Examinations/ExaminationSignOffContent.cs#L6)
+- [ManagementAssertionContent](../../src/Compliance.Common/Features/Examinations/ManagementAssertionContent.cs#L6)
+- [ManagementAssertionVersionView](../../src/Compliance.Common/Features/Examinations/ManagementAssertionVersionView.cs#L6)
+- [ManagementAssertionApprovalView](../../src/Compliance.Common/Features/Examinations/ManagementAssertionApprovalView.cs#L6)
 - [TypeIIPlanView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanView.cs#L6)
 - [ManagementAssertionView](../../src/Compliance.Common/Features/Examinations/ManagementAssertionView.cs#L6)
+- [ManagementAssertionSigner](../../src/Compliance.Common/Features/Examinations/ManagementAssertionSigner.cs#L6)
+- [ManagementRepresentationLetterContent](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterContent.cs#L6)
+- [ManagementRepresentationLetterView](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterView.cs#L6)
+- [ManagementRepresentationLetterSignatureView](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterSignatureView.cs#L6)
 - [ExaminationSignOffView](../../src/Compliance.Common/Features/Examinations/ExaminationSignOffView.cs#L6)
+- [TypeIIPlanContent](../../src/Compliance.Common/Features/Examinations/TypeIIPlanContent.cs#L6)
+- [TypeIIPlanVersionView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanVersionView.cs#L6)
+- [TypeIIPlanReviewView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanReviewView.cs#L6)
+- [TypeIIPlanApprovalView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanApprovalView.cs#L6)
+- [TypeIIControlPlanEntry](../../src/Compliance.Common/Features/Examinations/TypeIIControlPlanEntry.cs#L6)
+- [TypeIICarriedForwardGap](../../src/Compliance.Common/Features/Examinations/TypeIICarriedForwardGap.cs#L6)
+- [TypeIIPlanGapAcknowledgement](../../src/Compliance.Common/Features/Examinations/TypeIIPlanGapAcknowledgement.cs#L6)
+- [TypeIIPlannedChange](../../src/Compliance.Common/Features/Examinations/TypeIIPlannedChange.cs#L6)
+
+##### Retention
+
+- [ArtifactDisclosureDeliveryView](../../src/Compliance.Common/Features/Retention/ArtifactDisclosureDeliveryView.cs#L6)
+- [ArtifactDisclosureView](../../src/Compliance.Common/Features/Retention/ArtifactDisclosureView.cs#L6)
+- [ArtifactDispositionAttemptView](../../src/Compliance.Common/Features/Retention/ArtifactDispositionAttemptView.cs#L6)
+- [ArtifactDispositionTombstoneView](../../src/Compliance.Common/Features/Retention/ArtifactDispositionTombstoneView.cs#L6)
+- [ArtifactDispositionView](../../src/Compliance.Common/Features/Retention/ArtifactDispositionView.cs#L6)
+- [ArtifactEngagementHoldView](../../src/Compliance.Common/Features/Retention/ArtifactEngagementHoldView.cs#L6)
+- [EvidenceHandlingPolicyHistoryEntry](../../src/Compliance.Common/Features/Retention/EvidenceHandlingPolicyHistoryEntry.cs#L6)
+- [EvidenceHandlingPolicyView](../../src/Compliance.Common/Features/Retention/EvidenceHandlingPolicyView.cs#L6)
+- [ArtifactDisclosureSourceSnapshot](../../src/Compliance.Core/Features/Retention/ArtifactDisclosureSourceSnapshot.cs#L6)
+- [ArtifactDispositionEligibilitySnapshot](../../src/Compliance.Core/Features/Retention/ArtifactDispositionEligibilitySnapshot.cs#L6)
+- [EvidenceHandlingPolicySourceSnapshot](../../src/Compliance.Core/Features/Retention/EvidenceHandlingPolicySourceSnapshot.cs#L6)
 
 ##### Operations
 
 - [ObservationPeriodView](../../src/Compliance.Common/Features/Operations/ObservationPeriodView.cs#L6)
 - [ObservationPeriodSummaryView](../../src/Compliance.Common/Features/Operations/ObservationPeriodSummaryView.cs#L6)
+- [TypeIIObservationCalendarView](../../src/Compliance.Common/Features/Operations/TypeIIObservationCalendarView.cs#L6)
+- [TypeIIObservationCalendarPeriodView](../../src/Compliance.Common/Features/Operations/TypeIIObservationCalendarPeriodView.cs#L6)
+- [TypeIIObservationCalendarAmendmentView](../../src/Compliance.Common/Features/Operations/TypeIIObservationCalendarAmendmentView.cs#L6)
+- [TypeIIPeriodView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodView.cs#L8)
+- [TypeIIPeriodOpeningContent](../../src/Compliance.Common/Features/Operations/TypeIIPeriodOpeningContent.cs#L7)
+- [TypeIIPeriodOccurrenceView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodOccurrenceView.cs#L7)
+- [TypeIIPeriodAmendmentView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodAmendmentView.cs#L7)
+- [TypeIIPeriodCloseValidationContent](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationContent.cs#L7)
+- [TypeIIPeriodCloseValidationView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationView.cs#L7)
+- [TypeIIPeriodCloseSnapshotContent](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseSnapshotContent.cs#L7)
+- [TypeIIPeriodCloseSnapshotView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseSnapshotView.cs#L7)
+- [TypeIIPeriodCloseApprovalView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseApprovalView.cs#L7)
 - [ControlCalendarView](../../src/Compliance.Common/Features/Operations/ControlCalendarView.cs#L6)
 - [MissingOccurrenceView](../../src/Compliance.Common/Features/Operations/MissingOccurrenceView.cs#L6)
 - [GovernanceReviewDueView](../../src/Compliance.Common/Features/Operations/GovernanceReviewDueView.cs#L6)
@@ -2565,6 +2724,8 @@ These 128 requirement-backed event contracts have been added since the existing-
 - [ObservationPeriodClosePreview](../../src/Compliance.Common/Features/AuditPopulations/ObservationPeriodClosePreview.cs#L6)
 - [ObservationPeriodCloseView](../../src/Compliance.Common/Features/AuditPopulations/ObservationPeriodCloseView.cs#L6)
 - [AuditPopulationDefinitionView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationDefinitionView.cs#L6)
+- [AuditPopulationExportView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationExportView.cs#L6)
+- [AuditPopulationExportReceipt](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationExportReceipt.cs#L4)
 - [AuditPopulationView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationView.cs#L6)
 - [AuditPopulationRowView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationRowView.cs#L6)
 - [PopulationReconciliationView](../../src/Compliance.Common/Features/AuditPopulations/PopulationReconciliationView.cs#L6)
@@ -2623,6 +2784,19 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/invitations/acceptance` | `AcceptTenantInvitation` | [registration](../../src/Compliance.App/Program.cs#L537) |
 | GET | `/api/v1/tenants/{tenant_id}` | `GetTenant` | [registration](../../src/Compliance.App/Program.cs#L540) |
 | GET | `/api/v1/tenants/{tenant_id}/provisioning-status` | `GetTenantProvisioningStatus` | [registration](../../src/Compliance.App/Program.cs#L543) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}` | `ConfigureTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2186) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/tests` | `TestTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2190) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations` | `RotateTenantIdentityProviderCredentials` | [registration](../../src/Compliance.App/Program.cs#L2194) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}` | `CreateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2198) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments` | `AmendAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2202) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations` | `ValidateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2206) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id}` | `RecordManagementAssertion` | [registration](../../src/Compliance.App/Program.cs#L2210) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/representation-letters/{letter_id}` | `RecordManagementRepresentationLetter` | [registration](../../src/Compliance.App/Program.cs#L2214) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2218) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2222) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2226) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2230) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |
 | POST | `/api/v1/tenants/{tenant_id}/programs` | `CreateProgram` | [registration](../../src/Compliance.App/Program.cs#L559) |

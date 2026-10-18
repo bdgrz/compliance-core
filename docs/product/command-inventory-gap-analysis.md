@@ -456,7 +456,7 @@ Retention supports evidence artifacts and application import sources, one retent
 | Missing | `PlaceArtifactEngagementHold`; `RecordEngagementReportIssued`; `ReleaseArtifactEngagementHold` | Bind hold scope to the engagement/report and release authority, including report issuance plus one year and outstanding own-attest delivery requirements. |
 | Partial | `PrepareEvidenceRedaction`; `ApproveEvidenceRedaction` | Retain existing lineage/approval commands; add an authorized byte-derivation workflow and govern actual delivery of the approved derivative. |
 | Missing | `ApproveArtifactDisclosure`; `RecordArtifactDisclosureDelivery`; `RevokeArtifactDisclosure` | Bind approval and actual external delivery to exact content, recipient, purpose, actor and time. Revoke further access where supported without claiming downloaded bytes can be recalled. |
-| Missing | `ApproveArtifactDisposition`; `ExecuteArtifactDisposition`; `RecordArtifactDispositionResult` | Require explicit Org Admin approval after retention, holds and historical reliance checks. Execute safely, retain tombstones and partial/failure state; no automatic expiry deletion. |
+| Partial | `ApproveArtifactDisposition`; `ExecuteArtifactDisposition` | Handlers must persist exact Org Admin approval eligibility and a revision-fenced execution attempt after current retention, legal and engagement hold, historical reliance, and storage-readiness checks. `RecordArtifactDispositionResult` is a trusted-worker callback bound to the exact execution event and attempt; durable deletion belongs to the reactor. |
 
 <a id="g03"></a>
 
@@ -464,13 +464,14 @@ Retention supports evidence artifacts and application import sources, one retent
 
 Scope: **R2-08**. Requirement source: [decisions/m0-d14-advisor-collaboration](decisions/m0-d14-advisor-collaboration.md).
 
-There are no AdvisorHandoff/AdvisorFeedback request contracts, handlers or aggregates. AnnotateReadinessGap is a narrower readiness annotation; membership and grants are reusable.
+AdvisorHandoff and its request/event contracts exist, and the aggregate retains exact selected versions, readiness state, and feedback history. Close and revoke handlers are registered and exposed through tenant/program-scoped API routes. Creation, selection, readiness, and feedback are not fully wired because the system still needs an exact source-version resolver and the accepted internal-advisor/guest authority model; AnnotateReadinessGap remains a separate readiness annotation.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `CreateAdvisorHandoff`; `ReviseAdvisorHandoffSelection`; `MarkAdvisorHandoffReadyForReview` | Select exact draft versions and questions and explicitly open bounded in-product review access; no R2 export package or secure-link subsystem. |
-| Missing | `CloseAdvisorHandoff`; `RevokeAdvisorHandoff` | End access to selected drafts while preserving handoff history. |
-| Missing | `RecordAdvisorFeedback`; `CorrectAdvisorFeedback`; `RespondToAdvisorFeedback` | Retain immutable comment/change_request/validated feedback, actual author and exact target version; correction is a linked new entry. Validation never approves a record. |
+| Partial | `CreateAdvisorHandoff`; `ReviseAdvisorHandoffSelection`; `MarkAdvisorHandoffReadyForReview` | The contracts and aggregate retain exact IDs and readiness transitions. Add a resolver that proves tenant, program, exact current version, and shareable status for every supported record kind; restrict readiness to the Compliance Lead. |
+| Implemented | `CloseAdvisorHandoff`; `RevokeAdvisorHandoff` | Tested handlers end access while preserving handoff history; both commands have tenant/program-scoped API routes. The existing program-management authorization remains in force. |
+| Partial | `RecordAdvisorFeedback`; `CorrectAdvisorFeedback` | The aggregate retains immutable comment/change_request/validated feedback and linked corrections/responses. Add handlers plus M0-D14 internal-advisor and guest authorization; validation never approves a record. |
+| Implemented | `RespondToAdvisorFeedback` | The personal client-member handler addresses the owning handoff directly, records response attribution, and is registered at a tenant/program-scoped HTTP route. |
 | Partial | `InviteOrganizationMember`; `GrantAccess`; `RevokeAccessGrant`; `AssignWorkItem` | Reuse scoped expiring guest membership, grants and source-owned accountability. Add handoff/feedback consumers and authority checks; do not create a second consultant identity or generic task workflow. |
 
 <a id="g04"></a>
@@ -494,11 +495,11 @@ RunReadinessAssessment persists versioned inputs/results; ReadinessRules explici
 
 Scope: **R2-01/04, T2-02/03/06/09**. Requirement source: [control-operation-v1](control-operation-v1.md).
 
-Operating plans calculate expected cadence and OpenControlOccurrence retains deterministic occurrences. The repository contains no registered recurring-occurrence scheduling command. ReviewControlOccurrence already supports approved/action_requested/deferred; the finding reactor routes requested actions.
+Operating plans calculate expected cadence. `GenerateDueControlOccurrences` now persists period-bound generation batches and exact occurrence identities; the scheduling reactor that materializes those batches into the control operations ledger remains required before T2-02 is complete. ReviewControlOccurrence already supports approved/action_requested/deferred; the finding reactor routes requested actions.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `GenerateDueControlOccurrences` | Materialize approved recurring occurrences with deterministic identities and durable generation provenance across retries/restarts. Reuse OpenControlOccurrence; event-driven/ad hoc opening already exists. |
+| Partial | `GenerateDueControlOccurrences` | The registered handler records deterministic, period-bound batches and is replay-safe. The scheduling reactor must materialize the retained occurrence identities in the shared control operations ledger; event-driven/ad hoc opening already exists. |
 | Partial | `ProposeControlOperatingPlan`; `ApproveControlOperatingPlan` | Extend period-aware future schedule changes and reconcile added/retained/removed work when TypeIIPeriod exists; retain recorded reassignments and historical work. |
 | Partial | `AttestControlOccurrence`; `ReviewControlOccurrence`; `RaiseOccurrenceFinding` | Bind management-review submissions to exact readiness/monitoring versions and agenda/minutes artifacts; route requested actions through existing findings. No separate ManagementReviewSnapshot or governance-review approval command. |
 | Decision | `RaiseOccurrenceFinding`; `RaiseEvaluationDeviationFinding` | Ratify or replace the existing automatic severity/deadline/fallback-owner defaults (#274/#279); these names already exist, so this is a policy gap, not missing command code. |
@@ -540,11 +541,11 @@ Bounded feature contracts retain unresolved contexts: control risk/process appli
 
 Scope: **R2-11, F1-05**. Requirement source: [work-queue-source-coverage](work-queue-source-coverage.md).
 
-SetWorkDigestPreference persists preference; GetWorkDigest/ListWorkReminders are queries. Weekly email delivery/scheduling remains #647; tenant-owned campaign/waiver source placement remains #646.
+SetWorkDigestPreference persists preference; GetWorkDigest/ListWorkReminders are queries. R2-11c requires one opt-out weekly digest and records delivery outcomes; its bounded scheduling, suppression, deterministic attempt, and exact callback handlers are implemented. The content snapshot and trusted email provider remain reactor work. Tenant-owned campaign/waiver source placement remains #646.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Decision | `ScheduleWeeklyWorkDigest`; `DeliverWeeklyWorkDigest`; `RecordWorkDigestDelivery` | Set delivery cadence, recipient/consent policy, deduplication identity and failure/retry behavior before adding the delivery commands; queries and preferences already exist. |
+| Exists | `ScheduleWeeklyWorkDigest`; `DeliverWeeklyWorkDigest`; `RecordWorkDigestDelivery` | Handlers enforce the R2-11c opt-out, bounded membership paging, verified email, stable per-member/week identity, deterministic retries, and exact outcome callbacks. Current work snapshot composition and trusted email delivery remain for the reactor layer. |
 | Partial | `AssignWorkItem`; `ClaimWorkItem`; `DelegateWorkItem`; `EscalateWorkItem` | Extend only after the campaign/expectation/waiver owning-queue decision. Preserve source authority and eligibility; cross-client presentation does not introduce another task completion command. |
 
 <a id="g09"></a>
@@ -596,13 +597,13 @@ OpenEvidenceRequest handles internal evidence work; it does not retain the exter
 
 Scope: **T1-05, T3-05**. Requirement source: [decisions/m0-d17-audit-deliverables](decisions/m0-d17-audit-deliverables.md).
 
-No AuditPackage request/build/validation/delivery contracts exist. Snapshot manifests are a reusable primitive, not an examination package. #339 must validate actual auditor expectations; Privacy support remains #349.
+AuditPackage contracts and an aggregate exist, but the source-complete package creation and build pipeline is unfinished. The build-request handler persists an attempt against the frozen manifest, and the trusted result handler accepts only the exact worker callback caused by that request. Snapshot manifests alone are not an examination package. #339 must validate actual auditor expectations; Privacy support remains #349.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `RequestAuditPackageBuild`; `RecordAuditPackageBuildResult` | Generate deterministic exact-version package/index/control-matrix/evidence-index outputs with durable progress and terminal failure; internal completion records remain distinct from human approval. |
-| Missing | `ValidateAuditPackage`; `ApproveAuditPackageValidationOverride` | Retain validation against exact manifest/version and explicit authorized rationale for permitted overrides. Missing or unauthorized artifacts cannot be hidden by a clean result. |
-| Missing | `ApproveAuditPackageDisclosure`; `RecordAuditPackageDelivery`; `AmendAuditPackage` | Bind approval/recipient/actual delivery to immutable package bytes and retain amendments. Reuse general artifact disclosure where semantics match rather than create two approval authorities. |
+| Partial | `RequestAuditPackageBuild`; `RecordAuditPackageBuildResult` | Build-request and exact worker-result handlers persist an attempt and verify its request event. Still generate deterministic exact-version package/index/control-matrix/evidence-index outputs from frozen sources and store immutable bytes; internal completion remains distinct from human approval. |
+| Partial | `ValidateAuditPackage`; `ApproveAuditPackageValidationOverride` | The override handler retains an independent decision; validation still needs source-backed findings against the exact manifest/version. Missing or unauthorized artifacts cannot be hidden by a clean result. |
+| Partial | `ApproveAuditPackageDisclosure`; `RecordAuditPackageDelivery`; `AmendAuditPackage` | Disclosure and delivery handlers bind recipient/receipt to a package version. AmendAuditPackage v2 carries a complete selection and frozen source snapshot, enabling exact-source additions/removals while preserving package lineage; canonical source metadata still requires a trusted resolver. Package creation/build output remain incomplete. Reuse general artifact disclosure where semantics match rather than create two approval authorities. |
 
 <a id="g13"></a>
 
@@ -610,14 +611,18 @@ No AuditPackage request/build/validation/delivery contracts exist. Snapshot mani
 
 Scope: **T1-07, T3-06**. Requirement source: [decisions/m0-d17-audit-deliverables](decisions/m0-d17-audit-deliverables.md).
 
-DecideTypeIEntry is a readiness entry decision, not an assertion, representation letter, issued report or outcome. No examination sign-off/outcome/operating-plan commands exist.
+DecideTypeIEntry is a readiness entry decision, not an assertion, representation letter, issued report or outcome. Assertion, representation-letter, outcome, sign-off, and Type II-plan records now have distinct contracts or aggregates; the remaining gaps are source-backed recording/review commands and public transitions.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `RecordManagementAssertion`; `ApproveManagementAssertion` | Retain exact assertion wording/artifact and personal CEO/CISO sign-off against the validated exact package, description, criteria and known exceptions. |
-| Missing | `RecordManagementRepresentationLetter`; `SignManagementRepresentationLetter` | Preserve auditor-supplied source/form, signed artifact, exact package, actual signers and time; retain the required sequence after assertion approval. |
-| Missing | `RecordExaminationOutcome`; `RecordManagementExaminationReview` | Capture externally issued report/status/opinion provenance and management review after the required sign-offs; never derive an opinion from readiness. |
-| Missing | `ProposeTypeIIOperatingPlan`; `ReviewTypeIIOperatingPlan`; `ApproveTypeIIOperatingPlan` | Bind the proposed observation period to exact control/policy/risk/provider versions, ownership, cadence, changes and open remediation, with explicit approval. |
+| Present | `RecordManagementAssertion` | v2 verifies successful package validation, exact Type I baseline or Type II close snapshot, approved and bound system-description version, supporting inputs in both package and snapshot, and an inspected wording artifact with matching source attribution. |
+| Present | `ApproveManagementAssertion` | The handler checks the exact named CEO/CISO signer, current direct client membership, and matching persisted program permission. |
+| Present | `RecordManagementRepresentationLetter` | v2 verifies the approved assertion, the exact delivered package version and manifest/source snapshot, the inspected auditor-attributed original artifact hash, and the required signer identities from the assertion. |
+| Present | `SignManagementRepresentationLetter` | The handler requires the authenticated named signer and an available inspected signed artifact. The record command is now source-bound; enforcing the complete examination workflow sequence remains incomplete. |
+| Present | `RecordExaminationOutcome` | v2 binds an auditor-supplied code, summary, report reference/date, and optional inspected report artifact to an exact delivered package version and manifest; it rejects dates before package delivery or in the future. |
+| Complete | `RecordManagementExaminationReview` | V2 carries the exact sign-off source chain and acknowledgement set; the registered handler verifies current executive authority, delivered package, frozen Type I/Type II snapshot, approved assertion, signed representation-letter artifacts, auditor outcome, and attributable commitments. |
+| Partial | `ProposeTypeIIOperatingPlan` | The handler binds the current exact baseline, auditor outcome, approved/bound system description, complete baseline references, exact approved controls, active member owners, recurring cadence due windows, effective range, and required-change IDs. It also requires every live open/remediated finding with an exact current revision, disposition, and active client-personnel owner. Remaining work: resolve policy/risk/vendor versions; extend plan content for expected evidence and person/team owners; represent event-driven/ad hoc trigger and due semantics. |
+| Partial | `ReviewTypeIIOperatingPlan`; `ApproveTypeIIOperatingPlan` | Handlers and exact-version independent review/executive approval exist; the plan proposal source builder is required before the workflow is complete. |
 
 <a id="g14"></a>
 
@@ -625,12 +630,12 @@ DecideTypeIEntry is a readiness entry decision, not an assertion, representation
 
 Scope: **T2-01, T3-07**. Requirement source: [backlog](backlog.md).
 
-ProgramPlan holds target dates; it does not retain an approved TypeIIPeriod opening snapshot, overlap constraints, amendments or rollover approvals.
+`TypeIIPeriod` retains the approved opening snapshot and amendments, while `TypeIIObservationCalendar` serializes program-wide date reservations. `ProgramPlan` continues to hold target dates; it is not the authoritative period calendar.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `StartTypeIIObservationPeriod`; `AmendTypeIIObservationPeriod` | Start from approved plan/baseline, freeze opening inputs and govern date/scope amendments without rewriting earlier operation. |
-| Missing | `ProposeProgramRollover`; `ApproveProgramRollover` | Review changed/carried-forward/retired/unresolved records and retain approval before opening the next period. |
+| Partial | `StartTypeIIObservationPeriod` | The handler binds the exact approved plan, current Type I baseline, auditor outcome, and approved system description; it freezes the opening source manifest, revalidates current carried-forward findings and active owners, schedules recurring occurrences from their approved due windows, bootstraps committed periods, and rejects overlapping reservations. Policy/risk/vendor, expected-evidence, person/team owner, and event-driven/ad hoc trigger and due resolution remain open. |
+| Present | `AmendTypeIIObservationPeriod`; `ProposeProgramRollover`; `ApproveProgramRollover` | Amendments preserve prior period history. Rollover proposals bind complete carry-forward choices and rationale to the exact closed-period snapshot and auditor outcome; approval retains the exact reviewed decision before next-period creation. |
 | Reuse | `ReviseFinding` | Reuse the new period-start operation for later periods and existing finding identity/history for carry-forward. Add explicit carry-forward source references if needed, not a duplicate finding or schedule. |
 
 <a id="g15"></a>
@@ -653,11 +658,14 @@ No SignificantChange or ComplianceIncident write contracts/handlers exist. Incid
 
 Scope: **T3-01/02**. Requirement source: [backlog](backlog.md).
 
-Access populations and workforce snapshots are bounded reusable records; no TypeIIPeriodCloseSnapshot or general AuditPopulation write workflow exists.
+The period aggregate already owns immutable close snapshots, and AuditPopulation supports its versioned fact, reconciliation, freeze, amendment, and export workflow. The remaining close gap is the source-backed validation transition that verifies references and reconciles occurrences before approval and freeze.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `ApproveTypeIIPeriodClose`; `FreezeTypeIIPeriodClose`; `AmendTypeIIPeriodClose` | Bind management approval to completeness/blockers/unresolved acknowledgements and freeze the exact complete examination boundary; amendments preserve original content. |
+| Partial | `ApproveTypeIIPeriodClose` | The v2 command and handler require an explicit unresolved-item acknowledgement set and current CEO/CISO permission. The aggregate can record close validation, but there is no public validation command/handler. |
+| Partial | `FreezeTypeIIPeriodClose` | The handler freezes the persisted ready validation's exact source references and occurrence identities with the approved acknowledgement set, then releases the program calendar reservation using the persisted snapshot ID and hash. It depends on the still-missing source-backed close-validation command. |
+| Missing | `AmendTypeIIPeriodClose` | Build and verify the exact complete examination boundary before amending; the current command lacks new source references, changed-record identities, and affected-material identities. |
+| Missing | `RecordTypeIIPeriodCloseValidation` (required by T3-01; absent from the current command list) | Reconcile expected and actual occurrences, missing work, unresolved material items, and exact source versions. Expose the aggregate's close-validation transition only after a source-backed builder exists. |
 | Missing | `DefineAuditPopulation`; `ReviseAuditPopulationDefinition` | Version source universe, covered period, inclusion/exclusion, completeness evidence, permitted fields and control relationships. |
 | Missing | `RecordAuditPopulationFacts`; `ClassifyAuditPopulationRow`; `ReconcileAuditPopulation` | Allow manual source facts and classify included/excluded/duplicate/missing/rejected/unresolved rows; preserve source identity and explain exact totals. |
 | Missing | `GenerateAuditPopulation`; `FreezeAuditPopulation`; `AmendAuditPopulation`; `GenerateAuditPopulationExport` | Generate from exact close/source snapshots, retain completeness and immutable hash/row IDs, freeze before sampling and create linked amendments/exports. No connector dependency. |
@@ -704,7 +712,7 @@ Deployment OIDC/session/link/recovery operations exist. There is no TrustedIssue
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `ConfigureTenantIdentityProvider`; `TestTenantIdentityProvider`; `DisableTenantIdentityProvider`; `RotateTenantIdentityProviderCredentials` | Persist per-tenant issuer trust and safe lifecycle, test configuration without granting membership, immediately block new sign-ins when disabled, preserve subject/history and secret custody. Test command is a retained explicit configuration test, not a normal read. |
+| Partial | `ConfigureTenantIdentityProvider`; `TestTenantIdentityProvider`; `RotateTenantIdentityProviderCredentials` | `DisableTenantIdentityProvider` now records an administrator-attributed disable transition. The remaining lifecycle needs encrypted tenant credential custody, a provider test/rotation adapter with verifiable outcomes, and sign-in routing that rejects disabled connections while preserving subject/history. Test command is a retained explicit configuration test, not a normal read. |
 | Decision | `ConfigureTenantIdentityGroupMapping`; `RevokeTenantIdentityGroupMapping` | Use only if the approved IdP group-mapping slice is selected; preserve explicit organization grants and never grant membership from email/domain alone. |
 
 <a id="g20"></a>
@@ -824,7 +832,7 @@ This maps write outcomes only. “Exists” does not declare a milestone accepte
 | [**R2-08**](backlog.md#L3642) Collaborate with a readiness advisor on work in progress | Scoped membership/grants and readiness annotation are prerequisites | Missing | G03: handoff/feedback/response/close/revoke lifecycle. |
 | [**R2-09**](backlog.md#L3706) Make and record the Type I entry decision | DecideTypeIEntry | Partial | G04: complete required input/source acceptance. This is not Type I sign-off. |
 | [**R2-10**](backlog.md#L3760) Publish policies and verify acknowledgement and training | LaunchPolicyCampaign; AcknowledgePolicy; training requirement/completion/campaign/waiver commands | Exists | G01/G08: governed support and source queue placement remain consuming integration work. |
-| [**R2-11**](backlog.md#L3835) Manage accountable compliance work | Assign/Claim/Delegate/EscalateWorkItem; SetWorkDigestPreference | Partial | G08: email policy/delivery and source placement. Source commands own completion. |
+| [**R2-11**](backlog.md#L3835) Manage accountable compliance work | Assign/Claim/Delegate/EscalateWorkItem; SetWorkDigestPreference; Schedule/Deliver/RecordWorkDigestDelivery | Partial | Weekly digest handlers are complete; content/delivery reactor remains. G08 campaign/waiver source placement remains #646. Source commands own completion. |
 | [**R2-12**](backlog.md#L3950) Govern evidence access, retention, and disclosure | Retention basis/legal holds; redaction lineage and approval | Partial | G02: full handling/storage hold/disclosure/engagement hold/disposition. |
 | [**T1-01**](backlog.md#L4030) Establish the Type I engagement and point-in-time snapshot | Program/workforce snapshots are only prerequisites | Missing | G09: examination engagement and complete point-in-time baseline. |
 | [**T1-02**](backlog.md#L4080) Author, approve, and maintain the system description | Boundary/control/policy versions are only inputs | Missing | G10: management-authored system description lifecycle/export. |

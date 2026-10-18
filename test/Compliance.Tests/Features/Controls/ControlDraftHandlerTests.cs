@@ -116,6 +116,40 @@ public sealed class ControlDraftHandlerTests
         Assert.Equal(0, validator.Calls);
     }
 
+    [Fact]
+    public async Task ShouldSkipApplicabilityResolutionGivenUnchangedControlContent()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var controlId = ControlDraft.IdFor(tenantId, programId, "AC-NOOP");
+        var content = Content();
+        var validator = new FailingApplicabilityValidator();
+        await using var provider = ProgramManagementServices.Build(
+            new RecordingPermissionAuthorizer(allowed: true),
+            portia => portia.AddRequestHandler<ReviseControlDraftHandler>(),
+            services => services.AddSingleton<IControlApplicabilityReferenceValidator>(validator));
+        await ProgramManagementServices.SeedAsync(provider, new ControlDraft(tenantId, controlId),
+            control => control.Create(programId, Uuid.CreateVersion4(), "AC-NOOP", content,
+                RbacIds.Member(tenantId, userId), "Author", DateTimeOffset.UtcNow));
+
+        // Act
+        await RequestScenario.For(provider)
+            .GivenActor(ProgramManagementServices.Actor(userId))
+            .When(new ReviseControlDraft(tenantId, programId, controlId, 1, content))
+            // Assert
+            .ExpectAuthorized()
+            .ExpectHandled()
+            .ExpectSuccess();
+        var saved = await ProgramManagementServices.HydrateAsync(provider,
+            new ControlDraft(tenantId, controlId));
+
+        // Assert
+        Assert.Equal(0, validator.Calls);
+        Assert.Equal(1, saved.Revision);
+    }
+
     static ControlDraftContent Content() => new("Access review", "Review access",
         "Management reviews access", "The security lead reviews access quarterly.",
         ["Dated review record"]);

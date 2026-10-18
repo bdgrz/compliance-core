@@ -71,6 +71,12 @@ public sealed partial class DeclaredApplication : Aggregate
         });
         On<ApplicationRetired>(ev =>
         {
+            if (ev.MergedIntoApplicationRevision is { } targetRevision &&
+                (ev.MergedIntoApplicationId is not { } successorId || targetRevision < 1 ||
+                 Relationship(ApplicationRelationshipIdentity.Replaces, successorId)?.Approval
+                     ?.TargetApplicationRevision != targetRevision))
+                throw new InvalidOperationException(
+                    "An application retirement does not match its approved successor revision.");
             _revision = ev.Revision;
             _retired = true;
         });
@@ -78,6 +84,7 @@ public sealed partial class DeclaredApplication : Aggregate
         // Their instance state is projected separately and is not retained by this aggregate.
         On<SystemInstanceDeclared>(ev => _revision = ev.ApplicationRevision);
         RegisterApplicationRelationshipEvents();
+        RegisterGovernedRelationshipEvents();
     }
 
     public Result<ApplicationRegistration> Declare(string name, string purpose,
@@ -192,8 +199,20 @@ public sealed partial class DeclaredApplication : Aggregate
         if (mergedIntoApplicationId == Id || mergedIntoApplicationId == Uuid.Empty)
             return CommandFailure.InvalidContent(
                 "An application cannot be merged into itself or an empty identity.");
+        long? mergedIntoApplicationRevision = null;
+        if (mergedIntoApplicationId is { } successorId)
+        {
+            var relationship = Relationship(ApplicationRelationshipIdentity.Replaces, successorId);
+            if (relationship?.Status != "approved" || relationship.Approval is not { } approval ||
+                approval.SourceApplicationRevision != expectedRevision ||
+                approval.TargetApplicationRevision < 1)
+                return CommandFailure.StateConflict(
+                    "Merging an application requires an approved successor relationship for the current revision.");
+            mergedIntoApplicationRevision = approval.TargetApplicationRevision;
+        }
         RaiseEvent(new ApplicationRetired(_tenantId, Id, _revision + 1, effectiveAt,
-            reason.Trim(), mergedIntoApplicationId, actorMemberId, actorDisplay, changedAt)
+            reason.Trim(), mergedIntoApplicationId, actorMemberId, actorDisplay, changedAt,
+            mergedIntoApplicationRevision)
         {
             StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
         });

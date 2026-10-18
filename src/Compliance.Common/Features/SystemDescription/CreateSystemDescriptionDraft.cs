@@ -6,4 +6,7 @@ namespace Bdgrz.Compliance.Features.SystemDescription;
 
 /// <summary>Records the create system description draft intent required by the owning feature workflow.</summary>
 [Discriminator("bdgrz.system-description.create-system-description-draft", 1)]
-public sealed record CreateSystemDescriptionDraft(Uuid TenantId, Uuid ProgramId, Uuid DescriptionId, Uuid ExaminationId, string Title) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+public sealed record CreateSystemDescriptionDraft(Uuid TenantId, Uuid ProgramId,
+    Uuid DescriptionId, Uuid ExaminationId, string Title,
+    IReadOnlyList<SystemDescriptionSection> Sections) : IRequest, IProgramScopedRequest,
+    IClientManagementMutationRequest, ICallable;

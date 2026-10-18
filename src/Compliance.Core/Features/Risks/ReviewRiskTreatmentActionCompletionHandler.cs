@@ -36,11 +36,17 @@ public sealed class ReviewRiskTreatmentActionCompletionHandler(IAggregateExecuto
             completion.ReviewOutcome is null);
         if (pending is not null)
         {
-            var assignments = await reader.HydrateAsync(new WorkAssignmentLedger(request.TenantId,
-                request.ProgramId), ct).ConfigureAwait(false);
             var workItemId = WorkSource.RiskTreatmentWorkItemId(request.ProgramId,
                 request.RiskId, pending.SubmissionId, WorkSource.RiskTreatmentActionReview);
-            var assigned = assignments.Read(workItemId).AssigneeMemberId == actor.MemberId;
+            var assignment = await reader.HydrateAsync(new WorkItemAssignment(request.TenantId,
+                request.ProgramId, workItemId), ct).ConfigureAwait(false);
+            var assigned = assignment.Read().AssigneeMemberId == actor.MemberId;
+            if (!assigned && assignment.Read().Revision == 0)
+            {
+                var legacy = await reader.HydrateAsync(new LegacyWorkAssignmentLedger(
+                    request.TenantId, request.ProgramId), ct).ConfigureAwait(false);
+                assigned = legacy.Read(workItemId).AssigneeMemberId == actor.MemberId;
+            }
             var conflicts = governance.SubmitterMemberId(request.RiskId, pending.SubmissionId) ==
                                 actor.MemberId || action?.AccountableMemberId == actor.MemberId;
             var mayReviewByWaiver = request.SeparationOfDutiesWaiverId is not null && conflicts;

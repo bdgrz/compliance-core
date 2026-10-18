@@ -3,7 +3,7 @@
 # final `docker compose down --volumes` cleanup.
 services:
   broker:
-    image: ghcr.io/cntryl/fitz:latest@sha256:0686055f39f349aeec5e992e2ac19c4b02b585edd8dd7d5f7482eaba8c7e4804
+    image: ghcr.io/cntryl/fitz:0.2.0
     stop_signal: SIGINT
     stop_grace_period: 15s
     environment:

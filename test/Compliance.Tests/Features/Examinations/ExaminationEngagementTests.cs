@@ -1,0 +1,169 @@
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Versioning;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+
+namespace Bdgrz.Compliance.Tests.Features.Examinations;
+
+public sealed class ExaminationEngagementTests
+{
+    static readonly Uuid TenantId = Uuid.CreateVersion4();
+    static readonly Uuid ProgramId = Uuid.CreateVersion4();
+    static readonly Uuid EngagementId = Uuid.CreateVersion4();
+    static readonly Uuid MemberId = Uuid.CreateVersion4();
+    static readonly Uuid BaselineId = Uuid.CreateVersion4();
+    static readonly DateTimeOffset Now = new(2026, 10, 17, 15, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void ShouldRejectIncompleteEngagementGivenCreate()
+    {
+        // Arrange
+        var engagement = new ExaminationEngagement(TenantId, ProgramId, EngagementId);
+        var content = ValidContent() with { AuditFirm = " " };
+
+        // Act
+        var failure = engagement.Create(content, MemberId, "Lead", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent,
+            Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Empty(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+        Assert.Equal(0, engagement.Revision);
+    }
+
+    [Fact]
+    public void ShouldKeepEngagementIdentityAndRejectStaleRevisionGivenRevision()
+    {
+        // Arrange
+        var engagement = new ExaminationEngagement(TenantId, ProgramId, EngagementId);
+        Assert.Null(engagement.Create(ValidContent(), MemberId, "Lead", Now));
+
+        // Act
+        var stale = engagement.Revise(0, ValidContent() with { AuditFirm = "Other Firm" },
+            MemberId, "Lead", Now.AddDays(1));
+        var changed = engagement.Revise(1, ValidContent() with { AuditFirm = "  Second Firm  " },
+            MemberId, "Lead", Now.AddDays(2));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.VersionConflict,
+            Assert.IsType<CommandFailure>(stale).Code);
+        Assert.Null(changed);
+        Assert.Equal("Second Firm", engagement.Current!.AuditFirm);
+        Assert.Equal(2, engagement.Revision);
+        Assert.Collection(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents,
+            created => Assert.Equal(ValidContent().AuditFirm,
+                Assert.IsType<ExaminationEngagementOpened>(created).Engagement.AuditFirm),
+            revised => Assert.Equal("Second Firm",
+                Assert.IsType<ExaminationEngagementRevised>(revised).Engagement.AuditFirm));
+    }
+
+    [Fact]
+    public void ShouldBlockBaselineWithUnresolvedSourcesGivenFreeze()
+    {
+        // Arrange
+        var engagement = NewEngagement();
+        var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId, [],
+            ["The boundary has an unresolved system."]);
+
+        // Act
+        var failure = engagement.FreezeBaseline(1, BaselineId, preview, "Ready to freeze",
+            MemberId, "Lead", Now.AddDays(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Null(engagement.Baseline);
+        Assert.Single(new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldFreezeExactBaselineAndPreserveItGivenLaterSourceChange()
+    {
+        // Arrange
+        var engagement = NewEngagement();
+        var original = ValidPreview();
+
+        // Act
+        var failure = engagement.FreezeBaseline(1, BaselineId, original, "Scope confirmed",
+            MemberId, "Lead", Now.AddDays(1));
+        var afterFreeze = engagement.Baseline;
+        var revise = engagement.Revise(2, ValidContent() with { BoundaryId = Uuid.CreateVersion4() },
+            MemberId, "Lead", Now.AddDays(2));
+
+        // Assert
+        Assert.Null(failure);
+        Assert.Equal(original.ContentSha256, afterFreeze!.ContentSha256);
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(revise).Code);
+        Assert.Same(afterFreeze, engagement.Baseline);
+        Assert.Equal("frozen", engagement.Baseline!.Status);
+        Assert.Equal(2, engagement.Revision);
+    }
+
+    [Fact]
+    public void ShouldRequireReasonAndAffectedRecordsGivenBaselineAmendment()
+    {
+        // Arrange
+        var engagement = NewEngagement();
+        Assert.Null(engagement.FreezeBaseline(1, BaselineId, ValidPreview(), "Confirmed",
+            MemberId, "Lead", Now.AddDays(1)));
+        var current = engagement.Baseline!;
+        var amended = ValidPreview(Uuid.CreateVersion4(), current.Sources[0].RecordId);
+
+        // Act
+        var missingReason = engagement.AmendBaseline(2, Uuid.CreateVersion4(), amended, [], [],
+            " ", MemberId, "Approver", Now.AddDays(2));
+        var valid = engagement.AmendBaseline(2, Uuid.CreateVersion4(), amended,
+            [amended.Sources[0].RecordId], [], "Corrected scope source", MemberId,
+            "Approver", Now.AddDays(2));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent,
+            Assert.IsType<CommandFailure>(missingReason).Code);
+        Assert.Null(valid);
+        Assert.Equal(2, engagement.Baseline!.Revision);
+        Assert.Equal(BaselineId, engagement.Baseline.AmendsBaselineId);
+        Assert.Equal("Corrected scope source", engagement.Baseline.AmendmentReason);
+        Assert.Single(engagement.Baseline.ChangedRecordIds);
+    }
+
+    [Fact]
+    public void ShouldRejectChangedReplayOfExistingBaselineIdGivenFreezeRetry()
+    {
+        // Arrange
+        var engagement = NewEngagement();
+        var original = ValidPreview();
+        Assert.Null(engagement.FreezeBaseline(1, BaselineId, original, "Confirmed",
+            MemberId, "Lead", Now.AddDays(1)));
+
+        // Act
+        var exactRetry = engagement.FreezeBaseline(2, BaselineId, original, "Confirmed",
+            MemberId, "Lead", Now.AddDays(1));
+        var changedRetry = engagement.FreezeBaseline(2, BaselineId,
+            ValidPreview(Uuid.CreateVersion4()), "Confirmed", MemberId, "Lead", Now.AddDays(1));
+
+        // Assert
+        Assert.Null(exactRetry);
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(changedRetry).Code);
+        Assert.Equal(2, new AggregateScenario<ExaminationEngagement>(engagement).PendingEvents.Count);
+    }
+
+    static ExaminationEngagement NewEngagement()
+    {
+        var engagement = new ExaminationEngagement(TenantId, ProgramId, EngagementId);
+        Assert.Null(engagement.Create(ValidContent(), MemberId, "Lead", Now));
+        return engagement;
+    }
+
+    static ExaminationEngagementContent ValidContent() => new("type_i", "Audit Firm",
+        new DateOnly(2026, 9, 30), null, ["security"], Uuid.CreateVersion4(), [MemberId]);
+
+    static TypeIBaselinePreview ValidPreview(Uuid? versionId = null, Uuid? recordId = null)
+    {
+        var reference = new TypeIBaselineSourceReference("approved_boundary",
+            recordId ?? Uuid.CreateVersion4(),
+            versionId ?? Uuid.CreateVersion4(), 3, new string('a', 64));
+        return TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId, [reference]);
+    }
+}

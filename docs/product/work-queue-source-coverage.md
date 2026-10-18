@@ -165,9 +165,13 @@ handler and records its returned acceptance in the retained source aggregate.
   Neither supplies a pending program reviewer assignment to copy into the queue.
 - Queue-wide ADR 0007 acceptance remains under #284 until all required source
   coverage and reconciliation are established. Per-source checkpoint fencing
-  does not promise cross-stream atomicity.
-- Weekly email scheduling and delivery policy remain under #647 and their
-  consuming issues. Search and in-app attention do not depend on email delivery.
+  does not promise cross-stream atomicity. A queue read captures and confirms
+  each required source checkpoint around enumeration; ordinary writes after the
+  final confirmation can still race the response.
+- Weekly scheduling, suppression, deterministic attempts, and callback handling
+  are implemented under R2-11c/M0-D15. A current authorized work snapshot and
+  trusted email delivery remain under #647 and its consuming issues. Search and
+  in-app attention do not depend on email delivery.
 - Client and end-to-end acceptance remain in the owning repositories and later
   validation phase; this backend inventory does not claim that acceptance.
 

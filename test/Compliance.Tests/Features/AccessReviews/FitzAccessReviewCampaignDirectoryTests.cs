@@ -49,9 +49,9 @@ public sealed class FitzAccessReviewCampaignDirectoryTests
     sealed class PrefixCompatibleKvClient(IKvClient inner) : IKvClient
     {
 
-        public async Task<IKvTransaction> BeginAsync(string route, KvDurability durability,
+        public async Task<IKvTransaction> BeginAsync(string route,
             KvMode mode = KvMode.ReadWrite, CancellationToken ct = default) =>
-            new PrefixCompatibleTransaction(await inner.BeginAsync(route, durability, mode, ct));
+            new PrefixCompatibleTransaction(await inner.BeginAsync(route, mode, ct));
 
         public Task<KvSubscription> SubscribeAsync(string pattern, CancellationToken ct = default) =>
             inner.SubscribeAsync(pattern, ct);
@@ -78,7 +78,8 @@ public sealed class FitzAccessReviewCampaignDirectoryTests
 
                 return result;
             }
-            public Task CommitAsync(CancellationToken ct = default) => inner.CommitAsync(ct);
+            public Task CommitAsync(KvDurability durability, CancellationToken ct = default) =>
+                inner.CommitAsync(durability, ct);
             public Task RollbackAsync(CancellationToken ct = default) => inner.RollbackAsync(ct);
             public ValueTask DisposeAsync() => inner.DisposeAsync();
         }

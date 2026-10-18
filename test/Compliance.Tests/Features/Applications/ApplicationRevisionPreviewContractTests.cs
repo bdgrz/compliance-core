@@ -509,7 +509,12 @@ public sealed class ApplicationRevisionPreviewContractTests
                 ProjectionCheckpoint.Start));
             foreach (var record in await EventsAsync())
                 await directory.ApplyAsync(record.Event);
-            await batch.CommitAsync(ProjectionCheckpoint.Start);
+            var cursor = EventCursor.Start;
+            await foreach (var record in _events.ReadAsync(
+                               EventStreamPattern.ForPattern(Tenant.ToString()), cursor,
+                               CancellationToken.None))
+                cursor = record.NextCursor;
+            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
 
         public async Task RecordPersonAsync(Uuid id, Uuid? tenant = null)

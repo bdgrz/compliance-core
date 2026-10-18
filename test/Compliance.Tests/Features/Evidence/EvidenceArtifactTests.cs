@@ -119,7 +119,8 @@ public sealed class EvidenceArtifactTests
         var admin = ActorReference.ForMember(Uuid.CreateVersion4(), "Admin");
 
         // Act
-        var failure = artifact.ReleaseQuarantine("Rescan clean; vendor false positive", admin, Now);
+        var failure = artifact.ReleaseQuarantine(artifact.Revision, Uuid.CreateVersion4(),
+            Now.AddMinutes(1), "Rescan clean; vendor false positive", admin, Now.AddMinutes(2));
 
         // Assert
         Assert.Null(failure);
@@ -135,7 +136,8 @@ public sealed class EvidenceArtifactTests
         Assert.Null(artifact.RecordInspection(EvidenceInspectionOutcome.SecretDetected, Now));
 
         // Act
-        var failure = artifact.ReleaseQuarantine("Looks fine", Collector, Now);
+        var failure = artifact.ReleaseQuarantine(artifact.Revision, Uuid.CreateVersion4(),
+            Now, "Looks fine", Collector, Now);
 
         // Assert
         Assert.NotNull(failure);
@@ -150,7 +152,8 @@ public sealed class EvidenceArtifactTests
         Assert.Null(artifact.RecordInspection(EvidenceInspectionOutcome.Malware, Now));
 
         // Act
-        var failure = artifact.ReleaseQuarantine(" ", Collector, Now);
+        var failure = artifact.ReleaseQuarantine(artifact.Revision, Uuid.CreateVersion4(),
+            Now, " ", Collector, Now);
 
         // Assert
         Assert.NotNull(failure);

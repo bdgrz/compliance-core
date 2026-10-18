@@ -219,8 +219,21 @@ public sealed class WorkforceServiceIdentityE2ETests(BrokerStackFixture broker)
 
     static async Task<string> OpenAcceptedPopulationAsync(HttpClient owner, string root)
     {
+        var systemOwnerId = await PostWhenAuthorizedAsync(owner, $"{root}/people",
+            new { display_name = "Inventory System Owner" }, "person_id");
+        var accessOwnerId = await PostWhenAuthorizedAsync(owner, $"{root}/people",
+            new { display_name = "Inventory Access Owner" }, "person_id");
         var applicationId = await PostWhenAuthorizedAsync(owner, $"{root}/applications",
-            new { name = "GitHub", purpose = "Source hosting" }, "application_id");
+            new
+            {
+                name = "GitHub",
+                purpose = "Source hosting",
+                classification = "internal",
+                system_owner_person_id = systemOwnerId,
+                access_owner_person_id = accessOwnerId,
+                application_kind = "saas",
+                criticality = "high",
+            }, "application_id");
         using var declared = await owner.PostAsJsonAsync($"{root}/applications/{applicationId}/system-instances",
             new { expected_application_revision = 1, name = "Organization", kind = "aws_account" });
         Assert.Equal(HttpStatusCode.OK, declared.StatusCode);

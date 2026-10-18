@@ -108,6 +108,89 @@ public sealed class ComplianceWebTests
     }
 
     [Fact]
+    public async Task ShouldMapActualAssignmentRevocationGivenClientAdministrationApiRoute()
+    {
+        // Arrange
+        await using var factory = CreateBrokerFreeFactory("Development");
+        using var client = factory.CreateClient();
+        var route = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>()
+            .Single(endpoint => endpoint.RoutePattern.RawText ==
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations");
+
+        // Act
+        var methods = route.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods;
+        var authorization = route.Metadata.GetOrderedMetadata<IAuthorizeData>();
+
+        // Assert
+        Assert.Contains("POST", methods ?? []);
+        Assert.Equal("BdgrzApiUser", Assert.Single(authorization).Policy);
+        Assert.Equal(["tenant_id", "engagement_id", "staff_member_id"],
+            route.RoutePattern.Parameters.Select(parameter => parameter.Name));
+    }
+
+    [Fact]
+    public async Task ShouldMapServiceEngagementAcceptanceGivenPersonalHttpEndpoint()
+    {
+        // Arrange
+        await using var factory = CreateBrokerFreeFactory("Development");
+        using var client = factory.CreateClient();
+        var route = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>()
+            .Single(endpoint => endpoint.RoutePattern.RawText ==
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance" &&
+                endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Contains("POST") == true);
+
+        // Act
+        var methods = route.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods;
+        var authorization = route.Metadata.GetOrderedMetadata<IAuthorizeData>();
+
+        // Assert
+        Assert.Contains("POST", methods ?? []);
+        Assert.Equal("BdgrzApiUser", Assert.Single(authorization).Policy);
+        Assert.Equal(["tenant_id", "engagement_id"],
+            route.RoutePattern.Parameters.Select(parameter => parameter.Name));
+    }
+
+    [Fact]
+    public async Task ShouldMapApplicationRelationshipAndHttpOnlyApprovalEndpointsGivenApplicationApi()
+    {
+        // Arrange
+        await using var factory = CreateBrokerFreeFactory("Development");
+        using var client = factory.CreateClient();
+        var expectedMethods = new Dictionary<string, string[]>
+        {
+            ["/api/v1/tenants/{tenant_id}/applications/{source_application_id}/relationships"] =
+                ["POST"],
+            ["/api/v1/tenants/{tenant_id}/applications/{source_application_id}/relationships/{relationship_type}/{target_application_id}"] =
+                ["DELETE"],
+            ["/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships"] =
+                ["GET"],
+            ["/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/directed"] =
+                ["GET"],
+            ["/api/v1/tenants/{tenant_id}/applications/{predecessor_application_id}/successors/{successor_application_id}/approval"] =
+                ["POST"],
+        };
+
+        // Act
+        var endpoints = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>()
+            .Where(endpoint => expectedMethods.ContainsKey(endpoint.RoutePattern.RawText ?? ""))
+            .ToDictionary(endpoint => endpoint.RoutePattern.RawText!);
+
+        // Assert
+        Assert.Equal(expectedMethods.Keys.OrderBy(static path => path, StringComparer.Ordinal),
+            endpoints.Keys.OrderBy(static path => path, StringComparer.Ordinal));
+        foreach (var (path, methods) in expectedMethods)
+        {
+            var endpoint = endpoints[path];
+            Assert.Equal(methods, endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods);
+            Assert.Equal("BdgrzApiUser",
+                Assert.Single(endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>()).Policy);
+        }
+    }
+
+    [Fact]
     public async Task ShouldRequireDualProofPolicyGivenIdentityLinkEndpoint()
     {
         // Arrange
@@ -255,6 +338,100 @@ public sealed class ComplianceWebTests
         Assert.Equal(HttpStatusCode.OK, readiness.StatusCode);
         Assert.Equal(HttpStatusCode.OK, openApi.StatusCode);
         Assert.Contains("/api/v1/developer-user-sessions", openApiDocument, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ShouldDescribeTypeIIObservationStartGivenOpenApi()
+    {
+        // Arrange
+        await using var factory = CreateBrokerFreeFactory("Development");
+        using var client = factory.CreateClient();
+        const string route = "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts";
+        const string amendmentRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/amendments";
+        const string closeApprovalRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-approvals";
+        const string closeFreezeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/freezes";
+
+        // Act
+        using var response = await client.GetAsync("/openapi/v1.json", CancellationToken.None);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStreamAsync(
+            CancellationToken.None));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var operation = document.RootElement.GetProperty("paths").GetProperty(route)
+            .GetProperty("post");
+        Assert.True(operation.TryGetProperty("requestBody", out _));
+        var parameters = operation.GetProperty("parameters").EnumerateArray()
+            .Select(parameter => parameter.GetProperty("name").GetString()).ToArray();
+        Assert.Contains("tenant_id", parameters);
+        Assert.Contains("program_id", parameters);
+        Assert.Contains("examination_id", parameters);
+        Assert.Contains("period_id", parameters);
+        var paths = document.RootElement.GetProperty("paths");
+        Assert.True(paths.GetProperty(amendmentRoute).TryGetProperty("post", out _));
+        Assert.True(paths.GetProperty(closeApprovalRoute).TryGetProperty("post", out _));
+        var closeFreeze = paths.GetProperty(closeFreezeRoute).GetProperty("post");
+        Assert.True(closeFreeze.TryGetProperty("requestBody", out _));
+        Assert.Contains("close_snapshot_id", closeFreeze.GetProperty("parameters")
+            .EnumerateArray().Select(parameter => parameter.GetProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task ShouldDescribeTypeIIPlanProposalGivenOpenApi()
+    {
+        // Arrange
+        await using var factory = CreateBrokerFreeFactory("Development");
+        using var client = factory.CreateClient();
+        const string route = "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-ii-plans/{plan_id}/proposals";
+
+        // Act
+        using var response = await client.GetAsync("/openapi/v1.json", CancellationToken.None);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStreamAsync(
+            CancellationToken.None));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var operation = document.RootElement.GetProperty("paths").GetProperty(route)
+            .GetProperty("post");
+        Assert.True(operation.TryGetProperty("requestBody", out _));
+        var parameters = operation.GetProperty("parameters").EnumerateArray()
+            .Select(parameter => parameter.GetProperty("name").GetString()).ToArray();
+        Assert.Contains("tenant_id", parameters);
+        Assert.Contains("program_id", parameters);
+        Assert.Contains("examination_id", parameters);
+        Assert.Contains("plan_id", parameters);
+    }
+
+    [Fact]
+    public async Task ShouldDescribeAdvisorHandoffTerminationGivenOpenApi()
+    {
+        // Arrange
+        await using var factory = CreateBrokerFreeFactory("Development");
+        using var client = factory.CreateClient();
+        const string closeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures";
+        const string revokeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations";
+        const string responseRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses";
+
+        // Act
+        using var response = await client.GetAsync("/openapi/v1.json", CancellationToken.None);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStreamAsync(
+            CancellationToken.None));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var paths = document.RootElement.GetProperty("paths");
+        foreach (var route in new[] { closeRoute, revokeRoute, responseRoute })
+        {
+            var operation = paths.GetProperty(route).GetProperty("post");
+            Assert.True(operation.TryGetProperty("requestBody", out _));
+            var parameters = operation.GetProperty("parameters").EnumerateArray()
+                .Select(parameter => parameter.GetProperty("name").GetString()).ToArray();
+            Assert.Contains("tenant_id", parameters);
+            Assert.Contains("program_id", parameters);
+            Assert.Contains("handoff_id", parameters);
+            if (route == responseRoute)
+                Assert.Contains("feedback_id", parameters);
+        }
     }
 
     [Fact]

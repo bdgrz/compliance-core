@@ -4,6 +4,8 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
-/// <summary>Records the record template successor disposition intent required by the owning feature workflow.</summary>
+/// <summary>Records the reviewed final disposition for one proposed template successor.</summary>
 [Discriminator("bdgrz.methodology-templates.record-template-successor-disposition", 1)]
-public sealed record RecordTemplateSuccessorDisposition(Uuid TenantId, Uuid ProgramId, Uuid TemplateId, long NewTemplateVersion, string Disposition, string Rationale) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+public sealed record RecordTemplateSuccessorDisposition(Uuid TenantId, Uuid ProgramId, Uuid TemplateId,
+    string ApplicationKey, long ExpectedRevision, long NewTemplateVersion, string Disposition, string Rationale)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;

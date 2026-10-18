@@ -13,7 +13,7 @@ public static class ControlCadenceSchedule
     public const string Recurring = "recurring";
     public const string EventDriven = "event_driven";
     public const string AdHoc = "ad_hoc";
-    public const int MaximumDueWithinDays = 365;
+    public const int MaximumDueWithinDays = ControlCadence.MaximumDueWithinDays;
 
     public static string? Validate(ControlCadence? cadence)
     {

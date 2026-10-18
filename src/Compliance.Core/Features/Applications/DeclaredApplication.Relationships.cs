@@ -159,7 +159,14 @@ public sealed partial class DeclaredApplication
             _relationshipRevision = ev.RelationshipRevision;
             _relationships.Add(ev.RelationshipId, new ApplicationRelationshipState(
                 new ApplicationRelationshipView(ev.RelationshipId, ev.TargetApplicationId,
-                    ev.RelationshipType, ev.ActorMemberId, ev.ActorDisplay, ev.ChangedAt), true,
+                    ev.RelationshipType, ev.ActorMemberId, ev.ActorDisplay, ev.ChangedAt)
+                {
+                    TenantId = ev.TenantId,
+                    SourceApplicationId = Id,
+                    Revision = ev.RelationshipRevision,
+                    Status = ActiveRelationshipState,
+                    ChangedBy = ev.Actor,
+                }, true,
                 ev.RelationshipRevision, 1));
         });
         On<ApplicationRelationshipRemoved>(ev =>
@@ -173,6 +180,15 @@ public sealed partial class DeclaredApplication
             _relationshipRevision = ev.RelationshipRevision;
             _relationships[ev.RelationshipId] = state with
             {
+                View = state.View with
+                {
+                    Revision = ev.RelationshipRevision,
+                    Status = RemovedRelationshipState,
+                    ChangedBy = ev.Actor,
+                    ChangedAt = ev.ChangedAt,
+                    RemovalReason = ev.Reason,
+                    Approval = null,
+                },
                 IsActive = false,
                 RelationshipRevision = ev.RelationshipRevision,
                 EventCount = state.EventCount + 1,

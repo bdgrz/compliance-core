@@ -326,15 +326,15 @@ The source-backed command plan for the product features we have committed to sup
 
 The list below maps directly to accepted feature requirements. P0/P1 manual outcomes are included even when a later slice has prerequisite work; P2 hypotheses and proposed BO scope are not treated as committed commands. A worker result is listed only when a feature requires a durable outcome or replayable external effect.
 
-This pruned plan has 127 required additions, including five evidence command contracts already present in source; 122 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
+This pruned plan has 129 required additions, including five evidence command contracts and one internal identity-provider result callback already present in source; 123 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
 
 ### Governed evidence capture and support — [EN-06](backlog.md#en-06-store-governed-artifacts-with-immutable-content-identity), [R2-03](backlog.md#r2-03-request-and-capture-trustworthy-evidence), [R2-04](backlog.md#r2-04-perform-a-control-and-attest-to-the-result), [R2-05](backlog.md#r2-05-review-control-design-implementation-and-evidence), [R1-14](backlog.md#r1-14-evaluate-vendors-and-subservice-organizations)
 
-- **CaptureEvidenceArtifact** — contract created ([draft contract](../../src/Compliance.Common/Features/Evidence/CaptureEvidenceArtifact.cs)); handler, API exposure, and upload storage boundary remain to be wired
-- **RecordEvidenceArtifactInspection** — contract created ([internal contract](../../src/Compliance.Common/Features/Evidence/RecordEvidenceArtifactInspection.cs)); trusted inspection handler and durable worker remain to be wired
-- **IssueArtifactDownload** — contract created ([draft contract](../../src/Compliance.Common/Features/Evidence/IssueArtifactDownload.cs)); handler must enforce available-state and exact artifact authorization
-- **LinkEvidenceSupport** — contract created ([draft contract](../../src/Compliance.Common/Features/Evidence/LinkEvidenceSupport.cs)); aggregate, handler, and exact support type validation remain to be wired
-- **ReleaseEvidenceArtifactQuarantine** — contract created ([draft contract](../../src/Compliance.Common/Features/Evidence/ReleaseEvidenceArtifactQuarantine.cs)); handler must require a clean rescan and admin authority
+- **CaptureEvidenceArtifact** — handler wired to governed intake; API exposure and upload storage boundary remain to be wired
+- **RecordEvidenceArtifactInspection** — trusted system-only handler and inspection authorization are wired; durable worker remains to be wired
+- **IssueArtifactDownload** — handler issues a short-lived store delivery only for currently available content after exact artifact-read authorization; records purpose, actor and artifact revision
+- **LinkEvidenceSupport** — handler verifies an available exact artifact, exact current control/version/occurrence/evaluation/period revision and matching period, then records an immutable attributed relationship with the artifact content digest
+- **ReleaseEvidenceArtifactQuarantine** — personal decision handler requires the malware quarantine, current revision, separate retention-admin authorization, a clean rescan, and storage reconciliation; scanner-provider qualification remains open
 
 ### Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md)
 
@@ -342,23 +342,23 @@ This pruned plan has 127 required additions, including five evidence command con
 - **PlaceArtifactEngagementHold** — coded ([contract](../../src/Compliance.Common/Features/Retention/PlaceArtifactEngagementHold.cs#L7))
 - **RecordEngagementReportIssued** — coded ([contract](../../src/Compliance.Common/Features/Retention/RecordEngagementReportIssued.cs#L7))
 - **ReleaseArtifactEngagementHold** — coded ([contract](../../src/Compliance.Common/Features/Retention/ReleaseArtifactEngagementHold.cs#L7))
-- **ApproveArtifactDisclosure** — coded ([contract](../../src/Compliance.Common/Features/Retention/ApproveArtifactDisclosure.cs#L7))
-- **RecordArtifactDisclosureDelivery** — coded ([contract](../../src/Compliance.Common/Features/Retention/RecordArtifactDisclosureDelivery.cs#L7))
-- **RevokeArtifactDisclosure** — coded ([contract](../../src/Compliance.Common/Features/Retention/RevokeArtifactDisclosure.cs#L7))
+- **ApproveArtifactDisclosure** — handler captures the available artifact and reviewed classification at an exact revision; exact read and separate disclosure grants are required
+- **RecordArtifactDisclosureDelivery** — handler records a personal, revision-checked delivery receipt against the current artifact and handling policy
+- **RevokeArtifactDisclosure** — handler records a personal, revision-checked revocation while preserving the delivery history
 - **ApproveArtifactDisposition** — coded ([contract](../../src/Compliance.Common/Features/Retention/ApproveArtifactDisposition.cs#L7))
 - **ExecuteArtifactDisposition** — coded ([contract](../../src/Compliance.Common/Features/Retention/ExecuteArtifactDisposition.cs#L7))
-- **RecordArtifactDispositionResult** — coded ([contract](../../src/Compliance.Common/Features/Retention/RecordArtifactDispositionResult.cs#L7))
+- **RecordArtifactDispositionResult** — internal v2 callback bound to the exact execution-request event and attempt; named worker only ([contract](../../src/Compliance.Common/Features/Retention/RecordArtifactDispositionResult.cs#L7))
 
 ### Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md)
 
-- **CreateAdvisorHandoff** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs#L7))
-- **ReviseAdvisorHandoffSelection** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs#L7))
+- **CreateAdvisorHandoff** — coded; selects exact `(RecordId, VersionId)` pairs ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs#L7))
+- **ReviseAdvisorHandoffSelection** — coded; replaces exact `(RecordId, VersionId)` pairs and requires a change reason ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs#L7))
 - **MarkAdvisorHandoffReadyForReview** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs#L7))
 - **CloseAdvisorHandoff** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs#L7))
 - **RevokeAdvisorHandoff** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs#L7))
 - **RecordAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs#L7))
 - **CorrectAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs#L7))
-- **RespondToAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs#L7))
+- **RespondToAdvisorFeedback** — coded and handled ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs#L8))
 
 
 ### Control operation and recurrence — [R2-01](backlog.md#r2-01-assign-control-ownership-and-operating-cadence), [T2-02](backlog.md#t2-02-operate-a-recurring-control-calendar), R2-04, T2-03; [M0-D19](decisions/m0-d19-periodic-reviews.md)
@@ -382,14 +382,14 @@ This pruned plan has 127 required additions, including five evidence command con
 
 ### Work queue and digest delivery — [R2-11](backlog.md#r2-11-manage-accountable-compliance-work); [M0-D15](decisions/m0-d15-work-queue.md)
 
-- **ScheduleWeeklyWorkDigest** — required internal scheduler command for the opt-out weekly digest
-- **DeliverWeeklyWorkDigest** — required internal delivery command; delivery failure never gates the queue
-- **RecordWorkDigestDelivery** — required internal command to retain delivery outcome and retry identity
+- **ScheduleWeeklyWorkDigest** — bounded internal scheduler command that pages active tenant members and records eligible opt-in digest schedules ([contract](../../src/Compliance.Common/Features/Work/ScheduleWeeklyWorkDigest.cs#L7), handler and focused behavior tests).
+- **DeliverWeeklyWorkDigest** — internal delivery-attempt command bound to the exact schedule event and deterministic attempt identity ([contract](../../src/Compliance.Common/Features/Work/DeliverWeeklyWorkDigest.cs#L7), handler and focused behavior tests); delivery failure never gates the work queue.
+- **RecordWorkDigestDelivery** — internal callback command bound to the exact delivery-request event and attempt, retaining provider outcome and retry identity ([contract](../../src/Compliance.Common/Features/Work/RecordWorkDigestDelivery.cs#L7), handler and focused behavior tests).
 
 ### Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot)
 
-- **CreateExaminationEngagement** — coded ([contract](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L7))
-- **ReviseExaminationEngagement** — coded ([contract](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L7))
+- **CreateExaminationEngagement** — personal HTTP handler records the draft Type I terms and attributes the creating member ([contract](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L7))
+- **ReviseExaminationEngagement** — personal HTTP handler preserves management contacts and boundary identity while applying the exact expected revision ([contract](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L7))
 - **FreezeTypeIBaseline** — coded ([contract](../../src/Compliance.Common/Features/Examinations/FreezeTypeIBaseline.cs#L7))
 - **AmendTypeIBaseline** — coded ([contract](../../src/Compliance.Common/Features/Examinations/AmendTypeIBaseline.cs#L7))
 
@@ -419,36 +419,37 @@ This pruned plan has 127 required additions, including five evidence command con
 - **RecordAuditorResponseDisposition** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/RecordAuditorResponseDisposition.cs#L7))
 - **ResolveAuditorRequest** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/ResolveAuditorRequest.cs#L7))
 - **ReopenAuditorRequest** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/ReopenAuditorRequest.cs#L7))
-- **RecordSampleSelection** — coded ([contract](../../src/Compliance.Common/Features/AuditPopulations/RecordSampleSelection.cs#L7))
-- **AmendSampleSelection** — coded ([contract](../../src/Compliance.Common/Features/AuditPopulations/AmendSampleSelection.cs#L7))
+- **RecordSampleSelection** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/RecordSampleSelection.cs#L7))
+- **AmendSampleSelection** — coded ([contract](../../src/Compliance.Common/Features/AuditorRequests/AmendSampleSelection.cs#L7))
 
 ### Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md)
 
+- **CreateAuditPackage** — Type I and Type II creation are handled ([contract](../../src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs#L9), [handler](../../src/Compliance.Core/Features/AuditPackages/CreateAuditPackageHandler.cs#L8)); the source builder binds the latest frozen snapshot and exact selected version IDs. Canonical source metadata remains open, so handler coverage is partial.
 - **RequestAuditPackageBuild** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RequestAuditPackageBuild.cs#L7))
 - **RecordAuditPackageBuildResult** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs#L7))
-- **ValidateAuditPackage** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs#L7))
+- **ValidateAuditPackage** — Type I/II source resolution, manifest-linked validation, and tenant-scoped archive verification against the exact ZIP entries are handled ([contract](../../src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs#L7), [handler](../../src/Compliance.Core/Features/AuditPackages/ValidateAuditPackageHandler.cs#L8)).
 - **ApproveAuditPackageValidationOverride** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageValidationOverride.cs#L7))
 - **ApproveAuditPackageDisclosure** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageDisclosure.cs#L7))
 - **RecordAuditPackageDelivery** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageDelivery.cs#L7))
-- **AmendAuditPackage** — coded ([contract](../../src/Compliance.Common/Features/AuditPackages/AmendAuditPackage.cs#L7))
+- **AmendAuditPackage** — v2 accepts a complete desired selection and exact frozen source snapshot; the handler preserves package lineage and verifies every selected source against the Type I baseline or latest Type II close snapshot ([contract](../../src/Compliance.Common/Features/AuditPackages/AmendAuditPackage.cs#L7), [handler](../../src/Compliance.Core/Features/AuditPackages/AmendAuditPackageHandler.cs#L8)). Legacy retained-record requests remain supported. Canonical source metadata still needs a trusted resolver.
 
 ### Assertions, representation letters, outcomes and Type II plan — [T1-07](backlog.md#t1-07-record-the-type-i-outcome-and-approve-the-type-ii-plan), [T3-06](backlog.md#t3-06-record-management-sign-off-and-the-type-ii-outcome); [M0-D27](decisions/m0-d27-attest-scope.md)
 
-- **RecordManagementAssertion** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementAssertion.cs#L7))
+- **RecordManagementAssertion** — v2 records wording and signer candidates only when the exact package validation, frozen examination snapshot, approved bound system description, selected support inputs, and inspected wording-source attribution all match ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementAssertion.cs#L8), [handler](../../src/Compliance.Core/Features/Examinations/RecordManagementAssertionHandler.cs#L10))
 - **ApproveManagementAssertion** — coded ([contract](../../src/Compliance.Common/Features/Examinations/ApproveManagementAssertion.cs#L7))
-- **RecordManagementRepresentationLetter** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L7))
+- **RecordManagementRepresentationLetter** — v2 records an original letter only after resolving its approved assertion, exact delivered package/manifest, inspected auditor-attributed artifact digest, and assertion-bound signer set ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L7), [handler](../../src/Compliance.Core/Features/Examinations/RecordManagementRepresentationLetterHandler.cs#L8))
 - **SignManagementRepresentationLetter** — coded ([contract](../../src/Compliance.Common/Features/Examinations/SignManagementRepresentationLetter.cs#L7))
-- **RecordExaminationOutcome** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordExaminationOutcome.cs#L7))
-- **RecordManagementExaminationReview** — coded ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementExaminationReview.cs#L7))
-- **ProposeTypeIIOperatingPlan** — coded ([contract](../../src/Compliance.Common/Features/Operations/ProposeTypeIIOperatingPlan.cs#L7))
+- **RecordExaminationOutcome** — v2 handler records only auditor-supplied outcomes bound to an exact delivered package version and, when supplied, an available inspected report artifact ([contract](../../src/Compliance.Common/Features/Examinations/RecordExaminationOutcome.cs#L7), [handler](../../src/Compliance.Core/Features/Examinations/RecordExaminationOutcomeHandler.cs#L8))
+- **RecordManagementExaminationReview** — implemented in v2 with exact source-chain validation and immutable management sign-off ([contract](../../src/Compliance.Common/Features/Examinations/RecordManagementExaminationReview.cs#L7), [handler](../../src/Compliance.Core/Features/Examinations/RecordManagementExaminationReviewHandler.cs#L8))
+- **ProposeTypeIIOperatingPlan** — source-bound handler is registered and routed; it checks the exact baseline/outcome/system-description chain, derives control cadence, recurring due window, member ownership, and exact expected-evidence descriptions from approved records, and requires every current open/remediated finding with exact revision, disposition, and active client-personnel owner. Policy/risk/vendor source records, person/team owners, and event-driven/ad hoc trigger and due semantics remain open ([contract](../../src/Compliance.Common/Features/Operations/ProposeTypeIIOperatingPlan.cs#L7), [handler](../../src/Compliance.Core/Features/Operations/ProposeTypeIIOperatingPlanHandler.cs#L8))
 - **ReviewTypeIIOperatingPlan** — coded ([contract](../../src/Compliance.Common/Features/Operations/ReviewTypeIIOperatingPlan.cs#L7))
 - **ApproveTypeIIOperatingPlan** — coded ([contract](../../src/Compliance.Common/Features/Operations/ApproveTypeIIOperatingPlan.cs#L7))
 
 ### Observation periods and continuous operation — [T2-01](backlog.md#t2-01-start-the-type-ii-observation-period-from-the-approved-baseline), [T3-07](backlog.md#t3-07-roll-the-program-into-continuous-compliance-and-the-next-period)
 
-- **StartTypeIIObservationPeriod** — coded ([contract](../../src/Compliance.Common/Features/Operations/StartTypeIIObservationPeriod.cs#L7))
+- **StartTypeIIObservationPeriod** — starts from the exact approved plan and retains recurring due windows and each control's expected evidence descriptions on every expected occurrence; policy/risk/vendor source validation, person/team owner resolution, and event-driven/ad hoc trigger and due semantics remain open ([contract](../../src/Compliance.Common/Features/Operations/StartTypeIIObservationPeriod.cs#L7), [handler](../../src/Compliance.Core/Features/Operations/StartTypeIIObservationPeriodHandler.cs#L8))
 - **AmendTypeIIObservationPeriod** — coded ([contract](../../src/Compliance.Common/Features/Operations/AmendTypeIIObservationPeriod.cs#L7))
-- **ProposeProgramRollover** — coded ([contract](../../src/Compliance.Common/Features/Programs/ProposeProgramRollover.cs#L7))
+- **ProposeProgramRollover** — v2 handler binds the full carry-forward plan and rationale to the exact frozen close snapshot and auditor outcome ([contract](../../src/Compliance.Common/Features/Programs/ProposeProgramRollover.cs#L7), [handler](../../src/Compliance.Core/Features/Programs/ProposeProgramRolloverHandler.cs#L8))
 - **ApproveProgramRollover** — coded ([contract](../../src/Compliance.Common/Features/Programs/ApproveProgramRollover.cs#L7))
 
 ### Native significant changes and incidents — [T2-07](backlog.md#t2-07-assess-system-changes-and-incidents-for-compliance-impact), [M0-D21](decisions/m0-d21-significant-change.md)
@@ -460,6 +461,8 @@ This pruned plan has 127 required additions, including five evidence command con
 - **ReviseComplianceIncident** — coded ([contract](../../src/Compliance.Common/Features/Incidents/ReviseComplianceIncident.cs#L7))
 - **AssessComplianceIncident** — coded ([contract](../../src/Compliance.Common/Features/Incidents/AssessComplianceIncident.cs#L7))
 - **RecordComplianceIncidentResolution** — coded ([contract](../../src/Compliance.Common/Features/Incidents/RecordComplianceIncidentResolution.cs#L7))
+
+These commands carry the complete change or incident content accepted by their owning aggregates. The revised payload shapes use discriminator version 2 so handlers do not synthesize missing source, owner, impact, evidence, or resolution facts.
 
 ### Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md)
 
@@ -491,7 +494,7 @@ This pruned plan has 127 required additions, including five evidence command con
 
 - **RequestClientExport** — coded ([contract](../../src/Compliance.Common/Features/Exports/RequestClientExport.cs#L7))
 - **RecordClientExportBuildResult** — coded ([contract](../../src/Compliance.Common/Features/Exports/RecordClientExportBuildResult.cs#L7))
-- **RecordClientExportDelivery** — coded ([contract](../../src/Compliance.Common/Features/Exports/RecordClientExportDelivery.cs#L7))
+- **RecordClientExportDelivery** — coded; carries the expected export revision ([contract](../../src/Compliance.Common/Features/Exports/RecordClientExportDelivery.cs#L7))
 - **RequestOwnAttestRecordPackage** — coded ([contract](../../src/Compliance.Common/Features/AttestRecords/RequestOwnAttestRecordPackage.cs#L7))
 - **RecordOwnAttestRecordPackageResult** — coded ([contract](../../src/Compliance.Common/Features/AttestRecords/RecordOwnAttestRecordPackageResult.cs#L7))
 - **RecordOwnAttestRecordDelivery** — coded ([contract](../../src/Compliance.Common/Features/AttestRecords/RecordOwnAttestRecordDelivery.cs#L7))
@@ -501,6 +504,7 @@ This pruned plan has 127 required additions, including five evidence command con
 
 - **ConfigureTenantIdentityProvider** — coded ([contract](../../src/Compliance.Common/Features/UserIdentities/ConfigureTenantIdentityProvider.cs#L7))
 - **TestTenantIdentityProvider** — coded ([contract](../../src/Compliance.Common/Features/UserIdentities/TestTenantIdentityProvider.cs#L7))
+- **RecordTenantIdentityProviderTestResult** — internal v1 callback bound to the exact persisted test-request event; named worker only ([contract](../../src/Compliance.Common/Features/UserIdentities/RecordTenantIdentityProviderTestResult.cs#L7))
 - **DisableTenantIdentityProvider** — coded ([contract](../../src/Compliance.Common/Features/UserIdentities/DisableTenantIdentityProvider.cs#L7))
 - **RotateTenantIdentityProviderCredentials** — coded ([contract](../../src/Compliance.Common/Features/UserIdentities/RotateTenantIdentityProviderCredentials.cs#L7))
 

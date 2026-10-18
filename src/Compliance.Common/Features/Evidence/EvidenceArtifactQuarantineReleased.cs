@@ -6,4 +6,5 @@ namespace Bdgrz.Compliance.Features.Evidence;
 /// <summary>Records an attributed decision that a malware quarantine was a false positive.</summary>
 [Discriminator("bdgrz.evidence.artifact.quarantine_released", 1)]
 public sealed record EvidenceArtifactQuarantineReleased(Uuid TenantId, Uuid ArtifactId,
+    long Revision, Uuid RequestId, string RescanState, DateTimeOffset RescannedAt,
     string Rationale, ActorReference DecidedBy, DateTimeOffset DecidedAt) : DomainEvent;

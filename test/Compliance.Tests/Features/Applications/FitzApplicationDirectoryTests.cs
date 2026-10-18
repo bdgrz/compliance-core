@@ -526,9 +526,9 @@ public sealed class FitzApplicationDirectoryTests
         public int Writes { get; private set; }
         public List<(string Route, byte[] Key, byte[] Payload)> Rows { get; } = [];
 
-        public async Task<IKvTransaction> BeginAsync(string route, KvDurability durability,
+        public async Task<IKvTransaction> BeginAsync(string route,
             KvMode mode = KvMode.ReadWrite, CancellationToken ct = default) =>
-            new LegacyTransaction(await inner.BeginAsync(route, durability, mode, ct), this);
+            new LegacyTransaction(await inner.BeginAsync(route, mode, ct), this);
 
         public Task<KvSubscription> SubscribeAsync(string pattern, CancellationToken ct = default) =>
             inner.SubscribeAsync(pattern, ct);
@@ -538,7 +538,7 @@ public sealed class FitzApplicationDirectoryTests
             var payloads = new List<byte[]>();
             foreach (var row in Rows)
             {
-                await using var tx = await inner.BeginAsync(row.Route, KvDurability.Sync, KvMode.ReadOnly);
+                await using var tx = await inner.BeginAsync(row.Route, KvMode.ReadOnly);
                 var stored = await tx.GetAsync(row.Key);
                 payloads.Add(stored.Value!.Value.ToArray());
             }
@@ -583,7 +583,8 @@ public sealed class FitzApplicationDirectoryTests
                 CancellationToken ct = default) => inner.DeleteRangeAsync(startKey, endKey, ct);
             public Task<KvScanResult> ScanAsync(KvScanQuery query, CancellationToken ct = default) =>
                 inner.ScanAsync(query, ct);
-            public Task CommitAsync(CancellationToken ct = default) => inner.CommitAsync(ct);
+            public Task CommitAsync(KvDurability durability, CancellationToken ct = default) =>
+                inner.CommitAsync(durability, ct);
             public Task RollbackAsync(CancellationToken ct = default) => inner.RollbackAsync(ct);
             public ValueTask DisposeAsync() => inner.DisposeAsync();
         }

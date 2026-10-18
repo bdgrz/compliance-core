@@ -1,6 +1,8 @@
 global using Bdgrz.Compliance.Features.AccessControl;
 global using Bdgrz.Compliance.Features.AccessReviews;
+global using Bdgrz.Compliance.Features.AuditPackages;
 global using Bdgrz.Compliance.Features.Applications;
+global using Bdgrz.Compliance.Features.AdvisorCollaboration;
 global using Bdgrz.Compliance.Features.Authentication;
 global using Bdgrz.Compliance.Features.Boundaries;
 global using Bdgrz.Compliance.Features.Commitments;
@@ -9,6 +11,7 @@ global using Bdgrz.Compliance.Features.Controls;
 global using Bdgrz.Compliance.Features.Criteria;
 global using Bdgrz.Compliance.Features.Evaluations;
 global using Bdgrz.Compliance.Features.Evidence;
+global using Bdgrz.Compliance.Features.Examinations;
 global using Bdgrz.Compliance.Features.Operations;
 global using Bdgrz.Compliance.Features.Policies;
 global using Bdgrz.Compliance.Features.PolicyDistribution;

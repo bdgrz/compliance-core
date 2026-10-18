@@ -9,6 +9,7 @@ public sealed class ApplicationRetirementTests
 {
     static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
     static readonly Uuid ActorId = Uuid.CreateVersion4();
+    static readonly Uuid ApproverId = Uuid.CreateVersion4();
 
     [Fact]
     public void ShouldRetireWithMergeAndBlockLaterChangesGivenActiveApplication()
@@ -16,6 +17,12 @@ public sealed class ApplicationRetirementTests
         // Arrange
         var application = Application();
         var successorId = Uuid.CreateVersion4();
+        var proposal = application.RecordRelationship(successorId, 1, 1, "replaces",
+            ActorId, "Manager", Now);
+        Assert.True(proposal.IsSuccess);
+        Assert.Null(application.ApproveSuccessor(successorId, 1,
+            proposal.Value.Revision, 1, new string('a', 64),
+            ApproverId, "Partner", Now.AddMinutes(1)));
 
         // Act
         var retired = application.Retire(1, Now.AddDays(7), " Duplicate of Payroll ",
@@ -34,7 +41,64 @@ public sealed class ApplicationRetirementTests
             new AggregateScenario<DeclaredApplication>(application).PendingEvents[^1]);
         Assert.Equal("Duplicate of Payroll", ev.Reason);
         Assert.Equal(successorId, ev.MergedIntoApplicationId);
+        Assert.Equal(1, ev.MergedIntoApplicationRevision);
         Assert.Equal(Now.AddDays(7), ev.EffectiveAt);
+    }
+
+    [Fact]
+    public void ShouldRejectMergeRetirementGivenNoApprovedSuccessorRelationship()
+    {
+        // Arrange
+        var application = Application();
+
+        // Act
+        var retirement = application.Retire(1, Now.AddDays(7), "Duplicate application",
+            Uuid.CreateVersion4(), ActorId, "Manager", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(retirement).Code);
+        Assert.False(application.IsRetired);
+    }
+
+    [Fact]
+    public void ShouldRejectSuccessorApprovalGivenTargetRevisionChangedSinceProposal()
+    {
+        // Arrange
+        var application = Application();
+        var successorId = Uuid.CreateVersion4();
+        var proposal = application.RecordRelationship(successorId, 1, 1, "replaces",
+            ActorId, "Manager", Now);
+        Assert.True(proposal.IsSuccess);
+
+        // Act
+        var approval = application.ApproveSuccessor(successorId, 1, proposal.Value.Revision,
+            2, new string('a', 64), ApproverId, "Partner", Now.AddMinutes(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(approval).Code);
+        Assert.Equal("proposed", application.Relationship("replaces", successorId)?.Status);
+    }
+
+    [Fact]
+    public void ShouldRejectSuccessorApprovalGivenSameProposerAndApprover()
+    {
+        // Arrange
+        var application = Application();
+        var successorId = Uuid.CreateVersion4();
+        var proposal = application.RecordRelationship(successorId, 1, 1, "replaces",
+            ActorId, "Manager", Now);
+        Assert.True(proposal.IsSuccess);
+
+        // Act
+        var approval = application.ApproveSuccessor(successorId, 1, proposal.Value.Revision,
+            1, new string('a', 64), ActorId, "Manager", Now.AddMinutes(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(approval).Code);
+        Assert.Equal("proposed", application.Relationship("replaces", successorId)?.Status);
     }
 
     [Fact]
@@ -77,6 +141,61 @@ public sealed class ApplicationRetirementTests
             new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents[^1]);
         Assert.Equal(2, ev.Revision);
         Assert.Equal(instance.ApplicationId, ev.ApplicationId);
+    }
+
+    [Fact]
+    public void ShouldRejectInstanceRetirementGivenMissingRequiredFacts()
+    {
+        // Arrange
+        var instance = new DeclaredSystemInstance(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        Assert.True(instance.Declare(Uuid.CreateVersion4(), "Slack", "saas_tenant", null,
+            "T123", ActorId, "Manager", Now).IsSuccess);
+
+        // Act
+        var missingEffectiveDate = instance.Retire(1, default, "Workspace closed", ActorId,
+            "Manager", Now);
+        var missingActor = instance.Retire(1, Now, "Workspace closed", Uuid.Empty,
+            "Manager", Now);
+        var missingDisplay = instance.Retire(1, Now, "Workspace closed", ActorId,
+            " ", Now);
+        var missingOccurrenceTime = instance.Retire(1, Now, "Workspace closed", ActorId,
+            "Manager", default);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(missingEffectiveDate).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(missingActor).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(missingDisplay).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(missingOccurrenceTime).Code);
+        Assert.False(instance.IsRetired);
+        Assert.Equal(1, instance.Revision);
+        Assert.Empty(new AggregateScenario<DeclaredSystemInstance>(instance).PendingEvents.Skip(1));
+    }
+
+    [Fact]
+    public void ShouldRejectMalformedRetirementEventGivenSystemInstanceHistoryReplay()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var instanceId = Uuid.CreateVersion4();
+        var source = new DeclaredSystemInstance(tenantId, instanceId);
+        Assert.True(source.Declare(applicationId, "Slack", "saas_tenant", null, "T123",
+            ActorId, "Manager", Now).IsSuccess);
+        Assert.Null(source.Retire(1, Now, "Workspace closed", ActorId, "Manager", Now));
+        var history = new AggregateScenario<DeclaredSystemInstance>(source).PendingEvents
+            .Select(ev => ev is SystemInstanceRetired retired
+                ? retired with { EffectiveAt = default }
+                : ev).ToArray();
+        var replay = new DeclaredSystemInstance(tenantId, instanceId);
+
+        // Act
+        var exception = Record.Exception(() => new AggregateScenario<DeclaredSystemInstance>(replay)
+            .Given(history));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(exception);
+        Assert.False(replay.IsRetired);
+        Assert.Equal(1, replay.Revision);
     }
 
     static DeclaredApplication Application()

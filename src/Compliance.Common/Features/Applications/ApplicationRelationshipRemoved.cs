@@ -10,6 +10,9 @@ public sealed record ApplicationRelationshipRemoved(Uuid TenantId, Uuid Applicat
     string RelationshipType, Uuid ActorMemberId, string ActorDisplay,
     DateTimeOffset ChangedAt) : DomainEvent
 {
+    /// <summary>Reason recorded by the governed relationship removal contract, when present.</summary>
+    public string? Reason { get; init; }
+
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }
 

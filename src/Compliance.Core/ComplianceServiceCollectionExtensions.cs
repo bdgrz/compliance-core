@@ -1,7 +1,20 @@
 using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.AuditPopulations;
+using Bdgrz.Compliance.Features.AuditorRequests;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Exports;
+using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.Retention;
 using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.MethodologyTemplates;
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Features.Work;
 using Cntryl.Portia;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +42,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(new DeveloperUserRegistration(developerAuthentication));
         services.AddSingleton(PlatformOperatorAuthority.FromConfiguration(configuration, developerAuthentication));
         services.AddScoped<IPlatformOperatorAccess, EventSourcedPlatformOperatorAccess>();
+        var professionalAuthorityTrust = FirmProfessionalAuthorityTrustSettings.FromConfiguration(configuration);
+        services.TryAddScoped<IFirmProfessionalDutyAssertionVerifier>(_ =>
+            new SignedFirmProfessionalDutyAssertionVerifier(professionalAuthorityTrust));
         services.AddSingleton(ControlDraftDiscardReleaseGate.FromConfiguration(configuration));
         services.AddSingleton(ControlActivationReleaseGate.FromConfiguration(configuration));
         services.AddSingleton(ControlLifecycleReleaseGate.FromConfiguration(configuration));
@@ -47,12 +63,26 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(ArtifactContentStoreOptions.FromConfiguration(configuration));
         services.AddSingleton<IArtifactContentStore, LocalArtifactContentStore>();
         services.AddSingleton<IArtifactInspector, UninspectedArtifactInspector>();
+        services.AddScoped<EvidenceIntake>();
         services.AddScoped<EvidenceArtifactStorageReconciler>();
         services.AddScoped<ArtifactRetentionMutation>();
         services.AddScoped<ArtifactRetentionRead>();
+        services.AddScoped<AuditPackageSourceBuilder>();
         var emailDeliverySettings = EmailChallengeDeliverySettings.FromConfiguration(configuration,
             requireRealEmailDelivery);
         services.AddSingleton(emailDeliverySettings);
+        var workDigestDeliverySettings = WorkDigestDeliverySettings.FromConfiguration(configuration,
+            requireRealEmailDelivery);
+        services.AddSingleton(workDigestDeliverySettings);
+        services.AddSingleton<MockWorkDigestDelivery>();
+        services.AddSingleton<IWorkDigestDelivery>(provider => emailDeliverySettings.Mode == "smtp"
+            ? new SmtpWorkDigestDelivery(emailDeliverySettings)
+            : provider.GetRequiredService<MockWorkDigestDelivery>());
+        services.AddScoped<WorkDigestContentReader>();
+        services.AddScoped<IWorkDigestContentReader>(provider =>
+            provider.GetRequiredService<WorkDigestContentReader>());
+        services.AddScoped<WorkDigestDispatchProcessor>();
+        services.AddScoped<WorkDigestDispatchSweep>();
         services.AddSingleton(EmailChallengeTokenKeys.FromConfiguration(configuration,
             emailDeliverySettings.Mode == "mock"));
         services.AddSingleton<MockEmailChallengeDelivery>();
@@ -138,6 +168,17 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ApplicationHistoryReadConsistency>();
         services.AddScoped<SystemInstanceReadConsistency>();
         services.AddScoped<LegacySystemInstanceSource>();
+        services.AddScoped<FitzApplicationRelationshipDirectory>();
+        services.AddScoped<IApplicationRelationshipProjection>(provider =>
+            provider.GetRequiredService<FitzApplicationRelationshipDirectory>());
+        services.AddScoped<IApplicationRelationshipDirectory>(provider =>
+            provider.GetRequiredService<FitzApplicationRelationshipDirectory>());
+        services.AddScoped<ApplicationRelationshipReadConsistency>();
+        services.AddScoped<PreviewApplicationChangeHandler>();
+        services.AddScoped<IApplicationChangeImpactReader>(provider =>
+            provider.GetRequiredService<PreviewApplicationChangeHandler>());
+        services.AddScoped<IApplicationImportRetirementImpactReader>(provider =>
+            provider.GetRequiredService<PreviewApplicationChangeHandler>());
         services.AddScoped<FitzApplicationBoundaryReferenceDirectory>();
         services.AddScoped<IApplicationBoundaryReferenceProjection>(provider =>
             provider.GetRequiredService<FitzApplicationBoundaryReferenceDirectory>());
@@ -397,7 +438,13 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzAccessReviewCampaignDirectory>());
         services.AddScoped<IAccessReviewCampaignDirectoryReader>(
             provider => provider.GetRequiredService<FitzAccessReviewCampaignDirectory>());
+        services.AddScoped<FitzAccessReviewCampaignWorkItemDirectory>();
+        services.AddScoped<IAccessReviewCampaignWorkItemProjection>(provider =>
+            provider.GetRequiredService<FitzAccessReviewCampaignWorkItemDirectory>());
+        services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzAccessReviewCampaignWorkItemDirectory>());
         services.AddScoped<IAccessReviewSources, GovernedAccessReviewSources>();
+        services.AddScoped<AccessReviewQueueEligibility>();
         services.AddScoped<FitzPopulationSnapshotDirectory>();
         services.AddScoped<IPopulationSnapshotDirectoryProjection>(
             provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
@@ -433,10 +480,14 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<RestrictedApplicationVisibility>();
         services.AddScoped<TechnologyInventoryRestrictedVisibility>();
         services.AddScoped<OperatingAuthority>();
+        services.AddScoped<ManagementExecutiveAuthority>();
+        services.AddScoped<ProgramRolloverApproverAuthority>();
         services.AddScoped<ClientManagementIndependenceGuard>();
         services.AddScoped<ClientCompartmentIndependenceGuard>();
+        services.AddScoped<ProfessionalAdvisoryReadAccess>();
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
+        services.AddScoped<WeeklyWorkDigestRecipientResolver>();
         services.AddScoped<IProgramResourceScopeResolver, ProgramResourceScopeResolver>();
         services.AddScoped<BoundaryResponsibilityScopeValidator>();
         services.AddScoped<ControlResponsibilityScopeValidator>();
@@ -483,7 +534,16 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceRedactionAccess>();
         services.AddScoped<EvidenceArtifactReadAccess>();
         services.AddScoped<EvidenceArtifactMetadataRead>();
+        services.AddScoped<EvidenceSupportTargetSource>();
+        services.AddScoped<AuditorResponseEvidence>();
         services.AddScoped<DirectoryReevaluationDiscovery>();
+        services.AddScoped<ProfessionalDutyAdministrationAuthorizer>();
+        services.AddScoped<ProfessionalDutyAuthorityReader>();
+        services.AddScoped<IndependenceRuleRatificationAuthorizer>();
+        services.AddScoped<ProfessionalEngagementPartnerAuthorizer>();
+        services.AddScoped<CurrentRatifiedIndependenceRulesReader>();
+        services.TryAddScoped<IServiceEngagementAcceptanceEvidenceReader,
+            EventSourcedServiceEngagementAcceptanceEvidenceReader>();
         services.AddScoped<FitzActualStaffEngagementLocator>();
         services.AddScoped<IActualStaffEngagementLocatorProjection>(provider =>
             provider.GetRequiredService<FitzActualStaffEngagementLocator>());
@@ -514,8 +574,17 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GetEmailChallengeStatusHandler>()
             .AddRequestHandler<GetEmailAddressHandler>()
             .AddRequestHandler<ListEmailAddressesHandler>()
+            .AddRequestHandler<ConfigureTenantIdentityProviderHandler>()
+            .AddRequestHandler<TestTenantIdentityProviderHandler>()
+            .AddRequestHandler<RecordTenantIdentityProviderTestResultHandler>()
+            .AddRequestHandler<RotateTenantIdentityProviderCredentialsHandler>()
+            .AddRequestHandler<DisableTenantIdentityProviderHandler>()
+            .AddRequestAuthorizer<RecordTenantIdentityProviderTestResultAuthorizer>()
             .AddRequestAuthorizer<EmailOwnershipAuthorizer>()
             .AddRequestHandler<ReviseIndependenceRulesHandler>()
+            .AddRequestHandler<RatifyIndependenceRuleVersionHandler>()
+            .AddRequestHandler<RecordPartnerIndependenceEvaluationHandler>()
+            .AddRequestHandler<GetServiceEngagementPartnerReviewContextHandler>()
             .AddRequestHandler<GetIndependenceRuleVersionsHandler>()
             .AddRequestHandler<GetClientIndependenceRulesHandler>()
             .AddRequestHandler<RecordNonattestServiceHandler>()
@@ -525,13 +594,18 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RegisterFirmStaffHandler>()
             .AddRequestHandler<SetFirmStaffStatusHandler>()
             .AddRequestHandler<GetFirmStaffDirectoryHandler>()
+            .AddRequestHandler<RecordFirmProfessionalDutyDesignationHandler>()
+            .AddRequestHandler<RevokeFirmProfessionalDutyDesignationHandler>()
+            .AddRequestHandler<GetFirmProfessionalDutyCatalogHandler>()
             .AddRequestHandler<ListAssignableFirmStaffHandler>()
             .AddRequestHandler<CreateServiceEngagementHandler>()
             .AddRequestHandler<AmendServiceEngagementHandler>()
             .AddRequestHandler<ProposeServiceEngagementStaffHandler>()
             .AddRequestHandler<WithdrawServiceEngagementStaffProposalHandler>()
+            .AddRequestHandler<RevokeServiceEngagementActualStaffHandler>()
             .AddRequestHandler<CloseServiceEngagementHandler>()
             .AddRequestHandler<GetServiceEngagementAcceptanceHandler>()
+            .AddRequestHandler<AcceptServiceEngagementHandler>()
             .AddRequestHandler<GetServiceEngagementAcceptanceHistoryHandler>()
             .AddRequestHandler<GetServiceEngagementHandler>()
             .AddRequestHandler<ListServiceEngagementsHandler>()
@@ -539,7 +613,11 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<AcknowledgeEngagementManagementHandler>()
             .AddRequestHandler<GetEngagementManagementAcknowledgementsHandler>()
             .AddRequestAuthorizer<IndependenceRuleAdministrationAuthorizer>()
+            .AddRequestAuthorizer<IndependenceRuleRatificationAuthorizer>()
+            .AddRequestAuthorizer<ProfessionalEngagementPartnerAuthorizer>()
             .AddRequestAuthorizer<FirmStaffAdministrationAuthorizer>()
+            .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
+            .AddRequestAuthorizer<ServiceEngagementAcceptanceAuthorizer>()
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
             .AddRequestAuthorizer<RecordDirectoryIndependenceReevaluationAuthorizer>()
             .AddRequestHandler<RegisterMemberHandler>()
@@ -574,6 +652,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<DeclareApplicationHandler>()
             .AddRequestHandler<ReviseApplicationHandler>()
             .AddRequestHandler<DeclareSystemInstanceHandler>()
+            .AddRequestHandler<ReviseSystemInstanceHandler>()
             .AddRequestHandler<GetApplicationHandler>()
             .AddRequestHandler<ListApplicationsHandler>()
             .AddRequestHandler<AddApplicationRelationshipHandler>()
@@ -584,11 +663,15 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListApplicationRevisionsHandler>()
             .AddRequestHandler<GetSystemInstanceHandler>()
             .AddRequestHandler<ListSystemInstancesHandler>()
+            .AddRequestHandler<RecordApplicationRelationshipHandler>()
+            .AddRequestHandler<RemoveGovernedApplicationRelationshipHandler>()
+            .AddRequestHandler<ListDirectedApplicationRelationshipsHandler>()
             .AddRequestHandler<ListApplicationBoundaryReferencesHandler>()
             .AddRequestHandler<ListTechnologyComponentBoundaryReferencesHandler>()
             .AddRequestHandler<ListInformationAssetBoundaryReferencesHandler>()
             .AddRequestHandler<ListSystemInstanceBoundaryReferencesHandler>()
             .AddRequestHandler<PreviewApplicationChangeHandler>()
+            .AddRequestHandler<ApproveApplicationSuccessorHandler>()
             .AddRequestHandler<RetireApplicationHandler>()
             .AddRequestHandler<RetireSystemInstanceHandler>()
             .AddRequestHandler<DecideAccessReviewScopeHandler>()
@@ -596,9 +679,19 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListAccessReviewScopesHandler>()
             .AddRequestHandler<PreviewInformationAssetChangeHandler>()
             .AddRequestAuthorizer<ArtifactRetentionAdminAuthorizer>()
+            .AddRequestAuthorizer<ArtifactDisclosureAccess>()
+            .AddRequestHandler<ApproveArtifactDisclosureHandler>()
+            .AddRequestHandler<RecordArtifactDisclosureDeliveryHandler>()
+            .AddRequestHandler<RevokeArtifactDisclosureHandler>()
+            .AddRequestHandler<AssignArtifactHandlingPolicyHandler>()
+            .AddRequestHandler<PlaceArtifactEngagementHoldHandler>()
+            .AddRequestHandler<RecordEngagementReportIssuedHandler>()
+            .AddRequestHandler<ReleaseArtifactEngagementHoldHandler>()
             .AddRequestHandler<RecordArtifactRetentionBasisHandler>()
             .AddRequestHandler<PlaceArtifactLegalHoldHandler>()
             .AddRequestHandler<ReleaseArtifactLegalHoldHandler>()
+            .AddRequestHandler<RecordArtifactDispositionResultHandler>()
+            .AddRequestAuthorizer<RecordArtifactDispositionResultAuthorizer>()
             .AddRequestHandler<GetArtifactRetentionHandler>()
             .AddRequestHandler<GetApplicationImportRetentionHandler>()
             .AddRequestHandler<ListArtifactLegalHoldsHandler>()
@@ -687,6 +780,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListOperationalProcessesHandler>()
             .AddRequestHandler<ListOperationalProcessRevisionsHandler>()
             .AddRequestAuthorizer<TechnologyInventoryAuthorizer>()
+            .AddRequestHandler<CloseAdvisorHandoffHandler>()
+            .AddRequestHandler<RevokeAdvisorHandoffHandler>()
+            .AddRequestHandler<RespondToAdvisorFeedbackHandler>()
             .AddRequestHandler<CreateProgramHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()
@@ -729,6 +825,73 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<DecideReadinessHandler>()
             .AddRequestHandler<DecideTypeIEntryHandler>()
             .AddRequestHandler<ListTypeIEntryDecisionsHandler>()
+            .AddRequestHandler<CreateExaminationEngagementHandler>()
+            .AddRequestHandler<ReviseExaminationEngagementHandler>()
+            .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
+            .AddRequestHandler<ProposeTypeIIOperatingPlanHandler>()
+            .AddRequestHandler<ApproveTypeIIOperatingPlanHandler>()
+            .AddRequestHandler<StartTypeIIObservationPeriodHandler>()
+            .AddRequestHandler<ApproveTypeIIPeriodCloseHandler>()
+            .AddRequestHandler<FreezeTypeIIPeriodCloseHandler>()
+            .AddRequestHandler<ProposeSystemDescriptionSuccessorHandler>()
+            .AddRequestHandler<RecordManagementAssertionHandler>()
+            .AddRequestHandler<ApproveManagementAssertionHandler>()
+            .AddRequestHandler<RecordManagementRepresentationLetterHandler>()
+            .AddRequestHandler<SignManagementRepresentationLetterHandler>()
+            .AddRequestHandler<RecordExaminationOutcomeHandler>()
+            .AddRequestHandler<RecordManagementExaminationReviewHandler>()
+            .AddRequestHandler<CreateAuditPackageHandler>()
+            .AddRequestHandler<AmendAuditPackageHandler>()
+            .AddRequestHandler<ValidateAuditPackageHandler>()
+            .AddRequestHandler<ApproveAuditPackageDisclosureHandler>()
+            .AddRequestHandler<ApproveAuditPackageValidationOverrideHandler>()
+            .AddRequestHandler<RecordAuditPackageBuildResultHandler>()
+            .AddRequestHandler<RequestAuditPackageBuildHandler>()
+            .AddRequestHandler<RecordAuditPackageDeliveryHandler>()
+            .AddRequestHandler<RecordClientExportBuildResultHandler>()
+            .AddRequestHandler<RecordClientExportDeliveryHandler>()
+            .AddRequestAuthorizer<RecordAuditPackageBuildResultAuthorizer>()
+            .AddRequestAuthorizer<RecordClientExportBuildResultAuthorizer>()
+            .AddRequestHandler<DefineAuditPopulationHandler>()
+            .AddRequestHandler<RecordAuditPopulationFactsHandler>()
+            .AddRequestHandler<AmendAuditPopulationHandler>()
+            .AddRequestHandler<ClassifyAuditPopulationRowHandler>()
+            .AddRequestHandler<FreezeAuditPopulationHandler>()
+            .AddRequestHandler<ReviseAuditPopulationDefinitionHandler>()
+            .AddRequestHandler<GenerateAuditPopulationHandler>()
+            .AddRequestHandler<GenerateAuditPopulationExportHandler>()
+            .AddRequestHandler<ReconcileAuditPopulationHandler>()
+            .AddRequestHandler<RecordAuditorRequestHandler>()
+            .AddRequestHandler<ReviseAuditorRequestHandler>()
+            .AddRequestHandler<AssignAuditorRequestHandler>()
+            .AddRequestHandler<RecordAuditorRequestCommentHandler>()
+            .AddRequestHandler<CreateAuditResponseDraftHandler>()
+            .AddRequestHandler<ReviseAuditResponseDraftHandler>()
+            .AddRequestHandler<SubmitAuditResponseHandler>()
+            .AddRequestHandler<ReviewAuditResponseHandler>()
+            .AddRequestHandler<DeliverAuditResponseHandler>()
+            .AddRequestHandler<RecordAuditorResponseDispositionHandler>()
+            .AddRequestHandler<ResolveAuditorRequestHandler>()
+            .AddRequestHandler<ReopenAuditorRequestHandler>()
+            .AddRequestHandler<RecordSampleSelectionHandler>()
+            .AddRequestHandler<AmendSampleSelectionHandler>()
+            .AddRequestHandler<RecordSignificantChangeHandler>()
+            .AddRequestHandler<ReviseSignificantChangeHandler>()
+            .AddRequestHandler<AssessSignificantChangeHandler>()
+            .AddRequestHandler<RecordComplianceIncidentHandler>()
+            .AddRequestHandler<ReviseComplianceIncidentHandler>()
+            .AddRequestHandler<AssessComplianceIncidentHandler>()
+            .AddRequestHandler<RecordComplianceIncidentResolutionHandler>()
+            .AddRequestHandler<AmendTypeIIObservationPeriodHandler>()
+            .AddRequestHandler<GenerateDueControlOccurrencesHandler>()
+            .AddRequestHandler<CreateSystemDescriptionDraftHandler>()
+            .AddRequestHandler<ReviseSystemDescriptionDraftHandler>()
+            .AddRequestHandler<BindSystemDescriptionSourcesHandler>()
+            .AddRequestHandler<ReviewSystemDescriptionHandler>()
+            .AddRequestHandler<ApproveSystemDescriptionHandler>()
+            .AddRequestHandler<RecordSystemDescriptionNoChangeDecisionHandler>()
+            .AddRequestHandler<BindSystemDescriptionToExaminationHandler>()
+            .AddRequestHandler<GenerateSystemDescriptionExportHandler>()
             .AddRequestHandler<AnnotateReadinessGapHandler>()
             .AddRequestHandler<ListReadinessAnnotationsHandler>()
             .AddRequestAuthorizer<ReadinessAnnotationCompartmentAuthorizer>()
@@ -757,6 +920,13 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.OpenEvidenceRequestHandler>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.FulfilEvidenceRequestHandler>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.CancelEvidenceRequestHandler>()
+            .AddRequestHandler<CaptureEvidenceArtifactHandler>()
+            .AddRequestAuthorizer<EvidenceArtifactDownloadAccess>()
+            .AddRequestHandler<IssueArtifactDownloadHandler>()
+            .AddRequestHandler<LinkEvidenceSupportHandler>()
+            .AddRequestAuthorizer<EvidenceArtifactInspectionAuthorizer>()
+            .AddRequestHandler<RecordEvidenceArtifactInspectionHandler>()
+            .AddRequestHandler<ReleaseEvidenceArtifactQuarantineHandler>()
             .AddRequestHandler<GetEvidenceRedactionHandler>()
             .AddRequestAuthorizer<EvidenceRedactionWaiverScopeAuthorizer>()
             .AddRequestHandler<ApproveEvidenceRedactionHandler>()
@@ -774,8 +944,16 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<EscalateWorkItemHandler>()
             .AddRequestHandler<ListWorkRemindersHandler>()
             .AddRequestHandler<GetWorkDigestHandler>()
+            .AddRequestHandler<GetWorkDigestDispatchStatusHandler>()
+            .AddRequestHandler<AuthorizeWorkDigestUnknownRetryHandler>()
             .AddRequestHandler<SetWorkDigestPreferenceHandler>()
             .AddRequestHandler<GetWorkDigestPreferenceHandler>()
+            .AddRequestHandler<ScheduleWeeklyWorkDigestHandler>()
+            .AddRequestAuthorizer<ScheduleWeeklyWorkDigestAuthorizer>()
+            .AddRequestHandler<DeliverWeeklyWorkDigestHandler>()
+            .AddRequestAuthorizer<DeliverWeeklyWorkDigestAuthorizer>()
+            .AddRequestHandler<RecordWorkDigestDeliveryHandler>()
+            .AddRequestAuthorizer<RecordWorkDigestDeliveryAuthorizer>()
             .AddRequestAuthorizer<OperationsReactionAuthorizer>()
             .AddRequestHandler<AcceptAccessPopulationHandler>()
             .AddRequestHandler<ApproveAccessExpectationHandler>()
@@ -799,6 +977,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ExemptMissingAccessPopulationHandler>()
             .AddRequestHandler<RecordAccessPopulationFactsHandler>()
             .AddRequestHandler<RecordAccessRemediationChangeHandler>()
+            .AddRequestHandler<ReassignAccessReviewResponsibilityHandler>()
             .AddRequestHandler<ExemptAccessRemediationHandler>()
             .AddRequestHandler<RecordBulkAccessDecisionHandler>()
             .AddRequestHandler<VerifyAccessRemediationHandler>()
@@ -828,6 +1007,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GetCommitmentDraftRevisionHandler>()
             .AddRequestHandler<ReviewCommitmentDraftHandler>()
             .AddRequestHandler<ApproveCommitmentDraftHandler>()
+            .AddRequestHandler<RetireCommitmentHandler>()
             .AddRequestHandler<PreviewCommitmentImpactHandler>()
             .AddRequestHandler<GetCommitmentVersionHandler>()
             .AddRequestHandler<GetEffectiveCommitmentVersionHandler>()
@@ -890,7 +1070,20 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviewRiskTreatmentActionCompletionHandler>()
             .AddRequestHandler<RaiseRiskReassessmentTriggersHandler>()
             .AddRequestAuthorizer<RiskReassessmentReactionAuthorizer>()
+            .AddRequestHandler<CreateMethodologyTemplateHandler>()
+            .AddRequestHandler<ReviseMethodologyTemplateDraftHandler>()
+            .AddRequestHandler<ReviewMethodologyTemplateHandler>()
+            .AddRequestHandler<ApproveMethodologyTemplateVersionHandler>()
+            .AddRequestHandler<RetireMethodologyTemplateHandler>()
+            .AddRequestHandler<ApplyMethodologyTemplateHandler>()
+            .AddRequestHandler<ProposeTemplateSuccessorAdoptionHandler>()
+            .AddRequestHandler<RecordTemplateSuccessorDispositionHandler>()
+            .AddRequestHandler<ProposeDeidentifiedTemplateContributionHandler>()
+            .AddRequestHandler<ReviewTemplateContributionHandler>()
+            .AddRequestHandler<AcceptTemplateContributionHandler>()
             .AddRequestHandler<ReviseProgramHandler>()
+            .AddRequestHandler<ProposeProgramRolloverHandler>()
+            .AddRequestHandler<ApproveProgramRolloverHandler>()
             .AddRequestHandler<SelectProgramCriteriaEditionHandler>()
             .AddRequestHandler<GetProgramHandler>()
             .AddRequestHandler<ListProgramsHandler>()
@@ -1110,10 +1303,14 @@ public static class ComplianceServiceCollectionExtensions
                 AccessReviewDirectorySchema.PopulationProjector, WorkloadScope.PerTenant)
             .AddProjector<AccessReviewCampaignDirectoryProjector>(
                 AccessReviewDirectorySchema.CampaignProjector, WorkloadScope.PerTenant)
+            .AddProjector<AccessReviewCampaignWorkItemProjector>(
+                FitzAccessReviewCampaignWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AccessReviewScopeDirectoryProjector>(
                 AccessReviewScopeStreams.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ApplicationBoundaryReferenceProjector>(
                 "ApplicationBoundaryReferencesV2", WorkloadScope.PerTenant)
+            .AddProjector<ApplicationRelationshipProjector>(
+                "ApplicationRelationshipsV1", WorkloadScope.PerTenant)
             .AddProjector<ApplicationControlDraftReferenceProjector>(
                 "ApplicationControlDraftReferencesV1", WorkloadScope.PerTenant)
             .AddProjector<ProviderProjector>(FitzProviderDirectory.ProjectorName, WorkloadScope.PerTenant)
@@ -1156,7 +1353,8 @@ public static class ComplianceServiceCollectionExtensions
                 FitzCriteriaTextOverlayDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddFitz(
                 configuration.GetSection("Fitz"),
-                fitz => fitz.UseKvCheckpoints("kv://bdgrz/reactors/checkpoints"))
+                fitz => fitz.UseKvCheckpoints("kv://bdgrz/reactors/checkpoints",
+                    Cntryl.Fitz.KvDurability.Sync))
             .RequireAuthorization(options => options.AllowAnonymous<StartIdentityRecovery>());
 
         services.AddHostedService<PlatformOperatorRosterBootstrap>();

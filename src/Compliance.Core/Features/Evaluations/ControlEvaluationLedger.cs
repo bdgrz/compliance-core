@@ -359,6 +359,10 @@ public sealed class ControlEvaluationLedger : Aggregate
     public ControlEvaluationView? Read(Uuid controlId, Uuid evaluationId) =>
         Find(controlId, evaluationId) is { } evaluation ? ToView(evaluation) : null;
 
+    /// <summary>Resolves one exact evaluation identity within this program ledger.</summary>
+    public ControlEvaluationView? Read(Uuid evaluationId) =>
+        _evaluations.TryGetValue(evaluationId, out var evaluation) ? ToView(evaluation) : null;
+
     public IReadOnlyList<ControlEvaluationView> ReadControl(Uuid controlId) => _evaluations.Values
         .Where(evaluation => evaluation.Started.ControlId == controlId)
         .OrderByDescending(static evaluation => evaluation.Started.StartedAt)

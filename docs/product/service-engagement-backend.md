@@ -59,11 +59,39 @@ reusing a request identity for another mutation conflicts. Closed drafts cannot
 be reopened or edited. A draft amendment cannot rewrite its practice identity,
 and the proposed lead must remain selected until another lead is recorded.
 
-Partner-duty designation and personal HTTP-only acceptance require the real
-professional authority decision recorded on #269. No public acceptance or
-ratification operation is supplied by this draft capability. Actual firm
-ratification evidence remains #343; the directory or draft UI cannot generate
-it or remove that gate.
+Professional duties are never inferred from this metadata. The platform duty
+catalog accepts only a signed assertion from the deployment-configured firm
+authority. A current platform operator may relay a signed assertion over
+personal HTTP, but operator status and attribution do not establish its
+professional facts. The request carries the signed assertion and stable
+designation ID; it cannot supply a subject, duty, tenant, source reference or
+issuer. A missing or invalid trust configuration denies duty changes, and all
+professional reads fail closed when the retained signed assertion is invalid,
+expired, superseded or revoked.
+
+The configured issuer is pinned outside the API under
+`Compliance:ProfessionalAuthority`: HTTPS `Issuer`, exact `Audience`, `KeyId`,
+RSA SubjectPublicKeyInfo `PublicKeyBase64`, and a bounded
+`MaximumAssertionLifetimeSeconds` (at most 86,400 seconds). Assertions use
+RS256 compact JWS with exact canonical platform-user `sub`, unique assertion
+`jti`, stable `designation_id`, supported `duty`, monotonic
+`authority_revision`, and `iat`, `nbf` and `exp`. Engagement-partner assertions
+must carry one `tenant_id`; global rule-ratifier assertions must omit it.
+Successor assertions bind `supersedes_assertion_id` to the exact prior
+assertion; revocation is a signed `status: revoked` successor. The application
+retains the signed assertion and its digest with the duty event, rejects replayed
+assertion IDs, and re-verifies the current assertion against the active staff
+directory before granting authority. There is no API or platform-operator
+operation that changes the trusted issuer or key.
+
+The repository does not configure a real firm issuer or public key. Identifying
+the accountable issuer and supplying its production trust configuration remain
+external #343/deployment inputs; synthetic signed assertions are test evidence
+only. The current configuration pins one key ID at a time. Replacing that key
+makes assertions signed by the old key fail closed, so the authority owner must
+reissue/reingest current duties as part of a key rotation before relying on the
+new configuration. Actual firm rule ratification evidence also remains #343;
+the directory or draft UI cannot generate it or remove that gate.
 
 ## Personal client management acknowledgement
 
@@ -80,19 +108,27 @@ hundred acknowledgements without truncation. Replay preserves the same source an
 fences. Actual historical Attest assignees cannot acknowledge client management responsibilities.
 
 This is the client's own management decision. It does not ratify independence rules, designate
-an engagement partner, accept an engagement, or grant professional access. A later professional
-acceptance must independently verify designated partner authority, current source facts and
-this exact acknowledgement. No public professional acceptance operation exists yet.
+an engagement partner, accept an engagement, or grant professional access. The separate
+acceptance operation must independently verify designated partner authority, current source
+facts and this exact acknowledgement.
 
 ## Accepted-state domain boundary
 
-The ledger has an internal acceptance command that consumes verified named-partner review
-proof, current active directory snapshots and designated-duty revision, a ratified rule
-snapshot, and the exact personal client acknowledgement. This command is deliberately absent
-from public HTTP and MCP write contracts. No partner duty designation or production ratification
-is inferred from platform operator, directory practice or client administration authority.
-The production verified-partner authorizer and cross-source acceptance handler remain unfinished;
-synthetic fixture proofs are test evidence, never real professional ratification.
+The HTTP-only `POST /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance`
+operation accepts only the tenant, engagement and expected client sequence. It does not accept
+caller-supplied partner, authority, directory, boundary or rule evidence, and it is not registered
+as an MCP tool. A dedicated firm-professional authorizer requires an authenticated personal HTTP
+request, an active tenant, a current canonical platform user and one active firm-staff identity.
+The handler then resolves trusted evidence for the exact actor and engagement, rechecks that the
+actor is the currently designated partner and that the directory snapshot is still current, and
+requires the applicable ratified rules. No partner duty designation or production ratification is
+inferred from platform operator, directory practice or client administration authority.
+
+Production composition reads partner duty from the configured signed issuer and reads rule
+ratification from the retained personal-ratification source. Without a configured, valid duty
+assertion or a current ratified rule version, acceptance returns a denial/conflict without
+appending an event. No issuer or ratification source is preconfigured by this repository.
+Synthetic fixture proofs are test evidence, never real professional ratification.
 
 Acceptance recomputes policy from the complete immutable retained service history. An impaired
 or unclassified Attest service cannot be overridden; conditional compatibility requires a
@@ -111,19 +147,46 @@ ratification detail for issue #343.
 
 Actual assignments create permanent client-specific person history by canonical user and staff
 identity. Client closure and assignment revocation preserve it through aliases and later
-engagements. Removing the accepted lead closes the engagement and revokes the entire team;
-other removals revoke the named assignment. Client management acknowledgements refuse actual
+engagements. The client-administration endpoint and MCP tool
+`bdgrz.service-engagement.actual-staff.revoke` remove one current accepted assignment with an
+expected client sequence and attributed reason. Both use the existing active-tenant, current
+client-membership, and `tenant.rbac.manage` authorization; neither platform operators nor
+professional staff receive client authority from this operation. Removing the accepted lead
+closes the engagement and revokes the entire team; removing another assignee revokes only that
+assignment and leaves the engagement accepted. Client management acknowledgements refuse actual
 historical Attest actors even if they have a client-role identity. Immutable accepted history
 retains original approvals and separately attributed revocation reason and time.
 
-Current client administration grants allow acceptance metadata/history reads and the existing
-closure operation consumes accepted state when it exists. Actual removal is internal pending
-its professional lifecycle contract. No public acceptance writer or professional access grant
-is introduced. `IsEligibleForProfessionalAccess` is only a deny-only prerequisite: callers must
-supply trusted current rule and directory versions and an effective UTC instant, then apply
-ordinary grants and active directory/tenant conditions independently. It refuses before the
-recorded acceptance/assignment, outside the engagement period, after closure/removal, and when
-new service facts or changed supplied source versions invalidate the accepted snapshot. Runtime
+Current client administration grants allow acceptance metadata/history reads and closure. The
+actual-assignment revocation endpoint and MCP tool are described above.
+
+`IsEligibleForProfessionalAccess` remains a deny-only prerequisite: callers supply the ratified
+rules version frozen into the accepted engagement, the current directory revision, and an
+effective UTC instant. The frozen acceptance snapshot governs that engagement; later unratified
+catalog drafts do not silently replace its rules. Runtime authorization must also prove an active
+tenant, current staff-directory identity/status, and the exact accepted assignment, then apply the
+independence wall. The predicate refuses before the recorded acceptance/assignment, outside the
+engagement period, after closure/removal, and when retained service, assignment, or directory
+reevaluation receipts invalidate the accepted snapshot.
+
+One narrow professional read consumer is supported: `ListReadinessAnnotations` allows a
+canonical assigned advisory professional to read annotation bodies without client membership or a
+client program grant when the tenant is active and the existing Program is correctly scoped to
+it, the current firm-staff identity is active, and the exact accepted advisory assignment remains
+eligible. It uses the ratified rule version frozen in that acceptance, current directory revision,
+and effective UTC time; the general predicate does not grant access to other resources. The
+accepted examination-boundary binding limits this read to that boundary's program. Authorization
+hydrates the tenant's boundary source and matches the exact approved version, draft revision and
+approval decision retained in the acceptance. A missing or mismatched source denies access;
+a later boundary successor preserves the accepted historical version's scope. An acceptance
+without any boundary binding preserves the existing tenant-wide program-read eligibility.
+The readiness annotation authorizer also applies the complete retained Attest compartment wall, which
+continues to block that client's advisory notes after Attest closure or assignment removal.
+
+For that consumer, each authorization hydrates the current engagement, staff directory and
+assignment history. A closure, assignment removal, changed directory revision or retained source
+or directory reevaluation receipt denies the next read. Cross-stream changes are not atomic with
+the annotation request, and no cross-stream freshness or concurrency guarantee is claimed. Other
 professional-access authorizers and compartment search/count/export/notification consumers
 remain unfinished.
 

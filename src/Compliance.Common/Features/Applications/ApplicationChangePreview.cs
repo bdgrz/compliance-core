@@ -9,6 +9,9 @@ public sealed record ApplicationChangePreview(Uuid TenantId, Uuid ApplicationId,
     IReadOnlyList<ApplicationBoundaryReferenceView> BoundaryReferences,
     IReadOnlyList<string> PendingContexts, bool Complete)
 {
+    /// <summary>Digest of the normalized, bounded evidence and pending context set.</summary>
+    public string ImpactDigest { get; init; } = string.Empty;
+
     /// <summary>Up to 200 visible outgoing relationships; incoming impact remains pending.</summary>
     public IReadOnlyList<ApplicationRelationshipView> ApplicationRelationships { get; init; } = [];
 

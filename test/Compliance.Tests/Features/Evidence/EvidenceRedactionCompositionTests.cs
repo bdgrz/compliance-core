@@ -759,8 +759,10 @@ public sealed class EvidenceRedactionCompositionTests
         if (release)
             await ProgramManagementServices.SeedAsync(fixture.Provider, new EvidenceArtifact(fixture.TenantId, derived), artifact =>
             {
-                Assert.Null(artifact.ReleaseQuarantine("Synthetic false positive", ActorReference.ForMember(RbacIds.Member(fixture.TenantId, fixture.UserId), "Operator fixture"),
-                    availableAt ?? ArtifactMetadataAccessTests.Fixture.Now));
+                var decidedAt = availableAt ?? ArtifactMetadataAccessTests.Fixture.Now;
+                Assert.Null(artifact.ReleaseQuarantine(artifact.Revision, Uuid.CreateVersion4(),
+                    decidedAt, "Synthetic false positive", ActorReference.ForMember(
+                        RbacIds.Member(fixture.TenantId, fixture.UserId), "Operator fixture"), decidedAt));
                 return Result.Success;
             });
         return derived;

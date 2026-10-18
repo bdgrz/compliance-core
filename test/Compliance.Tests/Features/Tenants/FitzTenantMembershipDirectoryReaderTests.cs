@@ -167,11 +167,10 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
             "tenant-memberships", Bdgrz.Compliance.ComplianceCoreJsonContext.Default.TenantMembershipView,
             static view => view.UserId, static id => [id.ToString()], []);
         var route = await new TenantMembershipRouteReader(client).GetRouteAsync(tenantId);
-        await using (var tx = await client.BeginAsync(route,
-            KvDurability.Sync, KvMode.ReadWrite))
+        await using (var tx = await client.BeginAsync(route, KvMode.ReadWrite))
         {
             await legacy.InsertAsync(tx, new TenantMembershipView(userId, tenantId));
-            await tx.CommitAsync();
+            await tx.CommitAsync(KvDurability.Sync);
         }
 
         // Act

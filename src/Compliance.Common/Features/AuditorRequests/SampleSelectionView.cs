@@ -2,5 +2,21 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditorRequests;
 
-/// <summary>Frozen selection method, population reference, selected rows, and manifest.</summary>
-public sealed record SampleSelectionView(Uuid TenantId, Uuid ProgramId, Uuid SampleSelectionId, string Status, long Revision, DateTimeOffset UpdatedAt);
+/// <summary>Frozen selection method, exact population reference, selected rows, and manifest.</summary>
+public sealed record SampleSelectionView(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid SampleSelectionId,
+    Uuid AuditorRequestId,
+    Uuid PopulationSnapshotId,
+    int PopulationVersion,
+    string PopulationContentSha256,
+    string SelectionMethod,
+    IReadOnlyList<Uuid> SelectedRowIds,
+    string SelectionContentSha256,
+    string Status,
+    DateTimeOffset UpdatedAt,
+    string Source,
+    string ExternalReference,
+    Uuid? SupersedesSelectionId,
+    string? AmendmentReason);

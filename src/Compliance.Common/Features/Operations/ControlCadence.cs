@@ -6,4 +6,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     start, and the days allowed after a period ends; an event-driven cadence names its trigger.
 /// </summary>
 public sealed record ControlCadence(string Kind, string? Frequency = null,
-    DateOnly? FirstPeriodStart = null, int? DueWithinDays = null, string? Trigger = null);
+    DateOnly? FirstPeriodStart = null, int? DueWithinDays = null, string? Trigger = null)
+{
+    public const int MaximumDueWithinDays = 365;
+}
