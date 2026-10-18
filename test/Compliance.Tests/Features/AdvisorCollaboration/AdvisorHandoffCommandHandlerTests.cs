@@ -64,6 +64,35 @@ public sealed class AdvisorHandoffCommandHandlerTests
         Assert.Equal(2, saved.Revision);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldNotEndHandoffGivenDifferentProgramScope(bool revoke)
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var handoffId = await fixture.SeedOpenHandoffAsync();
+        var otherProgramId = Uuid.CreateVersion4();
+
+        // Act
+        var result = revoke
+            ? await new RevokeAdvisorHandoffHandler(fixture.Executor, fixture.Clock)
+                .HandleAsync(Fixture.Context(fixture.UserId, new RevokeAdvisorHandoff(
+                    fixture.TenantId, otherProgramId, handoffId, "Wrong program")),
+                    CancellationToken.None)
+            : await new CloseAdvisorHandoffHandler(fixture.Executor, fixture.Clock)
+                .HandleAsync(Fixture.Context(fixture.UserId, new CloseAdvisorHandoff(
+                    fixture.TenantId, otherProgramId, handoffId, "Wrong program")),
+                    CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+        Assert.Equal("ready_for_review", saved.Status);
+        Assert.Equal(2, saved.Revision);
+    }
+
     [Fact]
     public async Task ShouldRecordClientResponseAgainstExplicitHandoffGivenPersonalHttpActor()
     {
@@ -107,6 +136,27 @@ public sealed class AdvisorHandoffCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Empty(Assert.Single(saved.ReadFeedback()).Responses ?? []);
+        Assert.Equal(3, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldNotRespondGivenHandoffInDifferentProgramScope()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var (handoffId, feedbackId) = await fixture.SeedHandoffWithFeedbackAsync();
+        var request = new RespondToAdvisorFeedback(fixture.TenantId, Uuid.CreateVersion4(),
+            handoffId, feedbackId, "Response from the wrong program.");
+
+        // Act
+        var result = await new RespondToAdvisorFeedbackHandler(fixture.Executor, fixture.Clock)
+            .HandleAsync(Fixture.Context(fixture.UserId, request), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new AdvisorHandoff(fixture.TenantId,
+            fixture.ProgramId, handoffId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
         Assert.Empty(Assert.Single(saved.ReadFeedback()).Responses ?? []);
         Assert.Equal(3, saved.Revision);
     }
