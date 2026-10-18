@@ -447,6 +447,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<TechnologyInventoryRestrictedVisibility>();
         services.AddScoped<OperatingAuthority>();
         services.AddScoped<ManagementExecutiveAuthority>();
+        services.AddScoped<ProgramRolloverApproverAuthority>();
         services.AddScoped<ClientManagementIndependenceGuard>();
         services.AddScoped<ClientCompartmentIndependenceGuard>();
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
@@ -1011,6 +1012,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviewTemplateContributionHandler>()
             .AddRequestHandler<AcceptTemplateContributionHandler>()
             .AddRequestHandler<ReviseProgramHandler>()
+            .AddRequestHandler<ApproveProgramRolloverHandler>()
             .AddRequestHandler<SelectProgramCriteriaEditionHandler>()
             .AddRequestHandler<GetProgramHandler>()
             .AddRequestHandler<ListProgramsHandler>()

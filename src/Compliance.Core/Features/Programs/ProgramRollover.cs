@@ -129,7 +129,7 @@ public sealed class ProgramRollover : Aggregate
             current.Approvals[^1] is { } prior)
             return prior.Decision == decision && prior.Rationale == rationale &&
                 prior.ApprovedByMemberId == approverMemberId && prior.ApproverRole == approverRole &&
-                prior.ApproverDisplay == Clean(approverDisplay) && prior.ApprovedAt == approvedAt
+                prior.ApproverDisplay == Clean(approverDisplay)
                 ? null : CommandFailure.StateConflict("A rollover version has one immutable decision.");
         if (expectedRevision != Revision)
             return StaleRevision();

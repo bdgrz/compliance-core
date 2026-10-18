@@ -135,6 +135,32 @@ public sealed class ProgramRolloverTests
     }
 
     [Fact]
+    public void ShouldReplaySameApprovalIntentWithoutChangingFirstTimestampGivenApprovedRollover()
+    {
+        // Arrange
+        var rollover = NewRollover();
+        Assert.Null(rollover.Propose(Content(), SourcePeriod(), Outcome(), CEOId,
+            "Compliance lead", Now));
+        Assert.Null(rollover.Approve(rollover.Revision, "approved", "Reviewed the exact plan.",
+            ReviewerId, "compliance_lead", "Reviewer", Now.AddHours(1)));
+
+        // Act
+        var retry = rollover.Approve(rollover.Revision, "approved", "Reviewed the exact plan.",
+            ReviewerId, "compliance_lead", "Reviewer", Now.AddHours(4));
+        var conflictingRetry = rollover.Approve(rollover.Revision, "approved",
+            "Changed the rationale.", ReviewerId, "compliance_lead", "Reviewer", Now.AddHours(5));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(conflictingRetry).Code);
+        Assert.Equal(2, rollover.Revision);
+        var approval = Assert.Single(rollover.Current!.Approvals);
+        Assert.Equal(Now.AddHours(1), approval.ApprovedAt);
+        Assert.Equal("Reviewed the exact plan.", approval.Rationale);
+    }
+
+    [Fact]
     public void ShouldReplayApprovedRolloverWithoutChangingCompletedSourceGivenSuccessorCreation()
     {
         // Arrange
