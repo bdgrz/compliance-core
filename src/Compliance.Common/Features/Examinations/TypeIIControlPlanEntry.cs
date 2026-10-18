@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -12,4 +13,6 @@ public sealed record TypeIIControlPlanEntry(
     int ExpectedOccurrences,
     DateOnly EffectiveFrom,
     DateOnly? EffectiveThrough,
-    int? DueWithinDays = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? DueWithinDays = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<string>? ExpectedEvidenceDescriptions = null);

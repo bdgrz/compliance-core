@@ -179,7 +179,8 @@ public sealed class DefineAuditPopulationHandlerTests
             Uuid.CreateVersion4(), PeriodStart, PeriodEnd, "Audit Firm", ["security", "availability"],
             Uuid.CreateVersion4(), Uuid.CreateVersion4(), SourceReferences(),
             [new TypeIIControlPlanEntry(ControlId, Uuid.CreateVersion4(), "Quarterly access review",
-                ControlOwnerId, "quarterly", 4, PeriodStart, null)],
+                ControlOwnerId, "quarterly", 4, PeriodStart, null,
+                ExpectedEvidenceDescriptions: ["Dated review record"])],
             [new TypeIICarriedForwardGap("finding", GapId, Uuid.CreateVersion4(), 1, Hash('b'), "carry")],
             [new TypeIIPlanGapAcknowledgement(GapId, "Open gap", "acknowledged",
                 "The owner and due date were confirmed.")], []);

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
@@ -10,4 +11,6 @@ public sealed record TypeIIPeriodOccurrenceView(
     int Sequence,
     DateOnly? DueOn,
     Uuid OwnerMemberId,
-    string Cadence);
+    string Cadence,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<string>? ExpectedEvidenceDescriptions = null);

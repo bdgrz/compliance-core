@@ -50,8 +50,15 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
         Assert.Equal(content.TypeIOutcomeId, proposed.Content.TypeIOutcomeId);
         Assert.Equal(content.CarryForwardInputs.OrderBy(item => item.SourceType, StringComparer.Ordinal),
             proposed.Content.CarryForwardInputs);
-        Assert.Equal(content.Controls.OrderBy(item => item.ControlId.ToString(), StringComparer.Ordinal),
-            proposed.Content.Controls);
+        var expectedControl = Assert.Single(content.Controls.OrderBy(item =>
+            item.ControlId.ToString(), StringComparer.Ordinal));
+        var savedControl = Assert.Single(proposed.Content.Controls);
+        Assert.Equal(expectedControl with
+        {
+            ExpectedEvidenceDescriptions = savedControl.ExpectedEvidenceDescriptions,
+        }, savedControl);
+        Assert.Equal(expectedControl.ExpectedEvidenceDescriptions,
+            savedControl.ExpectedEvidenceDescriptions);
         Assert.Equal(content.CarriedForwardGaps.OrderBy(item => item.SourceKind, StringComparer.Ordinal),
             proposed.Content.CarriedForwardGaps);
         Assert.Equal(content.AcknowledgedGaps.OrderBy(item => item.GapId.ToString(), StringComparer.Ordinal),
@@ -111,6 +118,31 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
         var request = fixture.Request(content with
         {
             Controls = [content.Controls[0] with { DueWithinDays = 6 }],
+        });
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPlanAggregate(fixture.TenantId,
+            fixture.ProgramId, fixture.PlanId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectExpectedEvidenceDifferentFromApprovedControlVersionGivenProposal()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var content = await fixture.SeedTypeISourceChainAsync();
+        var request = fixture.Request(content with
+        {
+            Controls = [content.Controls[0] with
+            {
+                ExpectedEvidenceDescriptions = ["Substituted evidence description"],
+            }],
         });
 
         // Act
@@ -544,7 +576,8 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
                 engagement.Baseline.ContentSha256, DescriptionVersionId, PeriodStart, PeriodEnd,
                 "Audit Firm", ["security"], BaselineId, OutcomeId, references,
                 [new TypeIIControlPlanEntry(ControlId, ControlVersionId, controlVersion.Content.Title,
-                    MemberId, "quarterly", 4, PeriodStart, null, 5)], [gap],
+                    MemberId, "quarterly", 4, PeriodStart, null, 5,
+                    controlVersion.Content.ExpectedEvidenceDescriptions)], [gap],
                 [new TypeIIPlanGapAcknowledgement(FindingId, "Known opening finding",
                     "acknowledged", "Owner and due date were reviewed.")],
                 [new TypeIIPlannedChange(ChangeId, "Complete the required control change.",

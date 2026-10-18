@@ -445,7 +445,8 @@ public sealed class TypeIIPeriod : Aggregate
             state.ExpectedOccurrences is null || state.ExpectedOccurrences.Count is < 1 or > MaximumOccurrences ||
             state.ExpectedOccurrences.Any(item => item is null || item.OccurrenceId == Uuid.Empty ||
                 item.ControlId == Uuid.Empty || item.ControlVersionId == Uuid.Empty || item.Sequence <= 0 ||
-                item.OwnerMemberId == Uuid.Empty || !Bounded(item.Cadence, 1, 80)) ||
+                item.OwnerMemberId == Uuid.Empty || !Bounded(item.Cadence, 1, 80) ||
+                item.ExpectedEvidenceDescriptions is { } evidence && !ValidExpectedEvidence(evidence)) ||
             state.ExpectedOccurrences.Select(item => item.OccurrenceId).Distinct().Count() != state.ExpectedOccurrences.Count ||
             state.Amendments is null || state.Amendments.Count > MaximumAmendments ||
             state.Amendments.Any(item => item is null || item.PriorPeriodEnd < item.PriorPeriodStart ||
@@ -595,8 +596,15 @@ public sealed class TypeIIPeriod : Aggregate
     {
         var identity = $"expected:{control.ControlId}:{control.ControlVersionId}:{sequence}";
         return new(Uuid.CreateVersion5(periodId, identity), control.ControlId,
-            control.ControlVersionId, sequence, dueOn, owner, cadence);
+            control.ControlVersionId, sequence, dueOn, owner, cadence,
+            control.ExpectedEvidenceDescriptions is { } evidence
+                ? Freeze(evidence.ToArray())
+                : null);
     }
+
+    static bool ValidExpectedEvidence(IReadOnlyList<string> descriptions) =>
+        descriptions.Count is >= 1 and <= 20 &&
+        descriptions.All(value => Bounded(value, 1, MaximumTextLength));
 
     static TypeIIPeriodCloseValidationContent? NormalizeValidation(
         TypeIIPeriodCloseValidationContent? content,
@@ -765,7 +773,17 @@ public sealed class TypeIIPeriod : Aggregate
 
     static bool SameOccurrences(IReadOnlyList<TypeIIPeriodOccurrenceView> left,
         IReadOnlyList<TypeIIPeriodOccurrenceView> right) => left.Count == right.Count &&
-        left.Zip(right).All(pair => pair.First == pair.Second);
+        left.Zip(right).All(pair => SameOccurrence(pair.First, pair.Second));
+
+    static bool SameOccurrence(TypeIIPeriodOccurrenceView left,
+        TypeIIPeriodOccurrenceView right) => left.OccurrenceId == right.OccurrenceId &&
+        left.ControlId == right.ControlId && left.ControlVersionId == right.ControlVersionId &&
+        left.Sequence == right.Sequence && left.DueOn == right.DueOn &&
+        left.OwnerMemberId == right.OwnerMemberId && left.Cadence == right.Cadence &&
+        (left.ExpectedEvidenceDescriptions is null && right.ExpectedEvidenceDescriptions is null ||
+         left.ExpectedEvidenceDescriptions is not null && right.ExpectedEvidenceDescriptions is not null &&
+         left.ExpectedEvidenceDescriptions.SequenceEqual(right.ExpectedEvidenceDescriptions,
+             StringComparer.Ordinal));
 
     static bool SameValidation(TypeIIPeriodCloseValidationView? left,
         TypeIIPeriodCloseValidationView? right) => left == right || left is not null && right is not null &&
@@ -844,7 +862,12 @@ public sealed class TypeIIPeriod : Aggregate
     {
         OpeningSourceReferences = Freeze(state.OpeningSourceReferences.ToArray()),
         AcknowledgedOpeningGapIds = Freeze(state.AcknowledgedOpeningGapIds.ToArray()),
-        ExpectedOccurrences = Freeze(state.ExpectedOccurrences.ToArray()),
+        ExpectedOccurrences = Freeze(state.ExpectedOccurrences.Select(item => item with
+        {
+            ExpectedEvidenceDescriptions = item.ExpectedEvidenceDescriptions is { } evidence
+                ? Freeze(evidence.ToArray())
+                : null,
+        }).ToArray()),
         Amendments = Freeze(state.Amendments.ToArray()),
         CloseValidation = state.CloseValidation is { } validation ? validation with
         {

@@ -218,6 +218,9 @@ static class TypeIIPlanSourceValidator
             if (entry is null || string.IsNullOrWhiteSpace(entry.ControlTitle) ||
                 string.IsNullOrWhiteSpace(entry.Cadence) ||
                 entry.ControlTitle.Trim() != version.Content.Title ||
+                entry.ExpectedEvidenceDescriptions is null ||
+                !entry.ExpectedEvidenceDescriptions.SequenceEqual(
+                    version.Content.ExpectedEvidenceDescriptions, StringComparer.Ordinal) ||
                 entry.OwnerMemberId != plan.Owner.Id ||
                 !StringComparer.OrdinalIgnoreCase.Equals(entry.Cadence.Trim(),
                     CadenceName(plan.Cadence)) ||

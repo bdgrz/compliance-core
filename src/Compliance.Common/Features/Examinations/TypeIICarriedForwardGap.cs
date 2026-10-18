@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -10,4 +11,4 @@ public sealed record TypeIICarriedForwardGap(
     long SourceVersion,
     string SourceSha256,
     string Disposition,
-    Uuid? OwnerMemberId = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] Uuid? OwnerMemberId = null);

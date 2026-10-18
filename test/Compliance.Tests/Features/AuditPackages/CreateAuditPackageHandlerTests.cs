@@ -257,7 +257,8 @@ public sealed class CreateAuditPackageHandlerTests
                 TypeIIReference("finding"), TypeIIReference("change")],
             [new TypeIIControlPlanEntry(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
                 "Quarterly access review", Uuid.CreateVersion4(), "quarterly", 4,
-                new DateOnly(2026, 10, 1), null)],
+                new DateOnly(2026, 10, 1), null,
+                ExpectedEvidenceDescriptions: ["Dated review record"])],
             [new("finding", GapId, Uuid.CreateVersion4(), 1, new string('b', 64), "carry")],
             [new(GapId, "Open control gap", "acknowledged", "Owner and due date confirmed")],
             []);

@@ -43,8 +43,8 @@ Audit packages and Type II close:
 
 Type II operating plan and period:
 
-- [ ] `ProposeTypeIIOperatingPlan` (partial) — current open/remediated findings are required with exact revision, disposition, and active client-personnel owner; recurring due windows are retained from the approved control plan. Expected evidence, policy/risk/vendor sources, nonmember owners, and event-driven/ad hoc trigger and due semantics remain unresolved.
-- [ ] `StartTypeIIObservationPeriod` (partial) — revalidates each carried-forward finding's current exact revision and active client-personnel owner, and schedules recurring occurrences from their approved due windows. Policy/risk/vendor sources, expected evidence, nonmember-owner resolution, and event-driven/ad hoc trigger and due semantics remain unresolved.
+- [ ] `ProposeTypeIIOperatingPlan` (partial) — current open/remediated findings are required with exact revision, disposition, and active client-personnel owner; recurring due windows and exact expected-evidence descriptions are retained from the approved control version. Policy/risk/vendor source records, nonmember owners, and event-driven/ad hoc trigger and due semantics remain unresolved.
+- [ ] `StartTypeIIObservationPeriod` (partial) — revalidates each carried-forward finding's current exact revision and active client-personnel owner, schedules recurring occurrences from approved due windows, and carries each control's expected evidence descriptions to every occurrence. Policy/risk/vendor source validation, nonmember-owner resolution, and event-driven/ad hoc trigger and due semantics remain unresolved.
 - [ ] `FreezeTypeIIPeriodClose` (partial) — source-backed close validation and expected-versus-actual occurrence reconciliation.
 
 Professional authority:

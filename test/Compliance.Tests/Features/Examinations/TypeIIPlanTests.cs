@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
@@ -61,6 +62,43 @@ public sealed class TypeIIPlanTests
         // Assert
         Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
         Assert.Equal(0, plan.Revision);
+    }
+
+    [Fact]
+    public void ShouldRequireExpectedEvidenceOnEveryControlGivenProposedPlan()
+    {
+        // Arrange
+        var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);
+        var content = Content() with
+        {
+            Controls = [Control() with { ExpectedEvidenceDescriptions = null }],
+        };
+
+        // Act
+        var failure = plan.Propose(content, ProposerId, "Compliance lead", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Equal(0, plan.Revision);
+    }
+
+    [Fact]
+    public void ShouldOmitUnsetOptionalFieldsFromPlanContentSerializationGivenLegacyPlan()
+    {
+        // Arrange
+        var content = Content();
+
+        // Act
+        var controlJson = JsonSerializer.Serialize(content.Controls[0] with
+        {
+            ExpectedEvidenceDescriptions = null,
+        });
+        var gapJson = JsonSerializer.Serialize(content.CarriedForwardGaps[0]);
+
+        // Assert
+        Assert.DoesNotContain("\"DueWithinDays\"", controlJson, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"ExpectedEvidenceDescriptions\"", controlJson, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"OwnerMemberId\"", gapJson, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -156,7 +194,8 @@ public sealed class TypeIIPlanTests
     }
 
     static TypeIIControlPlanEntry Control() => new(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-        "Quarterly access review", ControlOwnerId, "quarterly", 4, new DateOnly(2026, 10, 1), null);
+        "Quarterly access review", ControlOwnerId, "quarterly", 4, new DateOnly(2026, 10, 1), null,
+        ExpectedEvidenceDescriptions: ["Dated review record"]);
 
     static ExaminationContentReference Reference(string sourceType) =>
         new(sourceType, Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, new string('c', 64));

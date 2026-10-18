@@ -273,7 +273,7 @@ public sealed class ProposeProgramRolloverHandlerTests
                 Uuid.CreateVersion4(), Uuid.CreateVersion4(), refs,
                 [new TypeIIControlPlanEntry(ControlId, Uuid.CreateVersion4(),
                     "Quarterly access review", Uuid.CreateVersion4(), "quarterly", 4,
-                    PeriodStart, null)],
+                    PeriodStart, null, ExpectedEvidenceDescriptions: ["Dated review record"])],
                 [new TypeIICarriedForwardGap("finding", GapId, Uuid.CreateVersion4(), 1,
                     Hash('c'), "carry")],
                 [new TypeIIPlanGapAcknowledgement(GapId, "Open control gap", "acknowledged",

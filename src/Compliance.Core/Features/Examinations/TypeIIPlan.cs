@@ -54,7 +54,7 @@ public sealed class TypeIIPlan : Aggregate
                 : CommandFailure.StateConflict("The Type II plan already exists with different content.");
         if (!ValidIdentity() || !ValidActor(actorMemberId, actorDisplay, proposedAt))
             return Invalid("A Type II plan requires tenant, program, plan, and attributed proposer identities.");
-        if (NormalizeContent(content) is not { } normalized)
+        if (NormalizeContent(content, requireExpectedEvidence: true) is not { } normalized)
             return Invalid("The proposed Type II plan must bind exact sources, owned controls, cadence, and period changes.");
         if (!CompleteGapAcknowledgements(normalized))
             return CommandFailure.StateConflict("Every carried-forward gap requires an explicit, reasoned acknowledgement.");
@@ -80,7 +80,8 @@ public sealed class TypeIIPlan : Aggregate
         if (!ValidActor(actorMemberId, actorDisplay, revisedAt))
             return Invalid("A plan revision requires an attributed member.");
         changeReason = Clean(changeReason);
-        if (!Bounded(changeReason, 1, MaximumTextLength) || NormalizeContent(content) is not { } normalized)
+        if (!Bounded(changeReason, 1, MaximumTextLength) ||
+            NormalizeContent(content, requireExpectedEvidence: true) is not { } normalized)
             return Invalid("A plan revision requires complete content and a bounded change reason.");
         if (!CompleteGapAcknowledgements(normalized))
             return CommandFailure.StateConflict("Every carried-forward gap requires an explicit, reasoned acknowledgement.");
@@ -299,7 +300,8 @@ public sealed class TypeIIPlan : Aggregate
                next.Current!.ProposedByMemberId == actorMemberId && next.Current.ProposedAt == next.UpdatedAt;
     }
 
-    static TypeIIPlanContent? NormalizeContent(TypeIIPlanContent? content)
+    static TypeIIPlanContent? NormalizeContent(TypeIIPlanContent? content,
+        bool requireExpectedEvidence = false)
     {
         if (content is null || content.ExaminationId == Uuid.Empty || content.SourceSnapshotId == Uuid.Empty ||
             !Sha256(content.SourceSnapshotSha256) || content.SystemDescriptionVersionId == Uuid.Empty ||
@@ -324,6 +326,8 @@ public sealed class TypeIIPlan : Aggregate
                 item.ControlVersionId == Uuid.Empty || !Bounded(item.ControlTitle, 1, 300) ||
                 item.OwnerMemberId is null || item.OwnerMemberId == Uuid.Empty ||
                 !Token(item.Cadence, 80) || item.ExpectedOccurrences <= 0 ||
+                item.ExpectedEvidenceDescriptions is null && requireExpectedEvidence ||
+                item.ExpectedEvidenceDescriptions is { } evidence && !ValidExpectedEvidence(evidence) ||
                 item.DueWithinDays is < 0 or >
                     Bdgrz.Compliance.Features.Operations.ControlCadence.MaximumDueWithinDays ||
                 item.EffectiveFrom < content.PeriodStart || item.EffectiveFrom > content.PeriodEnd ||
@@ -358,6 +362,9 @@ public sealed class TypeIIPlan : Aggregate
             {
                 ControlTitle = item.ControlTitle.Trim(),
                 Cadence = item.Cadence.Trim().ToLowerInvariant(),
+                ExpectedEvidenceDescriptions = item.ExpectedEvidenceDescriptions is { } evidence
+                    ? Freeze(evidence.Select(value => value.Trim()).ToArray())
+                    : null,
             }).OrderBy(item => item.ControlId.ToString(), StringComparer.Ordinal)
                 .ThenBy(item => item.ControlVersionId.ToString(), StringComparer.Ordinal).ToArray()),
             CarriedForwardGaps = Freeze(content.CarriedForwardGaps.Select(item => item with
@@ -416,6 +423,9 @@ public sealed class TypeIIPlan : Aggregate
         value!.Trim().All(static character => char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '.');
     static bool Sha256(string? value) => value is { Length: 64 } && value.All(char.IsAsciiHexDigit);
     static string NormalizeHash(string value) => value.ToLowerInvariant();
+    static bool ValidExpectedEvidence(IReadOnlyList<string> descriptions) =>
+        descriptions.Count is >= 1 and <= 20 &&
+        descriptions.All(value => Bounded(value, 1, MaximumTextLength));
     static TypeIIPlanView Freeze(TypeIIPlanView state)
     {
         var versions = Freeze(state.Versions.Select(item => item with
