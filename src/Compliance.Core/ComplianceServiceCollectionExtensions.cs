@@ -61,6 +61,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceArtifactStorageReconciler>();
         services.AddScoped<ArtifactRetentionMutation>();
         services.AddScoped<ArtifactRetentionRead>();
+        services.AddScoped<AuditPackageSourceBuilder>();
         var emailDeliverySettings = EmailChallengeDeliverySettings.FromConfiguration(configuration,
             requireRealEmailDelivery);
         services.AddSingleton(emailDeliverySettings);
@@ -763,6 +764,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ProposeSystemDescriptionSuccessorHandler>()
             .AddRequestHandler<SignManagementRepresentationLetterHandler>()
+            .AddRequestHandler<CreateAuditPackageHandler>()
             .AddRequestHandler<ApproveAuditPackageDisclosureHandler>()
             .AddRequestHandler<ApproveAuditPackageValidationOverrideHandler>()
             .AddRequestHandler<RecordAuditPackageBuildResultHandler>()

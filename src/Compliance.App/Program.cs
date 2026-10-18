@@ -2191,6 +2191,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Identity federation");
+    app.MapPortiaPost<CreateAuditPackage>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Audit packages");
     app.MapMethods(
         "/api/{**path}",
         ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],

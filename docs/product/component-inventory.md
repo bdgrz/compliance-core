@@ -269,14 +269,14 @@ The following is a static source inventory, including internal operations. Queri
 
 | Category | Unique feature/type names |
 | --- | ---: |
-| Commands | 230 |
+| Commands | 231 |
 | Queries | 271 |
 | Events | 372 |
 | Aggregates | 83 |
 | Models and supporting contracts | 562 |
 | Reactors | 30 |
 | Projectors | 66 |
-| Explicit MapPortia HTTP route registrations | 327 |
+| Explicit MapPortia HTTP route registrations | 328 |
 
 ### Existing commands
 
@@ -350,6 +350,10 @@ The following is a static source inventory, including internal operations. Queri
 - [ReviseApplication](../../src/Compliance.Common/Features/Applications/ReviseApplication.cs#L7) — `bdgrz.application.revise` v1
 - [ReviseApplicationMcpInput](../../src/Compliance.App/Features/Applications/ReviseApplicationMcpInput.cs#L7) — `bdgrz.application.revise.mcp-input` v1
 - [StageApplicationImport](../../src/Compliance.Common/Features/Applications/StageApplicationImport.cs#L6) — `bdgrz.application_import.stage` v1
+
+#### AuditPackages
+
+- [CreateAuditPackage](../../src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs#L9) — `bdgrz.audit-packages.create-audit-package` v1
 
 #### Boundaries
 
@@ -2741,6 +2745,7 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/tenants/{tenant_id}/provisioning-status` | `GetTenantProvisioningStatus` | [registration](../../src/Compliance.App/Program.cs#L543) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}` | `ConfigureTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2186) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations` | `RotateTenantIdentityProviderCredentials` | [registration](../../src/Compliance.App/Program.cs#L2190) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}` | `CreateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2194) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |
