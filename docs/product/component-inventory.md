@@ -71,10 +71,10 @@ These candidates make later scope concrete. They are not established public cont
 
 - Aggregate/model candidates: AdvisorRequest; AdvisorFeedback; AdvisoryReadinessNote; FeedbackResponse.
 - Commands: OpenAdvisorRequest; RecordAdvisorFeedback; RespondToAdvisorFeedback; ResolveAdvisorFeedback; WithdrawAdvisorRequest.
-- Queries: GetAdvisorRequest; ListAdvisorRequests; ListAdvisorFeedback.
+- Queries: GetAdvisorRequest; GetAdvisorSharedSource; ListAdvisorRequests; ListAdvisorFeedback.
 - Events: AdvisorHandoffCreated; AdvisorFeedbackRecorded; AdvisorFeedbackCorrected; AdvisorFeedbackResponded; AdvisorFeedbackResolved; AdvisorHandoffSelectionRevised; AdvisorHandoffReadiedForReview; AdvisorHandoffClosed; AdvisorHandoffRevoked.
 - Reactors: AdvisorRequestNotificationReactor.
-- Projectors: AdvisorRequestDirectoryProjector; AdvisorFeedbackWorkItemProjector.
+- Projectors: AdvisorHandoffDirectoryProjector (implemented); AdvisorFeedbackWorkItemProjector (required for the remaining feedback-to-work-queue assignment).
 - API family: advisory requests, feedback, responses and resolution.
 
 ### Type I engagement — T1-01
@@ -2481,6 +2481,10 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [AccessPopulationDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/AccessPopulationDirectoryProjector.cs#L5)
 - [AccessReviewCampaignDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaignDirectoryProjector.cs#L5)
 
+#### AdvisorCollaboration
+
+- [AdvisorHandoffDirectoryProjector](../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoffDirectoryProjector.cs#L5)
+
 #### Applications
 
 - [AccessReviewScopeDirectoryProjector](../../src/Compliance.Core/Features/Applications/AccessReviewScopeDirectoryProjector.cs#L5)
@@ -2807,17 +2811,18 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2222) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2226) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2230) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `CreateAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2365) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions` | `ReviseAdvisorHandoffSelection` | [registration](../../src/Compliance.App/Program.cs#L2369) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review` | `MarkAdvisorHandoffReadyForReview` | [registration](../../src/Compliance.App/Program.cs#L2373) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures` | `CloseAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2377) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations` | `RevokeAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2381) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses` | `RespondToAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2385) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `RecordAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2389) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections` | `CorrectAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2393) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}` | `GetAdvisorRequest` | [registration](../../src/Compliance.App/Program.cs#L2397) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}` | `GetAdvisorSharedSource` | [registration](../../src/Compliance.App/Program.cs#L2401) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `ListAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2405) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `CreateAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2366) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions` | `ReviseAdvisorHandoffSelection` | [registration](../../src/Compliance.App/Program.cs#L2370) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review` | `MarkAdvisorHandoffReadyForReview` | [registration](../../src/Compliance.App/Program.cs#L2374) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures` | `CloseAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2378) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations` | `RevokeAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2382) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses` | `RespondToAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2386) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `RecordAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2390) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections` | `CorrectAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2394) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}` | `GetAdvisorRequest` | [registration](../../src/Compliance.App/Program.cs#L2398) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `ListAdvisorRequests` | [registration](../../src/Compliance.App/Program.cs#L2402) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}` | `GetAdvisorSharedSource` | [registration](../../src/Compliance.App/Program.cs#L2406) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `ListAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2410) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |
@@ -3412,7 +3417,8 @@ These source lines identify raw routes, health routes and MCP configuration. Fol
 - [Program.cs:317](../../src/Compliance.App/Program.cs#L317): `.AddMcpTool<GetReadinessAssessment>(tool => tool.ReadOnly())`
 - [Program.cs:330](../../src/Compliance.App/Program.cs#L330): `.AddMcpTool<GetAdvisorRequest>(tool => tool.ReadOnly())`
 - [Program.cs:331](../../src/Compliance.App/Program.cs#L331): `.AddMcpTool<GetAdvisorSharedSource>(tool => tool.ReadOnly())`
-- [Program.cs:332](../../src/Compliance.App/Program.cs#L332): `.AddMcpTool<ListAdvisorFeedback>(tool => tool.ReadOnly())`
+- [Program.cs:332](../../src/Compliance.App/Program.cs#L332): `.AddMcpTool<ListAdvisorRequests>(tool => tool.ReadOnly())`
+- [Program.cs:333](../../src/Compliance.App/Program.cs#L333): `.AddMcpTool<ListAdvisorFeedback>(tool => tool.ReadOnly())`
 - [Program.cs:318](../../src/Compliance.App/Program.cs#L318): `.AddMcpTool<ListReadinessAssessments>(tool => tool.ReadOnly())`
 - [Program.cs:319](../../src/Compliance.App/Program.cs#L319): `.AddMcpTool<ListReadinessGaps>(tool => tool.ReadOnly())`
 - [Program.cs:320](../../src/Compliance.App/Program.cs#L320): `.AddMcpTool<ListTypeIEntryDecisions>(tool => tool.ReadOnly())`

@@ -1,0 +1,20 @@
+using System.Globalization;
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+
+static class AdvisorHandoffDirectorySchema
+{
+    public static readonly KvDirectoryIndex<AdvisorHandoffDirectoryEntry> ByProgramUpdatedAt = new(
+        "by_program_updated_at", 1, static handoff => [handoff.ProgramId.ToString(),
+            UpdatedAtSortKey(handoff.UpdatedAt), handoff.AdvisorRequestId.ToString()]);
+
+    public static readonly KvDirectory<AdvisorHandoffDirectoryEntry, Uuid> Handoffs = new(
+        "advisor_handoffs", ComplianceCoreJsonContext.Default.AdvisorHandoffDirectoryEntry,
+        static handoff => handoff.AdvisorRequestId,
+        static handoffId => [handoffId.ToString()], [ByProgramUpdatedAt]);
+
+    static string UpdatedAtSortKey(DateTimeOffset updatedAt) =>
+        (DateTime.MaxValue.Ticks - updatedAt.UtcDateTime.Ticks)
+        .ToString("D20", CultureInfo.InvariantCulture);
+}

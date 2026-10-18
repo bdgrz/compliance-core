@@ -19,16 +19,18 @@ The 55 planned query contracts and 54 response-view types listed below now have 
 | [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) | `Page<[AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)>` | Scoped handoff directory with status and review readiness. |
 | [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) | `Page<[AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)>` | Feedback and responses for a handoff or its selected records. |
 
-`GetAdvisorRequest`, `GetAdvisorSharedSource`, and `ListAdvisorFeedback` read their owning
-handoff stream through HTTP and MCP. Shared-source reads revalidate the selected native version
+`GetAdvisorRequest`, `GetAdvisorSharedSource`, `ListAdvisorRequests`, and `ListAdvisorFeedback`
+are available through HTTP and MCP. The handoff directory is a Fitz projection over handoff and
+feedback events, with tenant-partitioned program indexes, stable cursor ordering, and a read-freshness
+fence against its source event stream. Shared-source reads revalidate the selected native version
 before and after loading content; approved control and policy versions must still be the latest
 approved versions, and evidence requires the exact current program support link. Feedback pages
 mark a selected validation historical when its source is superseded or otherwise no longer current.
 Evidence bytes still flow through the governed artifact-download operation, which accepts the exact
 handoff selection and rechecks its authorization. Firm Advisors can read only an unexpired
-`ready_for_review` handoff after current engagement or program-scoped guest-grant checks. The
-handoff directory query remains unwired, and feedback-to-work-queue assignment and repeated-handoff
-change comparison remain story-level R2-08 gaps.
+`ready_for_review` handoff after current engagement or program-scoped guest-grant checks.
+Feedback-to-work-queue assignment and repeated-handoff change comparison remain story-level R2-08
+gaps.
 
 ### Type I engagement — T1-01
 

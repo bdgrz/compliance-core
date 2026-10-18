@@ -26,7 +26,7 @@ Evidence handling:
 
 Advisor collaboration:
 
-- Exact native source-version validation, active source reads, typed feedback identity, and current-versus-historical feedback reads are covered by `AdvisorRecordVersionResolverTests`, `GetAdvisorSharedSourceHandlerTests`, `AdvisorHandoffCommandHandlerTests`, and `ListAdvisorFeedbackHandlerTests`. `ListAdvisorRequests`, feedback-to-work-queue assignment, and repeated-handoff change comparison remain open R2-08 work.
+- Exact native source-version validation, active source reads, typed feedback identity, current-versus-historical feedback reads, and the projected handoff directory are covered by `AdvisorRecordVersionResolverTests`, `GetAdvisorSharedSourceHandlerTests`, `AdvisorHandoffCommandHandlerTests`, `ListAdvisorFeedbackHandlerTests`, `ListAdvisorRequestsHandlerTests`, and `FitzAdvisorHandoffDirectoryTests`. Feedback-to-work-queue assignment and repeated-handoff change comparison remain open R2-08 work.
 
 Type I baseline:
 

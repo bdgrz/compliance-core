@@ -12,6 +12,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorFeedbackResponseView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorRequestSummaryView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorRequestView))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorHandoffDirectoryEntry))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorSharedSourceView))]
 [JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.AdvisorCollaboration.AdvisorRecordVersion>))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.AdvisorCollaboration.GetAdvisorRequest))]
