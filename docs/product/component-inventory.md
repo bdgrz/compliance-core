@@ -77,15 +77,15 @@ These candidates make later scope concrete. They are not established public cont
 - Projectors: AdvisorRequestDirectoryProjector; AdvisorFeedbackWorkItemProjector.
 - API family: advisory requests, feedback, responses and resolution.
 
-### Type I engagement — T1-01/03
+### Type I engagement — T1-01
 
-- Aggregate/model candidates: ExaminationEngagement; TypeIBaseline; EngagementAccessGrant.
-- Commands: OpenExaminationEngagement; FreezeTypeIBaseline; AmendTypeIBaseline; GrantAuditorEngagementAccess; RevokeAuditorEngagementAccess.
-- Queries: GetExaminationEngagement; GetTypeIBaseline; ListEngagementAccess.
-- Events: ExaminationEngagementOpened; TypeIBaselineFrozen; TypeIBaselineAmended; AuditorEngagementAccessGranted; AuditorEngagementAccessRevoked.
+- Aggregate/model candidates: ExaminationEngagement; TypeIBaseline.
+- Commands: OpenExaminationEngagement; FreezeTypeIBaseline; AmendTypeIBaseline.
+- Queries: GetExaminationEngagement; GetTypeIBaseline.
+- Events: ExaminationEngagementOpened; TypeIBaselineFrozen; TypeIBaselineAmended.
 - Reactors: TypeIBaselineAssemblyReactor.
-- Projectors: ExaminationEngagementDirectoryProjector; TypeIBaselineProjector; EngagementAccessProjector.
-- API family: engagements, baselines and engagement access.
+- Projectors: ExaminationEngagementDirectoryProjector; TypeIBaselineProjector.
+- API family: engagements and baselines.
 
 ### System description — T1-02
 
@@ -915,7 +915,6 @@ The following is a static source inventory, including internal operations. Queri
 
 - [GetExaminationEngagement](../../src/Compliance.Common/Features/Examinations/GetExaminationEngagement.cs#L9) — `bdgrz.examinations.get-examination-engagement` v1
 - [GetTypeIBaseline](../../src/Compliance.Common/Features/Examinations/GetTypeIBaseline.cs#L9) — `bdgrz.examinations.get-type-i-baseline` v1
-- [ListEngagementAccess](../../src/Compliance.Common/Features/Examinations/ListEngagementAccess.cs#L9) — `bdgrz.examinations.list-engagement-access` v1
 
 ##### SystemDescription
 
@@ -2601,7 +2600,6 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [ExaminationEngagementView](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs#L6)
 - [TypeIBaselineView](../../src/Compliance.Common/Features/Examinations/TypeIBaselineView.cs#L6)
-- [EngagementAccessView](../../src/Compliance.Common/Features/Examinations/EngagementAccessView.cs#L6)
 
 ##### SystemDescription
 
