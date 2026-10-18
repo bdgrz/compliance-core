@@ -38,7 +38,7 @@ Each capability needs its owning commands and queries, retained facts, domain st
 | Program and scope | Program, client services, versioned boundaries, inclusions/exclusions, approvals and impact previews | R1-01/02 |
 | Criteria | Catalog editions, entries, permitted content overlays, selected criteria and applicability decisions | R1-03/06 |
 | Workforce | People, work relationships, workforce authority, observations, source reconciliation, service-identity ownership | R1-11 |
-| Application inventory | Logical applications, system instances, relationships, lifecycle, restricted visibility and review scope | R1-10 |
+| Application inventory | Logical applications, system instances, relationships, lifecycle, restricted visibility, review scope and bounded change-impact previews | R1-10 |
 | Technology and information | Material components, locations, processes, information assets, data flows, effective history and classifications | R1-12 |
 | Commitments | Service commitments, system requirements, CUECs/CSOCs, applicability, exact-version review and approval | R1-13 |
 | Controls and mappings | Drafts, immutable approved versions, retirement, criteria mappings, applicability, owner and operating plan | R1-05/06, R2-01 |

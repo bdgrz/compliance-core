@@ -18,6 +18,8 @@ public sealed class PreviewApplicationChangeHandler(
     : IRequestHandler<PreviewApplicationChange, ApplicationChangePreview>,
       IApplicationChangeImpactReader, IApplicationImportRetirementImpactReader
 {
+    const int MaximumSystemInstanceControlDraftReferences = 200;
+
     public PreviewApplicationChangeHandler(IAggregateReader aggregates,
         IApplicationDirectoryReader applications,
         IApplicationBoundaryReferenceDirectory references,
@@ -31,11 +33,12 @@ public sealed class PreviewApplicationChangeHandler(
     {
     }
 
-    static readonly string[] MissingContexts =
-        ["application_relationships", "vendors", "approved_control_versions_and_lifecycle_impact",
-            "system_instance_control_draft_references", "policies", "evidence_sources", "access_populations",
-            "review_campaigns", "open_work", "readiness", "engagements",
-            "cross_source_manual_reliance"];
+    static readonly string[] MissingContextsBeforeSystemInstanceControls =
+        ["application_relationships", "vendors", "approved_control_versions_and_lifecycle_impact"];
+
+    static readonly string[] MissingContextsAfterSystemInstanceControls =
+        ["policies", "evidence_sources", "access_populations", "review_campaigns",
+            "open_work", "readiness", "engagements", "cross_source_manual_reliance"];
 
     public async ValueTask<Result<ApplicationChangePreview>> HandleAsync(
         IRequestContext<PreviewApplicationChange> context, CancellationToken ct)
@@ -193,11 +196,51 @@ public sealed class PreviewApplicationChangeHandler(
 
         var instancePage = await applications.ListInstancesAsync(request.TenantId,
             request.ApplicationId, 200, null, ct).ConfigureAwait(false);
-        if (instancePage.Items.Any(item => item.TenantId != request.TenantId ||
-                                           item.ApplicationId != request.ApplicationId))
+        if (instancePage.Items.Count > 200 ||
+            instancePage.Items.Any(item => item.TenantId != request.TenantId ||
+                                           item.ApplicationId != request.ApplicationId ||
+                                           item.SystemInstanceId == Uuid.Empty) ||
+            instancePage.Items.Select(static item => item.SystemInstanceId).Distinct().Count() !=
+            instancePage.Items.Count)
             return Result<ApplicationChangePreview>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "The system instance projection is inconsistent.",
                 isTransient: true));
+
+        var systemInstanceControlDraftReferences =
+            new List<ApplicationControlDraftReferenceView>();
+        var systemInstanceControlDraftReferencesOverLimit = instancePage.NextCursor is not null;
+        if (instanceConsistency is not null)
+        {
+            foreach (var instance in instancePage.Items)
+            {
+                var remaining = MaximumSystemInstanceControlDraftReferences -
+                    systemInstanceControlDraftReferences.Count;
+                if (remaining == 0)
+                {
+                    systemInstanceControlDraftReferencesOverLimit = true;
+                    break;
+                }
+
+                var instanceControls = await controls.ListAsync(request.TenantId,
+                    "system_instance", instance.SystemInstanceId,
+                    Math.Min(200, remaining), null, ct).ConfigureAwait(false);
+                if (instanceControls.Items.Count > remaining ||
+                    instanceControls.Items.Any(reference =>
+                        !IsValidSystemInstanceControlReference(reference, request.TenantId,
+                            instance.SystemInstanceId)))
+                    return Result<ApplicationChangePreview>.Failure(new RequestError(
+                        RequestErrorKind.Conflict,
+                        "The system-instance control reference projection is inconsistent.",
+                        isTransient: true));
+
+                systemInstanceControlDraftReferences.AddRange(instanceControls.Items);
+                if (instanceControls.NextCursor is not null)
+                {
+                    systemInstanceControlDraftReferencesOverLimit = true;
+                    break;
+                }
+            }
+        }
 
         var boundaryConfirmed = await boundaryConsistency.ConfirmUnchangedAndCaughtUpAsync(
             request.TenantId, boundaryFence.Value, ct).ConfigureAwait(false);
@@ -241,14 +284,23 @@ public sealed class PreviewApplicationChangeHandler(
             pending.Add("system_instance_references_over_limit");
         if (relationships.HasMore)
             pending.Add("application_relationships_over_limit");
-        pending.AddRange(MissingContexts);
+        pending.AddRange(MissingContextsBeforeSystemInstanceControls);
+        if (instanceConsistency is null)
+            pending.Add("system_instance_control_draft_references");
+        else if (systemInstanceControlDraftReferencesOverLimit)
+            pending.Add("system_instance_control_draft_references_over_limit");
+        pending.AddRange(MissingContextsAfterSystemInstanceControls);
         var preview = new ApplicationChangePreview(
             request.TenantId, request.ApplicationId, source.Revision, request.ChangeKind,
             Changes(current, content), page.Items, pending, false)
         {
             ApplicationRelationships = relationships.Items,
             IncomingApplicationRelationships = incomingRelationships,
-            ControlDraftReferences = controlPage.Items,
+            ControlDraftReferences = controlPage.Items.Concat(systemInstanceControlDraftReferences)
+                .OrderBy(static item => item.SubjectType, StringComparer.Ordinal)
+                .ThenBy(static item => item.GovernedRecordId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.ControlId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static item => item.EntryId.ToString(), StringComparer.Ordinal).ToArray(),
             SystemInstanceReferences = instancePage.Items,
         };
         return Result<ApplicationChangePreview>.Success(preview with
@@ -296,6 +348,15 @@ public sealed class PreviewApplicationChangeHandler(
             _ => false,
         };
     }
+
+    static bool IsValidSystemInstanceControlReference(
+        ApplicationControlDraftReferenceView reference, Uuid tenantId, Uuid systemInstanceId) =>
+        reference.TenantId == tenantId && reference.SubjectType == "system_instance" &&
+        reference.GovernedRecordId == systemInstanceId && reference.ProgramId != Uuid.Empty &&
+        reference.ControlId != Uuid.Empty && reference.EntryId != Uuid.Empty &&
+        reference.Revision > 0 && !string.IsNullOrWhiteSpace(reference.Identifier) &&
+        !string.IsNullOrWhiteSpace(reference.Subject) &&
+        !string.IsNullOrWhiteSpace(reference.Rationale);
 
     static List<ApplicationFieldChange> Changes(ApplicationView current,
         ApplicationRevisionContent? content)
