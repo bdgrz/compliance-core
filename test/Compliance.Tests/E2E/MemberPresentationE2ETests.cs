@@ -234,9 +234,9 @@ public sealed class MemberPresentationE2ETests(BrokerStackFixture broker) : ICla
     static async Task ClearProjectionAsync(IKvClient client, string route, string prefix)
     {
         Assert.StartsWith(prefix, route, StringComparison.Ordinal);
-        await using var tx = await client.BeginAsync(route, KvDurability.Sync);
+        await using var tx = await client.BeginAsync(route, KvMode.ReadWrite);
         await tx.DeleteRangeAsync(ReadOnlyMemory<byte>.Empty, new byte[] { byte.MaxValue });
-        await tx.CommitAsync();
+        await tx.CommitAsync(KvDurability.Sync);
     }
 
     IHost BuildWorker(string applicationName)
@@ -256,11 +256,11 @@ public sealed class MemberPresentationE2ETests(BrokerStackFixture broker) : ICla
     {
         public string? LastRoute { get; private set; }
 
-        public Task<IKvTransaction> BeginAsync(string route, KvDurability durability,
+        public Task<IKvTransaction> BeginAsync(string route,
             KvMode mode = KvMode.ReadWrite, CancellationToken ct = default)
         {
             LastRoute = route;
-            return inner.BeginAsync(route, durability, mode, ct);
+            return inner.BeginAsync(route, mode, ct);
         }
 
         public Task<KvSubscription> SubscribeAsync(string pattern, CancellationToken ct = default) =>

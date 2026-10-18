@@ -529,9 +529,9 @@ public sealed class ActualStaffEngagementLocatorTests
 
     sealed class FaultingKvClient(IKvClient inner, Faults faults) : IKvClient
     {
-        public async Task<IKvTransaction> BeginAsync(string route, KvDurability durability,
+        public async Task<IKvTransaction> BeginAsync(string route,
             KvMode mode = KvMode.ReadWrite, CancellationToken ct = default) =>
-            new FaultingTransaction(await inner.BeginAsync(route, durability, mode, ct), faults);
+            new FaultingTransaction(await inner.BeginAsync(route, mode, ct), faults);
 
         public Task<KvSubscription> SubscribeAsync(string pattern, CancellationToken ct = default) =>
             inner.SubscribeAsync(pattern, ct);
@@ -560,14 +560,14 @@ public sealed class ActualStaffEngagementLocatorTests
                 }
                 return result;
             }
-            public Task CommitAsync(CancellationToken ct = default)
+            public Task CommitAsync(KvDurability durability, CancellationToken ct = default)
             {
                 if (_inserted && faults.FailNextLocatorCommit && Route.Contains("actual-staff-engagement-locator", StringComparison.Ordinal))
                 {
                     faults.FailNextLocatorCommit = false;
                     throw new IOException("Synthetic locator commit failure before durable commit.");
                 }
-                return inner.CommitAsync(ct);
+                return inner.CommitAsync(durability, ct);
             }
             public Task RollbackAsync(CancellationToken ct = default) => inner.RollbackAsync(ct);
             public ValueTask DisposeAsync() => inner.DisposeAsync();

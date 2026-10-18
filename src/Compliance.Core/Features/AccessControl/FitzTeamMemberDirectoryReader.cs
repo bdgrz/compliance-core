@@ -104,7 +104,8 @@ sealed class FitzTeamMemberDirectoryReader(IKvClient client, IDomainEventReader 
         do
         {
             var batch = await TeamMemberDirectorySchema.Directory.BackfillAsync(_client, route,
-                TeamMemberDirectorySchema.ByMember, 200, backfillCursor, ct).ConfigureAwait(false);
+                TeamMemberDirectorySchema.ByMember, 200, KvDurability.Sync, backfillCursor, ct)
+                .ConfigureAwait(false);
             backfillCursor = batch.NextCursor;
         } while (backfillCursor is not null);
 

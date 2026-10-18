@@ -21,7 +21,7 @@ public sealed class ArtifactContentStorageProbeE2ETests(BrokerStackFixture broke
         var store = factory.Services.GetRequiredService<IKvClient>();
         var tenantId = Uuid.CreateVersion4();
         await using var transaction = await store.BeginAsync(
-            $"kv://{tenantId}/artifact_content/v1", KvDurability.Sync, KvMode.ReadWrite);
+            $"kv://{tenantId}/artifact_content/v1", KvMode.ReadWrite);
         var content = GC.AllocateUninitializedArray<byte>(256 * 1024);
 
         // Act

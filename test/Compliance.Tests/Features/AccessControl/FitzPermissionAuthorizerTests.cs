@@ -103,11 +103,11 @@ public sealed class FitzPermissionAuthorizerTests
         var permissions = new FitzPermissionAuthorizer(client, new FixedMembershipDirectory(true), events,
             new FixedMemberAccessEligibility(true));
         var route = await new PermissionRouteReader(client).GetRouteAsync(tenantId);
-        await using (var tx = await client.BeginAsync(route, KvDurability.Sync, KvMode.ReadWrite))
+        await using (var tx = await client.BeginAsync(route, KvMode.ReadWrite))
         {
             await tx.PutAsync(PermissionProjectionKeys.Grant(memberId, RbacPermissions.TenantAccess),
                 "1"u8.ToArray());
-            await tx.CommitAsync();
+            await tx.CommitAsync(KvDurability.Sync);
         }
         Assert.Empty(await permissions.ReadAsync(tenantId, memberId));
         Assert.False(await permissions.IsAllowedAsync(tenantId, userId, memberId,

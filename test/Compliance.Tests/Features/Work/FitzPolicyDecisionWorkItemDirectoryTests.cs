@@ -78,9 +78,9 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     static async Task StoreAsync(InMemoryKvClient client, PolicyDecisionWorkState state)
     {
         var route = await new PolicyRouteReader(client).GetRouteAsync(state.TenantId);
-        await using var tx = await client.BeginAsync(route, KvDurability.Sync, KvMode.ReadWrite);
+        await using var tx = await client.BeginAsync(route, KvMode.ReadWrite);
         await PolicyDecisionWorkItemDirectorySchema.Policies.InsertAsync(tx, state);
-        await tx.CommitAsync();
+        await tx.CommitAsync(KvDurability.Sync);
     }
 
     sealed class PolicyRouteReader(IKvClient client)

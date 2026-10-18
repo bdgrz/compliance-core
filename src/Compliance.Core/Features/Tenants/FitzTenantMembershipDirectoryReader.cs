@@ -127,7 +127,7 @@ sealed class FitzTenantMembershipDirectoryReader
         {
             var batch = await TenantMembershipDirectorySchema.Directory.BackfillAsync(
                 _client, route, TenantMembershipDirectorySchema.ByUser,
-                200, backfillCursor, ct).ConfigureAwait(false);
+                200, KvDurability.Sync, backfillCursor, ct).ConfigureAwait(false);
             backfillCursor = batch.NextCursor;
         } while (backfillCursor is not null);
 

@@ -1288,7 +1288,8 @@ public static class ComplianceServiceCollectionExtensions
                 FitzCriteriaTextOverlayDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddFitz(
                 configuration.GetSection("Fitz"),
-                fitz => fitz.UseKvCheckpoints("kv://bdgrz/reactors/checkpoints"))
+                fitz => fitz.UseKvCheckpoints("kv://bdgrz/reactors/checkpoints",
+                    Cntryl.Fitz.KvDurability.Sync))
             .RequireAuthorization(options => options.AllowAnonymous<StartIdentityRecovery>());
 
         services.AddHostedService<PlatformOperatorRosterBootstrap>();

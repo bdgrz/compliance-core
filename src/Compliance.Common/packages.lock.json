@@ -4,39 +4,39 @@
     "net10.0": {
       "Cntryl.Fitz.Extensions": {
         "type": "Direct",
-        "requested": "[1.4.2, )",
-        "resolved": "1.4.2",
-        "contentHash": "WH2YcmwkkOvsP8+MoQ9BCuhsIXRY/vh/rsTNNKBiq7nctjmldyiOphRnsogu7uNT7paHgDpcN3L/Zl8aVDoU1Q==",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "3tc7rSMbUykJrsaQbH82d4zk+SRuE1SYFHmJDYAri5nl1kOL84FPbZnfTOW9C7xgJyBm24eduuK7SEEWIaLZ5w==",
         "dependencies": {
-          "Cntryl.Fitz.Abstractions": "1.4.2",
+          "Cntryl.Fitz.Abstractions": "2.0.0",
           "Cntryl.LexKey": "0.1.2"
         }
       },
       "Cntryl.Portia.Abstractions": {
         "type": "Direct",
-        "requested": "[0.7.0, )",
-        "resolved": "0.7.0",
-        "contentHash": "No6ZkDzDH2pgi7fGB/etxkqQiuz9RCsAExNqWLjQyh1NIxOa8vHyG/D5m4OUnAyGE9Mo8e1LWkwJ/NHO98arlQ==",
+        "requested": "[0.8.0, )",
+        "resolved": "0.8.0",
+        "contentHash": "8B5oKCb8zoMb1b5BZrS0eC8GjpZcbt3s5yxH1+fWFnkLzHXJ6qBlQkqd0nWUU+DIB9MV2nSON5xSzGY7sobzqA==",
         "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.12"
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.13"
         }
       },
       "Cntryl.Fitz.Abstractions": {
         "type": "Transitive",
-        "resolved": "1.4.2",
-        "contentHash": "y0dosEsA+/3+2W+r8I5mqk7GbFWRC1EakR3OdG4YvfOYctRai+YdtqLJngteQ4Dmor5V0nEe2SOC93f+BaStuA=="
+        "resolved": "2.0.0",
+        "contentHash": "RZH+mSXCrgLC6ISyVBMnNEWlRZFbWWb07ul/NgFXfoF1pwWEqDRB5IxblUuFW+F45b2KpurHpvsGIZTqJ2CKNg=="
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "9/qymSh7hVDMGTGwrLz8MRp5zRyXy9adGDOs4HwRdnLil3oZGYuWeZjbmHgCQ9BL1qBroVfgUK3U/nb61617Cw=="
+        "resolved": "10.0.13",
+        "contentHash": "G2GrGWNAPZBsii2F6AU8n+JT2tC1/I0Ml/e9ZyNCgPjf3hZqronP7o0X91aAynCmVeae8KkSIUNXXeXCNRmdVQ=="
       },
       "Microsoft.Extensions.Logging.Abstractions": {
         "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "+24lC4plfbEDNfLAdTV/SWKS7dW+16X4HdydO3R++134kSNTzcbYA4KpR1Hdh6uWisB8Za3AzwyOn+K+NxWIug==",
+        "resolved": "10.0.13",
+        "contentHash": "aSZEhEig4fvNiw2zs8Z6NyDlniKtq6YjcF3DyHuqTEHcZ2VKA/6itMPZ+dW+yWABWExlDcQwwdbqX1Rcb7W8WQ==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.12"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.13"
         }
       },
       "Cntryl.LexKey": {
