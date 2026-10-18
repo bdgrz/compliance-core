@@ -269,9 +269,9 @@ The following is a static source inventory, including internal operations. Queri
 
 | Category | Unique feature/type names |
 | --- | ---: |
-| Commands | 231 |
+| Commands | 232 |
 | Queries | 271 |
-| Events | 373 |
+| Events | 374 |
 | Aggregates | 83 |
 | Models and supporting contracts | 562 |
 | Reactors | 30 |
@@ -570,6 +570,7 @@ The following is a static source inventory, including internal operations. Queri
 - [LinkOidcProviderIdentity](../../src/Compliance.Common/Features/UserIdentities/LinkOidcProviderIdentity.cs#L7) — `bdgrz.oidc-provider.link` v1
 - [ReserveEmail](../../src/Compliance.Common/Features/UserIdentities/ReserveEmail.cs#L6) — `bdgrz.email-address.reserve` v1
 - [RotateTenantIdentityProviderCredentials](../../src/Compliance.Common/Features/UserIdentities/RotateTenantIdentityProviderCredentials.cs#L7) — `bdgrz.user-identities.rotate-tenant-identity-provider-credentials` v1
+- [RecordTenantIdentityProviderTestResult](../../src/Compliance.Common/Features/UserIdentities/RecordTenantIdentityProviderTestResult.cs#L7) — `bdgrz.user-identities.record-tenant-identity-provider-test-result` v1
 - [StartIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/StartIdentityRecovery.cs#L6) — `bdgrz.user-identity.start-recovery` v1
 - [TestTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/TestTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.test-tenant-identity-provider` v2
 
@@ -1345,6 +1346,8 @@ These 131 requirement-backed event contracts have been added since the existing-
 - [TenantIdentityProviderTested](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTested.cs#L6)
 
 - [TenantIdentityProviderTestRequested](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestRequested.cs#L6)
+
+- [TenantIdentityProviderTestedV2](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestedV2.cs#L6)
 
 
 ### Incidents

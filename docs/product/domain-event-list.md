@@ -4,13 +4,13 @@ Baseline: repository source and the accepted backlog reviewed 2026-10-17. This i
 
 ## Existing event contracts
 
-The source inventory contains **237 `DomainEvent` contracts**. Their complete feature-grouped, source-linked list is in the [component inventory](component-inventory.md#existing-events). Those are coded event types; this does not by itself prove the owning command handlers emit them, persistence retains them, or projectors consume them.
+The source inventory contains **238 `DomainEvent` contracts**. Their complete feature-grouped, source-linked list is in the [component inventory](component-inventory.md#existing-events). Those are coded event types; this does not by itself prove the owning command handlers emit them, persistence retains them, or projectors consume them.
 
 ## Backfill result
 
 - **136 missing event contracts** support accepted, requirement-backed workflows below.
 - **8 additional event contracts** belong to readiness-material import and stay deferred with that feature until its prerequisites and durable import boundary are implemented.
-- The named universe is therefore **373 current-plus-required event contracts**, with **8 deferred import events** outside the immediate backfill.
+- The named universe is therefore **374 current-plus-required event contracts**, with **8 deferred import events** outside the immediate backfill.
 
 These names were reconciled against current `DomainEvent` declarations, the pruned command inventory, and gap-analysis sections G01–G20. Event names retain business facts and outcomes; they are not a one-for-one mirror of every command or query. Existing events remain the owner when they already represent a required fact. Each backfill event is a typed contract for the listed story outcome. Payloads carry tenant and subject identity, revision, optional member attribution, and occurrence time; handlers still need to populate and emit them, and projectors still need to consume them.
 

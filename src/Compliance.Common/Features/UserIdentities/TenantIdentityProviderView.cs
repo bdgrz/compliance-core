@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
@@ -18,8 +19,9 @@ public sealed record TenantIdentityProviderView(
     Uuid ConfiguredByMemberId,
     string ConfiguredByDisplay,
     DateTimeOffset ConfiguredAt,
-    Uuid ActorMemberId,
+    Uuid? ActorMemberId,
     string ActorDisplay,
     DateTimeOffset UpdatedAt,
     string ContentSha256,
-    TenantIdentityProviderTestRequestView? PendingTest = null);
+    TenantIdentityProviderTestRequestView? PendingTest = null,
+    ActorReference? UpdatedByActor = null);

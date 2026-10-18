@@ -1,4 +1,5 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
@@ -9,6 +10,8 @@ public sealed record TenantIdentityProviderTestView(
     string Outcome,
     string? FailureCode,
     string? ActionableMessage,
-    Uuid TestedByMemberId,
+    Uuid? TestedByMemberId,
     string TestedByDisplay,
-    DateTimeOffset TestedAt);
+    DateTimeOffset TestedAt,
+    ActorReference? TestedByActor = null,
+    Uuid? TestRequestEventId = null);
