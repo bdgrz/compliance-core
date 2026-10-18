@@ -11,4 +11,5 @@ public sealed record TypeIIControlPlanEntry(
     string Cadence,
     int ExpectedOccurrences,
     DateOnly EffectiveFrom,
-    DateOnly? EffectiveThrough);
+    DateOnly? EffectiveThrough,
+    int? DueWithinDays = null);

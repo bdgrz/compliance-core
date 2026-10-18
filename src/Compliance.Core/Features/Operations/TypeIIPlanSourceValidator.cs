@@ -221,6 +221,7 @@ static class TypeIIPlanSourceValidator
                 entry.OwnerMemberId != plan.Owner.Id ||
                 !StringComparer.OrdinalIgnoreCase.Equals(entry.Cadence.Trim(),
                     CadenceName(plan.Cadence)) ||
+                entry.DueWithinDays != plan.Cadence.DueWithinDays ||
                 entry.ExpectedOccurrences != ExpectedOccurrences(plan.Cadence, content.PeriodStart,
                     content.PeriodEnd, plan.EffectiveUntil, version.EffectiveUntil) ||
                 entry.EffectiveFrom != content.PeriodStart ||

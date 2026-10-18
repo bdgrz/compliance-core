@@ -46,6 +46,24 @@ public sealed class TypeIIPlanTests
     }
 
     [Fact]
+    public void ShouldRejectDueWindowOutsideSupportedRangeGivenProposedPlan()
+    {
+        // Arrange
+        var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);
+
+        // Act
+        var failure = plan.Propose(Content() with
+        {
+            Controls = [Control() with { DueWithinDays =
+                Bdgrz.Compliance.Features.Operations.ControlCadence.MaximumDueWithinDays + 1 }],
+        }, ProposerId, "Compliance lead", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Equal(0, plan.Revision);
+    }
+
+    [Fact]
     public void ShouldRequireReviewBeforeApprovalAndRetainExactPlanVersionGivenPlan()
     {
         // Arrange

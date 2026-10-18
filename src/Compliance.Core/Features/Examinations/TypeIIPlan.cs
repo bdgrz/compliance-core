@@ -324,6 +324,8 @@ public sealed class TypeIIPlan : Aggregate
                 item.ControlVersionId == Uuid.Empty || !Bounded(item.ControlTitle, 1, 300) ||
                 item.OwnerMemberId is null || item.OwnerMemberId == Uuid.Empty ||
                 !Token(item.Cadence, 80) || item.ExpectedOccurrences <= 0 ||
+                item.DueWithinDays is < 0 or >
+                    Bdgrz.Compliance.Features.Operations.ControlCadence.MaximumDueWithinDays ||
                 item.EffectiveFrom < content.PeriodStart || item.EffectiveFrom > content.PeriodEnd ||
                 item.EffectiveThrough is { } through && (through < item.EffectiveFrom || through > content.PeriodEnd)) ||
             content.Controls.Select(item => (item.ControlId, item.ControlVersionId)).Distinct().Count() != content.Controls.Count ||

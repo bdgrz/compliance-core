@@ -50,6 +50,29 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
     }
 
     [Fact]
+    public async Task ShouldScheduleExpectedOccurrencesAfterApprovedCadenceDueWindowGivenPeriodStart()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedApprovedPlanAsync();
+
+        // Act
+        var result = await fixture.Handler.HandleAsync(fixture.Context(fixture.Request()),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal([
+            new DateOnly(2027, 1, 5),
+            new DateOnly(2027, 4, 5),
+            new DateOnly(2027, 7, 5),
+            new DateOnly(2027, 10, 5),
+        ], saved.Current!.ExpectedOccurrences.Select(item => item.DueOn));
+    }
+
+    [Fact]
     public async Task ShouldRejectPlanBoundToDifferentTypeIBaselineGivenApprovedPlan()
     {
         // Arrange
@@ -351,7 +374,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
                 PeriodStart, PeriodEnd, "Audit Firm", ["security"], BaselineId, OutcomeId,
                 BaselineSources.Select(ToReference).ToArray(),
                 [new TypeIIControlPlanEntry(ControlId, controlVersionId ?? ControlVersionId,
-                    controlVersion.Content.Title, MemberId, "quarterly", 4, PeriodStart, null)],
+                    controlVersion.Content.Title, MemberId, "quarterly", 4, PeriodStart, null, 5)],
                 [], [], []);
             var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);
             Assert.Null(plan.Propose(planContent, AuthorId, "Plan author", Now.AddMinutes(-4)));

@@ -381,7 +381,7 @@ public sealed class TypeIIPeriodTests
 
     static TypeIIControlPlanEntry ReferenceControl() => new(Uuid.CreateVersion4(),
         Uuid.CreateVersion4(), "Quarterly access review", ControlOwnerId, "quarterly", 4,
-        PeriodStart, null);
+        PeriodStart, null, 5);
 
     static TypeIIPeriodOpeningContent Opening() => new(ExaminationId, Uuid.CreateVersion4(),
         new string('c', 64), SourceReferences(), [GapId]);

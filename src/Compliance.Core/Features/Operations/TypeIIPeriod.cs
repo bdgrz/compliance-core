@@ -562,32 +562,40 @@ public sealed class TypeIIPeriod : Aggregate
                 control.EffectiveFrom > periodEnd)
                 return null;
             var cadence = control.Cadence.Trim().ToLowerInvariant();
-            for (var index = 0; index < control.ExpectedOccurrences; index++)
+            if (cadence is "event_driven" or "ad_hoc")
             {
-                var due = cadence switch
-                {
-                    "daily" => control.EffectiveFrom.AddDays(index),
-                    "weekly" => control.EffectiveFrom.AddDays(checked(7 * index)),
-                    "monthly" => control.EffectiveFrom.AddMonths(index),
-                    "quarterly" => control.EffectiveFrom.AddMonths(checked(3 * index)),
-                    "semiannual" or "semi_annual" => control.EffectiveFrom.AddMonths(checked(6 * index)),
-                    "annual" or "annually" => control.EffectiveFrom.AddYears(index),
-                    "event_driven" or "ad_hoc" => null,
-                    _ => (DateOnly?)null,
-                };
-                if (cadence is not ("event_driven" or "ad_hoc") && due is null ||
-                    due is { } dueOn && (dueOn < periodStart || dueOn > periodEnd ||
-                        control.EffectiveThrough is { } through && dueOn > through))
+                if (control.ExpectedOccurrences != 1)
                     return null;
-                var identity = $"expected:{control.ControlId}:{control.ControlVersionId}:{index + 1}";
-                occurrences.Add(new TypeIIPeriodOccurrenceView(Uuid.CreateVersion5(periodId, identity),
-                    control.ControlId, control.ControlVersionId, index + 1, due, owner, cadence));
+                occurrences.Add(NewExpectedOccurrence(periodId, control, 1, null, owner, cadence));
                 if (occurrences.Count > MaximumOccurrences)
                     return null;
+                continue;
             }
+
+            var schedule = new ControlCadence(ControlCadenceSchedule.Recurring, cadence,
+                control.EffectiveFrom, control.DueWithinDays ?? 0);
+            if (ControlCadenceSchedule.Validate(schedule) is not null)
+                return null;
+            var until = control.EffectiveThrough?.AddDays(1);
+            var periods = ControlCadenceSchedule.Periods(schedule, periodStart, until, periodEnd)
+                .ToArray();
+            if (periods.Length != control.ExpectedOccurrences ||
+                occurrences.Count + periods.Length > MaximumOccurrences)
+                return null;
+            for (var index = 0; index < periods.Length; index++)
+                occurrences.Add(NewExpectedOccurrence(periodId, control, index + 1,
+                    periods[index].DueOn, owner, cadence));
         }
         return Freeze(occurrences.OrderBy(item => IdKey(item.ControlId), StringComparer.Ordinal)
             .ThenBy(item => item.Sequence).ToArray());
+    }
+
+    static TypeIIPeriodOccurrenceView NewExpectedOccurrence(Uuid periodId,
+        TypeIIControlPlanEntry control, int sequence, DateOnly? dueOn, Uuid owner, string cadence)
+    {
+        var identity = $"expected:{control.ControlId}:{control.ControlVersionId}:{sequence}";
+        return new(Uuid.CreateVersion5(periodId, identity), control.ControlId,
+            control.ControlVersionId, sequence, dueOn, owner, cadence);
     }
 
     static TypeIIPeriodCloseValidationContent? NormalizeValidation(
