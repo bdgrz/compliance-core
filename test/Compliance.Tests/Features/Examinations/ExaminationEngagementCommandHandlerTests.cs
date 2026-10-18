@@ -38,6 +38,54 @@ public sealed class ExaminationEngagementCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldCaptureActiveManagementContactsGivenCreate()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var contactUserId = Uuid.CreateVersion4();
+        var contactMemberId = RbacIds.Member(fixture.TenantId, contactUserId);
+        await fixture.SeedMemberAsync(contactUserId, "client_personnel");
+        var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
+            null, ["security", "availability"], fixture.BoundaryId,
+            ManagementContactMemberIds: [contactMemberId]);
+
+        // Act
+        var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal([contactMemberId], saved.Current!.ManagementContactMemberIds);
+    }
+
+    [Fact]
+    public async Task ShouldRejectInactiveManagementContactGivenCreate()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var contactUserId = Uuid.CreateVersion4();
+        var contactMemberId = RbacIds.Member(fixture.TenantId, contactUserId);
+        await fixture.SeedMemberAsync(contactUserId, "firm_staff");
+        var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
+            null, ["security", "availability"], fixture.BoundaryId,
+            ManagementContactMemberIds: [contactMemberId]);
+
+        // Act
+        var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
     public async Task ShouldReviseDraftAtExpectedRevisionGivenPersonalCommand()
     {
         // Arrange
@@ -58,6 +106,58 @@ public sealed class ExaminationEngagementCommandHandlerTests
         Assert.Equal("Updated Independent Audit LLP", saved.Current!.AuditFirm);
         Assert.Equal(2, saved.Revision);
         Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), saved.Current.ActorMemberId);
+    }
+
+    [Fact]
+    public async Task ShouldReplaceManagementContactsGivenActiveClientMembers()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var previousUserId = Uuid.CreateVersion4();
+        var replacementUserId = Uuid.CreateVersion4();
+        var previousMemberId = RbacIds.Member(fixture.TenantId, previousUserId);
+        var replacementMemberId = RbacIds.Member(fixture.TenantId, replacementUserId);
+        await fixture.SeedMemberAsync(previousUserId, "client_personnel");
+        await fixture.SeedMemberAsync(replacementUserId, "client_personnel");
+        await fixture.SeedEngagementAsync([previousMemberId]);
+        var request = new ReviseExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId, 1, "Updated Independent Audit LLP",
+            new DateOnly(2026, 9, 30), null, ["security"],
+            ManagementContactMemberIds: [replacementMemberId]);
+
+        // Act
+        var result = await fixture.ReviseHandler().HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal([replacementMemberId], saved.Current!.ManagementContactMemberIds);
+    }
+
+    [Fact]
+    public async Task ShouldPreserveManagementContactsGivenRevisionWithoutContactField()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var contactUserId = Uuid.CreateVersion4();
+        var contactMemberId = RbacIds.Member(fixture.TenantId, contactUserId);
+        await fixture.SeedMemberAsync(contactUserId, "client_personnel");
+        await fixture.SeedEngagementAsync([contactMemberId]);
+        var request = new ReviseExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId, 1, "Updated Independent Audit LLP",
+            new DateOnly(2026, 9, 30), null, ["security"]);
+
+        // Act
+        var result = await fixture.ReviseHandler().HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal([contactMemberId], saved.Current!.ManagementContactMemberIds);
     }
 
     [Fact]
@@ -231,23 +331,31 @@ public sealed class ExaminationEngagementCommandHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public CreateExaminationEngagementHandler CreateHandler() => new(Executor, Clock);
+        public CreateExaminationEngagementHandler CreateHandler() => new(Reader, Executor, Clock);
 
-        public ReviseExaminationEngagementHandler ReviseHandler() => new(Executor, Clock);
+        public ReviseExaminationEngagementHandler ReviseHandler() => new(Reader, Executor, Clock);
 
         public Cntryl.Portia.RequestContext<T> Context<T>(T request) where T : IRequestBase => new(request,
             new RequestDispatchContext(Actor, new HttpInvocation("POST", "/api/v1/examinations",
                 "/api/v1/examinations", "examination-engagement-test")));
 
-        public async Task SeedEngagementAsync()
+        public async Task SeedEngagementAsync(IReadOnlyList<Uuid>? managementContactMemberIds = null)
         {
             var aggregate = new ExaminationEngagement(TenantId, ProgramId, EngagementId);
             Assert.Null(aggregate.Create(new ExaminationEngagementContent("type_i", "Original LLP",
-                new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
+                new DateOnly(2026, 9, 30), null, ["security"], BoundaryId,
+                managementContactMemberIds ?? []),
                 RbacIds.Member(TenantId, UserId), "Examiner", Now));
             await Writer.SaveAsync(aggregate, new RequestDispatchContext(RequestActor.System));
             await ProjectAsync(new ExaminationEngagementOpened(TenantId,
                 aggregate.Current!, Now));
+        }
+
+        public async Task SeedMemberAsync(Uuid userId, string affiliation)
+        {
+            var member = new Member(TenantId, userId);
+            Assert.True(member.Register(affiliation).IsSuccess);
+            await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
         }
 
         public async Task SeedBaselineAsync()

@@ -388,8 +388,8 @@ This pruned plan has 129 feature-backed additions, including five evidence comma
 
 ### Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot)
 
-- **CreateExaminationEngagement** — personal HTTP handler records the draft Type I terms and attributes the creating member ([contract](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L7))
-- **ReviseExaminationEngagement** — personal HTTP handler preserves management contacts and boundary identity while applying the exact expected revision ([contract](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L7))
+- **CreateExaminationEngagement** — personal HTTP handler records the draft Type I terms, validates and captures active client management-contact members, and attributes the creating member ([contract](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L7))
+- **ReviseExaminationEngagement** — personal HTTP handler validates supplied active client management contacts, preserves contacts when omitted, and retains boundary identity under the exact expected revision ([contract](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L7))
 - **FreezeTypeIBaseline** — coded ([contract](../../src/Compliance.Common/Features/Examinations/FreezeTypeIBaseline.cs#L7))
 - **AmendTypeIBaseline** — coded ([contract](../../src/Compliance.Common/Features/Examinations/AmendTypeIBaseline.cs#L7))
 
