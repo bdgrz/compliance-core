@@ -9,4 +9,4 @@ public sealed record AdvisorFeedbackView(Uuid TenantId, Uuid ProgramId, Uuid Adv
     ActorReference Author, DateTimeOffset CreatedAt,
     IReadOnlyList<AdvisorFeedbackCorrectionView> Corrections,
     IReadOnlyList<AdvisorFeedbackResponseView> Responses, DateTimeOffset? ResolvedAt,
-    bool IsCurrent);
+    bool IsCurrent, AdvisorRecordVersion? SourceVersion = null);

@@ -19,7 +19,8 @@ public sealed class ListAdvisorFeedbackHandlerTests
         var request = new ListAdvisorFeedback(fixture.TenantId, fixture.ProgramId, handoffId);
 
         // Act
-        var result = await new ListAdvisorFeedbackHandler(fixture.Reader).HandleAsync(
+        var result = await new ListAdvisorFeedbackHandler(fixture.Reader,
+            new AcceptCurrentAdvisorRecordVersions()).HandleAsync(
             new RequestContext<ListAdvisorFeedback>(request, new ClaimsPrincipal()), CancellationToken.None);
 
         // Assert
@@ -41,6 +42,46 @@ public sealed class ListAdvisorFeedbackHandlerTests
     }
 
     [Fact]
+    public async Task ShouldMarkFeedbackHistoricalGivenSelectedSourceIsNoLongerCurrent()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var handoffId = await fixture.SeedFeedbackAsync();
+        var resolver = new RejectSelectedAdvisorRecordVersion();
+
+        // Act
+        var result = await new ListAdvisorFeedbackHandler(fixture.Reader, resolver).HandleAsync(
+            new RequestContext<ListAdvisorFeedback>(new ListAdvisorFeedback(fixture.TenantId,
+                fixture.ProgramId, handoffId), new ClaimsPrincipal()), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var entry = Assert.Single(result.Value.Items);
+        Assert.False(entry.IsCurrent);
+        Assert.Equal(fixture.SelectedVersion,
+            Assert.Single(resolver.Selection));
+    }
+
+    [Fact]
+    public async Task ShouldReturnTransientFailureGivenCurrentSourceCannotBeChecked()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var handoffId = await fixture.SeedFeedbackAsync();
+        var request = new ListAdvisorFeedback(fixture.TenantId, fixture.ProgramId, handoffId);
+
+        // Act
+        var result = await new ListAdvisorFeedbackHandler(fixture.Reader,
+                new UnavailableAdvisorRecordVersionResolver())
+            .HandleAsync(new RequestContext<ListAdvisorFeedback>(request, new ClaimsPrincipal()),
+                CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.True(result.Error!.IsTransient);
+    }
+
+    [Fact]
     public async Task ShouldPaginateInAppendOrderGivenFeedbackCursor()
     {
         // Arrange
@@ -48,10 +89,12 @@ public sealed class ListAdvisorFeedbackHandlerTests
         var handoffId = await fixture.SeedTwoFeedbackEntriesAsync();
 
         // Act
-        var first = await new ListAdvisorFeedbackHandler(fixture.Reader).HandleAsync(
+        var first = await new ListAdvisorFeedbackHandler(fixture.Reader,
+            new AcceptCurrentAdvisorRecordVersions()).HandleAsync(
             new RequestContext<ListAdvisorFeedback>(new ListAdvisorFeedback(fixture.TenantId,
                 fixture.ProgramId, handoffId, 1), new ClaimsPrincipal()), CancellationToken.None);
-        var second = await new ListAdvisorFeedbackHandler(fixture.Reader).HandleAsync(
+        var second = await new ListAdvisorFeedbackHandler(fixture.Reader,
+            new AcceptCurrentAdvisorRecordVersions()).HandleAsync(
             new RequestContext<ListAdvisorFeedback>(new ListAdvisorFeedback(fixture.TenantId,
                 fixture.ProgramId, handoffId, 1, first.Value.NextCursor), new ClaimsPrincipal()),
             CancellationToken.None);
@@ -73,7 +116,8 @@ public sealed class ListAdvisorFeedbackHandlerTests
         var handoffId = await fixture.SeedFeedbackAsync();
 
         // Act
-        var result = await new ListAdvisorFeedbackHandler(fixture.Reader).HandleAsync(
+        var result = await new ListAdvisorFeedbackHandler(fixture.Reader,
+            new AcceptCurrentAdvisorRecordVersions()).HandleAsync(
             new RequestContext<ListAdvisorFeedback>(new ListAdvisorFeedback(fixture.TenantId,
                 fixture.ProgramId, handoffId, Cursor: "not-a-uuid"), new ClaimsPrincipal()),
             CancellationToken.None);
@@ -90,12 +134,41 @@ public sealed class ListAdvisorFeedbackHandlerTests
         var handoffId = await fixture.SeedFeedbackAsync();
 
         // Act
-        var result = await new ListAdvisorFeedbackHandler(fixture.Reader).HandleAsync(
+        var result = await new ListAdvisorFeedbackHandler(fixture.Reader,
+            new AcceptCurrentAdvisorRecordVersions()).HandleAsync(
             new RequestContext<ListAdvisorFeedback>(new ListAdvisorFeedback(fixture.TenantId,
                 Uuid.CreateVersion4(), handoffId), new ClaimsPrincipal()), CancellationToken.None);
 
         // Assert
         Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+    }
+
+    sealed class AcceptCurrentAdvisorRecordVersions : IAdvisorRecordVersionResolver
+    {
+        public ValueTask<Result> RequireCurrentAsync(Uuid tenantId, Uuid programId,
+            IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default) =>
+            ValueTask.FromResult(Result.Success);
+    }
+
+    sealed class RejectSelectedAdvisorRecordVersion : IAdvisorRecordVersionResolver
+    {
+        public IReadOnlyList<AdvisorRecordVersion> Selection { get; private set; } = [];
+
+        public ValueTask<Result> RequireCurrentAsync(Uuid tenantId, Uuid programId,
+            IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default)
+        {
+            Selection = selection.ToArray();
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The selected source has changed.")));
+        }
+    }
+
+    sealed class UnavailableAdvisorRecordVersionResolver : IAdvisorRecordVersionResolver
+    {
+        public ValueTask<Result> RequireCurrentAsync(Uuid tenantId, Uuid programId,
+            IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default) =>
+            ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The current source check is temporarily unavailable.", isTransient: true)));
     }
 
     sealed class Fixture : IAsyncDisposable
@@ -107,6 +180,8 @@ public sealed class ListAdvisorFeedbackHandlerTests
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public Uuid RecordId { get; } = Uuid.CreateVersion4();
         public Uuid RecordVersionId { get; } = Uuid.CreateVersion4();
+        public AdvisorRecordVersion SelectedVersion =>
+            AdvisorRecordVersion.ControlVersion(RecordId, RecordVersionId, 1);
         public Uuid SecondRecordId { get; } = Uuid.CreateVersion4();
         public Uuid SecondRecordVersionId { get; } = Uuid.CreateVersion4();
         public Uuid FeedbackId { get; } = Uuid.CreateVersion4();
@@ -141,15 +216,17 @@ public sealed class ListAdvisorFeedbackHandlerTests
             var handoffId = Uuid.CreateVersion4();
             var handoff = new AdvisorHandoff(TenantId, ProgramId, handoffId);
             Assert.True(handoff.Create("Type I readiness review",
-                [new(RecordId, RecordVersionId), new(SecondRecordId, SecondRecordVersionId)],
+                [SelectedVersion,
+                    AdvisorRecordVersion.ControlVersion(SecondRecordId, SecondRecordVersionId, 1)],
                 new DateOnly(2026, 12, 31), Lead, Now).IsSuccess);
             Assert.True(handoff.MarkReadyForReview(1, Lead, Now.AddMinutes(1)).IsSuccess);
-            Assert.True(handoff.RecordFeedback(FeedbackId, RecordId, RecordVersionId,
+            Assert.True(handoff.RecordFeedback(FeedbackId, SelectedVersion,
                 "change_request", "Clarify the evidence owner.", Advisor, Now.AddMinutes(2)).IsSuccess);
             if (twoEntries)
             {
-                Assert.True(handoff.RecordFeedback(SecondFeedbackId, SecondRecordId,
-                    SecondRecordVersionId, "comment", "Add the reviewer role.", Advisor,
+                Assert.True(handoff.RecordFeedback(SecondFeedbackId,
+                    AdvisorRecordVersion.ControlVersion(SecondRecordId, SecondRecordVersionId, 1),
+                    "comment", "Add the reviewer role.", Advisor,
                     Now.AddMinutes(3)).IsSuccess);
             }
             else

@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -12,6 +14,66 @@ public sealed class AdvisorHandoffTests
     static readonly Uuid LeadId = Uuid.CreateVersion4();
     static readonly Uuid AdvisorId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 10, 17, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void ShouldCreateHandoffWithNativeNumericPolicyVersionGivenApprovedPolicy()
+    {
+        // Arrange
+        var selected = AdvisorRecordVersion.PolicyVersion(Uuid.CreateVersion4(), version: 2,
+            revision: 5);
+        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
+
+        // Act
+        var result = handoff.Create("Review the approved policy", [selected],
+            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal([selected], handoff.Selection);
+    }
+
+    [Fact]
+    public void ShouldSelectMultipleQuestionsFromOneBoundaryGivenExactBoundaryVersion()
+    {
+        // Arrange
+        var boundaryId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion4();
+        var selected = new[]
+        {
+            AdvisorRecordVersion.BoundaryQuestion(boundaryId, Uuid.CreateVersion4(),
+                versionId, revision: 3),
+            AdvisorRecordVersion.BoundaryQuestion(boundaryId, Uuid.CreateVersion4(),
+                versionId, revision: 3),
+        };
+        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
+
+        // Act
+        var result = handoff.Create("Review the open boundary questions", selected,
+            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(selected, handoff.Selection);
+    }
+
+    [Fact]
+    public void ShouldRejectUnboundedSelectionGivenMoreThanOneHundredExactSources()
+    {
+        // Arrange
+        var selected = Enumerable.Range(0, 101).Select(_ =>
+            AdvisorRecordVersion.ControlDraft(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1))
+            .ToArray();
+        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
+
+        // Act
+        var result = handoff.Create("Review selected work", selected,
+            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.False(handoff.IsCreated);
+        Assert.Empty(new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents);
+    }
 
     [Fact]
     public void ShouldRetainValidationAsHistoricalGivenASelectedRecordAdvancesToANewVersion()
@@ -72,6 +134,39 @@ public sealed class AdvisorHandoffTests
         Assert.Equal(pendingBefore,
             new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents.Count);
         Assert.Empty(handoff.ReadFeedback());
+    }
+
+    [Fact]
+    public void ShouldRecordFeedbackAgainstNativePolicyVersionGivenSelectedVersion()
+    {
+        // Arrange
+        var selected = AdvisorRecordVersion.PolicyVersion(Uuid.CreateVersion4(), 3, 7);
+        var feedbackId = Uuid.CreateVersion4();
+        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
+        Assert.True(handoff.Create("Review policy", [selected], new DateOnly(2026, 12, 31),
+            ActorReference.ForMember(LeadId, "Lead"), Now).IsSuccess);
+        Assert.True(handoff.MarkReadyForReview(1,
+            ActorReference.ForMember(LeadId, "Lead"), Now.AddMinutes(1)).IsSuccess);
+
+        // Act
+        var result = handoff.RecordFeedback(feedbackId, selected, "change_request",
+            "Clarify this policy requirement.", ActorReference.ForMember(AdvisorId, "Advisor"),
+            Now.AddMinutes(2));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var feedback = Assert.Single(handoff.ReadFeedback());
+        Assert.Equal(selected, feedback.SourceVersion);
+        Assert.Equal(selected.RecordId, feedback.RecordId);
+        Assert.Equal(Uuid.Empty, feedback.RecordVersionId);
+        var recorded = Assert.IsType<AdvisorFeedbackRecorded>(
+            Assert.Single(new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents.Skip(2)));
+        Assert.Equal(selected, recorded.SelectedSource);
+        var json = JsonSerializer.Serialize(recorded,
+            ComplianceCoreJsonContext.Default.AdvisorFeedbackRecorded);
+        var replay = JsonSerializer.Deserialize(json,
+            ComplianceCoreJsonContext.Default.AdvisorFeedbackRecorded);
+        Assert.Equal(selected, replay!.SelectedSource);
     }
 
     [Fact]

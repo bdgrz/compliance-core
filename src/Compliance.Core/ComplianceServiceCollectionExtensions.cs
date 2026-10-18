@@ -520,6 +520,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ClientManagementIndependenceGuard>();
         services.AddScoped<ClientCompartmentIndependenceGuard>();
         services.AddScoped<ProfessionalAdvisoryReadAccess>();
+        services.AddScoped<IAdvisorSharedSourceAuthorization>(provider =>
+            provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();
@@ -576,6 +578,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceArtifactReadAccess>();
         services.AddScoped<EvidenceArtifactMetadataRead>();
         services.AddScoped<EvidenceSupportTargetSource>();
+        services.AddScoped<IAdvisorRecordVersionResolver, AdvisorRecordVersionResolver>();
+        services.AddScoped<IAdvisorSharedSourceReader, AdvisorSharedSourceReader>();
         services.AddScoped<AuditorResponseEvidence>();
         services.AddScoped<DirectoryReevaluationDiscovery>();
         services.AddScoped<ProfessionalDutyAdministrationAuthorizer>();
@@ -830,6 +834,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RespondToAdvisorFeedbackHandler>()
             .AddRequestHandler<RecordAdvisorFeedbackHandler>()
             .AddRequestHandler<GetAdvisorRequestHandler>()
+            .AddRequestHandler<GetAdvisorSharedSourceHandler>()
             .AddRequestHandler<ListAdvisorFeedbackHandler>()
             .AddRequestHandler<CorrectAdvisorFeedbackHandler>()
             .AddRequestHandler<CreateProgramHandler>()

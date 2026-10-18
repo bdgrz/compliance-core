@@ -22,6 +22,12 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
             return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
                 "Program administration requires a Bdgrz user identity."));
         var tenantId = context.Request.TenantId;
+        if (context.Request is GetAdvisorSharedSource sharedSource &&
+            professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.CanReadSelectedSourceAsync(tenantId,
+                sharedSource.ProgramId, sharedSource.HandoffId, sharedSource.SourceFamily,
+                sharedSource.RecordId, sharedSource.EntryId, userId, ct).ConfigureAwait(false))
+            return Result.Success;
         if (context.Request is GetAdvisorRequest handoff && professionalAdvisoryRead is not null &&
             await professionalAdvisoryRead.CanReadHandoffAsync(tenantId, handoff.ProgramId,
                 handoff.AdvisorRequestId, userId, ct).ConfigureAwait(false))
@@ -37,8 +43,10 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
         if (context.Request is RecordAdvisorFeedback advisorFeedback)
             return professionalAdvisoryRead is not null &&
                    await professionalAdvisoryRead.CanRecordFeedbackAsync(tenantId,
-                       advisorFeedback.ProgramId, advisorFeedback.HandoffId, advisorFeedback.RecordId,
-                       advisorFeedback.RecordVersionId, userId, ct).ConfigureAwait(false)
+                       advisorFeedback.ProgramId, advisorFeedback.HandoffId,
+                       advisorFeedback.SelectedSource ?? new AdvisorRecordVersion(
+                           advisorFeedback.RecordId, advisorFeedback.RecordVersionId), userId, ct)
+                       .ConfigureAwait(false)
                 ? Result.Success
                 : Result.Failure(new RequestError(RequestErrorKind.NotFound,
                     "The shared advisor handoff was not found."));

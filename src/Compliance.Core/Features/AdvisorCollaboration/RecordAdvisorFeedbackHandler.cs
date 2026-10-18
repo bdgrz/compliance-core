@@ -15,10 +15,16 @@ public sealed class RecordAdvisorFeedbackHandler(IAggregateExecutor executor, Ti
                 "Recording advisor feedback requires a personal HTTP actor.")));
         if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
             request.HandoffId == Uuid.Empty || request.FeedbackId == Uuid.Empty ||
-            request.RecordId == Uuid.Empty || request.RecordVersionId == Uuid.Empty ||
+            request.RecordId == Uuid.Empty ||
+            request.SelectedSource is null && request.RecordVersionId == Uuid.Empty ||
+            request.SelectedSource is { } selected && (!selected.IsSupported ||
+                selected.RecordId != request.RecordId || selected.VersionId != request.RecordVersionId) ||
             string.IsNullOrWhiteSpace(request.Kind) || string.IsNullOrWhiteSpace(request.Body))
             return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "Advisor feedback requires tenant, program, handoff, feedback, record, version, kind, and body.")));
+
+        var sourceVersion = request.SelectedSource ?? new AdvisorRecordVersion(request.RecordId,
+            request.RecordVersionId);
 
         return executor.ExecuteAsync(new AdvisorHandoff(request.TenantId, request.ProgramId,
                 request.HandoffId), handoff =>
@@ -28,8 +34,8 @@ public sealed class RecordAdvisorFeedbackHandler(IAggregateExecutor executor, Ti
                     RequestErrorKind.NotFound,
                     "The advisor handoff was not found in the requested program.")));
 
-            var result = handoff.RecordFeedback(request.FeedbackId, request.RecordId,
-                request.RecordVersionId, request.Kind, request.Body, actor, clock.GetUtcNow());
+            var result = handoff.RecordFeedback(request.FeedbackId, sourceVersion,
+                request.Kind, request.Body, actor, clock.GetUtcNow());
             return AggregateOutcome.CommitOnSuccess(result.IsSuccess
                 ? Result.Success : Result.Failure(result.Error));
         }, context, ct);

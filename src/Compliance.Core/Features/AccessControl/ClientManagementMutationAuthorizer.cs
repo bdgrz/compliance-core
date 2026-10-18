@@ -1,5 +1,6 @@
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Features.Evidence;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
@@ -23,11 +24,20 @@ sealed class ClientManagementMutationAuthorizer(ClientManagementIndependenceGuar
         if (context.Request is RecordAdvisorFeedback feedback)
             return professionalAdvisoryRead is not null &&
                    await professionalAdvisoryRead.CanRecordFeedbackAsync(context.Request.TenantId,
-                       feedback.ProgramId, feedback.HandoffId, feedback.RecordId,
-                       feedback.RecordVersionId, userId, ct).ConfigureAwait(false)
+                       feedback.ProgramId, feedback.HandoffId,
+                       feedback.SelectedSource ?? new AdvisorRecordVersion(feedback.RecordId,
+                           feedback.RecordVersionId), userId, ct).ConfigureAwait(false)
                 ? Result.Success
                 : Result.Failure(new RequestError(RequestErrorKind.NotFound,
                     "The shared advisor handoff was not found."));
+        if (context.Request is IssueArtifactDownload download &&
+            download.ProgramId is { } programId && download.AdvisorHandoffId is { } handoffId &&
+            download.SelectedSource is { IsSupported: true } source &&
+            source.SourceKind == AdvisorRecordVersion.EvidenceArtifactKind &&
+            professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.CanReadSelectedSourceAsync(context.Request.TenantId,
+                programId, handoffId, source, userId, ct).ConfigureAwait(false))
+            return Result.Success;
         var membership = await memberships.GetAsync(context.Request.TenantId.ToString(), userId, ct)
             .ConfigureAwait(false);
         if (membership is null || membership.TenantId != context.Request.TenantId || membership.UserId != userId ||

@@ -3,21 +3,27 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>Creates one attributed draft handoff for a program's compliance lead.</summary>
-public sealed class CreateAdvisorHandoffHandler(IAggregateExecutor executor, TimeProvider clock)
+public sealed class CreateAdvisorHandoffHandler(IAggregateExecutor executor,
+    IAdvisorRecordVersionResolver recordVersions, TimeProvider clock)
     : IRequestHandler<CreateAdvisorHandoff>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<CreateAdvisorHandoff> context,
+    public async ValueTask<Result> HandleAsync(IRequestContext<CreateAdvisorHandoff> context,
         CancellationToken ct)
     {
         var request = context.Request;
         if (!AdvisorHandoffCommandActor.TryGet(context, request.TenantId, out var actor))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Creating an advisor handoff requires a personal HTTP actor.")));
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Creating an advisor handoff requires a personal HTTP actor."));
         if (request.ProgramId == Uuid.Empty || request.HandoffId == Uuid.Empty)
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "An advisor handoff requires program and handoff identities.")));
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "An advisor handoff requires program and handoff identities."));
 
-        return executor.ExecuteAsync(new AdvisorHandoff(request.TenantId, request.ProgramId,
+        var exactSources = await recordVersions.RequireCurrentAsync(request.TenantId,
+            request.ProgramId, request.RecordVersions, ct).ConfigureAwait(false);
+        if (!exactSources.IsSuccess)
+            return exactSources;
+
+        return await executor.ExecuteAsync(new AdvisorHandoff(request.TenantId, request.ProgramId,
                 request.HandoffId), handoff =>
         {
             if (handoff.IsCreated && handoff.ProgramId != request.ProgramId)
@@ -29,6 +35,6 @@ public sealed class CreateAdvisorHandoffHandler(IAggregateExecutor executor, Tim
                 request.ExpiresOn, actor, clock.GetUtcNow());
             return AggregateOutcome.CommitOnSuccess(result.IsSuccess
                 ? Result.Success : Result.Failure(result.Error));
-        }, context, ct);
+        }, context, ct).ConfigureAwait(false);
     }
 }

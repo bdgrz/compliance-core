@@ -4,28 +4,31 @@ This is the requirement-backed read-layer plan for the committed product scope. 
 
 ## Existing inventory
 
-Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **270 query contracts** (216 existing plus 54 added here) and **491 model/supporting contracts** (436 existing, 53 response views added here, and two advisor-feedback history views). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
+Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **271 query contracts** (216 existing plus 55 added here) and **493 model/supporting contracts** (436 existing, 54 response views added here, two advisor-feedback history views, and `EvidenceSupportView`). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
 
 ## Required read workflows to backfill
 
-The 54 planned query contracts and 53 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Wiring and behavior status varies by query; a contract alone does not prove handler, read-model, API/MCP, or story-level authorization coverage. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
+The 55 planned query contracts and 54 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Wiring and behavior status varies by query; a contract alone does not prove handler, read-model, API/MCP, or story-level authorization coverage. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
 
 ### Advisor collaboration — R2-08
 
 | Query | Response view | Required read |
 | --- | --- | --- |
 | [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorRequest.cs#L9) | [AdvisorRequestView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestView.cs#L6) | One scoped advisor handoff, including selected immutable record versions and lifecycle state. |
+| [GetAdvisorSharedSource](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorSharedSource.cs#L9) | [AdvisorSharedSourceView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorSharedSourceView.cs#L8) | Current content for one exact control, policy, evidence artifact, readiness gap, or boundary question selected in an active handoff. |
 | [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) | `Page<[AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)>` | Scoped handoff directory with status and review readiness. |
 | [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) | `Page<[AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)>` | Feedback and responses for a handoff or its selected records. |
 
-`GetAdvisorRequest` and `ListAdvisorFeedback` read their owning handoff stream through HTTP and
-MCP. The handoff view returns its persisted selection, purpose, expiry, lifecycle state, and
-attribution; feedback pages preserve authors, exact record/version references, linked corrections,
-responses, resolution time, and current-versus-historical status. Firm Advisors can read only an
-unexpired `ready_for_review` handoff after current engagement or program-scoped guest-grant checks.
-The existing `TenantInvitationView` also carries guest program scopes and the required membership
-end date. The handoff directory query remains unwired, and source-version resolution and approved-
-record reads remain open feature gaps, so these reads do not complete R2-08.
+`GetAdvisorRequest`, `GetAdvisorSharedSource`, and `ListAdvisorFeedback` read their owning
+handoff stream through HTTP and MCP. Shared-source reads revalidate the selected native version
+before and after loading content; approved control and policy versions must still be the latest
+approved versions, and evidence requires the exact current program support link. Feedback pages
+mark a selected validation historical when its source is superseded or otherwise no longer current.
+Evidence bytes still flow through the governed artifact-download operation, which accepts the exact
+handoff selection and rechecks its authorization. Firm Advisors can read only an unexpired
+`ready_for_review` handoff after current engagement or program-scoped guest-grant checks. The
+handoff directory query remains unwired, and feedback-to-work-queue assignment and repeated-handoff
+change comparison remain story-level R2-08 gaps.
 
 ### Type I engagement — T1-01
 

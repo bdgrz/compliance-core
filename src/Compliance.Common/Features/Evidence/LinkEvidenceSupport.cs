@@ -9,4 +9,5 @@ namespace Bdgrz.Compliance.Features.Evidence;
 public sealed record LinkEvidenceSupport(Uuid TenantId, Uuid ProgramId, Uuid ArtifactId,
     string SupportedRecordType, Uuid SupportedRecordId, long SupportedRecordRevision,
     DateOnly PeriodStart, DateOnly PeriodEnd, string Purpose, string SufficiencyRationale)
-    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<EvidenceSupportView>, IProgramScopedRequest, IClientManagementMutationRequest,
+        ICallable;

@@ -5,7 +5,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>Reads the complete attributed feedback history owned by one handoff stream.</summary>
-public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader)
+public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader,
+    IAdvisorRecordVersionResolver versions)
     : IRequestHandler<ListAdvisorFeedback, Page<AdvisorFeedbackView>>
 {
     const int DefaultLimit = 50;
@@ -38,6 +39,22 @@ public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader)
                 "The advisor handoff was not found in the requested program."));
 
         var feedback = handoff.ReadFeedback();
+        var currentSources = new HashSet<AdvisorRecordVersion>();
+        foreach (var source in feedback
+                     .Where(static item => item.Disposition == AdvisorFeedbackDisposition.Current)
+                     .Select(static item => item.SourceVersion ??
+                         new AdvisorRecordVersion(item.RecordId, item.RecordVersionId))
+                     .Where(static source => source.IsSupported)
+                     .Distinct())
+        {
+            var current = await versions.RequireCurrentAsync(request.TenantId,
+                request.ProgramId, [source], ct).ConfigureAwait(false);
+            if (current.IsSuccess)
+                currentSources.Add(source);
+            else if (current.Error.IsTransient)
+                return Result<Page<AdvisorFeedbackView>>.Failure(current.Error);
+        }
+
         var start = 0;
         if (cursorId is { } after)
         {
@@ -59,7 +76,10 @@ public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader)
                 correction.CorrectedAt)).ToArray() ?? [],
             item.Responses?.Select(response => new AdvisorFeedbackResponseView(response.Body,
                 response.Actor, response.RespondedAt)).ToArray() ?? [],
-            item.ResolvedAt, item.Disposition == AdvisorFeedbackDisposition.Current)).ToArray();
+            item.ResolvedAt, item.Disposition == AdvisorFeedbackDisposition.Current &&
+                currentSources.Contains(item.SourceVersion ??
+                    new AdvisorRecordVersion(item.RecordId, item.RecordVersionId)),
+            item.SourceVersion)).ToArray();
         var nextCursor = hasMore && pageItems.Length > 0
             ? pageItems[^1].AdvisorFeedbackId.ToString()
             : null;

@@ -906,11 +906,12 @@ The following is a static source inventory, including internal operations. Queri
 - [PreviewWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/PreviewWorkforceSourceObservation.cs#L7) — `bdgrz.workforce.source.preview` v1
 - [RegenerateWorkforceRosterSnapshotManifest](../../src/Compliance.Common/Features/Workforce/RegenerateWorkforceRosterSnapshotManifest.cs#L8) — `bdgrz.snapshot.workforce_roster.manifest_regenerate` v1
 
-#### Requirement-backed read contracts added 2026-10-17
+#### Requirement-backed read contracts added 2026-10-17 to 2026-10-18
 
 ##### AdvisorCollaboration
 
 - [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorRequest.cs#L9) — `bdgrz.advisor-collaboration.get-advisor-request` v1
+- [GetAdvisorSharedSource](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorSharedSource.cs#L9) — `bdgrz.advisor-collaboration.get-shared-source` v1
 - [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-requests` v1
 - [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-feedback` v1
 
@@ -2117,6 +2118,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [EvidenceArtifactContent](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactContent.cs#L7)
 - [EvidenceArtifactMetadataView](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactMetadataView.cs#L7)
+- [EvidenceSupportView](../../src/Compliance.Common/Features/Evidence/EvidenceSupportView.cs#L7)
 - [EvidenceArtifactRegistration](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactRegistration.cs#L5)
 - [EvidenceArtifactResourceTypes](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactResourceTypes.cs#L3)
 - [EvidenceArtifactStates](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactStates.cs#L4)
@@ -2591,13 +2593,14 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [WorkforceObservationResolutionProjector](../../src/Compliance.Core/Features/Workforce/WorkforceObservationResolutionProjector.cs#L5)
 - [WorkforceSourceProjector](../../src/Compliance.Core/Features/Workforce/WorkforceSourceProjector.cs#L5)
 
-#### Requirement-backed response views added 2026-10-17
+#### Requirement-backed response views added 2026-10-17 to 2026-10-18
 
 ##### AdvisorCollaboration
 
 - [AdvisorRequestView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestView.cs#L6)
 - [AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)
 - [AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)
+- [AdvisorSharedSourceView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorSharedSourceView.cs#L8)
 
 ##### Examinations
 
@@ -2804,6 +2807,17 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2222) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2226) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2230) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `CreateAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2365) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions` | `ReviseAdvisorHandoffSelection` | [registration](../../src/Compliance.App/Program.cs#L2369) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review` | `MarkAdvisorHandoffReadyForReview` | [registration](../../src/Compliance.App/Program.cs#L2373) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures` | `CloseAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2377) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations` | `RevokeAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2381) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses` | `RespondToAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2385) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `RecordAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2389) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections` | `CorrectAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2393) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}` | `GetAdvisorRequest` | [registration](../../src/Compliance.App/Program.cs#L2397) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}` | `GetAdvisorSharedSource` | [registration](../../src/Compliance.App/Program.cs#L2401) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `ListAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2405) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |
@@ -2947,6 +2961,8 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/approvals` | `ApproveEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1256) |
 | GET | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}` | `GetEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1260) |
 | GET | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/metadata` | `GetEvidenceArtifactMetadata` | [registration](../../src/Compliance.App/Program.cs#L1264) |
+| POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads` | `IssueArtifactDownload` | [registration](../../src/Compliance.App/Program.cs#L1332) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports` | `LinkEvidenceSupport` | [registration](../../src/Compliance.App/Program.cs#L1336) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}` | `GetEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1268) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/fulfilments` | `FulfilEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1272) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/cancellations` | `CancelEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1276) |
@@ -3394,6 +3410,9 @@ These source lines identify raw routes, health routes and MCP configuration. Fol
 - [Program.cs:315](../../src/Compliance.App/Program.cs#L315): `.AddMcpTool<ListWorkforceRosterSnapshots>(tool => tool.ReadOnly())`
 - [Program.cs:316](../../src/Compliance.App/Program.cs#L316): `.AddMcpTool<RegenerateWorkforceRosterSnapshotManifest>(tool => tool.ReadOnly())`
 - [Program.cs:317](../../src/Compliance.App/Program.cs#L317): `.AddMcpTool<GetReadinessAssessment>(tool => tool.ReadOnly())`
+- [Program.cs:330](../../src/Compliance.App/Program.cs#L330): `.AddMcpTool<GetAdvisorRequest>(tool => tool.ReadOnly())`
+- [Program.cs:331](../../src/Compliance.App/Program.cs#L331): `.AddMcpTool<GetAdvisorSharedSource>(tool => tool.ReadOnly())`
+- [Program.cs:332](../../src/Compliance.App/Program.cs#L332): `.AddMcpTool<ListAdvisorFeedback>(tool => tool.ReadOnly())`
 - [Program.cs:318](../../src/Compliance.App/Program.cs#L318): `.AddMcpTool<ListReadinessAssessments>(tool => tool.ReadOnly())`
 - [Program.cs:319](../../src/Compliance.App/Program.cs#L319): `.AddMcpTool<ListReadinessGaps>(tool => tool.ReadOnly())`
 - [Program.cs:320](../../src/Compliance.App/Program.cs#L320): `.AddMcpTool<ListTypeIEntryDecisions>(tool => tool.ReadOnly())`

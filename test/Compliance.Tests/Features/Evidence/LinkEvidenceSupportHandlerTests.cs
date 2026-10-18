@@ -28,6 +28,9 @@ public sealed class LinkEvidenceSupportHandlerTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(EvidenceSupport.IdFor(request), result.Value.EvidenceSupportId);
+        Assert.Equal(artifactId, result.Value.ArtifactId);
+        Assert.Equal(2, result.Value.ArtifactRevision);
         Assert.Equal(1, support.Revision);
         Assert.Equal(artifactId, support.Current!.ArtifactId);
         Assert.Equal(controlId, support.Current.SupportedRecordId);

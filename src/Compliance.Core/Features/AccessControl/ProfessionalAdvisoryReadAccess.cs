@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActivity tenants,
     IProgramResourceScopeResolver programScopes, TimeProvider clock,
     ITenantMembershipDirectoryReader memberships,
-    IAccessGrantPermissionAuthorizer scopedPermissions)
+    IAccessGrantPermissionAuthorizer scopedPermissions) : IAdvisorSharedSourceAuthorization
 {
     public async ValueTask<bool> CanReadAsync(Uuid tenantId, Uuid programId, Uuid userId,
         CancellationToken ct = default)
@@ -65,6 +65,33 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
         return IsSharedHandoff(handoff, programId);
     }
 
+    /// <summary>Allows source content reads only for an exact selection in an open handoff.</summary>
+    public async ValueTask<bool> CanReadSelectedSourceAsync(Uuid tenantId, Uuid programId,
+        Uuid handoffId, string sourceFamily, Uuid recordId, Uuid? entryId, Uuid userId,
+        CancellationToken ct = default)
+    {
+        if (!await CanReadHandoffAsync(tenantId, programId, handoffId, userId, ct)
+                .ConfigureAwait(false))
+            return false;
+        var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
+            handoffId), ct).ConfigureAwait(false);
+        return handoff.Selection.Any(source => source.SourceFamily == sourceFamily &&
+            source.RecordId == recordId && source.EntryId == entryId);
+    }
+
+    public async ValueTask<bool> CanReadSelectedSourceAsync(Uuid tenantId, Uuid programId,
+        Uuid handoffId, AdvisorRecordVersion sourceVersion, Uuid userId,
+        CancellationToken ct = default)
+    {
+        if (sourceVersion is null || !sourceVersion.HasValidIdentity ||
+            !await CanReadHandoffAsync(tenantId, programId, handoffId, userId, ct)
+                .ConfigureAwait(false))
+            return false;
+        var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
+            handoffId), ct).ConfigureAwait(false);
+        return handoff.Selection.Contains(sourceVersion);
+    }
+
     /// <summary>An assigned Advisor may correct only their own feedback while it remains shared.</summary>
     public async ValueTask<bool> CanCorrectFeedbackAsync(Uuid tenantId, Uuid programId,
         Uuid handoffId, Uuid feedbackId, Uuid userId, CancellationToken ct = default)
@@ -83,10 +110,10 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
 
     /// <summary>An assigned Advisor may post only against an exact version in a shared handoff.</summary>
     public async ValueTask<bool> CanRecordFeedbackAsync(Uuid tenantId, Uuid programId,
-        Uuid handoffId, Uuid recordId, Uuid recordVersionId, Uuid userId,
+        Uuid handoffId, AdvisorRecordVersion sourceVersion, Uuid userId,
         CancellationToken ct = default)
     {
-        if (handoffId == Uuid.Empty || recordId == Uuid.Empty || recordVersionId == Uuid.Empty ||
+        if (handoffId == Uuid.Empty || sourceVersion is null || !sourceVersion.HasValidIdentity ||
             !await CanReadHandoffAsync(tenantId, programId, handoffId, userId, ct)
                 .ConfigureAwait(false))
             return false;
@@ -94,7 +121,7 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
         var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
             handoffId), ct).ConfigureAwait(false);
         return IsSharedHandoff(handoff, programId) &&
-               handoff.Selection.Contains(new AdvisorRecordVersion(recordId, recordVersionId));
+               handoff.Selection.Contains(sourceVersion);
     }
 
     bool IsSharedHandoff(AdvisorHandoff handoff, Uuid programId) => handoff.IsCreated &&

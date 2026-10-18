@@ -328,6 +328,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<RegenerateWorkforceRosterSnapshotManifest>(tool => tool.ReadOnly())
         .AddMcpTool<GetReadinessAssessment>(tool => tool.ReadOnly())
         .AddMcpTool<GetAdvisorRequest>(tool => tool.ReadOnly())
+        .AddMcpTool<GetAdvisorSharedSource>(tool => tool.ReadOnly())
         .AddMcpTool<ListAdvisorFeedback>(tool => tool.ReadOnly())
         .AddMcpTool<ListReadinessAssessments>(tool => tool.ReadOnly())
         .AddMcpTool<ListReadinessGaps>(tool => tool.ReadOnly())
@@ -1326,6 +1327,14 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Evidence redactions");
     app.MapPortiaGet<GetEvidenceArtifactMetadata, EvidenceArtifactMetadataView>(
             "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/metadata")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Evidence artifacts");
+    app.MapPortiaPost<IssueArtifactDownload, EvidenceArtifactDownloadLink>(
+            "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Evidence artifacts");
+    app.MapPortiaPost<LinkEvidenceSupport, EvidenceSupportView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Evidence artifacts");
     app.MapPortiaGet<GetEvidenceRequest, EvidenceRequestView>(
@@ -2387,6 +2396,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Advisor collaboration");
     app.MapPortiaGet<GetAdvisorRequest, AdvisorRequestView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaGet<GetAdvisorSharedSource, AdvisorSharedSourceView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
     app.MapPortiaGet<ListAdvisorFeedback, Cntryl.Fitz.Extensions.Page<AdvisorFeedbackView>>(

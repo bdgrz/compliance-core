@@ -9,6 +9,8 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 /// </summary>
 public sealed class AdvisorHandoff : Aggregate
 {
+    public const int MaximumSelectionCount = 100;
+
     static readonly HashSet<string> FeedbackKinds = new(StringComparer.Ordinal)
         { "comment", "change_request", "validated" };
 
@@ -81,13 +83,7 @@ public sealed class AdvisorHandoff : Aggregate
             _updatedAt = ev.RevokedAt;
             _status = "revoked";
         });
-        On<AdvisorFeedbackRecorded>(ev =>
-        {
-            _revision++;
-            _updatedAt = ev.CreatedAt;
-            _feedback.Add(new AdvisorFeedbackEntry(ev.FeedbackId, ev.RecordId,
-                ev.RecordVersionId, ev.Kind, ev.Body, ev.Author, ev.CreatedAt));
-        });
+        On<AdvisorFeedbackRecorded>(ApplyFeedbackRecorded);
         On<AdvisorFeedbackCorrected>(ev =>
         {
             _revision++;
@@ -178,22 +174,33 @@ public sealed class AdvisorHandoff : Aggregate
 
     public Result<bool> RecordFeedback(Uuid feedbackId, Uuid recordId, Uuid recordVersionId,
         string kind, string body, ActorReference author, DateTimeOffset createdAt)
+        => RecordFeedback(feedbackId, new AdvisorRecordVersion(recordId, recordVersionId),
+            kind, body, author, createdAt);
+
+    public Result<bool> RecordFeedback(Uuid feedbackId, AdvisorRecordVersion sourceVersion,
+        string kind, string body, ActorReference author, DateTimeOffset createdAt)
     {
         var existing = _feedback.Find(item => item.FeedbackId == feedbackId);
+        var recordId = sourceVersion?.RecordId ?? Uuid.Empty;
+        var recordVersionId = sourceVersion?.VersionId ?? Uuid.Empty;
         if (existing is not null)
-            return existing.RecordId == recordId && existing.RecordVersionId == recordVersionId &&
+            return (existing.SourceVersion ?? new AdvisorRecordVersion(existing.RecordId,
+                       existing.RecordVersionId)) == sourceVersion &&
                    existing.Kind == kind && existing.Body == body && existing.Author == author
                 ? Result<bool>.Success(true)
                 : Failure(RequestErrorKind.Conflict, "The feedback identifier already has different content.");
         if (_status != "ready_for_review" || !IsOpen())
             return Failure(RequestErrorKind.Conflict, "Feedback is accepted only while the handoff is ready for review.");
-        if (feedbackId == Uuid.Empty || recordId == Uuid.Empty || recordVersionId == Uuid.Empty ||
-            !_selection.Contains(new AdvisorRecordVersion(recordId, recordVersionId)) ||
+        if (feedbackId == Uuid.Empty || sourceVersion is null || !sourceVersion.HasValidIdentity ||
+            !_selection.Contains(sourceVersion) ||
             !FeedbackKinds.Contains(kind) || string.IsNullOrWhiteSpace(body) || !ValidActor(author))
             return Failure(RequestErrorKind.Validation, "Feedback must target a selected exact version and include a supported kind, body, and author.");
 
         RaiseEvent(new AdvisorFeedbackRecorded(_tenantId, _programId, Id, feedbackId, recordId,
-            recordVersionId, kind, body.Trim(), author, createdAt));
+            recordVersionId, kind, body.Trim(), author, createdAt)
+        {
+            SelectedSource = sourceVersion.IsSupported ? sourceVersion : null,
+        });
         return Result<bool>.Success(true);
     }
 
@@ -239,15 +246,17 @@ public sealed class AdvisorHandoff : Aggregate
 
     public bool IsValidationCurrent(Uuid recordId) =>
         _feedback.Any(feedback => feedback.RecordId == recordId && feedback.Kind == "validated" &&
-            _selection.Contains(new AdvisorRecordVersion(feedback.RecordId, feedback.RecordVersionId)));
+            _selection.Contains(feedback.SourceVersion ??
+                new AdvisorRecordVersion(feedback.RecordId, feedback.RecordVersionId)));
 
     public IReadOnlyList<AdvisorFeedbackEntry> ReadFeedback() => _feedback.Select(feedback =>
         feedback with
         {
             Corrections = feedback.Corrections?.ToArray(),
             Responses = feedback.Responses?.ToArray(),
-            Disposition = _selection.Contains(new AdvisorRecordVersion(feedback.RecordId,
-                feedback.RecordVersionId)) ? AdvisorFeedbackDisposition.Current :
+            Disposition = _selection.Contains(feedback.SourceVersion ??
+                new AdvisorRecordVersion(feedback.RecordId, feedback.RecordVersionId))
+                ? AdvisorFeedbackDisposition.Current :
                 AdvisorFeedbackDisposition.Historical,
         }).ToArray();
 
@@ -268,11 +277,31 @@ public sealed class AdvisorHandoff : Aggregate
 
     bool IsOpen() => _created && _status is "draft" or "ready_for_review";
 
+    void ApplyFeedbackRecorded(AdvisorFeedbackRecorded ev)
+    {
+        var sourceVersion = ev.SelectedSource ?? new AdvisorRecordVersion(ev.RecordId,
+            ev.RecordVersionId);
+        if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.HandoffId != Id ||
+            ev.FeedbackId == Uuid.Empty || ev.RecordId == Uuid.Empty ||
+            sourceVersion.RecordId != ev.RecordId || sourceVersion.VersionId != ev.RecordVersionId ||
+            !sourceVersion.HasValidIdentity || !FeedbackKinds.Contains(ev.Kind) ||
+            string.IsNullOrWhiteSpace(ev.Body) || ev.Body.Trim() != ev.Body ||
+            !ValidActor(ev.Author) || ev.CreatedAt == default ||
+            !_selection.Contains(sourceVersion) || _feedback.Any(item => item.FeedbackId == ev.FeedbackId))
+            throw new InvalidOperationException("The advisor feedback event is invalid.");
+        _revision++;
+        _updatedAt = ev.CreatedAt;
+        _feedback.Add(new AdvisorFeedbackEntry(ev.FeedbackId, ev.RecordId,
+            ev.RecordVersionId, ev.Kind, ev.Body, ev.Author, ev.CreatedAt,
+            SourceVersion: ev.SelectedSource));
+    }
+
     static bool ValidSelection(IReadOnlyList<AdvisorRecordVersion>? selection) =>
-        selection is { Count: > 0 } && selection.All(item => item is not null &&
-            item.RecordId != Uuid.Empty && item.VersionId != Uuid.Empty) &&
-        selection.Select(item => item.RecordId).Distinct().Count() == selection.Count &&
-        selection.Select(item => item.VersionId).Distinct().Count() == selection.Count;
+        selection is { Count: > 0 and <= MaximumSelectionCount } &&
+        selection.All(item => item is not null &&
+            item.HasValidIdentity) &&
+        selection.Select(item => (item.SourceFamily, item.RecordId, item.EntryId))
+            .Distinct().Count() == selection.Count;
 
     static bool ValidActor(ActorReference? actor) => actor is not null &&
         !string.IsNullOrWhiteSpace(actor.Kind) && !string.IsNullOrWhiteSpace(actor.Id) &&
@@ -289,7 +318,8 @@ public sealed record AdvisorFeedbackEntry(Uuid FeedbackId, Uuid RecordId, Uuid R
     IReadOnlyList<AdvisorFeedbackCorrection>? Corrections = null,
     IReadOnlyList<AdvisorFeedbackResponse>? Responses = null,
     DateTimeOffset? ResolvedAt = null,
-    AdvisorFeedbackDisposition Disposition = AdvisorFeedbackDisposition.Current);
+    AdvisorFeedbackDisposition Disposition = AdvisorFeedbackDisposition.Current,
+    AdvisorRecordVersion? SourceVersion = null);
 
 public sealed record AdvisorFeedbackCorrection(Uuid CorrectionId, string Body, string Reason,
     ActorReference Actor, DateTimeOffset CorrectedAt);
