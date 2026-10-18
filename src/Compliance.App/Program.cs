@@ -656,6 +656,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
+    app.MapPortiaPost<AssignServiceEngagementStaff, ServiceEngagementAcceptanceView>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Service engagements");
     app.MapPortiaGet<GetServiceEngagementAcceptance, ServiceEngagementAcceptanceView>(
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

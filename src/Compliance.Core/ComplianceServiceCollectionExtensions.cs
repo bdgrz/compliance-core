@@ -640,6 +640,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<CreateServiceEngagementHandler>()
             .AddRequestHandler<AmendServiceEngagementHandler>()
             .AddRequestHandler<ProposeServiceEngagementStaffHandler>()
+            .AddRequestHandler<AssignServiceEngagementStaffHandler>()
             .AddRequestHandler<WithdrawServiceEngagementStaffProposalHandler>()
             .AddRequestHandler<RevokeServiceEngagementActualStaffHandler>()
             .AddRequestHandler<CloseServiceEngagementHandler>()

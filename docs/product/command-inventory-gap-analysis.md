@@ -559,7 +559,7 @@ ServiceEngagement is the firm-services engagement, not the client examination. F
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Missing | `CreateExaminationEngagement`; `ReviseExaminationEngagement` | Record the client examination, auditor, dates, selected categories and baseline scope separately from professional service acceptance. |
+| Present | `CreateExaminationEngagement`; `ReviseExaminationEngagement` | The client examination aggregate records its auditor, dates, selected categories and scope separately from professional service acceptance. The complete point-in-time baseline remains a distinct missing transition below. |
 | Missing | `FreezeTypeIBaseline`; `AmendTypeIBaseline` | Freeze all required exact scope/control/policy/workforce/inventory/commitment/risk/provider/evaluation/evidence/decision inputs; preserve amendment ancestry and content identities. |
 
 <a id="g10"></a>
@@ -677,13 +677,12 @@ The period aggregate already owns immutable close snapshots, and AuditPopulation
 
 Scope: **F1-03/07/08**. Requirement source: [service-engagement-backend](service-engagement-backend.md).
 
-ReviseIndependenceRules authors unratified rules. AcceptEngagement and RemoveActualStaff exist as internal ledger methods with unit fixtures. Public professional acceptance, verified partner authority and production ratification are unfinished; provisional draft staffing grants no professional access.
+ReviseIndependenceRules authors unratified rules. HTTP handlers now verify signed current professional authority, exact ratification/evaluation sources, and personal acceptance or assignment decisions. The repository has no production firm issuer/key or real quality-management ratification evidence configured under #343; these handlers fail closed until those external inputs exist. Provisional draft staffing still grants no professional access.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Decision | `DesignateEngagementPartnerDuty`; `RevokeEngagementPartnerDuty`; `RatifyIndependenceRuleVersion`; `RecordPartnerIndependenceEvaluation` | Finalize and implement real named-partner authority and ratification evidence under #269/#343; directory practice/operator status is insufficient. |
-| Partial | `AcceptServiceEngagement` | Compose the existing internal acceptance boundary with verified current partner/directory/rule/acknowledgement/boundary sources and a personal decision. No public IRequest/handler/route exists. |
-| Missing | `AssignServiceEngagementStaff` | Authorize actual additions/changes after acceptance with current eligibility and lifetime wall checks; ProposeServiceEngagementStaff only records a tentative draft proposal. |
+| Partial | `DesignateEngagementPartnerDuty`; `RevokeEngagementPartnerDuty`; `RatifyIndependenceRuleVersion`; `RecordPartnerIndependenceEvaluation`; `AcceptServiceEngagement` | The signed-authority handlers and HTTP routes are implemented and fail closed. Production issuer/key and the firm's real ratification evidence remain deployment/policy inputs under #269/#343; directory practice/operator status is insufficient. |
+| Present | `AssignServiceEngagementStaff` | A current designated partner adds one exact active directory identity to an accepted engagement with client-sequence fencing, a non-backdated effective date, retained source authority, and the permanent M0-D26 wall. Directory-locator projection and later source-change reconciliation remain reactor/projector work. |
 | Present | `RevokeServiceEngagementActualStaff` | The authorized command revokes one exact current accepted assignment, records attributed history, and persists the independence reevaluation; withdrawing a tentative proposal remains a separate intent. |
 | Partial | `AmendServiceEngagement`; `CloseServiceEngagement` | Complete accepted-engagement amendment and attest package/delivery/hold prerequisites. Existing close can revoke accepted assignments but does not establish required attest delivery proof. |
 

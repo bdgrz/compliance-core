@@ -27,7 +27,8 @@ proposal. Actual accepted/active assignments must pass the lifetime
 independence wall in their owning acceptance/assignment consumer; those
 professional operations are separate from this draft contract.
 
-The six independence operations remain available. This draft capability adds:
+The independence operations remain available. The API includes these directory,
+draft, and accepted-engagement operations:
 
 | Operation | HTTP route | MCP tool |
 | --- | --- | --- |
@@ -39,6 +40,7 @@ The six independence operations remain available. This draft capability adds:
 | Amend draft | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/draft` | `bdgrz.service-engagement.amend` |
 | Propose staff | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}` | `bdgrz.service-engagement.staff.propose` |
 | Withdraw proposal | `POST /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals` | `bdgrz.service-engagement.staff.withdraw` |
+| Assign actual staff after acceptance | `POST /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}` | personal partner HTTP only |
 | Close draft | `POST /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure` | `bdgrz.service-engagement.close` |
 | Read current draft | `GET /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `bdgrz.service-engagement.get` |
 | List client drafts | `GET /api/v1/tenants/{tenant_id}/service-engagements` | `bdgrz.service-engagement.list` |
@@ -156,6 +158,18 @@ closes the engagement and revokes the entire team; removing another assignee rev
 assignment and leaves the engagement accepted. Client management acknowledgements refuse actual
 historical Attest actors even if they have a client-role identity. Immutable accepted history
 retains original approvals and separately attributed revocation reason and time.
+
+After acceptance, the currently designated partner can add one exact active firm-directory
+identity with `AssignServiceEngagementStaff`. This is personal HTTP only and requires the
+current client-ledger sequence plus an effective date no earlier than the UTC request date and
+inside the engagement period. The request cannot supply the user's canonical identity, practice,
+partner designation, or directory revision; the handler resolves and rechecks those sources. The
+aggregate records the exact partner designation and staff-directory revision, rejects a staff
+identity already present in that engagement, and applies the permanent M0-D26 wall across the
+client's complete actual assignment history. The accepted snapshot and engagement revision each
+advance once; professional access begins on the retained effective date. Later directory-status
+changes to assignments added this way still require the actual-assignment locator's reactor and
+projector coverage.
 
 Current client administration grants allow acceptance metadata/history reads and closure. The
 actual-assignment revocation endpoint and MCP tool are described above.

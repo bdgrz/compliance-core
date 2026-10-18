@@ -19,6 +19,7 @@ public sealed partial class IndependenceLedger : Aggregate
         On<EngagementManagementAcknowledged>(Apply);
         On<ServiceEngagementAcceptanceRecorded>(Apply);
         On<ServiceEngagementAssignmentRevoked>(Apply);
+        On<ServiceEngagementStaffAssigned>(Apply);
         On<NonattestServiceRecorded>(Apply);
         On<ServiceIndependenceReevaluated>(Apply);
         On<AssignmentIndependenceReevaluated>(Apply);

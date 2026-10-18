@@ -30,6 +30,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(IReadOnlyList<Uuid>))]
 [JsonSerializable(typeof(AssignResponsibility))]
 [JsonSerializable(typeof(AcceptServiceEngagement))]
+[JsonSerializable(typeof(AssignServiceEngagementStaff))]
 [JsonSerializable(typeof(RatifyIndependenceRuleVersion))]
 [JsonSerializable(typeof(IndependenceRuleRatificationView))]
 [JsonSerializable(typeof(RecordPartnerIndependenceEvaluation))]
