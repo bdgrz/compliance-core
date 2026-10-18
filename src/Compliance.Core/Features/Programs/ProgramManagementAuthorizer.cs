@@ -29,6 +29,10 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
             await professionalAdvisoryRead.CanReadHandoffAsync(tenantId, feedback.ProgramId,
                 feedback.HandoffId, userId, ct).ConfigureAwait(false))
             return Result.Success;
+        if (context.Request is CorrectAdvisorFeedback correction && professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.CanCorrectFeedbackAsync(tenantId, correction.ProgramId,
+                correction.HandoffId, correction.FeedbackId, userId, ct).ConfigureAwait(false))
+            return Result.Success;
         if (context.Request is ListReadinessAnnotations annotations && professionalAdvisoryRead is not null &&
             await professionalAdvisoryRead.CanReadAsync(tenantId, annotations.ProgramId, userId, ct)
                 .ConfigureAwait(false))

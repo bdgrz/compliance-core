@@ -8,8 +8,8 @@ Keep the layer boundary explicit: when a handler durably records valid intent an
 
 ## Current gap
 
-- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 106 have complete handler coverage, 3 have partial handler coverage, and 15 still have no handler.
-- Active command registration gaps: 15. Active commands without a handler test reference: 15. The three partial handlers are registered and tested but do not yet cover their accepted feature scope.
+- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 106 have complete handler coverage, 4 have partial handler coverage, and 14 still have no handler.
+- Active command registration gaps: 14. Active commands without a handler test reference: 14. The four partial handlers are registered and tested but do not yet cover their accepted feature scope.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Then implement reactors, with projectors as the final layer.
 
@@ -17,7 +17,7 @@ Keep the layer boundary explicit: when a handler durably records valid intent an
 
 Work the layers in order. A command is complete only when its source and authority checks are implemented, its aggregate transition is exercised by a red-to-green behavior test, the handler is registered and host-dispatched, and the owning API authorization is verified. Update the table below as each item closes; do not move into reactors while any active handler is missing or partial.
 
-### Handlers — 18 active open items (15 missing, 3 partial)
+### Handlers — 18 active open items (14 missing, 4 partial)
 
 Evidence handling:
 
@@ -30,7 +30,7 @@ Advisor collaboration:
 - [ ] `ReviseAdvisorHandoffSelection` — resolve every selected exact version and recheck shareable status.
 - [ ] `MarkAdvisorHandoffReadyForReview` — recheck the complete selection and Compliance Lead authority at sharing time.
 - [ ] `RecordAdvisorFeedback` — scoped advisor/guest authorization and actual member attribution.
-- [ ] `CorrectAdvisorFeedback` — scoped author/Compliance Lead correction authority and linked attribution.
+- [ ] `CorrectAdvisorFeedback` (partial) — linked correction ID, author attribution, and assigned firm-Advisor author/Compliance Lead authorization are implemented; guest author correction awaits scoped guest membership.
 
 Type I baseline:
 
@@ -341,7 +341,7 @@ Identity provider:
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CloseAdvisorHandoff` | present | present | present | referenced |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RevokeAdvisorHandoff` | present | present | present | referenced |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RecordAdvisorFeedback` | present | missing | check | no reference |
-| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CorrectAdvisorFeedback` | present | missing | check | no reference |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CorrectAdvisorFeedback` | present | partial | present | `CorrectAdvisorFeedbackHandlerTests`, `AdvisoryReadinessNoteIndependenceTests` |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RespondToAdvisorFeedback` | present | present | present | `AdvisorHandoffCommandHandlerTests` |
 | Control operation and recurrence — [R2-01](backlog.md#r2-01-assign-control-ownership-and-operating-cadence), [T2-02](backlog.md#t2-02-operate-a-recurring-control-calendar), R2-04, T2-03; [M0-D19](decisions/m0-d19-periodic-reviews.md) | `GenerateDueControlOccurrences` | present | present | present | referenced |
 | Inventory and commitment lifecycle — [R1-10](backlog.md#r1-10-establish-the-application-inventory-and-review-scope), [R1-13](backlog.md#r1-13-record-service-commitments-system-requirements-and-user-responsibilities) | `ReviseSystemInstance` | present | present | present | referenced |

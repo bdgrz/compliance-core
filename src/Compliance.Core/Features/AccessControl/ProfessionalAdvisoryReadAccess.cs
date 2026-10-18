@@ -55,10 +55,27 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
 
         var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
             handoffId), ct).ConfigureAwait(false);
-        return handoff.IsCreated && handoff.ProgramId == programId &&
-               handoff.Status == "ready_for_review" &&
-               handoff.ExpiresOn >= DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        return IsSharedHandoff(handoff, programId);
     }
+
+    /// <summary>An assigned Advisor may correct only their own feedback while it remains shared.</summary>
+    public async ValueTask<bool> CanCorrectFeedbackAsync(Uuid tenantId, Uuid programId,
+        Uuid handoffId, Uuid feedbackId, Uuid userId, CancellationToken ct = default)
+    {
+        if (handoffId == Uuid.Empty || feedbackId == Uuid.Empty ||
+            !await CanReadAsync(tenantId, programId, userId, ct).ConfigureAwait(false))
+            return false;
+
+        var handoff = await reader.HydrateAsync(new AdvisorHandoff(tenantId, programId,
+            handoffId), ct).ConfigureAwait(false);
+        return IsSharedHandoff(handoff, programId) && handoff.ReadFeedback().Any(feedback =>
+            feedback.FeedbackId == feedbackId && feedback.Author.Kind == "member" &&
+            feedback.Author.Id == RbacIds.Member(tenantId, userId).ToString());
+    }
+
+    bool IsSharedHandoff(AdvisorHandoff handoff, Uuid programId) => handoff.IsCreated &&
+        handoff.ProgramId == programId && handoff.Status == "ready_for_review" &&
+        handoff.ExpiresOn >= DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
 
     async ValueTask<bool> MatchesProgramScopeAsync(Uuid tenantId, Uuid programId,
         ServiceEngagementAcceptanceView acceptance, CancellationToken ct)

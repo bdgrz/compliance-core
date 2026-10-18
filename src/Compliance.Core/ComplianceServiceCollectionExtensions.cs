@@ -825,6 +825,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RespondToAdvisorFeedbackHandler>()
             .AddRequestHandler<GetAdvisorRequestHandler>()
             .AddRequestHandler<ListAdvisorFeedbackHandler>()
+            .AddRequestHandler<CorrectAdvisorFeedbackHandler>()
             .AddRequestHandler<CreateProgramHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()

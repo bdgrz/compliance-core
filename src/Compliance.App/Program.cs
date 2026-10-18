@@ -2361,6 +2361,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
+    app.MapPortiaPost<CorrectAdvisorFeedback>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
     app.MapPortiaGet<GetAdvisorRequest, AdvisorRequestView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
