@@ -1340,6 +1340,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Evidence artifacts");
+    app.MapPortiaPost<ReleaseEvidenceArtifactQuarantine>(
+            "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/quarantine-releases")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithSummary("Release malware-quarantined evidence after a clean rescan")
+        .WithTags("Evidence artifacts");
     app.MapPortiaPost<LinkEvidenceSupport, EvidenceSupportView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
