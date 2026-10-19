@@ -31,6 +31,7 @@ static class TypeIBaselinePreviewTestFactory
         "control_criterion_mapping_version" => "control_criterion_mappings",
         "control_evaluation" => "control_evaluations",
         "policy_version" or "policy_retirement" => "policies",
+        "policy_communication" or "training_requirement_version" => "policy_communications",
         "criteria_selection" or "criteria_edition" => "criteria",
         "control" or "approved_control" => "controls",
         "criteria" => "criteria",

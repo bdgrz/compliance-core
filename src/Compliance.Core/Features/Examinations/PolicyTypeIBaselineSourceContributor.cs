@@ -152,6 +152,52 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
                 scopeDifferences.AsReadOnly()));
     }
 
+    internal static IReadOnlyList<TypeIBaselineSourceReference> ReferencesAsOf(Uuid tenantId,
+        Policy policy, DateOnly periodStart, DateTimeOffset through, out bool valid)
+    {
+        var sources = new List<TypeIBaselineSourceReference>();
+        valid = true;
+        var versions = policy.ReadVersions();
+        if (versions.Count == 0)
+            return sources;
+        var decisions = policy.ReadDecisions();
+        if (!IsValidHistory(tenantId, policy, versions, decisions))
+        {
+            valid = false;
+            return sources;
+        }
+
+        var effective = versions.LastOrDefault(version => version.ApprovedAt <= through &&
+            version.EffectiveFrom <= periodStart);
+        if (effective is null)
+            return sources;
+        var retirement = decisions.SingleOrDefault(decision => decision.Kind == "retirement" &&
+            decision.Version == effective.Version && decision.DecidedAt <= through);
+        if (retirement is not null)
+        {
+            if (effective.EffectiveUntil is not { } effectiveUntil)
+            {
+                valid = false;
+                return sources;
+            }
+            sources.Add(RetirementReference(policy.Id, effective, retirement, effectiveUntil));
+            if (effectiveUntil <= periodStart)
+                return sources;
+        }
+
+        var periodicReviews = decisions.Where(decision =>
+                decision.Kind == "periodic_review" && decision.Version == effective.Version &&
+                decision.DecidedAt <= through)
+            .OrderBy(static decision => decision.DecidedAt)
+            .ThenBy(static decision => decision.DecisionId.ToString(), StringComparer.Ordinal)
+            .ToArray();
+        sources.Add(VersionReference(policy.Id, effective, periodicReviews,
+            decisions.Single(decision => decision.DecisionId == effective.ApprovalDecisionId),
+            decisions.Single(decision =>
+                decision.DecisionId == effective.AcceptedReviewDecisionId)));
+        return sources;
+    }
+
     static bool IsValidHistory(Uuid tenantId, Policy policy,
         IReadOnlyList<PolicyVersionView> versions,
         IReadOnlyList<PolicyDecisionView> decisions)
@@ -250,7 +296,7 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
         decision.Kind == "review" && decision.Outcome == "accept" &&
         decision.Revision == version.Revision && decision.DecidedAt <= version.ApprovedAt;
 
-    static TypeIBaselineSourceReference VersionReference(Uuid policyId,
+    internal static TypeIBaselineSourceReference VersionReference(Uuid policyId,
         PolicyVersionView version, IReadOnlyList<PolicyDecisionView> periodicReviews,
         PolicyDecisionView approvalDecision, PolicyDecisionView acceptedReviewDecision)
     {
@@ -267,7 +313,7 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
                 ComplianceCoreJsonContext.Default.PolicyVersionSourceContent));
     }
 
-    static TypeIBaselineSourceReference RetirementReference(Uuid policyId,
+    internal static TypeIBaselineSourceReference RetirementReference(Uuid policyId,
         PolicyVersionView version, PolicyDecisionView retirement, DateOnly effectiveUntil)
     {
         var content = new PolicyRetirementSourceContent(retirement.TenantId,
