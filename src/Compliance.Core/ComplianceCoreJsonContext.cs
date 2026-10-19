@@ -1301,6 +1301,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.PolicyCommunicationCampaignSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.TrainingRequirementSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessExpectationLedgerSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewCampaignSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewCampaignSourceEvent))]
 [JsonSerializable(typeof(Page<PolicyVersionView>))]
 [JsonSerializable(typeof(PolicyDecisionView))]
 [JsonSerializable(typeof(Page<PolicyDecisionView>))]
