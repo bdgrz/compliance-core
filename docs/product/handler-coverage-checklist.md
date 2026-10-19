@@ -34,8 +34,8 @@ Advisor collaboration:
 
 Type I baseline:
 
-- [ ] `FreezeTypeIBaseline` (partial) — authoritative source-complete preview and frozen point-in-time snapshot; only 3 of 21 required source families currently contribute.
-- [ ] `AmendTypeIBaseline` (partial) — complete amendment snapshot and package-impact evidence; only 3 of 21 required source families currently contribute.
+- [ ] `FreezeTypeIBaseline` (partial) — authoritative source-complete preview and frozen point-in-time snapshot; only 4 of 21 required source families currently contribute.
+- [ ] `AmendTypeIBaseline` (partial) — complete amendment snapshot and package-impact evidence; only 4 of 21 required source families currently contribute.
 
 Audit packages and Type II close:
 
