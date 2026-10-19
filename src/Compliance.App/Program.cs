@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance;
+using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
@@ -395,6 +396,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetWorkDigestPreference>(tool => tool.ReadOnly())
         .AddMcpTool<SetWorkDigestPreference>()
         .AddMcpHttp();
+    builder.Services.AddScoped<CaptureEvidenceArtifactHandler>();
     builder.Services.ConfigureHttpJsonOptions(options =>
     {
         options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
@@ -506,6 +508,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaPost<RegisterTenant, TenantRegistration>("/api/v1/tenants")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
+    if (app.Environment.IsDevelopment())
+    {
+        // The registered content store is local; keep public uploads unavailable until production storage is qualified.
+        app.MapEvidenceArtifactUpload();
+    }
     app.MapPortiaPost<SuspendTenant>("/api/v1/tenants/{tenant_id}/suspensions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");

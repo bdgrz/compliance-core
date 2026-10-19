@@ -278,6 +278,7 @@ The following is a static source inventory, including internal operations. Queri
 | Reactors | 30 |
 | Projectors | 66 |
 | Explicit MapPortia HTTP route registrations | 440 |
+| Additional custom HTTP route registrations | 1 |
 
 ### Existing commands
 
@@ -2998,6 +2999,7 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/approvals` | `ApproveEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1256) |
 | GET | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}` | `GetEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1260) |
 | GET | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/metadata` | `GetEvidenceArtifactMetadata` | [registration](../../src/Compliance.App/Program.cs#L1264) |
+| POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts` | `CaptureEvidenceArtifact` (development-only multipart upload) | [route](../../src/Compliance.App/Features/Evidence/EvidenceArtifactUploadEndpoint.cs#L23), [app registration](../../src/Compliance.App/Program.cs#L511) |
 | POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads` | `IssueArtifactDownload` | [registration](../../src/Compliance.App/Program.cs#L1339) |
 | POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/quarantine-releases` | `ReleaseEvidenceArtifactQuarantine` | [registration](../../src/Compliance.App/Program.cs#L1343) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports` | `LinkEvidenceSupport` | [registration](../../src/Compliance.App/Program.cs#L1348) |
