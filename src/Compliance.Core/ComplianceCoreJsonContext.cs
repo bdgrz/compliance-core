@@ -106,6 +106,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AuditOutcomeContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ApplicationRevisionSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ApplicationRetirementSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ReviewedSystemRevisionSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ReviewedSystemRetirementSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ControlVersionSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ExaminationContentReference))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.ExaminationEngagementView))]

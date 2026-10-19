@@ -22,6 +22,7 @@ static class TypeIBaselinePreviewTestFactory
         "approved_boundary" => "approved_boundary",
         "workforce_roster_snapshot" => "workforce",
         "application_revision" or "application_retirement" => "applications",
+        "reviewed_system_revision" or "reviewed_system_retirement" => "reviewed_systems",
         "criteria_selection" or "criteria_edition" => "criteria",
         "control" or "approved_control" => "controls",
         "criteria" => "criteria",
