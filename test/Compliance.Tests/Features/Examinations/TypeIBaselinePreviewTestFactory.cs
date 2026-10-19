@@ -26,6 +26,7 @@ static class TypeIBaselinePreviewTestFactory
         "system_component_revision" => "system_components",
         "information_asset_revision" => "information_assets",
         "data_flow_revision" => "data_flows",
+        "commitment_version" or "commitment_retirement" => "commitments",
         "criteria_selection" or "criteria_edition" => "criteria",
         "control" or "approved_control" => "controls",
         "criteria" => "criteria",
