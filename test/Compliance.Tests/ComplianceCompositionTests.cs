@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +26,27 @@ public sealed class ComplianceCompositionTests
 
         // Assert
         Assert.NotNull(application);
+    }
+
+    [Fact]
+    public async Task ShouldComposeEveryTypeIBaselineSourceFamilyGivenSharedApplication()
+    {
+        // Arrange
+        var builder = Compose();
+        using var host = builder.Build();
+        await using var scope = host.Services.CreateAsyncScope();
+
+        // Act
+        var contributors = scope.ServiceProvider
+            .GetServices<ITypeIBaselineSourceContributor>().ToArray();
+        var previewReader = scope.ServiceProvider.GetRequiredService<ITypeIBaselinePreviewReader>();
+
+        // Assert
+        Assert.Equal(TypeIBaselineSourceFamilies.Required.Count, contributors.Length);
+        Assert.Equal(TypeIBaselineSourceFamilies.Required.Order(StringComparer.Ordinal),
+            contributors.Select(static contributor => contributor.Family)
+                .Order(StringComparer.Ordinal));
+        Assert.IsType<TypeIBaselinePreviewReader>(previewReader);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.Readiness;
@@ -10,7 +11,8 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
     ITenantActivity tenants,
     IAccessGrantPermissionAuthorizer scopedPermissions,
     IProgramResourceScopeResolver resourceScopes,
-    ProfessionalAdvisoryReadAccess? professionalAdvisoryRead = null)
+    ProfessionalAdvisoryReadAccess? professionalAdvisoryRead = null,
+    IAccessGrantRolePermissionAuthorizer? rolePermissions = null)
     : IRequestAuthorizer<IProgramManagementRequest>
 {
     public async ValueTask<Result> AuthorizeAsync(IRequestContext<IProgramManagementRequest> context,
@@ -20,6 +22,39 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
             return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
                 "Program administration requires a Bdgrz user identity."));
         var tenantId = context.Request.TenantId;
+        if (context.Request is ListAdvisorRequests handoffs && professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.GetListVisibilityAsync(tenantId,
+                handoffs.ProgramId, userId, ct).ConfigureAwait(false) ==
+            AdvisorHandoffListVisibility.SharedOnly)
+            return Result.Success;
+        if (context.Request is GetAdvisorSharedSource sharedSource &&
+            professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.CanReadSelectedSourceAsync(tenantId,
+                sharedSource.ProgramId, sharedSource.HandoffId, sharedSource.SourceFamily,
+                sharedSource.RecordId, sharedSource.EntryId, userId, ct).ConfigureAwait(false))
+            return Result.Success;
+        if (context.Request is GetAdvisorRequest handoff && professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.CanReadHandoffAsync(tenantId, handoff.ProgramId,
+                handoff.AdvisorRequestId, userId, ct).ConfigureAwait(false))
+            return Result.Success;
+        if (context.Request is ListAdvisorFeedback feedback && professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.CanReadHandoffAsync(tenantId, feedback.ProgramId,
+                feedback.HandoffId, userId, ct).ConfigureAwait(false))
+            return Result.Success;
+        if (context.Request is CorrectAdvisorFeedback correction && professionalAdvisoryRead is not null &&
+            await professionalAdvisoryRead.CanCorrectFeedbackAsync(tenantId, correction.ProgramId,
+                correction.HandoffId, correction.FeedbackId, userId, ct).ConfigureAwait(false))
+            return Result.Success;
+        if (context.Request is RecordAdvisorFeedback advisorFeedback)
+            return professionalAdvisoryRead is not null &&
+                   await professionalAdvisoryRead.CanRecordFeedbackAsync(tenantId,
+                       advisorFeedback.ProgramId, advisorFeedback.HandoffId,
+                       advisorFeedback.SelectedSource ?? new AdvisorRecordVersion(
+                           advisorFeedback.RecordId, advisorFeedback.RecordVersionId), userId, ct)
+                       .ConfigureAwait(false)
+                ? Result.Success
+                : Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The shared advisor handoff was not found."));
         if (context.Request is ListReadinessAnnotations annotations && professionalAdvisoryRead is not null &&
             await professionalAdvisoryRead.CanReadAsync(tenantId, annotations.ProgramId, userId, ct)
                 .ConfigureAwait(false))
@@ -31,6 +66,9 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
         if (membership.Affiliation == "firm_staff")
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Firm staff require an accepted engagement to access client work."));
+        if (membership.Affiliation == "guest")
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Guest members may access only records exposed by an active advisor handoff."));
         if (!await tenants.IsActiveAsync(tenantId, ct).ConfigureAwait(false))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "The tenant is not active."));
         var memberId = RbacIds.Member(tenantId, userId);
@@ -41,6 +79,17 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
                     .ConfigureAwait(false))
                 return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                     "The program was not found."));
+            if (RequiresComplianceLead(context.Request))
+            {
+                var complianceLead = rolePermissions is not null &&
+                    await rolePermissions.IsAllowedAsRoleAsync(tenantId, userId, memberId,
+                        scoped.ProgramId, BuiltInRbac.ComplianceManagementRoleId(tenantId),
+                        scoped.RequiredPermission, ct).ConfigureAwait(false);
+                return complianceLead
+                    ? Result.Success
+                    : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                        "This advisor handoff operation requires a current Compliance Lead grant."));
+            }
             var scopedAllowed = await scopedPermissions.IsAllowedAsync(tenantId, userId, memberId,
                     scoped.ProgramId, scoped.RequiredPermission, ct)
                 .ConfigureAwait(false);
@@ -127,4 +176,8 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
         return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
             "The request does not identify an authorized program scope."));
     }
+
+    static bool RequiresComplianceLead(IProgramManagementRequest request) => request is
+        CreateAdvisorHandoff or ReviseAdvisorHandoffSelection or MarkAdvisorHandoffReadyForReview or
+        PreviewAdvisorHandoff;
 }

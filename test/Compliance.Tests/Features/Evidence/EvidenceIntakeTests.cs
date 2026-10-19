@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Artifacts;
 using Bdgrz.Compliance.Features.Evidence;
@@ -24,7 +25,7 @@ public sealed class EvidenceIntakeTests : IDisposable
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(_events);
         services.AddSingleton(TimeProvider.System);
-        services.AddPortia();
+        services.AddPortia().AddRequestHandler<CaptureEvidenceArtifactHandler>();
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         _scope = _provider.CreateAsyncScope();
         _store = new LocalArtifactContentStore(new ArtifactContentStoreOptions(_root,
@@ -47,7 +48,8 @@ public sealed class EvidenceIntakeTests : IDisposable
         var userId = Uuid.CreateVersion4();
         var request = new CaptureEvidenceArtifact(_tenantId, "handler evidence"u8.ToArray(), Metadata("Quarterly export"));
         var context = new FixedCaptureRequestContext(request, Actor(userId));
-        var handler = new CaptureEvidenceArtifactHandler(Intake());
+        var handler = new CaptureEvidenceArtifactHandler(Intake(),
+            _scope.ServiceProvider.GetRequiredService<IRequestBus>());
 
         // Act
         var captured = await handler.HandleAsync(context, CancellationToken.None);
@@ -58,6 +60,67 @@ public sealed class EvidenceIntakeTests : IDisposable
         var registration = await RegistrationAsync(captured.Value.ArtifactId);
         Assert.Equal(RbacIds.Member(_tenantId, userId).ToString(), registration.Collector.Id);
         Assert.Equal("Quarterly export", registration.Content.Title);
+    }
+
+    [Fact]
+    public async Task ShouldCaptureEvidenceFromStreamGivenAuthorizedPersonalHttpRequest()
+    {
+        // Arrange
+        _inspector.State = ArtifactInspectionState.Clean;
+        var userId = Uuid.CreateVersion4();
+        var content = new MemoryStream("streamed handler evidence"u8.ToArray(), writable: false);
+        var request = new CaptureEvidenceArtifact(_tenantId, [], Metadata("Streamed quarterly export"));
+        var dispatch = new RequestDispatchContext(Actor(userId),
+            new HttpInvocation("POST", "/api/v1/tenants/evidence", "/api/v1/tenants/{tenant_id}/evidence-artifacts", "stream-test"));
+        var handler = new CaptureEvidenceArtifactHandler(Intake(),
+            _scope.ServiceProvider.GetRequiredService<IRequestBus>());
+
+        // Act
+        var captured = await handler.HandleUploadAsync(request, content, dispatch, CancellationToken.None);
+
+        // Assert
+        Assert.True(captured.IsSuccess, captured.Error?.Message);
+        Assert.Equal(EvidenceArtifactStates.Available, captured.Value.State);
+        var registration = await RegistrationAsync(captured.Value.ArtifactId);
+        Assert.Equal(RbacIds.Member(_tenantId, userId).ToString(), registration.Collector.Id);
+        Assert.Equal("Streamed quarterly export", registration.Content.Title);
+        Assert.Equal(content.Length, _inspector.Last?.Length);
+    }
+
+    [Fact]
+    public async Task ShouldRejectEvidenceStreamGivenNonHttpInvocation()
+    {
+        // Arrange
+        var content = new MemoryStream("not an HTTP upload"u8.ToArray(), writable: false);
+        var request = new CaptureEvidenceArtifact(_tenantId, [], Metadata("Rejected streamed upload"));
+        var dispatch = new RequestDispatchContext(Actor(Uuid.CreateVersion4()), new McpInvocation("evidence.capture"));
+        var handler = new CaptureEvidenceArtifactHandler(Intake(),
+            _scope.ServiceProvider.GetRequiredService<IRequestBus>());
+
+        // Act
+        var result = await handler.HandleUploadAsync(request, content, dispatch, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal(0, content.Position);
+        Assert.False(Directory.Exists(_root));
+    }
+
+    [Fact]
+    public async Task ShouldRemoveUnregisteredContentGivenEmptyEvidenceUpload()
+    {
+        // Arrange
+        var digest = Convert.ToHexStringLower(SHA256.HashData([]));
+
+        // Act
+        var result = await CaptureAsync([], "Empty upload");
+        await using var content = await _store.OpenVerifiedAsync(
+            new ArtifactContentReference(_tenantId, digest, 0));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Null(content);
+        Assert.False((await LoadAsync(EvidenceIntake.IdFor(_tenantId, digest))).IsCreated);
     }
 
     [Fact]

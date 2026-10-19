@@ -21,7 +21,8 @@ public sealed class ApplicationRetirementTests
             ActorId, "Manager", Now);
         Assert.True(proposal.IsSuccess);
         Assert.Null(application.ApproveSuccessor(successorId, 1,
-            proposal.Value.Revision, 1, new string('a', 64),
+            application.SourceRelationshipRevision, proposal.Value.Revision, 1,
+            new string('a', 64),
             ApproverId, "Partner", Now.AddMinutes(1)));
 
         // Act
@@ -72,8 +73,34 @@ public sealed class ApplicationRetirementTests
         Assert.True(proposal.IsSuccess);
 
         // Act
-        var approval = application.ApproveSuccessor(successorId, 1, proposal.Value.Revision,
-            2, new string('a', 64), ApproverId, "Partner", Now.AddMinutes(1));
+        var approval = application.ApproveSuccessor(successorId, 1,
+            application.SourceRelationshipRevision, proposal.Value.Revision, 2,
+            new string('a', 64), ApproverId, "Partner", Now.AddMinutes(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict,
+            Assert.IsType<CommandFailure>(approval).Code);
+        Assert.Equal("proposed", application.Relationship("replaces", successorId)?.Status);
+    }
+
+    [Fact]
+    public void ShouldRejectSuccessorApprovalGivenRelationshipSetChangedAfterImpactCapture()
+    {
+        // Arrange
+        var application = Application();
+        var successorId = Uuid.CreateVersion4();
+        var proposal = application.RecordRelationship(successorId, 1, 1, "replaces",
+            ActorId, "Manager", Now);
+        Assert.True(proposal.IsSuccess);
+        var expectedSourceRelationshipRevision = application.SourceRelationshipRevision;
+        var unrelated = application.RecordRelationship(Uuid.CreateVersion4(), 1, 1,
+            "depends_on", ActorId, "Manager", Now.AddMinutes(1));
+        Assert.True(unrelated.IsSuccess);
+
+        // Act
+        var approval = application.ApproveSuccessor(successorId, 1,
+            expectedSourceRelationshipRevision, proposal.Value.Revision, 1,
+            new string('a', 64), ApproverId, "Partner", Now.AddMinutes(2));
 
         // Assert
         Assert.Equal(CommandFailureCode.StateConflict,
@@ -92,8 +119,9 @@ public sealed class ApplicationRetirementTests
         Assert.True(proposal.IsSuccess);
 
         // Act
-        var approval = application.ApproveSuccessor(successorId, 1, proposal.Value.Revision,
-            1, new string('a', 64), ActorId, "Manager", Now.AddMinutes(1));
+        var approval = application.ApproveSuccessor(successorId, 1,
+            application.SourceRelationshipRevision, proposal.Value.Revision, 1,
+            new string('a', 64), ActorId, "Manager", Now.AddMinutes(1));
 
         // Assert
         Assert.Equal(CommandFailureCode.StateConflict,

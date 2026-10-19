@@ -46,7 +46,7 @@ public sealed class AccessReviewQueueEligibility(IAggregateReader reader,
         var member = await reader.HydrateAsync(Member.ForVerification(tenantId, memberId), ct)
             .ConfigureAwait(false);
         return member.IsRegistered && !member.IsSuspended && !member.IsDeprovisioned &&
-               member.Affiliation != "firm_staff" && member.UserId != Uuid.Empty &&
+               member.Affiliation == "client_personnel" && member.UserId != Uuid.Empty &&
                RbacIds.Member(tenantId, member.UserId) == memberId
             ? member
             : null;

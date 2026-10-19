@@ -58,6 +58,38 @@ public sealed class TenantInvitationDirectoryTests
     }
 
     [Fact]
+    public async Task ShouldProjectGuestProgramsAndRequiredExpiryGivenGuestInvitation()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var directory = new FitzTenantInvitationDirectory(client);
+        var programIds = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
+        var expiresOn = DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30);
+        var aggregate = new TenantInvitation(TenantId, "guest@example.com");
+        Assert.True(aggregate.InviteGuest(programIds, expiresOn, new string('A', 64),
+            Now.AddDays(7), Now, InvitedBy, invitedByDisplay: "Org Admin").IsSuccess);
+        var invited = Assert.IsType<TenantMemberInvited>(
+            Assert.Single(new AggregateScenario<TenantInvitation>(aggregate).PendingEvents));
+        var identity = new CheckpointIdentity("TenantInvitationDirectory",
+            EventStreamPattern.ForPattern(TenantId.ToString()));
+
+        // Act
+        await using (var batch = await directory.BeginAsync(
+            new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(invited);
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var projected = Assert.Single((await directory.ListAsync(TenantId, 50, null)).Items);
+
+        // Assert
+        Assert.Equal("guest", projected.Affiliation);
+        Assert.Equal(programIds.OrderBy(id => id.ToString(), StringComparer.Ordinal).ToArray(),
+            projected.GuestProgramIds);
+        Assert.Equal(expiresOn, projected.GuestExpiresOn);
+    }
+
+    [Fact]
     public async Task ShouldBecomeActiveGivenMembershipWithoutCurrentRoleGrant()
     {
         // Arrange
@@ -82,6 +114,28 @@ public sealed class TenantInvitationDirectoryTests
         var active = await handler.HandleAsync(new RequestContext<ListTenantInvitations>(
             request, Actor()), CancellationToken.None);
         Assert.Equal("active", Assert.Single(active.Value.Items).Status);
+    }
+
+    [Fact]
+    public async Task ShouldReportExpiredGivenAcceptedGuestMembershipPastRequiredEndDate()
+    {
+        // Arrange
+        var userId = Uuid.CreateVersion4();
+        var entry = new TenantInvitationDirectoryEntry(TenantId, "guest@example.com",
+            "guest", false, null, Now.AddDays(7), InvitedBy, userId,
+            [Uuid.CreateVersion4()], DateOnly.FromDateTime(Now.UtcDateTime).AddDays(-1));
+        var membership = new FakeMembershipDirectory { IsMember = true };
+        var handler = new ListTenantInvitationsHandler(new FakeInvitationDirectory(entry),
+            membership, new FixedTimeProvider(Now));
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<ListTenantInvitations>(
+            new ListTenantInvitations(TenantId, EmailAddress: entry.EmailAddress), Actor()),
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal("expired", Assert.Single(result.Value.Items).Status);
     }
 
     [Fact]

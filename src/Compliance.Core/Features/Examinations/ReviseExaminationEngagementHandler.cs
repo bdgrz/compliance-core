@@ -3,29 +3,36 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
-sealed class ReviseExaminationEngagementHandler(IAggregateExecutor executor, TimeProvider clock)
+sealed class ReviseExaminationEngagementHandler(IAggregateReader reader,
+    IAggregateExecutor executor, TimeProvider clock)
     : IRequestHandler<ReviseExaminationEngagement>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<ReviseExaminationEngagement> context,
+    public async ValueTask<Result> HandleAsync(IRequestContext<ReviseExaminationEngagement> context,
         CancellationToken ct)
     {
         var request = context.Request;
-        if (!ExaminationCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,
+        if (!ExaminationManagementActor.TryGet(context.Actor, context.Invocation, request.TenantId,
                 out var memberId, out var display))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "An examination engagement decision requires a personal HTTP actor.")));
-        return executor.ExecuteAsync(new ExaminationEngagement(request.TenantId, request.ProgramId,
-                request.ExaminationId), engagement =>
-            {
-                if (engagement.Current is not { } current)
-                    return CommandFailureRequestAdapter.ToOutcome(
-                        CommandFailure.MissingRecord("The examination engagement was not found."));
-                var content = new ExaminationEngagementContent(current.EngagementType,
-                    request.AuditFirm, request.PeriodStart, request.PeriodEnd,
-                    request.TrustServicesCategories, current.BoundaryId,
-                    current.ManagementContactMemberIds);
-                return CommandFailureRequestAdapter.ToOutcome(engagement.Revise(
-                    request.ExpectedRevision, content, memberId, display, clock.GetUtcNow()));
-            }, context, ct);
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "An examination engagement decision requires a personal HTTP actor."));
+
+        var currentEngagement = await reader.HydrateAsync(new ExaminationEngagement(request.TenantId,
+            request.ProgramId, request.ExaminationId), ct).ConfigureAwait(false);
+        if (currentEngagement.Current is not { } current)
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                "The examination engagement was not found."));
+        var contacts = request.ManagementContactMemberIds ?? current.ManagementContactMemberIds;
+        var validation = await ExaminationManagementContacts.ValidateAsync(reader,
+            request.TenantId, contacts, ct).ConfigureAwait(false);
+        if (validation is not null)
+            return Result.Failure(validation);
+        var content = new ExaminationEngagementContent(current.EngagementType,
+            request.AuditFirm, request.PeriodStart, request.PeriodEnd,
+            request.TrustServicesCategories, current.BoundaryId, contacts);
+        return await executor.ExecuteAsync(new ExaminationEngagement(request.TenantId,
+                request.ProgramId, request.ExaminationId), engagement =>
+                CommandFailureRequestAdapter.ToOutcome(engagement.Revise(
+                    request.ExpectedRevision, content, memberId, display, clock.GetUtcNow())),
+            context, ct).ConfigureAwait(false);
     }
 }

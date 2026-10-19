@@ -70,6 +70,81 @@ public sealed class AccessGrantProposalValidatorTests
     }
 
     [Fact]
+    public async Task ShouldAllowGuestGivenTimeLimitedViewerProgramGrant()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var roleId = BuiltInRbac.ViewerRoleId(tenantId);
+        var programId = Uuid.CreateVersion4();
+        var validator = Validator(tenantId, roleId, userId, "guest");
+
+        // Act
+        var result = await validator.ValidateAsync(tenantId, Proposal(tenantId, roleId,
+            new AccessGrantPrincipal(AccessGrantPrincipalKind.Member,
+                RbacIds.Member(tenantId, userId)),
+            new AccessGrantScope(AccessGrantScopeKind.Program, programId),
+            DateTimeOffset.UtcNow.AddDays(30)));
+
+        // Assert
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task ShouldRejectGuestGrantPastMembershipEndGivenViewerRole()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var roleId = BuiltInRbac.ViewerRoleId(tenantId);
+        var programId = Uuid.CreateVersion4();
+        var expiresOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30);
+        var validator = Validator(tenantId, roleId, userId, "guest",
+            guestExpiresOn: expiresOn);
+        var membershipEnd = new DateTimeOffset(expiresOn.AddDays(1).ToDateTime(TimeOnly.MinValue,
+            DateTimeKind.Utc));
+
+        // Act
+        var result = await validator.ValidateAsync(tenantId, Proposal(tenantId, roleId,
+            new AccessGrantPrincipal(AccessGrantPrincipalKind.Member,
+                RbacIds.Member(tenantId, userId)),
+            new AccessGrantScope(AccessGrantScopeKind.Program, programId),
+            membershipEnd.AddTicks(1)));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(result.Error).Kind);
+    }
+
+    [Theory]
+    [InlineData(false, AccessGrantScopeKind.Program)]
+    [InlineData(true, AccessGrantScopeKind.Program)]
+    [InlineData(false, AccessGrantScopeKind.Organization)]
+    public async Task ShouldRejectGuestGivenUnboundedOrElevatedGrant(
+        bool elevatedRole, AccessGrantScopeKind scopeKind)
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var roleId = elevatedRole
+            ? BuiltInRbac.ComplianceManagementRoleId(tenantId)
+            : BuiltInRbac.ViewerRoleId(tenantId);
+        var scopeId = scopeKind == AccessGrantScopeKind.Organization
+            ? tenantId
+            : Uuid.CreateVersion4();
+        var validator = Validator(tenantId, roleId, userId, "guest");
+
+        // Act
+        var result = await validator.ValidateAsync(tenantId, Proposal(tenantId, roleId,
+            new AccessGrantPrincipal(AccessGrantPrincipalKind.Member,
+                RbacIds.Member(tenantId, userId)),
+            new AccessGrantScope(scopeKind, scopeId),
+            elevatedRole ? DateTimeOffset.UtcNow.AddDays(30) : null));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(result.Error).Kind);
+    }
+
+    [Fact]
     public async Task ShouldRejectProgramFromAnotherTenantGivenGrantProposal()
     {
         // Arrange
@@ -439,11 +514,22 @@ public sealed class AccessGrantProposalValidatorTests
 
     static AccessGrantProposalValidator Validator(Uuid tenantId, Uuid roleId, Uuid userId,
         string affiliation, Uuid? programTenantId = null, bool roleDeleted = false,
-        bool teamDeleted = false) =>
-        new(new MembershipReader(userId, tenantId, affiliation),
+        bool teamDeleted = false, DateOnly? guestExpiresOn = null)
+    {
+        Member? guestMember = null;
+        if (affiliation == "guest")
+        {
+            guestMember = new Member(tenantId, userId);
+            Assert.True(guestMember.Register("guest", guestExpiresOn ??
+                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(90)).IsSuccess);
+        }
+        return new AccessGrantProposalValidator(
+            new MembershipReader(userId, tenantId, affiliation),
             new TeamDirectory(), new RoleDirectory(roleId),
             ResourceScopes(programTenantId ?? tenantId),
-            new SourceReader(roleDeleted: roleDeleted, teamDeleted: teamDeleted));
+            new SourceReader(roleDeleted: roleDeleted, teamDeleted: teamDeleted,
+                member: guestMember));
+    }
 
     static ProgramResourceScopeResolver ResourceScopes(Uuid programTenantId,
         ComplianceProgram? source = null, bool projected = true) =>
@@ -451,9 +537,9 @@ public sealed class AccessGrantProposalValidatorTests
             null!, null!, null!, new SourceReader(source));
 
     static AccessGrantProposal Proposal(Uuid tenantId, Uuid roleId, AccessGrantPrincipal principal,
-        AccessGrantScope? scope = null) => new(principal, roleId,
+        AccessGrantScope? scope = null, DateTimeOffset? effectiveUntil = null) => new(principal, roleId,
         scope ?? new AccessGrantScope(AccessGrantScopeKind.Organization, tenantId),
-        new AccessGrantSource("manual", "request-1"), DateTimeOffset.UnixEpoch, null);
+        new AccessGrantSource("manual", "request-1"), DateTimeOffset.UnixEpoch, effectiveUntil);
 
     sealed class MembershipReader(Uuid memberUserId, Uuid membershipTenantId, string affiliation,
         Uuid? returnedTenantId = null, bool isDeprovisioned = false)
@@ -521,11 +607,14 @@ public sealed class AccessGrantProposalValidatorTests
     }
 
     sealed class SourceReader(ComplianceProgram? source = null, bool roleDeleted = false,
-        bool teamDeleted = false) : IAggregateReader
+        bool teamDeleted = false, Member? member = null) : IAggregateReader
     {
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
             CancellationToken ct = default) where TAggregate : Aggregate
         {
+            if (member is not null && aggregate is Member requestedMember &&
+                requestedMember.Id == member.Id)
+                return ValueTask.FromResult((TAggregate)(Aggregate)member);
             if (source is not null && source.Stream == aggregate.Stream &&
                 aggregate is ComplianceProgram)
                 return ValueTask.FromResult((TAggregate)(Aggregate)source);

@@ -291,7 +291,7 @@ public sealed class ControlEvaluationLedger : Aggregate
     ///     concluded effective; a material deviation is ineffective; a minor one is at best
     ///     effective_with_exceptions. An evaluator may always conclude more severely.
     /// </summary>
-    static string[] AllowedConclusions(ControlEvaluationStepView[] steps,
+    internal static string[] AllowedConclusions(ControlEvaluationStepView[] steps,
         IReadOnlyList<EvaluationDeviationView> deviations)
     {
         var stepIds = steps.Select(static s => s.StepId).ToHashSet();

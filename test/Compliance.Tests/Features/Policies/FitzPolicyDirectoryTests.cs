@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Text.Json;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Cntryl.Fitz;
@@ -104,6 +106,83 @@ public sealed class FitzPolicyDirectoryTests
     }
 
     [Fact]
+    public async Task ShouldListRetiredSummaryAndKeepVersionHistoryGivenSuccessorRetirement()
+    {
+        // Arrange
+        var directory = new FitzPolicyDirectory(new InMemoryKvClient());
+        var policy = new Policy(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-HISTORY"));
+        Assert.True(policy.Create(ProgramId, Uuid.CreateVersion4(), "POL-HISTORY",
+            Content("Initial"), Actor(AuthorId), AuthorId, Now).IsSuccess);
+        var firstReview = Uuid.CreateVersion4();
+        Assert.Null(policy.Review(ProgramId, policy.Revision, firstReview, "accept", "Reviewed",
+            Actor(ReviewerId), ReviewerId, Now.AddMinutes(1)));
+        Assert.Null(policy.Approve(ProgramId, policy.Revision, Uuid.CreateVersion4(), firstReview,
+            new DateOnly(2026, 10, 1), true, "Approved", null, Actor(ApproverId), ApproverId,
+            Now.AddMinutes(2)));
+        Assert.Null(policy.ProposeSuccessor(ProgramId, 1, Content("Successor"),
+            Actor(AuthorId), AuthorId, Now.AddMinutes(3)));
+        var successorReview = Uuid.CreateVersion4();
+        Assert.Null(policy.Review(ProgramId, policy.Revision, successorReview, "accept",
+            "Reviewed", Actor(ReviewerId), ReviewerId, Now.AddMinutes(4)));
+        Assert.Null(policy.Approve(ProgramId, policy.Revision, Uuid.CreateVersion4(),
+            successorReview, new DateOnly(2027, 1, 1), false, "Approved successor",
+            "impact-digest", Actor(ApproverId), ApproverId, Now.AddMinutes(5)));
+        Assert.Null(policy.ProposeRetirement(ProgramId, 2, new DateOnly(2027, 6, 1),
+            "Policy retired", Actor(AuthorId), AuthorId, Now.AddMinutes(6)));
+        var retirementReview = Uuid.CreateVersion4();
+        Assert.Null(policy.Review(ProgramId, policy.Revision, retirementReview, "accept",
+            "Reviewed", Actor(ReviewerId), ReviewerId, Now.AddMinutes(7)));
+        Assert.Null(policy.ApproveRetirement(ProgramId, policy.Revision, Uuid.CreateVersion4(),
+            retirementReview, "Approved retirement", Actor(ApproverId), ApproverId,
+            Now.AddMinutes(8)));
+
+        // Act
+        var events = new AggregateScenario<Policy>(policy).PendingEvents.ToArray();
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
+                         Identity(TenantId), ProjectionCheckpoint.Start)))
+        {
+            foreach (var ev in events)
+                await directory.ApplyAsync(ev);
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var page = await directory.ListProgramAsync(TenantId, ProgramId, 50, null);
+        var replayedPolicy = new AggregateScenario<Policy>(new Policy(TenantId, policy.Id))
+            .Given(events.Select((ev, index) => DomainEventSeed.Attach(RoundTrip(ev), policy.Id,
+                (ulong)index + 1)).ToArray()).Aggregate;
+        var reader = new PolicyAggregateReader(replayedPolicy);
+        var versions = await new ListPolicyVersionsHandler(reader).HandleAsync(
+            new RequestContext<ListPolicyVersions>(new ListPolicyVersions(TenantId, ProgramId,
+                policy.Id), new ClaimsPrincipal()), CancellationToken.None);
+        var effective = await new GetEffectivePolicyVersionHandler(reader).HandleAsync(
+            new RequestContext<GetEffectivePolicyVersion>(new GetEffectivePolicyVersion(TenantId,
+                ProgramId, policy.Id, new DateOnly(2026, 12, 31)), new ClaimsPrincipal()),
+            CancellationToken.None);
+        var effectiveSuccessor = await new GetEffectivePolicyVersionHandler(reader).HandleAsync(
+            new RequestContext<GetEffectivePolicyVersion>(new GetEffectivePolicyVersion(TenantId,
+                ProgramId, policy.Id, new DateOnly(2027, 1, 1)), new ClaimsPrincipal()),
+            CancellationToken.None);
+        var afterRetirement = await new GetEffectivePolicyVersionHandler(reader).HandleAsync(
+            new RequestContext<GetEffectivePolicyVersion>(new GetEffectivePolicyVersion(TenantId,
+                ProgramId, policy.Id, new DateOnly(2027, 6, 1)), new ClaimsPrincipal()),
+            CancellationToken.None);
+
+        // Assert
+        var summary = Assert.Single(page.Items);
+        Assert.Equal("retired", summary.Status);
+        Assert.Null(summary.PendingStatus);
+        Assert.Equal(2, summary.CurrentVersion);
+        Assert.Null(summary.NextReviewDueOn);
+        Assert.True(versions.IsSuccess);
+        Assert.Equal(["superseded", "retired"],
+            versions.Value.Items.Select(static version => version.Status));
+        Assert.True(effective.IsSuccess);
+        Assert.Equal(1, effective.Value.Version);
+        Assert.True(effectiveSuccessor.IsSuccess);
+        Assert.Equal(2, effectiveSuccessor.Value.Version);
+        Assert.Equal(RequestErrorKind.NotFound, afterRetirement.Error!.Kind);
+    }
+
+    [Fact]
     public async Task ShouldListCampaignsBoundToExactVersionGivenLaunchedAndClosedCampaigns()
     {
         // Arrange
@@ -146,6 +225,17 @@ public sealed class FitzPolicyDirectoryTests
 
     static CheckpointIdentity Identity(Uuid tenantId) => new(FitzPolicyDirectory.ProjectorName,
         EventStreamPattern.ForPattern(tenantId.ToString(), "policies"));
+
+    static DomainEvent RoundTrip(DomainEvent ev) => (DomainEvent)JsonSerializer.Deserialize(
+        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonContext.Default), ev.GetType(),
+        ComplianceCoreJsonContext.Default)!;
+
+    sealed class PolicyAggregateReader(Policy policy) : IAggregateReader
+    {
+        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
+            CancellationToken ct = default) where TAggregate : Aggregate =>
+            ValueTask.FromResult(policy is TAggregate typed ? typed : aggregate);
+    }
 
     sealed class CountingKvClient(IKvClient inner) : IKvClient
     {

@@ -31,14 +31,15 @@ public sealed class FitzExaminationEngagementDirectoryTests
             Revision = 3,
             UpdatedAt = now.AddMinutes(2),
         };
-        var preview = TypeIBaselinePreview.Create(tenantId, programId, engagementId,
+        var preview = TypeIBaselinePreviewTestFactory.Create(tenantId, programId, engagementId,
             [new TypeIBaselineSourceReference("approved_boundary", boundaryId,
                 Uuid.CreateVersion4(), 1, new string('b', 64))]);
         var baseline = new TypeIBaselineView(tenantId, programId, engagementId,
             Uuid.CreateVersion4(), "frozen", 1, preview.Sources, [], preview.CanonicalManifest,
             preview.ContentSha256,
-            frozen.UpdatedAt, actorMemberId, "Examiner", "Confirmed", null, null, [], [], 0);
-        var amendedPreview = TypeIBaselinePreview.Create(tenantId, programId, engagementId,
+            frozen.UpdatedAt, actorMemberId, "Examiner", "Confirmed", null, null, [], [], 0)
+        { SourceCoverage = preview.SourceCoverage };
+        var amendedPreview = TypeIBaselinePreviewTestFactory.Create(tenantId, programId, engagementId,
             [new TypeIBaselineSourceReference("approved_boundary", boundaryId,
                 Uuid.CreateVersion4(), 2, new string('c', 64))]);
         var amended = baseline with
@@ -47,6 +48,7 @@ public sealed class FitzExaminationEngagementDirectoryTests
             Status = "amended",
             Revision = 2,
             Sources = amendedPreview.Sources,
+            SourceCoverage = amendedPreview.SourceCoverage,
             CanonicalManifest = amendedPreview.CanonicalManifest,
             ContentSha256 = amendedPreview.ContentSha256,
             UpdatedAt = now.AddMinutes(3),

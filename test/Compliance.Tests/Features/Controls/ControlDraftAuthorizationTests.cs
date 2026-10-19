@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Programs;
@@ -34,6 +35,84 @@ public sealed class ControlDraftAuthorizationTests
         Assert.Empty(permissions.Permissions);
         Assert.Equal(programId, scoped.ProgramId);
         Assert.Equal(RbacPermissions.ProgramManage, scoped.Permission);
+    }
+
+    [Theory]
+    [InlineData("create", "compliance_lead", true)]
+    [InlineData("create", "ceo", false)]
+    [InlineData("revise", "compliance_lead", true)]
+    [InlineData("revise", "ciso", false)]
+    [InlineData("ready", "compliance_lead", true)]
+    [InlineData("ready", null, false)]
+    [InlineData("preview", "compliance_lead", true)]
+    [InlineData("preview", "ceo", false)]
+    public async Task ShouldRequireComplianceLeadGivenAdvisorHandoffMutation(string operation,
+        string? role, bool allowed)
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var scoped = new RecordingAccessGrantPermissionAuthorizer(allowed);
+        var userId = Uuid.CreateVersion4();
+        var roleAllowsHandoff = role == BuiltInRbac.ComplianceLeadRole;
+        Assert.Equal(allowed, roleAllowsHandoff);
+        var authority = new FixedAccessGrantRolePermissionAuthorizer(roleAllowsHandoff);
+        var authorizer = new ProgramManagementAuthorizer(new FixedMembershipDirectory(true),
+            new ActiveTenant(), scoped, ProgramManagementServices.ResourceScopes(),
+            rolePermissions: authority);
+        IProgramManagementRequest request = operation switch
+        {
+            "create" => new CreateAdvisorHandoff(tenantId, programId, Uuid.CreateVersion4(),
+                [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Readiness review",
+                new DateOnly(2026, 12, 31)),
+            "revise" => new ReviseAdvisorHandoffSelection(tenantId, programId,
+                Uuid.CreateVersion4(), 1,
+                [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Updated selection"),
+            "ready" => new MarkAdvisorHandoffReadyForReview(tenantId, programId,
+                Uuid.CreateVersion4(), 1),
+            "preview" => new PreviewAdvisorHandoff(tenantId, programId,
+                Uuid.CreateVersion4()),
+            _ => throw new InvalidOperationException()
+        };
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
+            request, ProgramManagementServices.Actor(userId)),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(allowed, result.IsSuccess);
+        if (!allowed)
+            Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal(tenantId, authority.TenantId);
+        Assert.Equal(programId, authority.ProgramId);
+        Assert.Equal(userId, authority.UserId);
+        Assert.Equal(RbacIds.Member(tenantId, userId), authority.MemberId);
+        Assert.Equal(BuiltInRbac.ComplianceManagementRoleId(tenantId), authority.RoleId);
+        Assert.Equal(RbacPermissions.ProgramManage, authority.Permission);
+    }
+
+    sealed class FixedAccessGrantRolePermissionAuthorizer(bool allowed)
+        : IAccessGrantRolePermissionAuthorizer
+    {
+        public Uuid TenantId { get; private set; }
+        public Uuid ProgramId { get; private set; }
+        public Uuid UserId { get; private set; }
+        public Uuid MemberId { get; private set; }
+        public Uuid RoleId { get; private set; }
+        public string? Permission { get; private set; }
+
+        public ValueTask<bool> IsAllowedAsRoleAsync(Uuid tenantId, Uuid userId, Uuid memberId,
+            Uuid programId, Uuid roleId, string permission, CancellationToken ct = default)
+        {
+            TenantId = tenantId;
+            ProgramId = programId;
+            UserId = userId;
+            MemberId = memberId;
+            RoleId = roleId;
+            Permission = permission;
+            return ValueTask.FromResult(allowed);
+        }
     }
 
     [Fact]

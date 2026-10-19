@@ -101,7 +101,8 @@ public sealed partial class DeclaredApplication
     }
 
     public CommandFailure? ApproveSuccessor(Uuid targetApplicationId,
-        long expectedSourceRevision, long expectedRelationshipRevision,
+        long expectedSourceRevision, long expectedSourceRelationshipRevision,
+        long expectedRelationshipRevision,
         long expectedTargetRevision, string impactDigest, Uuid approverMemberId,
         string approverDisplay, DateTimeOffset approvedAt)
     {
@@ -110,6 +111,9 @@ public sealed partial class DeclaredApplication
         if (expectedSourceRevision != _revision)
             return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision(
                 "application", _revision));
+        if (expectedSourceRelationshipRevision != _relationshipRevision)
+            return CommandFailure.StateConflict(
+                "The application relationships changed. Reload before approval.");
         var relationship = Relationship(ApplicationRelationshipIdentity.Replaces,
             targetApplicationId);
         if (relationship is not { Status: "proposed" } ||

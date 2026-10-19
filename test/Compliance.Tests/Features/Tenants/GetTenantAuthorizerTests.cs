@@ -50,14 +50,34 @@ public sealed class GetTenantAuthorizerTests
         Assert.True(result.IsSuccess);
     }
 
+    [Fact]
+    public async Task ShouldHideTenantGivenExpiredGuestMembership()
+    {
+        // Arrange
+        var membership = new Memberships(true, expiresOn: DateOnly.FromDateTime(DateTime.UtcNow)
+            .AddDays(-1));
+        var authorizer = new GetTenantAuthorizer(new FixedOperatorAccess(), membership,
+            new TenantActivity(true), new Permissions(true));
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(
+            new RequestContext<GetTenant>(new GetTenant(TenantId), Actor()), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+    }
+
     static ClaimsPrincipal Actor() => new(new ClaimsIdentity(
         [new Claim("iss", "bdgrz"), new Claim("sub", UserId.ToString())], "BdgrzSession"));
 
-    sealed class Memberships(bool member, bool suspended = false) : ITenantMembershipDirectoryReader
+    sealed class Memberships(bool member, bool suspended = false, DateOnly? expiresOn = null)
+        : ITenantMembershipDirectoryReader
     {
         public ValueTask<TenantMembershipView?> GetAsync(string tenantId, Uuid userId,
             CancellationToken ct = default) => ValueTask.FromResult<TenantMembershipView?>(member
-            ? new TenantMembershipView(userId, TenantId, IsSuspended: suspended) : null);
+            ? new TenantMembershipView(userId, TenantId, Affiliation: expiresOn is null
+                    ? "client_personnel" : "guest", IsSuspended: suspended,
+                MembershipExpiresOn: expiresOn) : null);
 
         public ValueTask<bool> IsMemberAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
             ValueTask.FromResult(member);

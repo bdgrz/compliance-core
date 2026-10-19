@@ -1,22 +1,70 @@
 # Query and view-model inventory
 
-This is the requirement-backed read-layer plan for the committed product scope. It names query operations and their feature-owned response views. A query is a read, list, preview, or derived assessment; a POST transport does not make a read a command. The response views below are proposed contracts to backfill, not evidence that a handler, projection, API route, or authorization policy already exists.
+This is the requirement-backed read-layer plan for the committed product scope. It names query operations and their feature-owned response views. A query is a read, list, preview, or derived assessment; a POST transport does not make a read a command. The inventory tracks required contracts and implementation coverage separately: a source file alone does not prove a handler, projection, API route, or authorization policy exists.
 
 ## Existing inventory
 
-Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **270 query contracts** (216 existing plus 54 added here) and **489 model/supporting contracts** (436 existing plus 53 response views added here). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
+Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current source inventory contains **272 unique query contracts**. The 57 rows below are required read workflows, not a unique contract count; some workflows reuse query contracts that were already in the source inventory. The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Source presence does not prove that a query is authorized, registered, projected, exposed, or satisfies its owning story. Reconcile by behavior before adding a new name.
+
+## Current handler and HTTP gaps
+
+Reconciled 2026-10-19 against the query contracts, Core handlers, and typed `MapPortia*` registrations. All query contracts in this table and their response-view contracts have source files. These 44 reads have no Core request handler and no typed HTTP registration. Their read-model repositories and projector support must be established with the owning feature before exposing a route. The query table below remains the requirement source for the expected response.
+
+| Feature | Queries without a handler or typed HTTP registration |
+| --- | --- |
+| AttestRecords | `GetOwnAttestRecordDelivery`, `GetOwnAttestRecordPackage`, `ListOutstandingAttestDeliveryHolds` |
+| AuditPackages | `GetAuditPackage`, `GetAuditPackageDelivery`, `GetAuditPackageManifest`, `GetAuditPackageValidation`, `ListAuditPackages` |
+| AuditPopulations | `GetAuditPopulation`, `GetObservationPeriodClose`, `GetPopulationReconciliation`, `ListAuditPopulationDefinitions`, `ListAuditPopulationRows`, `PreviewObservationPeriodClose` |
+| AuditorRequests | `GetAuditorRequest`, `GetSampleSelection`, `ListAuditorRequests`, `ListRequestResponses` |
+| Examinations | `GetAuditOutcome`, `GetExaminationSignOff`, `GetManagementAssertion`, `GetTypeIIPlan`, `ListAuditObservations` |
+| FirmPortfolio | `GetAuthorizedClientSummary`, `ListAuthorizedClientPortfolio`, `ListMyCrossClientWork` |
+| MethodologyTemplates | `GetMethodologyTemplateVersion`, `GetTemplateApplication`, `ListMethodologyTemplates`, `PreviewMethodologyTemplateApplication` |
+| Operations | `GetControlCalendar`, `GetManagementReview`, `GetObservationPeriod`, `ListDueGovernanceReviews`, `ListManagementReviewActions`, `ListMissingOccurrences`, `ListObservationPeriods` |
+| Programs | `GetNextPeriodPlan`, `GetProgramRollover`, `ListCarryForwardReferences`, `PreviewProgramRollover` |
+| SystemDescription | `GetSystemDescription`, `ListSystemDescriptionVersions`, `PreviewSystemDescriptionImpact` |
+
+The route gap is not an instruction to expose every command over HTTP. Keep internal worker callbacks and scheduler commands off the public API; decide route exposure per accepted user workflow and its authorization contract.
+
+The three incident reads are now implemented with a tenant-partitioned directory projection, Core handlers, and program-authorized HTTP routes. Detail and impact assessment reads return not-found for restricted records outside the current assessor or dedicated restricted-read grant; list reads filter hidden rows before pagination and do not emit a cursor that would reveal trailing restricted rows.
 
 ## Required read workflows to backfill
 
-The 54 planned query contracts and 53 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Wiring and behavior status varies by query; a contract alone does not prove handler, read-model, API/MCP, or story-level authorization coverage. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
+The 57 planned query contracts and 57 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Wiring and behavior status varies by query; a contract alone does not prove handler, read-model, API/MCP, or story-level authorization coverage. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
 
 ### Advisor collaboration — R2-08
 
 | Query | Response view | Required read |
 | --- | --- | --- |
 | [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorRequest.cs#L9) | [AdvisorRequestView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestView.cs#L6) | One scoped advisor handoff, including selected immutable record versions and lifecycle state. |
-| [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) | `Page<[AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)>` | Scoped handoff directory with status and review readiness. |
-| [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) | `Page<[AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)>` | Feedback and responses for a handoff or its selected records. |
+| [GetAdvisorSharedSource](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorSharedSource.cs#L9) | [AdvisorSharedSourceView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorSharedSourceView.cs#L8) | Current content for one exact control, policy, evidence artifact, readiness gap, or boundary question selected in an active handoff. |
+| [PreviewAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/PreviewAdvisorHandoff.cs#L7) | [AdvisorHandoffPreviewView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewView.cs#L6), [AdvisorHandoffPreviewItemView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewItemView.cs#L4) | Compliance Lead-only exact-content preview of a draft handoff, including new/changed versions and source versions removed from an explicitly selected ended shared handoff. |
+| [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) | `Page<[AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)>` | Scoped handoff directory with status, review readiness, and optional comparison baseline. |
+| [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) | `Page<[AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)>` | Feedback, corrections, responses, and resolution actor/time for a handoff or selected record. |
+
+`GetAdvisorRequest`, `GetAdvisorSharedSource`, `PreviewAdvisorHandoff`, `ListAdvisorRequests`, and `ListAdvisorFeedback`
+are available through HTTP and MCP. `PreviewAdvisorHandoff` is limited to the Compliance Lead,
+loads the exact selected content, validates current source versions, and checks the draft revision
+again after loading. Repeated handoffs name a prior shared handoff that has ended; exact unchanged
+sources are excluded, changed/new content is previewed, and removed source versions are listed
+separately. The handoff directory is a Fitz projection over handoff and
+feedback events, with tenant-partitioned program indexes, stable cursor ordering, and a read-freshness
+fence against its source event stream. Shared-source reads revalidate the selected native version
+before and after loading content; approved control and policy versions must still be the latest
+approved versions, and evidence requires the exact current program support link. Feedback pages
+mark a selected validation historical when its source is superseded or otherwise no longer current.
+Evidence bytes still flow through the governed artifact-download operation, which accepts the exact
+handoff selection and rechecks its authorization. Firm Advisors can read only an unexpired
+`ready_for_review` handoff after current engagement or program-scoped guest-grant checks. Internal
+`comment` and `change_request` feedback appears as program-manager work; response changes its next
+action to resolution, and resolution removes it from active work while preserving feedback history.
+`validated` feedback remains review history, never a work item. The firm Advisor engagement path
+remains blocked on the accepted authority prerequisite in #269.
+
+`ListAdvisorRequests` returns the full lifecycle directory to client program readers. Assigned
+Advisors and scoped guests receive only unexpired `ready_for_review` handoffs, through a separate
+status-indexed query path; the query backfills that index for existing directory entries. The
+list handler checks the visibility decision again after reading, so a revoked guest or engagement
+assignment cannot fall back to the full directory during the request.
 
 ### Type I engagement — T1-01
 
@@ -24,6 +72,7 @@ The 54 planned query contracts and 53 response-view types listed below now have 
 | --- | --- | --- |
 | [GetExaminationEngagement](../../src/Compliance.Common/Features/Examinations/GetExaminationEngagement.cs#L9) | [ExaminationEngagementView](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs#L6) | Engagement identity, period, lifecycle, and baseline binding. |
 | [GetTypeIBaseline](../../src/Compliance.Common/Features/Examinations/GetTypeIBaseline.cs#L9) | [TypeIBaselineView](../../src/Compliance.Common/Features/Examinations/TypeIBaselineView.cs#L6) | Frozen baseline manifest, exact source versions, and verification state. |
+| [PreviewTypeIBaseline](../../src/Compliance.Common/Features/Examinations/PreviewTypeIBaseline.cs#L9) | [TypeIBaselinePreviewView](../../src/Compliance.Common/Features/Examinations/TypeIBaselinePreviewView.cs#L7) | Current exact source references, uncovered source-family blockers, and scope differences before confirmation. |
 
 ### System description — T1-02
 
@@ -85,9 +134,9 @@ The 54 planned query contracts and 53 response-view types listed below now have 
 | --- | --- | --- |
 | [GetSignificantChange](../../src/Compliance.Common/Features/Changes/GetSignificantChange.cs#L9) | [SignificantChangeView](../../src/Compliance.Common/Features/Changes/SignificantChangeView.cs#L6) | Change record, impact assessment, and linked review work. |
 | [ListSignificantChanges](../../src/Compliance.Common/Features/Changes/ListSignificantChanges.cs#L9) | `Page<[SignificantChangeSummaryView](../../src/Compliance.Common/Features/Changes/SignificantChangeSummaryView.cs#L6)>` | Changes within the authorized program/period scope. |
-| [GetComplianceIncident](../../src/Compliance.Common/Features/Incidents/GetComplianceIncident.cs#L9) | [ComplianceIncidentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentView.cs#L6) | Incident, assessment, resolution, and evidence references. |
+| [GetComplianceIncident](../../src/Compliance.Common/Features/Incidents/GetComplianceIncident.cs#L9) | [ComplianceIncidentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentView.cs#L6) | Current incident chronology, assessment, resolution, and evidence references. |
 | [ListComplianceIncidents](../../src/Compliance.Common/Features/Incidents/ListComplianceIncidents.cs#L9) | `Page<[ComplianceIncidentSummaryView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentSummaryView.cs#L6)>` | Incidents within authorized program/period scope. |
-| [GetComplianceImpactAssessment](../../src/Compliance.Common/Features/Incidents/GetComplianceImpactAssessment.cs#L9) | [ComplianceImpactAssessmentView](../../src/Compliance.Common/Features/Incidents/ComplianceImpactAssessmentView.cs#L6) | Assessed control, risk, and evidence impacts with disposition. |
+| [GetComplianceImpactAssessment](../../src/Compliance.Common/Features/Incidents/GetComplianceImpactAssessment.cs#L9) | [ComplianceIncidentImpactAssessmentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentImpactAssessmentView.cs#L6) | Current assessed control, risk, evidence, and system-description impacts. |
 
 ### Period close and populations — T3-01/02
 

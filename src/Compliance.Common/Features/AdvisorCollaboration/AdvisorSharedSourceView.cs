@@ -1,0 +1,15 @@
+using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.Policies;
+using Bdgrz.Compliance.Features.Readiness;
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
+
+/// <summary>One exact source view returned only through its active advisor handoff.</summary>
+public sealed record AdvisorSharedSourceView(Uuid TenantId, Uuid ProgramId, Uuid HandoffId,
+    AdvisorRecordVersion SelectedSource, ControlDraftContent? ControlDraftContent,
+    ControlVersionView? ControlVersion, PolicyContent? PolicyDraftContent,
+    PolicyVersionView? PolicyVersion, EvidenceArtifactMetadataView? EvidenceArtifact,
+    ReadinessGapView? ReadinessGap, BoundaryScopeEntry? BoundaryQuestion);

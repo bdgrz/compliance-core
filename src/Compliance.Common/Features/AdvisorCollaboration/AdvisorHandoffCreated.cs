@@ -7,4 +7,5 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 [Discriminator("bdgrz.advisor-handoff.created", 1)]
 public sealed record AdvisorHandoffCreated(
     Uuid TenantId, Uuid ProgramId, Uuid HandoffId, IReadOnlyList<AdvisorRecordVersion> RecordVersions,
-    string Purpose, DateOnly ExpiresOn, ActorReference CreatedBy, DateTimeOffset CreatedAt) : DomainEvent;
+    string Purpose, DateOnly ExpiresOn, ActorReference CreatedBy, DateTimeOffset CreatedAt,
+    Uuid? ComparedToHandoffId = null) : DomainEvent;

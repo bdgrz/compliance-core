@@ -1,0 +1,40 @@
+using System.Security.Claims;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.UserIdentities;
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.Changes;
+
+/// <summary>Enforces the internal visibility rule for restricted change and incident records.</summary>
+public sealed class RestrictedComplianceRecordVisibility(IPermissionAuthorizer permissions)
+{
+    static readonly HashSet<string> HandlingClasses = new(StringComparer.Ordinal)
+        { "public", "internal", "confidential", "restricted" };
+
+    public async ValueTask<bool> CanReadAsync(Uuid tenantId, ClaimsPrincipal actor,
+        string? handlingClass, IReadOnlyCollection<Uuid> assessorMemberIds,
+        CancellationToken ct = default) => await CanAccessAsync(tenantId, actor, handlingClass,
+            assessorMemberIds, RbacPermissions.ComplianceRecordRestrictedRead, ct).ConfigureAwait(false);
+
+    public async ValueTask<bool> CanEditAsync(Uuid tenantId, ClaimsPrincipal actor,
+        string? handlingClass, IReadOnlyCollection<Uuid> assessorMemberIds,
+        CancellationToken ct = default) => await CanAccessAsync(tenantId, actor, handlingClass,
+            assessorMemberIds, RbacPermissions.ComplianceRecordRestrictedWrite, ct).ConfigureAwait(false);
+
+    async ValueTask<bool> CanAccessAsync(Uuid tenantId, ClaimsPrincipal actor,
+        string? handlingClass, IReadOnlyCollection<Uuid> assessorMemberIds, string permission,
+        CancellationToken ct)
+    {
+        if (tenantId == Uuid.Empty || !HandlingClasses.Contains(handlingClass ?? ""))
+            return false;
+        if (handlingClass != "restricted")
+            return true;
+        if (!UserIdentityClaims.TryGetBdgrzSubject(actor, out var userId) || assessorMemberIds is null)
+            return false;
+
+        var memberId = RbacIds.Member(tenantId, userId);
+        return assessorMemberIds.Contains(memberId) ||
+            await permissions.IsAllowedAsync(tenantId, userId, memberId,
+                permission, ct).ConfigureAwait(false);
+    }
+}

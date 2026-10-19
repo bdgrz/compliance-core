@@ -19,16 +19,21 @@ public sealed class ComplianceProgram : Aggregate
     public long Revision => _revision;
     public Uuid? CriteriaEditionId => _criteriaEditionId;
 
-    /// <summary>The most recent criteria selection recorded at or before the requested time.</summary>
-    public Uuid? CriteriaEditionAt(DateTimeOffset asOf)
+    /// <summary>The exact criteria selection recorded at or before the requested time.</summary>
+    public ProgramCriteriaEditionSelection? CriteriaSelectionAt(DateTimeOffset asOf)
     {
         var selected = _criteriaEditionHistory
             .Where(selection => selection.ChangedAt <= asOf)
             .OrderByDescending(static selection => selection.ChangedAt)
             .ThenByDescending(static selection => selection.Revision)
             .FirstOrDefault();
-        return selected.Revision > 0 ? selected.EditionId : null;
+        return selected.Revision > 0
+            ? new ProgramCriteriaEditionSelection(selected.Revision, selected.EditionId,
+                selected.ChangedAt)
+            : null;
     }
+
+    public Uuid? CriteriaEditionAt(DateTimeOffset asOf) => CriteriaSelectionAt(asOf)?.EditionId;
 
     public ComplianceProgram(Uuid tenantId, Uuid programId)
         : base(programId, new EventStreamAddress(tenantId.ToString(), "programs", programId.ToString()))

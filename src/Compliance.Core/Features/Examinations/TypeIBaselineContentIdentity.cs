@@ -7,7 +7,8 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 static class TypeIBaselineContentIdentity
 {
-    const string Domain = "bdgrz.snapshot.manifest.type_i_baseline.v1\0";
+    const string Domain = "bdgrz.snapshot.manifest.type_i_baseline.v3\0";
+    const string CoverageDomain = "bdgrz.snapshot.coverage.type_i_baseline.v1\0";
 
     public static (string Json, string Digest) Manifest(TypeIBaselinePreview preview)
     {
@@ -16,7 +17,7 @@ static class TypeIBaselineContentIdentity
                    new JsonWriterOptions { Encoder = JavaScriptEncoder.Default }))
         {
             writer.WriteStartObject();
-            writer.WriteNumber("format_version", 1);
+            writer.WriteNumber("format_version", 3);
             writer.WriteString("kind", "type_i_baseline");
             writer.WriteString("tenant_id", preview.TenantId.ToString());
             writer.WriteString("program_id", preview.ProgramId.ToString());
@@ -36,6 +37,25 @@ static class TypeIBaselineContentIdentity
                 writer.WriteEndObject();
             }
             writer.WriteEndArray();
+            writer.WritePropertyName("blockers");
+            writer.WriteStartArray();
+            foreach (var blocker in preview.Blockers.Select(static value =>
+                         value.Normalize(NormalizationForm.FormC)).OrderBy(static value => value,
+                         StringComparer.Ordinal))
+                writer.WriteStringValue(blocker);
+            writer.WriteEndArray();
+            writer.WritePropertyName("source_coverage");
+            writer.WriteStartArray();
+            foreach (var coverage in preview.SourceCoverage.OrderBy(static coverage =>
+                         coverage.Family, StringComparer.Ordinal))
+            {
+                writer.WriteStartObject();
+                writer.WriteString("family", coverage.Family);
+                writer.WriteNumber("record_count", coverage.RecordCount);
+                writer.WriteString("content_sha256", coverage.ContentSha256);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
             writer.WritePropertyName("scope_differences");
             writer.WriteStartArray();
             foreach (var difference in preview.ScopeDifferences.Select(static value =>
@@ -52,6 +72,41 @@ static class TypeIBaselineContentIdentity
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
         return (Encoding.UTF8.GetString(bytes),
+            Convert.ToHexStringLower(SHA256.HashData(material)));
+    }
+
+    public static TypeIBaselineSourceCoverage Coverage(string family,
+        IReadOnlyList<TypeIBaselineSourceReference> sources)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream,
+                   new JsonWriterOptions { Encoder = JavaScriptEncoder.Default }))
+        {
+            writer.WriteStartObject();
+            writer.WriteString("family", family.Normalize(NormalizationForm.FormC));
+            writer.WritePropertyName("sources");
+            writer.WriteStartArray();
+            foreach (var source in sources.OrderBy(static source => source.Kind,
+                         StringComparer.Ordinal).ThenBy(static source => source.RecordId.ToString(),
+                         StringComparer.Ordinal))
+            {
+                writer.WriteStartObject();
+                writer.WriteString("kind", source.Kind);
+                writer.WriteString("record_id", source.RecordId.ToString());
+                writer.WriteString("version_id", source.VersionId.ToString());
+                writer.WriteNumber("revision", source.Revision);
+                writer.WriteString("content_sha256", source.ContentSha256);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+        var prefix = Encoding.UTF8.GetBytes(CoverageDomain);
+        var bytes = stream.ToArray();
+        var material = new byte[prefix.Length + bytes.Length];
+        prefix.CopyTo(material, 0);
+        bytes.CopyTo(material, prefix.Length);
+        return new TypeIBaselineSourceCoverage(family, sources.Count,
             Convert.ToHexStringLower(SHA256.HashData(material)));
     }
 }

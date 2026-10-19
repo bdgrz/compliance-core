@@ -30,6 +30,14 @@ public sealed class EvidenceIntake(IArtifactContentStore store, IArtifactInspect
             return Validation($"Evidence content may not exceed the maximum artifact size.");
         }
         var reference = written.Content;
+        if (reference.Length <= 0)
+        {
+            var cleanup = await store.DeleteAsync(reference, ct).ConfigureAwait(false);
+            return cleanup == ArtifactDeletionResult.Held
+                ? Conflict("Empty evidence content could not be removed because a storage hold is active.")
+                : Validation("Evidence content must contain at least one byte.");
+        }
+
         var artifact = await reader.HydrateAsync(new EvidenceArtifact(tenantId, IdFor(tenantId, reference.Sha256)),
             ct).ConfigureAwait(false);
         var duplicate = artifact.IsCreated;

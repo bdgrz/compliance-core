@@ -329,6 +329,70 @@ public sealed class FitzApplicationDirectoryTests
     }
 
     [Fact]
+    public async Task ShouldProjectRevisedSystemInstanceGivenCurrentRegistration()
+    {
+        // Arrange
+        var directory = new FitzApplicationDirectory(new InMemoryKvClient());
+        var tenantId = Uuid.CreateVersion4();
+        var applicationId = Uuid.CreateVersion4();
+        var instanceId = Uuid.CreateVersion4();
+        var declaredBy = Uuid.CreateVersion4();
+        var revisedBy = Uuid.CreateVersion4();
+        var now = new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
+        var identity = new CheckpointIdentity("ApplicationDirectoryV2",
+            EventStreamPattern.ForPattern(tenantId.ToString()));
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
+                "Payroll", "Run payroll", null, declaredBy, "Owner", now));
+            await directory.ApplyAsync(new SystemInstanceRegistered(tenantId, applicationId,
+                instanceId, 1, "Production", "production", "Boundary v1", "payroll-prod",
+                declaredBy, "Owner", now));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var projector = new ApplicationDirectoryProjector(directory, new AggregateReader());
+        var revisionHandler = Assert.IsAssignableFrom<IProjectorHandler<SystemInstanceRevised>>(
+            projector);
+        var revised = new SystemInstanceRevised(tenantId, applicationId, instanceId, 2,
+            "Production east", "production", "Boundary v2", "payroll-prod-east",
+            "The reviewed system moved to the east network zone.", revisedBy, "Reviewer",
+            now.AddDays(10));
+
+        // Act
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         ProjectionCheckpoint.Start)))
+        {
+            await revisionHandler.HandleAsync(revised, new ProjectionContext(identity),
+                CancellationToken.None);
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var instance = await directory.GetInstanceAsync(tenantId, instanceId);
+
+        // Assert
+        Assert.Equal(2, instance?.Revision);
+        Assert.Equal("Production east", instance?.Name);
+        Assert.Equal("production", instance?.Kind);
+        Assert.Equal("Boundary v2", instance?.AccessBoundaryReference);
+        Assert.Equal("payroll-prod-east", instance?.SourceIdentifier);
+        Assert.Equal(declaredBy, instance?.DeclaredByMemberId);
+        Assert.Contains("access_boundary_unverified", instance!.Unresolved);
+        Assert.Contains("source_identifier_unverified", instance.Unresolved);
+    }
+
+    sealed class AggregateReader : IAggregateReader
+    {
+        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
+            CancellationToken ct = default) where TAggregate : Aggregate =>
+            ValueTask.FromResult(aggregate);
+    }
+
+    sealed record ProjectionContext(CheckpointIdentity Identity) : IProjectorContext
+    {
+        public bool IsRebuild => Identity.RebuildId is not null;
+    }
+
+    [Fact]
     public async Task ShouldKeepFirstRowAndFlagConflictGivenDifferentContentForSameInstanceKey()
     {
         // Arrange

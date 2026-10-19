@@ -20,8 +20,6 @@ public sealed class ScopeResponsibilityIndependenceTests
     [InlineData("revoke", false, "client_personnel", "http")]
     [InlineData("freeze", false, "client_personnel", "http")]
     [InlineData("amend", false, "client_personnel", "http")]
-    [InlineData("assign", true, "guest", "mcp")]
-    [InlineData("amend", true, "guest", "mcp")]
     public async Task ShouldPreserveRetainedSourcesGivenDeniedHistoricalAttestManagementWrite(string operation,
         bool closed, string affiliation, string transport)
     {

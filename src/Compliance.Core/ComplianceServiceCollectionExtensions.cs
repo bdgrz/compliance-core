@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.AuditPopulations;
@@ -483,6 +484,7 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
         services.AddScoped<IPopulationSnapshotDirectoryReader>(
             provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
+        services.AddScoped<PopulationSnapshotDirectoryReadConsistency>();
         services.AddScoped<PopulationSnapshotFreezer>();
         services.TryAddSingleton(TenantActivationPolicy.Default);
         services.AddScoped<TenantManagerInvariant>();
@@ -510,6 +512,8 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
         services.AddScoped<IAccessGrantScopePermissionAuthorizer>(provider =>
             provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
+        services.AddScoped<IAccessGrantRolePermissionAuthorizer>(provider =>
+            provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
         services.AddScoped<RestrictedApplicationVisibility>();
         services.AddScoped<TechnologyInventoryRestrictedVisibility>();
         services.AddScoped<OperatingAuthority>();
@@ -518,6 +522,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ClientManagementIndependenceGuard>();
         services.AddScoped<ClientCompartmentIndependenceGuard>();
         services.AddScoped<ProfessionalAdvisoryReadAccess>();
+        services.AddScoped<IAdvisorSharedSourceAuthorization>(provider =>
+            provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        services.AddScoped<IAdvisorHandoffListAccess>(provider =>
+            provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();
@@ -542,8 +550,47 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<FitzExaminationEngagementDirectory>();
         services.AddScoped<IExaminationEngagementDirectoryReader>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
+        services.AddScoped<FitzSignificantChangeDirectory>();
+        services.AddScoped<ISignificantChangeDirectoryProjection>(provider =>
+            provider.GetRequiredService<FitzSignificantChangeDirectory>());
+        services.AddScoped<ISignificantChangeDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzSignificantChangeDirectory>());
+        services.AddScoped<IChangeImpactWorkOwnershipReader, AccountableWorkItemOwnershipReader>();
+        services.AddScoped<ISystemDescriptionDecisionCorrelationReader,
+            AggregateSystemDescriptionDecisionCorrelationReader>();
+        services.AddScoped<RestrictedComplianceRecordVisibility>();
+        services.AddScoped<FitzComplianceIncidentDirectory>();
+        services.AddScoped<IComplianceIncidentDirectoryProjection>(provider =>
+            provider.GetRequiredService<FitzComplianceIncidentDirectory>());
+        services.AddScoped<IComplianceIncidentDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzComplianceIncidentDirectory>());
         services.AddScoped<IExaminationEngagementDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
+        services.AddScoped<ITypeIBaselineSourceContributor, BoundaryTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, CriteriaTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ApplicationTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ReviewedSystemTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, TechnologyComponentTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, InformationAssetTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, DataFlowTypeIBaselineSourceContributor>();
+        services.AddScoped<CommitmentTypeIBaselineSourceReader>();
+        services.AddScoped<IProviderCsocBaselineReader>(provider =>
+            provider.GetRequiredService<CommitmentTypeIBaselineSourceReader>());
+        services.AddScoped<ITypeIBaselineSourceContributor, CommitmentTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, SystemRequirementTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ControlTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ControlCriterionMappingTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ControlEvaluationTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, PolicyTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, PolicyCommunicationTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, AccessExpectationsTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, AccessReviewCampaignsTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, RiskTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ProviderTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, EvidenceGovernanceTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, FindingTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, WorkforceTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselinePreviewReader, TypeIBaselinePreviewReader>();
         services.AddScoped<IReadinessReadModel, FitzReadinessReadModel>();
         services.AddScoped<ReadinessProjectionReadConsistency>();
         services.AddScoped<IApplicationReadinessImpactReader, ApplicationReadinessImpactReader>();
@@ -574,6 +621,19 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceArtifactReadAccess>();
         services.AddScoped<EvidenceArtifactMetadataRead>();
         services.AddScoped<EvidenceSupportTargetSource>();
+        services.AddScoped<IAdvisorRecordVersionResolver, AdvisorRecordVersionResolver>();
+        services.AddScoped<IAdvisorSharedSourceReader, AdvisorSharedSourceReader>();
+        services.AddScoped<FitzAdvisorHandoffDirectory>();
+        services.AddScoped<IAdvisorHandoffDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzAdvisorHandoffDirectory>());
+        services.AddScoped<IAdvisorHandoffDirectoryProjection>(provider =>
+            provider.GetRequiredService<FitzAdvisorHandoffDirectory>());
+        services.AddScoped<AdvisorHandoffListReadConsistency>();
+        services.AddScoped<FitzAdvisorFeedbackWorkItemDirectory>();
+        services.AddScoped<IAdvisorFeedbackWorkItemProjection>(provider =>
+            provider.GetRequiredService<FitzAdvisorFeedbackWorkItemDirectory>());
+        services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzAdvisorFeedbackWorkItemDirectory>());
         services.AddScoped<AuditorResponseEvidence>();
         services.AddScoped<DirectoryReevaluationDiscovery>();
         services.AddScoped<ProfessionalDutyAdministrationAuthorizer>();
@@ -820,9 +880,20 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListOperationalProcessesHandler>()
             .AddRequestHandler<ListOperationalProcessRevisionsHandler>()
             .AddRequestAuthorizer<TechnologyInventoryAuthorizer>()
+            .AddRequestHandler<CreateAdvisorHandoffHandler>()
+            .AddRequestHandler<ReviseAdvisorHandoffSelectionHandler>()
+            .AddRequestHandler<MarkAdvisorHandoffReadyForReviewHandler>()
             .AddRequestHandler<CloseAdvisorHandoffHandler>()
             .AddRequestHandler<RevokeAdvisorHandoffHandler>()
             .AddRequestHandler<RespondToAdvisorFeedbackHandler>()
+            .AddRequestHandler<ResolveAdvisorFeedbackHandler>()
+            .AddRequestHandler<RecordAdvisorFeedbackHandler>()
+            .AddRequestHandler<GetAdvisorRequestHandler>()
+            .AddRequestHandler<GetAdvisorSharedSourceHandler>()
+            .AddRequestHandler<PreviewAdvisorHandoffHandler>()
+            .AddRequestHandler<ListAdvisorRequestsHandler>()
+            .AddRequestHandler<ListAdvisorFeedbackHandler>()
+            .AddRequestHandler<CorrectAdvisorFeedbackHandler>()
             .AddRequestHandler<CreateProgramHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()
@@ -869,6 +940,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviseExaminationEngagementHandler>()
             .AddRequestHandler<GetExaminationEngagementHandler>()
             .AddRequestHandler<GetTypeIBaselineHandler>()
+            .AddRequestHandler<PreviewTypeIBaselineHandler>()
+            .AddRequestHandler<FreezeTypeIBaselineHandler>()
+            .AddRequestHandler<AmendTypeIBaselineHandler>()
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ProposeTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ApproveTypeIIOperatingPlanHandler>()
@@ -920,6 +994,15 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordSignificantChangeHandler>()
             .AddRequestHandler<ReviseSignificantChangeHandler>()
             .AddRequestHandler<AssessSignificantChangeHandler>()
+            .AddRequestHandler<GetSignificantChangeHandler>()
+            .AddRequestHandler<ListSignificantChangesHandler>()
+            .AddRequestHandler<GetComplianceIncidentHandler>()
+            .AddRequestHandler<ListComplianceIncidentsHandler>()
+            .AddRequestHandler<GetComplianceImpactAssessmentHandler>()
+            .AddRequestHandler<LinkImpactReviewWorkHandler>()
+            .AddRequestHandler<RecordSignificantChangeSystemDescriptionDecisionHandler>()
+            .AddRequestHandler<RecordComplianceIncidentSystemDescriptionDecisionHandler>()
+            .AddRequestAuthorizer<ComplianceImpactReactionAuthorizer>()
             .AddRequestHandler<RecordComplianceIncidentHandler>()
             .AddRequestHandler<ReviseComplianceIncidentHandler>()
             .AddRequestHandler<AssessComplianceIncidentHandler>()
@@ -1176,6 +1259,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RegenerateWorkforceRosterSnapshotManifestHandler>()
             .AddRequestAuthorizer<ProgramManagementAuthorizer>()
             .AddRequestAuthorizer<ClientManagementMutationAuthorizer>()
+            .AddRequestAuthorizer<RestrictedComplianceRecordMutationAuthorizer>()
             .AddRequestAuthorizer<ClientRbacMutationAuthorizer>()
             .AddRequestAuthorizer<SeparationOfDutiesWaiverAuthorizer>()
             .AddRequestHandler<RegisterTenantHandler>()
@@ -1190,8 +1274,11 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<OffboardTenantHandler>()
             .AddRequestHandler<InviteTenantMemberHandler>()
             .AddRequestHandler<InviteOrganizationMemberHandler>()
+            .AddRequestHandler<InviteGuestConsultantHandler>()
             .AddRequestHandler<ListTenantInvitationsHandler>()
             .AddRequestHandler<GetMemberAccessHandler>()
+            .AddRequestHandler<ProvisionGuestProgramAccessHandler>()
+            .AddRequestAuthorizer<GuestInvitationReactionAuthorizer>()
             .AddRequestHandler<AcceptTenantInvitationHandler>()
             .AddRequestHandler<GetTenantHandler>()
             .AddRequestAuthorizer<GetTenantAuthorizer>()
@@ -1256,6 +1343,8 @@ public static class ComplianceServiceCollectionExtensions
             // registrations without restoring intentionally removed memberships or grants.
             .AddReactor<ApplicationInventoryGrantBackfillReactor>(
                 "ApplicationInventoryGrantBackfillV1", WorkloadScope.Global)
+            .AddReactor<ComplianceRecordRestrictedAccessGrantBackfillReactor>(
+                "ComplianceRecordRestrictedAccessGrantBackfillV1", WorkloadScope.Global)
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AcceptedStaffDirectoryReconciliationReactor>(AcceptedStaffDirectoryReconciliationReactor.WorkloadName, WorkloadScope.PerTenant,
@@ -1284,6 +1373,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<RoleCleanupReactor>("RoleCleanup", WorkloadScope.PerTenant)
             .AddReactor<ControlOccurrenceFindingReactor>(
                 ControlOccurrenceFindingReactor.WorkloadName, WorkloadScope.PerTenant)
+            .AddReactor<LinkImpactReviewWorkReactor>(
+                LinkImpactReviewWorkReactor.WorkloadName, WorkloadScope.PerTenant)
+            .AddReactor<SystemDescriptionDecisionReactor>(
+                SystemDescriptionDecisionReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddReactor<ControlEvaluationDeviationFindingReactor>(
                 ControlEvaluationDeviationFindingReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddProjector<ActualStaffEngagementLocatorProjector>(ActualStaffEngagementLocatorProjector.WorkloadName,
@@ -1302,6 +1395,14 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant)
             .AddProjector<ExaminationEngagementDirectoryProjector>(
                 FitzExaminationEngagementDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<SignificantChangeDirectoryProjector>(
+                SignificantChangeDirectoryProjector.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<ComplianceIncidentDirectoryProjector>(
+                ComplianceIncidentDirectoryProjector.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<AdvisorHandoffDirectoryProjector>(
+                FitzAdvisorHandoffDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<AdvisorFeedbackWorkItemProjector>(
+                FitzAdvisorFeedbackWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ControlDraftDirectoryV2Projector>("ControlDraftDirectoryV2",
                 WorkloadScope.PerTenant)
             .AddProjector<ControlDraftHistoryDirectoryV1Projector>(

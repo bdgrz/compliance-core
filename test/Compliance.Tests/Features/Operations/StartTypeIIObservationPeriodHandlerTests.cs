@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.SystemDescription;
+using Bdgrz.Compliance.Tests.Features.Examinations;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -354,7 +355,8 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i", "Audit Firm",
                 new DateOnly(2026, 9, 30), null, ["security"], BoundaryId, []),
                 AuthorId, "Examiner", Now.AddMinutes(-12)));
-            var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, EngagementId, BaselineSources);
+            var preview = TypeIBaselinePreviewTestFactory.Create(TenantId, ProgramId,
+                EngagementId, BaselineSources);
             Assert.Null(engagement.FreezeBaseline(1, BaselineId, preview,
                 "The frozen baseline includes the approved system description.", AuthorId,
                 "Examiner", Now.AddMinutes(-7)));
