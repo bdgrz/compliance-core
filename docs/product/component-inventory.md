@@ -150,12 +150,12 @@ These candidates make later scope concrete. They are not established public cont
 
 ### Changes and incidents — T2-07
 
-- Aggregate/model candidates: SignificantChange; ComplianceIncident; ComplianceImpactAssessment; ChangeReviewReference.
-- Commands: RecordSignificantChange; ReviseSignificantChange; AssessSignificantChangeImpact; RecordComplianceIncident; ReviseComplianceIncident; AssessComplianceIncidentImpact; RecordIncidentResolution; LinkImpactReviewWork.
+- Aggregate/model candidates: SignificantChange; ComplianceIncident; ComplianceIncidentImpactAssessmentView.
+- Commands: RecordSignificantChange; ReviseSignificantChange; AssessSignificantChange; RecordComplianceIncident; ReviseComplianceIncident; AssessComplianceIncident; RecordComplianceIncidentResolution; internal LinkImpactReviewWork; internal RecordSignificantChangeSystemDescriptionDecision; internal RecordComplianceIncidentSystemDescriptionDecision.
 - Queries: GetSignificantChange; ListSignificantChanges; GetComplianceIncident; ListComplianceIncidents; GetComplianceImpactAssessment.
-- Events: SignificantChangeRecorded; SignificantChangeRevised; SignificantChangeImpactAssessed; ComplianceIncidentRecorded; ComplianceIncidentRevised; ComplianceIncidentImpactAssessed; IncidentResolutionRecorded; ImpactReviewWorkLinked.
-- Reactors: ComplianceImpactReviewReactor; ChangeRiskReassessmentReactor.
-- Projectors: SignificantChangeDirectoryProjector; ComplianceIncidentDirectoryProjector; ComplianceImpactWorkItemProjector.
+- Events: SignificantChangeRecorded; SignificantChangeRevised; SignificantChangeImpactAssessed; ImpactReviewWorkLinked; SignificantChangeSystemDescriptionDecisionRecorded; ComplianceIncidentRecorded; ComplianceIncidentRevised; ComplianceIncidentImpactAssessed; IncidentResolutionRecorded; ComplianceIncidentSystemDescriptionDecisionRecorded.
+- Reactors: LinkImpactReviewWorkReactor; SystemDescriptionDecisionReactor. Incident approved-successor correlation remains incomplete because approved description content has no incident-ID field.
+- Projectors: SignificantChangeDirectoryProjector; ComplianceIncidentDirectoryProjector.
 - API family: native changes, native incidents, impact assessments and linked reviews.
 
 ### Optional collection — T2-08
@@ -256,7 +256,9 @@ These candidates make later scope concrete. They are not established public cont
 - Preserve manual capture for evidence, workforce/access populations, operational facts, professional handoffs and all compliance outcomes. Collection and integrations remain optional.
 - The canonical catalog's finer device, resource, network and provider facets are not an instruction to build a full CMDB. Add persistence and APIs when an approved story consumes them.
 - Every read must apply tenant, permission, sensitive-field and independence rules before rows, counts, cursors, exports or derived results become visible.
+- T2-07 records with `handling_class: restricted` are visible and editable only to the current assessor or a member with the dedicated restricted-read or restricted-write grant; built-in Org Admin and Compliance Lead roles receive both grants.
 - Use versioned projector identities and atomic rows/checkpoints. Freshness applies per required source/projection; reproducible history requires retained exact inputs or snapshots.
+- Coordinate cross-aggregate business flows through event choreography: reactors consume committed facts and issue idempotent commands to each owning aggregate. Keep aggregates within one consistency boundary and projectors read-only.
 - Schedule time-driven checks through an explicit clock/tick/job contract. Ordinary event consumption alone does not detect elapsed deadlines, expiry or missing occurrences. Reminders, waiver expiry, acceptance expiry, retention eligibility and recurring work each need an owning policy and safe scheduler.
 - A reminder reactor must not silently approve work, expire a business decision, release a hold or dispose of content. Those transitions require their owning commands and authorization.
 - Reactor follow-up commands and external effects need stable IDs, durable progress, retry/recovery and duplicate suppression. Distinguish committed intent from observed provider completion.
@@ -270,15 +272,17 @@ The following is a static source inventory, including internal operations. Queri
 
 | Category | Unique feature/type names |
 | --- | ---: |
-| Commands | 231 |
+| Commands | 238 |
 | Queries | 272 |
-| Events | 374 |
-| Aggregates | 83 |
-| Models and supporting contracts | 564 |
-| Reactors | 30 |
-| Projectors | 66 |
-| Explicit MapPortia HTTP route registrations | 440 |
+| Events | 404 |
+| Aggregates | 85 |
+| Models and supporting contracts | 569 |
+| Reactors | 33 |
+| Projectors | 78 |
+| Explicit MapPortia HTTP route registrations | 493 |
 | Additional custom HTTP route registrations | 1 |
+
+Reconciled 2026-10-19. All 404 declared event types now have a recorded requirement mapping or explicit exclusion in the [event source reconciliation](domain-event-list.md#source-declaration-reconciliation). The HTTP route table below mirrors the typed registrations in `Program.cs`; it does not imply that every command has or should have an HTTP route.
 
 ### Existing commands
 
@@ -380,6 +384,14 @@ The following is a static source inventory, including internal operations. Queri
 - [ReviewBoundary](../../src/Compliance.Common/Features/Boundaries/ReviewBoundary.cs#L7) — `bdgrz.boundary.review` v1
 - [ReviseBoundaryDraft](../../src/Compliance.Common/Features/Boundaries/ReviseBoundaryDraft.cs#L7) — `bdgrz.boundary.draft.revise` v1
 
+#### Changes
+
+- [AssessSignificantChange](../../src/Compliance.Common/Features/Changes/AssessSignificantChange.cs#L8) — `bdgrz.changes.assess-significant-change` v2
+- [RecordSignificantChange](../../src/Compliance.Common/Features/Changes/RecordSignificantChange.cs#L8) — `bdgrz.changes.record-significant-change` v2
+- [ReviseSignificantChange](../../src/Compliance.Common/Features/Changes/ReviseSignificantChange.cs#L8) — `bdgrz.changes.revise-significant-change` v2
+- [LinkImpactReviewWork](../../src/Compliance.Common/Features/Changes/LinkImpactReviewWork.cs#L6) — `bdgrz.changes.link-impact-review-work` v1 (internal reaction)
+- [RecordSignificantChangeSystemDescriptionDecision](../../src/Compliance.Common/Features/Changes/RecordSignificantChangeSystemDescriptionDecision.cs#L6) — `bdgrz.changes.record-system-description-decision` v2 (internal reaction)
+
 #### Commitments
 
 - [ApproveCommitmentDraft](../../src/Compliance.Common/Features/Commitments/ApproveCommitmentDraft.cs#L12) — `bdgrz.commitment.draft.approve` v1
@@ -422,6 +434,14 @@ The following is a static source inventory, including internal operations. Queri
 - [ReviewControlEvaluation](../../src/Compliance.Common/Features/Evaluations/ReviewControlEvaluation.cs#L12) — `bdgrz.control.evaluation.review` v1
 - [StartControlEvaluation](../../src/Compliance.Common/Features/Evaluations/StartControlEvaluation.cs#L12) — `bdgrz.control.evaluation.start` v1
 - [SubmitControlEvaluation](../../src/Compliance.Common/Features/Evaluations/SubmitControlEvaluation.cs#L12) — `bdgrz.control.evaluation.submit` v1
+
+#### Incidents
+
+- [AssessComplianceIncident](../../src/Compliance.Common/Features/Incidents/AssessComplianceIncident.cs#L8) — `bdgrz.incidents.assess-compliance-incident` v2
+- [RecordComplianceIncident](../../src/Compliance.Common/Features/Incidents/RecordComplianceIncident.cs#L8) — `bdgrz.incidents.record-compliance-incident` v2
+- [RecordComplianceIncidentResolution](../../src/Compliance.Common/Features/Incidents/RecordComplianceIncidentResolution.cs#L8) — `bdgrz.incidents.record-compliance-incident-resolution` v2
+- [ReviseComplianceIncident](../../src/Compliance.Common/Features/Incidents/ReviseComplianceIncident.cs#L8) — `bdgrz.incidents.revise-compliance-incident` v2
+- [RecordComplianceIncidentSystemDescriptionDecision](../../src/Compliance.Common/Features/Incidents/RecordComplianceIncidentSystemDescriptionDecision.cs#L7) — `bdgrz.incidents.record-system-description-decision` v2 (internal reaction)
 
 #### Evidence
 
@@ -981,14 +1001,14 @@ The following is a static source inventory, including internal operations. Queri
 
 ##### Changes
 
-- [GetSignificantChange](../../src/Compliance.Common/Features/Changes/GetSignificantChange.cs#L9) — `bdgrz.changes.get-significant-change` v1
+- [GetSignificantChange](../../src/Compliance.Common/Features/Changes/GetSignificantChange.cs#L9) — `bdgrz.changes.get-significant-change` v2
 - [ListSignificantChanges](../../src/Compliance.Common/Features/Changes/ListSignificantChanges.cs#L9) — `bdgrz.changes.list-significant-changes` v1
 
 ##### Incidents
 
-- [GetComplianceIncident](../../src/Compliance.Common/Features/Incidents/GetComplianceIncident.cs#L9) — `bdgrz.incidents.get-compliance-incident` v1
+- [GetComplianceIncident](../../src/Compliance.Common/Features/Incidents/GetComplianceIncident.cs#L9) — `bdgrz.incidents.get-compliance-incident` v2
 - [ListComplianceIncidents](../../src/Compliance.Common/Features/Incidents/ListComplianceIncidents.cs#L9) — `bdgrz.incidents.list-compliance-incidents` v1
-- [GetComplianceImpactAssessment](../../src/Compliance.Common/Features/Incidents/GetComplianceImpactAssessment.cs#L9) — `bdgrz.incidents.get-compliance-impact-assessment` v1
+- [GetComplianceImpactAssessment](../../src/Compliance.Common/Features/Incidents/GetComplianceImpactAssessment.cs#L9) — `bdgrz.incidents.get-compliance-impact-assessment` v2
 
 ##### AuditPopulations
 
@@ -1174,6 +1194,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 
 - [ImpactReviewWorkLinked](../../src/Compliance.Common/Features/Changes/ImpactReviewWorkLinked.cs#L6)
+- [SignificantChangeSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Changes/SignificantChangeSystemDescriptionDecisionRecorded.cs#L6)
 
 
 - [SignificantChangeImpactAssessed](../../src/Compliance.Common/Features/Changes/SignificantChangeImpactAssessed.cs#L6)
@@ -1405,6 +1426,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [ComplianceIncidentImpactAssessed](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentImpactAssessed.cs#L6)
 - [ComplianceIncidentRecorded](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentRecorded.cs#L6)
 - [ComplianceIncidentRevised](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentRevised.cs#L6)
+- [ComplianceIncidentSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentSystemDescriptionDecisionRecorded.cs#L6)
 - [IncidentResolutionRecorded](../../src/Compliance.Common/Features/Incidents/IncidentResolutionRecorded.cs#L6)
 
 ### Existing events
@@ -2446,6 +2468,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [WorkforceGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/WorkforceGrantBackfillReactor.cs#L8)
 - [WorkforcePersonalDetailsGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/WorkforcePersonalDetailsGrantBackfillReactor.cs#L10)
 - [WorkforceRestrictedFieldGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/WorkforceRestrictedFieldGrantBackfillReactor.cs#L9)
+- [ComplianceRecordRestrictedAccessGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/ComplianceRecordRestrictedAccessGrantBackfillReactor.cs#L6)
 
 #### Applications
 
@@ -2458,6 +2481,11 @@ These 140 requirement-backed event contracts have been added since the existing-
 #### Evidence
 
 - [EvidenceArtifactInspectionEffectsReactor](../../src/Compliance.Core/Features/Evidence/EvidenceArtifactInspectionEffectsReactor.cs#L6)
+
+#### Changes
+
+- [LinkImpactReviewWorkReactor](../../src/Compliance.Core/Features/Changes/LinkImpactReviewWorkReactor.cs#L5)
+- [SystemDescriptionDecisionReactor](../../src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs#L8)
 
 #### Remediation
 
@@ -2500,6 +2528,8 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [AccessPopulationDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/AccessPopulationDirectoryProjector.cs#L5)
 - [AccessReviewCampaignDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaignDirectoryProjector.cs#L5)
+- [AccessReviewCampaignImpactProjector](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaignImpactProjector.cs#L5)
+- [AccessReviewCampaignWorkItemProjector](../../src/Compliance.Core/Features/Work/AccessReviewCampaignWorkItemProjector.cs#L5)
 
 #### AdvisorCollaboration
 
@@ -2511,8 +2541,13 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [AccessReviewScopeDirectoryProjector](../../src/Compliance.Core/Features/Applications/AccessReviewScopeDirectoryProjector.cs#L5)
 - [ApplicationBoundaryReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationBoundaryReferenceProjector.cs#L6)
 - [ApplicationControlDraftReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationControlDraftReferenceProjector.cs#L7)
+- [ApplicationControlVersionReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationControlVersionReferenceProjector.cs#L5)
 - [ApplicationDirectoryProjector](../../src/Compliance.Core/Features/Applications/ApplicationDirectoryProjector.cs#L5)
+- [ApplicationEvidenceSourceReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationEvidenceSourceReferenceProjector.cs#L5)
 - [ApplicationImportProjector](../../src/Compliance.Core/Features/Applications/ApplicationImportProjector.cs#L5)
+- [ApplicationIncomingRelationshipProjector](../../src/Compliance.Core/Features/Applications/ApplicationIncomingRelationshipProjector.cs#L5)
+- [ApplicationPolicyReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationPolicyReferenceProjector.cs#L5)
+- [ApplicationRelationshipProjector](../../src/Compliance.Core/Features/Applications/ApplicationRelationshipProjector.cs#L5)
 
 #### Boundaries
 
@@ -2536,6 +2571,18 @@ These 140 requirement-backed event contracts have been added since the existing-
 #### Criteria
 
 - [CriteriaTextOverlayDirectoryProjector](../../src/Compliance.Core/Features/Criteria/CriteriaTextOverlayDirectoryProjector.cs#L5)
+
+#### Examinations
+
+- [ExaminationEngagementDirectoryProjector](../../src/Compliance.Core/Features/Examinations/ExaminationEngagementDirectoryProjector.cs#L5)
+
+#### Changes
+
+- [SignificantChangeDirectoryProjector](../../src/Compliance.Core/Features/Changes/SignificantChangeDirectoryProjector.cs#L5)
+
+#### Incidents
+
+- [ComplianceIncidentDirectoryProjector](../../src/Compliance.Core/Features/Incidents/ComplianceIncidentDirectoryProjector.cs#L5)
 
 #### Policies
 
@@ -2665,7 +2712,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 ##### AuditPackages
 
-- [AuditPackageBuildOutput](../../src/Compliance.Core/Features/AuditPackages/AuditPackageBuildOutput.cs#L6)
+- [AuditPackageBuildOutput](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildOutput.cs#L6)
 - [AuditPackageBuildAttemptView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildAttemptView.cs#L6)
 - [AuditPackageContent](../../src/Compliance.Common/Features/AuditPackages/AuditPackageContent.cs#L6)
 - [AuditPackageDisclosureApprovalView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageDisclosureApprovalView.cs#L6)
@@ -2753,7 +2800,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [ComplianceIncidentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentView.cs#L6)
 - [ComplianceIncidentSummaryView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentSummaryView.cs#L6)
-- [ComplianceImpactAssessmentView](../../src/Compliance.Common/Features/Incidents/ComplianceImpactAssessmentView.cs#L6)
+- [ComplianceIncidentImpactAssessmentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentImpactAssessmentView.cs#L6)
 
 ##### AuditPopulations
 
@@ -2797,380 +2844,499 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 
 | Method | Route | Request | Source |
 | --- | --- | --- | --- |
-| POST | `/api/v1/developer-user-sessions` | `ContinueWithDeveloperIdentity` | [registration](../../src/Compliance.App/Program.cs#L454) |
-| POST | `/api/v1/oidc-user-sessions` | `ContinueWithOidcProvider` | [registration](../../src/Compliance.App/Program.cs#L462) |
-| POST | `/api/v1/my/oidc-identity-links` | `LinkOidcProviderIdentity` | [registration](../../src/Compliance.App/Program.cs#L467) |
-| POST | `/api/v1/identity-recovery/challenges` | `StartIdentityRecovery` | [registration](../../src/Compliance.App/Program.cs#L471) |
-| POST | `/api/v1/identity-recovery/options` | `GetIdentityRecoveryOptions` | [registration](../../src/Compliance.App/Program.cs#L474) |
-| POST | `/api/v1/identity-recovery/completions` | `CompleteIdentityRecovery` | [registration](../../src/Compliance.App/Program.cs#L478) |
-| POST | `/api/v1/tenants` | `RegisterTenant` | [registration](../../src/Compliance.App/Program.cs#L482) |
-| POST | `/api/v1/tenants/{tenant_id}/suspensions` | `SuspendTenant` | [registration](../../src/Compliance.App/Program.cs#L485) |
-| DELETE | `/api/v1/tenants/{tenant_id}/suspensions` | `ReactivateTenant` | [registration](../../src/Compliance.App/Program.cs#L488) |
-| POST | `/api/v1/tenants/{tenant_id}/offboarding` | `OffboardTenant` | [registration](../../src/Compliance.App/Program.cs#L491) |
-| POST | `/api/v1/platform/operator-grants` | `GrantPlatformOperator` | [registration](../../src/Compliance.App/Program.cs#L494) |
-| POST | `/api/v1/platform/operator-revocations` | `RevokePlatformOperator` | [registration](../../src/Compliance.App/Program.cs#L497) |
-| GET | `/api/v1/platform/operators` | `ListPlatformOperators` | [registration](../../src/Compliance.App/Program.cs#L500) |
-| POST | `/api/v1/tenants/{tenant_id}/invitations` | `InviteTenantMember` | [registration](../../src/Compliance.App/Program.cs#L503) |
-| POST | `/api/v1/tenants/{tenant_id}/member-invitations` | `InviteOrganizationMember` | [registration](../../src/Compliance.App/Program.cs#L506) |
-| POST | `/api/v1/tenants/{tenant_id}/guest-invitations` | `InviteGuestConsultant` | [registration](../../src/Compliance.App/Program.cs#L532) |
-| GET | `/api/v1/tenants/{tenant_id}/members/{user_id}/access` | `GetMemberAccess` | [registration](../../src/Compliance.App/Program.cs#L513) |
-| POST | `/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions` | `SuspendMember` | [registration](../../src/Compliance.App/Program.cs#L517) |
-| DELETE | `/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions` | `ReinstateMember` | [registration](../../src/Compliance.App/Program.cs#L521) |
-| POST | `/api/v1/tenants/{tenant_id}/members/{user_id}/deprovisioning` | `DeprovisionMember` | [registration](../../src/Compliance.App/Program.cs#L525) |
-| GET | `/api/v1/tenants/{tenant_id}/members/{user_id}` | `GetTenantMember` | [registration](../../src/Compliance.App/Program.cs#L529) |
-| POST | `/api/v1/tenants/{tenant_id}/invitations/acceptance` | `AcceptTenantInvitation` | [registration](../../src/Compliance.App/Program.cs#L537) |
-| GET | `/api/v1/tenants/{tenant_id}` | `GetTenant` | [registration](../../src/Compliance.App/Program.cs#L540) |
-| GET | `/api/v1/tenants/{tenant_id}/provisioning-status` | `GetTenantProvisioningStatus` | [registration](../../src/Compliance.App/Program.cs#L543) |
-| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}` | `ConfigureTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2186) |
-| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/tests` | `TestTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2190) |
-| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations` | `RotateTenantIdentityProviderCredentials` | [registration](../../src/Compliance.App/Program.cs#L2194) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}` | `CreateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2198) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments` | `AmendAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2202) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations` | `ValidateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2206) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `CreateExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2295) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/revisions` | `ReviseExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2299) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `GetExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2303) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}` | `GetTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2307) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baseline-preview` | `PreviewTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2311) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/freeze` | `FreezeTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2315) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/amendments` | `AmendTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2319) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id}` | `RecordManagementAssertion` | [registration](../../src/Compliance.App/Program.cs#L2323) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/representation-letters/{letter_id}` | `RecordManagementRepresentationLetter` | [registration](../../src/Compliance.App/Program.cs#L2327) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2331) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/management-reviews/{sign_off_id}` | `RecordManagementExaminationReview` | [registration](../../src/Compliance.App/Program.cs#L2335) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-ii-plans/{plan_id}/proposals` | `ProposeTypeIIOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L2339) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2343) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2226) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2230) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `CreateAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2366) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions` | `ReviseAdvisorHandoffSelection` | [registration](../../src/Compliance.App/Program.cs#L2370) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review` | `MarkAdvisorHandoffReadyForReview` | [registration](../../src/Compliance.App/Program.cs#L2374) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures` | `CloseAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2378) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations` | `RevokeAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2382) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses` | `RespondToAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2386) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `RecordAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2394) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections` | `CorrectAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2398) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions` | `ResolveAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2390) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}` | `GetAdvisorRequest` | [registration](../../src/Compliance.App/Program.cs#L2402) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/preview` | `PreviewAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2415) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `ListAdvisorRequests` | [registration](../../src/Compliance.App/Program.cs#L2406) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}` | `GetAdvisorSharedSource` | [registration](../../src/Compliance.App/Program.cs#L2410) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `ListAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2414) |
-| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
-| POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
-| GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |
-| POST | `/api/v1/tenants/{tenant_id}/programs` | `CreateProgram` | [registration](../../src/Compliance.App/Program.cs#L559) |
-| GET | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}` | `GetCriteriaCatalogEdition` | [registration](../../src/Compliance.App/Program.cs#L566) |
-| GET | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}` | `GetCriteriaCatalogEntry` | [registration](../../src/Compliance.App/Program.cs#L578) |
-| PUT | `/api/v1/platform/firm-staff/{staff_member_id}` | `RegisterFirmStaff` | [registration](../../src/Compliance.App/Program.cs#L582) |
-| PUT | `/api/v1/platform/firm-staff/{staff_member_id}/status` | `SetFirmStaffStatus` | [registration](../../src/Compliance.App/Program.cs#L586) |
-| GET | `/api/v1/platform/firm-staff` | `GetFirmStaffDirectory` | [registration](../../src/Compliance.App/Program.cs#L590) |
-| GET | `/api/v1/tenants/{tenant_id}/firm-staff` | `ListAssignableFirmStaff` | [registration](../../src/Compliance.App/Program.cs#L594) |
-| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `CreateServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L598) |
-| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/draft` | `AmendServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L602) |
-| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}` | `ProposeServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L606) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals` | `WithdrawServiceEngagementStaffProposal` | [registration](../../src/Compliance.App/Program.cs#L610) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations` | `RevokeServiceEngagementActualStaff` | [registration](../../src/Compliance.App/Program.cs#L655) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}` | `AssignServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L659) |
-| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance` | `GetServiceEngagementAcceptance` | [registration](../../src/Compliance.App/Program.cs#L614) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance` | `AcceptServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L667) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations` | `RecordPartnerIndependenceEvaluation` | [registration](../../src/Compliance.App/Program.cs#L623) |
-| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-review-context` | `GetServiceEngagementPartnerReviewContext` | [registration](../../src/Compliance.App/Program.cs#L627) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}` | `AcknowledgeEngagementManagement` | [registration](../../src/Compliance.App/Program.cs#L622) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure` | `CloseServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L630) |
-| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `GetServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L634) |
-| PUT | `/api/v1/platform/independence/rules` | `ReviseIndependenceRules` | [registration](../../src/Compliance.App/Program.cs#L654) |
-| POST | `/api/v1/platform/independence/rules/{rule_version}/ratification` | `RatifyIndependenceRuleVersion` | [registration](../../src/Compliance.App/Program.cs#L711) |
-| PUT | `/api/v1/tenants/{tenant_id}/independence/services/{service_record_id}` | `RecordNonattestService` | [registration](../../src/Compliance.App/Program.cs#L658) |
-| PUT | `/api/v1/tenants/{tenant_id}/independence/evaluations/{evaluation_id}` | `EvaluateClientIndependence` | [registration](../../src/Compliance.App/Program.cs#L662) |
-| GET | `/api/v1/tenants/{tenant_id}/independence/history` | `GetClientIndependenceHistory` | [registration](../../src/Compliance.App/Program.cs#L666) |
-| PUT | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}/overlay` | `SetCriteriaTextOverlay` | [registration](../../src/Compliance.App/Program.cs#L670) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criteria-edition` | `SelectProgramCriteriaEdition` | [registration](../../src/Compliance.App/Program.cs#L674) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}` | `ReviseProgram` | [registration](../../src/Compliance.App/Program.cs#L678) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}` | `GetProgram` | [registration](../../src/Compliance.App/Program.cs#L681) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/revisions/{revision}` | `GetProgramRevision` | [registration](../../src/Compliance.App/Program.cs#L691) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/setup-work` | `GetProgramSetupWork` | [registration](../../src/Compliance.App/Program.cs#L695) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls` | `CreateControlDraft` | [registration](../../src/Compliance.App/Program.cs#L699) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft` | `ReviseControlDraft` | [registration](../../src/Compliance.App/Program.cs#L703) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/discards` | `DiscardControlDraft` | [registration](../../src/Compliance.App/Program.cs#L707) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft` | `GetControlDraft` | [registration](../../src/Compliance.App/Program.cs#L711) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/revisions/{revision}` | `GetControlDraftRevision` | [registration](../../src/Compliance.App/Program.cs#L723) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/reviews` | `ReviewControl` | [registration](../../src/Compliance.App/Program.cs#L728) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/approvals` | `ApproveControl` | [registration](../../src/Compliance.App/Program.cs#L732) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/current-version` | `GetCurrentControlVersion` | [registration](../../src/Compliance.App/Program.cs#L736) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/effective-version` | `GetEffectiveControlVersion` | [registration](../../src/Compliance.App/Program.cs#L740) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/versions/{version_id}` | `GetControlVersion` | [registration](../../src/Compliance.App/Program.cs#L748) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/decisions/{decision_id}` | `GetControlDecision` | [registration](../../src/Compliance.App/Program.cs#L756) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings` | `ProposeControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L761) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/reviews` | `ReviewControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L765) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/retirements` | `RetireControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L769) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}` | `GetControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L773) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/successors` | `ProposeControlSuccessor` | [registration](../../src/Compliance.App/Program.cs#L785) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/retirement-proposals` | `ProposeControlRetirement` | [registration](../../src/Compliance.App/Program.cs#L789) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/impact-preview` | `PreviewControlImpact` | [registration](../../src/Compliance.App/Program.cs#L793) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/retirements` | `RetireControl` | [registration](../../src/Compliance.App/Program.cs#L798) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/proposal-withdrawals` | `WithdrawControlProposal` | [registration](../../src/Compliance.App/Program.cs#L803) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person` | `DesignateControlOwnerPerson` | [registration](../../src/Compliance.App/Program.cs#L807) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person` | `GetControlDraftOwnerPerson` | [registration](../../src/Compliance.App/Program.cs#L811) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability` | `ProposeCriterionNotApplicable` | [registration](../../src/Compliance.App/Program.cs#L816) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/reviews` | `ReviewCriterionApplicability` | [registration](../../src/Compliance.App/Program.cs#L820) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/withdrawals` | `WithdrawCriterionNotApplicable` | [registration](../../src/Compliance.App/Program.cs#L824) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}` | `GetCriterionApplicability` | [registration](../../src/Compliance.App/Program.cs#L828) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts` | `CreateCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L836) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}` | `ReviseCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L840) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}` | `GetCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L844) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/revisions/{revision}` | `GetCommitmentDraftRevision` | [registration](../../src/Compliance.App/Program.cs#L856) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/impact-preview` | `PreviewCommitmentImpact` | [registration](../../src/Compliance.App/Program.cs#L860) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/reviews` | `ReviewCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L864) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/approvals` | `ApproveCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L869) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/versions/{version}` | `GetCommitmentVersion` | [registration](../../src/Compliance.App/Program.cs#L881) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/effective-version` | `GetEffectiveCommitmentVersion` | [registration](../../src/Compliance.App/Program.cs#L885) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies` | `CreatePolicyDraft` | [registration](../../src/Compliance.App/Program.cs#L889) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}` | `GetPolicy` | [registration](../../src/Compliance.App/Program.cs#L897) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/draft` | `RevisePolicyDraft` | [registration](../../src/Compliance.App/Program.cs#L901) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/draft/discards` | `DiscardPolicyDraft` | [registration](../../src/Compliance.App/Program.cs#L905) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/successors` | `ProposePolicySuccessor` | [registration](../../src/Compliance.App/Program.cs#L909) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/impact-preview` | `PreviewPolicyImpact` | [registration](../../src/Compliance.App/Program.cs#L913) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/reviews` | `ReviewPolicyDraft` | [registration](../../src/Compliance.App/Program.cs#L918) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/approvals` | `ApprovePolicy` | [registration](../../src/Compliance.App/Program.cs#L922) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/periodic-reviews` | `ConfirmPolicyReview` | [registration](../../src/Compliance.App/Program.cs#L926) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirement-proposals` | `ProposePolicyRetirement` | [registration](../../src/Compliance.App/Program.cs#L930) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirements` | `ApprovePolicyRetirement` | [registration](../../src/Compliance.App/Program.cs#L934) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/versions/{version}` | `GetPolicyVersion` | [registration](../../src/Compliance.App/Program.cs#L942) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/effective-version` | `GetEffectivePolicyVersion` | [registration](../../src/Compliance.App/Program.cs#L946) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements` | `DefineTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L954) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id}` | `GetTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L962) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id}` | `ReviseTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L966) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policy-campaigns` | `LaunchPolicyCampaign` | [registration](../../src/Compliance.App/Program.cs#L970) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-campaigns` | `LaunchTrainingCampaign` | [registration](../../src/Compliance.App/Program.cs#L974) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}` | `GetCampaign` | [registration](../../src/Compliance.App/Program.cs#L982) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/reconciliations` | `ReconcileCampaignAudience` | [registration](../../src/Compliance.App/Program.cs#L994) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/completions` | `RecordTrainingCompletion` | [registration](../../src/Compliance.App/Program.cs#L998) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/closure` | `CloseCampaign` | [registration](../../src/Compliance.App/Program.cs#L1002) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/acknowledgements` | `AcknowledgePolicy` | [registration](../../src/Compliance.App/Program.cs#L1007) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/waivers` | `ApproveCampaignWaiver` | [registration](../../src/Compliance.App/Program.cs#L1011) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks` | `CreateRiskDraft` | [registration](../../src/Compliance.App/Program.cs#L1015) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/draft` | `ReviseRiskDraft` | [registration](../../src/Compliance.App/Program.cs#L1019) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/draft` | `GetRiskDraft` | [registration](../../src/Compliance.App/Program.cs#L1023) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/draft/revisions/{revision}` | `GetRiskDraftRevision` | [registration](../../src/Compliance.App/Program.cs#L1035) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risk-method/versions` | `PublishRiskMethodVersion` | [registration](../../src/Compliance.App/Program.cs#L1039) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risk-method` | `GetRiskMethod` | [registration](../../src/Compliance.App/Program.cs#L1043) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risk-method/versions/{version}` | `GetRiskMethodVersion` | [registration](../../src/Compliance.App/Program.cs#L1047) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/assessments` | `RecordRiskAssessment` | [registration](../../src/Compliance.App/Program.cs#L1051) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment` | `ChooseRiskTreatment` | [registration](../../src/Compliance.App/Program.cs#L1055) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/acceptances` | `AcceptRisk` | [registration](../../src/Compliance.App/Program.cs#L1059) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/evaluation` | `GetRiskEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1063) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/owner` | `AssignRiskOwner` | [registration](../../src/Compliance.App/Program.cs#L1072) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments` | `ProposeRiskControlTreatment` | [registration](../../src/Compliance.App/Program.cs#L1076) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/reviews` | `ReviewRiskControlTreatment` | [registration](../../src/Compliance.App/Program.cs#L1080) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/retirements` | `RetireRiskControlTreatment` | [registration](../../src/Compliance.App/Program.cs#L1084) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions` | `AddRiskTreatmentAction` | [registration](../../src/Compliance.App/Program.cs#L1088) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}` | `ReviseRiskTreatmentAction` | [registration](../../src/Compliance.App/Program.cs#L1092) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/cancellations` | `CancelRiskTreatmentAction` | [registration](../../src/Compliance.App/Program.cs#L1096) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/completions` | `SubmitRiskTreatmentActionCompletion` | [registration](../../src/Compliance.App/Program.cs#L1100) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/completion-reviews` | `ReviewRiskTreatmentActionCompletion` | [registration](../../src/Compliance.App/Program.cs#L1105) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/governance` | `GetRiskGovernance` | [registration](../../src/Compliance.App/Program.cs#L1109) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments` | `RunReadinessAssessment` | [registration](../../src/Compliance.App/Program.cs#L1113) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}` | `GetReadinessAssessment` | [registration](../../src/Compliance.App/Program.cs#L1121) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/decision` | `DecideReadiness` | [registration](../../src/Compliance.App/Program.cs#L1129) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/gaps/{gap_id}/plan` | `PlanReadinessGap` | [registration](../../src/Compliance.App/Program.cs#L1133) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/type-i-entry-decision` | `DecideTypeIEntry` | [registration](../../src/Compliance.App/Program.cs#L1139) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/gaps/{gap_id}/annotations` | `AnnotateReadinessGap` | [registration](../../src/Compliance.App/Program.cs#L1147) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals` | `ProposeControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1155) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/preview` | `PreviewControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1159) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}/approvals` | `ApproveControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1163) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan` | `GetControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1167) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/my-work` | `ListMyControlWork` | [registration](../../src/Compliance.App/Program.cs#L1175) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences` | `OpenControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1179) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}` | `GetControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1187) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations` | `AttestControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1191) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections` | `CorrectControlAttestation` | [registration](../../src/Compliance.App/Program.cs#L1195) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews` | `ReviewControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1199) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations` | `StartControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1203) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions` | `DefineControlEvaluationPlan` | [registration](../../src/Compliance.App/Program.cs#L1207) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions/{plan_version_id}` | `GetControlEvaluationPlanVersion` | [registration](../../src/Compliance.App/Program.cs#L1216) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}` | `GetControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1224) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results` | `RecordControlEvaluationStep` | [registration](../../src/Compliance.App/Program.cs#L1228) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions` | `DisposeControlEvaluationDeviation` | [registration](../../src/Compliance.App/Program.cs#L1232) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions` | `SubmitControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1236) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews` | `ReviewControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1240) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests` | `OpenEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1244) |
-| POST | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/preparations` | `PrepareEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1252) |
-| POST | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/approvals` | `ApproveEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1256) |
-| GET | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}` | `GetEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1260) |
-| GET | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/metadata` | `GetEvidenceArtifactMetadata` | [registration](../../src/Compliance.App/Program.cs#L1264) |
-| POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts` | `CaptureEvidenceArtifact` (development-only multipart upload) | [route](../../src/Compliance.App/Features/Evidence/EvidenceArtifactUploadEndpoint.cs#L23), [app registration](../../src/Compliance.App/Program.cs#L511) |
-| POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads` | `IssueArtifactDownload` | [registration](../../src/Compliance.App/Program.cs#L1339) |
-| POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/quarantine-releases` | `ReleaseEvidenceArtifactQuarantine` | [registration](../../src/Compliance.App/Program.cs#L1343) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports` | `LinkEvidenceSupport` | [registration](../../src/Compliance.App/Program.cs#L1348) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}` | `GetEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1268) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/fulfilments` | `FulfilEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1272) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/cancellations` | `CancelEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1276) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings` | `RaiseFinding` | [registration](../../src/Compliance.App/Program.cs#L1280) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}` | `GetFinding` | [registration](../../src/Compliance.App/Program.cs#L1288) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions` | `ReviseFinding` | [registration](../../src/Compliance.App/Program.cs#L1292) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions` | `AddCorrectiveAction` | [registration](../../src/Compliance.App/Program.cs#L1296) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions` | `CompleteCorrectiveAction` | [registration](../../src/Compliance.App/Program.cs#L1300) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances` | `LinkFindingAcceptance` | [registration](../../src/Compliance.App/Program.cs#L1304) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures` | `CloseFinding` | [registration](../../src/Compliance.App/Program.cs#L1308) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings` | `ReopenFinding` | [registration](../../src/Compliance.App/Program.cs#L1312) |
-| POST | `/api/v1/tenants/{tenant_id}/access-populations` | `OpenAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1316) |
-| PUT | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/facts` | `RecordAccessPopulationFacts` | [registration](../../src/Compliance.App/Program.cs#L1320) |
-| GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/preview` | `PreviewAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1324) |
-| POST | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance` | `AcceptAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1328) |
-| GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}` | `GetAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1332) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions` | `ExemptMissingAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1340) |
-| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/access-review-coverage` | `GetAccessReviewCoverage` | [registration](../../src/Compliance.App/Program.cs#L1344) |
-| POST | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/classifications` | `ClassifyAccessPrincipal` | [registration](../../src/Compliance.App/Program.cs#L1348) |
-| GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/variance` | `GetAccessVariance` | [registration](../../src/Compliance.App/Program.cs#L1356) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations` | `ProposeAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1360) |
-| POST | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval` | `ApproveAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1364) |
-| POST | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions` | `ExemptAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1368) |
-| GET | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations` | `ListAccessExpectations` | [registration](../../src/Compliance.App/Program.cs#L1372) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns` | `LaunchAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1376) |
-| GET | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}` | `GetAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1384) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions` | `RecordAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1388) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decision-previews` | `PreviewBulkAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1392) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decisions` | `RecordBulkAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1396) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes` | `RecordAccessRemediationChange` | [registration](../../src/Compliance.App/Program.cs#L1400) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications` | `VerifyAccessRemediation` | [registration](../../src/Compliance.App/Program.cs#L1404) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions` | `ExemptAccessRemediation` | [registration](../../src/Compliance.App/Program.cs#L1408) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion` | `CompleteAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1412) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work` | `ListWork` | [registration](../../src/Compliance.App/Program.cs#L1416) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/digest` | `GetWorkDigest` | [registration](../../src/Compliance.App/Program.cs#L1424) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}` | `GetWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1428) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/claims` | `ClaimWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1432) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/assignments` | `AssignWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1436) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/delegations` | `DelegateWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1440) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/escalations` | `EscalateWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1444) |
-| GET | `/api/v1/tenants/{tenant_id}/work-digest-preference` | `GetWorkDigestPreference` | [registration](../../src/Compliance.App/Program.cs#L1448) |
-| PUT | `/api/v1/tenants/{tenant_id}/work-digest-preference` | `SetWorkDigestPreference` | [registration](../../src/Compliance.App/Program.cs#L1452) |
-| POST | `/api/v1/tenants/{tenant_id}/people` | `RecordPerson` | [registration](../../src/Compliance.App/Program.cs#L1456) |
-| PUT | `/api/v1/tenants/{tenant_id}/people/{person_id}` | `RevisePerson` | [registration](../../src/Compliance.App/Program.cs#L1460) |
-| PUT | `/api/v1/tenants/{tenant_id}/people/{person_id}/membership-correlation` | `CorrelatePersonMembership` | [registration](../../src/Compliance.App/Program.cs#L1464) |
-| GET | `/api/v1/tenants/{tenant_id}/people/{person_id}` | `GetPerson` | [registration](../../src/Compliance.App/Program.cs#L1468) |
-| POST | `/api/v1/tenants/{tenant_id}/work-relationships` | `RecordWorkRelationship` | [registration](../../src/Compliance.App/Program.cs#L1476) |
-| PUT | `/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}` | `ReviseWorkRelationship` | [registration](../../src/Compliance.App/Program.cs#L1480) |
-| GET | `/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}` | `GetWorkRelationship` | [registration](../../src/Compliance.App/Program.cs#L1484) |
-| PUT | `/api/v1/tenants/{tenant_id}/workforce-observations/{observation_id}/resolution` | `ResolveWorkforceObservation` | [registration](../../src/Compliance.App/Program.cs#L1496) |
-| POST | `/api/v1/tenants/{tenant_id}/workforce-source-observations` | `RecordWorkforceSourceObservation` | [registration](../../src/Compliance.App/Program.cs#L1500) |
-| GET | `/api/v1/tenants/{tenant_id}/workforce-source-observations/{observation_id}` | `GetWorkforceSourceObservation` | [registration](../../src/Compliance.App/Program.cs#L1504) |
-| GET | `/api/v1/tenants/{tenant_id}/workforce-source-observations/{observation_id}/preview` | `PreviewWorkforceSourceObservation` | [registration](../../src/Compliance.App/Program.cs#L1512) |
-| PUT | `/api/v1/tenants/{tenant_id}/workforce-source-observations/{observation_id}/decision` | `ReconcileWorkforceSourceObservation` | [registration](../../src/Compliance.App/Program.cs#L1516) |
-| POST | `/api/v1/tenants/{tenant_id}/service-identities` | `RecordServiceIdentity` | [registration](../../src/Compliance.App/Program.cs#L1525) |
-| PUT | `/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}` | `ReviseServiceIdentity` | [registration](../../src/Compliance.App/Program.cs#L1529) |
-| GET | `/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}` | `GetServiceIdentity` | [registration](../../src/Compliance.App/Program.cs#L1533) |
-| POST | `/api/v1/tenants/{tenant_id}/providers` | `RecordProvider` | [registration](../../src/Compliance.App/Program.cs#L1541) |
-| PUT | `/api/v1/tenants/{tenant_id}/providers/{provider_id}` | `ReviseProvider` | [registration](../../src/Compliance.App/Program.cs#L1544) |
-| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}` | `GetProvider` | [registration](../../src/Compliance.App/Program.cs#L1547) |
-| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/revisions/{revision}` | `GetProviderRevision` | [registration](../../src/Compliance.App/Program.cs#L1553) |
-| POST | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports` | `RecordAssuranceReport` | [registration](../../src/Compliance.App/Program.cs#L1559) |
-| PUT | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/{report_id}` | `ReviseAssuranceReport` | [registration](../../src/Compliance.App/Program.cs#L1563) |
-| POST | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/reviews` | `RecordProviderReview` | [registration](../../src/Compliance.App/Program.cs#L1572) |
-| POST | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps` | `RecordProviderCoverageGap` | [registration](../../src/Compliance.App/Program.cs#L1580) |
-| PUT | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}` | `CloseProviderCoverageGap` | [registration](../../src/Compliance.App/Program.cs#L1585) |
-| PUT | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances` | `LinkProviderCoverageGapRiskAcceptance` | [registration](../../src/Compliance.App/Program.cs#L1590) |
-| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}` | `GetProviderCoverageGap` | [registration](../../src/Compliance.App/Program.cs#L1594) |
-| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-coverage` | `GetProviderAssuranceCoverage` | [registration](../../src/Compliance.App/Program.cs#L1602) |
-| POST | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/change-impact-previews` | `PreviewProviderChange` | [registration](../../src/Compliance.App/Program.cs#L1606) |
-| POST | `/api/v1/tenants/{tenant_id}/technology-components` | `RecordTechnologyComponent` | [registration](../../src/Compliance.App/Program.cs#L1611) |
-| PUT | `/api/v1/tenants/{tenant_id}/technology-components/{component_id}` | `ReviseTechnologyComponent` | [registration](../../src/Compliance.App/Program.cs#L1615) |
-| GET | `/api/v1/tenants/{tenant_id}/technology-components/{component_id}` | `GetTechnologyComponent` | [registration](../../src/Compliance.App/Program.cs#L1631) |
-| POST | `/api/v1/tenants/{tenant_id}/information-assets` | `RecordInformationAsset` | [registration](../../src/Compliance.App/Program.cs#L1643) |
-| PUT | `/api/v1/tenants/{tenant_id}/information-assets/{information_asset_id}` | `ReviseInformationAsset` | [registration](../../src/Compliance.App/Program.cs#L1647) |
-| GET | `/api/v1/tenants/{tenant_id}/information-assets/{information_asset_id}` | `GetInformationAsset` | [registration](../../src/Compliance.App/Program.cs#L1651) |
-| POST | `/api/v1/tenants/{tenant_id}/information-assets/{information_asset_id}/change-previews` | `PreviewInformationAssetChange` | [registration](../../src/Compliance.App/Program.cs#L1663) |
-| POST | `/api/v1/tenants/{tenant_id}/locations` | `RecordLocation` | [registration](../../src/Compliance.App/Program.cs#L1668) |
-| PUT | `/api/v1/tenants/{tenant_id}/locations/{location_id}` | `ReviseLocation` | [registration](../../src/Compliance.App/Program.cs#L1672) |
-| GET | `/api/v1/tenants/{tenant_id}/locations/{location_id}` | `GetLocation` | [registration](../../src/Compliance.App/Program.cs#L1676) |
-| POST | `/api/v1/tenants/{tenant_id}/operational-processes` | `RecordOperationalProcess` | [registration](../../src/Compliance.App/Program.cs#L1688) |
-| PUT | `/api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id}` | `ReviseOperationalProcess` | [registration](../../src/Compliance.App/Program.cs#L1692) |
-| GET | `/api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id}` | `GetOperationalProcess` | [registration](../../src/Compliance.App/Program.cs#L1696) |
-| POST | `/api/v1/tenants/{tenant_id}/data-flows` | `RecordDataFlow` | [registration](../../src/Compliance.App/Program.cs#L1708) |
-| PUT | `/api/v1/tenants/{tenant_id}/data-flows/{data_flow_id}` | `ReviseDataFlow` | [registration](../../src/Compliance.App/Program.cs#L1712) |
-| GET | `/api/v1/tenants/{tenant_id}/data-flows/{data_flow_id}` | `GetDataFlow` | [registration](../../src/Compliance.App/Program.cs#L1716) |
-| POST | `/api/v1/tenants/{tenant_id}/applications` | `DeclareApplication` | [registration](../../src/Compliance.App/Program.cs#L1728) |
-| PUT | `/api/v1/tenants/{tenant_id}/applications/{application_id}` | `ReviseApplication` | [registration](../../src/Compliance.App/Program.cs#L1732) |
-| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}` | `GetApplication` | [registration](../../src/Compliance.App/Program.cs#L1741) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}` | `AddApplicationRelationship` | [registration](../../src/Compliance.App/Program.cs#L1749) |
-| DELETE | `/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}` | `RemoveApplicationRelationship` | [registration](../../src/Compliance.App/Program.cs#L1757) |
-| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships` | `ListApplicationRelationships` | [registration](../../src/Compliance.App/Program.cs#L1765) |
-| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/revisions/{revision}` | `GetApplicationRevision` | [registration](../../src/Compliance.App/Program.cs#L1780) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances` | `DeclareSystemInstance` | [registration](../../src/Compliance.App/Program.cs#L1788) |
-| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}` | `GetSystemInstance` | [registration](../../src/Compliance.App/Program.cs#L1792) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/change-previews` | `PreviewApplicationChange` | [registration](../../src/Compliance.App/Program.cs#L1812) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/retirements` | `RetireApplication` | [registration](../../src/Compliance.App/Program.cs#L1822) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/retirements` | `RetireSystemInstance` | [registration](../../src/Compliance.App/Program.cs#L1827) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-review-scope-decisions` | `DecideAccessReviewScope` | [registration](../../src/Compliance.App/Program.cs#L1832) |
-| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-review-scope` | `GetAccessReviewScope` | [registration](../../src/Compliance.App/Program.cs#L1837) |
-| GET | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}` | `GetArtifactRetention` | [registration](../../src/Compliance.App/Program.cs#L1847) |
-| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/retention` | `GetApplicationImportRetention` | [registration](../../src/Compliance.App/Program.cs#L1855) |
-| POST | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/basis` | `RecordArtifactRetentionBasis` | [registration](../../src/Compliance.App/Program.cs#L1859) |
-| POST | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds` | `PlaceArtifactLegalHold` | [registration](../../src/Compliance.App/Program.cs#L1863) |
-| POST | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}/releases` | `ReleaseArtifactLegalHold` | [registration](../../src/Compliance.App/Program.cs#L1867) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports` | `StageApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L1871) |
-| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/progress` | `GetApplicationImportProgress` | [registration](../../src/Compliance.App/Program.cs#L1875) |
-| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rejected-report` | `GetApplicationImportRejectedReport` | [registration](../../src/Compliance.App/Program.cs#L1880) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances` | `AcceptApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L1885) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations` | `CancelApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L1890) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations` | `CorrelateApplicationImportRow` | [registration](../../src/Compliance.App/Program.cs#L1894) |
-| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}` | `GetApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L1899) |
-| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal/preview` | `PreviewApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L1916) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal` | `FreezeApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L1920) |
-| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal` | `GetApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L1925) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/client-services` | `CreateClientService` | [registration](../../src/Compliance.App/Program.cs#L1929) |
-| PUT | `/api/v1/tenants/{tenant_id}/client-services/{service_id}` | `ReviseClientService` | [registration](../../src/Compliance.App/Program.cs#L1937) |
-| POST | `/api/v1/tenants/{tenant_id}/client-services/{service_id}/retirements` | `RetireClientService` | [registration](../../src/Compliance.App/Program.cs#L1941) |
-| GET | `/api/v1/tenants/{tenant_id}/client-services/{service_id}` | `GetClientService` | [registration](../../src/Compliance.App/Program.cs#L1945) |
-| GET | `/api/v1/tenants/{tenant_id}/client-services/{service_id}/revisions/{revision}` | `GetClientServiceRevision` | [registration](../../src/Compliance.App/Program.cs#L1957) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/boundaries` | `CreateBoundary` | [registration](../../src/Compliance.App/Program.cs#L1961) |
-| PUT | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}` | `ReviseBoundaryDraft` | [registration](../../src/Compliance.App/Program.cs#L1969) |
-| POST | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/discards` | `DiscardBoundaryDraft` | [registration](../../src/Compliance.App/Program.cs#L1973) |
-| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}` | `GetBoundary` | [registration](../../src/Compliance.App/Program.cs#L1977) |
-| POST | `/api/v1/tenants/{tenant_id}/responsibilities` | `AssignResponsibility` | [registration](../../src/Compliance.App/Program.cs#L1981) |
-| POST | `/api/v1/tenants/{tenant_id}/responsibilities/{assignment_id}/revocation` | `RevokeResponsibility` | [registration](../../src/Compliance.App/Program.cs#L1985) |
-| GET | `/api/v1/tenants/{tenant_id}/responsibilities` | `ListResponsibilities` | [registration](../../src/Compliance.App/Program.cs#L1989) |
-| GET | `/api/v1/tenants/{tenant_id}/responsibilities/conflict-preview` | `PreviewResponsibilityConflicts` | [registration](../../src/Compliance.App/Program.cs#L1993) |
-| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/versions/{version_id}` | `GetBoundaryVersion` | [registration](../../src/Compliance.App/Program.cs#L1998) |
-| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/effective-version` | `GetEffectiveBoundaryVersion` | [registration](../../src/Compliance.App/Program.cs#L2006) |
-| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/decisions/{decision_id}` | `GetBoundaryDecision` | [registration](../../src/Compliance.App/Program.cs#L2010) |
-| GET | `/api/v1/tenants/{tenant_id}/separation-of-duties-waivers/{waiver_id}` | `GetSeparationOfDutiesWaiver` | [registration](../../src/Compliance.App/Program.cs#L2018) |
-| POST | `/api/v1/tenants/{tenant_id}/scope-snapshots` | `FreezeProgramScopeSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2022) |
-| POST | `/api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/amendments` | `AmendProgramScopeSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2026) |
-| GET | `/api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}` | `GetSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2030) |
-| GET | `/api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/verification` | `VerifyProgramScopeSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2034) |
-| GET | `/api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/manifest-regeneration` | `RegenerateProgramScopeSnapshotManifest` | [registration](../../src/Compliance.App/Program.cs#L2038) |
-| POST | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshots` | `FreezeWorkforceRosterSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2047) |
-| POST | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshots/{snapshot_id}/amendments` | `AmendWorkforceRosterSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2051) |
-| GET | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshots/{snapshot_id}` | `GetWorkforceRosterSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2055) |
-| GET | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshots/{snapshot_id}/manifest-regeneration` | `RegenerateWorkforceRosterSnapshotManifest` | [registration](../../src/Compliance.App/Program.cs#L2063) |
-| GET | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshot-as-of` | `GetWorkforceRosterSnapshotAsOf` | [registration](../../src/Compliance.App/Program.cs#L2067) |
-| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/impact-preview` | `PreviewBoundaryImpact` | [registration](../../src/Compliance.App/Program.cs#L2071) |
-| POST | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/reviews` | `ReviewBoundary` | [registration](../../src/Compliance.App/Program.cs#L2075) |
-| POST | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/approvals` | `ApproveBoundary` | [registration](../../src/Compliance.App/Program.cs#L2079) |
-| POST | `/api/v1/tenants/{tenant_id}/separation-of-duties-waivers` | `RecordSeparationOfDutiesWaiver` | [registration](../../src/Compliance.App/Program.cs#L2083) |
-| POST | `/api/v1/tenants/{tenant_id}/separation-of-duties-waivers/{waiver_id}/approvals` | `ApproveSeparationOfDutiesWaiver` | [registration](../../src/Compliance.App/Program.cs#L2087) |
-| POST | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/successors` | `ProposeBoundarySuccessor` | [registration](../../src/Compliance.App/Program.cs#L2091) |
-| POST | `/api/v1/users/{user_id}/email-addresses/{email_address}` | `ReserveEmail` | [registration](../../src/Compliance.App/Program.cs#L2095) |
-| POST | `/api/v1/users/{user_id}/email-addresses/{email_address}/challenges` | `IssueEmailChallenge` | [registration](../../src/Compliance.App/Program.cs#L2098) |
-| GET | `/api/v1/users/{user_id}/email-addresses/{email_address}/challenges/status` | `GetEmailChallengeStatus` | [registration](../../src/Compliance.App/Program.cs#L2101) |
-| POST | `/api/v1/users/{user_id}/email-addresses/{email_address}/verifications` | `CompleteEmailChallenge` | [registration](../../src/Compliance.App/Program.cs#L2105) |
-| GET | `/api/v1/users/{user_id}/email-addresses/{email_address}` | `GetEmailAddress` | [registration](../../src/Compliance.App/Program.cs#L2108) |
-| POST | `/api/v1/tenants/{tenant_id}/teams/{team_id}` | `DefineTeam` | [registration](../../src/Compliance.App/Program.cs#L2117) |
-| DELETE | `/api/v1/tenants/{tenant_id}/teams/{team_id}` | `DeleteTeam` | [registration](../../src/Compliance.App/Program.cs#L2120) |
-| GET | `/api/v1/tenants/{tenant_id}/teams/{team_id}` | `GetTeam` | [registration](../../src/Compliance.App/Program.cs#L2123) |
-| POST | `/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}` | `AssignTeamMember` | [registration](../../src/Compliance.App/Program.cs#L2129) |
-| DELETE | `/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}` | `RemoveTeamMember` | [registration](../../src/Compliance.App/Program.cs#L2132) |
-| POST | `/api/v1/tenants/{tenant_id}/teams/{team_id}/roles/{role_id}` | `AssignTeamRole` | [registration](../../src/Compliance.App/Program.cs#L2138) |
-| DELETE | `/api/v1/tenants/{tenant_id}/teams/{team_id}/roles/{role_id}` | `RemoveTeamRole` | [registration](../../src/Compliance.App/Program.cs#L2141) |
-| POST | `/api/v1/tenants/{tenant_id}/roles/{role_id}` | `DefineRole` | [registration](../../src/Compliance.App/Program.cs#L2144) |
-| DELETE | `/api/v1/tenants/{tenant_id}/roles/{role_id}` | `DeleteRole` | [registration](../../src/Compliance.App/Program.cs#L2147) |
-| GET | `/api/v1/tenants/{tenant_id}/roles/{role_id}` | `GetRole` | [registration](../../src/Compliance.App/Program.cs#L2150) |
-| POST | `/api/v1/tenants/{tenant_id}/roles/{role_id}/permissions/{permission}` | `AssignRolePermission` | [registration](../../src/Compliance.App/Program.cs#L2156) |
-| DELETE | `/api/v1/tenants/{tenant_id}/roles/{role_id}/permissions/{permission}` | `RemoveRolePermission` | [registration](../../src/Compliance.App/Program.cs#L2159) |
-| POST | `/api/v1/tenants/{tenant_id}/access-grants/{grant_id}` | `GrantAccess` | [registration](../../src/Compliance.App/Program.cs#L2172) |
-| DELETE | `/api/v1/tenants/{tenant_id}/access-grants/{grant_id}` | `RevokeAccessGrant` | [registration](../../src/Compliance.App/Program.cs#L2175) |
-| GET | `/api/v1/tenants/{tenant_id}/access-grants` | `ListAccessGrants` | [registration](../../src/Compliance.App/Program.cs#L2178) |
+| POST | `/api/v1/developer-user-sessions` | `ContinueWithDeveloperIdentity` | [registration](../../src/Compliance.App/Program.cs#L480) |
+| POST | `/api/v1/oidc-user-sessions` | `ContinueWithOidcProvider` | [registration](../../src/Compliance.App/Program.cs#L488) |
+| POST | `/api/v1/my/oidc-identity-links` | `LinkOidcProviderIdentity` | [registration](../../src/Compliance.App/Program.cs#L493) |
+| POST | `/api/v1/identity-recovery/challenges` | `StartIdentityRecovery` | [registration](../../src/Compliance.App/Program.cs#L497) |
+| POST | `/api/v1/identity-recovery/options` | `GetIdentityRecoveryOptions` | [registration](../../src/Compliance.App/Program.cs#L500) |
+| POST | `/api/v1/identity-recovery/completions` | `CompleteIdentityRecovery` | [registration](../../src/Compliance.App/Program.cs#L504) |
+| POST | `/api/v1/tenants` | `RegisterTenant` | [registration](../../src/Compliance.App/Program.cs#L508) |
+| POST | `/api/v1/tenants/{tenant_id}/suspensions` | `SuspendTenant` | [registration](../../src/Compliance.App/Program.cs#L516) |
+| DELETE | `/api/v1/tenants/{tenant_id}/suspensions` | `ReactivateTenant` | [registration](../../src/Compliance.App/Program.cs#L519) |
+| POST | `/api/v1/tenants/{tenant_id}/offboarding` | `OffboardTenant` | [registration](../../src/Compliance.App/Program.cs#L522) |
+| POST | `/api/v1/platform/operator-grants` | `GrantPlatformOperator` | [registration](../../src/Compliance.App/Program.cs#L525) |
+| POST | `/api/v1/platform/operator-revocations` | `RevokePlatformOperator` | [registration](../../src/Compliance.App/Program.cs#L528) |
+| GET | `/api/v1/platform/operators` | `ListPlatformOperators` | [registration](../../src/Compliance.App/Program.cs#L531) |
+| GET | `/api/v1/platform/tenants/{tenant_id}/members/{member_id}/work-digest-dispatches/{week_of}` | `GetWorkDigestDispatchStatus` | [registration](../../src/Compliance.App/Program.cs#L534) |
+| POST | `/api/v1/platform/tenants/{tenant_id}/members/{member_id}/work-digest-dispatches/{week_of}/retry-authorizations` | `AuthorizeWorkDigestUnknownRetry` | [registration](../../src/Compliance.App/Program.cs#L538) |
+| POST | `/api/v1/tenants/{tenant_id}/invitations` | `InviteTenantMember` | [registration](../../src/Compliance.App/Program.cs#L542) |
+| POST | `/api/v1/tenants/{tenant_id}/member-invitations` | `InviteOrganizationMember` | [registration](../../src/Compliance.App/Program.cs#L545) |
+| POST | `/api/v1/tenants/{tenant_id}/guest-invitations` | `InviteGuestConsultant` | [registration](../../src/Compliance.App/Program.cs#L548) |
+| GET | `/api/v1/tenants/{tenant_id}/member-invitations` | `ListTenantInvitations` | [registration](../../src/Compliance.App/Program.cs#L551) |
+| GET | `/api/v1/tenants/{tenant_id}/members/{user_id}/access` | `GetMemberAccess` | [registration](../../src/Compliance.App/Program.cs#L555) |
+| POST | `/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions` | `SuspendMember` | [registration](../../src/Compliance.App/Program.cs#L559) |
+| DELETE | `/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions` | `ReinstateMember` | [registration](../../src/Compliance.App/Program.cs#L563) |
+| POST | `/api/v1/tenants/{tenant_id}/members/{user_id}/deprovisioning` | `DeprovisionMember` | [registration](../../src/Compliance.App/Program.cs#L567) |
+| GET | `/api/v1/tenants/{tenant_id}/members/{user_id}` | `GetTenantMember` | [registration](../../src/Compliance.App/Program.cs#L571) |
+| GET | `/api/v1/tenants/{tenant_id}/members/{user_id}/responsibilities` | `ListMemberResponsibilities` | [registration](../../src/Compliance.App/Program.cs#L575) |
+| POST | `/api/v1/tenants/{tenant_id}/invitations/acceptance` | `AcceptTenantInvitation` | [registration](../../src/Compliance.App/Program.cs#L579) |
+| GET | `/api/v1/tenants/{tenant_id}` | `GetTenant` | [registration](../../src/Compliance.App/Program.cs#L582) |
+| GET | `/api/v1/tenants/{tenant_id}/provisioning-status` | `GetTenantProvisioningStatus` | [registration](../../src/Compliance.App/Program.cs#L585) |
+| GET | `/api/v1/platform/tenants` | `ListTenants` | [registration](../../src/Compliance.App/Program.cs#L589) |
+| GET | `/api/v1/tenants/{tenant_id}/members` | `ListTenantMembers` | [registration](../../src/Compliance.App/Program.cs#L592) |
+| POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L595) |
+| GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L598) |
+| POST | `/api/v1/tenants/{tenant_id}/programs` | `CreateProgram` | [registration](../../src/Compliance.App/Program.cs#L601) |
+| GET | `/api/v1/tenants/{tenant_id}/criteria-editions` | `ListCriteriaCatalogEditions` | [registration](../../src/Compliance.App/Program.cs#L604) |
+| GET | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}` | `GetCriteriaCatalogEdition` | [registration](../../src/Compliance.App/Program.cs#L608) |
+| GET | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries` | `ListCriteriaCatalogEntries` | [registration](../../src/Compliance.App/Program.cs#L612) |
+| GET | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/export` | `ExportCriteriaCatalogEntries` | [registration](../../src/Compliance.App/Program.cs#L616) |
+| GET | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}` | `GetCriteriaCatalogEntry` | [registration](../../src/Compliance.App/Program.cs#L620) |
+| PUT | `/api/v1/platform/firm-staff/{staff_member_id}` | `RegisterFirmStaff` | [registration](../../src/Compliance.App/Program.cs#L624) |
+| PUT | `/api/v1/platform/firm-staff/{staff_member_id}/status` | `SetFirmStaffStatus` | [registration](../../src/Compliance.App/Program.cs#L628) |
+| PUT | `/api/v1/platform/firm-professional-duties/{designation_id}` | `RecordFirmProfessionalDutyDesignation` | [registration](../../src/Compliance.App/Program.cs#L632) |
+| POST | `/api/v1/platform/firm-professional-duties/{designation_id}/revocation` | `RevokeFirmProfessionalDutyDesignation` | [registration](../../src/Compliance.App/Program.cs#L636) |
+| GET | `/api/v1/platform/firm-professional-duties` | `GetFirmProfessionalDutyCatalog` | [registration](../../src/Compliance.App/Program.cs#L640) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations` | `RecordPartnerIndependenceEvaluation` | [registration](../../src/Compliance.App/Program.cs#L644) |
+| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-review-context` | `GetServiceEngagementPartnerReviewContext` | [registration](../../src/Compliance.App/Program.cs#L648) |
+| GET | `/api/v1/platform/firm-staff` | `GetFirmStaffDirectory` | [registration](../../src/Compliance.App/Program.cs#L652) |
+| GET | `/api/v1/tenants/{tenant_id}/firm-staff` | `ListAssignableFirmStaff` | [registration](../../src/Compliance.App/Program.cs#L656) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `CreateServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L660) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/draft` | `AmendServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L664) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}` | `ProposeServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L668) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals` | `WithdrawServiceEngagementStaffProposal` | [registration](../../src/Compliance.App/Program.cs#L672) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations` | `RevokeServiceEngagementActualStaff` | [registration](../../src/Compliance.App/Program.cs#L676) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}` | `AssignServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L680) |
+| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance` | `GetServiceEngagementAcceptance` | [registration](../../src/Compliance.App/Program.cs#L684) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance` | `AcceptServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L688) |
+| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance-history` | `GetServiceEngagementAcceptanceHistory` | [registration](../../src/Compliance.App/Program.cs#L692) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}` | `AcknowledgeEngagementManagement` | [registration](../../src/Compliance.App/Program.cs#L696) |
+| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements` | `GetEngagementManagementAcknowledgements` | [registration](../../src/Compliance.App/Program.cs#L700) |
+| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure` | `CloseServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L704) |
+| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `GetServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L708) |
+| GET | `/api/v1/tenants/{tenant_id}/service-engagements` | `ListServiceEngagements` | [registration](../../src/Compliance.App/Program.cs#L712) |
+| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/history` | `GetServiceEngagementHistory` | [registration](../../src/Compliance.App/Program.cs#L716) |
+| GET | `/api/v1/tenants/{tenant_id}/independence/rules` | `GetClientIndependenceRules` | [registration](../../src/Compliance.App/Program.cs#L720) |
+| GET | `/api/v1/platform/independence/rules` | `GetIndependenceRuleVersions` | [registration](../../src/Compliance.App/Program.cs#L724) |
+| PUT | `/api/v1/platform/independence/rules` | `ReviseIndependenceRules` | [registration](../../src/Compliance.App/Program.cs#L728) |
+| POST | `/api/v1/platform/independence/rules/{rule_version}/ratification` | `RatifyIndependenceRuleVersion` | [registration](../../src/Compliance.App/Program.cs#L732) |
+| PUT | `/api/v1/tenants/{tenant_id}/independence/services/{service_record_id}` | `RecordNonattestService` | [registration](../../src/Compliance.App/Program.cs#L736) |
+| PUT | `/api/v1/tenants/{tenant_id}/independence/evaluations/{evaluation_id}` | `EvaluateClientIndependence` | [registration](../../src/Compliance.App/Program.cs#L740) |
+| GET | `/api/v1/tenants/{tenant_id}/independence/history` | `GetClientIndependenceHistory` | [registration](../../src/Compliance.App/Program.cs#L744) |
+| PUT | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}/overlay` | `SetCriteriaTextOverlay` | [registration](../../src/Compliance.App/Program.cs#L748) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criteria-edition` | `SelectProgramCriteriaEdition` | [registration](../../src/Compliance.App/Program.cs#L752) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}` | `ReviseProgram` | [registration](../../src/Compliance.App/Program.cs#L756) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}` | `GetProgram` | [registration](../../src/Compliance.App/Program.cs#L759) |
+| GET | `/api/v1/tenants/{tenant_id}/programs` | `ListPrograms` | [registration](../../src/Compliance.App/Program.cs#L762) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/revisions` | `ListProgramRevisions` | [registration](../../src/Compliance.App/Program.cs#L765) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/revisions/{revision}` | `GetProgramRevision` | [registration](../../src/Compliance.App/Program.cs#L769) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/setup-work` | `GetProgramSetupWork` | [registration](../../src/Compliance.App/Program.cs#L773) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls` | `CreateControlDraft` | [registration](../../src/Compliance.App/Program.cs#L777) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft` | `ReviseControlDraft` | [registration](../../src/Compliance.App/Program.cs#L781) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/discards` | `DiscardControlDraft` | [registration](../../src/Compliance.App/Program.cs#L785) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft` | `GetControlDraft` | [registration](../../src/Compliance.App/Program.cs#L789) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls` | `ListControlDrafts` | [registration](../../src/Compliance.App/Program.cs#L793) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/revisions` | `ListControlDraftRevisions` | [registration](../../src/Compliance.App/Program.cs#L797) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/revisions/{revision}` | `GetControlDraftRevision` | [registration](../../src/Compliance.App/Program.cs#L801) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/reviews` | `ReviewControl` | [registration](../../src/Compliance.App/Program.cs#L806) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/approvals` | `ApproveControl` | [registration](../../src/Compliance.App/Program.cs#L810) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/current-version` | `GetCurrentControlVersion` | [registration](../../src/Compliance.App/Program.cs#L814) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/effective-version` | `GetEffectiveControlVersion` | [registration](../../src/Compliance.App/Program.cs#L818) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/versions` | `ListControlVersions` | [registration](../../src/Compliance.App/Program.cs#L822) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/versions/{version_id}` | `GetControlVersion` | [registration](../../src/Compliance.App/Program.cs#L826) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/decisions` | `ListControlDecisions` | [registration](../../src/Compliance.App/Program.cs#L830) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/decisions/{decision_id}` | `GetControlDecision` | [registration](../../src/Compliance.App/Program.cs#L834) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings` | `ProposeControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L839) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/reviews` | `ReviewControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L843) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/retirements` | `RetireControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L847) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}` | `GetControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L851) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings` | `ListControlCriterionMappings` | [registration](../../src/Compliance.App/Program.cs#L855) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criteria-coverage` | `ListCriteriaCoverage` | [registration](../../src/Compliance.App/Program.cs#L859) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/successors` | `ProposeControlSuccessor` | [registration](../../src/Compliance.App/Program.cs#L863) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/retirement-proposals` | `ProposeControlRetirement` | [registration](../../src/Compliance.App/Program.cs#L867) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/impact-preview` | `PreviewControlImpact` | [registration](../../src/Compliance.App/Program.cs#L871) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/retirements` | `RetireControl` | [registration](../../src/Compliance.App/Program.cs#L876) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/proposal-withdrawals` | `WithdrawControlProposal` | [registration](../../src/Compliance.App/Program.cs#L881) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person` | `DesignateControlOwnerPerson` | [registration](../../src/Compliance.App/Program.cs#L885) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person` | `GetControlDraftOwnerPerson` | [registration](../../src/Compliance.App/Program.cs#L889) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability` | `ProposeCriterionNotApplicable` | [registration](../../src/Compliance.App/Program.cs#L894) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/reviews` | `ReviewCriterionApplicability` | [registration](../../src/Compliance.App/Program.cs#L898) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/withdrawals` | `WithdrawCriterionNotApplicable` | [registration](../../src/Compliance.App/Program.cs#L902) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}` | `GetCriterionApplicability` | [registration](../../src/Compliance.App/Program.cs#L906) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability` | `ListCriterionApplicability` | [registration](../../src/Compliance.App/Program.cs#L910) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts` | `CreateCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L914) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}` | `ReviseCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L918) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}` | `GetCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L922) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts` | `ListCommitmentDrafts` | [registration](../../src/Compliance.App/Program.cs#L926) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/revisions` | `ListCommitmentDraftRevisions` | [registration](../../src/Compliance.App/Program.cs#L930) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/revisions/{revision}` | `GetCommitmentDraftRevision` | [registration](../../src/Compliance.App/Program.cs#L934) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/impact-preview` | `PreviewCommitmentImpact` | [registration](../../src/Compliance.App/Program.cs#L938) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/reviews` | `ReviewCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L942) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/approvals` | `ApproveCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L947) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/decisions` | `ListCommitmentDecisions` | [registration](../../src/Compliance.App/Program.cs#L951) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/versions` | `ListCommitmentVersions` | [registration](../../src/Compliance.App/Program.cs#L955) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/versions/{version}` | `GetCommitmentVersion` | [registration](../../src/Compliance.App/Program.cs#L959) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/effective-version` | `GetEffectiveCommitmentVersion` | [registration](../../src/Compliance.App/Program.cs#L963) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies` | `CreatePolicyDraft` | [registration](../../src/Compliance.App/Program.cs#L967) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies` | `ListPolicies` | [registration](../../src/Compliance.App/Program.cs#L971) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}` | `GetPolicy` | [registration](../../src/Compliance.App/Program.cs#L975) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/draft` | `RevisePolicyDraft` | [registration](../../src/Compliance.App/Program.cs#L979) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/draft/discards` | `DiscardPolicyDraft` | [registration](../../src/Compliance.App/Program.cs#L983) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/successors` | `ProposePolicySuccessor` | [registration](../../src/Compliance.App/Program.cs#L987) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/impact-preview` | `PreviewPolicyImpact` | [registration](../../src/Compliance.App/Program.cs#L991) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/reviews` | `ReviewPolicyDraft` | [registration](../../src/Compliance.App/Program.cs#L996) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/approvals` | `ApprovePolicy` | [registration](../../src/Compliance.App/Program.cs#L1000) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/periodic-reviews` | `ConfirmPolicyReview` | [registration](../../src/Compliance.App/Program.cs#L1004) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirement-proposals` | `ProposePolicyRetirement` | [registration](../../src/Compliance.App/Program.cs#L1008) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirements` | `ApprovePolicyRetirement` | [registration](../../src/Compliance.App/Program.cs#L1012) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/versions` | `ListPolicyVersions` | [registration](../../src/Compliance.App/Program.cs#L1016) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/versions/{version}` | `GetPolicyVersion` | [registration](../../src/Compliance.App/Program.cs#L1020) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/effective-version` | `GetEffectivePolicyVersion` | [registration](../../src/Compliance.App/Program.cs#L1024) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/decisions` | `ListPolicyDecisions` | [registration](../../src/Compliance.App/Program.cs#L1028) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements` | `DefineTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L1032) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements` | `ListTrainingRequirements` | [registration](../../src/Compliance.App/Program.cs#L1036) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id}` | `GetTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L1040) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id}` | `ReviseTrainingRequirement` | [registration](../../src/Compliance.App/Program.cs#L1044) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/policy-campaigns` | `LaunchPolicyCampaign` | [registration](../../src/Compliance.App/Program.cs#L1048) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/training-campaigns` | `LaunchTrainingCampaign` | [registration](../../src/Compliance.App/Program.cs#L1052) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns` | `ListCampaigns` | [registration](../../src/Compliance.App/Program.cs#L1056) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}` | `GetCampaign` | [registration](../../src/Compliance.App/Program.cs#L1060) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/participants` | `ListCampaignParticipants` | [registration](../../src/Compliance.App/Program.cs#L1064) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/amendments` | `ListCampaignAmendments` | [registration](../../src/Compliance.App/Program.cs#L1068) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/reconciliations` | `ReconcileCampaignAudience` | [registration](../../src/Compliance.App/Program.cs#L1072) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/completions` | `RecordTrainingCompletion` | [registration](../../src/Compliance.App/Program.cs#L1076) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/closure` | `CloseCampaign` | [registration](../../src/Compliance.App/Program.cs#L1080) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/acknowledgements` | `AcknowledgePolicy` | [registration](../../src/Compliance.App/Program.cs#L1085) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/waivers` | `ApproveCampaignWaiver` | [registration](../../src/Compliance.App/Program.cs#L1089) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks` | `CreateRiskDraft` | [registration](../../src/Compliance.App/Program.cs#L1093) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/draft` | `ReviseRiskDraft` | [registration](../../src/Compliance.App/Program.cs#L1097) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/draft` | `GetRiskDraft` | [registration](../../src/Compliance.App/Program.cs#L1101) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks` | `ListRiskDrafts` | [registration](../../src/Compliance.App/Program.cs#L1105) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/draft/revisions` | `ListRiskDraftRevisions` | [registration](../../src/Compliance.App/Program.cs#L1109) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/draft/revisions/{revision}` | `GetRiskDraftRevision` | [registration](../../src/Compliance.App/Program.cs#L1113) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risk-method/versions` | `PublishRiskMethodVersion` | [registration](../../src/Compliance.App/Program.cs#L1117) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risk-method` | `GetRiskMethod` | [registration](../../src/Compliance.App/Program.cs#L1121) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risk-method/versions/{version}` | `GetRiskMethodVersion` | [registration](../../src/Compliance.App/Program.cs#L1125) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/assessments` | `RecordRiskAssessment` | [registration](../../src/Compliance.App/Program.cs#L1129) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment` | `ChooseRiskTreatment` | [registration](../../src/Compliance.App/Program.cs#L1133) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/acceptances` | `AcceptRisk` | [registration](../../src/Compliance.App/Program.cs#L1137) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/evaluation` | `GetRiskEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1141) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/evaluation/history` | `ListRiskEvaluationHistory` | [registration](../../src/Compliance.App/Program.cs#L1145) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/owner` | `AssignRiskOwner` | [registration](../../src/Compliance.App/Program.cs#L1150) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments` | `ProposeRiskControlTreatment` | [registration](../../src/Compliance.App/Program.cs#L1154) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/reviews` | `ReviewRiskControlTreatment` | [registration](../../src/Compliance.App/Program.cs#L1158) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/retirements` | `RetireRiskControlTreatment` | [registration](../../src/Compliance.App/Program.cs#L1162) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions` | `AddRiskTreatmentAction` | [registration](../../src/Compliance.App/Program.cs#L1166) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}` | `ReviseRiskTreatmentAction` | [registration](../../src/Compliance.App/Program.cs#L1170) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/cancellations` | `CancelRiskTreatmentAction` | [registration](../../src/Compliance.App/Program.cs#L1174) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/completions` | `SubmitRiskTreatmentActionCompletion` | [registration](../../src/Compliance.App/Program.cs#L1178) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/completion-reviews` | `ReviewRiskTreatmentActionCompletion` | [registration](../../src/Compliance.App/Program.cs#L1183) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/governance` | `GetRiskGovernance` | [registration](../../src/Compliance.App/Program.cs#L1187) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments` | `RunReadinessAssessment` | [registration](../../src/Compliance.App/Program.cs#L1191) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments` | `ListReadinessAssessments` | [registration](../../src/Compliance.App/Program.cs#L1195) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}` | `GetReadinessAssessment` | [registration](../../src/Compliance.App/Program.cs#L1199) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/gaps` | `ListReadinessGaps` | [registration](../../src/Compliance.App/Program.cs#L1203) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/decision` | `DecideReadiness` | [registration](../../src/Compliance.App/Program.cs#L1207) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/gaps/{gap_id}/plan` | `PlanReadinessGap` | [registration](../../src/Compliance.App/Program.cs#L1211) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/type-i-entry-decision` | `DecideTypeIEntry` | [registration](../../src/Compliance.App/Program.cs#L1217) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/type-i-entry-decisions` | `ListTypeIEntryDecisions` | [registration](../../src/Compliance.App/Program.cs#L1221) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/gaps/{gap_id}/annotations` | `AnnotateReadinessGap` | [registration](../../src/Compliance.App/Program.cs#L1225) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/annotations` | `ListReadinessAnnotations` | [registration](../../src/Compliance.App/Program.cs#L1229) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals` | `ProposeControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1233) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/preview` | `PreviewControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1237) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}/approvals` | `ApproveControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1241) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan` | `GetControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1245) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/operating-blockers` | `ListControlOperatingBlockers` | [registration](../../src/Compliance.App/Program.cs#L1249) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/my-work` | `ListMyControlWork` | [registration](../../src/Compliance.App/Program.cs#L1253) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences` | `OpenControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1257) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences` | `ListControlOccurrences` | [registration](../../src/Compliance.App/Program.cs#L1261) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}` | `GetControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1265) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations` | `AttestControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1269) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections` | `CorrectControlAttestation` | [registration](../../src/Compliance.App/Program.cs#L1273) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews` | `ReviewControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1277) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations` | `StartControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1281) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions` | `DefineControlEvaluationPlan` | [registration](../../src/Compliance.App/Program.cs#L1285) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions` | `ListControlEvaluationPlanVersions` | [registration](../../src/Compliance.App/Program.cs#L1289) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions/{plan_version_id}` | `GetControlEvaluationPlanVersion` | [registration](../../src/Compliance.App/Program.cs#L1294) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations` | `ListControlEvaluations` | [registration](../../src/Compliance.App/Program.cs#L1298) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}` | `GetControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1302) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results` | `RecordControlEvaluationStep` | [registration](../../src/Compliance.App/Program.cs#L1306) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions` | `DisposeControlEvaluationDeviation` | [registration](../../src/Compliance.App/Program.cs#L1310) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions` | `SubmitControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1314) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews` | `ReviewControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1318) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests` | `OpenEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1322) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests` | `ListEvidenceRequests` | [registration](../../src/Compliance.App/Program.cs#L1326) |
+| POST | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/preparations` | `PrepareEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1330) |
+| POST | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/approvals` | `ApproveEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1334) |
+| GET | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}` | `GetEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1338) |
+| GET | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/metadata` | `GetEvidenceArtifactMetadata` | [registration](../../src/Compliance.App/Program.cs#L1342) |
+| POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads` | `IssueArtifactDownload` | [registration](../../src/Compliance.App/Program.cs#L1346) |
+| POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/quarantine-releases` | `ReleaseEvidenceArtifactQuarantine` | [registration](../../src/Compliance.App/Program.cs#L1350) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports` | `LinkEvidenceSupport` | [registration](../../src/Compliance.App/Program.cs#L1355) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}` | `GetEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1359) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/fulfilments` | `FulfilEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1363) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/cancellations` | `CancelEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1367) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings` | `RaiseFinding` | [registration](../../src/Compliance.App/Program.cs#L1371) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings` | `ListFindings` | [registration](../../src/Compliance.App/Program.cs#L1375) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}` | `GetFinding` | [registration](../../src/Compliance.App/Program.cs#L1379) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions` | `ReviseFinding` | [registration](../../src/Compliance.App/Program.cs#L1383) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions` | `AddCorrectiveAction` | [registration](../../src/Compliance.App/Program.cs#L1387) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions` | `CompleteCorrectiveAction` | [registration](../../src/Compliance.App/Program.cs#L1391) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances` | `LinkFindingAcceptance` | [registration](../../src/Compliance.App/Program.cs#L1395) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures` | `CloseFinding` | [registration](../../src/Compliance.App/Program.cs#L1399) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings` | `ReopenFinding` | [registration](../../src/Compliance.App/Program.cs#L1403) |
+| POST | `/api/v1/tenants/{tenant_id}/access-populations` | `OpenAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1407) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/facts` | `RecordAccessPopulationFacts` | [registration](../../src/Compliance.App/Program.cs#L1411) |
+| GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/preview` | `PreviewAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1415) |
+| POST | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance` | `AcceptAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1419) |
+| GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}` | `GetAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1423) |
+| GET | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-populations` | `ListAccessPopulations` | [registration](../../src/Compliance.App/Program.cs#L1427) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions` | `ExemptMissingAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1431) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/access-review-coverage` | `GetAccessReviewCoverage` | [registration](../../src/Compliance.App/Program.cs#L1435) |
+| POST | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/classifications` | `ClassifyAccessPrincipal` | [registration](../../src/Compliance.App/Program.cs#L1439) |
+| GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/principals` | `ListAccessPrincipals` | [registration](../../src/Compliance.App/Program.cs#L1443) |
+| GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/variance` | `GetAccessVariance` | [registration](../../src/Compliance.App/Program.cs#L1447) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations` | `ProposeAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1451) |
+| POST | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval` | `ApproveAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1455) |
+| POST | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions` | `ExemptAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1459) |
+| GET | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations` | `ListAccessExpectations` | [registration](../../src/Compliance.App/Program.cs#L1463) |
+| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns` | `LaunchAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1467) |
+| GET | `/api/v1/tenants/{tenant_id}/access-review-campaigns` | `ListAccessReviewCampaigns` | [registration](../../src/Compliance.App/Program.cs#L1471) |
+| GET | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}` | `GetAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1475) |
+| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions` | `RecordAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1479) |
+| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decision-previews` | `PreviewBulkAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1483) |
+| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decisions` | `RecordBulkAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1487) |
+| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes` | `RecordAccessRemediationChange` | [registration](../../src/Compliance.App/Program.cs#L1491) |
+| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments` | `ReassignAccessReviewResponsibility` | [registration](../../src/Compliance.App/Program.cs#L1495) |
+| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications` | `VerifyAccessRemediation` | [registration](../../src/Compliance.App/Program.cs#L1499) |
+| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions` | `ExemptAccessRemediation` | [registration](../../src/Compliance.App/Program.cs#L1503) |
+| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion` | `CompleteAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1507) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work` | `ListWork` | [registration](../../src/Compliance.App/Program.cs#L1511) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/reminders` | `ListWorkReminders` | [registration](../../src/Compliance.App/Program.cs#L1515) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/digest` | `GetWorkDigest` | [registration](../../src/Compliance.App/Program.cs#L1519) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}` | `GetWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1523) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/claims` | `ClaimWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1527) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/assignments` | `AssignWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1531) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/delegations` | `DelegateWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1535) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/escalations` | `EscalateWorkItem` | [registration](../../src/Compliance.App/Program.cs#L1539) |
+| GET | `/api/v1/tenants/{tenant_id}/work-digest-preference` | `GetWorkDigestPreference` | [registration](../../src/Compliance.App/Program.cs#L1543) |
+| PUT | `/api/v1/tenants/{tenant_id}/work-digest-preference` | `SetWorkDigestPreference` | [registration](../../src/Compliance.App/Program.cs#L1547) |
+| POST | `/api/v1/tenants/{tenant_id}/people` | `RecordPerson` | [registration](../../src/Compliance.App/Program.cs#L1551) |
+| PUT | `/api/v1/tenants/{tenant_id}/people/{person_id}` | `RevisePerson` | [registration](../../src/Compliance.App/Program.cs#L1555) |
+| PUT | `/api/v1/tenants/{tenant_id}/people/{person_id}/membership-correlation` | `CorrelatePersonMembership` | [registration](../../src/Compliance.App/Program.cs#L1559) |
+| GET | `/api/v1/tenants/{tenant_id}/people/{person_id}` | `GetPerson` | [registration](../../src/Compliance.App/Program.cs#L1563) |
+| GET | `/api/v1/tenants/{tenant_id}/people` | `ListPeople` | [registration](../../src/Compliance.App/Program.cs#L1567) |
+| POST | `/api/v1/tenants/{tenant_id}/work-relationships` | `RecordWorkRelationship` | [registration](../../src/Compliance.App/Program.cs#L1571) |
+| PUT | `/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}` | `ReviseWorkRelationship` | [registration](../../src/Compliance.App/Program.cs#L1575) |
+| GET | `/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}` | `GetWorkRelationship` | [registration](../../src/Compliance.App/Program.cs#L1579) |
+| GET | `/api/v1/tenants/{tenant_id}/work-relationships` | `ListWorkRelationships` | [registration](../../src/Compliance.App/Program.cs#L1583) |
+| GET | `/api/v1/tenants/{tenant_id}/workforce-observations` | `ListWorkforceObservations` | [registration](../../src/Compliance.App/Program.cs#L1587) |
+| PUT | `/api/v1/tenants/{tenant_id}/workforce-observations/{observation_id}/resolution` | `ResolveWorkforceObservation` | [registration](../../src/Compliance.App/Program.cs#L1591) |
+| POST | `/api/v1/tenants/{tenant_id}/workforce-source-observations` | `RecordWorkforceSourceObservation` | [registration](../../src/Compliance.App/Program.cs#L1595) |
+| GET | `/api/v1/tenants/{tenant_id}/workforce-source-observations/{observation_id}` | `GetWorkforceSourceObservation` | [registration](../../src/Compliance.App/Program.cs#L1599) |
+| GET | `/api/v1/tenants/{tenant_id}/workforce-source-observations` | `ListWorkforceSourceObservations` | [registration](../../src/Compliance.App/Program.cs#L1603) |
+| GET | `/api/v1/tenants/{tenant_id}/workforce-source-observations/{observation_id}/preview` | `PreviewWorkforceSourceObservation` | [registration](../../src/Compliance.App/Program.cs#L1607) |
+| PUT | `/api/v1/tenants/{tenant_id}/workforce-source-observations/{observation_id}/decision` | `ReconcileWorkforceSourceObservation` | [registration](../../src/Compliance.App/Program.cs#L1611) |
+| GET | `/api/v1/tenants/{tenant_id}/workforce-reconciliation-observations` | `ListWorkforceReconciliationObservations` | [registration](../../src/Compliance.App/Program.cs#L1615) |
+| POST | `/api/v1/tenants/{tenant_id}/service-identities` | `RecordServiceIdentity` | [registration](../../src/Compliance.App/Program.cs#L1620) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}` | `ReviseServiceIdentity` | [registration](../../src/Compliance.App/Program.cs#L1624) |
+| GET | `/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}` | `GetServiceIdentity` | [registration](../../src/Compliance.App/Program.cs#L1628) |
+| GET | `/api/v1/tenants/{tenant_id}/service-identities` | `ListServiceIdentities` | [registration](../../src/Compliance.App/Program.cs#L1632) |
+| POST | `/api/v1/tenants/{tenant_id}/providers` | `RecordProvider` | [registration](../../src/Compliance.App/Program.cs#L1636) |
+| PUT | `/api/v1/tenants/{tenant_id}/providers/{provider_id}` | `ReviseProvider` | [registration](../../src/Compliance.App/Program.cs#L1639) |
+| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}` | `GetProvider` | [registration](../../src/Compliance.App/Program.cs#L1642) |
+| GET | `/api/v1/tenants/{tenant_id}/providers` | `ListProviders` | [registration](../../src/Compliance.App/Program.cs#L1645) |
+| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/revisions/{revision}` | `GetProviderRevision` | [registration](../../src/Compliance.App/Program.cs#L1648) |
+| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/revisions` | `ListProviderRevisions` | [registration](../../src/Compliance.App/Program.cs#L1651) |
+| POST | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports` | `RecordAssuranceReport` | [registration](../../src/Compliance.App/Program.cs#L1654) |
+| PUT | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/{report_id}` | `ReviseAssuranceReport` | [registration](../../src/Compliance.App/Program.cs#L1658) |
+| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports` | `ListProviderAssuranceReports` | [registration](../../src/Compliance.App/Program.cs#L1662) |
+| POST | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/reviews` | `RecordProviderReview` | [registration](../../src/Compliance.App/Program.cs#L1667) |
+| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/reviews` | `ListProviderReviews` | [registration](../../src/Compliance.App/Program.cs#L1671) |
+| POST | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps` | `RecordProviderCoverageGap` | [registration](../../src/Compliance.App/Program.cs#L1675) |
+| PUT | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}` | `CloseProviderCoverageGap` | [registration](../../src/Compliance.App/Program.cs#L1680) |
+| PUT | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances` | `LinkProviderCoverageGapRiskAcceptance` | [registration](../../src/Compliance.App/Program.cs#L1685) |
+| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}` | `GetProviderCoverageGap` | [registration](../../src/Compliance.App/Program.cs#L1689) |
+| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps` | `ListProviderCoverageGaps` | [registration](../../src/Compliance.App/Program.cs#L1693) |
+| GET | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-coverage` | `GetProviderAssuranceCoverage` | [registration](../../src/Compliance.App/Program.cs#L1697) |
+| POST | `/api/v1/tenants/{tenant_id}/providers/{provider_id}/change-impact-previews` | `PreviewProviderChange` | [registration](../../src/Compliance.App/Program.cs#L1701) |
+| POST | `/api/v1/tenants/{tenant_id}/technology-components` | `RecordTechnologyComponent` | [registration](../../src/Compliance.App/Program.cs#L1706) |
+| PUT | `/api/v1/tenants/{tenant_id}/technology-components/{component_id}` | `ReviseTechnologyComponent` | [registration](../../src/Compliance.App/Program.cs#L1710) |
+| GET | `/api/v1/tenants/{tenant_id}/technology-components/{component_id}/boundary-references` | `ListTechnologyComponentBoundaryReferences` | [registration](../../src/Compliance.App/Program.cs#L1714) |
+| GET | `/api/v1/tenants/{tenant_id}/information-assets/{information_asset_id}/boundary-references` | `ListInformationAssetBoundaryReferences` | [registration](../../src/Compliance.App/Program.cs#L1720) |
+| GET | `/api/v1/tenants/{tenant_id}/technology-components/{component_id}` | `GetTechnologyComponent` | [registration](../../src/Compliance.App/Program.cs#L1726) |
+| GET | `/api/v1/tenants/{tenant_id}/technology-components` | `ListTechnologyComponents` | [registration](../../src/Compliance.App/Program.cs#L1730) |
+| GET | `/api/v1/tenants/{tenant_id}/technology-components/{component_id}/revisions` | `ListTechnologyComponentRevisions` | [registration](../../src/Compliance.App/Program.cs#L1734) |
+| POST | `/api/v1/tenants/{tenant_id}/information-assets` | `RecordInformationAsset` | [registration](../../src/Compliance.App/Program.cs#L1738) |
+| PUT | `/api/v1/tenants/{tenant_id}/information-assets/{information_asset_id}` | `ReviseInformationAsset` | [registration](../../src/Compliance.App/Program.cs#L1742) |
+| GET | `/api/v1/tenants/{tenant_id}/information-assets/{information_asset_id}` | `GetInformationAsset` | [registration](../../src/Compliance.App/Program.cs#L1746) |
+| GET | `/api/v1/tenants/{tenant_id}/information-assets` | `ListInformationAssets` | [registration](../../src/Compliance.App/Program.cs#L1750) |
+| GET | `/api/v1/tenants/{tenant_id}/information-assets/{information_asset_id}/revisions` | `ListInformationAssetRevisions` | [registration](../../src/Compliance.App/Program.cs#L1754) |
+| POST | `/api/v1/tenants/{tenant_id}/information-assets/{information_asset_id}/change-previews` | `PreviewInformationAssetChange` | [registration](../../src/Compliance.App/Program.cs#L1758) |
+| POST | `/api/v1/tenants/{tenant_id}/locations` | `RecordLocation` | [registration](../../src/Compliance.App/Program.cs#L1763) |
+| PUT | `/api/v1/tenants/{tenant_id}/locations/{location_id}` | `ReviseLocation` | [registration](../../src/Compliance.App/Program.cs#L1767) |
+| GET | `/api/v1/tenants/{tenant_id}/locations/{location_id}` | `GetLocation` | [registration](../../src/Compliance.App/Program.cs#L1771) |
+| GET | `/api/v1/tenants/{tenant_id}/locations` | `ListLocations` | [registration](../../src/Compliance.App/Program.cs#L1775) |
+| GET | `/api/v1/tenants/{tenant_id}/locations/{location_id}/revisions` | `ListLocationRevisions` | [registration](../../src/Compliance.App/Program.cs#L1779) |
+| POST | `/api/v1/tenants/{tenant_id}/operational-processes` | `RecordOperationalProcess` | [registration](../../src/Compliance.App/Program.cs#L1783) |
+| PUT | `/api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id}` | `ReviseOperationalProcess` | [registration](../../src/Compliance.App/Program.cs#L1787) |
+| GET | `/api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id}` | `GetOperationalProcess` | [registration](../../src/Compliance.App/Program.cs#L1791) |
+| GET | `/api/v1/tenants/{tenant_id}/operational-processes` | `ListOperationalProcesses` | [registration](../../src/Compliance.App/Program.cs#L1795) |
+| GET | `/api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id}/revisions` | `ListOperationalProcessRevisions` | [registration](../../src/Compliance.App/Program.cs#L1799) |
+| POST | `/api/v1/tenants/{tenant_id}/data-flows` | `RecordDataFlow` | [registration](../../src/Compliance.App/Program.cs#L1803) |
+| PUT | `/api/v1/tenants/{tenant_id}/data-flows/{data_flow_id}` | `ReviseDataFlow` | [registration](../../src/Compliance.App/Program.cs#L1807) |
+| GET | `/api/v1/tenants/{tenant_id}/data-flows/{data_flow_id}` | `GetDataFlow` | [registration](../../src/Compliance.App/Program.cs#L1811) |
+| GET | `/api/v1/tenants/{tenant_id}/data-flows` | `ListDataFlows` | [registration](../../src/Compliance.App/Program.cs#L1815) |
+| GET | `/api/v1/tenants/{tenant_id}/data-flows/{data_flow_id}/revisions` | `ListDataFlowRevisions` | [registration](../../src/Compliance.App/Program.cs#L1819) |
+| POST | `/api/v1/tenants/{tenant_id}/applications` | `DeclareApplication` | [registration](../../src/Compliance.App/Program.cs#L1823) |
+| PUT | `/api/v1/tenants/{tenant_id}/applications/{application_id}` | `ReviseApplication` | [registration](../../src/Compliance.App/Program.cs#L1827) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}` | `GetApplication` | [registration](../../src/Compliance.App/Program.cs#L1836) |
+| GET | `/api/v1/tenants/{tenant_id}/applications` | `ListApplications` | [registration](../../src/Compliance.App/Program.cs#L1840) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}` | `AddApplicationRelationship` | [registration](../../src/Compliance.App/Program.cs#L1844) |
+| DELETE | `/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}` | `RemoveApplicationRelationship` | [registration](../../src/Compliance.App/Program.cs#L1852) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships` | `ListApplicationRelationships` | [registration](../../src/Compliance.App/Program.cs#L1860) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/revisions/{revision}` | `GetApplicationRevision` | [registration](../../src/Compliance.App/Program.cs#L1875) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/revisions` | `ListApplicationRevisions` | [registration](../../src/Compliance.App/Program.cs#L1879) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{source_application_id}/relationships` | `RecordApplicationRelationship` | [registration](../../src/Compliance.App/Program.cs#L1883) |
+| DELETE | `/api/v1/tenants/{tenant_id}/applications/{source_application_id}/relationships/{relationship_type}/{target_application_id}` | `RemoveGovernedApplicationRelationship` | [registration](../../src/Compliance.App/Program.cs#L1888) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/directed` | `ListDirectedApplicationRelationships` | [registration](../../src/Compliance.App/Program.cs#L1893) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{predecessor_application_id}/successors/{successor_application_id}/approval` | `ApproveApplicationSuccessor` | [registration](../../src/Compliance.App/Program.cs#L1898) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances` | `DeclareSystemInstance` | [registration](../../src/Compliance.App/Program.cs#L1903) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}` | `GetSystemInstance` | [registration](../../src/Compliance.App/Program.cs#L1907) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances` | `ListSystemInstances` | [registration](../../src/Compliance.App/Program.cs#L1911) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/boundary-references` | `ListApplicationBoundaryReferences` | [registration](../../src/Compliance.App/Program.cs#L1915) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/boundary-references` | `ListSystemInstanceBoundaryReferences` | [registration](../../src/Compliance.App/Program.cs#L1921) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/change-previews` | `PreviewApplicationChange` | [registration](../../src/Compliance.App/Program.cs#L1927) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/retirements` | `RetireApplication` | [registration](../../src/Compliance.App/Program.cs#L1937) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/retirements` | `RetireSystemInstance` | [registration](../../src/Compliance.App/Program.cs#L1942) |
+| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-review-scope-decisions` | `DecideAccessReviewScope` | [registration](../../src/Compliance.App/Program.cs#L1947) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-review-scope` | `GetAccessReviewScope` | [registration](../../src/Compliance.App/Program.cs#L1952) |
+| GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/access-review-scopes` | `ListAccessReviewScopes` | [registration](../../src/Compliance.App/Program.cs#L1957) |
+| GET | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}` | `GetArtifactRetention` | [registration](../../src/Compliance.App/Program.cs#L1962) |
+| GET | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds` | `ListArtifactLegalHolds` | [registration](../../src/Compliance.App/Program.cs#L1966) |
+| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/retention` | `GetApplicationImportRetention` | [registration](../../src/Compliance.App/Program.cs#L1970) |
+| POST | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/basis` | `RecordArtifactRetentionBasis` | [registration](../../src/Compliance.App/Program.cs#L1974) |
+| POST | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds` | `PlaceArtifactLegalHold` | [registration](../../src/Compliance.App/Program.cs#L1978) |
+| POST | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}/releases` | `ReleaseArtifactLegalHold` | [registration](../../src/Compliance.App/Program.cs#L1982) |
+| POST | `/api/v1/tenants/{tenant_id}/application-imports` | `StageApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L1986) |
+| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/progress` | `GetApplicationImportProgress` | [registration](../../src/Compliance.App/Program.cs#L1990) |
+| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rejected-report` | `GetApplicationImportRejectedReport` | [registration](../../src/Compliance.App/Program.cs#L1995) |
+| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances` | `AcceptApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2000) |
+| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations` | `CancelApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2005) |
+| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations` | `CorrelateApplicationImportRow` | [registration](../../src/Compliance.App/Program.cs#L2009) |
+| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}` | `GetApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2014) |
+| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows` | `ListApplicationImportRows` | [registration](../../src/Compliance.App/Program.cs#L2018) |
+| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/preview` | `PreviewApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2022) |
+| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/preview/missing` | `PreviewMissingApplicationImportRows` | [registration](../../src/Compliance.App/Program.cs#L2026) |
+| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal/preview` | `PreviewApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L2031) |
+| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal` | `FreezeApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L2035) |
+| GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal` | `GetApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L2040) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/client-services` | `CreateClientService` | [registration](../../src/Compliance.App/Program.cs#L2044) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/client-services` | `ListProgramClientServices` | [registration](../../src/Compliance.App/Program.cs#L2048) |
+| PUT | `/api/v1/tenants/{tenant_id}/client-services/{service_id}` | `ReviseClientService` | [registration](../../src/Compliance.App/Program.cs#L2052) |
+| POST | `/api/v1/tenants/{tenant_id}/client-services/{service_id}/retirements` | `RetireClientService` | [registration](../../src/Compliance.App/Program.cs#L2056) |
+| GET | `/api/v1/tenants/{tenant_id}/client-services/{service_id}` | `GetClientService` | [registration](../../src/Compliance.App/Program.cs#L2060) |
+| GET | `/api/v1/tenants/{tenant_id}/client-services` | `ListClientServices` | [registration](../../src/Compliance.App/Program.cs#L2064) |
+| GET | `/api/v1/tenants/{tenant_id}/client-services/{service_id}/revisions` | `ListClientServiceRevisions` | [registration](../../src/Compliance.App/Program.cs#L2068) |
+| GET | `/api/v1/tenants/{tenant_id}/client-services/{service_id}/revisions/{revision}` | `GetClientServiceRevision` | [registration](../../src/Compliance.App/Program.cs#L2072) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/boundaries` | `CreateBoundary` | [registration](../../src/Compliance.App/Program.cs#L2076) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/boundaries` | `ListProgramBoundaries` | [registration](../../src/Compliance.App/Program.cs#L2080) |
+| PUT | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}` | `ReviseBoundaryDraft` | [registration](../../src/Compliance.App/Program.cs#L2084) |
+| POST | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/discards` | `DiscardBoundaryDraft` | [registration](../../src/Compliance.App/Program.cs#L2088) |
+| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}` | `GetBoundary` | [registration](../../src/Compliance.App/Program.cs#L2092) |
+| POST | `/api/v1/tenants/{tenant_id}/responsibilities` | `AssignResponsibility` | [registration](../../src/Compliance.App/Program.cs#L2096) |
+| POST | `/api/v1/tenants/{tenant_id}/responsibilities/{assignment_id}/revocation` | `RevokeResponsibility` | [registration](../../src/Compliance.App/Program.cs#L2100) |
+| GET | `/api/v1/tenants/{tenant_id}/responsibilities` | `ListResponsibilities` | [registration](../../src/Compliance.App/Program.cs#L2104) |
+| GET | `/api/v1/tenants/{tenant_id}/responsibilities/conflict-preview` | `PreviewResponsibilityConflicts` | [registration](../../src/Compliance.App/Program.cs#L2108) |
+| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/versions/{version_id}` | `GetBoundaryVersion` | [registration](../../src/Compliance.App/Program.cs#L2113) |
+| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/versions` | `ListBoundaryVersions` | [registration](../../src/Compliance.App/Program.cs#L2117) |
+| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/effective-version` | `GetEffectiveBoundaryVersion` | [registration](../../src/Compliance.App/Program.cs#L2121) |
+| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/decisions/{decision_id}` | `GetBoundaryDecision` | [registration](../../src/Compliance.App/Program.cs#L2125) |
+| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/decisions` | `ListBoundaryDecisions` | [registration](../../src/Compliance.App/Program.cs#L2129) |
+| GET | `/api/v1/tenants/{tenant_id}/separation-of-duties-waivers/{waiver_id}` | `GetSeparationOfDutiesWaiver` | [registration](../../src/Compliance.App/Program.cs#L2133) |
+| POST | `/api/v1/tenants/{tenant_id}/scope-snapshots` | `FreezeProgramScopeSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2137) |
+| POST | `/api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/amendments` | `AmendProgramScopeSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2141) |
+| GET | `/api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}` | `GetSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2145) |
+| GET | `/api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/verification` | `VerifyProgramScopeSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2149) |
+| GET | `/api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/manifest-regeneration` | `RegenerateProgramScopeSnapshotManifest` | [registration](../../src/Compliance.App/Program.cs#L2153) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/scope-snapshots` | `ListProgramSnapshots` | [registration](../../src/Compliance.App/Program.cs#L2158) |
+| POST | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshots` | `FreezeWorkforceRosterSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2162) |
+| POST | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshots/{snapshot_id}/amendments` | `AmendWorkforceRosterSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2166) |
+| GET | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshots/{snapshot_id}` | `GetWorkforceRosterSnapshot` | [registration](../../src/Compliance.App/Program.cs#L2170) |
+| GET | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshots` | `ListWorkforceRosterSnapshots` | [registration](../../src/Compliance.App/Program.cs#L2174) |
+| GET | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshots/{snapshot_id}/manifest-regeneration` | `RegenerateWorkforceRosterSnapshotManifest` | [registration](../../src/Compliance.App/Program.cs#L2178) |
+| GET | `/api/v1/tenants/{tenant_id}/workforce-roster-snapshot-as-of` | `GetWorkforceRosterSnapshotAsOf` | [registration](../../src/Compliance.App/Program.cs#L2182) |
+| GET | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/impact-preview` | `PreviewBoundaryImpact` | [registration](../../src/Compliance.App/Program.cs#L2186) |
+| POST | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/reviews` | `ReviewBoundary` | [registration](../../src/Compliance.App/Program.cs#L2190) |
+| POST | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/approvals` | `ApproveBoundary` | [registration](../../src/Compliance.App/Program.cs#L2194) |
+| POST | `/api/v1/tenants/{tenant_id}/separation-of-duties-waivers` | `RecordSeparationOfDutiesWaiver` | [registration](../../src/Compliance.App/Program.cs#L2198) |
+| POST | `/api/v1/tenants/{tenant_id}/separation-of-duties-waivers/{waiver_id}/approvals` | `ApproveSeparationOfDutiesWaiver` | [registration](../../src/Compliance.App/Program.cs#L2202) |
+| POST | `/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/successors` | `ProposeBoundarySuccessor` | [registration](../../src/Compliance.App/Program.cs#L2206) |
+| POST | `/api/v1/users/{user_id}/email-addresses/{email_address}` | `ReserveEmail` | [registration](../../src/Compliance.App/Program.cs#L2210) |
+| POST | `/api/v1/users/{user_id}/email-addresses/{email_address}/challenges` | `IssueEmailChallenge` | [registration](../../src/Compliance.App/Program.cs#L2213) |
+| GET | `/api/v1/users/{user_id}/email-addresses/{email_address}/challenges/status` | `GetEmailChallengeStatus` | [registration](../../src/Compliance.App/Program.cs#L2216) |
+| POST | `/api/v1/users/{user_id}/email-addresses/{email_address}/verifications` | `CompleteEmailChallenge` | [registration](../../src/Compliance.App/Program.cs#L2220) |
+| GET | `/api/v1/users/{user_id}/email-addresses/{email_address}` | `GetEmailAddress` | [registration](../../src/Compliance.App/Program.cs#L2223) |
+| GET | `/api/v1/users/{user_id}/email-addresses` | `ListEmailAddresses` | [registration](../../src/Compliance.App/Program.cs#L2226) |
+| GET | `/api/v1/tenants/mine` | `ListMyTenants` | [registration](../../src/Compliance.App/Program.cs#L2229) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2232) |
+| POST | `/api/v1/tenants/{tenant_id}/teams/{team_id}` | `DefineTeam` | [registration](../../src/Compliance.App/Program.cs#L2236) |
+| DELETE | `/api/v1/tenants/{tenant_id}/teams/{team_id}` | `DeleteTeam` | [registration](../../src/Compliance.App/Program.cs#L2239) |
+| GET | `/api/v1/tenants/{tenant_id}/teams/{team_id}` | `GetTeam` | [registration](../../src/Compliance.App/Program.cs#L2242) |
+| GET | `/api/v1/tenants/{tenant_id}/teams` | `ListTeams` | [registration](../../src/Compliance.App/Program.cs#L2245) |
+| POST | `/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}` | `AssignTeamMember` | [registration](../../src/Compliance.App/Program.cs#L2248) |
+| DELETE | `/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}` | `RemoveTeamMember` | [registration](../../src/Compliance.App/Program.cs#L2251) |
+| GET | `/api/v1/tenants/{tenant_id}/teams/{team_id}/members` | `ListTeamMembers` | [registration](../../src/Compliance.App/Program.cs#L2254) |
+| POST | `/api/v1/tenants/{tenant_id}/teams/{team_id}/roles/{role_id}` | `AssignTeamRole` | [registration](../../src/Compliance.App/Program.cs#L2257) |
+| DELETE | `/api/v1/tenants/{tenant_id}/teams/{team_id}/roles/{role_id}` | `RemoveTeamRole` | [registration](../../src/Compliance.App/Program.cs#L2260) |
+| POST | `/api/v1/tenants/{tenant_id}/roles/{role_id}` | `DefineRole` | [registration](../../src/Compliance.App/Program.cs#L2263) |
+| DELETE | `/api/v1/tenants/{tenant_id}/roles/{role_id}` | `DeleteRole` | [registration](../../src/Compliance.App/Program.cs#L2266) |
+| GET | `/api/v1/tenants/{tenant_id}/roles/{role_id}` | `GetRole` | [registration](../../src/Compliance.App/Program.cs#L2269) |
+| GET | `/api/v1/tenants/{tenant_id}/roles` | `ListRoles` | [registration](../../src/Compliance.App/Program.cs#L2272) |
+| POST | `/api/v1/tenants/{tenant_id}/roles/{role_id}/permissions/{permission}` | `AssignRolePermission` | [registration](../../src/Compliance.App/Program.cs#L2275) |
+| DELETE | `/api/v1/tenants/{tenant_id}/roles/{role_id}/permissions/{permission}` | `RemoveRolePermission` | [registration](../../src/Compliance.App/Program.cs#L2278) |
+| GET | `/api/v1/tenants/{tenant_id}/roles/{role_id}/permissions` | `ListRolePermissions` | [registration](../../src/Compliance.App/Program.cs#L2281) |
+| GET | `/api/v1/tenants/{tenant_id}/roles/{role_id}/teams` | `ListRoleTeams` | [registration](../../src/Compliance.App/Program.cs#L2285) |
+| GET | `/api/v1/tenants/{tenant_id}/teams/{team_id}/roles` | `ListTeamRoles` | [registration](../../src/Compliance.App/Program.cs#L2288) |
+| POST | `/api/v1/tenants/{tenant_id}/access-grants/{grant_id}` | `GrantAccess` | [registration](../../src/Compliance.App/Program.cs#L2291) |
+| DELETE | `/api/v1/tenants/{tenant_id}/access-grants/{grant_id}` | `RevokeAccessGrant` | [registration](../../src/Compliance.App/Program.cs#L2294) |
+| GET | `/api/v1/tenants/{tenant_id}/access-grants` | `ListAccessGrants` | [registration](../../src/Compliance.App/Program.cs#L2297) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}` | `ConfigureTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2300) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/tests` | `TestTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2304) |
+| POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations` | `RotateTenantIdentityProviderCredentials` | [registration](../../src/Compliance.App/Program.cs#L2308) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}` | `CreateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2312) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments` | `AmendAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2316) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations` | `ValidateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2320) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `CreateExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2324) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/revisions` | `ReviseExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2328) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `GetExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2332) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}` | `GetTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2336) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baseline-preview` | `PreviewTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2340) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/freeze` | `FreezeTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2344) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/amendments` | `AmendTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2348) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id}` | `RecordManagementAssertion` | [registration](../../src/Compliance.App/Program.cs#L2352) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/representation-letters/{letter_id}` | `RecordManagementRepresentationLetter` | [registration](../../src/Compliance.App/Program.cs#L2356) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2360) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/management-reviews/{sign_off_id}` | `RecordManagementExaminationReview` | [registration](../../src/Compliance.App/Program.cs#L2364) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-ii-plans/{plan_id}/proposals` | `ProposeTypeIIOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L2368) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2372) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/amendments` | `AmendTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2376) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-approvals` | `ApproveTypeIIPeriodClose` | [registration](../../src/Compliance.App/Program.cs#L2380) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/freezes` | `FreezeTypeIIPeriodClose` | [registration](../../src/Compliance.App/Program.cs#L2384) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2388) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2392) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `CreateAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2396) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions` | `ReviseAdvisorHandoffSelection` | [registration](../../src/Compliance.App/Program.cs#L2400) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review` | `MarkAdvisorHandoffReadyForReview` | [registration](../../src/Compliance.App/Program.cs#L2404) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures` | `CloseAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2408) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations` | `RevokeAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2412) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses` | `RespondToAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2416) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions` | `ResolveAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2420) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `RecordAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2424) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections` | `CorrectAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2428) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}` | `GetAdvisorRequest` | [registration](../../src/Compliance.App/Program.cs#L2432) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `ListAdvisorRequests` | [registration](../../src/Compliance.App/Program.cs#L2436) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}` | `GetAdvisorSharedSource` | [registration](../../src/Compliance.App/Program.cs#L2440) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/preview` | `PreviewAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2444) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `ListAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2448) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{significant_change_id}` | `GetSignificantChange` | [registration](../../src/Compliance.App/Program.cs#L2452) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes` | `ListSignificantChanges` | [registration](../../src/Compliance.App/Program.cs#L2456) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}/impact-assessment` | `GetComplianceImpactAssessment` | [registration](../../src/Compliance.App/Program.cs#L2460) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}` | `GetComplianceIncident` | [registration](../../src/Compliance.App/Program.cs#L2464) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents` | `ListComplianceIncidents` | [registration](../../src/Compliance.App/Program.cs#L2468) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}` | `RecordSignificantChange` | [registration](../../src/Compliance.App/Program.cs#L2472) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/revisions` | `ReviseSignificantChange` | [registration](../../src/Compliance.App/Program.cs#L2476) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/assessments` | `AssessSignificantChange` | [registration](../../src/Compliance.App/Program.cs#L2480) |
 
 ### Additional transport and MCP registrations
 

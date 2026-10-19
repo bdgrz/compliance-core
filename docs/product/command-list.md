@@ -466,6 +466,10 @@ This pruned plan has 130 feature-backed additions, including five evidence comma
 
 These commands carry the complete change or incident content accepted by their owning aggregates. The revised payload shapes use discriminator version 2 so handlers do not synthesize missing source, owner, impact, evidence, or resolution facts.
 
+The first T2-07 choreography slice is wired through internal commands and reactors. `LinkImpactReviewWork` follows a current change assessment and checks every selected item against the authoritative accountable-work directories for the same tenant and program before the owning aggregate records each link. `SystemDescriptionDecisionReactor` records exact approved-successor decisions for changes and exact no-change decisions for both changes and incidents. No-change correlation binds the current assessment version and canonical `AssessmentSha256`; approved change successors must postdate the assessment and name the exact change. The internal commands have no public routes, and projectors only index the resulting facts.
+
+Incident approved-successor correlation remains incomplete: approved description content stores `SignificantChangeIds` but has no incident-ID field. Do not infer an incident from other identifiers. Restricted record reads and edits now allow the current assessor or a member granted the dedicated restricted read/write permission; built-in Org Admin and Compliance Lead roles receive those grants. The incident directory query routes and significant-change read routes are registered with program authorization.
+
 ### Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md)
 
 - **ApproveTypeIIPeriodClose** — coded ([contract](../../src/Compliance.Common/Features/Examinations/ApproveTypeIIPeriodClose.cs#L7))

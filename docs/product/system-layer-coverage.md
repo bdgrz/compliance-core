@@ -6,11 +6,15 @@ Reconciled 2026-10-19 against `src/Compliance.Common` and `src/Compliance.Core`.
 
 | Layer | Coded types | Inventory |
 | --- | ---: | --- |
-| Request/command contracts | 235 source contracts | [Existing commands](component-inventory.md#existing-commands) and [command list](command-list.md) |
+| Request/command contracts | 238 source contracts | [Existing commands](component-inventory.md#existing-commands) and [command list](command-list.md) |
 | Query contracts | 272 (216 existing + 56 backfilled contracts) | [Existing queries](component-inventory.md#existing-queries) and [required query/view-model backfill](query-and-view-model-list.md) |
-| Domain events | 392 declared source types; 381 in the tracked feature-backed universe, with 11 declarations to reconcile | [Existing events](component-inventory.md#existing-events) and [required event backfill](domain-event-list.md) |
+| Domain events | 404 declared source types; 403 accepted facts and 1 explicitly excluded migration event | [Existing events](component-inventory.md#existing-events) and [source declaration reconciliation](domain-event-list.md#source-declaration-reconciliation) |
 | Aggregates | 85 (68 existing + 17 TDD-backed aggregates) | [Existing aggregates](component-inventory.md#existing-aggregates) |
 | Models, views, and supporting contracts | 569 (436 existing + 59 response/receipt views + 74 aggregate payload/support models) | [Existing models](component-inventory.md#existing-models-and-supporting-contracts) and [required query/view-model backfill](query-and-view-model-list.md) |
+| Core handler coverage | 114 complete, 3 partial, and 8 missing of 125 active commands | [Handler coverage checklist](handler-coverage-checklist.md) |
+| Reactors | 33 source types | [Existing reactors](component-inventory.md#existing-reactors); critical-flow coverage remains open |
+| Projectors | 78 source types | [Existing projectors](component-inventory.md#existing-projectors); query-to-projector coverage remains open |
+| HTTP routes | 493 typed registrations and 1 custom route | [HTTP API inventory](component-inventory.md#existing-http-apis); 44 query routes remain unregistered |
 
 All source links in those existing inventories resolve to files. The command list separates existing contracts from additional candidates and internal operations. The component inventory contains the proposed future queries, events, aggregate/model candidates, reactors, and projectors.
 
@@ -20,7 +24,15 @@ The former broad proposal list mixed required work with hypotheses and unresolve
 
 The pruned plan retains 130 feature-backed command requirements, each mapped to a typed command contract; actual-staff revocation reuses its already wired contract and handler. Five readiness-material import commands are explicitly deferred, leaving 125 active handler requirements. Excluded P2 hypotheses, unsettled BO scope, and unvalidated Privacy scope are not counted as required product commands.
 
-The domain-event backfill identifies 141 typed contracts; the four weekly-digest and five Type II calendar lifecycle events extend the tracked feature-backed universe to 381. Eight readiness-import events remain deferred, and 11 declarations in the current source scan still need reconciliation to accepted feature requirements. The R2-08 `AdvisorHandoff`, T1-01 `ExaminationEngagement`, T1-02 `SystemDescription`, T1-04 `AuditorRequest`, R2-12 evidence-governance roots, T1-05/T3-05 `AuditPackage`, T1-07 examination transition roots, and T2-01/T3-01 `TypeIIPeriod` plus `TypeIIObservationCalendar` have focused RED-to-GREEN behavior tests. All 21 Type I baseline source families are registered and covered by source-contributor tests. Handler coverage is 114 of 125 active commands complete, 3 partial, and 8 without handlers. The Type II proposal and period start now preserve exact approved-control expected-evidence descriptions through their plan and occurrence records. Five readiness-import commands remain explicitly deferred. The [handler checklist](handler-coverage-checklist.md) tracks active gaps and prerequisites. Reactors follow handler closure; projectors are the final layer.
+The domain-event inventory reconciles all 404 declared source types: 403 accepted facts are mapped to business requirements, and `WorkItemAssignmentHistoryImported` is explicitly excluded as a legacy migration fact. Eight readiness-import events remain deferred and are not current source declarations. The R2-08 `AdvisorHandoff`, T1-01 `ExaminationEngagement`, T1-02 `SystemDescription`, T1-04 `AuditorRequest`, R2-12 evidence-governance roots, T1-05/T3-05 `AuditPackage`, T1-07 examination transition roots, and T2-01/T3-01 `TypeIIPeriod` plus `TypeIIObservationCalendar` have focused RED-to-GREEN behavior tests. All 21 Type I baseline source families are registered and covered by source-contributor tests. Handler coverage is 114 of 125 active commands complete, 3 partial, and 8 without handlers; the three internal T2-07 reaction commands are outside that active public-command count. The Type II proposal and period start preserve exact approved-control expected-evidence descriptions through their plan and occurrence records. Five readiness-import commands remain explicitly deferred. The [handler checklist](handler-coverage-checklist.md) tracks active gaps and prerequisites. Reactors follow handler closure; projectors are the final layer.
+
+## Vertical-slice closure gaps
+
+The query audit found 44 of 272 tracked query contracts without a Core handler or typed HTTP registration. Their contracts and response-view files exist; each still needs an authorized read path and a read model or aggregate source selected by its owning feature. The [query inventory](query-and-view-model-list.md#current-handler-and-http-gaps) names every affected query. Significant-change and incident reads now use tenant-partitioned projections with paged program indexes and restricted-record filtering.
+
+The accepted command plan has 125 active handler requirements: 114 complete, 3 partial, and 8 missing. Five additional readiness-import commands stay deferred by M0-D04/EN-05. Do not treat worker callbacks or scheduler commands as public HTTP routes simply because a command contract exists.
+
+Current source contains 33 reactor types and 78 projector types. Their source counts do not establish behavior coverage: the remaining work is to connect every required query to its authorized read source and projector, reconcile every business fact to its owning bounded aggregate, and identify each critical cross-aggregate flow that needs a reactor. Use event choreography for follow-up commands and external effects; keep projectors read-only. T2-07 impact-work linking and exact no-change/approved-change description decisions now have internal commands and reactors. Incident approved-successor correlation remains open because the system-description source does not identify incident IDs.
 
 ## Validation
 

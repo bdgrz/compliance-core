@@ -489,6 +489,13 @@ public sealed class SignificantChange : Aggregate
         item.EvidenceArtifactIds,
         item.RequiresSystemDescriptionReview,
     });
+
+    /// <summary>Returns the canonical digest of the assessed facts, excluding actor attribution.</summary>
+    public static string AssessmentSha256(SignificantChangeImpactView item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return AssessmentDigest(item);
+    }
     static bool SameVersion(SignificantChangeVersionView left, SignificantChangeVersionView right) =>
         left.Version == right.Version && left.ContentSha256 == right.ContentSha256 &&
         left.RecordedByMemberId == right.RecordedByMemberId && left.RecordedByDisplay == right.RecordedByDisplay &&

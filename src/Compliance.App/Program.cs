@@ -2449,6 +2449,38 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
+    app.MapPortiaGet<GetSignificantChange, SignificantChangeView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{significant_change_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
+    app.MapPortiaGet<ListSignificantChanges, Page<SignificantChangeSummaryView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
+    app.MapPortiaGet<GetComplianceImpactAssessment, ComplianceIncidentImpactAssessmentView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}/impact-assessment")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
+    app.MapPortiaGet<GetComplianceIncident, ComplianceIncidentView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
+    app.MapPortiaGet<ListComplianceIncidents, Page<ComplianceIncidentSummaryView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
+    app.MapPortiaPut<RecordSignificantChange>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
+    app.MapPortiaPost<ReviseSignificantChange>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/revisions")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
+    app.MapPortiaPost<AssessSignificantChange>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/assessments")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
     app.MapMethods(
         "/api/{**path}",
         ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],
