@@ -4,6 +4,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
+/// <summary>Lists every retained immutable version, including superseded and retired versions.</summary>
 [Discriminator("bdgrz.policy.versions.list", 1)]
 public sealed record ListPolicyVersions(Uuid TenantId, Uuid ProgramId, Uuid PolicyId,
     int? Limit = null, string? Cursor = null)

@@ -4,6 +4,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
+/// <summary>Lists the program policy inventory, including policies with retired status.</summary>
 [Discriminator("bdgrz.policies.list", 1)]
 public sealed record ListPolicies(Uuid TenantId, Uuid ProgramId, int? Limit = null,
     string? Cursor = null)
