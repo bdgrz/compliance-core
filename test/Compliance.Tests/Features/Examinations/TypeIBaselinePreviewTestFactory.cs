@@ -32,6 +32,7 @@ static class TypeIBaselinePreviewTestFactory
         "control_evaluation" => "control_evaluations",
         "policy_version" or "policy_retirement" => "policies",
         "policy_communication" or "training_requirement_version" => "policy_communications",
+        "access_expectation_ledger" => "access_expectations",
         "criteria_selection" or "criteria_edition" => "criteria",
         "control" or "approved_control" => "controls",
         "criteria" => "criteria",

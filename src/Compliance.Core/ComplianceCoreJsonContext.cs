@@ -1300,6 +1300,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.PolicyRetirementSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.PolicyCommunicationCampaignSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.TrainingRequirementSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessExpectationLedgerSourceContent))]
 [JsonSerializable(typeof(Page<PolicyVersionView>))]
 [JsonSerializable(typeof(PolicyDecisionView))]
 [JsonSerializable(typeof(Page<PolicyDecisionView>))]
