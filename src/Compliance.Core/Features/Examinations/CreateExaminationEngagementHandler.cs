@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -15,6 +16,13 @@ sealed class CreateExaminationEngagementHandler(IAggregateReader reader,
                 out var memberId, out var display))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "An examination engagement requires a personal HTTP actor."));
+        var readiness = await reader.HydrateAsync(new ReadinessLedger(request.TenantId,
+            request.ProgramId), ct).ConfigureAwait(false);
+        var entryDecisions = readiness.TypeIEntryDecisions();
+        if (entryDecisions.Count == 0 || entryDecisions[0].Outcome is not
+            (ReadinessLedger.Approve or ReadinessLedger.ApproveWithExceptions))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A Type I engagement requires an approved Type I entry decision."));
         var contacts = request.ManagementContactMemberIds ?? [];
         var validation = await ExaminationManagementContacts.ValidateAsync(reader,
             request.TenantId, contacts, ct).ConfigureAwait(false);

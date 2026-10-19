@@ -30,6 +30,7 @@ Advisor collaboration:
 
 Type I baseline:
 
+- [x] `CreateExaminationEngagement` — requires the program's approved or approved-with-exceptions Type I entry decision; missing or deferred decisions conflict before an engagement is written.
 - [x] `FreezeTypeIBaseline` — all 21 source families are production-composed; the handler rejects blockers and stale preview digests, freezes the manifest and family coverage, and supports exact-identity retries.
 - [x] `AmendTypeIBaseline` — the handler preserves prior snapshots, requires the exact changed-record set, records the reason, approver, and affected package materials, and supports exact-identity retries.
 

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -14,10 +15,52 @@ public sealed class ExaminationEngagementCommandHandlerTests
     static readonly DateTimeOffset Now = new(2026, 10, 17, 17, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public async Task ShouldRejectCreateGivenNoApprovedTypeIEntryDecision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
+            null, ["security", "availability"], fixture.BoundaryId);
+
+        // Act
+        var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectCreateGivenDeferredTypeIEntryDecision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Defer);
+        var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+            fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
+            null, ["security", "availability"], fixture.BoundaryId);
+
+        // Act
+        var result = await fixture.CreateHandler().HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, saved.Revision);
+    }
+
+    [Fact]
     public async Task ShouldCreateTypeIEngagementGivenPersonalCommand()
     {
         // Arrange
         await using var fixture = new Fixture();
+        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Approve);
         var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
             fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
             null, ["security", "availability"], fixture.BoundaryId);
@@ -42,6 +85,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
+        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Approve);
         var request = new CreateExaminationEngagement(fixture.TenantId, fixture.ProgramId,
             fixture.EngagementId, "type_i", "Independent Audit LLP", new DateOnly(2026, 9, 30),
             null, ["security", "availability"], fixture.BoundaryId);
@@ -64,6 +108,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
+        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Approve);
         var contactUserId = Uuid.CreateVersion4();
         var contactMemberId = RbacIds.Member(fixture.TenantId, contactUserId);
         await fixture.SeedMemberAsync(contactUserId, "client_personnel");
@@ -88,6 +133,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
+        await fixture.SeedTypeIEntryDecisionAsync(ReadinessLedger.Approve);
         var contactUserId = Uuid.CreateVersion4();
         var contactMemberId = RbacIds.Member(fixture.TenantId, contactUserId);
         await fixture.SeedMemberAsync(contactUserId, "firm_staff");
@@ -379,6 +425,25 @@ public sealed class ExaminationEngagementCommandHandlerTests
             var member = new Member(TenantId, userId);
             Assert.True(member.Register(affiliation).IsSuccess);
             await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
+        }
+
+        public async Task SeedTypeIEntryDecisionAsync(string outcome)
+        {
+            var assessmentId = Uuid.CreateVersion4();
+            var runnerMemberId = RbacIds.Member(TenantId, UserId);
+            var approverMemberId = RbacIds.Member(TenantId, Uuid.CreateVersion4());
+            var ledger = new ReadinessLedger(TenantId, ProgramId);
+            Assert.Null(ledger.Record(0, assessmentId, Now, null,
+                new ReadinessEvaluation([], [], [], new string('a', 64)), runnerMemberId,
+                "Readiness runner", Now));
+            if (outcome != ReadinessLedger.Defer)
+                Assert.Null(ledger.Decide(assessmentId, ledger.Revision, Uuid.CreateVersion4(),
+                    ReadinessLedger.Proceed, "Management decided to proceed", approverMemberId,
+                    "Management approver", Now));
+            Assert.Null(ledger.DecideTypeIEntry(assessmentId, ledger.Revision,
+                Uuid.CreateVersion4(), outcome, "Type I entry decision", [], approverMemberId,
+                "Management approver", Now));
+            await Writer.SaveAsync(ledger, new RequestDispatchContext(RequestActor.System));
         }
 
         public async Task SeedBaselineAsync()
