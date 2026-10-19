@@ -929,6 +929,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(ListCriteriaCoverage))]
 [JsonSerializable(typeof(ControlCriterionMappingRegistration))]
 [JsonSerializable(typeof(ControlCriterionMappingView))]
+[JsonSerializable(typeof(ControlCriterionMappingVersionView))]
 [JsonSerializable(typeof(Page<ControlCriterionMappingView>))]
 [JsonSerializable(typeof(CriterionCoverageView))]
 [JsonSerializable(typeof(Page<CriterionCoverageView>))]
