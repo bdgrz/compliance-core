@@ -1296,6 +1296,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(PolicyView))]
 [JsonSerializable(typeof(PolicyRetirementProposalView))]
 [JsonSerializable(typeof(PolicyVersionView))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.PolicyVersionSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.PolicyRetirementSourceContent))]
 [JsonSerializable(typeof(Page<PolicyVersionView>))]
 [JsonSerializable(typeof(PolicyDecisionView))]
 [JsonSerializable(typeof(Page<PolicyDecisionView>))]
