@@ -35,6 +35,7 @@ public sealed class ApproveApplicationSuccessorHandler(IAggregateExecutor execut
         if (source.IsRetired || source.Revision != request.ExpectedSourceRevision)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The predecessor application changed. Reload before approval."));
+        var expectedSourceRelationshipRevision = source.SourceRelationshipRevision;
 
         var successor = await reader.HydrateApplicationAsync(request.TenantId,
             request.SuccessorApplicationId, ct).ConfigureAwait(false);
@@ -71,6 +72,7 @@ public sealed class ApproveApplicationSuccessorHandler(IAggregateExecutor execut
         var currentProposal = currentSource.Relationship(ApplicationRelationshipIdentity.Replaces,
             request.SuccessorApplicationId);
         if (currentSource.Revision != request.ExpectedSourceRevision ||
+            currentSource.SourceRelationshipRevision != expectedSourceRelationshipRevision ||
             !currentSuccessor.IsCreated || currentSuccessor.IsRetired ||
             currentSuccessor.Revision != request.ExpectedTargetRevision ||
             !IsCurrentProposal(currentProposal, request))
@@ -85,7 +87,8 @@ public sealed class ApproveApplicationSuccessorHandler(IAggregateExecutor execut
                 ? AggregateOutcome.Discard(Result.Failure(importError))
                 : CommandFailureRequestAdapter.ToOutcome(application.ApproveSuccessor(
                     request.SuccessorApplicationId, request.ExpectedSourceRevision,
-                    request.ExpectedRelationshipRevision, request.ExpectedTargetRevision,
+                    expectedSourceRelationshipRevision, request.ExpectedRelationshipRevision,
+                    request.ExpectedTargetRevision,
                     assessment.Value.ImpactDigest, memberId, display, clock.GetUtcNow())),
             context, ct).ConfigureAwait(false);
     }

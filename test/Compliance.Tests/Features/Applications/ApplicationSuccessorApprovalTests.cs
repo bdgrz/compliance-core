@@ -50,6 +50,28 @@ public sealed class ApplicationSuccessorApprovalTests
     }
 
     [Fact]
+    public async Task ShouldBlockApprovalWithoutAppendGivenRelationshipsChangeDuringImpactRead()
+    {
+        // Arrange
+        var scenario = Scenario.Create();
+        var executor = new NoWriteExecutor();
+        var impact = scenario.CompleteImpact();
+        var handler = scenario.Handler(executor,
+            new ImpactReader(impact, scenario.AddUnrelatedRelationship));
+        var context = scenario.Context(new HttpInvocation("POST", "/synthetic/successor/approve",
+            "/synthetic/successor/approve", "synthetic"));
+
+        // Act
+        var result = await handler.HandleAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict,
+            Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.False(executor.Called);
+        Assert.Equal(scenario.SourceEventCount + 1, scenario.PendingSourceEvents());
+    }
+
+    [Fact]
     public async Task ShouldPersistAttributedApprovalGivenCurrentCompleteImpact()
     {
         // Arrange
@@ -199,6 +221,19 @@ public sealed class ApplicationSuccessorApprovalTests
         public int PendingSourceEvents() =>
             new AggregateScenario<DeclaredApplication>(Source).PendingEvents.Count;
 
+        public ApplicationChangePreview CompleteImpact() =>
+            new(TenantId, PredecessorId, 1, "retire", [], [], [], true)
+            {
+                ImpactDigest = new string('a', 64),
+            };
+
+        public void AddUnrelatedRelationship()
+        {
+            var result = Source.RecordRelationship(Uuid.CreateVersion4(), 1, 1,
+                "depends_on", Uuid.CreateVersion4(), "Manager", Now.AddMinutes(1));
+            Assert.True(result.IsSuccess);
+        }
+
         public ApproveApplicationSuccessorHandler Handler(IAggregateExecutor executor,
             IApplicationChangeImpactReader impactReader) => new(executor,
             new ApplicationReader(Source, Successor), impactReader, TimeProvider.System);
@@ -222,16 +257,20 @@ public sealed class ApplicationSuccessorApprovalTests
         }
     }
 
-    sealed class ImpactReader(ApplicationChangePreview preview) : IApplicationChangeImpactReader
+    sealed class ImpactReader(ApplicationChangePreview preview, Action? onRead = null)
+        : IApplicationChangeImpactReader
     {
         public ValueTask<Result<ApplicationChangePreview>> ReadAsync(
-            PreviewApplicationChange request, Uuid userId, CancellationToken ct) =>
-            ValueTask.FromResult(Result<ApplicationChangePreview>.Success(preview with
+            PreviewApplicationChange request, Uuid userId, CancellationToken ct)
+        {
+            onRead?.Invoke();
+            return ValueTask.FromResult(Result<ApplicationChangePreview>.Success(preview with
             {
                 TenantId = request.TenantId,
                 ApplicationId = request.ApplicationId,
                 ApplicationRevision = request.ExpectedApplicationRevision,
             }));
+        }
     }
 
     sealed class NoWriteExecutor : IAggregateExecutor
