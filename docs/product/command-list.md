@@ -335,7 +335,7 @@ This pruned plan has 130 feature-backed additions, including five evidence comma
 - **RecordEvidenceArtifactInspection** — trusted system-only handler and inspection authorization are wired; durable worker remains to be wired
 - **IssueArtifactDownload** — handler issues a short-lived store delivery only for currently available content after exact artifact-read authorization; records purpose, actor and artifact revision
 - **LinkEvidenceSupport** — handler verifies an available exact artifact, exact current control/version/occurrence/evaluation/period revision and matching period, then records an immutable attributed relationship with the artifact content digest
-- **ReleaseEvidenceArtifactQuarantine** — personal decision handler requires the malware quarantine, current revision, separate retention-admin authorization, a clean rescan, and storage reconciliation; scanner-provider qualification remains open
+- **ReleaseEvidenceArtifactQuarantine** — personal HTTP-only decision at `POST /api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/quarantine-releases`; requires the malware quarantine, current revision, separate retention-admin authorization, a clean rescan, and storage reconciliation. It is intentionally not an MCP tool; scanner-provider qualification remains open.
 
 ### Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md)
 
