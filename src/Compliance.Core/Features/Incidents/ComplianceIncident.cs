@@ -558,6 +558,13 @@ public sealed class ComplianceIncident : Aggregate
         item.CustomerDataAffected,
         item.AvailabilitySlaAffected,
     });
+
+    /// <summary>Returns the canonical digest of the assessed facts, excluding actor attribution.</summary>
+    public static string AssessmentSha256(ComplianceIncidentImpactAssessmentView item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return AssessmentDigest(item);
+    }
     static bool SameResolution(ComplianceIncidentResolutionView? existing,
         ComplianceIncidentResolutionContent content, Uuid actor, string display) =>
         existing is not null && NormalizeResolution(content) is { } normalized &&

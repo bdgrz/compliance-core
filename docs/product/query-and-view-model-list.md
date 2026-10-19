@@ -4,7 +4,28 @@ This is the requirement-backed read-layer plan for the committed product scope. 
 
 ## Existing inventory
 
-Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **273 query contracts** (216 existing plus 57 added here) and **497 model/supporting contracts** (436 existing, 57 response views, two advisor-feedback history views, `EvidenceSupportView`, and the Type I baseline source-coverage contract). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
+Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current source inventory contains **272 unique query contracts**. The 57 rows below are required read workflows, not a unique contract count; some workflows reuse query contracts that were already in the source inventory. The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Source presence does not prove that a query is authorized, registered, projected, exposed, or satisfies its owning story. Reconcile by behavior before adding a new name.
+
+## Current handler and HTTP gaps
+
+Reconciled 2026-10-19 against the query contracts, Core handlers, and typed `MapPortia*` registrations. All query contracts in this table and their response-view contracts have source files. These 44 reads have no Core request handler and no typed HTTP registration. Their read-model repositories and projector support must be established with the owning feature before exposing a route. The query table below remains the requirement source for the expected response.
+
+| Feature | Queries without a handler or typed HTTP registration |
+| --- | --- |
+| AttestRecords | `GetOwnAttestRecordDelivery`, `GetOwnAttestRecordPackage`, `ListOutstandingAttestDeliveryHolds` |
+| AuditPackages | `GetAuditPackage`, `GetAuditPackageDelivery`, `GetAuditPackageManifest`, `GetAuditPackageValidation`, `ListAuditPackages` |
+| AuditPopulations | `GetAuditPopulation`, `GetObservationPeriodClose`, `GetPopulationReconciliation`, `ListAuditPopulationDefinitions`, `ListAuditPopulationRows`, `PreviewObservationPeriodClose` |
+| AuditorRequests | `GetAuditorRequest`, `GetSampleSelection`, `ListAuditorRequests`, `ListRequestResponses` |
+| Examinations | `GetAuditOutcome`, `GetExaminationSignOff`, `GetManagementAssertion`, `GetTypeIIPlan`, `ListAuditObservations` |
+| FirmPortfolio | `GetAuthorizedClientSummary`, `ListAuthorizedClientPortfolio`, `ListMyCrossClientWork` |
+| MethodologyTemplates | `GetMethodologyTemplateVersion`, `GetTemplateApplication`, `ListMethodologyTemplates`, `PreviewMethodologyTemplateApplication` |
+| Operations | `GetControlCalendar`, `GetManagementReview`, `GetObservationPeriod`, `ListDueGovernanceReviews`, `ListManagementReviewActions`, `ListMissingOccurrences`, `ListObservationPeriods` |
+| Programs | `GetNextPeriodPlan`, `GetProgramRollover`, `ListCarryForwardReferences`, `PreviewProgramRollover` |
+| SystemDescription | `GetSystemDescription`, `ListSystemDescriptionVersions`, `PreviewSystemDescriptionImpact` |
+
+The route gap is not an instruction to expose every command over HTTP. Keep internal worker callbacks and scheduler commands off the public API; decide route exposure per accepted user workflow and its authorization contract.
+
+The three incident reads are now implemented with a tenant-partitioned directory projection, Core handlers, and program-authorized HTTP routes. Detail and impact assessment reads return not-found for restricted records outside the current assessor or dedicated restricted-read grant; list reads filter hidden rows before pagination and do not emit a cursor that would reveal trailing restricted rows.
 
 ## Required read workflows to backfill
 
@@ -113,9 +134,9 @@ assignment cannot fall back to the full directory during the request.
 | --- | --- | --- |
 | [GetSignificantChange](../../src/Compliance.Common/Features/Changes/GetSignificantChange.cs#L9) | [SignificantChangeView](../../src/Compliance.Common/Features/Changes/SignificantChangeView.cs#L6) | Change record, impact assessment, and linked review work. |
 | [ListSignificantChanges](../../src/Compliance.Common/Features/Changes/ListSignificantChanges.cs#L9) | `Page<[SignificantChangeSummaryView](../../src/Compliance.Common/Features/Changes/SignificantChangeSummaryView.cs#L6)>` | Changes within the authorized program/period scope. |
-| [GetComplianceIncident](../../src/Compliance.Common/Features/Incidents/GetComplianceIncident.cs#L9) | [ComplianceIncidentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentView.cs#L6) | Incident, assessment, resolution, and evidence references. |
+| [GetComplianceIncident](../../src/Compliance.Common/Features/Incidents/GetComplianceIncident.cs#L9) | [ComplianceIncidentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentView.cs#L6) | Current incident chronology, assessment, resolution, and evidence references. |
 | [ListComplianceIncidents](../../src/Compliance.Common/Features/Incidents/ListComplianceIncidents.cs#L9) | `Page<[ComplianceIncidentSummaryView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentSummaryView.cs#L6)>` | Incidents within authorized program/period scope. |
-| [GetComplianceImpactAssessment](../../src/Compliance.Common/Features/Incidents/GetComplianceImpactAssessment.cs#L9) | [ComplianceImpactAssessmentView](../../src/Compliance.Common/Features/Incidents/ComplianceImpactAssessmentView.cs#L6) | Assessed control, risk, and evidence impacts with disposition. |
+| [GetComplianceImpactAssessment](../../src/Compliance.Common/Features/Incidents/GetComplianceImpactAssessment.cs#L9) | [ComplianceIncidentImpactAssessmentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentImpactAssessmentView.cs#L6) | Current assessed control, risk, evidence, and system-description impacts. |
 
 ### Period close and populations — T3-01/02
 

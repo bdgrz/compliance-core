@@ -42,6 +42,26 @@ public sealed class TenantRbacBootstrapReactorTests
         Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
         {
             RoleId: var roleId,
+            Permission: RbacPermissions.ComplianceRecordRestrictedRead,
+        } && roleId == BuiltInRbac.TenantAdministrationRoleId(tenantId));
+        Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
+        {
+            RoleId: var roleId,
+            Permission: RbacPermissions.ComplianceRecordRestrictedRead,
+        } && roleId == BuiltInRbac.ComplianceManagementRoleId(tenantId));
+        Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
+        {
+            RoleId: var roleId,
+            Permission: RbacPermissions.ComplianceRecordRestrictedWrite,
+        } && roleId == BuiltInRbac.TenantAdministrationRoleId(tenantId));
+        Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
+        {
+            RoleId: var roleId,
+            Permission: RbacPermissions.ComplianceRecordRestrictedWrite,
+        } && roleId == BuiltInRbac.ComplianceManagementRoleId(tenantId));
+        Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
+        {
+            RoleId: var roleId,
             Permission: RbacPermissions.TechnologyInventoryRestrictedRead,
         } && roleId == BuiltInRbac.TenantAdministrationRoleId(tenantId));
         Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission

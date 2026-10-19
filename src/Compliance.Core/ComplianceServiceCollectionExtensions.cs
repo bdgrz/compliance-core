@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.AuditPopulations;
@@ -549,6 +550,20 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<FitzExaminationEngagementDirectory>();
         services.AddScoped<IExaminationEngagementDirectoryReader>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
+        services.AddScoped<FitzSignificantChangeDirectory>();
+        services.AddScoped<ISignificantChangeDirectoryProjection>(provider =>
+            provider.GetRequiredService<FitzSignificantChangeDirectory>());
+        services.AddScoped<ISignificantChangeDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzSignificantChangeDirectory>());
+        services.AddScoped<IChangeImpactWorkOwnershipReader, AccountableWorkItemOwnershipReader>();
+        services.AddScoped<ISystemDescriptionDecisionCorrelationReader,
+            AggregateSystemDescriptionDecisionCorrelationReader>();
+        services.AddScoped<RestrictedComplianceRecordVisibility>();
+        services.AddScoped<FitzComplianceIncidentDirectory>();
+        services.AddScoped<IComplianceIncidentDirectoryProjection>(provider =>
+            provider.GetRequiredService<FitzComplianceIncidentDirectory>());
+        services.AddScoped<IComplianceIncidentDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzComplianceIncidentDirectory>());
         services.AddScoped<IExaminationEngagementDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
         services.AddScoped<ITypeIBaselineSourceContributor, BoundaryTypeIBaselineSourceContributor>();
@@ -979,6 +994,15 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordSignificantChangeHandler>()
             .AddRequestHandler<ReviseSignificantChangeHandler>()
             .AddRequestHandler<AssessSignificantChangeHandler>()
+            .AddRequestHandler<GetSignificantChangeHandler>()
+            .AddRequestHandler<ListSignificantChangesHandler>()
+            .AddRequestHandler<GetComplianceIncidentHandler>()
+            .AddRequestHandler<ListComplianceIncidentsHandler>()
+            .AddRequestHandler<GetComplianceImpactAssessmentHandler>()
+            .AddRequestHandler<LinkImpactReviewWorkHandler>()
+            .AddRequestHandler<RecordSignificantChangeSystemDescriptionDecisionHandler>()
+            .AddRequestHandler<RecordComplianceIncidentSystemDescriptionDecisionHandler>()
+            .AddRequestAuthorizer<ComplianceImpactReactionAuthorizer>()
             .AddRequestHandler<RecordComplianceIncidentHandler>()
             .AddRequestHandler<ReviseComplianceIncidentHandler>()
             .AddRequestHandler<AssessComplianceIncidentHandler>()
@@ -1235,6 +1259,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RegenerateWorkforceRosterSnapshotManifestHandler>()
             .AddRequestAuthorizer<ProgramManagementAuthorizer>()
             .AddRequestAuthorizer<ClientManagementMutationAuthorizer>()
+            .AddRequestAuthorizer<RestrictedComplianceRecordMutationAuthorizer>()
             .AddRequestAuthorizer<ClientRbacMutationAuthorizer>()
             .AddRequestAuthorizer<SeparationOfDutiesWaiverAuthorizer>()
             .AddRequestHandler<RegisterTenantHandler>()
@@ -1318,6 +1343,8 @@ public static class ComplianceServiceCollectionExtensions
             // registrations without restoring intentionally removed memberships or grants.
             .AddReactor<ApplicationInventoryGrantBackfillReactor>(
                 "ApplicationInventoryGrantBackfillV1", WorkloadScope.Global)
+            .AddReactor<ComplianceRecordRestrictedAccessGrantBackfillReactor>(
+                "ComplianceRecordRestrictedAccessGrantBackfillV1", WorkloadScope.Global)
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AcceptedStaffDirectoryReconciliationReactor>(AcceptedStaffDirectoryReconciliationReactor.WorkloadName, WorkloadScope.PerTenant,
@@ -1346,6 +1373,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<RoleCleanupReactor>("RoleCleanup", WorkloadScope.PerTenant)
             .AddReactor<ControlOccurrenceFindingReactor>(
                 ControlOccurrenceFindingReactor.WorkloadName, WorkloadScope.PerTenant)
+            .AddReactor<LinkImpactReviewWorkReactor>(
+                LinkImpactReviewWorkReactor.WorkloadName, WorkloadScope.PerTenant)
+            .AddReactor<SystemDescriptionDecisionReactor>(
+                SystemDescriptionDecisionReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddReactor<ControlEvaluationDeviationFindingReactor>(
                 ControlEvaluationDeviationFindingReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddProjector<ActualStaffEngagementLocatorProjector>(ActualStaffEngagementLocatorProjector.WorkloadName,
@@ -1364,6 +1395,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant)
             .AddProjector<ExaminationEngagementDirectoryProjector>(
                 FitzExaminationEngagementDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<SignificantChangeDirectoryProjector>(
+                SignificantChangeDirectoryProjector.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<ComplianceIncidentDirectoryProjector>(
+                ComplianceIncidentDirectoryProjector.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AdvisorHandoffDirectoryProjector>(
                 FitzAdvisorHandoffDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AdvisorFeedbackWorkItemProjector>(

@@ -1,16 +1,44 @@
 # Domain event universe and backfill list
 
-Baseline: repository source and the accepted backlog reviewed 2026-10-18. This is the event counterpart to the [system command list](command-list.md) and [query/view-model list](query-and-view-model-list.md).
+Baseline: repository source and the accepted backlog reconciled 2026-10-19. This is the event counterpart to the [system command list](command-list.md) and [query/view-model list](query-and-view-model-list.md).
 
 ## Existing event contracts
 
-The original component inventory listed **236 existing `DomainEvent` contracts**. The current source declares **392** event types; the original feature-backed event universe, four weekly-digest events, and five program-calendar lifecycle events account for 381, leaving 11 source declarations to reconcile against accepted requirements before the inventory can be considered closed. Coded event types do not by themselves prove persistence retains them or projectors consume them.
+The original component inventory listed **236 existing `DomainEvent` contracts**. The current source declares **404** event types. The existing source-linked inventory names 383; this reconciliation maps the remaining 21 declarations to accepted business facts or an explicit exclusion. Coded event types do not by themselves prove persistence retains them or projectors consume them.
+
+## Source declaration reconciliation
+
+Each previously unlisted source declaration now has an explicit disposition. Twenty map to accepted business facts; `WorkItemAssignmentHistoryImported` is an internal legacy migration event outside the accepted manual P0/P1 workflow scope. These mappings close the inventory gap, not the event handler, aggregate, projection, or reactor implementation work for each mapped fact.
+
+| Source event | Requirement mapping |
+| --- | --- |
+| [AccessReviewResponsibilityReassigned](../../src/Compliance.Common/Features/AccessReviews/AccessReviewResponsibilityReassigned.cs) | Accepted R2-06 responsibility reassignment. |
+| [ApplicationRelationshipApproved](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipApproved.cs) | Accepted R1-10 relationship approval. |
+| [ApplicationRelationshipGovernedRemoved](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipGovernedRemoved.cs) | Accepted R1-10 governed relationship removal. |
+| [ApplicationRelationshipRecorded](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipRecorded.cs) | Accepted R1-10 relationship creation. |
+| [AuditPopulationDefinitionRevised](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationDefinitionRevised.cs) | Accepted T3-02 population-definition revision. |
+| [ClientExportAttestPackageDeliveryRecorded](../../src/Compliance.Common/Features/Exports/ClientExportAttestPackageDeliveryRecorded.cs) | Accepted F1-01/F1-07/F1-08 delivery receipt fact; the own-attest package aggregate remains an unresolved prerequisite. |
+| [ComplianceIncidentSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentSystemDescriptionDecisionRecorded.cs) | Accepted T2-07 exact no-change disposition fact. |
+| [FirmProfessionalDutyDesignationRecorded](../../src/Compliance.Common/Features/AccessControl/FirmProfessionalDutyDesignationRecorded.cs) | Accepted M0-D26 professional-duty designation. |
+| [FirmProfessionalDutyDesignationRevoked](../../src/Compliance.Common/Features/AccessControl/FirmProfessionalDutyDesignationRevoked.cs) | Accepted M0-D26 professional-duty designation revocation. |
+| [IndependenceRuleRatificationRecorded](../../src/Compliance.Common/Features/AccessControl/IndependenceRuleRatificationRecorded.cs) | Accepted M0-D26 ratification catalog fact. |
+| [MethodologyTemplateDraftReviewed](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateDraftReviewed.cs) | Accepted F1-04 methodology-template draft review. |
+| [ProgramNextPeriodCreated](../../src/Compliance.Common/Features/Programs/ProgramNextPeriodCreated.cs) | Accepted T3-07 next-period creation. |
+| [ProgramRolloverDecisionRecorded](../../src/Compliance.Common/Features/Programs/ProgramRolloverDecisionRecorded.cs) | Accepted T3-07 explicit rollover decision. |
+| [ProgramRolloverRevised](../../src/Compliance.Common/Features/Programs/ProgramRolloverRevised.cs) | Accepted T3-07 carry-forward selection revision. |
+| [SignificantChangeSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Changes/SignificantChangeSystemDescriptionDecisionRecorded.cs) | Accepted T2-07 exact system-description disposition fact. |
+| [TemplateApplicationDraftCreated](../../src/Compliance.Common/Features/MethodologyTemplates/TemplateApplicationDraftCreated.cs) | Accepted F1-04 template-application draft creation. |
+| [WorkDigestDispatchAttemptStarted](../../src/Compliance.Common/Features/Work/WorkDigestDispatchAttemptStarted.cs) | Accepted R2-11/M0-D15 delivery-attempt fact. |
+| [WorkDigestDispatchOutcomeRecorded](../../src/Compliance.Common/Features/Work/WorkDigestDispatchOutcomeRecorded.cs) | Accepted R2-11/M0-D15 provider-outcome fact. |
+| [WorkDigestDispatchScheduled](../../src/Compliance.Common/Features/Work/WorkDigestDispatchScheduled.cs) | Accepted R2-11/M0-D15 schedule fact. |
+| [WorkDigestUnknownRetryAuthorized](../../src/Compliance.Common/Features/Work/WorkDigestUnknownRetryAuthorized.cs) | Accepted R2-11/M0-D15 retry-authorization fact. |
+| [WorkItemAssignmentHistoryImported](../../src/Compliance.Common/Features/Work/WorkItemAssignmentHistoryImported.cs) | Explicitly out of scope for accepted manual P0/P1 workflows; retained only for legacy assignment-history migration. |
 
 ## Backfill result
 
 - **141 event contracts** are identified for accepted, requirement-backed workflows below.
-- **8 additional event contracts** belong to readiness-material import and stay deferred with that feature until its prerequisites and durable import boundary are implemented.
-- Four weekly-digest lifecycle contracts and five program-calendar lifecycle contracts bring the tracked current-plus-required universe to **381 event contracts**; the 8 readiness-import events remain outside the immediate backfill.
+- **8 candidate event contracts** belong to readiness-material import and stay deferred with that feature until its prerequisites and durable import boundary are implemented. They are not current source declarations.
+- Four weekly-digest lifecycle contracts and five program-calendar lifecycle contracts are included in the current source inventory; all 404 source declarations are accounted for after the reconciliation above.
 
 These names were reconciled against `DomainEvent` declarations, the pruned command inventory, and gap-analysis sections G01–G20. Event names retain business facts and outcomes; they are not a one-for-one mirror of every command or query. Existing events remain the owner when they already represent a required fact. Each backfill event is a typed contract for the listed story outcome. Payloads carry tenant and subject identity, revision, optional member attribution, and occurrence time; handlers must populate and emit them, and projectors must consume them.
 
