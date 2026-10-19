@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Readiness;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.Workforce;
@@ -72,4 +73,6 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(ProblemDetails))]
 [JsonSerializable(typeof(PersonalContactDetails))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.CriteriaTextOverlayContent))]
+[JsonSerializable(typeof(EvidenceArtifactContent))]
+[JsonSerializable(typeof(EvidenceCapture))]
 sealed partial class ComplianceJsonContext : JsonSerializerContext;

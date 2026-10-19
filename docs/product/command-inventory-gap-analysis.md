@@ -33,7 +33,7 @@ Test links below identify source references, not tests run in this audit or proo
 
 ## Most consequential gaps
 
-1. **Governed evidence is partial**: internal capture exists, but public upload/download, qualified scanner composition, contextual support and full disclosure/disposition remain unfinished (G01/G02).
+1. **Governed evidence is partial**: authorized personal HTTP upload and internal capture exist, while usable download, qualified scanner composition, production storage, contextual support and full disclosure/disposition remain unfinished (G01/G02).
 2. **Advisor collaboration is missing**: existing memberships/annotations do not provide exact-version handoff and feedback lifecycles (G03).
 3. **Readiness and operation have incomplete consumers**: existing command names are reusable, but source coverage, real evidence and recurring materialization remain gaps (G04/G05/G07/G08).
 4. **The examination command chain is missing**: examination engagement → complete baseline → system description → requests/samples/packages → assertion/letter/outcome → operating period → close/populations → rollover (G09–G16).
@@ -431,11 +431,11 @@ For Missing rows, the absence claim is about the required owning workflow, not a
 
 Scope: **EN-06, R2-03/04/05, R1-14**. Requirement source: [evidence-intake-recovery-v1](evidence-intake-recovery-v1.md).
 
-EvidenceIntake.CaptureAsync registers and inspects bytes internally. EvidenceIntake is not composed as a public upload handler; Program.cs has no upload route. The default UninspectedArtifactInspector never returns clean. Existing request fulfilment requires an available canonical artifact.
+EvidenceIntake.CaptureAsync registers and inspects content internally. `POST /api/v1/tenants/{tenant_id}/evidence-artifacts` now accepts a bounded multipart request with JSON metadata and a streamed content part, and runs the existing Portia tenant-membership and independence authorization before capture. Requests require `X-Bdgrz-Upload: true` to prevent browser form submissions from bypassing the cross-origin preflight used by the API's JSON mutations. The 256 MiB content bound is enforced while streaming; malformed or extra multipart sections fail before the content store completes. The endpoint is personal HTTP-only; the current MCP transport has no suitable large-binary upload contract. The default UninspectedArtifactInspector never returns clean, and production Portia storage and selected scanner composition remain open. Existing request fulfilment requires an available canonical artifact.
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Partial | `CaptureEvidenceArtifact` | Expose authorized manual upload with original metadata, hash identity, size/type checks, durable inspection progress and attributable collector; adapt existing EvidenceIntake rather than create another artifact aggregate. |
+| Partial | `CaptureEvidenceArtifact` | The HTTP upload adapter preserves original metadata, content hash identity, bounded streaming, durable inspection progress and attributable collector through existing EvidenceIntake. Select and qualify supported content types, compose a scanner, and provide production Portia storage; do not create another artifact aggregate. |
 | Partial | `RecordEvidenceArtifactInspection` | Compose a qualified scan engine and durable pending-inspection processing around the existing RecordInspection mutation. Internal system operation; no user may assert an unverified clean result. |
 | Missing | `IssueArtifactDownload` | Authorize exact artifact/version independently, record delivery issuance and return usable bytes only for an available artifact; a metadata read is insufficient. |
 | Implemented | `LinkEvidenceSupport` | The registered handler binds an available artifact's exact revision and digest to a current target revision, and requires the claimed support period to fit both the target period and the artifact's captured coverage. Reuse is accepted only within the artifact's recorded coverage and retains purpose and sufficiency rationale; occurrence-population completeness remains tracked under T2-03. |
