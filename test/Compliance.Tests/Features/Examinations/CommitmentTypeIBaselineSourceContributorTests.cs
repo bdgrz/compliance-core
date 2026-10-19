@@ -17,6 +17,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     static readonly Uuid ProgramId = Uuid.CreateVersion4();
     static readonly Uuid BoundaryId = Uuid.CreateVersion4();
     static readonly Uuid ServiceId = Uuid.CreateVersion4();
+    static readonly Uuid ProviderId = Uuid.CreateVersion4();
     static readonly Uuid AuthorId = Uuid.CreateVersion4();
     static readonly Uuid ReviewerId = Uuid.CreateVersion4();
     static readonly Uuid ApproverId = Uuid.CreateVersion4();
@@ -150,16 +151,66 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
         Assert.Empty(result.Value.Blockers);
     }
 
+    [Fact]
+    public async Task ShouldResolveOnlyEffectiveApplicableCsocsForTheirProviderGivenCommitmentCapture()
+    {
+        // Arrange
+        var fixture = await Fixture("subservice_responsibility", providerId: ProviderId);
+        var captured = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
+            CancellationToken.None);
+        Assert.True(captured.IsSuccess, captured.Error?.Message);
+        Assert.DoesNotContain(captured.Value.Sources, static source =>
+            source.Kind == "provider_csocs");
+        var context = fixture.Context with
+        {
+            PreviouslyCapturedSources = Array.AsReadOnly(
+                fixture.Context.PreviouslyCapturedSources.Concat(captured.Value.Sources).ToArray()),
+        };
+
+        // Act
+        var result = await fixture.SourceReader.ReadEffectiveProviderCsocsAsync(Engagement(),
+            context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal([ProviderId], result.Value);
+    }
+
+    [Fact]
+    public async Task ShouldExcludeCsocGivenProviderCommitmentRetiredByTypeIDate()
+    {
+        // Arrange
+        var fixture = await Fixture("subservice_responsibility", retire: true,
+            providerId: ProviderId, retirementEffectiveOn: new DateOnly(2026, 6, 1));
+        var captured = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
+            CancellationToken.None);
+        Assert.True(captured.IsSuccess, captured.Error?.Message);
+        var context = fixture.Context with
+        {
+            PreviouslyCapturedSources = Array.AsReadOnly(
+                fixture.Context.PreviouslyCapturedSources.Concat(captured.Value.Sources).ToArray()),
+        };
+
+        // Act
+        var result = await fixture.SourceReader.ReadEffectiveProviderCsocsAsync(Engagement(),
+            context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Empty(result.Value);
+    }
+
     static async Task<FixtureState> Fixture(string kind, bool includeSuccessor = false,
         bool retire = false, bool approve = true, bool reviewAfterRetirement = false,
         bool includeService = true, bool staleApprovalAfterRevision = false,
-        string family = "commitments")
+        string family = "commitments", Uuid? providerId = null,
+        DateOnly? retirementEffectiveOn = null)
     {
         var draftId = CommitmentDraft.IdFor(TenantId, ProgramId, kind, "SC-01");
         var draft = new CommitmentDraft(TenantId, draftId);
         Assert.True(draft.Create(ProgramId, Uuid.CreateVersion4(), ServiceId, kind, "SC-01",
             "Protect customer data", "Payroll service", "MSA v3, section 4.1", AuthorId,
-            "Author", DayOne).IsSuccess);
+            "Author", DayOne, providerId).IsSuccess);
         Uuid? staleReviewId = null;
         if (staleApprovalAfterRevision)
         {
@@ -183,7 +234,8 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
             Approve(draft, 2, new DateOnly(2026, 7, 1), "MSA v3, section 4.2");
         }
         if (retire)
-            Assert.Null(draft.Retire(ProgramId, draft.Revision, new DateOnly(2026, 7, 15),
+            Assert.Null(draft.Retire(ProgramId, draft.Revision,
+                retirementEffectiveOn ?? new DateOnly(2026, 7, 15),
                 "The commitment was superseded.", ApproverId, "Approver", DayOne.AddDays(10)));
 
         var pending = new AggregateScenario<CommitmentDraft>(draft).PendingEvents;
@@ -244,7 +296,8 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
             version.VersionId, version.Revision,
             SnapshotContentIdentity.ApprovedBoundaryVersion(version));
         return new FixtureState(draftId, contributor,
-            new TypeIBaselineSourceReadContext(Uuid.CreateVersion4(), [boundarySource]));
+            new TypeIBaselineSourceReadContext(Uuid.CreateVersion4(), [boundarySource]),
+            sourceReader);
     }
 
     static void Approve(CommitmentDraft draft, long revision, DateOnly effectiveFrom,
@@ -323,7 +376,8 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
 
     sealed record FixtureState(Uuid DraftId,
         ITypeIBaselineSourceContributor Contributor,
-        TypeIBaselineSourceReadContext Context);
+        TypeIBaselineSourceReadContext Context,
+        CommitmentTypeIBaselineSourceReader SourceReader);
 
     sealed class CommitmentAggregateReader(CommitmentDraft draft) : IAggregateReader
     {

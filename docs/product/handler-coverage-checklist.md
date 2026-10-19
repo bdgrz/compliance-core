@@ -34,8 +34,8 @@ Advisor collaboration:
 
 Type I baseline:
 
-- [ ] `FreezeTypeIBaseline` (partial) — authoritative source-complete preview and frozen point-in-time snapshot; only 18 of 21 required source families currently contribute, including policy communication, training requirements, access expectations, access review campaigns, and risks.
-- [ ] `AmendTypeIBaseline` (partial) — complete amendment snapshot and package-impact evidence; only 18 of 21 required source families currently contribute, including policy communication, training requirements, access expectations, access review campaigns, and risks.
+- [ ] `FreezeTypeIBaseline` (partial) — authoritative source-complete preview and frozen point-in-time snapshot; only 19 of 21 required source families currently contribute, including policy communication, training requirements, access expectations, access review campaigns, risks, and providers.
+- [ ] `AmendTypeIBaseline` (partial) — complete amendment snapshot and package-impact evidence; only 19 of 21 required source families currently contribute, including policy communication, training requirements, access expectations, access review campaigns, risks, and providers.
 
 Audit packages and Type II close:
 

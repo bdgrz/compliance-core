@@ -553,6 +553,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ITypeIBaselineSourceContributor, InformationAssetTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, DataFlowTypeIBaselineSourceContributor>();
         services.AddScoped<CommitmentTypeIBaselineSourceReader>();
+        services.AddScoped<IProviderCsocBaselineReader>(provider =>
+            provider.GetRequiredService<CommitmentTypeIBaselineSourceReader>());
         services.AddScoped<ITypeIBaselineSourceContributor, CommitmentTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, SystemRequirementTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, ControlTypeIBaselineSourceContributor>();
@@ -563,6 +565,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ITypeIBaselineSourceContributor, AccessExpectationsTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, AccessReviewCampaignsTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, RiskTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ProviderTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, WorkforceTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselinePreviewReader, TypeIBaselinePreviewReader>();
         services.AddScoped<IReadinessReadModel, FitzReadinessReadModel>();

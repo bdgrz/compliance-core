@@ -15,6 +15,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
     IAggregateReader reader, IDomainEventReader events,
     CommitmentVersionReadConsistency versions, CommitmentDraftListReadConsistency consistency,
     IBoundaryDirectoryReader boundaries, ProgramSetupWorkReadConsistency boundaryConsistency)
+    : IProviderCsocBaselineReader
 {
     static readonly HashSet<string> AllKinds = new(StringComparer.Ordinal)
     {
@@ -22,14 +23,70 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         "subservice_responsibility",
     };
 
+    static readonly IReadOnlySet<string> ProviderCsocKinds = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "service_commitment", "user_entity_responsibility", "subservice_responsibility",
+    };
+
+    public async ValueTask<Result<IReadOnlySet<Uuid>>> ReadEffectiveProviderCsocsAsync(
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context,
+        CancellationToken ct)
+    {
+        if (engagement is null || context?.PreviouslyCapturedSources is null)
+            return Result<IReadOnlySet<Uuid>>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A provider CSOC read requires its engagement and source context."));
+
+        var priorBoundaries = context.PreviouslyCapturedSources.Where(static source =>
+            source.Kind == "approved_boundary").ToArray();
+        if (priorBoundaries.Length != 1 || priorBoundaries[0].RecordId != engagement.BoundaryId)
+            return Result<IReadOnlySet<Uuid>>.Success(new HashSet<Uuid>());
+
+        var read = await ReadCoreAsync("commitments", ProviderCsocKinds, engagement, context,
+            includeProviderCsocReferences: true, ct).ConfigureAwait(false);
+        if (!read.IsSuccess)
+            return Result<IReadOnlySet<Uuid>>.Failure(read.Error);
+
+        var priorSources = context.PreviouslyCapturedSources.Where(IsCapturedCommitmentSource)
+            .OrderBy(static source => source.Kind, StringComparer.Ordinal)
+            .ThenBy(static source => source.RecordId.ToString(), StringComparer.Ordinal).ToArray();
+        var currentSources = read.Value.Sources.Where(IsCapturedCommitmentSource)
+            .OrderBy(static source => source.Kind, StringComparer.Ordinal)
+            .ThenBy(static source => source.RecordId.ToString(), StringComparer.Ordinal).ToArray();
+        if (!SameSourceReferences(priorSources, currentSources))
+            return Result<IReadOnlySet<Uuid>>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The commitment sources changed while provider scope was being read. Retry the preview.",
+                isTransient: true));
+
+        IReadOnlySet<Uuid> providerIds = read.Value.Sources.Where(static source =>
+                source.Kind == "provider_csocs").Select(static source => source.RecordId).ToHashSet();
+        return Result<IReadOnlySet<Uuid>>.Success(providerIds);
+    }
+
+    static bool IsCapturedCommitmentSource(TypeIBaselineSourceReference source) =>
+        source.Kind is "commitment_version" or "commitment_retirement";
+
+    static bool SameSourceReferences(TypeIBaselineSourceReference[] left,
+        TypeIBaselineSourceReference[] right) => left.Length == right.Length &&
+        left.Zip(right).All(static pair => pair.First.Kind == pair.Second.Kind &&
+            pair.First.RecordId == pair.Second.RecordId && pair.First.VersionId == pair.Second.VersionId &&
+            pair.First.Revision == pair.Second.Revision &&
+            pair.First.ContentSha256 == pair.Second.ContentSha256);
+
     public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
         string family, IReadOnlySet<string> includedKinds, ExaminationEngagementView engagement,
         CancellationToken ct) => ReadAsync(family, includedKinds, engagement,
         new TypeIBaselineSourceReadContext(Uuid.Empty, []), ct);
 
-    public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+    public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
         string family, IReadOnlySet<string> includedKinds, ExaminationEngagementView engagement,
-        TypeIBaselineSourceReadContext context, CancellationToken ct)
+        TypeIBaselineSourceReadContext context, CancellationToken ct) =>
+        ReadCoreAsync(family, includedKinds, engagement, context,
+            includeProviderCsocReferences: false, ct);
+
+    async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(
+        string family, IReadOnlySet<string> includedKinds, ExaminationEngagementView engagement,
+        TypeIBaselineSourceReadContext context, bool includeProviderCsocReferences,
+        CancellationToken ct)
     {
         if (engagement is null || context is null || context.PreviouslyCapturedSources is null)
             return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(
@@ -99,6 +156,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         }
 
         var sources = new List<TypeIBaselineSourceReference>();
+        var providerCsocs = new Dictionary<Uuid, List<TypeIBaselineSourceReference>>();
         foreach (var draftId in commitmentIds)
         {
             var draft = await reader.HydrateAsync(new CommitmentDraft(engagement.TenantId,
@@ -141,11 +199,13 @@ public sealed class CommitmentTypeIBaselineSourceReader(
                 return SourceConflict();
 
             var stem = family == "commitments" ? "commitment" : "system_requirement";
+            TypeIBaselineSourceReference sourceReference;
             try
             {
-                sources.Add(new TypeIBaselineSourceReference(stem + "_version", draftId,
+                sourceReference = new TypeIBaselineSourceReference(stem + "_version", draftId,
                     Uuid.CreateVersion5(draftId, $"{stem}_version_v1:{view.Version}"),
-                    view.Revision, VersionDigest(stem, view)));
+                    view.Revision, VersionDigest(stem, view));
+                sources.Add(sourceReference);
             }
             catch (Exception exception) when (exception is ArgumentException or JsonException or
                                                InvalidOperationException or NotSupportedException)
@@ -177,6 +237,15 @@ public sealed class CommitmentTypeIBaselineSourceReader(
             }
 
             var retirement = history.Value.Retirement;
+            if (family == "commitments" && view.Kind == "subservice_responsibility" &&
+                view.ProviderId is { } csocProviderId && csocProviderId != Uuid.Empty &&
+                view.Applicability == "applicable" && view.Interpretation == "supported" &&
+                (retirement is null || retirement.EffectiveOn > engagement.PeriodStart))
+            {
+                if (!providerCsocs.TryGetValue(csocProviderId, out var references))
+                    providerCsocs.Add(csocProviderId, references = []);
+                references.Add(sourceReference);
+            }
             if (retirement is null)
                 continue;
             var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
@@ -203,6 +272,20 @@ public sealed class CommitmentTypeIBaselineSourceReader(
                     scopeDifferences.Add($"Commitment {draft.Identifier} was retired retroactively after the Type I date.");
                 else
                     scopeDifferences.Add($"Commitment {draft.Identifier} was retired on or before the Type I date.");
+            }
+        }
+
+        if (includeProviderCsocReferences)
+        {
+            foreach (var (providerId, references) in providerCsocs.OrderBy(static item =>
+                         item.Key.ToString(), StringComparer.Ordinal))
+            {
+                var digest = TypeIBaselineContentIdentity.Coverage("provider_csocs", references)
+                    .ContentSha256;
+                sources.Add(new TypeIBaselineSourceReference("provider_csocs", providerId,
+                    Uuid.CreateVersion5(providerId, "provider_csocs_v1:" +
+                        engagement.PeriodStart.ToString("yyyy-MM-dd",
+                            System.Globalization.CultureInfo.InvariantCulture)), 1, digest));
             }
         }
 
