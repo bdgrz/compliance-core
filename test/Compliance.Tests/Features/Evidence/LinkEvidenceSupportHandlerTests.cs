@@ -79,6 +79,45 @@ public sealed class LinkEvidenceSupportHandlerTests
     }
 
     [Fact]
+    public async Task ShouldRejectSupportPeriodOutsideArtifactCoverageGivenCurrentTarget()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var artifactId = await fixture.SeedArtifactAsync(EvidenceInspectionOutcome.Clean,
+            new DateOnly(2025, 1, 1), new DateOnly(2025, 12, 31));
+        var controlId = await fixture.SeedControlAsync();
+        var request = fixture.Request(artifactId, controlId, 1);
+
+        // Act
+        var result = await fixture.Handler().HandleAsync(fixture.Context(request), CancellationToken.None);
+        var support = await fixture.Reader.HydrateAsync(new EvidenceSupport(fixture.TenantId,
+            fixture.ProgramId, EvidenceSupport.IdFor(request)));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+        Assert.Equal(0, support.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldAllowReusedEvidenceGivenCapturedCoverageIncludesRequestedPeriod()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var artifactId = await fixture.SeedArtifactAsync(EvidenceInspectionOutcome.Clean,
+            new DateOnly(2025, 1, 1), new DateOnly(2026, 12, 31));
+        var controlId = await fixture.SeedControlAsync();
+        var request = fixture.Request(artifactId, controlId, 1);
+
+        // Act
+        var result = await fixture.Handler().HandleAsync(fixture.Context(request), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(new DateOnly(2026, 1, 1), result.Value.PeriodStart);
+        Assert.Equal(new DateOnly(2026, 12, 31), result.Value.PeriodEnd);
+    }
+
+    [Fact]
     public async Task ShouldRequireExactArtifactReadGrantGivenKnownArtifactIdentity()
     {
         // Arrange
@@ -164,13 +203,16 @@ public sealed class LinkEvidenceSupportHandlerTests
             new RequestDispatchContext(Actor, new HttpInvocation("POST", "/api/v1/evidence/support",
                 "/api/v1/evidence/support", "evidence-support-test")));
 
-        public async Task<Uuid> SeedArtifactAsync(EvidenceInspectionOutcome outcome)
+        public async Task<Uuid> SeedArtifactAsync(EvidenceInspectionOutcome outcome,
+            DateOnly? periodStart = null, DateOnly? periodEnd = null)
         {
             var artifactId = Uuid.CreateVersion4();
+            var coveredFrom = periodStart ?? new DateOnly(2026, 1, 1);
+            var coveredUntil = periodEnd ?? new DateOnly(2026, 12, 31);
             var artifact = new EvidenceArtifact(TenantId, artifactId);
             Assert.True(artifact.Register(new EvidenceArtifactContent("Audit evidence", null,
-                    "document", "Manual upload", Now.AddMinutes(-1), new DateOnly(2026, 1, 1),
-                    new DateOnly(2026, 12, 31), "restricted"), new string('a', 64), 128,
+                    "document", "Manual upload", Now.AddMinutes(-1), coveredFrom,
+                    coveredUntil, "restricted"), new string('a', 64), 128,
                 ActorReference.ForMember(RbacIds.Member(TenantId, UserId), "Collector"),
                 Now.AddMinutes(-1)).IsSuccess);
             Assert.Null(artifact.RecordInspection(outcome, Now));
