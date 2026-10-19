@@ -11,6 +11,41 @@ public sealed class MemberLifecycleTests
     static readonly Uuid UserId = Uuid.Parse("0862062f-97e9-45de-a312-0f884c48180d", CultureInfo.InvariantCulture);
     static readonly Uuid ActorMemberId = Uuid.Parse("2cc8e854-a49a-42a1-9581-d0622de3d5c3", CultureInfo.InvariantCulture);
     static readonly DateTimeOffset ActionAt = new(2026, 9, 29, 14, 0, 0, TimeSpan.Zero);
+    static readonly DateOnly GuestExpiresOn = new(2026, 11, 30);
+
+    [Fact]
+    public void ShouldRegisterGuestGivenExternalConsultantMembership()
+    {
+        // Arrange
+        var member = new Member(TenantId, UserId);
+        var scenario = new AggregateScenario<Member>(member);
+
+        // Act
+        var result = scenario.Aggregate.Register("guest", GuestExpiresOn);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal("guest", scenario.Aggregate.Affiliation);
+        Assert.Equal(GuestExpiresOn, scenario.Aggregate.MembershipExpiresOn);
+        var registered = Assert.IsType<MemberRegistered>(Assert.Single(scenario.PendingEvents));
+        Assert.Equal("guest", registered.Affiliation);
+        Assert.Equal(GuestExpiresOn, registered.MembershipExpiresOn);
+    }
+
+    [Fact]
+    public void ShouldRequireEndDateGivenGuestMembership()
+    {
+        // Arrange
+        var member = new Member(TenantId, UserId);
+        var scenario = new AggregateScenario<Member>(member);
+
+        // Act
+        var result = scenario.Aggregate.Register("guest");
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Empty(scenario.PendingEvents);
+    }
 
     [Fact]
     public void ShouldRecordAttributedSuspensionGivenRegisteredMember()

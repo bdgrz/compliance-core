@@ -13,6 +13,30 @@ namespace Bdgrz.Compliance.Tests.Features.Work;
 
 public sealed class AccessReviewWorkQueueVisibilityTests
 {
+    [Fact]
+    public async Task ShouldDenyGuestAccessReviewGivenProgramGrantAndSystemVisibility()
+    {
+        // Arrange
+        await using var scenario = await CreateScenarioAsync(allowSystemRead: true);
+        var guestUserId = Uuid.CreateVersion4();
+        var guestMemberId = RbacIds.Member(scenario.Fixture.TenantId, guestUserId);
+        await ProgramManagementServices.SeedAsync(scenario.Fixture.Provider,
+            new Member(scenario.Fixture.TenantId, guestUserId), member => member.Register("guest",
+                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30)));
+        var visibility = new RestrictedApplicationVisibility(scenario.Permissions,
+            scenario.VisibilityGrants, scenario.AggregateReader);
+        var eligibility = new AccessReviewQueueEligibility(scenario.AggregateReader,
+            scenario.Permissions, scenario.Permissions, visibility);
+
+        // Act
+        var canRead = await eligibility.CanReadAsync(scenario.Fixture.TenantId,
+            scenario.Fixture.ProgramId, guestMemberId, scenario.SystemInstanceId,
+            CancellationToken.None);
+
+        // Assert
+        Assert.False(canRead);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -207,7 +231,7 @@ public sealed class AccessReviewWorkQueueVisibilityTests
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [source], accessReviewQueueEligibility: eligibility);
         return new QueueScenario(fixture, scope, CreateQueue, source, grants, permissions,
-            systemInstanceId);
+            systemInstanceId, aggregateReader);
     }
 
     static WorkCandidate Candidate(OperationsFixture fixture, Uuid systemInstanceId,
@@ -241,7 +265,7 @@ public sealed class AccessReviewWorkQueueVisibilityTests
     sealed record QueueScenario(OperationsFixture Fixture, AsyncServiceScope Scope,
         Func<WorkQueueReader> CreateQueue, AccessReviewWorkItems Source,
         MutableVisibilityGrants VisibilityGrants, QueuePermissions Permissions,
-        Uuid SystemInstanceId) : IAsyncDisposable
+        Uuid SystemInstanceId, IAggregateReader AggregateReader) : IAsyncDisposable
     {
         public ValueTask DisposeAsync() => Scope.DisposeAsync();
     }

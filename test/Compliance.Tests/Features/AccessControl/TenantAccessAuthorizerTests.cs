@@ -133,6 +133,26 @@ public sealed class TenantAccessAuthorizerTests
         Assert.Empty(permissions.Permissions);
     }
 
+    [Fact]
+    public async Task ShouldHideTenantGivenExpiredGuestMembership()
+    {
+        // Arrange
+        var permissions = new RecordingPermissionAuthorizer(true);
+        var expiredOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        var authorizer = new TenantAccessAuthorizer(permissions, new ActiveTenant(),
+            new FixedMembershipDirectory(true, "guest", membershipExpiresOn: expiredOn));
+        var context = new RequestContext<ITenantAccessRequest>(
+            new GetTeam(TenantId, Uuid.CreateVersion4()), BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.NotFound, result.Error.Kind);
+        Assert.Empty(permissions.Permissions);
+    }
+
     static ClaimsPrincipal BdgrzActor() => new(new ClaimsIdentity(
         [new Claim("iss", "bdgrz"), new Claim("sub", UserId.ToString())], "BdgrzSession"));
 

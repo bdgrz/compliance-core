@@ -12,6 +12,43 @@ namespace Bdgrz.Compliance.Tests.Features.Tenants;
 public sealed class MemberTenantDiscoveryLagTests
 {
     [Fact]
+    public async Task ShouldHideTenantMetadataGivenGuestExpiryBeforeMembershipProjection()
+    {
+        // Arrange
+        var userId = Uuid.CreateVersion4();
+        var tenantId = Uuid.CreateVersion4();
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddPortia();
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+        await SeedTenantAsync(writer, tenantId, userId, "Expired Guest Org", "expired-guest-org",
+            "guest", DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1));
+        var activeTenants = new ActiveTenants(tenantId);
+        var projectedMemberships = new FixedMembershipDirectory(true);
+        var projectedTenants = new TenantViews(
+            new TenantView(tenantId, "Expired Guest Org", "expired-guest-org"));
+        var list = new ListMyTenantsHandler(activeTenants, projectedMemberships,
+            projectedTenants, reader);
+        var resolve = new ResolveMyTenantSlugHandler(reader, projectedMemberships);
+        var actor = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
+
+        // Act
+        var tenants = await list.HandleAsync(new RequestContext<ListMyTenants>(new ListMyTenants(),
+            actor), CancellationToken.None);
+        var slug = await resolve.HandleAsync(new RequestContext<ResolveMyTenantSlug>(
+            new ResolveMyTenantSlug("expired-guest-org"), actor), CancellationToken.None);
+
+        // Assert
+        Assert.True(await projectedMemberships.IsMemberAsync(tenantId.ToString(), userId));
+        Assert.Empty(tenants.Value.Items);
+        Assert.Equal(RequestErrorKind.NotFound, slug.Error?.Kind);
+    }
+
+    [Fact]
     public async Task ShouldHideTenantMetadataGivenSuspensionBeforeMembershipProjection()
     {
         // Arrange
@@ -67,7 +104,7 @@ public sealed class MemberTenantDiscoveryLagTests
     }
 
     static async Task SeedTenantAsync(IAggregateWriter writer, Uuid tenantId, Uuid userId,
-        string name, string slug, string affiliation)
+        string name, string slug, string affiliation, DateOnly? membershipExpiresOn = null)
     {
         var tenant = new Tenant(tenantId);
         Assert.True(tenant.Register(userId, name, slug).IsSuccess);
@@ -77,7 +114,7 @@ public sealed class MemberTenantDiscoveryLagTests
         Assert.True(reservation.Register(tenantId).IsSuccess);
         await writer.SaveAsync(reservation, new RequestDispatchContext(RequestActor.System));
         var member = new Member(tenantId, userId);
-        Assert.True(member.Register(affiliation).IsSuccess);
+        Assert.True(member.Register(affiliation, membershipExpiresOn).IsSuccess);
         await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
     }
 

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Artifacts;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Retention;
@@ -98,6 +99,39 @@ public sealed class IssueArtifactDownloadHandlerTests
         Assert.Equal(2UL, retained.CommittedStreamPosition);
     }
 
+    [Fact]
+    public async Task ShouldIssueSelectedEvidenceDownloadGivenActiveAdvisorHandoff()
+    {
+        // Arrange
+        await using var fixture = new Fixture(allow: false);
+        var artifactId = await fixture.SeedArtifactAsync(EvidenceInspectionOutcome.Clean);
+        var metadata = await new EvidenceArtifactMetadataRead(fixture.Reader, fixture.Events)
+            .GetAsync(fixture.TenantId, artifactId, CancellationToken.None);
+        Assert.True(metadata.IsSuccess, metadata.Error?.Message);
+        var selected = AdvisorRecordVersion.EvidenceArtifact(artifactId, revision: 2,
+            metadata.Value.SourcePosition, metadata.Value.ContentSha256, Uuid.CreateVersion4());
+        var request = new IssueArtifactDownload(fixture.TenantId, artifactId,
+            "Advisor review")
+        {
+            ProgramId = Uuid.CreateVersion4(),
+            AdvisorHandoffId = Uuid.CreateVersion4(),
+            SelectedSource = selected,
+        };
+        var sharedAccess = new EvidenceArtifactDownloadAccess(new FixedArtifactPermission(false),
+            new FixedAdvisorSourceAuthorization(allow: true),
+            new FixedCurrentSourceResolver());
+
+        // Act
+        var result = await fixture.Handler(sharedAccess).HandleAsync(fixture.Context(request),
+            CancellationToken.None);
+        var retained = await fixture.Reader.HydrateAsync(new EvidenceArtifact(fixture.TenantId,
+            artifactId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(3, retained.Revision);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -134,7 +168,7 @@ public sealed class IssueArtifactDownloadHandlerTests
             Access = new(new FixedArtifactPermission(allow));
         }
 
-        public IssueArtifactDownloadHandler Handler() => new(Access,
+        public IssueArtifactDownloadHandler Handler(EvidenceArtifactDownloadAccess? access = null) => new(access ?? Access,
                 new EvidenceArtifactMetadataRead(Reader, Events), _store, Executor, Clock);
 
         public Cntryl.Portia.RequestContext<T> Context<T>(T request) where T : IRequestBase => new(request,
@@ -209,5 +243,19 @@ public sealed class IssueArtifactDownloadHandlerTests
 
         public ValueTask<bool> IsAllowedAtAnyApplicationInventoryScopeAsync(Uuid tenantId, Uuid userId,
             Uuid memberId, string permission, CancellationToken ct = default) => ValueTask.FromResult(_allow);
+    }
+
+    sealed class FixedAdvisorSourceAuthorization(bool allow) : IAdvisorSharedSourceAuthorization
+    {
+        public ValueTask<bool> CanReadSelectedSourceAsync(Uuid tenantId, Uuid programId,
+            Uuid handoffId, AdvisorRecordVersion sourceVersion, Uuid userId,
+            CancellationToken ct = default) => ValueTask.FromResult(allow);
+    }
+
+    sealed class FixedCurrentSourceResolver : IAdvisorRecordVersionResolver
+    {
+        public ValueTask<Result> RequireCurrentAsync(Uuid tenantId, Uuid programId,
+            IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default) =>
+            ValueTask.FromResult(Result.Success);
     }
 }

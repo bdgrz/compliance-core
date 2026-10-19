@@ -33,7 +33,8 @@ sealed class AccessGrantPermissionAuthorizer(IAccessGrantDirectory grants,
     ITenantMembershipDirectoryReader memberships, ITeamMemberDirectoryReader teamMembers,
     IRolePermissionDirectoryReader rolePermissions, IAggregateReader reader, TimeProvider clock,
     IMemberAccessEligibility sourceMember)
-    : IAccessGrantPermissionAuthorizer, IAccessGrantScopePermissionAuthorizer
+    : IAccessGrantPermissionAuthorizer, IAccessGrantScopePermissionAuthorizer,
+        IAccessGrantRolePermissionAuthorizer
 {
     const int PageSize = 200;
 
@@ -58,6 +59,19 @@ sealed class AccessGrantPermissionAuthorizer(IAccessGrantDirectory grants,
                 grant.Scope.Kind == AccessGrantScopeKind.Program)
             .Select(grant => grant.Scope.Id).ToHashSet();
         return new ProgramAccessVisibility(organizationWide, programIds);
+    }
+
+    public async ValueTask<bool> IsAllowedAsRoleAsync(Uuid tenantId, Uuid userId,
+        Uuid memberId, Uuid programId, Uuid roleId, string permission,
+        CancellationToken ct = default)
+    {
+        if (programId == Uuid.Empty || roleId == Uuid.Empty)
+            return false;
+        var grants = await GetEligibleGrantsAsync(tenantId, userId, memberId, permission,
+            scope => CoversAnyProgram(scope, tenantId), ct, roleId).ConfigureAwait(false);
+        return grants.Any(grant => grant.Scope.Kind == AccessGrantScopeKind.Organization &&
+                grant.Scope.Id == tenantId || grant.Scope.Kind == AccessGrantScopeKind.Program &&
+                grant.Scope.Id == programId);
     }
 
     public async ValueTask<bool> IsAllowedAtAnyScopeAsync(Uuid tenantId, Uuid userId,
@@ -100,7 +114,7 @@ sealed class AccessGrantPermissionAuthorizer(IAccessGrantDirectory grants,
 
     async ValueTask<IReadOnlyList<EffectiveGrant>> GetEligibleGrantsAsync(Uuid tenantId,
         Uuid userId, Uuid memberId, string permission, Func<AccessGrantScope, bool> scopeMatches,
-        CancellationToken ct)
+        CancellationToken ct, Uuid? requiredRoleId = null)
     {
         if (tenantId == Uuid.Empty || userId == Uuid.Empty ||
             memberId != RbacIds.Member(tenantId, userId) || string.IsNullOrWhiteSpace(permission))
@@ -108,7 +122,9 @@ sealed class AccessGrantPermissionAuthorizer(IAccessGrantDirectory grants,
 
         var membership = await memberships.GetAsync(tenantId.ToString(), userId, ct)
             .ConfigureAwait(false);
-        if (membership is not { Affiliation: "client_personnel", IsSuspended: false, IsDeprovisioned: false } ||
+        if (membership is not { IsSuspended: false, IsDeprovisioned: false } ||
+            membership.Affiliation is not ("client_personnel" or "guest") ||
+            membership.Affiliation == "guest" && permission != RbacPermissions.TenantAccess ||
             membership.TenantId != tenantId || membership.UserId != userId ||
             !await sourceMember.IsEligibleAsync(tenantId, userId, ct).ConfigureAwait(false))
             return [];
@@ -128,7 +144,13 @@ sealed class AccessGrantPermissionAuthorizer(IAccessGrantDirectory grants,
             var scope = grant.Terms.Scope;
             if (grant.TenantId != tenantId || grant.RevokedAt is not null ||
                 grant.Terms.EffectiveFrom > now ||
-                grant.Terms.EffectiveUntil is { } until && until <= now || !scopeMatches(scope))
+                grant.Terms.EffectiveUntil is { } until && until <= now || !scopeMatches(scope) ||
+                requiredRoleId is { } expectedRoleId && grant.Terms.RoleId != expectedRoleId)
+                continue;
+            if (membership.Affiliation == "guest" &&
+                (scope.Kind != AccessGrantScopeKind.Program ||
+                 grant.Terms.RoleId != BuiltInRbac.ViewerRoleId(tenantId) ||
+                 grant.Terms.EffectiveUntil is null))
                 continue;
 
             if (!principalMatches.TryGetValue(grant.Terms.Principal, out var includesMember))

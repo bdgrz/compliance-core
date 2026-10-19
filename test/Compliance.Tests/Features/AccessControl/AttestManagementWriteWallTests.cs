@@ -68,7 +68,8 @@ public sealed class AttestManagementWriteWallTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, error?.Kind);
-        Assert.Contains("Attest", error!.Message, StringComparison.Ordinal);
+        Assert.Contains(affiliation == "guest" ? "Guest members" : "Attest",
+            error!.Message, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -142,32 +143,52 @@ public sealed class AttestManagementWriteWallTests
     [Theory]
     [InlineData("client_personnel")]
     [InlineData("guest")]
-    public async Task ShouldAllowSharedControlReadGivenHistoricalAttestIdentityAndOrdinaryGrant(string affiliation)
+    public async Task ShouldLimitSharedControlReadToClientPersonnelGivenHistoricalAttestIdentity(
+        string affiliation)
     {
         // Arrange
         await using var provider = Compose(affiliation);
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         await SeedProgramAsync(provider);
-        var control = await bus.SendAsync(new CreateControlDraft(Tenant, Program, "AC-1", Content), Actor);
-        Assert.True(control.IsSuccess, control.Error?.Message);
+        var controlId = Uuid.CreateVersion4();
+        if (affiliation == "client_personnel")
+        {
+            var control = await bus.SendAsync(new CreateControlDraft(Tenant, Program, "AC-1", Content), Actor);
+            Assert.True(control.IsSuccess, control.Error?.Message);
+            controlId = control.Value!.ControlId;
+        }
+        else
+        {
+            await ProgramManagementServices.SeedAsync(provider, new ControlDraft(Tenant, controlId), draft =>
+            {
+                Assert.True(draft.Create(Program, Uuid.CreateVersion4(), "AC-1", Content,
+                    RbacIds.Member(Tenant, User), "Client author", Now).IsSuccess);
+                return Result.Success;
+            });
+        }
         var projection = scope.ServiceProvider.GetRequiredService<IControlDraftDirectoryProjection>();
         await using (var batch = await projection.BeginAsync(new ProjectionBatchContext(
             new CheckpointIdentity("ControlDraftDirectoryV2", EventStreamPattern.ForPattern(Tenant.ToString(),
                 "controls")), ProjectionCheckpoint.Start)))
         {
-            await projection.ApplyAsync(new ControlDraftCreated(Tenant, Program, control.Value!.ControlId,
+            await projection.ApplyAsync(new ControlDraftCreated(Tenant, Program, controlId,
                 Uuid.CreateVersion4(), "AC-1", Content, RbacIds.Member(Tenant, User), "Client author", Now));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         await AttestAssignmentHistoryFixture.SeedAsync(provider, Tenant, User, true);
 
         // Act
-        var read = await bus.SendAsync(new GetControlDraft(Tenant, Program, control.Value!.ControlId), Actor);
+        var read = await bus.SendAsync(new GetControlDraft(Tenant, Program, controlId), Actor);
 
         // Assert
-        Assert.True(read.IsSuccess, read.Error?.Message);
-        Assert.Equal("Access control", read.Value!.Content.Title);
+        if (affiliation == "guest")
+            Assert.Equal(RequestErrorKind.Forbidden, read.Error?.Kind);
+        else
+        {
+            Assert.True(read.IsSuccess, read.Error?.Message);
+            Assert.Equal("Access control", read.Value!.Content.Title);
+        }
     }
 
     [Theory]

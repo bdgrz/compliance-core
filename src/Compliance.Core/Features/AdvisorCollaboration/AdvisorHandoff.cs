@@ -9,24 +9,37 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 /// </summary>
 public sealed class AdvisorHandoff : Aggregate
 {
+    public const int MaximumSelectionCount = 100;
+
     static readonly HashSet<string> FeedbackKinds = new(StringComparer.Ordinal)
         { "comment", "change_request", "validated" };
 
     readonly Uuid _tenantId;
-    readonly Uuid _programId;
+    Uuid _programId;
     readonly List<AdvisorRecordVersion> _selection = [];
     readonly List<AdvisorFeedbackEntry> _feedback = [];
     bool _created;
     string? _purpose;
     DateOnly _expiresOn;
+    ActorReference? _createdBy;
+    DateTimeOffset? _createdAt;
+    DateTimeOffset? _updatedAt;
+    Uuid? _comparedToHandoffId;
     string _status = "missing";
     long _revision;
+    bool _wasReadyForReview;
 
     public bool IsCreated => _created;
+    public Uuid ProgramId => _programId;
     public string Status => _status;
     public long Revision => _revision;
     public string? Purpose => _purpose;
     public DateOnly ExpiresOn => _expiresOn;
+    public ActorReference? CreatedBy => _createdBy;
+    public DateTimeOffset? CreatedAt => _createdAt;
+    public DateTimeOffset? UpdatedAt => _updatedAt;
+    public Uuid? ComparedToHandoffId => _comparedToHandoffId;
+    public bool WasReadyForReview => _wasReadyForReview;
     public IReadOnlyList<AdvisorRecordVersion> Selection => _selection.ToArray();
 
     public AdvisorHandoff(Uuid tenantId, Uuid programId, Uuid handoffId)
@@ -37,16 +50,26 @@ public sealed class AdvisorHandoff : Aggregate
         _programId = programId;
         On<AdvisorHandoffCreated>(ev =>
         {
+            if (ev.ComparedToHandoffId is { } comparedTo &&
+                (comparedTo == Uuid.Empty || comparedTo == Id))
+                throw new InvalidOperationException(
+                    "An advisor handoff cannot compare its selection to itself or an empty handoff.");
             _created = true;
+            _programId = ev.ProgramId;
             _revision = 1;
             _purpose = ev.Purpose;
             _expiresOn = ev.ExpiresOn;
+            _createdBy = ev.CreatedBy;
+            _createdAt = ev.CreatedAt;
+            _updatedAt = ev.CreatedAt;
+            _comparedToHandoffId = ev.ComparedToHandoffId;
             _selection.AddRange(ev.RecordVersions);
             _status = "draft";
         });
         On<AdvisorHandoffSelectionRevised>(ev =>
         {
             _revision = ev.Revision;
+            _updatedAt = ev.RevisedAt;
             _selection.Clear();
             _selection.AddRange(ev.RecordVersions);
             _status = "draft";
@@ -54,27 +77,27 @@ public sealed class AdvisorHandoff : Aggregate
         On<AdvisorHandoffReadiedForReview>(ev =>
         {
             _revision = ev.Revision;
+            _updatedAt = ev.ReadiedAt;
             _status = "ready_for_review";
+            _wasReadyForReview = true;
         });
         On<AdvisorHandoffClosed>(ev =>
         {
             _revision = ev.Revision;
+            _updatedAt = ev.ClosedAt;
             _status = "closed";
         });
         On<AdvisorHandoffRevoked>(ev =>
         {
             _revision = ev.Revision;
+            _updatedAt = ev.RevokedAt;
             _status = "revoked";
         });
-        On<AdvisorFeedbackRecorded>(ev =>
-        {
-            _revision++;
-            _feedback.Add(new AdvisorFeedbackEntry(ev.FeedbackId, ev.RecordId,
-                ev.RecordVersionId, ev.Kind, ev.Body, ev.Author, ev.CreatedAt));
-        });
+        On<AdvisorFeedbackRecorded>(ApplyFeedbackRecorded);
         On<AdvisorFeedbackCorrected>(ev =>
         {
             _revision++;
+            _updatedAt = ev.CorrectedAt;
             var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
             if (index >= 0)
                 _feedback[index] = _feedback[index] with
@@ -87,6 +110,7 @@ public sealed class AdvisorHandoff : Aggregate
         On<AdvisorFeedbackResponded>(ev =>
         {
             _revision++;
+            _updatedAt = ev.RespondedAt;
             var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
             if (index >= 0)
                 _feedback[index] = _feedback[index] with
@@ -97,28 +121,40 @@ public sealed class AdvisorHandoff : Aggregate
         });
         On<AdvisorFeedbackResolved>(ev =>
         {
-            _revision++;
+            RequireFeedbackScope(ev.TenantId, ev.ProgramId, ev.HandoffId);
             var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
-            if (index >= 0)
-                _feedback[index] = _feedback[index] with { ResolvedAt = ev.ResolvedAt };
+            if (ev.FeedbackId == Uuid.Empty || !ValidActor(ev.ResolvedBy) ||
+                ev.ResolvedAt == default || index < 0 || _feedback[index].ResolvedAt is not null)
+                throw new InvalidOperationException("The advisor feedback resolution event is invalid.");
+            _revision++;
+            _updatedAt = ev.ResolvedAt;
+            _feedback[index] = _feedback[index] with
+            {
+                ResolvedAt = ev.ResolvedAt,
+                ResolvedBy = ev.ResolvedBy,
+            };
         });
     }
 
     public Result<bool> Create(string purpose, IReadOnlyList<AdvisorRecordVersion> recordVersions,
-        DateOnly expiresOn, ActorReference createdBy, DateTimeOffset createdAt)
+        DateOnly expiresOn, ActorReference createdBy, DateTimeOffset createdAt,
+        Uuid? comparedToHandoffId = null)
     {
         if (_tenantId == Uuid.Empty || _programId == Uuid.Empty || Id == Uuid.Empty ||
             string.IsNullOrWhiteSpace(purpose) || !ValidSelection(recordVersions) ||
-            !ValidActor(createdBy) || expiresOn < DateOnly.FromDateTime(createdAt.UtcDateTime))
+            !ValidActor(createdBy) || expiresOn < DateOnly.FromDateTime(createdAt.UtcDateTime) ||
+            comparedToHandoffId is { } compareId &&
+            (compareId == Uuid.Empty || compareId == Id))
             return Failure(RequestErrorKind.Validation, "A handoff requires purpose, exact selected versions, an actor, and a valid expiry.");
         if (_created)
             return _purpose == purpose.Trim() && _expiresOn == expiresOn &&
-                   _selection.SequenceEqual(recordVersions)
+                   _selection.SequenceEqual(recordVersions) &&
+                   _comparedToHandoffId == comparedToHandoffId
                 ? Result<bool>.Success(true)
                 : Failure(RequestErrorKind.Conflict, "The handoff already exists with different content.");
 
         RaiseEvent(new AdvisorHandoffCreated(_tenantId, _programId, Id, recordVersions.ToArray(),
-            purpose.Trim(), expiresOn, createdBy, createdAt));
+            purpose.Trim(), expiresOn, createdBy, createdAt, comparedToHandoffId));
         return Result<bool>.Success(true);
     }
 
@@ -159,22 +195,33 @@ public sealed class AdvisorHandoff : Aggregate
 
     public Result<bool> RecordFeedback(Uuid feedbackId, Uuid recordId, Uuid recordVersionId,
         string kind, string body, ActorReference author, DateTimeOffset createdAt)
+        => RecordFeedback(feedbackId, new AdvisorRecordVersion(recordId, recordVersionId),
+            kind, body, author, createdAt);
+
+    public Result<bool> RecordFeedback(Uuid feedbackId, AdvisorRecordVersion sourceVersion,
+        string kind, string body, ActorReference author, DateTimeOffset createdAt)
     {
         var existing = _feedback.Find(item => item.FeedbackId == feedbackId);
+        var recordId = sourceVersion?.RecordId ?? Uuid.Empty;
+        var recordVersionId = sourceVersion?.VersionId ?? Uuid.Empty;
         if (existing is not null)
-            return existing.RecordId == recordId && existing.RecordVersionId == recordVersionId &&
+            return (existing.SourceVersion ?? new AdvisorRecordVersion(existing.RecordId,
+                       existing.RecordVersionId)) == sourceVersion &&
                    existing.Kind == kind && existing.Body == body && existing.Author == author
                 ? Result<bool>.Success(true)
                 : Failure(RequestErrorKind.Conflict, "The feedback identifier already has different content.");
         if (_status != "ready_for_review" || !IsOpen())
             return Failure(RequestErrorKind.Conflict, "Feedback is accepted only while the handoff is ready for review.");
-        if (feedbackId == Uuid.Empty || recordId == Uuid.Empty || recordVersionId == Uuid.Empty ||
-            !_selection.Contains(new AdvisorRecordVersion(recordId, recordVersionId)) ||
+        if (feedbackId == Uuid.Empty || sourceVersion is null || !sourceVersion.HasValidIdentity ||
+            !_selection.Contains(sourceVersion) ||
             !FeedbackKinds.Contains(kind) || string.IsNullOrWhiteSpace(body) || !ValidActor(author))
             return Failure(RequestErrorKind.Validation, "Feedback must target a selected exact version and include a supported kind, body, and author.");
 
         RaiseEvent(new AdvisorFeedbackRecorded(_tenantId, _programId, Id, feedbackId, recordId,
-            recordVersionId, kind, body.Trim(), author, createdAt));
+            recordVersionId, kind, body.Trim(), author, createdAt)
+        {
+            SelectedSource = sourceVersion.IsSupported ? sourceVersion : null,
+        });
         return Result<bool>.Success(true);
     }
 
@@ -212,6 +259,23 @@ public sealed class AdvisorHandoff : Aggregate
         return Result<bool>.Success(true);
     }
 
+    public Result<bool> ResolveFeedback(Uuid feedbackId, ActorReference resolvedBy,
+        DateTimeOffset resolvedAt)
+    {
+        if (feedbackId == Uuid.Empty || !ValidActor(resolvedBy) || resolvedAt == default)
+            return Failure(RequestErrorKind.Validation,
+                "Resolving advisor feedback requires a feedback identity, actor, and time.");
+        var feedback = _feedback.Find(item => item.FeedbackId == feedbackId);
+        if (feedback is null)
+            return Failure(RequestErrorKind.NotFound, "The advisor feedback to resolve was not found.");
+        if (feedback.ResolvedAt is not null)
+            return Result<bool>.Success(true);
+
+        RaiseEvent(new AdvisorFeedbackResolved(_tenantId, _programId, Id, feedbackId,
+            resolvedBy, resolvedAt));
+        return Result<bool>.Success(true);
+    }
+
     public Result<bool> Close(string rationale, ActorReference closedBy, DateTimeOffset closedAt) =>
         End(rationale, closedBy, closedAt, revoke: false);
 
@@ -220,15 +284,17 @@ public sealed class AdvisorHandoff : Aggregate
 
     public bool IsValidationCurrent(Uuid recordId) =>
         _feedback.Any(feedback => feedback.RecordId == recordId && feedback.Kind == "validated" &&
-            _selection.Contains(new AdvisorRecordVersion(feedback.RecordId, feedback.RecordVersionId)));
+            _selection.Contains(feedback.SourceVersion ??
+                new AdvisorRecordVersion(feedback.RecordId, feedback.RecordVersionId)));
 
     public IReadOnlyList<AdvisorFeedbackEntry> ReadFeedback() => _feedback.Select(feedback =>
         feedback with
         {
             Corrections = feedback.Corrections?.ToArray(),
             Responses = feedback.Responses?.ToArray(),
-            Disposition = _selection.Contains(new AdvisorRecordVersion(feedback.RecordId,
-                feedback.RecordVersionId)) ? AdvisorFeedbackDisposition.Current :
+            Disposition = _selection.Contains(feedback.SourceVersion ??
+                new AdvisorRecordVersion(feedback.RecordId, feedback.RecordVersionId))
+                ? AdvisorFeedbackDisposition.Current :
                 AdvisorFeedbackDisposition.Historical,
         }).ToArray();
 
@@ -249,15 +315,42 @@ public sealed class AdvisorHandoff : Aggregate
 
     bool IsOpen() => _created && _status is "draft" or "ready_for_review";
 
+    void ApplyFeedbackRecorded(AdvisorFeedbackRecorded ev)
+    {
+        var sourceVersion = ev.SelectedSource ?? new AdvisorRecordVersion(ev.RecordId,
+            ev.RecordVersionId);
+        if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.HandoffId != Id ||
+            ev.FeedbackId == Uuid.Empty || ev.RecordId == Uuid.Empty ||
+            sourceVersion.RecordId != ev.RecordId || sourceVersion.VersionId != ev.RecordVersionId ||
+            !sourceVersion.HasValidIdentity || !FeedbackKinds.Contains(ev.Kind) ||
+            string.IsNullOrWhiteSpace(ev.Body) || ev.Body.Trim() != ev.Body ||
+            !ValidActor(ev.Author) || ev.CreatedAt == default ||
+            !_selection.Contains(sourceVersion) || _feedback.Any(item => item.FeedbackId == ev.FeedbackId))
+            throw new InvalidOperationException("The advisor feedback event is invalid.");
+        _revision++;
+        _updatedAt = ev.CreatedAt;
+        _feedback.Add(new AdvisorFeedbackEntry(ev.FeedbackId, ev.RecordId,
+            ev.RecordVersionId, ev.Kind, ev.Body, ev.Author, ev.CreatedAt,
+            SourceVersion: ev.SelectedSource));
+    }
+
     static bool ValidSelection(IReadOnlyList<AdvisorRecordVersion>? selection) =>
-        selection is { Count: > 0 } && selection.All(item => item is not null &&
-            item.RecordId != Uuid.Empty && item.VersionId != Uuid.Empty) &&
-        selection.Select(item => item.RecordId).Distinct().Count() == selection.Count &&
-        selection.Select(item => item.VersionId).Distinct().Count() == selection.Count;
+        selection is { Count: > 0 and <= MaximumSelectionCount } &&
+        selection.All(item => item is not null &&
+            item.HasValidIdentity) &&
+        selection.Select(item => (item.SourceFamily, item.RecordId, item.EntryId))
+            .Distinct().Count() == selection.Count;
 
     static bool ValidActor(ActorReference? actor) => actor is not null &&
         !string.IsNullOrWhiteSpace(actor.Kind) && !string.IsNullOrWhiteSpace(actor.Id) &&
         !string.IsNullOrWhiteSpace(actor.Display);
+
+    void RequireFeedbackScope(Uuid tenantId, Uuid programId, Uuid handoffId)
+    {
+        if (tenantId != _tenantId || programId != _programId || handoffId != Id)
+            throw new InvalidOperationException(
+                "Advisor feedback event scope does not match its handoff stream.");
+    }
 
     static Result<bool> Failure(RequestErrorKind kind, string message) =>
         Result<bool>.Failure(new RequestError(kind, message));
@@ -270,7 +363,11 @@ public sealed record AdvisorFeedbackEntry(Uuid FeedbackId, Uuid RecordId, Uuid R
     IReadOnlyList<AdvisorFeedbackCorrection>? Corrections = null,
     IReadOnlyList<AdvisorFeedbackResponse>? Responses = null,
     DateTimeOffset? ResolvedAt = null,
-    AdvisorFeedbackDisposition Disposition = AdvisorFeedbackDisposition.Current);
+    AdvisorFeedbackDisposition Disposition = AdvisorFeedbackDisposition.Current,
+    AdvisorRecordVersion? SourceVersion = null)
+{
+    public ActorReference? ResolvedBy { get; init; }
+}
 
 public sealed record AdvisorFeedbackCorrection(Uuid CorrectionId, string Body, string Reason,
     ActorReference Actor, DateTimeOffset CorrectedAt);

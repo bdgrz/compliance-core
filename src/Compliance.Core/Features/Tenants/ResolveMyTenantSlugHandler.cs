@@ -4,7 +4,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Tenants;
 
 public sealed class ResolveMyTenantSlugHandler(IAggregateReader reader,
-    ITenantMembershipDirectoryReader memberships) : IRequestHandler<ResolveMyTenantSlug, TenantSlugResolution>
+    ITenantMembershipDirectoryReader memberships, TimeProvider? clock = null)
+    : IRequestHandler<ResolveMyTenantSlug, TenantSlugResolution>
 {
     public async ValueTask<Result<TenantSlugResolution>> HandleAsync(
         IRequestContext<ResolveMyTenantSlug> context, CancellationToken ct)
@@ -26,7 +27,8 @@ public sealed class ResolveMyTenantSlugHandler(IAggregateReader reader,
         // resolution still blocks disclosure of the current slug or redirect relationship.
         var member = await reader.HydrateAsync(new Member(tenantId, actorId), ct)
             .ConfigureAwait(false);
-        if (!member.IsRegistered || member.IsSuspended)
+        var asOfDate = DateOnly.FromDateTime((clock ?? TimeProvider.System).GetUtcNow().UtcDateTime);
+        if (!member.IsAccessEligibleOn(asOfDate))
             return NotFound();
         return Result<TenantSlugResolution>.Success(
             new TenantSlugResolution(tenantId, currentSlug, currentSlug != slug));

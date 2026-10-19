@@ -8,8 +8,8 @@ Keep the layer boundary explicit: when a handler durably records valid intent an
 
 ## Current gap
 
-- The plan contains 129 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 124 active commands, 106 have complete handler coverage, 5 have partial handler coverage, and 13 still have no handler.
-- Active command registration gaps: 13. Active commands without a handler test reference: 13. The five partial handlers are registered and tested but do not yet cover their accepted feature scope.
+- The plan contains 130 feature-backed commands, including 5 explicitly deferred by M0-D04/EN-05. Of the 125 active commands, 114 have complete handler coverage, 3 have partial handler coverage, and 8 still have no handler.
+- Active command registration gaps: 8. Active commands without a handler test reference: 8. The three partial handlers are registered and tested but do not yet cover their accepted feature scope.
 - Existing commands remain listed below to track established handler coverage and known transport or registration exceptions.
 - Keep this layer open until every required command has a real handler, the owning host can dispatch it, and behavior tests pass. Then implement reactors, with projectors as the final layer.
 
@@ -17,7 +17,7 @@ Keep the layer boundary explicit: when a handler durably records valid intent an
 
 Work the layers in order. A command is complete only when its source and authority checks are implemented, its aggregate transition is exercised by a red-to-green behavior test, the handler is registered and host-dispatched, and the owning API authorization is verified. Update the table below as each item closes; do not move into reactors while any active handler is missing or partial.
 
-### Handlers — 18 active open items (13 missing, 5 partial)
+### Handlers — 11 active open items (8 missing, 3 partial)
 
 Evidence handling:
 
@@ -26,11 +26,7 @@ Evidence handling:
 
 Advisor collaboration:
 
-- [ ] `CreateAdvisorHandoff` — exact version resolver for every supported record family and Compliance Lead authorization.
-- [ ] `ReviseAdvisorHandoffSelection` — resolve every selected exact version and recheck shareable status.
-- [ ] `MarkAdvisorHandoffReadyForReview` — recheck the complete selection and Compliance Lead authority at sharing time.
-- [ ] `RecordAdvisorFeedback` — scoped advisor/guest authorization and actual member attribution.
-- [ ] `CorrectAdvisorFeedback` — scoped author/Compliance Lead correction authority and linked attribution.
+- Exact native source-version validation, active source reads, typed feedback identity, current-versus-historical feedback reads, the projected handoff directory, internal feedback work-item response and resolution, and change-aware handoff previews are covered by `AdvisorRecordVersionResolverTests`, `GetAdvisorSharedSourceHandlerTests`, `AdvisorHandoffCommandHandlerTests`, `PreviewAdvisorHandoffHandlerTests`, `ListAdvisorFeedbackHandlerTests`, `ListAdvisorRequestsHandlerTests`, `FitzAdvisorHandoffDirectoryTests`, `FitzAdvisorFeedbackWorkItemDirectoryTests`, and `WorkSourceCompositionTests`. Firm Advisor engagement authorization remains blocked on #269.
 
 Type I baseline:
 
@@ -83,7 +79,7 @@ Identity provider:
 
 ### Layer gates
 
-- [ ] All 124 active handlers are complete; five readiness-import commands remain deferred by M0-D04/EN-05.
+- [ ] All 125 active handlers are complete; five readiness-import commands remain deferred by M0-D04/EN-05.
 - [ ] All required reactors are implemented and verified before starting projectors.
 - [ ] All required projectors are implemented and verified as the final backend layer; document any requirement that remains explicitly deferred by an accepted decision.
 
@@ -281,6 +277,7 @@ Identity provider:
 | Tenants | `ConfirmTenantSlugSurrender` | present | present | present | referenced |
 | Tenants | `GrantPlatformOperator` | present | present | present | no reference |
 | Tenants | `InviteOrganizationMember` | present | present | present | referenced |
+| Tenants | `InviteGuestConsultant` | present | present | present | `InviteGuestConsultantHandlerTests` |
 | Tenants | `InviteTenantMember` | present | present | present | no reference |
 | Tenants | `OffboardTenant` | present | present | present | referenced |
 | Tenants | `ReactivateTenant` | present | present | present | no reference |
@@ -335,14 +332,15 @@ Identity provider:
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `ExecuteArtifactDisposition` | present | missing | check | no reference |
 | Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md) | `RecordArtifactDispositionResult` | present | present | present | `RecordArtifactDispositionResultHandlerTests` |
 | Indexed audit packages — [T1-05](backlog.md#t1-05-produce-and-validate-the-type-i-package), [T3-05](backlog.md#t3-05-produce-and-validate-the-type-ii-package); [M0-D17](decisions/m0-d17-audit-deliverables.md) | `CreateAuditPackage` | present | present | present | `CreateAuditPackageHandlerTests` |
-| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CreateAdvisorHandoff` | present | missing | check | no reference |
-| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `ReviseAdvisorHandoffSelection` | present | missing | check | no reference |
-| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `MarkAdvisorHandoffReadyForReview` | present | missing | check | no reference |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CreateAdvisorHandoff` | present | present | present | `AdvisorHandoffCommandHandlerTests`, `AdvisorRecordVersionResolverTests` |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `ReviseAdvisorHandoffSelection` | present | present | present | `AdvisorHandoffCommandHandlerTests`, `AdvisorRecordVersionResolverTests` |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `MarkAdvisorHandoffReadyForReview` | present | present | present | `AdvisorHandoffCommandHandlerTests`, `AdvisorRecordVersionResolverTests` |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CloseAdvisorHandoff` | present | present | present | referenced |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RevokeAdvisorHandoff` | present | present | present | referenced |
-| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RecordAdvisorFeedback` | present | missing | check | no reference |
-| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CorrectAdvisorFeedback` | present | missing | check | no reference |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RecordAdvisorFeedback` | present | present | present | `AdvisorHandoffCommandHandlerTests`, `ListAdvisorFeedbackHandlerTests`, `AdvisoryReadinessNoteIndependenceTests` |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `CorrectAdvisorFeedback` | present | present | present | `CorrectAdvisorFeedbackHandlerTests`, `AdvisorHandoffCommandHandlerTests`, `AdvisoryReadinessNoteIndependenceTests` |
 | Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `RespondToAdvisorFeedback` | present | present | present | `AdvisorHandoffCommandHandlerTests` |
+| Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md) | `ResolveAdvisorFeedback` | present | present | present | `AdvisorHandoffCommandHandlerTests`, `WorkSourceCompositionTests` |
 | Control operation and recurrence — [R2-01](backlog.md#r2-01-assign-control-ownership-and-operating-cadence), [T2-02](backlog.md#t2-02-operate-a-recurring-control-calendar), R2-04, T2-03; [M0-D19](decisions/m0-d19-periodic-reviews.md) | `GenerateDueControlOccurrences` | present | present | present | referenced |
 | Inventory and commitment lifecycle — [R1-10](backlog.md#r1-10-establish-the-application-inventory-and-review-scope), [R1-13](backlog.md#r1-13-record-service-commitments-system-requirements-and-user-responsibilities) | `ReviseSystemInstance` | present | present | present | referenced |
 | Inventory and commitment lifecycle — [R1-10](backlog.md#r1-10-establish-the-application-inventory-and-review-scope), [R1-13](backlog.md#r1-13-record-service-commitments-system-requirements-and-user-responsibilities) | `RetireCommitment` | present | present | present | referenced |
@@ -460,8 +458,9 @@ These dependencies are found in the existing contracts, aggregates, and accepted
 | Commands | Prerequisite before a correct handler can be wired |
 |---|---|
 | `ApproveArtifactDisposition`, `ExecuteArtifactDisposition` | Build a tenant-scoped eligibility reader that binds the exact artifact, retention basis, handling policy, active legal and engagement holds, historical reliance, and storage readiness. Portia 0.8.0's `IObjectStorage` still lacks the quarantine and hold hooks required for production storage readiness. The handlers must persist approval and an exact execution attempt; provider deletion and its callback belong to `ArtifactDispositionReactor`. `ArtifactDisposition` already rejects missing or changed eligibility snapshots. |
-| `CreateAdvisorHandoff`, `ReviseAdvisorHandoffSelection`, `MarkAdvisorHandoffReadyForReview` | Add a resolver for every supported record kind that proves tenant, program, current exact version, and shareable status. The aggregate accepts IDs but cannot establish those source facts. Readiness must be restricted to the Compliance Lead as required by [M0-D14](decisions/m0-d14-advisor-collaboration.md). |
-| `RecordAdvisorFeedback`, `CorrectAdvisorFeedback` | Add the M0-D14 scoped advisor/guest authorization model, including accepted firm-staff assignments, program-scoped expiring guest grants, and actual member attribution. The current commands use ordinary client-management authorization, which cannot authorize the specified advisor actors. |
+| `CreateAdvisorHandoff`, `ReviseAdvisorHandoffSelection`, `MarkAdvisorHandoffReadyForReview` | Exact native identities now resolve current control drafts/latest approved control versions, policy drafts/latest approved numeric versions, evidence with its program support link, latest readiness gaps, and current boundary-question entries. Handlers validate before create/revise and recheck the persisted selection before sharing; Compliance Lead authorization remains required under [M0-D14](decisions/m0-d14-advisor-collaboration.md). |
+| `RecordAdvisorFeedback`, `CorrectAdvisorFeedback` | Typed native source identity is persisted with feedback. Current source resolution marks superseded feedback historical in the read view. Assigned firm-Advisor checks, scoped expiring guest Viewer grants, actual member attribution, and author-only correction on an open unexpired handoff remain enforced. |
+| `ResolveAdvisorFeedback` | An authorized personal client actor resolves the feedback once; the event is projected out of active manager work while remaining in the handoff history. |
 | System-description Type II successor scope — T1-02, T2-07, T3-01 | Draft creation and revision accept structured sections; source refresh verifies the complete Type I baseline or exact approved Type II plan and frozen close manifest. The aggregate successor path still preserves its existing scope and cannot create a Type II period version; add a period-scoped successor transition before this part of the feature is complete. |
 | `ProposeTypeIIOperatingPlan` | The handler requires complete content and validates the current baseline manifest, auditor outcome, approved and bound system description, every carried-forward baseline reference, all approved controls, active member owners, approved control operating plans, cadence including its recurring due window, effective range, and required-change source IDs. It also requires every current open/remediated finding to appear exactly once with a deterministic hash of its current revision, matching disposition and active client-personnel owner. The plan contract still cannot carry expected evidence or person/team owners; policy/risk/vendor sources and event-driven/ad hoc trigger and due semantics remain unresolved. `RecordManagementExaminationReview` v2 validates an authorized executive against the exact delivered package and manifest, frozen Type I or Type II close snapshot, approved assertion and supporting references, signed representation letter and retained artifacts, auditor outcome, and management commitments before persisting the immutable sign-off. |
 | `StartTypeIIObservationPeriod` | Implemented as a partial source-bound handler: derives the opening manifest from the current approved plan, current frozen Type I baseline, recorded auditor outcome, and approved system description bound to that baseline. It shares the Type II source validator, which also verifies all carried-forward references, each current finding's exact revision and active client-personnel owner, exact planned controls, active member owners, operating-plan cadence and recurring due window, and effective range. The opening period records each recurring occurrence's due date using the approved window. The program calendar is bootstrapped from committed period streams and serializes inclusive date reservations; period amendments reserve replacement ranges until the period stream update completes. Policy/risk/vendor sources, expected evidence, nonmember owners, and event-driven/ad hoc trigger and due semantics still limit proposal completeness. |

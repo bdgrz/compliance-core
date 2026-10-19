@@ -16,8 +16,36 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
 
     async ValueTask ReactAsync(IReactorContext<TenantInvitationAccepted> context, CancellationToken ct)
     {
-        await bus.SendReactionAsync(new RegisterMember(context.Trigger.TenantId, context.Trigger.UserId,
-            context.Trigger.Affiliation), context, ct);
+        var invitedByDisplay = context.Trigger.InvitedByDisplay;
+        Uuid[]? guestPrograms = null;
+        DateOnly? guestExpiresOn = null;
+        if (context.Trigger.Affiliation == "guest")
+        {
+            if (context.Trigger.GuestProgramIds is not { Count: > 0 } programs ||
+                context.Trigger.GuestExpiresOn is not { } expiresOn ||
+                context.Trigger.InvitedBy == Uuid.Empty ||
+                string.IsNullOrWhiteSpace(invitedByDisplay) ||
+                context.Trigger.AcceptedAt == default ||
+                DateOnly.FromDateTime(context.Trigger.AcceptedAt.UtcDateTime) > expiresOn)
+                throw new InvalidOperationException("A guest acceptance must retain its invited scope and attribution.");
+            guestPrograms = programs.ToArray();
+            guestExpiresOn = expiresOn;
+        }
+
+        await bus.SendReactionAsync(new RegisterMember(context.Trigger.TenantId,
+            context.Trigger.UserId, context.Trigger.Affiliation, guestExpiresOn), context, ct);
+        if (guestPrograms is not null && guestExpiresOn is { } endDate)
+        {
+            var invitationId = TenantInvitation.IdFor(context.Trigger.TenantId,
+                context.Trigger.EmailAddress);
+            foreach (var programId in guestPrograms)
+            {
+                await bus.SendReactionAsync(new ProvisionGuestProgramAccess(context.Trigger.TenantId,
+                    context.Trigger.UserId, programId, invitationId, endDate,
+                    context.Trigger.AcceptedAt, context.Trigger.InvitedBy,
+                    invitedByDisplay!), context, ct);
+            }
+        }
         var memberId = RbacIds.Member(context.Trigger.TenantId, context.Trigger.UserId);
         if (context.Trigger.BuiltInRole is { } role)
         {

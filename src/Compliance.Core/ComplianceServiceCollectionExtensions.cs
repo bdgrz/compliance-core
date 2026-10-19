@@ -511,6 +511,8 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
         services.AddScoped<IAccessGrantScopePermissionAuthorizer>(provider =>
             provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
+        services.AddScoped<IAccessGrantRolePermissionAuthorizer>(provider =>
+            provider.GetRequiredService<AccessGrantPermissionAuthorizer>());
         services.AddScoped<RestrictedApplicationVisibility>();
         services.AddScoped<TechnologyInventoryRestrictedVisibility>();
         services.AddScoped<OperatingAuthority>();
@@ -519,6 +521,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ClientManagementIndependenceGuard>();
         services.AddScoped<ClientCompartmentIndependenceGuard>();
         services.AddScoped<ProfessionalAdvisoryReadAccess>();
+        services.AddScoped<IAdvisorSharedSourceAuthorization>(provider =>
+            provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        services.AddScoped<IAdvisorHandoffListAccess>(provider =>
+            provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();
@@ -600,6 +606,19 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceArtifactReadAccess>();
         services.AddScoped<EvidenceArtifactMetadataRead>();
         services.AddScoped<EvidenceSupportTargetSource>();
+        services.AddScoped<IAdvisorRecordVersionResolver, AdvisorRecordVersionResolver>();
+        services.AddScoped<IAdvisorSharedSourceReader, AdvisorSharedSourceReader>();
+        services.AddScoped<FitzAdvisorHandoffDirectory>();
+        services.AddScoped<IAdvisorHandoffDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzAdvisorHandoffDirectory>());
+        services.AddScoped<IAdvisorHandoffDirectoryProjection>(provider =>
+            provider.GetRequiredService<FitzAdvisorHandoffDirectory>());
+        services.AddScoped<AdvisorHandoffListReadConsistency>();
+        services.AddScoped<FitzAdvisorFeedbackWorkItemDirectory>();
+        services.AddScoped<IAdvisorFeedbackWorkItemProjection>(provider =>
+            provider.GetRequiredService<FitzAdvisorFeedbackWorkItemDirectory>());
+        services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzAdvisorFeedbackWorkItemDirectory>());
         services.AddScoped<AuditorResponseEvidence>();
         services.AddScoped<DirectoryReevaluationDiscovery>();
         services.AddScoped<ProfessionalDutyAdministrationAuthorizer>();
@@ -846,9 +865,20 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListOperationalProcessesHandler>()
             .AddRequestHandler<ListOperationalProcessRevisionsHandler>()
             .AddRequestAuthorizer<TechnologyInventoryAuthorizer>()
+            .AddRequestHandler<CreateAdvisorHandoffHandler>()
+            .AddRequestHandler<ReviseAdvisorHandoffSelectionHandler>()
+            .AddRequestHandler<MarkAdvisorHandoffReadyForReviewHandler>()
             .AddRequestHandler<CloseAdvisorHandoffHandler>()
             .AddRequestHandler<RevokeAdvisorHandoffHandler>()
             .AddRequestHandler<RespondToAdvisorFeedbackHandler>()
+            .AddRequestHandler<ResolveAdvisorFeedbackHandler>()
+            .AddRequestHandler<RecordAdvisorFeedbackHandler>()
+            .AddRequestHandler<GetAdvisorRequestHandler>()
+            .AddRequestHandler<GetAdvisorSharedSourceHandler>()
+            .AddRequestHandler<PreviewAdvisorHandoffHandler>()
+            .AddRequestHandler<ListAdvisorRequestsHandler>()
+            .AddRequestHandler<ListAdvisorFeedbackHandler>()
+            .AddRequestHandler<CorrectAdvisorFeedbackHandler>()
             .AddRequestHandler<CreateProgramHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()
@@ -1219,8 +1249,11 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<OffboardTenantHandler>()
             .AddRequestHandler<InviteTenantMemberHandler>()
             .AddRequestHandler<InviteOrganizationMemberHandler>()
+            .AddRequestHandler<InviteGuestConsultantHandler>()
             .AddRequestHandler<ListTenantInvitationsHandler>()
             .AddRequestHandler<GetMemberAccessHandler>()
+            .AddRequestHandler<ProvisionGuestProgramAccessHandler>()
+            .AddRequestAuthorizer<GuestInvitationReactionAuthorizer>()
             .AddRequestHandler<AcceptTenantInvitationHandler>()
             .AddRequestHandler<GetTenantHandler>()
             .AddRequestAuthorizer<GetTenantAuthorizer>()
@@ -1331,6 +1364,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant)
             .AddProjector<ExaminationEngagementDirectoryProjector>(
                 FitzExaminationEngagementDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<AdvisorHandoffDirectoryProjector>(
+                FitzAdvisorHandoffDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddProjector<AdvisorFeedbackWorkItemProjector>(
+                FitzAdvisorFeedbackWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ControlDraftDirectoryV2Projector>("ControlDraftDirectoryV2",
                 WorkloadScope.PerTenant)
             .AddProjector<ControlDraftHistoryDirectoryV1Projector>(
