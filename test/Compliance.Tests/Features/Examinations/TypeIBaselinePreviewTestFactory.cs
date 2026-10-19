@@ -23,6 +23,7 @@ static class TypeIBaselinePreviewTestFactory
         "workforce_roster_snapshot" => "workforce",
         "application_revision" or "application_retirement" => "applications",
         "reviewed_system_revision" or "reviewed_system_retirement" => "reviewed_systems",
+        "system_component_revision" => "system_components",
         "criteria_selection" or "criteria_edition" => "criteria",
         "control" or "approved_control" => "controls",
         "criteria" => "criteria",

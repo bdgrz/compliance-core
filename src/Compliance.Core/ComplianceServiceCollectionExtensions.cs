@@ -549,6 +549,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ITypeIBaselineSourceContributor, CriteriaTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, ApplicationTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, ReviewedSystemTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, TechnologyComponentTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, ControlTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, WorkforceTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselinePreviewReader, TypeIBaselinePreviewReader>();

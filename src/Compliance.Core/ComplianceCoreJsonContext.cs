@@ -1357,6 +1357,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(TechnologyComponentView))]
 [JsonSerializable(typeof(Page<TechnologyComponentView>))]
 [JsonSerializable(typeof(TechnologyComponentRevisionRecorded))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.TechnologyComponentSourceContent))]
 [JsonSerializable(typeof(RecordInformationAsset))]
 [JsonSerializable(typeof(ReviseInformationAsset))]
 [JsonSerializable(typeof(GetInformationAsset))]
