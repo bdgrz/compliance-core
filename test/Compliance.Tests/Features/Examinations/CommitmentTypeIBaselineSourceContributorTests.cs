@@ -130,9 +130,30 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
         Assert.Empty(result.Value.Blockers);
     }
 
+    [Fact]
+    public async Task ShouldCaptureSystemRequirementVersionGivenItsOwnFamily()
+    {
+        // Arrange
+        var fixture = await Fixture("system_requirement", family: "system_requirements");
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context,
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("system_requirements", result.Value.Family);
+        var source = Assert.Single(result.Value.Sources);
+        Assert.Equal("system_requirement_version", source.Kind);
+        Assert.Equal(Uuid.CreateVersion5(fixture.DraftId,
+            "system_requirement_version_v1:1"), source.VersionId);
+        Assert.Empty(result.Value.Blockers);
+    }
+
     static async Task<FixtureState> Fixture(string kind, bool includeSuccessor = false,
         bool retire = false, bool approve = true, bool reviewAfterRetirement = false,
-        bool includeService = true, bool staleApprovalAfterRevision = false)
+        bool includeService = true, bool staleApprovalAfterRevision = false,
+        string family = "commitments")
     {
         var draftId = CommitmentDraft.IdFor(TenantId, ProgramId, kind, "SC-01");
         var draft = new CommitmentDraft(TenantId, draftId);
@@ -213,7 +234,12 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
             new ProgramDirectory(checkpoint), boundaries, events);
         var sourceReader = new CommitmentTypeIBaselineSourceReader(aggregateReader, events,
             versionConsistency, commitmentConsistency, boundaries, boundaryConsistency);
-        var contributor = new CommitmentTypeIBaselineSourceContributor(sourceReader);
+        ITypeIBaselineSourceContributor contributor = family switch
+        {
+            "commitments" => new CommitmentTypeIBaselineSourceContributor(sourceReader),
+            "system_requirements" => new SystemRequirementTypeIBaselineSourceContributor(sourceReader),
+            _ => throw new ArgumentOutOfRangeException(nameof(family), family, "Unknown source family."),
+        };
         var boundarySource = new TypeIBaselineSourceReference("approved_boundary", BoundaryId,
             version.VersionId, version.Revision,
             SnapshotContentIdentity.ApprovedBoundaryVersion(version));
@@ -296,7 +322,7 @@ public sealed class CommitmentTypeIBaselineSourceContributorTests
     }
 
     sealed record FixtureState(Uuid DraftId,
-        CommitmentTypeIBaselineSourceContributor Contributor,
+        ITypeIBaselineSourceContributor Contributor,
         TypeIBaselineSourceReadContext Context);
 
     sealed class CommitmentAggregateReader(CommitmentDraft draft) : IAggregateReader
