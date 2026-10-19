@@ -1303,6 +1303,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessExpectationLedgerSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewCampaignSourceContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.AccessReviewCampaignSourceEvent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.RiskSourceContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Examinations.RiskSourceEvent))]
 [JsonSerializable(typeof(Page<PolicyVersionView>))]
 [JsonSerializable(typeof(PolicyDecisionView))]
 [JsonSerializable(typeof(Page<PolicyDecisionView>))]
