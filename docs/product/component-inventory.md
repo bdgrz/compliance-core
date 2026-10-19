@@ -71,10 +71,10 @@ These candidates make later scope concrete. They are not established public cont
 
 - Aggregate/model candidates: AdvisorRequest; AdvisorFeedback; AdvisoryReadinessNote; FeedbackResponse.
 - Commands: OpenAdvisorRequest; RecordAdvisorFeedback; RespondToAdvisorFeedback; ResolveAdvisorFeedback; WithdrawAdvisorRequest.
-- Queries: GetAdvisorRequest; ListAdvisorRequests; ListAdvisorFeedback.
+- Queries: GetAdvisorRequest; GetAdvisorSharedSource; PreviewAdvisorHandoff; ListAdvisorRequests; ListAdvisorFeedback.
 - Events: AdvisorHandoffCreated; AdvisorFeedbackRecorded; AdvisorFeedbackCorrected; AdvisorFeedbackResponded; AdvisorFeedbackResolved; AdvisorHandoffSelectionRevised; AdvisorHandoffReadiedForReview; AdvisorHandoffClosed; AdvisorHandoffRevoked.
 - Reactors: AdvisorRequestNotificationReactor.
-- Projectors: AdvisorRequestDirectoryProjector; AdvisorFeedbackWorkItemProjector.
+- Projectors: AdvisorHandoffDirectoryProjector; AdvisorFeedbackWorkItemProjector (implemented; routes actionable comment and change-request feedback to program-manager work and removes it when resolved).
 - API family: advisory requests, feedback, responses and resolution.
 
 ### Type I engagement — T1-01
@@ -270,13 +270,13 @@ The following is a static source inventory, including internal operations. Queri
 | Category | Unique feature/type names |
 | --- | ---: |
 | Commands | 231 |
-| Queries | 271 |
+| Queries | 272 |
 | Events | 374 |
 | Aggregates | 83 |
-| Models and supporting contracts | 562 |
+| Models and supporting contracts | 564 |
 | Reactors | 30 |
 | Projectors | 66 |
-| Explicit MapPortia HTTP route registrations | 439 |
+| Explicit MapPortia HTTP route registrations | 440 |
 
 ### Existing commands
 
@@ -297,6 +297,7 @@ The following is a static source inventory, including internal operations. Queri
 - [DeprovisionMember](../../src/Compliance.Common/Features/AccessControl/DeprovisionMember.cs#L6) — `bdgrz.tenant.member.deprovision` v1
 - [EvaluateClientIndependence](../../src/Compliance.Common/Features/AccessControl/EvaluateClientIndependence.cs#L7) — `bdgrz.independence.evaluate` v1
 - [GrantAccess](../../src/Compliance.Common/Features/AccessControl/GrantAccess.cs#L6) — `bdgrz.access-grant.issue` v1
+- [ProvisionGuestProgramAccess](../../src/Compliance.Common/Features/AccessControl/ProvisionGuestProgramAccess.cs#L7) — `bdgrz.access-grant.guest-invitation.provision` v1 (internal reaction)
 - [ProposeServiceEngagementStaff](../../src/Compliance.Common/Features/AccessControl/ProposeServiceEngagementStaff.cs#L6) — `bdgrz.service-engagement.staff.propose` v1
 - [RecordDirectoryIndependenceReevaluation](../../src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs#L7) — `bdgrz.independence.record-directory-reevaluation` v1
 - [RecordNonattestService](../../src/Compliance.Common/Features/AccessControl/RecordNonattestService.cs#L6) — `bdgrz.independence.service.record` v1
@@ -314,6 +315,18 @@ The following is a static source inventory, including internal operations. Queri
 - [SetFirmStaffStatus](../../src/Compliance.Common/Features/AccessControl/SetFirmStaffStatus.cs#L6) — `bdgrz.firm-staff.status.set` v1
 - [SuspendMember](../../src/Compliance.Common/Features/AccessControl/SuspendMember.cs#L6) — `bdgrz.tenant.member.suspend` v1
 - [WithdrawServiceEngagementStaffProposal](../../src/Compliance.Common/Features/AccessControl/WithdrawServiceEngagementStaffProposal.cs#L6) — `bdgrz.service-engagement.staff.withdraw` v1
+
+#### AdvisorCollaboration
+
+- [CloseAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.close-advisor-handoff` v1
+- [CorrectAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs#L7) — `bdgrz.advisor-collaboration.correct-advisor-feedback` v1
+- [CreateAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.create-advisor-handoff` v1
+- [MarkAdvisorHandoffReadyForReview](../../src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs#L7) — `bdgrz.advisor-collaboration.mark-advisor-handoff-ready-for-review` v1
+- [RecordAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs#L7) — `bdgrz.advisor-collaboration.record-advisor-feedback` v1
+- [ResolveAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ResolveAdvisorFeedback.cs#L9) — `bdgrz.advisor-collaboration.resolve-advisor-feedback` v1
+- [RespondToAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs#L8) — `bdgrz.advisor-collaboration.respond-to-advisor-feedback` v1
+- [ReviseAdvisorHandoffSelection](../../src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs#L7) — `bdgrz.advisor-collaboration.revise-advisor-handoff-selection` v1
+- [RevokeAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.revoke-advisor-handoff` v1
 
 #### AccessReviews
 
@@ -552,6 +565,7 @@ The following is a static source inventory, including internal operations. Queri
 - [ConfirmTenantSlugSurrender](../../src/Compliance.Common/Features/Tenants/ConfirmTenantSlugSurrender.cs#L6) — `bdgrz.tenant-slug-surrender.confirm` v1
 - [GrantPlatformOperator](../../src/Compliance.Common/Features/Tenants/GrantPlatformOperator.cs#L6) — `bdgrz.platform.operator.grant` v1
 - [InviteOrganizationMember](../../src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs#L7) — `bdgrz.organization-member.invite` v1
+- [InviteGuestConsultant](../../src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs#L7) — `bdgrz.tenant.guest-consultant.invite` v1
 - [InviteTenantMember](../../src/Compliance.Common/Features/Tenants/InviteTenantMember.cs#L6) — `bdgrz.tenant-member.invite` v1
 - [OffboardTenant](../../src/Compliance.Common/Features/Tenants/OffboardTenant.cs#L6) — `bdgrz.tenant.offboard` v1
 - [ReactivateTenant](../../src/Compliance.Common/Features/Tenants/ReactivateTenant.cs#L6) — `bdgrz.tenant.reactivate` v2
@@ -904,11 +918,13 @@ The following is a static source inventory, including internal operations. Queri
 - [PreviewWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/PreviewWorkforceSourceObservation.cs#L7) — `bdgrz.workforce.source.preview` v1
 - [RegenerateWorkforceRosterSnapshotManifest](../../src/Compliance.Common/Features/Workforce/RegenerateWorkforceRosterSnapshotManifest.cs#L8) — `bdgrz.snapshot.workforce_roster.manifest_regenerate` v1
 
-#### Requirement-backed read contracts added 2026-10-17
+#### Requirement-backed read contracts added 2026-10-17 to 2026-10-18
 
 ##### AdvisorCollaboration
 
 - [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorRequest.cs#L9) — `bdgrz.advisor-collaboration.get-advisor-request` v1
+- [GetAdvisorSharedSource](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorSharedSource.cs#L9) — `bdgrz.advisor-collaboration.get-shared-source` v1
+- [PreviewAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/PreviewAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.preview-advisor-handoff` v1
 - [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-requests` v1
 - [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-feedback` v1
 
@@ -2115,6 +2131,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [EvidenceArtifactContent](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactContent.cs#L7)
 - [EvidenceArtifactMetadataView](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactMetadataView.cs#L7)
+- [EvidenceSupportView](../../src/Compliance.Common/Features/Evidence/EvidenceSupportView.cs#L7)
 - [EvidenceArtifactRegistration](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactRegistration.cs#L5)
 - [EvidenceArtifactResourceTypes](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactResourceTypes.cs#L3)
 - [EvidenceArtifactStates](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactStates.cs#L4)
@@ -2477,6 +2494,11 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [AccessPopulationDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/AccessPopulationDirectoryProjector.cs#L5)
 - [AccessReviewCampaignDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaignDirectoryProjector.cs#L5)
 
+#### AdvisorCollaboration
+
+- [AdvisorHandoffDirectoryProjector](../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoffDirectoryProjector.cs#L5)
+- [AdvisorFeedbackWorkItemProjector](../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorFeedbackWorkItemProjector.cs#L5)
+
 #### Applications
 
 - [AccessReviewScopeDirectoryProjector](../../src/Compliance.Core/Features/Applications/AccessReviewScopeDirectoryProjector.cs#L5)
@@ -2589,13 +2611,16 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [WorkforceObservationResolutionProjector](../../src/Compliance.Core/Features/Workforce/WorkforceObservationResolutionProjector.cs#L5)
 - [WorkforceSourceProjector](../../src/Compliance.Core/Features/Workforce/WorkforceSourceProjector.cs#L5)
 
-#### Requirement-backed response views added 2026-10-17
+#### Requirement-backed response views added 2026-10-17 to 2026-10-18
 
 ##### AdvisorCollaboration
 
 - [AdvisorRequestView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestView.cs#L6)
 - [AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)
 - [AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)
+- [AdvisorSharedSourceView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorSharedSourceView.cs#L8)
+- [AdvisorHandoffPreviewView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewView.cs#L6)
+- [AdvisorHandoffPreviewItemView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewItemView.cs#L4)
 
 ##### Examinations
 
@@ -2777,6 +2802,7 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/platform/operators` | `ListPlatformOperators` | [registration](../../src/Compliance.App/Program.cs#L500) |
 | POST | `/api/v1/tenants/{tenant_id}/invitations` | `InviteTenantMember` | [registration](../../src/Compliance.App/Program.cs#L503) |
 | POST | `/api/v1/tenants/{tenant_id}/member-invitations` | `InviteOrganizationMember` | [registration](../../src/Compliance.App/Program.cs#L506) |
+| POST | `/api/v1/tenants/{tenant_id}/guest-invitations` | `InviteGuestConsultant` | [registration](../../src/Compliance.App/Program.cs#L532) |
 | GET | `/api/v1/tenants/{tenant_id}/members/{user_id}/access` | `GetMemberAccess` | [registration](../../src/Compliance.App/Program.cs#L513) |
 | POST | `/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions` | `SuspendMember` | [registration](../../src/Compliance.App/Program.cs#L517) |
 | DELETE | `/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions` | `ReinstateMember` | [registration](../../src/Compliance.App/Program.cs#L521) |
@@ -2801,6 +2827,20 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2222) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2226) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2230) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `CreateAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2366) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions` | `ReviseAdvisorHandoffSelection` | [registration](../../src/Compliance.App/Program.cs#L2370) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review` | `MarkAdvisorHandoffReadyForReview` | [registration](../../src/Compliance.App/Program.cs#L2374) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures` | `CloseAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2378) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations` | `RevokeAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2382) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses` | `RespondToAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2386) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `RecordAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2394) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections` | `CorrectAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2398) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions` | `ResolveAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2390) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}` | `GetAdvisorRequest` | [registration](../../src/Compliance.App/Program.cs#L2402) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/preview` | `PreviewAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2415) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `ListAdvisorRequests` | [registration](../../src/Compliance.App/Program.cs#L2406) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}` | `GetAdvisorSharedSource` | [registration](../../src/Compliance.App/Program.cs#L2410) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback` | `ListAdvisorFeedback` | [registration](../../src/Compliance.App/Program.cs#L2414) |
 | POST | `/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable` | `DisableTenantIdentityProvider` | [registration](../../src/Compliance.App/Program.cs#L2118) |
 | POST | `/api/v1/tenants/{tenant_id}/slug-changes` | `ChangeTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L553) |
 | GET | `/api/v1/tenant-slugs/{slug}/mine` | `ResolveMyTenantSlug` | [registration](../../src/Compliance.App/Program.cs#L556) |
@@ -2944,6 +2984,8 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/approvals` | `ApproveEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1256) |
 | GET | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}` | `GetEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1260) |
 | GET | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/metadata` | `GetEvidenceArtifactMetadata` | [registration](../../src/Compliance.App/Program.cs#L1264) |
+| POST | `/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads` | `IssueArtifactDownload` | [registration](../../src/Compliance.App/Program.cs#L1332) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports` | `LinkEvidenceSupport` | [registration](../../src/Compliance.App/Program.cs#L1336) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}` | `GetEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1268) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/fulfilments` | `FulfilEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1272) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/cancellations` | `CancelEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1276) |
@@ -3391,6 +3433,11 @@ These source lines identify raw routes, health routes and MCP configuration. Fol
 - [Program.cs:315](../../src/Compliance.App/Program.cs#L315): `.AddMcpTool<ListWorkforceRosterSnapshots>(tool => tool.ReadOnly())`
 - [Program.cs:316](../../src/Compliance.App/Program.cs#L316): `.AddMcpTool<RegenerateWorkforceRosterSnapshotManifest>(tool => tool.ReadOnly())`
 - [Program.cs:317](../../src/Compliance.App/Program.cs#L317): `.AddMcpTool<GetReadinessAssessment>(tool => tool.ReadOnly())`
+- [Program.cs:330](../../src/Compliance.App/Program.cs#L330): `.AddMcpTool<GetAdvisorRequest>(tool => tool.ReadOnly())`
+- [Program.cs:331](../../src/Compliance.App/Program.cs#L331): `.AddMcpTool<PreviewAdvisorHandoff>(tool => tool.ReadOnly())`
+- [Program.cs:332](../../src/Compliance.App/Program.cs#L332): `.AddMcpTool<GetAdvisorSharedSource>(tool => tool.ReadOnly())`
+- [Program.cs:333](../../src/Compliance.App/Program.cs#L333): `.AddMcpTool<ListAdvisorRequests>(tool => tool.ReadOnly())`
+- [Program.cs:334](../../src/Compliance.App/Program.cs#L334): `.AddMcpTool<ListAdvisorFeedback>(tool => tool.ReadOnly())`
 - [Program.cs:318](../../src/Compliance.App/Program.cs#L318): `.AddMcpTool<ListReadinessAssessments>(tool => tool.ReadOnly())`
 - [Program.cs:319](../../src/Compliance.App/Program.cs#L319): `.AddMcpTool<ListReadinessGaps>(tool => tool.ReadOnly())`
 - [Program.cs:320](../../src/Compliance.App/Program.cs#L320): `.AddMcpTool<ListTypeIEntryDecisions>(tool => tool.ReadOnly())`

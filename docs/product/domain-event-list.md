@@ -51,6 +51,11 @@ Events to backfill:
 
 Scoped handoff selection/access transitions and immutable feedback/correction/response/resolution. The older proposed `AdvisorRequestWithdrawn` name is omitted because the required command plan uses close and revoke intents.
 
+`AdvisorHandoffCreated` also records the optional explicit comparison handoff ID for repeated
+handoffs. The aggregate retains that lineage through replay and records whether the handoff was
+ever shared, so a comparison can be made only against an ended handoff that was actually ready
+for review.
+
 Events to backfill:
 - `AdvisorHandoffCreated`
 - `AdvisorHandoffSelectionRevised`

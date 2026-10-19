@@ -4,7 +4,8 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Row-level authorization for tenant-scoped reads: requires <see cref="RbacPermissions.TenantAccess" />.</summary>
 sealed class TenantAccessAuthorizer(IPermissionAuthorizer permissions, ITenantActivity tenants,
-    ITenantMembershipDirectoryReader memberships) : IRequestAuthorizer<ITenantAccessRequest>
+    ITenantMembershipDirectoryReader memberships, TimeProvider? clock = null)
+    : IRequestAuthorizer<ITenantAccessRequest>
 {
     public async ValueTask<Result> AuthorizeAsync(IRequestContext<ITenantAccessRequest> context, CancellationToken ct)
     {
@@ -18,7 +19,8 @@ sealed class TenantAccessAuthorizer(IPermissionAuthorizer permissions, ITenantAc
 
         var tenantId = context.Request.TenantId;
         var membership = await memberships.GetAsync(tenantId.ToString(), userId, ct).ConfigureAwait(false);
-        if (membership is null || membership.IsSuspended || membership.IsDeprovisioned)
+        if (membership is null || !membership.IsActiveOn(DateOnly.FromDateTime(
+                (clock ?? TimeProvider.System).GetUtcNow().UtcDateTime)))
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The tenant was not found."));
         if (membership.Affiliation == "firm_staff")
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,

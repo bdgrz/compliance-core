@@ -20,6 +20,8 @@ public sealed class WeeklyWorkDigestRecipientResolver(IAggregateReader reader,
         if (!member.IsRegistered || member.IsSuspended || member.IsDeprovisioned ||
             member.UserId == Uuid.Empty || RbacIds.Member(tenantId, member.UserId) != memberId)
             return "member_inactive";
+        if (member.Affiliation == "guest")
+            return "guest_member";
 
         var preference = await reader.HydrateAsync(new WorkDigestPreference(tenantId, memberId), ct)
             .ConfigureAwait(false);

@@ -14,4 +14,9 @@ public sealed record TenantMembershipView(Uuid UserId, Uuid TenantId,
     string? ReinstatedByDisplay = null, string? VerifiedEmailAddress = null,
     string? DisplayName = null, bool IsDeprovisioned = false,
     DateTimeOffset? DeprovisionedAt = null, Uuid DeprovisionedByMemberId = default,
-    string? DeprovisionedByDisplay = null, string? DeprovisionReason = null);
+    string? DeprovisionedByDisplay = null, string? DeprovisionReason = null,
+    DateOnly? MembershipExpiresOn = null)
+{
+    public bool IsActiveOn(DateOnly utcDate) => !IsSuspended && !IsDeprovisioned &&
+        (MembershipExpiresOn is not { } expiresOn || utcDate <= expiresOn);
+}

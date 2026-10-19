@@ -4,7 +4,7 @@ namespace Bdgrz.Compliance.Features.Tenants;
 
 sealed class GetTenantAuthorizer(IPlatformOperatorAccess operators,
     ITenantMembershipDirectoryReader memberships, ITenantActivity tenants,
-    IPermissionAuthorizer permissions) : IRequestAuthorizer<GetTenant>
+    IPermissionAuthorizer permissions, TimeProvider? clock = null) : IRequestAuthorizer<GetTenant>
 {
     public async ValueTask<Result> AuthorizeAsync(IRequestContext<GetTenant> context, CancellationToken ct)
     {
@@ -16,7 +16,8 @@ sealed class GetTenantAuthorizer(IPlatformOperatorAccess operators,
 
         var tenantId = context.Request.TenantId;
         var membership = await memberships.GetAsync(tenantId.ToString(), userId, ct).ConfigureAwait(false);
-        if (membership is null || membership.IsSuspended || membership.IsDeprovisioned)
+        if (membership is null || !membership.IsActiveOn(DateOnly.FromDateTime(
+                (clock ?? TimeProvider.System).GetUtcNow().UtcDateTime)))
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The tenant was not found."));
         if (membership.Affiliation == "firm_staff")
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,

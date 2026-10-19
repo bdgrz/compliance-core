@@ -191,6 +191,54 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldSuppressGuestDigestGivenGuestMembership()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var userId = Uuid.CreateVersion4();
+        var memberId = RbacIds.Member(fixture.TenantId, userId);
+        var digestId = await fixture.SeedScheduledDigestAsync(userId, "guest");
+        var scheduleEventId = await fixture.FindEventIdAsync<WeeklyWorkDigestScheduled>(digestId);
+        var command = new DeliverWeeklyWorkDigest(fixture.TenantId, memberId, digestId,
+            scheduleEventId, 1, 1, WeeklyWorkDigest.DeliveryKeyFor(digestId, 1));
+
+        // Act
+        var result = await fixture.DeliveryHandler().HandleAsync(
+            Fixture.DeliveryContext(command, scheduleEventId), CancellationToken.None);
+        var digest = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId,
+            digestId));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("suppressed", digest.Status);
+        Assert.Equal("guest_member", digest.Read().SuppressionReason);
+        Assert.Empty(digest.DeliveryAttempts);
+    }
+
+    [Fact]
+    public async Task ShouldSkipSchedulingGivenGuestMembership()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var userId = Uuid.CreateVersion4();
+        var memberId = RbacIds.Member(fixture.TenantId, userId);
+        await fixture.SeedRecipientAsync(userId, verifiedEmail: true, affiliation: "guest");
+        var handler = fixture.ScheduleHandler(new MembershipDirectory(fixture.TenantId,
+            [new TenantMembershipView(userId, fixture.TenantId, "guest")]));
+
+        // Act
+        var result = await handler.HandleAsync(Fixture.ScheduleContext(new ScheduleWeeklyWorkDigest(
+            fixture.TenantId, WeekStarting, "schedule-2026-10-12")), CancellationToken.None);
+        var digest = await fixture.Reader.HydrateAsync(new WeeklyWorkDigest(fixture.TenantId,
+            WeeklyWorkDigest.IdFor(fixture.TenantId, memberId, WeekStarting)));
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(new WorkDigestSchedulePageView(1, 0, 1, null), result.Value);
+        Assert.Equal("missing", digest.Status);
+    }
+
+    [Fact]
     public async Task ShouldKeepDeliveryRequestIdempotentGivenOptOutAfterPendingAttempt()
     {
         // Arrange
@@ -284,11 +332,15 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
 
         WeeklyWorkDigestRecipientResolver RecipientResolver() => new(Reader, _emails);
 
-        public async Task SeedRecipientAsync(Uuid userId, bool verifiedEmail, bool optedOut = false)
+        public async Task SeedRecipientAsync(Uuid userId, bool verifiedEmail, bool optedOut = false,
+            string affiliation = "client_personnel")
         {
             var memberId = RbacIds.Member(TenantId, userId);
             var member = new Member(TenantId, userId);
-            Assert.True(member.Register().IsSuccess);
+            DateOnly? membershipExpiresOn = affiliation == "guest"
+                ? DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30)
+                : null;
+            Assert.True(member.Register(affiliation, membershipExpiresOn).IsSuccess);
             await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
 
             if (optedOut)
@@ -313,15 +365,29 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             _emails.Add(new EmailAddressView(userId, emailAddress, true));
         }
 
-        public async Task<Uuid> ScheduleOneAsync(Uuid userId)
+        public async Task<Uuid> ScheduleOneAsync(Uuid userId,
+            string affiliation = "client_personnel")
         {
-            await SeedRecipientAsync(userId, verifiedEmail: true);
+            await SeedRecipientAsync(userId, verifiedEmail: true, affiliation: affiliation);
             var handler = ScheduleHandler(new MembershipDirectory(TenantId,
-                [new TenantMembershipView(userId, TenantId)]));
+                [new TenantMembershipView(userId, TenantId, affiliation)]));
             var result = await handler.HandleAsync(ScheduleContext(new ScheduleWeeklyWorkDigest(
                 TenantId, WeekStarting, "schedule-2026-10-12")), CancellationToken.None);
             Assert.True(result.IsSuccess, result.Error?.Message);
             return WeeklyWorkDigest.IdFor(TenantId, RbacIds.Member(TenantId, userId), WeekStarting);
+        }
+
+        public async Task<Uuid> SeedScheduledDigestAsync(Uuid userId, string affiliation)
+        {
+            await SeedRecipientAsync(userId, verifiedEmail: true, affiliation: affiliation);
+            var memberId = RbacIds.Member(TenantId, userId);
+            var digestId = WeeklyWorkDigest.IdFor(TenantId, memberId, WeekStarting);
+            var digest = new WeeklyWorkDigest(TenantId, digestId);
+            Assert.True(digest.Schedule(memberId, WeekStarting, "schedule-2026-10-12",
+                ActorReference.ForSystemProcess(WeeklyWorkDigest.SchedulerProcessId,
+                    "Weekly work digest scheduler"), Now).IsSuccess);
+            await Writer.SaveAsync(digest, new RequestDispatchContext(RequestActor.System));
+            return digestId;
         }
 
         public async Task<Uuid> FindEventIdAsync<TEvent>(Uuid digestId) where TEvent : DomainEvent

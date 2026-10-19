@@ -22,7 +22,8 @@ sealed class IssueArtifactDownloadHandler(EvidenceArtifactDownloadAccess access,
             return Result<EvidenceArtifactDownloadLink>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A bounded download purpose is required."));
 
-        var allowed = await access.RequireAsync(context, request.TenantId, request.ArtifactId, ct)
+        var allowed = await access.RequireAsync(context, request.TenantId, request.ArtifactId,
+            request.ProgramId, request.AdvisorHandoffId, request.SelectedSource, ct)
             .ConfigureAwait(false);
         if (!allowed.IsSuccess)
             return Result<EvidenceArtifactDownloadLink>.Failure(allowed.Error);
@@ -52,7 +53,8 @@ sealed class IssueArtifactDownloadHandler(EvidenceArtifactDownloadAccess access,
             return Result<EvidenceArtifactDownloadLink>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Verified available content could not be issued for delivery.", isTransient: true));
 
-        allowed = await access.RequireAsync(context, request.TenantId, request.ArtifactId, ct)
+        allowed = await access.RequireAsync(context, request.TenantId, request.ArtifactId,
+            request.ProgramId, request.AdvisorHandoffId, request.SelectedSource, ct)
             .ConfigureAwait(false);
         if (!allowed.IsSuccess)
             return Result<EvidenceArtifactDownloadLink>.Failure(allowed.Error);

@@ -20,7 +20,8 @@ public sealed class RegisterMemberHandler(IAggregateExecutor executor, IAggregat
         }
 
         return await executor.ExecuteAsync(new Member(request.TenantId, request.UserId),
-            member => AggregateOutcome.CommitOnSuccess(member.Register(request.Affiliation)), context, ct)
+            member => AggregateOutcome.CommitOnSuccess(member.Register(request.Affiliation,
+                request.MembershipExpiresOn)), context, ct)
             .ConfigureAwait(false);
     }
 }

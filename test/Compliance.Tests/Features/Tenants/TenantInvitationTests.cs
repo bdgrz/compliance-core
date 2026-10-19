@@ -49,6 +49,23 @@ public sealed class TenantInvitationTests
     }
 
     [Fact]
+    public void ShouldRejectMalformedTokenHashGivenInvitationIssue()
+    {
+        // Arrange
+        var invitation = new TenantInvitation(Uuid.CreateVersion4(), "member@example.com");
+        var now = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+        var scenario = new AggregateScenario<TenantInvitation>(invitation);
+
+        // Act
+        var result = invitation.Invite("client_personnel", false, new string('Z', 64),
+            now.AddDays(7), now, Uuid.CreateVersion4());
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
     public void ShouldCarrySelectedRoleGivenClientPersonnelInvitation()
     {
         // Arrange
@@ -72,6 +89,127 @@ public sealed class TenantInvitationTests
             Assert.IsType<TenantMemberInvited>(events[0]).BuiltInRole);
         Assert.Equal(BuiltInRbac.ComplianceManagementRole,
             Assert.IsType<TenantInvitationAccepted>(events[1]).BuiltInRole);
+    }
+
+    [Fact]
+    public void ShouldCarryGuestProgramScopesAndExpiryGivenScopedGuestInvitation()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var invitedBy = Uuid.CreateVersion4();
+        var programIds = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
+        var now = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+        var membershipExpiresOn = DateOnly.FromDateTime(now.UtcDateTime).AddDays(30);
+        const string token = "guest-invitation-token";
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+        var invitation = new TenantInvitation(tenantId, "guest@example.com");
+        var scenario = new AggregateScenario<TenantInvitation>(invitation);
+
+        // Act
+        var invited = invitation.InviteGuest(programIds, membershipExpiresOn, hash,
+            now.AddDays(7), now, invitedBy, invitedByDisplay: "Org Admin");
+        var accepted = invitation.Accept(userId, token, now);
+        var invitationEvent = Assert.Single(scenario.PendingEvents.OfType<TenantMemberInvited>());
+        var acceptedEvent = Assert.Single(scenario.PendingEvents.OfType<TenantInvitationAccepted>());
+
+        // Assert
+        Assert.True(invited.IsSuccess, invited.Error?.Message);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+        Assert.Equal("guest", invitationEvent.Affiliation);
+        Assert.False(invitationEvent.Administrator);
+        Assert.Equal(programIds.OrderBy(id => id.ToString(), StringComparer.Ordinal).ToArray(),
+            invitationEvent.GuestProgramIds);
+        Assert.Equal(membershipExpiresOn, invitationEvent.GuestExpiresOn);
+        Assert.Equal("guest", acceptedEvent.Affiliation);
+        Assert.Equal(programIds.OrderBy(id => id.ToString(), StringComparer.Ordinal).ToArray(),
+            acceptedEvent.GuestProgramIds);
+        Assert.Equal(membershipExpiresOn, acceptedEvent.GuestExpiresOn);
+        Assert.Equal(now, acceptedEvent.AcceptedAt);
+        Assert.Equal(invitedBy, acceptedEvent.InvitedBy);
+        Assert.Equal("Org Admin", acceptedEvent.InvitedByDisplay);
+    }
+
+    [Fact]
+    public void ShouldRejectGuestAcceptanceReplayGivenInvitationTokenWasExpired()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var invitedBy = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var now = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+        var invitationExpiresAt = now.AddDays(7);
+        var guestExpiresOn = DateOnly.FromDateTime(now.UtcDateTime).AddDays(30);
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("guest-token")));
+        var invited = new TenantMemberInvited(tenantId, "guest@example.com", "guest", false,
+            hash, invitationExpiresAt, invitedBy, GuestProgramIds: [programId],
+            GuestExpiresOn: guestExpiresOn, InvitedAt: now, InvitedByDisplay: "Org Admin");
+        var replay = new TenantInvitation(tenantId, "guest@example.com");
+        var acceptedAfterExpiry = new TenantInvitationAccepted(tenantId, userId,
+            "guest@example.com", "guest", false, GuestProgramIds: [programId],
+            GuestExpiresOn: guestExpiresOn, AcceptedAt: invitationExpiresAt);
+
+        // Act
+        var error = Record.Exception(() => new AggregateScenario<TenantInvitation>(replay).Given(
+            DomainEventSeed.Attach(invited, replay.Id, 1),
+            DomainEventSeed.Attach(acceptedAfterExpiry, replay.Id, 2)));
+
+        // Assert
+        Assert.Contains("expired", Assert.IsType<InvalidOperationException>(error).Message,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ShouldRejectGuestInvitationGivenMissingOrInvalidScopeAndExpiry()
+    {
+        // Arrange
+        var invitation = new TenantInvitation(Uuid.CreateVersion4(), "guest@example.com");
+        var now = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+        var hash = new string('A', 64);
+        var invitedBy = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var today = DateOnly.FromDateTime(now.UtcDateTime);
+        var scenario = new AggregateScenario<TenantInvitation>(invitation);
+
+        // Act
+        var missingScope = invitation.InviteGuest([], today.AddDays(1), hash,
+            now.AddDays(7), now, invitedBy);
+        var emptyProgram = invitation.InviteGuest([Uuid.Empty], today.AddDays(1), hash,
+            now.AddDays(7), now, invitedBy);
+        var duplicateProgram = invitation.InviteGuest([programId, programId], today.AddDays(1), hash,
+            now.AddDays(7), now, invitedBy);
+        var expired = invitation.InviteGuest([programId], today, hash,
+            now.AddDays(7), now, invitedBy);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, missingScope.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, emptyProgram.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, duplicateProgram.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, expired.Error?.Kind);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectAcceptanceGivenGuestMembershipEndDateHasPassed()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var invitation = new TenantInvitation(tenantId, "guest@example.com");
+        var now = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+        var token = "guest-expiry-token";
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+        Assert.True(invitation.InviteGuest([Uuid.CreateVersion4()],
+            DateOnly.FromDateTime(now.UtcDateTime).AddDays(1), hash, now.AddDays(7), now,
+            Uuid.CreateVersion4(), invitedByDisplay: "Org Admin").IsSuccess);
+        var scenario = new AggregateScenario<TenantInvitation>(invitation);
+
+        // Act
+        var result = invitation.Accept(Uuid.CreateVersion4(), token, now.AddDays(2));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.DoesNotContain(scenario.PendingEvents, item => item is TenantInvitationAccepted);
     }
 
     [Fact]

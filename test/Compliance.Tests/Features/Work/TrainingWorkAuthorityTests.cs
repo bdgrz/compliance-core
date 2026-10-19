@@ -273,26 +273,26 @@ public sealed class TrainingWorkAuthorityTests
     [Theory]
     [InlineData("training")]
     [InlineData("policy")]
-    public async Task ShouldRouteRecordingToGuestManagerGivenSourceExplicitlyAuthorizesGuest(string kind)
+    public async Task ShouldDenyGuestWorkQueueAndRecordingGivenScopedGuestMembership(string kind)
     {
         // Arrange
         await using var fixture = await Fixture.CreateAsync(kind, correlated: false,
             ownerAffiliation: "guest");
-        var before = await fixture.QueueAsync(fixture.OwnerUserId);
 
         // Act
+        var queue = await fixture.Scenario(fixture.OwnerUserId).When(new ListWork(
+            fixture.TenantId, fixture.ProgramId, "mine")).ExpectFailure(RequestErrorKind.Forbidden);
         if (kind == "training")
-            await fixture.Scenario(fixture.OwnerUserId).When(fixture.Completion()).ExpectSuccess();
+            await fixture.Scenario(fixture.OwnerUserId).When(fixture.Completion())
+                .ExpectFailure(RequestErrorKind.Forbidden);
         else
             await fixture.AcknowledgeHttpAsync(new AcknowledgePolicy(
                 fixture.TenantId, fixture.ProgramId, fixture.CampaignId, fixture.PersonId, 1,
-                "subject-hash", PolicyDistributionCampaign.DefaultAcknowledgementText), fixture.OwnerUserId);
-        await fixture.CatchUpAsync();
-        var after = await fixture.QueueAsync(fixture.OwnerUserId);
+                "subject-hash", PolicyDistributionCampaign.DefaultAcknowledgementText),
+                fixture.OwnerUserId, RequestErrorKind.Forbidden);
 
         // Assert
-        Assert.Equal(fixture.OwnerMemberId, Assert.Single(before.Items).AssigneeMemberId);
-        Assert.Empty(after.Items);
+        Assert.Equal(RequestErrorKind.Forbidden, queue.Error?.Kind);
     }
 
     sealed class MembershipDirectory(IAggregateReader reader) : ITenantMembershipDirectoryReader
@@ -369,7 +369,8 @@ public sealed class TrainingWorkAuthorityTests
                 if (user == fixture.OwnerUserId && ownerAffiliation == "guest")
                 {
                     DomainEvent registered = new MemberRegistered(fixture.TenantId,
-                        fixture.OwnerMemberId, user, ownerAffiliation, Uuid.CreateVersion4());
+                        fixture.OwnerMemberId, user, ownerAffiliation, Uuid.CreateVersion4(),
+                        DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30));
                     registered.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
                         fixture.OwnerMemberId, 1, DateTimeOffset.UtcNow));
                     await provider.GetRequiredService<IEventStore>().AppendAsync(

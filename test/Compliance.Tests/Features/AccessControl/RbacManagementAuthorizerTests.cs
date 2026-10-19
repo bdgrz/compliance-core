@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Tenants;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 
@@ -101,6 +102,25 @@ public sealed class RbacManagementAuthorizerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(RequestErrorKind.Forbidden, result.Error.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldRequireTenantRbacManageGivenGuestInvitation()
+    {
+        // Arrange
+        var permissions = new RecordingPermissionAuthorizer(false);
+        var authorizer = new RbacManagementAuthorizer(permissions, new ActiveTenant(),
+            new FixedMembershipDirectory(true));
+        var request = new InviteGuestConsultant(TenantId, "guest@example.com",
+            [Uuid.CreateVersion4()], new DateOnly(2026, 11, 30));
+        var context = new RequestContext<IRbacManagementRequest>(request, BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Equal(RbacPermissions.TenantRbacManage, Assert.Single(permissions.Permissions));
     }
 
     [Fact]

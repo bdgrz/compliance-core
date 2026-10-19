@@ -38,7 +38,8 @@ sealed class AccessGrantProposalValidator(ITenantMembershipDirectoryReader membe
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The access grant role was not found in this organization."));
 
-        var principal = await ValidatePrincipalAsync(tenantId, proposal.Principal, ct).ConfigureAwait(false);
+        var principal = await ValidatePrincipalAsync(tenantId, proposal.Principal, proposal, ct)
+            .ConfigureAwait(false);
         if (!principal.IsSuccess)
             return principal;
 
@@ -121,7 +122,7 @@ sealed class AccessGrantProposalValidator(ITenantMembershipDirectoryReader membe
     }
 
     async ValueTask<Result> ValidatePrincipalAsync(Uuid tenantId, AccessGrantPrincipal principal,
-        CancellationToken ct)
+        AccessGrantProposal proposal, CancellationToken ct)
     {
         if (!Enum.IsDefined(principal.Kind) || principal.Id == Uuid.Empty)
             return Invalid("The access grant principal is invalid.");
@@ -151,10 +152,28 @@ sealed class AccessGrantProposalValidator(ITenantMembershipDirectoryReader membe
                 if (membership.IsDeprovisioned)
                     return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                         "The access grant member was not found in this organization."));
-                return membership.Affiliation == "client_personnel"
-                    ? Result.Success
-                    : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                        "Firm staff require an accepted engagement assignment for client access."));
+                if (membership.Affiliation == "client_personnel")
+                    return Result.Success;
+                if (membership.Affiliation == "guest")
+                {
+                    var sourceMember = await reader.HydrateAsync(
+                        new Member(tenantId, membership.UserId), ct).ConfigureAwait(false);
+                    var maximumUntil = sourceMember.MembershipExpiresOn is { } expiresOn &&
+                                       expiresOn != DateOnly.MaxValue
+                        ? new DateTimeOffset(expiresOn.AddDays(1).ToDateTime(TimeOnly.MinValue,
+                            DateTimeKind.Utc))
+                        : (DateTimeOffset?)null;
+                    if (sourceMember.IsRegistered && sourceMember.Affiliation == "guest" &&
+                        proposal.RoleId == BuiltInRbac.ViewerRoleId(tenantId) &&
+                        proposal.Scope.Kind == AccessGrantScopeKind.Program &&
+                        proposal.EffectiveUntil is { } effectiveUntil && maximumUntil is { } max &&
+                        effectiveUntil <= max)
+                        return Result.Success;
+                }
+                return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                    membership.Affiliation == "firm_staff"
+                        ? "Firm staff require an accepted engagement assignment for client access."
+                        : "Guest membership grants must be time-limited Viewer access to one program."));
             }
             cursor = page.NextCursor;
         } while (cursor is not null);

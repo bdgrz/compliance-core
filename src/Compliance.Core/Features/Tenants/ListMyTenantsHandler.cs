@@ -9,7 +9,8 @@ public sealed class ListMyTenantsHandler(
     ITenantDirectory activeTenants,
     ITenantMembershipDirectoryReader memberships,
     ITenantDirectoryReader tenants,
-    IAggregateReader reader) : IRequestHandler<ListMyTenants, Page<TenantMembershipSummary>>
+    IAggregateReader reader, TimeProvider? clock = null)
+    : IRequestHandler<ListMyTenants, Page<TenantMembershipSummary>>
 {
     const int DefaultLimit = 50;
     const int MaxLimit = 200;
@@ -25,6 +26,7 @@ public sealed class ListMyTenantsHandler(
                 "ListMyTenantsAuthorizer must reject requests without a Bdgrz user identity.");
 
         var request = context.Request;
+        var asOfDate = DateOnly.FromDateTime((clock ?? TimeProvider.System).GetUtcNow().UtcDateTime);
         if (request.Limit is < 1 or > MaxLimit)
             return Result<Page<TenantMembershipSummary>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The tenant membership list limit must be between 1 and 200."));
@@ -83,7 +85,7 @@ public sealed class ListMyTenantsHandler(
             // is read. Use the tenant-addressed member stream at the final disclosure point.
             var member = await reader.HydrateAsync(new Member(resolvedTenantId, userId), ct)
                 .ConfigureAwait(false);
-            if (!member.IsRegistered || member.IsSuspended)
+            if (!member.IsAccessEligibleOn(asOfDate))
                 continue;
             items.Add(new TenantMembershipSummary(tenant.TenantId, tenant.Name, tenant.Slug,
                 tenant.Status));

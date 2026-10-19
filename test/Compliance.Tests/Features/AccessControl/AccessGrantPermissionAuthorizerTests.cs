@@ -35,6 +35,98 @@ public sealed class AccessGrantPermissionAuthorizerTests
     }
 
     [Fact]
+    public async Task ShouldAllowExactComplianceLeadRoleGivenProgramManagementGrant()
+    {
+        // Arrange
+        var complianceLeadRoleId = BuiltInRbac.ComplianceManagementRoleId(TenantId);
+        var grant = Grant(new AccessGrantScope(AccessGrantScopeKind.Program, ProgramId),
+            roleId: complianceLeadRoleId);
+        var authorizer = Authorizer(new GrantDirectory(grant), "client_personnel",
+            [RbacPermissions.ProgramManage]);
+
+        // Act
+        var allowed = await authorizer.IsAllowedAsRoleAsync(TenantId, UserId, MemberId,
+            ProgramId, complianceLeadRoleId, RbacPermissions.ProgramManage);
+
+        // Assert
+        Assert.True(allowed);
+    }
+
+    [Fact]
+    public async Task ShouldDenyOrganizationAdministratorGivenComplianceLeadRoleRequirement()
+    {
+        // Arrange
+        var administratorRoleId = BuiltInRbac.TenantAdministrationRoleId(TenantId);
+        var grant = Grant(new AccessGrantScope(AccessGrantScopeKind.Program, ProgramId),
+            roleId: administratorRoleId);
+        var authorizer = Authorizer(new GrantDirectory(grant), "client_personnel",
+            [RbacPermissions.ProgramManage]);
+
+        // Act
+        var allowed = await authorizer.IsAllowedAsRoleAsync(TenantId, UserId, MemberId,
+            ProgramId, BuiltInRbac.ComplianceManagementRoleId(TenantId),
+            RbacPermissions.ProgramManage);
+
+        // Assert
+        Assert.False(allowed);
+    }
+
+    [Fact]
+    public async Task ShouldAllowGuestViewerOnlyAtGrantedProgramGivenUnexpiredProgramGrant()
+    {
+        // Arrange
+        var grant = Grant(new AccessGrantScope(AccessGrantScopeKind.Program, ProgramId),
+            roleId: BuiltInRbac.ViewerRoleId(TenantId), effectiveUntil: Now.AddDays(1));
+        var authorizer = Authorizer(new GrantDirectory(grant), "guest",
+            [RbacPermissions.TenantAccess]);
+
+        // Act
+        var allowed = await authorizer.IsAllowedAsync(TenantId, UserId, MemberId, ProgramId,
+            RbacPermissions.TenantAccess);
+        var otherProgram = await authorizer.IsAllowedAsync(TenantId, UserId, MemberId,
+            Uuid.CreateVersion4(), RbacPermissions.TenantAccess);
+
+        // Assert
+        Assert.True(allowed);
+        Assert.False(otherProgram);
+    }
+
+    [Fact]
+    public async Task ShouldDenyGuestManagementGrantGivenProgramScope()
+    {
+        // Arrange
+        var grant = Grant(new AccessGrantScope(AccessGrantScopeKind.Program, ProgramId),
+            roleId: BuiltInRbac.ComplianceManagementRoleId(TenantId),
+            effectiveUntil: Now.AddDays(1));
+        var authorizer = Authorizer(new GrantDirectory(grant), "guest",
+            [RbacPermissions.ProgramManage]);
+
+        // Act
+        var allowed = await authorizer.IsAllowedAsync(TenantId, UserId, MemberId, ProgramId,
+            RbacPermissions.ProgramManage);
+
+        // Assert
+        Assert.False(allowed);
+    }
+
+    [Fact]
+    public async Task ShouldDenyGuestEvidenceReadGivenViewerGrantAndProgramScope()
+    {
+        // Arrange
+        var grant = Grant(new AccessGrantScope(AccessGrantScopeKind.Program, ProgramId),
+            roleId: BuiltInRbac.ViewerRoleId(TenantId), effectiveUntil: Now.AddDays(1));
+        var authorizer = Authorizer(new GrantDirectory(grant), "guest",
+            [RbacPermissions.EvidenceArtifactRead]);
+
+        // Act
+        var allowed = await authorizer.IsAllowedAsync(TenantId, UserId, MemberId, ProgramId,
+            RbacPermissions.EvidenceArtifactRead);
+
+        // Assert
+        Assert.False(allowed);
+    }
+
+    [Fact]
     public async Task ShouldDenyOldMemberGrantGivenFreshMembershipEpisode()
     {
         // Arrange
@@ -594,11 +686,12 @@ public sealed class AccessGrantPermissionAuthorizerTests
         }
     }
 
-    static AccessGrantView Grant(AccessGrantScope scope, AccessGrantPrincipal? principal = null) =>
+    static AccessGrantView Grant(AccessGrantScope scope, AccessGrantPrincipal? principal = null,
+        Uuid? roleId = null, DateTimeOffset? effectiveUntil = null) =>
         new(TenantId, Uuid.CreateVersion4(), new AccessGrantTerms(
             principal ?? new AccessGrantPrincipal(AccessGrantPrincipalKind.Member, MemberId),
-            RoleId, scope, new AccessGrantSource("manual", "request-123"),
-            ActorReference.ForMember(MemberId, "Organization Admin"), Now.AddDays(-1), null), null, null);
+            roleId ?? RoleId, scope, new AccessGrantSource("manual", "request-123"),
+            ActorReference.ForMember(MemberId, "Organization Admin"), Now.AddDays(-1), effectiveUntil), null, null);
 
     sealed class GrantDirectory : IAccessGrantDirectory
     {
