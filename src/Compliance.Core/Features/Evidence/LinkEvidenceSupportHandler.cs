@@ -38,6 +38,13 @@ sealed class LinkEvidenceSupportHandler(EvidenceArtifactDownloadAccess access,
             source.AvailabilityRecordedAt is not { } availableAt || availableAt > clock.GetUtcNow())
             return Failure(new RequestError(RequestErrorKind.Conflict,
                 "Evidence can only be linked after a clean inspection."));
+        if (source.Metadata.Content is not { } artifactContent)
+            return Failure(new RequestError(RequestErrorKind.Conflict,
+                "Available evidence must have an authoritative captured coverage period."));
+        if (request.PeriodStart < artifactContent.PeriodStart ||
+            request.PeriodEnd > artifactContent.PeriodEnd)
+            return Failure(new RequestError(RequestErrorKind.Validation,
+                "The evidence support period must fit within the artifact's captured coverage period."));
         if (source.Metadata.SourcePosition > long.MaxValue)
             return Failure(new RequestError(RequestErrorKind.Conflict,
                 "The evidence artifact revision cannot be represented safely."));
