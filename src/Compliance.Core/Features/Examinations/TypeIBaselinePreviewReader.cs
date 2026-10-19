@@ -25,7 +25,11 @@ public sealed class TypeIBaselinePreviewReader : ITypeIBaselinePreviewReader
     }
 
     public async ValueTask<Result<TypeIBaselinePreview>> ReadAsync(
-        ExaminationEngagementView engagement, CancellationToken ct = default)
+        ExaminationEngagementView engagement, CancellationToken ct = default) =>
+        await ReadAsync(engagement, Uuid.Empty, ct).ConfigureAwait(false);
+
+    public async ValueTask<Result<TypeIBaselinePreview>> ReadAsync(
+        ExaminationEngagementView engagement, Uuid requesterUserId, CancellationToken ct = default)
     {
         if (engagement is null || engagement.TenantId == Uuid.Empty ||
             engagement.ProgramId == Uuid.Empty || engagement.ExaminationEngagementId == Uuid.Empty ||
@@ -45,7 +49,10 @@ public sealed class TypeIBaselinePreviewReader : ITypeIBaselinePreviewReader
                 continue;
             }
 
-            var result = await contributor.ReadAsync(engagement, ct).ConfigureAwait(false);
+            var context = new TypeIBaselineSourceReadContext(requesterUserId,
+                Array.AsReadOnly(sources.ToArray()));
+            var result = await contributor.ReadAsync(engagement, context, ct)
+                .ConfigureAwait(false);
             if (!result.IsSuccess)
                 return Result<TypeIBaselinePreview>.Failure(result.Error);
             var contribution = result.Value;

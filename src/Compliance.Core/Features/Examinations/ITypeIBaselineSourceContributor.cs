@@ -9,4 +9,8 @@ public interface ITypeIBaselineSourceContributor
 
     ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
         ExaminationEngagementView engagement, CancellationToken ct);
+
+    ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context,
+        CancellationToken ct) => ReadAsync(engagement, ct);
 }

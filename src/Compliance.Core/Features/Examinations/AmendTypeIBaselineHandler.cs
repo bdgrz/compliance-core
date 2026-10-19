@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -13,7 +14,8 @@ public sealed class AmendTypeIBaselineHandler(IAggregateReader reader,
     {
         var request = context.Request;
         if (!ExaminationManagementActor.TryGet(context.Actor, context.Invocation, request.TenantId,
-                out var memberId, out var display))
+                out var memberId, out var display) ||
+            !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var requesterUserId))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Amending a Type I baseline requires an authenticated personal actor."));
         if (request.ExpectedRevision <= 0 || request.BaselineId == Uuid.Empty ||
@@ -47,7 +49,8 @@ public sealed class AmendTypeIBaselineHandler(IAggregateReader reader,
         }
         else
         {
-            var result = await previews.ReadAsync(current, ct).ConfigureAwait(false);
+            var result = await previews.ReadAsync(current, requesterUserId, ct)
+                .ConfigureAwait(false);
             if (!result.IsSuccess)
                 return Result.Failure(result.Error);
             preview = result.Value;

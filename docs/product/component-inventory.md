@@ -86,7 +86,7 @@ These candidates make later scope concrete. They are not established public cont
 - Reactors: TypeIBaselineAssemblyReactor.
 - Projectors: ExaminationEngagementDirectoryProjector; TypeIBaselineProjector.
 - API family: engagements and baselines.
-- Implemented baseline source contributors: the approved boundary, the criteria edition selected at the Type I date, the latest intact workforce roster snapshot at that date, and each approved control version effective on the Type I date. The other 17 required source families remain explicit preview blockers.
+- Implemented baseline source contributors: the approved boundary; the criteria edition and latest intact workforce roster snapshot selected at the Type I date; each approved control version effective on that date; and application revisions and applicable retirement records included by that exact boundary. The other 16 required source families remain explicit preview blockers.
 
 ### System description — T1-02
 

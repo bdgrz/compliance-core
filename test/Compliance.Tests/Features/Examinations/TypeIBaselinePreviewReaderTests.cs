@@ -50,6 +50,33 @@ public sealed class TypeIBaselinePreviewReaderTests
     }
 
     [Fact]
+    public async Task ShouldPassRequesterAndApprovedBoundaryToApplicationReaderGivenPreview()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var requesterUserId = Uuid.CreateVersion4();
+        var boundary = new TypeIBaselineSourceReference("approved_boundary",
+            engagement.BoundaryId, Uuid.CreateVersion4(), 2, new string('a', 64));
+        var applications = new ContextContributor("applications");
+        var contributors = TypeIBaselineSourceFamilies.Required.Select(family =>
+            family == "approved_boundary"
+                ? (ITypeIBaselineSourceContributor)new StubContributor(family, [boundary])
+                : family == "applications"
+                    ? applications
+                    : new StubContributor(family, []));
+        var reader = new TypeIBaselinePreviewReader(contributors);
+
+        // Act
+        var result = await reader.ReadAsync(engagement, requesterUserId, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.NotNull(applications.Context);
+        Assert.Equal(requesterUserId, applications.Context.RequesterUserId);
+        Assert.Equal(boundary, Assert.Single(applications.Context.PreviouslyCapturedSources));
+    }
+
+    [Fact]
     public void ShouldBindCompletedEmptyFamiliesIntoManifestGivenSourceCoverage()
     {
         // Arrange
@@ -182,6 +209,25 @@ public sealed class TypeIBaselinePreviewReaderTests
             ExaminationEngagementView engagement, CancellationToken ct) =>
             ValueTask.FromResult(Result<TypeIBaselineSourceContribution>.Success(
                 new TypeIBaselineSourceContribution(family, sources, [], [])));
+    }
+
+    sealed class ContextContributor(string family) : ITypeIBaselineSourceContributor
+    {
+        public string Family => family;
+        public TypeIBaselineSourceReadContext? Context { get; private set; }
+
+        public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+            ExaminationEngagementView engagement, CancellationToken ct) =>
+            ValueTask.FromResult(Result<TypeIBaselineSourceContribution>.Success(
+                new TypeIBaselineSourceContribution(family, [], [], [])));
+
+        public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+            ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context,
+            CancellationToken ct)
+        {
+            Context = context;
+            return ReadAsync(engagement, ct);
+        }
     }
 
     sealed class ProgramReader : Bdgrz.Compliance.Features.Programs.IProgramDirectoryReader

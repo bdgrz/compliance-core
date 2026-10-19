@@ -33,7 +33,9 @@ public sealed class PreviewTypeIBaselineHandler(IAggregateReader aggregateReader
                 "The examination engagement projection changed or has not caught up. Retry the preview.",
                 true);
 
-        var preview = await previews.ReadAsync(current, ct).ConfigureAwait(false);
+        var requesterUserId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
+            ? subject : Uuid.Empty;
+        var preview = await previews.ReadAsync(current, requesterUserId, ct).ConfigureAwait(false);
         if (!preview.IsSuccess)
             return Result<TypeIBaselinePreviewView>.Failure(preview.Error);
         if (preview.Value.TenantId != request.TenantId ||
