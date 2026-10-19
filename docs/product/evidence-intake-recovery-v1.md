@@ -93,15 +93,17 @@ Independent artifact authorization and durable delivery issuance, derived
 lineage, production storage, the selected malware and secret scan engine,
 pending-inspection scheduling, and full R2-03 first-consumer proof remain open.
 
-The backend now exposes a bounded personal HTTP multipart upload at
+Development hosts expose a bounded personal HTTP multipart upload at
 `POST /api/v1/tenants/{tenant_id}/evidence-artifacts`. Its first part is a
 snake_case JSON `metadata` object and its second part is the streamed `content`
 file, limited to 256 MiB. Requests also require `X-Bdgrz-Upload: true` so a
 browser form cannot bypass the API's cross-origin preflight. Portia authorization
 runs before the content part is read, and the existing intake records inspection
 progress and collector attribution. This transport remains HTTP-only; the
-current MCP request shape is not suitable for large binary uploads. The upload route does not close the
-production-storage or scanner-selection gates above.
+current MCP request shape is not suitable for large binary uploads. Production
+hosts keep the route unavailable until production storage is qualified. The
+upload route does not close the supported-content-type or scanner-selection
+gates above.
 
 Portia [0.8.0's tagged `IObjectStorage` contract](https://github.com/cntryl/portia/blob/v0.8.0/src/Portia.Storage.Abstractions/Objects/IObjectStorage.cs)
 still provides multipart upload, verification, bounded download, read, and

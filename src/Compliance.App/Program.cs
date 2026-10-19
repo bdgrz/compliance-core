@@ -508,7 +508,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaPost<RegisterTenant, TenantRegistration>("/api/v1/tenants")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapEvidenceArtifactUpload();
+    if (app.Environment.IsDevelopment())
+    {
+        // The registered content store is local; keep public uploads unavailable until production storage is qualified.
+        app.MapEvidenceArtifactUpload();
+    }
     app.MapPortiaPost<SuspendTenant>("/api/v1/tenants/{tenant_id}/suspensions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
