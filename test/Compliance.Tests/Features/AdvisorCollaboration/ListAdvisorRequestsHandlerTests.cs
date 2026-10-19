@@ -27,8 +27,9 @@ public sealed class ListAdvisorRequestsHandlerTests
         // Act
         var result = await new ListAdvisorRequestsHandler(directory,
                 new AdvisorHandoffListReadConsistency(directory, fixture.Events),
-                new FixedListAccess(false), new FixedTimeProvider(Now))
-            .HandleAsync(new RequestContext<ListAdvisorRequests>(request, RequestActor.System),
+                new FixedListAccess(AdvisorHandoffListVisibility.Full), new FixedTimeProvider(Now))
+            .HandleAsync(new RequestContext<ListAdvisorRequests>(request,
+                    ProgramManagementServices.Actor(Uuid.CreateVersion4())),
                 CancellationToken.None);
 
         // Assert
@@ -55,7 +56,8 @@ public sealed class ListAdvisorRequestsHandlerTests
         // Act
         var result = await new ListAdvisorRequestsHandler(directory,
                 new AdvisorHandoffListReadConsistency(directory, fixture.Events),
-                new FixedListAccess(true), new FixedTimeProvider(Now))
+                new FixedListAccess(AdvisorHandoffListVisibility.SharedOnly),
+                new FixedTimeProvider(Now))
             .HandleAsync(new RequestContext<ListAdvisorRequests>(request,
                 ProgramManagementServices.Actor(Uuid.CreateVersion4())), CancellationToken.None);
 
@@ -64,6 +66,32 @@ public sealed class ListAdvisorRequestsHandlerTests
         Assert.Equal([shared], result.Value.Items);
         Assert.Equal(0, directory.FullCalls);
         Assert.Equal(1, directory.SharedCalls);
+    }
+
+    [Fact]
+    public async Task ShouldDenyAdvisorListGivenGrantRevokedDuringRead()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var shared = new AdvisorRequestSummaryView(fixture.TenantId, fixture.ProgramId,
+            Uuid.CreateVersion4(), "Shared review", "ready_for_review", Now);
+        var directory = new FixedDirectory(new Page<AdvisorRequestSummaryView>([], null),
+            new Page<AdvisorRequestSummaryView>([shared], null));
+        var access = new SequenceListAccess(AdvisorHandoffListVisibility.SharedOnly,
+            AdvisorHandoffListVisibility.Denied);
+        var handler = new ListAdvisorRequestsHandler(directory,
+            new AdvisorHandoffListReadConsistency(directory, fixture.Events), access,
+            new FixedTimeProvider(Now));
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<ListAdvisorRequests>(
+            new ListAdvisorRequests(fixture.TenantId, fixture.ProgramId),
+            ProgramManagementServices.Actor(Uuid.CreateVersion4())), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal(2, access.Calls);
+        Assert.Equal(0, directory.FullCalls);
     }
 
     [Fact]
@@ -78,9 +106,10 @@ public sealed class ListAdvisorRequestsHandlerTests
         // Act
         var result = await new ListAdvisorRequestsHandler(directory,
                 new AdvisorHandoffListReadConsistency(directory, fixture.Events),
-                new FixedListAccess(false), new FixedTimeProvider(Now))
+                new FixedListAccess(AdvisorHandoffListVisibility.Full), new FixedTimeProvider(Now))
             .HandleAsync(new RequestContext<ListAdvisorRequests>(new ListAdvisorRequests(
-                fixture.TenantId, fixture.ProgramId), RequestActor.System), CancellationToken.None);
+                fixture.TenantId, fixture.ProgramId),
+                ProgramManagementServices.Actor(Uuid.CreateVersion4())), CancellationToken.None);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -96,7 +125,8 @@ public sealed class ListAdvisorRequestsHandlerTests
         // Act
         var result = await new ListAdvisorRequestsHandler(directory,
                 new AdvisorHandoffListReadConsistency(directory, fixture.Events),
-                new FixedListAccess(false), new FixedTimeProvider(Now))
+                new FixedListAccess(AdvisorHandoffListVisibility.Denied),
+                new FixedTimeProvider(Now))
             .HandleAsync(new RequestContext<ListAdvisorRequests>(new ListAdvisorRequests(
                 fixture.TenantId, fixture.ProgramId, Limit: 201), RequestActor.System),
                 CancellationToken.None);
@@ -117,9 +147,10 @@ public sealed class ListAdvisorRequestsHandlerTests
         // Act
         var result = await new ListAdvisorRequestsHandler(directory,
                 new AdvisorHandoffListReadConsistency(directory, fixture.Events),
-                new FixedListAccess(false), new FixedTimeProvider(Now))
+                new FixedListAccess(AdvisorHandoffListVisibility.Full), new FixedTimeProvider(Now))
             .HandleAsync(new RequestContext<ListAdvisorRequests>(new ListAdvisorRequests(
-                fixture.TenantId, fixture.ProgramId), RequestActor.System), CancellationToken.None);
+                fixture.TenantId, fixture.ProgramId),
+                ProgramManagementServices.Actor(Uuid.CreateVersion4())), CancellationToken.None);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -204,10 +235,26 @@ public sealed class ListAdvisorRequestsHandlerTests
         }
     }
 
-    sealed class FixedListAccess(bool allowed) : IAdvisorHandoffListAccess
+    sealed class FixedListAccess(AdvisorHandoffListVisibility visibility)
+        : IAdvisorHandoffListAccess
     {
-        public ValueTask<bool> CanListSharedHandoffsAsync(Uuid tenantId, Uuid programId,
-            Uuid userId, CancellationToken ct = default) => ValueTask.FromResult(allowed);
+        public ValueTask<AdvisorHandoffListVisibility> GetListVisibilityAsync(Uuid tenantId,
+            Uuid programId, Uuid userId, CancellationToken ct = default) =>
+            ValueTask.FromResult(visibility);
+    }
+
+    sealed class SequenceListAccess(params AdvisorHandoffListVisibility[] results)
+        : IAdvisorHandoffListAccess
+    {
+        public int Calls { get; private set; }
+
+        public ValueTask<AdvisorHandoffListVisibility> GetListVisibilityAsync(Uuid tenantId,
+            Uuid programId, Uuid userId, CancellationToken ct = default)
+        {
+            var index = Math.Min(Calls, results.Length - 1);
+            Calls++;
+            return ValueTask.FromResult(results[index]);
+        }
     }
 
     sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider

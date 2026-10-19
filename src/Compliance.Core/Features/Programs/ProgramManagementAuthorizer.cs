@@ -23,8 +23,9 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
                 "Program administration requires a Bdgrz user identity."));
         var tenantId = context.Request.TenantId;
         if (context.Request is ListAdvisorRequests handoffs && professionalAdvisoryRead is not null &&
-            await professionalAdvisoryRead.CanListSharedHandoffsAsync(tenantId,
-                handoffs.ProgramId, userId, ct).ConfigureAwait(false))
+            await professionalAdvisoryRead.GetListVisibilityAsync(tenantId,
+                handoffs.ProgramId, userId, ct).ConfigureAwait(false) ==
+            AdvisorHandoffListVisibility.SharedOnly)
             return Result.Success;
         if (context.Request is GetAdvisorSharedSource sharedSource &&
             professionalAdvisoryRead is not null &&

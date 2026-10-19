@@ -48,10 +48,31 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
         return false;
     }
 
-    public async ValueTask<bool> CanListSharedHandoffsAsync(Uuid tenantId, Uuid programId,
-        Uuid userId, CancellationToken ct = default) =>
-        await CanReadAsync(tenantId, programId, userId, ct).ConfigureAwait(false) ||
-        await CanReadGuestProgramAsync(tenantId, programId, userId, ct).ConfigureAwait(false);
+    public async ValueTask<AdvisorHandoffListVisibility> GetListVisibilityAsync(Uuid tenantId,
+        Uuid programId, Uuid userId, CancellationToken ct = default)
+    {
+        if (tenantId == Uuid.Empty || programId == Uuid.Empty || userId == Uuid.Empty ||
+            !await tenants.IsActiveAsync(tenantId, ct).ConfigureAwait(false) ||
+            !await programScopes.IsTenantProgramAsync(tenantId, programId, ct)
+                .ConfigureAwait(false))
+            return AdvisorHandoffListVisibility.Denied;
+
+        var membership = await memberships.GetAsync(tenantId.ToString(), userId, ct)
+            .ConfigureAwait(false);
+        if (membership is { Affiliation: "client_personnel" } &&
+            membership.TenantId == tenantId && membership.UserId == userId &&
+            membership.IsActiveOn(DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime)) &&
+            await scopedPermissions.IsAllowedAsync(tenantId, userId,
+                RbacIds.Member(tenantId, userId), programId, IProgramReadRequest.ReadPermission, ct)
+                .ConfigureAwait(false))
+            return AdvisorHandoffListVisibility.Full;
+
+        return await CanReadAsync(tenantId, programId, userId, ct).ConfigureAwait(false) ||
+               await CanReadGuestProgramAsync(tenantId, programId, userId, ct)
+                   .ConfigureAwait(false)
+            ? AdvisorHandoffListVisibility.SharedOnly
+            : AdvisorHandoffListVisibility.Denied;
+    }
 
     /// <summary>Draft selections become visible to an assigned Advisor only while actively shared.</summary>
     public async ValueTask<bool> CanReadHandoffAsync(Uuid tenantId, Uuid programId,

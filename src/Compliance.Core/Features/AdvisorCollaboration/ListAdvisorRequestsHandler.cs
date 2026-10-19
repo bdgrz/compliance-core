@@ -19,17 +19,23 @@ public sealed class ListAdvisorRequestsHandler(IAdvisorHandoffDirectoryReader di
             request.Limit is < 1 or > 200)
             return Invalid();
 
+        if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
+            return Result<Page<AdvisorRequestSummaryView>>.Failure(new RequestError(
+                RequestErrorKind.Unauthorized,
+                "Listing advisor handoffs requires a Bdgrz user identity."));
+        var visibility = await listAccess.GetListVisibilityAsync(request.TenantId,
+            request.ProgramId, userId, ct).ConfigureAwait(false);
+        if (visibility == AdvisorHandoffListVisibility.Denied)
+            return Denied();
+
         var fence = await consistency.CaptureAsync(request.TenantId, ct).ConfigureAwait(false);
         if (!fence.IsSuccess)
             return Result<Page<AdvisorRequestSummaryView>>.Failure(fence.Error);
 
-        var sharedOnly = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId) &&
-            await listAccess.CanListSharedHandoffsAsync(request.TenantId, request.ProgramId,
-                userId, ct).ConfigureAwait(false);
         Page<AdvisorRequestSummaryView> page;
         try
         {
-            page = sharedOnly
+            page = visibility == AdvisorHandoffListVisibility.SharedOnly
                 ? await directory.ListSharedProgramAsync(request.TenantId, request.ProgramId,
                     DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime),
                     request.Limit ?? DefaultLimit, request.Cursor, ct).ConfigureAwait(false)
@@ -50,12 +56,26 @@ public sealed class ListAdvisorRequestsHandler(IAdvisorHandoffDirectoryReader di
 
         var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(request.TenantId,
             fence.Value, ct).ConfigureAwait(false);
-        return confirmed.IsSuccess
+        if (!confirmed.IsSuccess)
+            return Result<Page<AdvisorRequestSummaryView>>.Failure(confirmed.Error);
+
+        var currentVisibility = await listAccess.GetListVisibilityAsync(request.TenantId,
+            request.ProgramId, userId, ct).ConfigureAwait(false);
+        if (currentVisibility == AdvisorHandoffListVisibility.Denied)
+            return Denied();
+        return currentVisibility == visibility
             ? Result<Page<AdvisorRequestSummaryView>>.Success(page)
-            : Result<Page<AdvisorRequestSummaryView>>.Failure(confirmed.Error);
+            : Result<Page<AdvisorRequestSummaryView>>.Failure(new RequestError(
+                RequestErrorKind.Conflict,
+                "Advisor handoff list access changed during the read. Retry the query.",
+                isTransient: true));
     }
 
     static Result<Page<AdvisorRequestSummaryView>> Invalid() =>
         Result<Page<AdvisorRequestSummaryView>>.Failure(new RequestError(RequestErrorKind.Validation,
             "Advisor handoff lists require tenant and program identities and a limit between 1 and 200."));
+
+    static Result<Page<AdvisorRequestSummaryView>> Denied() =>
+        Result<Page<AdvisorRequestSummaryView>>.Failure(new RequestError(RequestErrorKind.Forbidden,
+            "The actor may not list advisor handoffs in this program."));
 }

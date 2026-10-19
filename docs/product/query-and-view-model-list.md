@@ -41,7 +41,9 @@ remains blocked on the accepted authority prerequisite in #269.
 
 `ListAdvisorRequests` returns the full lifecycle directory to client program readers. Assigned
 Advisors and scoped guests receive only unexpired `ready_for_review` handoffs, through a separate
-status-indexed query path; the query backfills that index for existing directory entries.
+status-indexed query path; the query backfills that index for existing directory entries. The
+list handler checks the visibility decision again after reading, so a revoked guest or engagement
+assignment cannot fall back to the full directory during the request.
 
 ### Type I engagement — T1-01
 
