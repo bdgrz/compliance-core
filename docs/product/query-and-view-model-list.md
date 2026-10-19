@@ -39,6 +39,10 @@ action to resolution, and resolution removes it from active work while preservin
 `validated` feedback remains review history, never a work item. The firm Advisor engagement path
 remains blocked on the accepted authority prerequisite in #269.
 
+`ListAdvisorRequests` returns the full lifecycle directory to client program readers. Assigned
+Advisors and scoped guests receive only unexpired `ready_for_review` handoffs, through a separate
+status-indexed query path; the query backfills that index for existing directory entries.
+
 ### Type I engagement — T1-01
 
 | Query | Response view | Required read |

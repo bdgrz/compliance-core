@@ -10,7 +10,8 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActivity tenants,
     IProgramResourceScopeResolver programScopes, TimeProvider clock,
     ITenantMembershipDirectoryReader memberships,
-    IAccessGrantPermissionAuthorizer scopedPermissions) : IAdvisorSharedSourceAuthorization
+    IAccessGrantPermissionAuthorizer scopedPermissions)
+    : IAdvisorSharedSourceAuthorization, IAdvisorHandoffListAccess
 {
     public async ValueTask<bool> CanReadAsync(Uuid tenantId, Uuid programId, Uuid userId,
         CancellationToken ct = default)
@@ -46,6 +47,11 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
 
         return false;
     }
+
+    public async ValueTask<bool> CanListSharedHandoffsAsync(Uuid tenantId, Uuid programId,
+        Uuid userId, CancellationToken ct = default) =>
+        await CanReadAsync(tenantId, programId, userId, ct).ConfigureAwait(false) ||
+        await CanReadGuestProgramAsync(tenantId, programId, userId, ct).ConfigureAwait(false);
 
     /// <summary>Draft selections become visible to an assigned Advisor only while actively shared.</summary>
     public async ValueTask<bool> CanReadHandoffAsync(Uuid tenantId, Uuid programId,

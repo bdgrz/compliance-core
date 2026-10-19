@@ -4,12 +4,16 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-sealed class FitzAdvisorHandoffDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/advisor-handoff-directory/projection-v1",
-        ProjectorName), IAdvisorHandoffDirectoryReader, IAdvisorHandoffDirectoryProjection
+sealed class FitzAdvisorHandoffDirectory : FitzKvProjectionStore,
+    IAdvisorHandoffDirectoryReader, IAdvisorHandoffDirectoryProjection
 {
     public const string ProjectorName = "AdvisorHandoffDirectoryV1";
+    readonly IKvClient _directoryClient;
     Uuid? _batchTenantId;
+
+    public FitzAdvisorHandoffDirectory(IKvClient client)
+        : base(client, "kv://bdgrz/advisor-handoff-directory/projection-v1", ProjectorName) =>
+        _directoryClient = client;
 
     public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context,
         CancellationToken ct = default) => BeginTenantBatchAsync(context, ct);
@@ -288,6 +292,46 @@ sealed class FitzAdvisorHandoffDirectory(IKvClient client)
                 item.Name, item.Status, item.UpdatedAt, item.ComparedToHandoffId)).ToArray(),
             page.NextCursor);
     }
+
+    public async ValueTask<Page<AdvisorRequestSummaryView>> ListSharedProgramAsync(Uuid tenantId,
+        Uuid programId, DateOnly asOf, int limit, string? cursor, CancellationToken ct = default)
+    {
+        string route;
+        await using (var routeTx = await BeginReadAsync(tenantId.ToString(), ct)
+                         .ConfigureAwait(false))
+            route = routeTx.Route;
+        string? backfillCursor = null;
+        do
+        {
+            var batch = await AdvisorHandoffDirectorySchema.Handoffs.BackfillAsync(_directoryClient,
+                route, AdvisorHandoffDirectorySchema.ByProgramStatusUpdatedAt, 200,
+                KvDurability.Sync, backfillCursor, ct).ConfigureAwait(false);
+            backfillCursor = batch.NextCursor;
+        } while (backfillCursor is not null);
+
+        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        var pageSize = Math.Clamp(limit, 1, 200);
+        var items = new List<AdvisorRequestSummaryView>(pageSize);
+        var nextCursor = cursor;
+        while (items.Count < pageSize)
+        {
+            var remaining = pageSize - items.Count;
+            var page = await AdvisorHandoffDirectorySchema.Handoffs.QueryAsync(tx,
+                AdvisorHandoffDirectorySchema.ByProgramStatusUpdatedAt.Query()
+                    .WithPrefix(programId.ToString(), "ready_for_review")
+                    .Take(remaining).After(nextCursor), ct).ConfigureAwait(false);
+            items.AddRange(page.Items.Where(item => item.ExpiresOn >= asOf)
+                .Select(ToSummary));
+            nextCursor = page.NextCursor;
+            if (nextCursor is null || page.Items.Count == 0)
+                break;
+        }
+        return new Page<AdvisorRequestSummaryView>(items, nextCursor);
+    }
+
+    static AdvisorRequestSummaryView ToSummary(AdvisorHandoffDirectoryEntry item) =>
+        new(item.TenantId, item.ProgramId, item.AdvisorRequestId, item.Name,
+            item.Status, item.UpdatedAt, item.ComparedToHandoffId);
 
     static bool ValidIdentity(Uuid tenantId, Uuid programId, Uuid handoffId,
         DateTimeOffset occurredAt) => tenantId != Uuid.Empty && programId != Uuid.Empty &&

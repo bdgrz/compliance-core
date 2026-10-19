@@ -109,13 +109,39 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         var handoff = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
             new GetAdvisorRequest(fixture.Tenant, fixture.Program, handoffId), guest),
             CancellationToken.None);
+        var handoffs = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
+            new ListAdvisorRequests(fixture.Tenant, fixture.Program), guest),
+            CancellationToken.None);
         var annotations = await authorizer.AuthorizeAsync(
             new RequestContext<IProgramManagementRequest>(new ListReadinessAnnotations(
                 fixture.Tenant, fixture.Program, fixture.Assessment), guest), CancellationToken.None);
 
         // Assert
         Assert.True(handoff.IsSuccess);
+        Assert.True(handoffs.IsSuccess, handoffs.Error?.Message);
         Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(annotations.Error).Kind);
+    }
+
+    [Fact]
+    public async Task ShouldDenyGuestHandoffListGivenNoProgramScopedViewerGrant()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        fixture.Memberships.Affiliation = "guest";
+        fixture.Permissions.Allowed = false;
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
+            scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
+            scope.ServiceProvider.GetRequiredService<IProgramResourceScopeResolver>(),
+            scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
+            new ListAdvisorRequests(fixture.Tenant, fixture.Program),
+            ProgramManagementServices.Actor(fixture.User)), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
     }
 
     [Theory]

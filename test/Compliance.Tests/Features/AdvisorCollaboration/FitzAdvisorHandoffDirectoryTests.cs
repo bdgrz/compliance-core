@@ -152,6 +152,52 @@ public sealed class FitzAdvisorHandoffDirectoryTests
     }
 
     [Fact]
+    public async Task ShouldListOnlyUnexpiredReadyHandoffsGivenSharedProgramQuery()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
+        var draftId = Uuid.CreateVersion4();
+        var expiredId = Uuid.CreateVersion4();
+        var currentId = Uuid.CreateVersion4();
+        var draftCreated = WithMetadata(new AdvisorHandoffCreated(tenantId, programId,
+            draftId, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Unshared draft",
+            new DateOnly(2026, 12, 31), actor, Now.AddDays(-1)), draftId, 1);
+        var expiredCreated = WithMetadata(new AdvisorHandoffCreated(tenantId, programId,
+            expiredId, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Expired handoff",
+            new DateOnly(2026, 10, 18), actor, Now.AddDays(-1)), expiredId, 1);
+        var expiredReady = WithMetadata(new AdvisorHandoffReadiedForReview(tenantId,
+            programId, expiredId, 2, actor, Now.AddMinutes(2)), expiredId, 2);
+        var currentCreated = WithMetadata(new AdvisorHandoffCreated(tenantId, programId,
+            currentId, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Current handoff",
+            new DateOnly(2026, 12, 31), actor, Now.AddDays(-1)), currentId, 1);
+        var currentReady = WithMetadata(new AdvisorHandoffReadiedForReview(tenantId,
+            programId, currentId, 2, actor, Now.AddMinutes(1)), currentId, 2);
+        var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
+        var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
+            EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
+
+        // Act
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
+                         ProjectionCheckpoint.Start)))
+        {
+            await directory.ApplyAsync(draftCreated);
+            await directory.ApplyAsync(expiredCreated);
+            await directory.ApplyAsync(expiredReady);
+            await directory.ApplyAsync(currentCreated);
+            await directory.ApplyAsync(currentReady);
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var page = await directory.ListSharedProgramAsync(tenantId, programId,
+            new DateOnly(2026, 10, 19), 1, null);
+
+        // Assert
+        Assert.Equal(currentId, Assert.Single(page.Items).AdvisorRequestId);
+        Assert.Null(page.NextCursor);
+    }
+
+    [Fact]
     public async Task ShouldRejectReadyEventAfterHandoffExpiryGivenOrderedAggregateEvents()
     {
         // Arrange

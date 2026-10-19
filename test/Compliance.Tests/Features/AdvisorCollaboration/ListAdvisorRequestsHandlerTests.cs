@@ -1,4 +1,6 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -24,7 +26,8 @@ public sealed class ListAdvisorRequestsHandlerTests
 
         // Act
         var result = await new ListAdvisorRequestsHandler(directory,
-                new AdvisorHandoffListReadConsistency(directory, fixture.Events))
+                new AdvisorHandoffListReadConsistency(directory, fixture.Events),
+                new FixedListAccess(false), new FixedTimeProvider(Now))
             .HandleAsync(new RequestContext<ListAdvisorRequests>(request, RequestActor.System),
                 CancellationToken.None);
 
@@ -34,6 +37,33 @@ public sealed class ListAdvisorRequestsHandlerTests
         Assert.Equal("next", result.Value.NextCursor);
         Assert.Equal(25, directory.LastLimit);
         Assert.Equal("after-id", directory.LastCursor);
+    }
+
+    [Fact]
+    public async Task ShouldListOnlySharedHandoffsForAdvisorGivenPersonalActor()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var shared = new AdvisorRequestSummaryView(fixture.TenantId, fixture.ProgramId,
+            Uuid.CreateVersion4(), "Shared review", "ready_for_review", Now);
+        var hiddenDraft = new AdvisorRequestSummaryView(fixture.TenantId, fixture.ProgramId,
+            Uuid.CreateVersion4(), "Unshared draft", "draft", Now);
+        var directory = new FixedDirectory(new Page<AdvisorRequestSummaryView>(
+            [hiddenDraft], "manager-cursor"), new Page<AdvisorRequestSummaryView>([shared], null));
+        var request = new ListAdvisorRequests(fixture.TenantId, fixture.ProgramId, Limit: 25);
+
+        // Act
+        var result = await new ListAdvisorRequestsHandler(directory,
+                new AdvisorHandoffListReadConsistency(directory, fixture.Events),
+                new FixedListAccess(true), new FixedTimeProvider(Now))
+            .HandleAsync(new RequestContext<ListAdvisorRequests>(request,
+                ProgramManagementServices.Actor(Uuid.CreateVersion4())), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal([shared], result.Value.Items);
+        Assert.Equal(0, directory.FullCalls);
+        Assert.Equal(1, directory.SharedCalls);
     }
 
     [Fact]
@@ -47,7 +77,8 @@ public sealed class ListAdvisorRequestsHandlerTests
 
         // Act
         var result = await new ListAdvisorRequestsHandler(directory,
-                new AdvisorHandoffListReadConsistency(directory, fixture.Events))
+                new AdvisorHandoffListReadConsistency(directory, fixture.Events),
+                new FixedListAccess(false), new FixedTimeProvider(Now))
             .HandleAsync(new RequestContext<ListAdvisorRequests>(new ListAdvisorRequests(
                 fixture.TenantId, fixture.ProgramId), RequestActor.System), CancellationToken.None);
 
@@ -64,7 +95,8 @@ public sealed class ListAdvisorRequestsHandlerTests
 
         // Act
         var result = await new ListAdvisorRequestsHandler(directory,
-                new AdvisorHandoffListReadConsistency(directory, fixture.Events))
+                new AdvisorHandoffListReadConsistency(directory, fixture.Events),
+                new FixedListAccess(false), new FixedTimeProvider(Now))
             .HandleAsync(new RequestContext<ListAdvisorRequests>(new ListAdvisorRequests(
                 fixture.TenantId, fixture.ProgramId, Limit: 201), RequestActor.System),
                 CancellationToken.None);
@@ -84,7 +116,8 @@ public sealed class ListAdvisorRequestsHandlerTests
 
         // Act
         var result = await new ListAdvisorRequestsHandler(directory,
-                new AdvisorHandoffListReadConsistency(directory, fixture.Events))
+                new AdvisorHandoffListReadConsistency(directory, fixture.Events),
+                new FixedListAccess(false), new FixedTimeProvider(Now))
             .HandleAsync(new RequestContext<ListAdvisorRequests>(new ListAdvisorRequests(
                 fixture.TenantId, fixture.ProgramId), RequestActor.System), CancellationToken.None);
 
@@ -136,10 +169,13 @@ public sealed class ListAdvisorRequestsHandlerTests
         }
     }
 
-    sealed class FixedDirectory(Page<AdvisorRequestSummaryView> page)
+    sealed class FixedDirectory(Page<AdvisorRequestSummaryView> page,
+        Page<AdvisorRequestSummaryView>? sharedPage = null)
         : IAdvisorHandoffDirectoryReader
     {
         public int Calls { get; private set; }
+        public int FullCalls { get; private set; }
+        public int SharedCalls { get; private set; }
         public int LastLimit { get; private set; }
         public string? LastCursor { get; private set; }
 
@@ -150,9 +186,32 @@ public sealed class ListAdvisorRequestsHandlerTests
             Uuid programId, int limit, string? cursor, CancellationToken ct = default)
         {
             Calls++;
+            FullCalls++;
             LastLimit = limit;
             LastCursor = cursor;
             return ValueTask.FromResult(page);
         }
+
+        public ValueTask<Page<AdvisorRequestSummaryView>> ListSharedProgramAsync(Uuid tenantId,
+            Uuid programId, DateOnly asOf, int limit, string? cursor,
+            CancellationToken ct = default)
+        {
+            Calls++;
+            SharedCalls++;
+            LastLimit = limit;
+            LastCursor = cursor;
+            return ValueTask.FromResult(sharedPage ?? new Page<AdvisorRequestSummaryView>([], null));
+        }
+    }
+
+    sealed class FixedListAccess(bool allowed) : IAdvisorHandoffListAccess
+    {
+        public ValueTask<bool> CanListSharedHandoffsAsync(Uuid tenantId, Uuid programId,
+            Uuid userId, CancellationToken ct = default) => ValueTask.FromResult(allowed);
+    }
+
+    sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }

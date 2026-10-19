@@ -522,6 +522,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ProfessionalAdvisoryReadAccess>();
         services.AddScoped<IAdvisorSharedSourceAuthorization>(provider =>
             provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        services.AddScoped<IAdvisorHandoffListAccess>(provider =>
+            provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();

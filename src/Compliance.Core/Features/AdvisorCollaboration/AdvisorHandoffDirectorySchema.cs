@@ -9,10 +9,14 @@ static class AdvisorHandoffDirectorySchema
         "by_program_updated_at", 1, static handoff => [handoff.ProgramId.ToString(),
             UpdatedAtSortKey(handoff.UpdatedAt), handoff.AdvisorRequestId.ToString()]);
 
+    public static readonly KvDirectoryIndex<AdvisorHandoffDirectoryEntry> ByProgramStatusUpdatedAt = new(
+        "by_program_status_updated_at", 1, static handoff => [handoff.ProgramId.ToString(),
+            handoff.Status, UpdatedAtSortKey(handoff.UpdatedAt), handoff.AdvisorRequestId.ToString()]);
+
     public static readonly KvDirectory<AdvisorHandoffDirectoryEntry, Uuid> Handoffs = new(
         "advisor_handoffs", ComplianceCoreJsonContext.Default.AdvisorHandoffDirectoryEntry,
         static handoff => handoff.AdvisorRequestId,
-        static handoffId => [handoffId.ToString()], [ByProgramUpdatedAt]);
+        static handoffId => [handoffId.ToString()], [ByProgramUpdatedAt, ByProgramStatusUpdatedAt]);
 
     static string UpdatedAtSortKey(DateTimeOffset updatedAt) =>
         (DateTime.MaxValue.Ticks - updatedAt.UtcDateTime.Ticks)

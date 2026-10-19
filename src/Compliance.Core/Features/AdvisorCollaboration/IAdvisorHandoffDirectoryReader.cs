@@ -10,4 +10,7 @@ public interface IAdvisorHandoffDirectoryReader
 
     ValueTask<Page<AdvisorRequestSummaryView>> ListProgramAsync(Uuid tenantId,
         Uuid programId, int limit, string? cursor, CancellationToken ct = default);
+
+    ValueTask<Page<AdvisorRequestSummaryView>> ListSharedProgramAsync(Uuid tenantId,
+        Uuid programId, DateOnly asOf, int limit, string? cursor, CancellationToken ct = default);
 }

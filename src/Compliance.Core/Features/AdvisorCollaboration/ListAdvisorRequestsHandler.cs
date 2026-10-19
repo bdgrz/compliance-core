@@ -1,10 +1,12 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 public sealed class ListAdvisorRequestsHandler(IAdvisorHandoffDirectoryReader directory,
-    AdvisorHandoffListReadConsistency consistency)
+    AdvisorHandoffListReadConsistency consistency, IAdvisorHandoffListAccess listAccess,
+    TimeProvider clock)
     : IRequestHandler<ListAdvisorRequests, Page<AdvisorRequestSummaryView>>
 {
     const int DefaultLimit = 50;
@@ -21,11 +23,18 @@ public sealed class ListAdvisorRequestsHandler(IAdvisorHandoffDirectoryReader di
         if (!fence.IsSuccess)
             return Result<Page<AdvisorRequestSummaryView>>.Failure(fence.Error);
 
+        var sharedOnly = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId) &&
+            await listAccess.CanListSharedHandoffsAsync(request.TenantId, request.ProgramId,
+                userId, ct).ConfigureAwait(false);
         Page<AdvisorRequestSummaryView> page;
         try
         {
-            page = await directory.ListProgramAsync(request.TenantId, request.ProgramId,
-                request.Limit ?? DefaultLimit, request.Cursor, ct).ConfigureAwait(false);
+            page = sharedOnly
+                ? await directory.ListSharedProgramAsync(request.TenantId, request.ProgramId,
+                    DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime),
+                    request.Limit ?? DefaultLimit, request.Cursor, ct).ConfigureAwait(false)
+                : await directory.ListProgramAsync(request.TenantId, request.ProgramId,
+                    request.Limit ?? DefaultLimit, request.Cursor, ct).ConfigureAwait(false);
         }
         catch (KvDirectoryQueryException)
         {
