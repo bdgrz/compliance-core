@@ -613,7 +613,7 @@
           "Cntryl.Portia.AspNetCore": "[0.8.1, )",
           "Cntryl.Portia.Mcp": "[0.8.1, )",
           "Cntryl.Portia.Mcp.AspNetCore": "[0.8.1, )",
-          "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.12, )"
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.13, )"
         }
       },
       "Bdgrz.Compliance.Common": {
@@ -707,9 +707,9 @@
       },
       "Microsoft.AspNetCore.Authentication.JwtBearer": {
         "type": "CentralTransitive",
-        "requested": "[10.0.12, )",
-        "resolved": "10.0.12",
-        "contentHash": "DeE+Bq2OqB3FikFkZk+7gFBeLOQhkSolejLrbi+a9zpfvXtW1Ff6Nd6DIvHXIm+pc4aM4+52vDy3jnuau0qoUQ==",
+        "requested": "[10.0.13, )",
+        "resolved": "10.0.13",
+        "contentHash": "cEPhQWsaUKymSdQ+NB2rF4GnWtjofAcRrzr2aGPzbjSFyeDtIlBzrbX1Qeh/OAHjvdwBe05SbsukoSbz27AD6g==",
         "dependencies": {
           "Microsoft.IdentityModel.Protocols.OpenIdConnect": "8.19.2"
         }
