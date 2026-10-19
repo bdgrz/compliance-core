@@ -123,6 +123,29 @@ public sealed class TypeIBaselineCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldRejectUnauthenticatedActorGivenFreezeConfirmation()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedEngagementAsync();
+        fixture.SourceReader.Preview = fixture.PreviewWith(fixture.BoundarySource);
+        var request = new FreezeTypeIBaseline(fixture.TenantId, fixture.ProgramId,
+            fixture.ExaminationId, fixture.BaselineId, 1, "Scope confirmed",
+            fixture.SourceReader.Preview.ContentSha256);
+        var actor = new ClaimsPrincipal(new ClaimsIdentity());
+
+        // Act
+        var result = await fixture.FreezeHandler.HandleAsync(fixture.Context(request,
+            actor: actor), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.ExaminationId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Null(saved.Baseline);
+    }
+
+    [Fact]
     public async Task ShouldAllowFreezeRetryAfterSourceChangesGivenSameBaselineIdentity()
     {
         // Arrange
@@ -182,6 +205,9 @@ public sealed class TypeIBaselineCommandHandlerTests
         Assert.Equal(fixture.BaselineId, saved.Baseline?.AmendsBaselineId);
         Assert.Equal([fixture.ControlSource.RecordId], saved.Baseline?.ChangedRecordIds);
         Assert.Equal([materialId], saved.Baseline?.AffectedPackageMaterialIds);
+        Assert.Equal("Control added to scope", saved.Baseline?.AmendmentReason);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId),
+            saved.Baseline?.ActorMemberId);
     }
 
     [Fact]
@@ -243,6 +269,37 @@ public sealed class TypeIBaselineCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Single(saved.BaselineHistory);
+    }
+
+    [Fact]
+    public async Task ShouldRejectUnauthenticatedActorGivenAmendment()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedEngagementAsync();
+        var original = fixture.PreviewWith(fixture.BoundarySource);
+        fixture.SourceReader.Preview = original;
+        var freeze = new FreezeTypeIBaseline(fixture.TenantId, fixture.ProgramId,
+            fixture.ExaminationId, fixture.BaselineId, 1, "Scope confirmed",
+            original.ContentSha256);
+        Assert.True((await fixture.FreezeHandler.HandleAsync(fixture.Context(freeze),
+            CancellationToken.None)).IsSuccess);
+        var amendedPreview = fixture.PreviewWith(fixture.BoundarySource, fixture.ControlSource);
+        fixture.SourceReader.Preview = amendedPreview;
+        var request = new AmendTypeIBaseline(fixture.TenantId, fixture.ProgramId,
+            fixture.ExaminationId, fixture.AmendmentId, 2, "Control added to scope",
+            [fixture.ControlSource.RecordId], amendedPreview.ContentSha256, []);
+        var actor = new ClaimsPrincipal(new ClaimsIdentity());
+
+        // Act
+        var result = await fixture.AmendHandler.HandleAsync(fixture.Context(request,
+            actor: actor), CancellationToken.None);
+        var saved = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.ExaminationId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Single(saved.BaselineHistory);
     }
 
@@ -308,8 +365,9 @@ public sealed class TypeIBaselineCommandHandlerTests
         }
 
         public Cntryl.Portia.RequestContext<T> Context<T>(T request,
-            RequestInvocation? invocation = null) where T : IRequestBase => new(request,
-            new RequestDispatchContext(Actor, invocation ?? new HttpInvocation("POST",
+            RequestInvocation? invocation = null, ClaimsPrincipal? actor = null)
+            where T : IRequestBase => new(request,
+            new RequestDispatchContext(actor ?? Actor, invocation ?? new HttpInvocation("POST",
                 "/api/v1/examinations", "/api/v1/examinations", "type-i-baseline-command-test")));
 
         public async ValueTask DisposeAsync()

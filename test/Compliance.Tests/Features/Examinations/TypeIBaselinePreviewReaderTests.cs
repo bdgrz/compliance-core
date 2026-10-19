@@ -124,6 +124,26 @@ public sealed class TypeIBaselinePreviewReaderTests
     }
 
     [Fact]
+    public void ShouldCountArtifactAndEngagementHoldSourcesGivenEvidenceGovernanceCoverage()
+    {
+        // Arrange
+        var engagement = Engagement();
+        var artifact = new TypeIBaselineSourceReference("evidence_artifact",
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), 2, new string('a', 64));
+        var hold = new TypeIBaselineSourceReference("artifact_engagement_hold",
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, new string('b', 64));
+
+        // Act
+        var preview = TypeIBaselinePreviewTestFactory.Create(engagement.TenantId,
+            engagement.ProgramId, engagement.ExaminationEngagementId, [artifact, hold]);
+
+        // Assert
+        var evidenceGovernance = Assert.Single(preview.SourceCoverage, static coverage =>
+            coverage.Family == "evidence_governance");
+        Assert.Equal(2, evidenceGovernance.RecordCount);
+    }
+
+    [Fact]
     public async Task ShouldResolveBoundaryVersionEffectiveOnTypeIDateGivenBoundaryContribution()
     {
         // Arrange

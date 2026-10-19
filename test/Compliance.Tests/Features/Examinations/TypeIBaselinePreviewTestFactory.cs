@@ -40,6 +40,7 @@ static class TypeIBaselinePreviewTestFactory
         "policy" => "policies",
         "risk" => "risks",
         "provider" or "vendor" => "providers",
+        "evidence_artifact" or "artifact_engagement_hold" => "evidence_governance",
         "finding" => "findings",
         _ => null,
     };
