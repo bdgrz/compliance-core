@@ -6,7 +6,8 @@ public sealed partial class ApplicationDirectoryProjector(IApplicationDirectoryP
     : Projector(projection, EventStreamPattern.ForTenant(), "ApplicationDirectoryV2"),
       IProjectorHandler<ApplicationDeclared>, IProjectorHandler<ApplicationRevised>,
       IProjectorHandler<SystemInstanceDeclared>, IProjectorHandler<SystemInstanceRegistered>,
-      IProjectorHandler<ApplicationRetired>, IProjectorHandler<SystemInstanceRetired>,
+      IProjectorHandler<SystemInstanceRevised>, IProjectorHandler<ApplicationRetired>,
+      IProjectorHandler<SystemInstanceRetired>,
       IProjectorHandler<ApplicationImportCommitted>
 {
     public ValueTask HandleAsync(ApplicationDeclared ev, IProjectorContext context,
@@ -16,6 +17,9 @@ public sealed partial class ApplicationDirectoryProjector(IApplicationDirectoryP
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
 
     public ValueTask HandleAsync(SystemInstanceDeclared ev, IProjectorContext context,
+        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+
+    public ValueTask HandleAsync(SystemInstanceRevised ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
 
     public ValueTask HandleAsync(ApplicationRetired ev, IProjectorContext context,

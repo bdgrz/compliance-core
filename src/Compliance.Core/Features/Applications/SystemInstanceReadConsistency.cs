@@ -93,7 +93,8 @@ public sealed class SystemInstanceReadConsistency(IApplicationDirectoryReader di
             // processes old application and new instance events in one tenant cursor.
             var backlog = await ApplicationDirectoryBacklog.FindAsync(directory, events,
                 tenantId, static ev => ev is ApplicationDeclared or ApplicationRevised or
-                    SystemInstanceDeclared or SystemInstanceRegistered or ApplicationImportCommitted, ct).ConfigureAwait(false);
+                    SystemInstanceDeclared or SystemInstanceRegistered or SystemInstanceRevised or
+                    ApplicationImportCommitted, ct).ConfigureAwait(false);
             if (!backlog.Clear)
                 return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                     "The system instance list projection has not reached the source.",
@@ -113,7 +114,8 @@ public sealed class SystemInstanceReadConsistency(IApplicationDirectoryReader di
             if (scanned++ == ApplicationDirectoryBacklog.ScanLimit)
                 return true;
             if (pending.Event is ApplicationDeclared or ApplicationRevised or ApplicationRetired or
-                SystemInstanceDeclared or SystemInstanceRegistered or SystemInstanceRetired or
+                SystemInstanceDeclared or SystemInstanceRegistered or SystemInstanceRevised or
+                SystemInstanceRetired or
                 ApplicationImportCommitted)
                 return true;
         }

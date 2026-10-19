@@ -113,6 +113,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetServiceEngagementHistory>(tool => tool.ReadOnly())
         .AddMcpTool<GetExaminationEngagement>(tool => tool.ReadOnly())
         .AddMcpTool<GetTypeIBaseline>(tool => tool.ReadOnly())
+        .AddMcpTool<PreviewTypeIBaseline>(tool => tool.ReadOnly())
+        .AddMcpTool<CreateExaminationEngagement>(tool => tool.Idempotent())
+        .AddMcpTool<ReviseExaminationEngagement>(tool => tool.Idempotent())
+        .AddMcpTool<FreezeTypeIBaseline>(tool => tool.Idempotent())
+        .AddMcpTool<AmendTypeIBaseline>(tool => tool.Idempotent())
         .AddMcpTool<GetClientIndependenceRules>(tool => tool.ReadOnly())
         .AddMcpTool<GetIndependenceRuleVersions>(tool => tool.ReadOnly())
         .AddMcpTool<ReviseIndependenceRules>(tool => tool.Idempotent())
@@ -2318,6 +2323,18 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Examinations");
     app.MapPortiaGet<GetTypeIBaseline, TypeIBaselineView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
+    app.MapPortiaGet<PreviewTypeIBaseline, TypeIBaselinePreviewView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baseline-preview")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
+    app.MapPortiaPost<FreezeTypeIBaseline>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/freeze")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
+    app.MapPortiaPost<AmendTypeIBaseline>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/amendments")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
     app.MapPortiaPost<RecordManagementAssertion>(

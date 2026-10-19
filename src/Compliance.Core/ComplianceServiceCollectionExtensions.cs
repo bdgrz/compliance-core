@@ -483,6 +483,7 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
         services.AddScoped<IPopulationSnapshotDirectoryReader>(
             provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
+        services.AddScoped<PopulationSnapshotDirectoryReadConsistency>();
         services.AddScoped<PopulationSnapshotFreezer>();
         services.TryAddSingleton(TenantActivationPolicy.Default);
         services.AddScoped<TenantManagerInvariant>();
@@ -550,6 +551,31 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
         services.AddScoped<IExaminationEngagementDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
+        services.AddScoped<ITypeIBaselineSourceContributor, BoundaryTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, CriteriaTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ApplicationTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ReviewedSystemTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, TechnologyComponentTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, InformationAssetTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, DataFlowTypeIBaselineSourceContributor>();
+        services.AddScoped<CommitmentTypeIBaselineSourceReader>();
+        services.AddScoped<IProviderCsocBaselineReader>(provider =>
+            provider.GetRequiredService<CommitmentTypeIBaselineSourceReader>());
+        services.AddScoped<ITypeIBaselineSourceContributor, CommitmentTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, SystemRequirementTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ControlTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ControlCriterionMappingTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ControlEvaluationTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, PolicyTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, PolicyCommunicationTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, AccessExpectationsTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, AccessReviewCampaignsTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, RiskTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, ProviderTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, EvidenceGovernanceTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, FindingTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselineSourceContributor, WorkforceTypeIBaselineSourceContributor>();
+        services.AddScoped<ITypeIBaselinePreviewReader, TypeIBaselinePreviewReader>();
         services.AddScoped<IReadinessReadModel, FitzReadinessReadModel>();
         services.AddScoped<ReadinessProjectionReadConsistency>();
         services.AddScoped<IApplicationReadinessImpactReader, ApplicationReadinessImpactReader>();
@@ -899,6 +925,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviseExaminationEngagementHandler>()
             .AddRequestHandler<GetExaminationEngagementHandler>()
             .AddRequestHandler<GetTypeIBaselineHandler>()
+            .AddRequestHandler<PreviewTypeIBaselineHandler>()
+            .AddRequestHandler<FreezeTypeIBaselineHandler>()
+            .AddRequestHandler<AmendTypeIBaselineHandler>()
             .AddRequestHandler<ReviewTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ProposeTypeIIOperatingPlanHandler>()
             .AddRequestHandler<ApproveTypeIIOperatingPlanHandler>()

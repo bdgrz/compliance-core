@@ -80,12 +80,13 @@ These candidates make later scope concrete. They are not established public cont
 ### Type I engagement — T1-01
 
 - Aggregate/model candidates: ExaminationEngagement; TypeIBaseline.
-- Commands: OpenExaminationEngagement; FreezeTypeIBaseline; AmendTypeIBaseline.
-- Queries: GetExaminationEngagement; GetTypeIBaseline.
+- Commands: CreateExaminationEngagement; ReviseExaminationEngagement; FreezeTypeIBaseline; AmendTypeIBaseline.
+- Queries: GetExaminationEngagement; GetTypeIBaseline; PreviewTypeIBaseline.
 - Events: ExaminationEngagementOpened; TypeIBaselineFrozen; TypeIBaselineAmended.
 - Reactors: TypeIBaselineAssemblyReactor.
 - Projectors: ExaminationEngagementDirectoryProjector; TypeIBaselineProjector.
 - API family: engagements and baselines.
+- Implemented baseline source contributors: the approved boundary; the criteria edition and latest intact workforce roster snapshot selected at the Type I date; each approved control version effective on that date; application revisions and applicable retirement records; and reviewed-system revisions and applicable retirements, both selected from that exact boundary. The other 15 required source families remain explicit preview blockers.
 
 ### System description — T1-02
 
@@ -431,6 +432,10 @@ The following is a static source inventory, including internal operations. Queri
 
 #### Examinations
 
+- [AmendTypeIBaseline](../../src/Compliance.Common/Features/Examinations/AmendTypeIBaseline.cs#L9) — `bdgrz.examinations.amend-type-i-baseline` v1
+- [CreateExaminationEngagement](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L9) — `bdgrz.examinations.create-examination-engagement` v1
+- [FreezeTypeIBaseline](../../src/Compliance.Common/Features/Examinations/FreezeTypeIBaseline.cs#L9) — `bdgrz.examinations.freeze-type-i-baseline` v1
+- [ReviseExaminationEngagement](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L9) — `bdgrz.examinations.revise-examination-engagement` v1
 - [RecordManagementAssertion](../../src/Compliance.Common/Features/Examinations/RecordManagementAssertion.cs#L8) — `bdgrz.examinations.record-management-assertion` v2; [handler](../../src/Compliance.Core/Features/Examinations/RecordManagementAssertionHandler.cs#L10) binds assertion wording to exact validated package and approved examination inputs
 - [RecordManagementRepresentationLetter](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L6) — `bdgrz.examinations.record-management-representation-letter` v2
 
@@ -932,6 +937,7 @@ The following is a static source inventory, including internal operations. Queri
 
 - [GetExaminationEngagement](../../src/Compliance.Common/Features/Examinations/GetExaminationEngagement.cs#L9) — `bdgrz.examinations.get-examination-engagement` v1
 - [GetTypeIBaseline](../../src/Compliance.Common/Features/Examinations/GetTypeIBaseline.cs#L9) — `bdgrz.examinations.get-type-i-baseline` v1
+- [PreviewTypeIBaseline](../../src/Compliance.Common/Features/Examinations/PreviewTypeIBaseline.cs#L9) — `bdgrz.examinations.preview-type-i-baseline` v1
 
 ##### SystemDescription
 
@@ -2626,6 +2632,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [ExaminationEngagementView](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs#L6)
 - [TypeIBaselineView](../../src/Compliance.Common/Features/Examinations/TypeIBaselineView.cs#L6)
+- [TypeIBaselinePreviewView](../../src/Compliance.Common/Features/Examinations/TypeIBaselinePreviewView.cs#L6)
 
 ##### SystemDescription
 
@@ -2689,6 +2696,8 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [ManagementRepresentationLetterView](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterView.cs#L6)
 - [ManagementRepresentationLetterSignatureView](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterSignatureView.cs#L6)
 - [ExaminationSignOffView](../../src/Compliance.Common/Features/Examinations/ExaminationSignOffView.cs#L6)
+- [TypeIBaselineSourceReference](../../src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs#L6)
+- [TypeIBaselineSourceCoverage](../../src/Compliance.Common/Features/Examinations/TypeIBaselineSourceCoverage.cs#L3)
 - [TypeIIPlanContent](../../src/Compliance.Common/Features/Examinations/TypeIIPlanContent.cs#L6)
 - [TypeIIPlanVersionView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanVersionView.cs#L6)
 - [TypeIIPlanReviewView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanReviewView.cs#L6)
@@ -2817,14 +2826,19 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}` | `CreateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2198) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments` | `AmendAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2202) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations` | `ValidateAuditPackage` | [registration](../../src/Compliance.App/Program.cs#L2206) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `CreateExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2285) |
-| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/revisions` | `ReviseExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2289) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `GetExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2293) |
-| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}` | `GetTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2298) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id}` | `RecordManagementAssertion` | [registration](../../src/Compliance.App/Program.cs#L2210) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/representation-letters/{letter_id}` | `RecordManagementRepresentationLetter` | [registration](../../src/Compliance.App/Program.cs#L2214) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2218) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2222) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `CreateExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2295) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/revisions` | `ReviseExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2299) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}` | `GetExaminationEngagement` | [registration](../../src/Compliance.App/Program.cs#L2303) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}` | `GetTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2307) |
+| GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baseline-preview` | `PreviewTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2311) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/freeze` | `FreezeTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2315) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/amendments` | `AmendTypeIBaseline` | [registration](../../src/Compliance.App/Program.cs#L2319) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id}` | `RecordManagementAssertion` | [registration](../../src/Compliance.App/Program.cs#L2323) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/representation-letters/{letter_id}` | `RecordManagementRepresentationLetter` | [registration](../../src/Compliance.App/Program.cs#L2327) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2331) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/management-reviews/{sign_off_id}` | `RecordManagementExaminationReview` | [registration](../../src/Compliance.App/Program.cs#L2335) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-ii-plans/{plan_id}/proposals` | `ProposeTypeIIOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L2339) |
+| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2343) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2226) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions` | `ApproveProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2230) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs` | `CreateAdvisorHandoff` | [registration](../../src/Compliance.App/Program.cs#L2366) |
@@ -3226,13 +3240,18 @@ These source lines identify raw routes, health routes and MCP configuration. Fol
 - [Program.cs:112](../../src/Compliance.App/Program.cs#L112): `.AddMcpTool<GetServiceEngagementHistory>(tool => tool.ReadOnly())`
 - [Program.cs:113](../../src/Compliance.App/Program.cs#L113): `.AddMcpTool<GetExaminationEngagement>(tool => tool.ReadOnly())`
 - [Program.cs:114](../../src/Compliance.App/Program.cs#L114): `.AddMcpTool<GetTypeIBaseline>(tool => tool.ReadOnly())`
-- [Program.cs:115](../../src/Compliance.App/Program.cs#L115): `.AddMcpTool<GetClientIndependenceRules>(tool => tool.ReadOnly())`
-- [Program.cs:116](../../src/Compliance.App/Program.cs#L116): `.AddMcpTool<GetIndependenceRuleVersions>(tool => tool.ReadOnly())`
-- [Program.cs:117](../../src/Compliance.App/Program.cs#L117): `.AddMcpTool<ReviseIndependenceRules>(tool => tool.Idempotent())`
-- [Program.cs:118](../../src/Compliance.App/Program.cs#L118): `.AddMcpTool<RecordNonattestService>(tool => tool.Idempotent())`
-- [Program.cs:119](../../src/Compliance.App/Program.cs#L119): `.AddMcpTool<EvaluateClientIndependence>(tool => tool.Idempotent())`
-- [Program.cs:120](../../src/Compliance.App/Program.cs#L120): `.AddMcpTool<GetClientIndependenceHistory>(tool => tool.ReadOnly())`
-- [Program.cs:121](../../src/Compliance.App/Program.cs#L121): `.AddMcpTool<SetCriteriaTextOverlay>(tool => tool.Idempotent())`
+- [Program.cs:115](../../src/Compliance.App/Program.cs#L115): `.AddMcpTool<PreviewTypeIBaseline>(tool => tool.ReadOnly())`
+- [Program.cs:116](../../src/Compliance.App/Program.cs#L116): `.AddMcpTool<CreateExaminationEngagement>(tool => tool.Idempotent())`
+- [Program.cs:117](../../src/Compliance.App/Program.cs#L117): `.AddMcpTool<ReviseExaminationEngagement>(tool => tool.Idempotent())`
+- [Program.cs:118](../../src/Compliance.App/Program.cs#L118): `.AddMcpTool<FreezeTypeIBaseline>(tool => tool.Idempotent())`
+- [Program.cs:119](../../src/Compliance.App/Program.cs#L119): `.AddMcpTool<AmendTypeIBaseline>(tool => tool.Idempotent())`
+- [Program.cs:120](../../src/Compliance.App/Program.cs#L120): `.AddMcpTool<GetClientIndependenceRules>(tool => tool.ReadOnly())`
+- [Program.cs:121](../../src/Compliance.App/Program.cs#L121): `.AddMcpTool<GetIndependenceRuleVersions>(tool => tool.ReadOnly())`
+- [Program.cs:122](../../src/Compliance.App/Program.cs#L122): `.AddMcpTool<ReviseIndependenceRules>(tool => tool.Idempotent())`
+- [Program.cs:123](../../src/Compliance.App/Program.cs#L123): `.AddMcpTool<RecordNonattestService>(tool => tool.Idempotent())`
+- [Program.cs:124](../../src/Compliance.App/Program.cs#L124): `.AddMcpTool<EvaluateClientIndependence>(tool => tool.Idempotent())`
+- [Program.cs:125](../../src/Compliance.App/Program.cs#L125): `.AddMcpTool<GetClientIndependenceHistory>(tool => tool.ReadOnly())`
+- [Program.cs:126](../../src/Compliance.App/Program.cs#L126): `.AddMcpTool<SetCriteriaTextOverlay>(tool => tool.Idempotent())
 - [Program.cs:116](../../src/Compliance.App/Program.cs#L116): `.AddMcpTool<SelectProgramCriteriaEdition>(tool => tool.Idempotent())`
 - [Program.cs:117](../../src/Compliance.App/Program.cs#L117): `.AddMcpTool<CreateControlDraft>()`
 - [Program.cs:118](../../src/Compliance.App/Program.cs#L118): `.AddMcpTool<ReviseControlDraft>(tool => tool.Idempotent())`

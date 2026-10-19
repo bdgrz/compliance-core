@@ -1,14 +1,14 @@
 # Query and view-model inventory
 
-This is the requirement-backed read-layer plan for the committed product scope. It names query operations and their feature-owned response views. A query is a read, list, preview, or derived assessment; a POST transport does not make a read a command. The response views below are proposed contracts to backfill, not evidence that a handler, projection, API route, or authorization policy already exists.
+This is the requirement-backed read-layer plan for the committed product scope. It names query operations and their feature-owned response views. A query is a read, list, preview, or derived assessment; a POST transport does not make a read a command. The inventory tracks required contracts and implementation coverage separately: a source file alone does not prove a handler, projection, API route, or authorization policy exists.
 
 ## Existing inventory
 
-Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **272 query contracts** (216 existing plus 56 added here) and **495 model/supporting contracts** (436 existing, 56 response views added here, two advisor-feedback history views, and `EvidenceSupportView`). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
+Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current code now contains **273 query contracts** (216 existing plus 57 added here) and **497 model/supporting contracts** (436 existing, 57 response views, two advisor-feedback history views, `EvidenceSupportView`, and the Type I baseline source-coverage contract). The full, source-linked query list and feature-owned models are in the [component inventory](component-inventory.md#existing-queries) and [model appendix](component-inventory.md#existing-models-and-supporting-contracts). Those totals are a static source inventory, not proof that every query is authorized, registered, tested, or satisfies its owning story. Reconcile by behavior before adding a new name: a current query can satisfy a requirement even when its vocabulary differs.
 
 ## Required read workflows to backfill
 
-The 56 planned query contracts and 56 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Wiring and behavior status varies by query; a contract alone does not prove handler, read-model, API/MCP, or story-level authorization coverage. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
+The 57 planned query contracts and 57 response-view types listed below now have one source file each under their owning feature. This fills the contract-file gap recorded in the source audit. Wiring and behavior status varies by query; a contract alone does not prove handler, read-model, API/MCP, or story-level authorization coverage. Existing contracts with incomplete consumers are tracked as completion gaps rather than duplicated here.
 
 ### Advisor collaboration — R2-08
 
@@ -51,6 +51,7 @@ assignment cannot fall back to the full directory during the request.
 | --- | --- | --- |
 | [GetExaminationEngagement](../../src/Compliance.Common/Features/Examinations/GetExaminationEngagement.cs#L9) | [ExaminationEngagementView](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs#L6) | Engagement identity, period, lifecycle, and baseline binding. |
 | [GetTypeIBaseline](../../src/Compliance.Common/Features/Examinations/GetTypeIBaseline.cs#L9) | [TypeIBaselineView](../../src/Compliance.Common/Features/Examinations/TypeIBaselineView.cs#L6) | Frozen baseline manifest, exact source versions, and verification state. |
+| [PreviewTypeIBaseline](../../src/Compliance.Common/Features/Examinations/PreviewTypeIBaseline.cs#L9) | [TypeIBaselinePreviewView](../../src/Compliance.Common/Features/Examinations/TypeIBaselinePreviewView.cs#L7) | Current exact source references, uncovered source-family blockers, and scope differences before confirmation. |
 
 ### System description — T1-02
 

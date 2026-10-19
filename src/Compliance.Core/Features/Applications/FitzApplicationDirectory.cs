@@ -106,6 +106,41 @@ sealed partial class FitzApplicationDirectory(IKvClient client)
                             Unresolved = Gaps(parent, true),
                         }, ct).ConfigureAwait(false);
                 break;
+            case SystemInstanceRevised revised:
+                var beforeRevision = await ApplicationDirectorySchema.Instances.GetAsync(
+                    Transaction, revised.SystemInstanceId, ct).ConfigureAwait(false) ??
+                    throw new InvalidOperationException(
+                        "A system instance revision cannot project before its registration.");
+                if (revised.TenantId != _batchTenantId ||
+                    beforeRevision.TenantId != revised.TenantId ||
+                    beforeRevision.ApplicationId != revised.ApplicationId ||
+                    beforeRevision.SystemInstanceId != revised.SystemInstanceId ||
+                    beforeRevision.LegacyApplicationRevision is not null ||
+                    beforeRevision.Lifecycle != "active" || beforeRevision.Retirement is not null ||
+                    beforeRevision.Revision < 1 || revised.Revision != beforeRevision.Revision + 1 ||
+                    string.IsNullOrWhiteSpace(revised.Name) || revised.Name != revised.Name.Trim() ||
+                    string.IsNullOrWhiteSpace(revised.Kind) || revised.Kind != revised.Kind.Trim() ||
+                    revised.AccessBoundaryReference is { Length: > 2000 } ||
+                    revised.SourceIdentifier is { Length: > 1000 } ||
+                    string.IsNullOrWhiteSpace(revised.Rationale) ||
+                    revised.Rationale.Length > 2000 || revised.ActorMemberId == Uuid.Empty ||
+                    string.IsNullOrWhiteSpace(revised.ActorDisplay) ||
+                    revised.ActorDisplay.Length > 200 || revised.ChangedAt == default ||
+                    revised.Actor != ActorReference.ForMember(revised.ActorMemberId,
+                        revised.ActorDisplay))
+                    throw new InvalidOperationException("The system instance revision event is invalid.");
+                await ApplicationDirectorySchema.Instances.ReplaceAsync(Transaction,
+                    beforeRevision, beforeRevision with
+                    {
+                        Revision = revised.Revision,
+                        Name = revised.Name,
+                        Kind = revised.Kind,
+                        AccessBoundaryReference = revised.AccessBoundaryReference,
+                        SourceIdentifier = revised.SourceIdentifier,
+                        Unresolved = RevisedInstanceGaps(beforeRevision.Unresolved,
+                            revised.AccessBoundaryReference, revised.SourceIdentifier),
+                    }, ct).ConfigureAwait(false);
+                break;
             case ApplicationRetired retired:
                 var active = await RequireApplicationAsync(retired.ApplicationId, ct)
                     .ConfigureAwait(false);
@@ -169,6 +204,19 @@ sealed partial class FitzApplicationDirectory(IKvClient client)
     }
 
     const string DeclarationConflict = "declaration_conflict";
+    static readonly HashSet<string> InstanceGapCodes = new(StringComparer.Ordinal)
+    {
+        "access_boundary_missing",
+        "access_boundary_unverified",
+        "source_identifier_missing",
+        "source_identifier_unverified",
+    };
+
+    static IReadOnlyList<string> RevisedInstanceGaps(IReadOnlyList<string> unresolved,
+        string? accessBoundary, string? sourceIdentifier) =>
+        [.. unresolved.Where(gap => !InstanceGapCodes.Contains(gap)),
+            accessBoundary is null ? "access_boundary_missing" : "access_boundary_unverified",
+            sourceIdentifier is null ? "source_identifier_missing" : "source_identifier_unverified"];
 
     static SystemInstanceView InstanceView(Uuid tenantId, Uuid applicationId,
         Uuid instanceId, string name, string kind, string? accessBoundaryReference,

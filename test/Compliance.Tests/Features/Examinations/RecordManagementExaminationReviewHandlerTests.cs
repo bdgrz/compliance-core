@@ -105,7 +105,7 @@ public sealed class RecordManagementExaminationReviewHandlerTests
             Uuid.CreateVersion4(), 3, new string('d', 64));
         var engagement = await fixture.Reader.HydrateAsync(new ExaminationEngagement(
             fixture.TenantId, fixture.ProgramId, fixture.ExaminationId));
-        var amendmentPreview = TypeIBaselinePreview.Create(fixture.TenantId, fixture.ProgramId,
+        var amendmentPreview = TypeIBaselinePreviewTestFactory.Create(fixture.TenantId, fixture.ProgramId,
             fixture.ExaminationId, baseline.Sources.Append(criteria).Append(control).ToArray());
         Assert.Null(engagement.AmendBaseline(engagement.Revision, Uuid.CreateVersion4(),
             amendmentPreview, [criteria.RecordId, control.RecordId], [],
