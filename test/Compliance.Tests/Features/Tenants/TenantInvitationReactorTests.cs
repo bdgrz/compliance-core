@@ -12,6 +12,49 @@ namespace Bdgrz.Compliance.Tests.Features.Tenants;
 public sealed class TenantInvitationReactorTests
 {
     [Fact]
+    public async Task ShouldProvisionEveryGrantedProgramGivenGuestAcceptsInvitation()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var invitedBy = Uuid.CreateVersion4();
+        var programIds = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
+        var scenario = new ReactorScenario().Given(new TenantInvitationAccepted(tenantId,
+            userId, "guest@example.com", "guest", false,
+            GuestProgramIds: programIds, GuestExpiresOn: new DateOnly(2026, 11, 30),
+            AcceptedAt: new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero),
+            InvitedBy: invitedBy, InvitedByDisplay: "Org Admin"));
+        var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(),
+            scenario.Requests, NullLogger<TenantInvitationReactor>.Instance);
+
+        // Act
+        await scenario.RunAsync(reactor);
+
+        // Assert
+        var registration = Assert.Single(scenario.SentRequests.OfType<RegisterMember>());
+        Assert.Equal("guest", registration.Affiliation);
+        Assert.Equal(new DateOnly(2026, 11, 30), registration.MembershipExpiresOn);
+        var grants = scenario.SentRequests.OfType<ProvisionGuestProgramAccess>().ToArray();
+        Assert.Equal(programIds.Length, grants.Length);
+        Assert.All(grants, grant => Assert.Equal(
+            TenantInvitation.IdFor(tenantId, "guest@example.com"), grant.InvitationId));
+        Assert.Equal(programIds.OrderBy(id => id.ToString(), StringComparer.Ordinal),
+            grants.Select(grant => grant.ProgramId).OrderBy(id => id.ToString(), StringComparer.Ordinal));
+        Assert.All(grants, grant =>
+        {
+            Assert.Equal(tenantId, grant.TenantId);
+            Assert.Equal(userId, grant.UserId);
+            Assert.Equal(invitedBy, grant.InvitedBy);
+            Assert.Equal("Org Admin", grant.InvitedByDisplay);
+            Assert.Equal(new DateOnly(2026, 11, 30), grant.ExpiresOn);
+            Assert.Equal(new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero),
+                grant.AcceptedAt);
+        });
+        Assert.Empty(scenario.SentRequests.OfType<AssignTeamMember>());
+        Assert.Empty(scenario.SentRequests.OfType<ActivateTenant>());
+    }
+
+    [Fact]
     public async Task ShouldCompleteActivationWithoutReplayingReactionGivenTransientProjectionLag()
     {
         // Arrange

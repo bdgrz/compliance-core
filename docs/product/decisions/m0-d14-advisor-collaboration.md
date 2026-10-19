@@ -14,6 +14,16 @@ Closes [M0-D14 #71](https://github.com/bdgrz/compliance/issues/71).
   - it has no approval rights;
   - it expires on a required end date.
 
+Implementation invariant: an accepted guest receives only direct, program-scoped,
+time-limited Viewer grants. The existing Viewer role supplies `tenant.access`;
+guest authorization exposes that permission only on open advisor handoffs, and
+ordinary program reads remain denied.
+
+The accepted end date is persisted on the guest `Member` registration. Event-sourced
+membership eligibility stops access at the end of that UTC date, and later grant
+proposals cannot extend beyond it. Work queues, access reviews, and work digests
+remain outside the guest handoff boundary.
+
   No export handoff package, secure link, or third-party platform is built
   for R2.
 

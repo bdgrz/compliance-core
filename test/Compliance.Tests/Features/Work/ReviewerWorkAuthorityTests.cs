@@ -51,7 +51,7 @@ public sealed class ReviewerWorkAuthorityTests
     [InlineData("mapping", true)]
     [InlineData("applicability", false)]
     [InlineData("applicability", true)]
-    public async Task ShouldPermitIndependentAssignmentGivenGuestManagerAcceptedByActualSourceCommand(
+    public async Task ShouldDenyGuestWorkQueueAndReviewGivenScopedGuestMembership(
         string kind, bool projected)
     {
         // Arrange
@@ -59,31 +59,12 @@ public sealed class ReviewerWorkAuthorityTests
         var source = await fixture.SeedAsync(kind);
 
         // Act
-        await fixture.ReviewAsync(kind, source);
-        var next = await fixture.SeedAsync(kind, source.Revision + 1);
+        await fixture.ReviewAsync(kind, source, RequestErrorKind.Forbidden);
         var queue = await fixture.Scenario().When(new ListWork(fixture.Operations.TenantId,
-            fixture.Operations.ProgramId, kind == "control_assigned" ? "all" : "unassigned")).ExpectSuccess();
-        var item = Assert.Single(queue.Value.Items, candidate => candidate.SourceId == next.Id);
-        var assignedItem = item;
-        if (kind != "control_assigned")
-        {
-            var assigned = await fixture.Scenario().When(new AssignWorkItem(fixture.Operations.TenantId,
-                fixture.Operations.ProgramId, item.WorkItemId, 0, fixture.GuestMemberId)).ExpectSuccess();
-            assignedItem = assigned.Value.Item;
-        }
-
-        var detail = await fixture.Scenario().When(new GetWorkItem(fixture.Operations.TenantId,
-            fixture.Operations.ProgramId, assignedItem.WorkItemId)).ExpectSuccess();
-        await fixture.ReviewAsync(kind, next);
-        var after = await fixture.Scenario().When(new ListWork(fixture.Operations.TenantId,
-            fixture.Operations.ProgramId, "mine")).ExpectSuccess();
+            fixture.Operations.ProgramId, "all")).ExpectFailure(RequestErrorKind.Forbidden);
 
         // Assert
-        Assert.Empty(after.Value.Items);
-        Assert.Equal(0, after.Value.Counts.Total);
-        Assert.Equal(fixture.GuestMemberId, assignedItem.AssigneeMemberId);
-        Assert.Equal(assignedItem, detail.Value.Item);
-        Assert.Equal(kind == "control_assigned" ? 2 : 1, queue.Value.Counts.Total);
+        Assert.Equal(RequestErrorKind.Forbidden, queue.Error?.Kind);
     }
 
     [Theory]
@@ -91,7 +72,7 @@ public sealed class ReviewerWorkAuthorityTests
     [InlineData(true, "accept")]
     [InlineData(false, "reject")]
     [InlineData(true, "reject")]
-    public async Task ShouldPermitRiskCompletionReviewGivenAuthorizedGuestAndActualQueueAssignment(bool projected,
+    public async Task ShouldDenyRiskCompletionReviewGivenScopedGuestMembership(bool projected,
         string outcome)
     {
         // Arrange
@@ -107,22 +88,16 @@ public sealed class ReviewerWorkAuthorityTests
             ProgramManagementServices.ResourceScopes(operations.ProgramId));
         var authorized = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(command,
             ProgramManagementServices.Actor(fixture.GuestUserId)), CancellationToken.None);
-        Assert.True(authorized.IsSuccess);
-        var queue = await fixture.Scenario(operations.ApproverUserId).When(new ListWork(operations.TenantId,
-            operations.ProgramId, "all")).ExpectSuccess();
-        var item = Assert.Single(queue.Value.Items, candidate => candidate.SourceId == pending.Id);
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(authorized.Error).Kind);
 
         // Act
-        await fixture.Scenario(operations.ApproverUserId).When(new AssignWorkItem(operations.TenantId,
-            operations.ProgramId, item.WorkItemId, 0, fixture.GuestMemberId)).ExpectSuccess();
-        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.GuestUserId, command);
-        await fixture.CatchUpAsync();
-        var after = await fixture.Scenario().When(new ListWork(operations.TenantId, operations.ProgramId,
-            "mine")).ExpectSuccess();
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.GuestUserId, command,
+            RequestErrorKind.Forbidden);
+        var queue = await fixture.Scenario().When(new ListWork(operations.TenantId,
+            operations.ProgramId, "all")).ExpectFailure(RequestErrorKind.Forbidden);
 
         // Assert
-        Assert.Empty(after.Value.Items);
-        Assert.Equal(0, after.Value.Counts.Total);
+        Assert.Equal(RequestErrorKind.Forbidden, queue.Error?.Kind);
     }
 
     [Theory]
@@ -147,12 +122,11 @@ public sealed class ReviewerWorkAuthorityTests
             .ExpectFailure(RequestErrorKind.Validation);
         await fixture.ReviewAsync("risk_completion", pending, RequestErrorKind.Forbidden);
         var mine = await fixture.Scenario().When(new ListWork(operations.TenantId, operations.ProgramId,
-            "mine")).ExpectSuccess();
+            "mine")).ExpectFailure(RequestErrorKind.Forbidden);
 
         // Assert
         Assert.Null(item.AssigneeMemberId);
-        Assert.Empty(mine.Value.Items);
-        Assert.Equal(0, mine.Value.Counts.Total);
+        Assert.Equal(RequestErrorKind.Forbidden, mine.Error?.Kind);
     }
 
     [Theory]
@@ -171,19 +145,20 @@ public sealed class ReviewerWorkAuthorityTests
         // Arrange
         await using var fixture = await Fixture.CreateAsync(projected: true);
         var pending = await fixture.SeedAsync(kind);
-        var before = await fixture.Scenario().When(new ListWork(fixture.Operations.TenantId,
-            fixture.Operations.ProgramId, "unassigned")).ExpectSuccess();
+        var before = await fixture.Scenario(fixture.Operations.ApproverUserId).When(new ListWork(
+            fixture.Operations.TenantId, fixture.Operations.ProgramId, "unassigned")).ExpectSuccess();
         var item = Assert.Single(before.Value.Items);
-        await fixture.Scenario().When(new AssignWorkItem(fixture.Operations.TenantId,
-            fixture.Operations.ProgramId, item.WorkItemId, 0, fixture.GuestMemberId)).ExpectSuccess();
+        await fixture.Scenario(fixture.Operations.ApproverUserId).When(new AssignWorkItem(
+            fixture.Operations.TenantId, fixture.Operations.ProgramId, item.WorkItemId, 0,
+            fixture.GuestMemberId)).ExpectSuccess();
         fixture.Operations.Permissions.Managers.Remove(fixture.GuestMemberId);
 
         // Act
         await fixture.ReviewAsync(kind, pending, RequestErrorKind.Forbidden);
         var guest = await fixture.Scenario().When(new ListWork(fixture.Operations.TenantId,
-            fixture.Operations.ProgramId, "unassigned")).ExpectSuccess();
+            fixture.Operations.ProgramId, "unassigned")).ExpectFailure(RequestErrorKind.Forbidden);
         await fixture.Scenario().When(new GetWorkItem(fixture.Operations.TenantId,
-            fixture.Operations.ProgramId, item.WorkItemId)).ExpectFailure(RequestErrorKind.NotFound);
+            fixture.Operations.ProgramId, item.WorkItemId)).ExpectFailure(RequestErrorKind.Forbidden);
         var manager = await fixture.Scenario(fixture.Operations.ApproverUserId).When(
             new ListWork(fixture.Operations.TenantId, fixture.Operations.ProgramId,
                 "unassigned")).ExpectSuccess();
@@ -192,8 +167,7 @@ public sealed class ReviewerWorkAuthorityTests
             fixture.GuestMemberId)).ExpectFailure(RequestErrorKind.Validation);
 
         // Assert
-        Assert.Empty(guest.Value.Items);
-        Assert.Equal(0, guest.Value.Counts.Total);
+        Assert.Equal(RequestErrorKind.Forbidden, guest.Error?.Kind);
         Assert.Null(Assert.Single(manager.Value.Items).AssigneeMemberId);
         Assert.Equal(1, manager.Value.Counts.Total);
     }
@@ -247,16 +221,15 @@ public sealed class ReviewerWorkAuthorityTests
         await fixture.ReviewAsync("finding_closure", new Pending(finding.FindingId, finding.Revision),
             RequestErrorKind.Forbidden);
         var guest = await fixture.Scenario().When(new ListWork(operations.TenantId,
-            operations.ProgramId, "all")).ExpectSuccess();
+            operations.ProgramId, "all")).ExpectFailure(RequestErrorKind.Forbidden);
         await fixture.Scenario().When(new GetWorkItem(operations.TenantId, operations.ProgramId,
-            candidate.WorkItemId)).ExpectFailure(RequestErrorKind.NotFound);
+            candidate.WorkItemId)).ExpectFailure(RequestErrorKind.Forbidden);
         await fixture.Scenario(operations.BackupUserId).When(new AssignWorkItem(operations.TenantId,
             operations.ProgramId, candidate.WorkItemId, 0, fixture.GuestMemberId))
             .ExpectFailure(RequestErrorKind.Validation);
 
         // Assert
-        Assert.Empty(guest.Value.Items);
-        Assert.Equal(0, guest.Value.Counts.Total);
+        Assert.Equal(RequestErrorKind.Forbidden, guest.Error?.Kind);
     }
 
     sealed record Pending(Uuid Id, long Revision, Uuid? ResourceId = null, Uuid? ActionId = null);
@@ -277,7 +250,8 @@ public sealed class ReviewerWorkAuthorityTests
             operations.Permissions.Managers.Add(guestMemberId);
             operations.Permissions.Managers.Add(operations.BackupMemberId);
             DomainEvent registered = new MemberRegistered(operations.TenantId, guestMemberId,
-                guestUserId, "guest", Uuid.CreateVersion4());
+                guestUserId, "guest", Uuid.CreateVersion4(),
+                DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30));
             registered.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), guestMemberId,
                 1, DateTimeOffset.UtcNow));
             var events = operations.Provider.GetRequiredService<IEventStore>();

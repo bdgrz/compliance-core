@@ -16,6 +16,11 @@ public sealed class CloseAdvisorHandoffHandler(IAggregateExecutor executor, Time
         return executor.ExecuteAsync(new AdvisorHandoff(request.TenantId, request.ProgramId,
                 request.HandoffId), handoff =>
         {
+            if (!handoff.IsCreated || handoff.ProgramId != request.ProgramId)
+                return AggregateOutcome.CommitOnSuccess(Result.Failure(new RequestError(
+                    RequestErrorKind.NotFound,
+                    "The advisor handoff was not found in the requested program.")));
+
             var result = handoff.Close(request.Rationale, actor, clock.GetUtcNow());
             return AggregateOutcome.CommitOnSuccess(result.IsSuccess
                 ? Result.Success : Result.Failure(result.Error));

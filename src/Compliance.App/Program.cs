@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance;
+using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
@@ -80,6 +81,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetWorkDigestDispatchStatus>(tool => tool.ReadOnly())
         .AddMcpTool<InviteTenantMember>()
         .AddMcpTool<InviteOrganizationMember>()
+        .AddMcpTool<InviteGuestConsultant>()
         .AddMcpTool<ListTenantInvitations>(tool => tool.ReadOnly())
         .AddMcpTool<GetMemberAccess>(tool => tool.ReadOnly())
         .AddMcpTool<GetTenant>(tool => tool.ReadOnly())
@@ -112,6 +114,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetServiceEngagementHistory>(tool => tool.ReadOnly())
         .AddMcpTool<GetExaminationEngagement>(tool => tool.ReadOnly())
         .AddMcpTool<GetTypeIBaseline>(tool => tool.ReadOnly())
+        .AddMcpTool<PreviewTypeIBaseline>(tool => tool.ReadOnly())
+        .AddMcpTool<CreateExaminationEngagement>(tool => tool.Idempotent())
+        .AddMcpTool<ReviseExaminationEngagement>(tool => tool.Idempotent())
+        .AddMcpTool<FreezeTypeIBaseline>(tool => tool.Idempotent())
+        .AddMcpTool<AmendTypeIBaseline>(tool => tool.Idempotent())
         .AddMcpTool<GetClientIndependenceRules>(tool => tool.ReadOnly())
         .AddMcpTool<GetIndependenceRuleVersions>(tool => tool.ReadOnly())
         .AddMcpTool<ReviseIndependenceRules>(tool => tool.Idempotent())
@@ -326,6 +333,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListWorkforceRosterSnapshots>(tool => tool.ReadOnly())
         .AddMcpTool<RegenerateWorkforceRosterSnapshotManifest>(tool => tool.ReadOnly())
         .AddMcpTool<GetReadinessAssessment>(tool => tool.ReadOnly())
+        .AddMcpTool<GetAdvisorRequest>(tool => tool.ReadOnly())
+        .AddMcpTool<PreviewAdvisorHandoff>(tool => tool.ReadOnly())
+        .AddMcpTool<GetAdvisorSharedSource>(tool => tool.ReadOnly())
+        .AddMcpTool<ListAdvisorRequests>(tool => tool.ReadOnly())
+        .AddMcpTool<ListAdvisorFeedback>(tool => tool.ReadOnly())
         .AddMcpTool<ListReadinessAssessments>(tool => tool.ReadOnly())
         .AddMcpTool<ListReadinessGaps>(tool => tool.ReadOnly())
         .AddMcpTool<ListTypeIEntryDecisions>(tool => tool.ReadOnly())
@@ -384,6 +396,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetWorkDigestPreference>(tool => tool.ReadOnly())
         .AddMcpTool<SetWorkDigestPreference>()
         .AddMcpHttp();
+    builder.Services.AddScoped<CaptureEvidenceArtifactHandler>();
     builder.Services.ConfigureHttpJsonOptions(options =>
     {
         options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
@@ -495,6 +508,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaPost<RegisterTenant, TenantRegistration>("/api/v1/tenants")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
+    if (app.Environment.IsDevelopment())
+    {
+        // The registered content store is local; keep public uploads unavailable until production storage is qualified.
+        app.MapEvidenceArtifactUpload();
+    }
     app.MapPortiaPost<SuspendTenant>("/api/v1/tenants/{tenant_id}/suspensions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
@@ -525,6 +543,9 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
     app.MapPortiaPost<InviteOrganizationMember>("/api/v1/tenants/{tenant_id}/member-invitations")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Tenants");
+    app.MapPortiaPost<InviteGuestConsultant>("/api/v1/tenants/{tenant_id}/guest-invitations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
     app.MapPortiaGet<ListTenantInvitations, Page<TenantInvitationView>>(
@@ -1320,6 +1341,19 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Evidence redactions");
     app.MapPortiaGet<GetEvidenceArtifactMetadata, EvidenceArtifactMetadataView>(
             "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/metadata")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Evidence artifacts");
+    app.MapPortiaPost<IssueArtifactDownload, EvidenceArtifactDownloadLink>(
+            "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Evidence artifacts");
+    app.MapPortiaPost<ReleaseEvidenceArtifactQuarantine>(
+            "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/quarantine-releases")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithSummary("Release malware-quarantined evidence after a clean rescan")
+        .WithTags("Evidence artifacts");
+    app.MapPortiaPost<LinkEvidenceSupport, EvidenceSupportView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Evidence artifacts");
     app.MapPortiaGet<GetEvidenceRequest, EvidenceRequestView>(
@@ -2303,6 +2337,18 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-i-baselines/{type_i_baseline_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Examinations");
+    app.MapPortiaGet<PreviewTypeIBaseline, TypeIBaselinePreviewView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baseline-preview")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
+    app.MapPortiaPost<FreezeTypeIBaseline>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/freeze")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
+    app.MapPortiaPost<AmendTypeIBaseline>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/amendments")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Examinations");
     app.MapPortiaPost<RecordManagementAssertion>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -2347,6 +2393,18 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Programs");
+    app.MapPortiaPost<CreateAdvisorHandoff>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaPost<ReviseAdvisorHandoffSelection>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaPost<MarkAdvisorHandoffReadyForReview>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
     app.MapPortiaPost<CloseAdvisorHandoff>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -2359,6 +2417,70 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
+    app.MapPortiaPost<ResolveAdvisorFeedback>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaPost<RecordAdvisorFeedback>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaPost<CorrectAdvisorFeedback>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaGet<GetAdvisorRequest, AdvisorRequestView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{advisor_request_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaGet<ListAdvisorRequests, Cntryl.Fitz.Extensions.Page<AdvisorRequestSummaryView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaGet<GetAdvisorSharedSource, AdvisorSharedSourceView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/sources/{source_family}/{record_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaGet<PreviewAdvisorHandoff, AdvisorHandoffPreviewView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/preview")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaGet<ListAdvisorFeedback, Cntryl.Fitz.Extensions.Page<AdvisorFeedbackView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Advisor collaboration");
+    app.MapPortiaGet<GetSignificantChange, SignificantChangeView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{significant_change_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
+    app.MapPortiaGet<ListSignificantChanges, Page<SignificantChangeSummaryView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
+    app.MapPortiaGet<GetComplianceImpactAssessment, ComplianceIncidentImpactAssessmentView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}/impact-assessment")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
+    app.MapPortiaGet<GetComplianceIncident, ComplianceIncidentView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents/{incident_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
+    app.MapPortiaGet<ListComplianceIncidents, Page<ComplianceIncidentSummaryView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Incidents");
+    app.MapPortiaPut<RecordSignificantChange>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
+    app.MapPortiaPost<ReviseSignificantChange>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/revisions")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
+    app.MapPortiaPost<AssessSignificantChange>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/assessments")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Changes");
     app.MapMethods(
         "/api/{**path}",
         ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],

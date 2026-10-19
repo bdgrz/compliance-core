@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Readiness;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Tenants;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
@@ -76,6 +77,73 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         Assert.Equal(RequestErrorKind.Forbidden, notes.Error?.Kind);
     }
 
+    [Fact]
+    public async Task ShouldLimitGuestProgramAccessToCurrentOpenHandoffGivenScopedGuestMembership()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        fixture.Memberships.Affiliation = "guest";
+        var handoffId = Uuid.CreateVersion4();
+        var recordId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant,
+            Uuid.CreateVersion4()), "Compliance Lead");
+        var createdAt = fixture.Clock.GetUtcNow().AddDays(-1);
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
+            {
+                Assert.True(handoff.Create("Guest review", [new(recordId, versionId)],
+                    DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime).AddDays(7),
+                    actor, createdAt).IsSuccess);
+                Assert.True(handoff.MarkReadyForReview(1, actor, createdAt.AddMinutes(1)).IsSuccess);
+                return Result.Success;
+            });
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
+            scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
+            scope.ServiceProvider.GetRequiredService<IProgramResourceScopeResolver>(),
+            scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        var guest = ProgramManagementServices.Actor(fixture.User);
+
+        // Act
+        var handoff = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
+            new GetAdvisorRequest(fixture.Tenant, fixture.Program, handoffId), guest),
+            CancellationToken.None);
+        var handoffs = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
+            new ListAdvisorRequests(fixture.Tenant, fixture.Program), guest),
+            CancellationToken.None);
+        var annotations = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(new ListReadinessAnnotations(
+                fixture.Tenant, fixture.Program, fixture.Assessment), guest), CancellationToken.None);
+
+        // Assert
+        Assert.True(handoff.IsSuccess);
+        Assert.True(handoffs.IsSuccess, handoffs.Error?.Message);
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(annotations.Error).Kind);
+    }
+
+    [Fact]
+    public async Task ShouldDenyGuestHandoffListGivenNoProgramScopedViewerGrant()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        fixture.Memberships.Affiliation = "guest";
+        fixture.Permissions.Allowed = false;
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
+            scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
+            scope.ServiceProvider.GetRequiredService<IProgramResourceScopeResolver>(),
+            scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
+            new ListAdvisorRequests(fixture.Tenant, fixture.Program),
+            ProgramManagementServices.Actor(fixture.User)), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -97,6 +165,174 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         Assert.Equal("Advisor working feedback", Assert.Single(notes.Value!.Items).Body);
     }
 
+    [Theory]
+    [InlineData("draft", false, false)]
+    [InlineData("ready_for_review", false, true)]
+    [InlineData("closed", false, false)]
+    [InlineData("ready_for_review", true, false)]
+    public async Task ShouldEnforceAdvisorHandoffReadVisibilityGivenHandoffStatusAndExpiry(
+        string status, bool expired, bool expectedAllowed)
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var staff = await AttestAssignmentHistoryFixture.SeedAndReturnAsync(fixture.Provider,
+            fixture.Tenant, fixture.User, practice: "advisory");
+        await fixture.SeedStaffDirectoryAsync(staff);
+        fixture.Memberships.State = "absent";
+        fixture.Permissions.Allowed = false;
+        var handoffId = Uuid.CreateVersion4();
+        var feedbackId = Uuid.CreateVersion4();
+        var recordId = Uuid.CreateVersion4();
+        var recordVersionId = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant,
+            Uuid.CreateVersion4()), "Compliance lead");
+        var advisorAuthor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant,
+            fixture.User), "Assigned Advisor");
+        var createdAt = fixture.Clock.GetUtcNow().AddDays(-2);
+        var expiresOn = DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime)
+            .AddDays(expired ? -1 : 30);
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
+            {
+                Assert.True(handoff.Create("Readiness review",
+                    [new(recordId, recordVersionId)], expiresOn,
+                    actor, createdAt).IsSuccess);
+                if (status is "ready_for_review" or "closed")
+                {
+                    Assert.True(handoff.MarkReadyForReview(1, actor,
+                        createdAt.AddMinutes(1)).IsSuccess);
+                    Assert.True(handoff.RecordFeedback(feedbackId, recordId, recordVersionId,
+                        "comment", "Clarify the control owner.", advisorAuthor,
+                        createdAt.AddMinutes(2)).IsSuccess);
+                }
+                if (status == "closed")
+                    Assert.True(handoff.Close("Review complete", actor,
+                        createdAt.AddMinutes(2)).IsSuccess);
+                return Result.Success;
+            });
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
+            scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
+            scope.ServiceProvider.GetRequiredService<IProgramResourceScopeResolver>(),
+            scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        var clientMutationAuthorizer = new ClientManagementMutationAuthorizer(
+            scope.ServiceProvider.GetRequiredService<ClientManagementIndependenceGuard>(),
+            fixture.Memberships,
+            scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        IProgramManagementRequest handoffRequest = new GetAdvisorRequest(fixture.Tenant,
+            fixture.Program, handoffId);
+        IProgramManagementRequest feedbackRequest = new ListAdvisorFeedback(fixture.Tenant,
+            fixture.Program, handoffId);
+        var correctionRequest = new CorrectAdvisorFeedback(fixture.Tenant,
+            fixture.Program, handoffId, feedbackId, Uuid.CreateVersion4(), "Corrected wording.",
+            "The original wording was incomplete.");
+        var feedbackPostRequest = new RecordAdvisorFeedback(fixture.Tenant, fixture.Program,
+            handoffId, Uuid.CreateVersion4(), recordId, recordVersionId, "comment",
+            "Please clarify the control owner.");
+        var feedbackOutsideSelectionRequest = new RecordAdvisorFeedback(fixture.Tenant,
+            fixture.Program, handoffId, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), "comment", "This version was not shared.");
+
+        // Act
+        var principal = ProgramManagementServices.Actor(fixture.User);
+        var handoffResult = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(handoffRequest, principal), CancellationToken.None);
+        var feedbackResult = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(feedbackRequest, principal), CancellationToken.None);
+        var correctionResult = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(correctionRequest, principal), CancellationToken.None);
+        var clientCorrectionResult = await clientMutationAuthorizer.AuthorizeAsync(
+            new RequestContext<IClientManagementMutationRequest>(correctionRequest, principal),
+            CancellationToken.None);
+        var feedbackPostResult = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(feedbackPostRequest, principal),
+            CancellationToken.None);
+        var clientFeedbackPostResult = await clientMutationAuthorizer.AuthorizeAsync(
+            new RequestContext<IClientManagementMutationRequest>(feedbackPostRequest, principal),
+            CancellationToken.None);
+        var feedbackOutsideSelectionResult = await authorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(feedbackOutsideSelectionRequest, principal),
+            CancellationToken.None);
+        var clientFeedbackOutsideSelectionResult = await clientMutationAuthorizer.AuthorizeAsync(
+            new RequestContext<IClientManagementMutationRequest>(feedbackOutsideSelectionRequest, principal),
+            CancellationToken.None);
+
+        // Assert
+        if (expectedAllowed)
+        {
+            Assert.True(handoffResult.IsSuccess, handoffResult.Error?.Message);
+            Assert.True(feedbackResult.IsSuccess, feedbackResult.Error?.Message);
+            Assert.True(correctionResult.IsSuccess, correctionResult.Error?.Message);
+            Assert.True(clientCorrectionResult.IsSuccess, clientCorrectionResult.Error?.Message);
+            Assert.True(feedbackPostResult.IsSuccess, feedbackPostResult.Error?.Message);
+            Assert.True(clientFeedbackPostResult.IsSuccess, clientFeedbackPostResult.Error?.Message);
+        }
+        else
+        {
+            Assert.Equal(RequestErrorKind.NotFound, handoffResult.Error?.Kind);
+            Assert.Equal(RequestErrorKind.NotFound, feedbackResult.Error?.Kind);
+            Assert.Equal(RequestErrorKind.NotFound, correctionResult.Error?.Kind);
+            Assert.Equal(RequestErrorKind.NotFound, clientCorrectionResult.Error?.Kind);
+        }
+        Assert.Equal(RequestErrorKind.NotFound, feedbackOutsideSelectionResult.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, clientFeedbackOutsideSelectionResult.Error?.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldDenyAssignedAdvisorCorrectionGivenFeedbackAuthoredByAnotherMember()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var staff = await AttestAssignmentHistoryFixture.SeedAndReturnAsync(fixture.Provider,
+            fixture.Tenant, fixture.User, practice: "advisory");
+        await fixture.SeedStaffDirectoryAsync(staff);
+        fixture.Memberships.State = "absent";
+        fixture.Permissions.Allowed = false;
+        var handoffId = Uuid.CreateVersion4();
+        var feedbackId = Uuid.CreateVersion4();
+        var recordId = Uuid.CreateVersion4();
+        var recordVersionId = Uuid.CreateVersion4();
+        var at = fixture.Clock.GetUtcNow().AddDays(-2);
+        var lead = ActorReference.ForMember(RbacIds.Member(fixture.Tenant,
+            Uuid.CreateVersion4()), "Compliance lead");
+        var otherAuthor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant,
+            Uuid.CreateVersion4()), "Another Advisor");
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
+            {
+                Assert.True(handoff.Create("Readiness review",
+                    [new(recordId, recordVersionId)], DateOnly.FromDateTime(at.UtcDateTime).AddDays(30),
+                    lead, at).IsSuccess);
+                Assert.True(handoff.MarkReadyForReview(1, lead, at.AddMinutes(1)).IsSuccess);
+                Assert.True(handoff.RecordFeedback(feedbackId, recordId, recordVersionId,
+                    "comment", "Clarify the control owner.", otherAuthor, at.AddMinutes(2)).IsSuccess);
+                return Result.Success;
+            });
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
+            scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
+            scope.ServiceProvider.GetRequiredService<IProgramResourceScopeResolver>(),
+            scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        var clientMutationAuthorizer = new ClientManagementMutationAuthorizer(
+            scope.ServiceProvider.GetRequiredService<ClientManagementIndependenceGuard>(),
+            fixture.Memberships,
+            scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
+        var request = new CorrectAdvisorFeedback(fixture.Tenant,
+            fixture.Program, handoffId, feedbackId, Uuid.CreateVersion4(), "Corrected wording.",
+            "The original wording was incomplete.");
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
+            request, ProgramManagementServices.Actor(fixture.User)), CancellationToken.None);
+        var clientMutationResult = await clientMutationAuthorizer.AuthorizeAsync(
+            new RequestContext<IClientManagementMutationRequest>(request,
+                ProgramManagementServices.Actor(fixture.User)), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, clientMutationResult.Error?.Kind);
+    }
+
     [Fact]
     public async Task ShouldDenyAssignedAdvisorReadGivenAcceptanceBoundToAnotherProgram()
     {
@@ -108,12 +344,63 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         await fixture.SeedStaffDirectoryAsync(staff);
         fixture.Memberships.State = "absent";
         fixture.Permissions.Allowed = false;
+        var handoffId = Uuid.CreateVersion4();
+        var feedbackId = Uuid.CreateVersion4();
+        var recordId = Uuid.CreateVersion4();
+        var recordVersionId = Uuid.CreateVersion4();
+        var author = ActorReference.ForMember(RbacIds.Member(fixture.Tenant, fixture.User),
+            "Assigned Advisor");
+        var lead = ActorReference.ForMember(RbacIds.Member(fixture.Tenant, Uuid.CreateVersion4()),
+            "Compliance lead");
+        var at = fixture.Clock.GetUtcNow().AddDays(-1);
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
+            {
+                Assert.True(handoff.Create("Readiness review", [new(recordId, recordVersionId)],
+                    DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime).AddDays(30),
+                    lead, at).IsSuccess);
+                Assert.True(handoff.MarkReadyForReview(1, lead, at.AddMinutes(1)).IsSuccess);
+                Assert.True(handoff.RecordFeedback(feedbackId, recordId, recordVersionId,
+                    "comment", "Please clarify the control owner.", author, at.AddMinutes(2)).IsSuccess);
+                return Result.Success;
+            });
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var advisoryRead = scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>();
+        var programAuthorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
+            scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
+            scope.ServiceProvider.GetRequiredService<IProgramResourceScopeResolver>(), advisoryRead);
+        var clientMutationAuthorizer = new ClientManagementMutationAuthorizer(
+            scope.ServiceProvider.GetRequiredService<ClientManagementIndependenceGuard>(),
+            fixture.Memberships, advisoryRead);
+        var feedbackPostRequest = new RecordAdvisorFeedback(fixture.Tenant, fixture.Program,
+            handoffId, Uuid.CreateVersion4(), recordId, recordVersionId, "comment",
+            "Please clarify the evidence owner.");
+        var correctionRequest = new CorrectAdvisorFeedback(fixture.Tenant, fixture.Program,
+            handoffId, feedbackId, Uuid.CreateVersion4(), "Corrected wording.",
+            "The original wording was incomplete.");
+        var principal = ProgramManagementServices.Actor(fixture.User);
 
         // Act
         var notes = await fixture.NotesAsync();
+        var feedbackPost = await programAuthorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(feedbackPostRequest, principal),
+            CancellationToken.None);
+        var feedbackPostClient = await clientMutationAuthorizer.AuthorizeAsync(
+            new RequestContext<IClientManagementMutationRequest>(feedbackPostRequest, principal),
+            CancellationToken.None);
+        var correction = await programAuthorizer.AuthorizeAsync(
+            new RequestContext<IProgramManagementRequest>(correctionRequest, principal),
+            CancellationToken.None);
+        var correctionClient = await clientMutationAuthorizer.AuthorizeAsync(
+            new RequestContext<IClientManagementMutationRequest>(correctionRequest, principal),
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(RequestErrorKind.NotFound, notes.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, feedbackPost.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, feedbackPostClient.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, correction.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, correctionClient.Error?.Kind);
     }
 
     [Fact]
@@ -571,10 +858,11 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
     sealed class Memberships(Uuid tenant, Uuid user) : ITenantMembershipDirectoryReader
     {
         public string State { get; set; } = "active";
+        public string Affiliation { get; set; } = "client_personnel";
         public ValueTask<TenantMembershipView?> GetAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
             ValueTask.FromResult<TenantMembershipView?>(tenantId == tenant.ToString() && userId == user && State != "absent"
                 ? new TenantMembershipView(State == "wrong_user" ? Uuid.CreateVersion4() : user,
-                    State == "wrong_tenant" ? Uuid.CreateVersion4() : tenant, "client_personnel",
+                    State == "wrong_tenant" ? Uuid.CreateVersion4() : tenant, Affiliation,
                     IsSuspended: State == "suspended", IsDeprovisioned: State == "deprovisioned") : null);
         public ValueTask<bool> IsMemberAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
             ValueTask.FromResult(tenantId == tenant.ToString() && userId == user);

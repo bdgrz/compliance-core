@@ -140,11 +140,23 @@ sealed class FitzExaminationEngagementDirectory(IKvClient client)
     {
         if (baseline.Sources is null || baseline.ScopeDifferences is null ||
             baseline.Sources.Count is 0 or > 256 || baseline.ScopeDifferences.Count > 1000 ||
+            baseline.SourceCoverage is null ||
+            baseline.SourceCoverage.Count != TypeIBaselineSourceFamilies.Required.Count ||
             baseline.ScopeDifferences.Any(static value => string.IsNullOrWhiteSpace(value) ||
                 value.Length > 1000))
             return false;
         try
         {
+            var coveredFamilies = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var coverage in baseline.SourceCoverage)
+                if (coverage is null || coverage.RecordCount is < 0 or > 256 ||
+                    !ValidDigest(coverage.ContentSha256) ||
+                    !TypeIBaselineSourceFamilies.Required.Contains(coverage.Family,
+                        StringComparer.Ordinal) || !coveredFamilies.Add(coverage.Family))
+                    return false;
+            if (!coveredFamilies.SetEquals(TypeIBaselineSourceFamilies.Required))
+                return false;
+
             var identities = new HashSet<(string Kind, Uuid RecordId)>();
             foreach (var source in baseline.Sources)
                 if (source is null || !ValidKind(source.Kind) || source.RecordId == Uuid.Empty ||
@@ -154,7 +166,8 @@ sealed class FitzExaminationEngagementDirectory(IKvClient client)
                     return false;
 
             var preview = TypeIBaselinePreview.Create(baseline.TenantId, baseline.ProgramId,
-                baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences);
+                baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences,
+                baseline.SourceCoverage);
             return preview.CanonicalManifest == baseline.CanonicalManifest &&
                    preview.ContentSha256 == baseline.ContentSha256 &&
                    ValidDigest(baseline.ContentSha256);
@@ -177,6 +190,7 @@ sealed class FitzExaminationEngagementDirectory(IKvClient client)
         left.ExaminationEngagementId == right.ExaminationEngagementId &&
         left.TypeIBaselineId == right.TypeIBaselineId && left.Status == right.Status &&
         left.Revision == right.Revision && left.Sources.SequenceEqual(right.Sources) &&
+        left.SourceCoverage.SequenceEqual(right.SourceCoverage) &&
         left.ScopeDifferences.SequenceEqual(right.ScopeDifferences, StringComparer.Ordinal) &&
         left.CanonicalManifest == right.CanonicalManifest && left.ContentSha256 == right.ContentSha256 &&
         left.UpdatedAt == right.UpdatedAt && left.ActorMemberId == right.ActorMemberId &&

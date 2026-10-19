@@ -264,6 +264,7 @@ The source-backed command plan for the product features we have committed to sup
 - **ConfirmTenantSlugSurrender** — exists ([contract](../../src/Compliance.Common/Features/Tenants/ConfirmTenantSlugSurrender.cs#L6))
 - **GrantPlatformOperator** — exists ([contract](../../src/Compliance.Common/Features/Tenants/GrantPlatformOperator.cs#L6))
 - **InviteOrganizationMember** — extend ([contract](../../src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs#L7))
+- **InviteGuestConsultant** — exists ([contract](../../src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs#L7))
 - **InviteTenantMember** — exists ([contract](../../src/Compliance.Common/Features/Tenants/InviteTenantMember.cs#L6))
 - **OffboardTenant** — extend ([contract](../../src/Compliance.Common/Features/Tenants/OffboardTenant.cs#L6))
 - **ReactivateTenant** — exists ([contract](../../src/Compliance.Common/Features/Tenants/ReactivateTenant.cs#L6))
@@ -326,15 +327,15 @@ The source-backed command plan for the product features we have committed to sup
 
 The list below maps directly to accepted feature requirements. P0/P1 manual outcomes are included even when a later slice has prerequisite work; P2 hypotheses and proposed BO scope are not treated as committed commands. A worker result is listed only when a feature requires a durable outcome or replayable external effect.
 
-This pruned plan has 129 feature-backed additions, including five evidence command contracts, one internal identity-provider result callback, and actual-staff revocation already present in source; 122 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
+This pruned plan has 130 feature-backed additions, including five evidence command contracts, one internal identity-provider result callback, actual-staff revocation already present in source, and `ResolveAdvisorFeedback`; 121 required command contracts remain to be created. The 230 existing command contracts are listed above. **Existing + required additions** is the complete current command plan.
 
 ### Governed evidence capture and support — [EN-06](backlog.md#en-06-store-governed-artifacts-with-immutable-content-identity), [R2-03](backlog.md#r2-03-request-and-capture-trustworthy-evidence), [R2-04](backlog.md#r2-04-perform-a-control-and-attest-to-the-result), [R2-05](backlog.md#r2-05-review-control-design-implementation-and-evidence), [R1-14](backlog.md#r1-14-evaluate-vendors-and-subservice-organizations)
 
-- **CaptureEvidenceArtifact** — handler wired to governed intake; API exposure and upload storage boundary remain to be wired
+- **CaptureEvidenceArtifact** — handler wired to governed intake and a development-only bounded personal HTTP multipart upload at `POST /api/v1/tenants/{tenant_id}/evidence-artifacts`; requests require `X-Bdgrz-Upload: true`, then JSON metadata followed by a streamed content part capped at 256 MiB, with Portia authorization. It remains HTTP-only because the current MCP transport has no suitable large-binary upload contract; the qualified scanner, supported content types and production Portia storage boundary remain open
 - **RecordEvidenceArtifactInspection** — trusted system-only handler and inspection authorization are wired; durable worker remains to be wired
 - **IssueArtifactDownload** — handler issues a short-lived store delivery only for currently available content after exact artifact-read authorization; records purpose, actor and artifact revision
 - **LinkEvidenceSupport** — handler verifies an available exact artifact, exact current control/version/occurrence/evaluation/period revision and matching period, then records an immutable attributed relationship with the artifact content digest
-- **ReleaseEvidenceArtifactQuarantine** — personal decision handler requires the malware quarantine, current revision, separate retention-admin authorization, a clean rescan, and storage reconciliation; scanner-provider qualification remains open
+- **ReleaseEvidenceArtifactQuarantine** — personal HTTP-only decision at `POST /api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/quarantine-releases`; requires the malware quarantine, current revision, separate retention-admin authorization, a clean rescan, and storage reconciliation. It is intentionally not an MCP tool; scanner-provider qualification remains open.
 
 ### Evidence handling, disclosure, holds and disposition — [R2-12](backlog.md#r2-12-govern-evidence-access-retention-and-disclosure), EN-06; [M0-D16](decisions/m0-d16-evidence-handling.md)
 
@@ -351,7 +352,7 @@ This pruned plan has 129 feature-backed additions, including five evidence comma
 
 ### Advisor handoffs and feedback — [R2-08](backlog.md#r2-08-collaborate-with-a-readiness-advisor-on-work-in-progress); [M0-D14](decisions/m0-d14-advisor-collaboration.md)
 
-- **CreateAdvisorHandoff** — coded; selects exact `(RecordId, VersionId)` pairs ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs#L7))
+- **CreateAdvisorHandoff** — coded; selects exact source versions and may bind an explicitly selected prior shared handoff for change comparison ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs#L7))
 - **ReviseAdvisorHandoffSelection** — coded; replaces exact `(RecordId, VersionId)` pairs and requires a change reason ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs#L7))
 - **MarkAdvisorHandoffReadyForReview** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs#L7))
 - **CloseAdvisorHandoff** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs#L7))
@@ -359,6 +360,7 @@ This pruned plan has 129 feature-backed additions, including five evidence comma
 - **RecordAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs#L7))
 - **CorrectAdvisorFeedback** — coded ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs#L7))
 - **RespondToAdvisorFeedback** — coded and handled ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs#L8))
+- **ResolveAdvisorFeedback** — coded and handled; closes the client-owned work raised from feedback ([contract](../../src/Compliance.Common/Features/AdvisorCollaboration/ResolveAdvisorFeedback.cs#L9))
 
 
 ### Control operation and recurrence — [R2-01](backlog.md#r2-01-assign-control-ownership-and-operating-cadence), [T2-02](backlog.md#t2-02-operate-a-recurring-control-calendar), R2-04, T2-03; [M0-D19](decisions/m0-d19-periodic-reviews.md)
@@ -388,8 +390,8 @@ This pruned plan has 129 feature-backed additions, including five evidence comma
 
 ### Type I engagement and baseline — [T1-01](backlog.md#t1-01-establish-the-type-i-engagement-and-point-in-time-snapshot)
 
-- **CreateExaminationEngagement** — personal HTTP handler records the draft Type I terms and attributes the creating member ([contract](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L7))
-- **ReviseExaminationEngagement** — personal HTTP handler preserves management contacts and boundary identity while applying the exact expected revision ([contract](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L7))
+- **CreateExaminationEngagement** — personal HTTP handler records the draft Type I terms, validates and captures active client management-contact members, and attributes the creating member ([contract](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L7))
+- **ReviseExaminationEngagement** — personal HTTP handler validates supplied active client management contacts, preserves contacts when omitted, and retains boundary identity under the exact expected revision ([contract](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L7))
 - **FreezeTypeIBaseline** — coded ([contract](../../src/Compliance.Common/Features/Examinations/FreezeTypeIBaseline.cs#L7))
 - **AmendTypeIBaseline** — coded ([contract](../../src/Compliance.Common/Features/Examinations/AmendTypeIBaseline.cs#L7))
 
@@ -463,6 +465,10 @@ This pruned plan has 129 feature-backed additions, including five evidence comma
 - **RecordComplianceIncidentResolution** — coded ([contract](../../src/Compliance.Common/Features/Incidents/RecordComplianceIncidentResolution.cs#L7))
 
 These commands carry the complete change or incident content accepted by their owning aggregates. The revised payload shapes use discriminator version 2 so handlers do not synthesize missing source, owner, impact, evidence, or resolution facts.
+
+The first T2-07 choreography slice is wired through internal commands and reactors. `LinkImpactReviewWork` follows a current change assessment and checks every selected item against the authoritative accountable-work directories for the same tenant and program before the owning aggregate records each link. `SystemDescriptionDecisionReactor` records exact approved-successor decisions for changes and exact no-change decisions for both changes and incidents. No-change correlation binds the current assessment version and canonical `AssessmentSha256`; approved change successors must postdate the assessment and name the exact change. The internal commands have no public routes, and projectors only index the resulting facts.
+
+Incident approved-successor correlation remains incomplete: approved description content stores `SignificantChangeIds` but has no incident-ID field. Do not infer an incident from other identifiers. Restricted record reads and edits now allow the current assessor or a member granted the dedicated restricted read/write permission; built-in Org Admin and Compliance Lead roles receive those grants. The incident directory query routes and significant-change read routes are registered with program authorization.
 
 ### Period close and examination populations — [T3-01](backlog.md#t3-01-close-the-observation-period-and-freeze-the-examination-snapshot), [T3-02](backlog.md#t3-02-demonstrate-complete-audit-populations); [M0-D17](decisions/m0-d17-audit-deliverables.md)
 

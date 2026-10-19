@@ -8,6 +8,7 @@ public sealed class Member : Aggregate
     Uuid _userId;
     bool _isRegistered;
     string? _affiliation;
+    DateOnly? _membershipExpiresOn;
     Uuid _membershipEpisodeId;
     bool _isSuspended;
     bool _isDeprovisioned;
@@ -19,6 +20,7 @@ public sealed class Member : Aggregate
 
     public bool IsRegistered => _isRegistered;
     public string? Affiliation => _affiliation;
+    public DateOnly? MembershipExpiresOn => _membershipExpiresOn;
     public Uuid UserId => _userId;
     public Uuid MembershipEpisodeId => _membershipEpisodeId;
     public bool IsSuspended => _isSuspended;
@@ -28,6 +30,9 @@ public sealed class Member : Aggregate
     public string? DeprovisionedByDisplay => _deprovisionedByDisplay;
     public DateTimeOffset? DeprovisionedAt => _deprovisionedAt;
     public string? DeprovisionReason => _deprovisionReason;
+
+    public bool IsAccessEligibleOn(DateOnly utcDate) => IsRegistered && !_isSuspended &&
+        !_isDeprovisioned && (_membershipExpiresOn is not { } expiresOn || utcDate <= expiresOn);
 
     public Member(Uuid tenantId, Uuid userId)
         : this(tenantId, RbacIds.Member(tenantId, userId), userId)
@@ -49,8 +54,15 @@ public sealed class Member : Aggregate
         _userId = userId;
         On<MemberRegistered>(registered =>
         {
+            var hasFiniteExpiry = registered.MembershipExpiresOn is { } expiresOn &&
+                                  expiresOn != DateOnly.MinValue && expiresOn != DateOnly.MaxValue;
+            if (registered.Affiliation is not ("client_personnel" or "firm_staff" or "guest") ||
+                registered.Affiliation == "guest" && !hasFiniteExpiry ||
+                registered.Affiliation != "guest" && registered.MembershipExpiresOn is not null)
+                throw new InvalidOperationException("The member registration event has invalid affiliation or expiry terms.");
             _isRegistered = true;
             _affiliation = registered.Affiliation;
+            _membershipExpiresOn = registered.MembershipExpiresOn;
             _userId = registered.UserId;
             _membershipEpisodeId = registered.MembershipEpisodeId;
             _isSuspended = false;
@@ -73,20 +85,27 @@ public sealed class Member : Aggregate
         On<MemberDeprovisionCleanupCompleted>(_ => _isDeprovisionCleanupComplete = true);
     }
 
-    public Result Register(string affiliation = "client_personnel")
+    public Result Register(string affiliation = "client_personnel",
+        DateOnly? membershipExpiresOn = null)
     {
         EnsureUserIdentity();
-        if (affiliation is not ("client_personnel" or "firm_staff"))
+        if (affiliation is not ("client_personnel" or "firm_staff" or "guest"))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "Invalid membership affiliation."));
+        var hasFiniteExpiry = membershipExpiresOn is { } endDate &&
+                              endDate != DateOnly.MinValue && endDate != DateOnly.MaxValue;
+        if (affiliation == "guest" && !hasFiniteExpiry ||
+            affiliation != "guest" && membershipExpiresOn is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Guest membership requires a finite end date; other affiliations cannot have one."));
         if (_isDeprovisioned && !_isDeprovisionCleanupComplete)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Membership authority cleanup must finish before a new invitation can take effect."));
         if (!_isRegistered)
             RaiseEvent(new MemberRegistered(_tenantId, Id, _userId, affiliation,
-                Uuid.CreateVersion4()));
-        else if (_affiliation != affiliation)
+                Uuid.CreateVersion4(), membershipExpiresOn));
+        else if (_affiliation != affiliation || _membershipExpiresOn != membershipExpiresOn)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "This membership has a different affiliation."));
+                "This membership has different affiliation or expiry terms."));
         return Result.Success;
     }
 

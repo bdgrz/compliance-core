@@ -14,6 +14,8 @@ public static class RbacPermissions
     public const string TechnologyInventoryManage = "technology_inventory.manage";
     public const string TechnologyInventoryRestrictedRead = "technology_inventory.restricted.read";
     public const string ApplicationRestrictedRead = "application.restricted.read";
+    public const string ComplianceRecordRestrictedRead = "compliance_record.restricted.read";
+    public const string ComplianceRecordRestrictedWrite = "compliance_record.restricted.write";
     public const string ProviderInventoryManage = "provider_inventory.manage";
     public const string WorkforceManage = "workforce.manage";
     public const string RiskAcceptComplianceLead = "risk.accept.compliance_lead";

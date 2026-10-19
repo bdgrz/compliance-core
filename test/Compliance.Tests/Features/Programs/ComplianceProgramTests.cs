@@ -162,6 +162,30 @@ public sealed class ComplianceProgramTests
     }
 
     [Fact]
+    public void ShouldReturnExactCriteriaSelectionEffectiveAtGivenTime()
+    {
+        // Arrange
+        var program = new ComplianceProgram(TenantId, ProgramId);
+        var plan = new ProgramPlan(null, null, null, null, null, null);
+        var firstEdition = Uuid.CreateVersion4();
+        var laterEdition = Uuid.CreateVersion4();
+        var firstSelectedAt = Now.AddDays(1);
+        Assert.Null(program.Create("SOC 2", plan, MemberId, "Lead", Now));
+        Assert.Null(program.SelectCriteriaEdition(1, firstEdition, MemberId, "Lead",
+            firstSelectedAt));
+        Assert.Null(program.SelectCriteriaEdition(2, laterEdition, MemberId, "Lead",
+            Now.AddDays(5)));
+
+        // Act
+        var selection = program.CriteriaSelectionAt(Now.AddDays(3));
+
+        // Assert
+        Assert.Equal(new ProgramCriteriaEditionSelection(2, firstEdition, firstSelectedAt),
+            selection);
+        Assert.Equal(firstEdition, program.CriteriaEditionAt(Now.AddDays(3)));
+    }
+
+    [Fact]
     public void ShouldPreserveLegacyActorGivenDifferentReviserAndReplay()
     {
         // Arrange

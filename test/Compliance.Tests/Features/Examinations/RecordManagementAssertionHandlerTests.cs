@@ -230,11 +230,18 @@ public sealed class RecordManagementAssertionHandlerTests
                 descriptionReference,
             };
             var engagement = new ExaminationEngagement(TenantId, ProgramId, ExaminationId);
+            var boundaryId = Uuid.CreateVersion4();
             Assert.Null(engagement.Create(new ExaminationEngagementContent("type_i",
                 "Independent Audit LLP", new DateOnly(2026, 1, 1), null,
-                ["security"], Uuid.CreateVersion4(), [AuthorMemberId]), AuthorMemberId,
+                ["security"], boundaryId, [AuthorMemberId]), AuthorMemberId,
                 "Assertion author", Now));
-            var preview = TypeIBaselinePreview.Create(TenantId, ProgramId, ExaminationId,
+            baselineSources =
+            [
+                new TypeIBaselineSourceReference("approved_boundary", boundaryId,
+                    Uuid.CreateVersion4(), 1, Hash('b')),
+                .. baselineSources,
+            ];
+            var preview = TypeIBaselinePreviewTestFactory.Create(TenantId, ProgramId, ExaminationId,
                 baselineSources);
             Assert.Null(engagement.FreezeBaseline(engagement.Revision, BaselineId, preview,
                 "Confirmed the exact examination source population.", AuthorMemberId,

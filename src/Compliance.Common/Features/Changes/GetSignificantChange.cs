@@ -5,6 +5,6 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Changes;
 
 /// <summary>Reads the feature state required by the linked product workflow.</summary>
-[Discriminator("bdgrz.changes.get-significant-change", 1)]
-public sealed record GetSignificantChange(Uuid TenantId, Uuid ProgramId, Uuid SignificantChangeId)
+[Discriminator("bdgrz.changes.get-significant-change", 2)]
+public sealed record GetSignificantChange(Uuid TenantId, Uuid ProgramId, Uuid ChangeId)
     : IRequest<SignificantChangeView>, IProgramReadRequest, ICallable;

@@ -3,16 +3,18 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Checks member events before the membership projection can catch up.</summary>
-sealed class EventSourcedMemberAccessEligibility(IAggregateReader reader) : IMemberAccessEligibility
+sealed class EventSourcedMemberAccessEligibility(IAggregateReader reader,
+    TimeProvider? clock = null) : IMemberAccessEligibility
 {
+    readonly TimeProvider _clock = clock ?? TimeProvider.System;
+
     public async ValueTask<bool> IsEligibleAsync(Uuid tenantId, Uuid userId,
         CancellationToken ct = default)
     {
         if (tenantId == Uuid.Empty || userId == Uuid.Empty)
             return false;
         var member = await reader.HydrateAsync(new Member(tenantId, userId), ct).ConfigureAwait(false);
-        return member.IsRegistered && member.Affiliation == "client_personnel" &&
-               !member.IsSuspended && !member.IsDeprovisioned;
+        return IsEligible(member);
     }
 
     public async ValueTask<Uuid?> GetMembershipEpisodeIdAsync(Uuid tenantId, Uuid memberId,
@@ -22,8 +24,12 @@ sealed class EventSourcedMemberAccessEligibility(IAggregateReader reader) : IMem
             return null;
         var member = await reader.HydrateAsync(Member.ForVerification(tenantId, memberId), ct)
             .ConfigureAwait(false);
-        return member.IsRegistered && !member.IsSuspended && !member.IsDeprovisioned
+        return IsEligible(member)
             ? member.MembershipEpisodeId
             : null;
     }
+
+    bool IsEligible(Member member) => member.IsRegistered &&
+        (member.Affiliation is "client_personnel" or "guest") &&
+        member.IsAccessEligibleOn(DateOnly.FromDateTime(_clock.GetUtcNow().UtcDateTime));
 }

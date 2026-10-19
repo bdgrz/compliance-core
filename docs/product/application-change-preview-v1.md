@@ -68,12 +68,13 @@ up to 200 direct-Application `policy_references`, up to 200
 `evidence_source_references`, up to 200 currently visible outgoing
 `application_relationships`, up to 200 `access_population_references`, and up to
 200 `review_campaign_references`, up to 200 `vendor_references`, and up to 200
-`readiness_references`, `pending_contexts`, and `complete`. A control
+`readiness_references`, `impact_digest`, `pending_contexts`, and `complete`. A control
 reference contains the stable control, program, applicability-entry, and
 current draft revision identifiers plus the authored subject and rationale; it
 does not contain full draft content. `complete` is true only when no impact
 context is pending; the preview remains incomplete while any decided context
-lacks an authoritative contribution. `policy_references` contains policy and
+lacks an authoritative contribution. `impact_digest` commits to the normalized,
+bounded references and pending-context set. `policy_references` contains policy and
 program IDs, identifier, title,
 revision or approved version, direct applicability subject, effective interval,
 and successor or retirement state. It never contains policy body text.
@@ -177,13 +178,17 @@ revision against the Fitz Application projection, and checks the boundary,
 Control, approved-Control-version, policy, evidence-support, access-population,
 review-campaign, program-directory, and readiness-directory
 projection checkpoints against their corresponding tenant source streams before
-and after reading references. It rechecks the Application and relationship source revisions after
-the projection reads. A source write
-detected during the read returns a retryable 409. A missing or wrong-tenant Application returns 404
+and after reading references. It rechecks the Application and relationship
+source revisions after the projection reads. A source write detected during the
+read returns a retryable 409. A missing or wrong-tenant Application returns 404
 without disclosing another tenant. Invalid request fields return 400. A stale
-expected revision returns 409. This advisory observation is not an atomic
-cross-stream snapshot, freeze, or digest that could be used for approval; a
-later write can still race a completed preview.
+expected revision returns 409. The preview is advisory and is not a freeze or
+global cross-stream snapshot. HTTP-only successor approval rereads the impact,
+requires it to be complete with no pending contexts, and matches the supplied
+`impact_digest`. It revalidates the predecessor Application and outgoing
+relationship-set revisions, and the aggregate checks that relationship revision
+before appending approval. Other independent source streams are not made atomic
+with the approval; a later write can still race a completed preview.
 
 The existing `ReviseApplication` command still applies a manual change
 directly. A governed successor, retirement, and in-use deletion gate require
