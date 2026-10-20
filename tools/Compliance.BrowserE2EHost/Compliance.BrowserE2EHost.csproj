@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../test/Compliance.Tests/Compliance.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../test/Compliance.Tests/E2E/compose.yml" Link="E2E/compose.yml"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

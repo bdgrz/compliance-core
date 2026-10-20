@@ -13,9 +13,14 @@ public sealed class BrokerStackFixture : IAsyncLifetime, IAsyncDisposable
         (_stack ?? throw new InvalidOperationException("The broker has not started.")).WebSocketEndpoint;
 
     public async Task InitializeAsync()
+        => await StartAsync(CancellationToken.None);
+
+    public async Task StartAsync(CancellationToken ct)
     {
+        if (_stack is not null)
+            throw new InvalidOperationException("The broker fixture has already started.");
         _stack = new BrokerStack();
-        await _stack.StartAsync();
+        await _stack.StartAsync(ct);
     }
 
     public Task DisposeAsync() => ((IAsyncDisposable)this).DisposeAsync().AsTask();
