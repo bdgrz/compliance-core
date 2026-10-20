@@ -407,7 +407,7 @@ public sealed class ReadinessAssessmentHandlerTests
                 Kind: "catalog_support_gap", RuleId: "catalog_support_declared"));
 
         // Assert
-        Assert.Equal("readiness-rules/12", assessment.RuleVersion);
+        Assert.Equal("readiness-rules/13", assessment.RuleVersion);
         Assert.Equal(6, gaps.Items.Count);
         Assert.Equal(assessment.Gaps.Count, assessment.GapCount);
         foreach (var gap in gaps.Items)

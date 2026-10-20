@@ -12,7 +12,7 @@ Baseline: local backend commit `1f9bb3c9b9ae3459f3ca563a4355c5b6a6187689`, inspe
 
 ## Scope and evidence
 
-The baseline is the local accepted backlog/decisions and current source. Where an older feature note differs from current code, current code governs existence: for example readiness-rules/12 already assesses effective commitments, while workforce completeness and evidence remain explicit unassessed families. No claim here relies on historical issue status. Exact command names and transaction boundaries for missing workflows will be settled in their consuming slices. Privacy lifecycle scope (#349) remains an explicit unresolved requirement, not an invented list.
+The baseline is the local accepted backlog/decisions and current source. Where an older feature note differs from current code, current code governs existence: for example readiness-rules/13 already assesses effective commitments, while workforce completeness beyond an integrity-checked as-of roster snapshot, when available, and evidence remain explicit unassessed families. No claim here relies on historical issue status. Exact command names and transaction boundaries for missing workflows will be settled in their consuming slices. Privacy lifecycle scope (#349) remains an explicit unresolved requirement, not an invented list.
 
 ## Status and counting rules
 
@@ -487,7 +487,7 @@ RunReadinessAssessment persists versioned inputs/results; ReadinessRules explici
 
 | Status | Command intent / candidate names | Remaining behavior |
 | --- | --- | --- |
-| Partial | `RunReadinessAssessment` | Complete workforce completeness and governed-evidence assessment, broader required source/rule coverage and exact input retention. Current readiness-rules/12 already assesses effective commitments and provider CSOCs; do not treat that existing coverage as missing. Preserve selected-category limitations. |
+| Partial | `RunReadinessAssessment` | Complete workforce completeness and governed-evidence assessment, broader required source/rule coverage and exact input retention. Current readiness-rules/13 already assesses effective commitments and provider CSOCs; do not treat that existing coverage as missing. Preserve selected-category limitations. |
 | Partial | `PlanReadinessGap` | Reconcile severity, target stage, control links and remaining plan policy under the owning readiness contract; keep stable gap identities. |
 | Partial | `DecideReadiness`; `DecideTypeIEntry` | Retain exact-version personal decisions; complete their source/snapshot prerequisites without treating entry approval as an examination baseline or auditor opinion. |
 | Decision | `PublishReadinessRuleVersion`; `RecordReadinessMonitoringResult` | Determine whether rule versions remain code-owned or need governed authoring, and which T2 monitoring results must be retained for management-review evidence. Do not add a generic calculation-state command prematurely. |
