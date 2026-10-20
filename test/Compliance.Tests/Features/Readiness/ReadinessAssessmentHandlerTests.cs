@@ -247,6 +247,40 @@ public sealed class ReadinessAssessmentHandlerTests
     }
 
     [Fact]
+    public async Task ShouldRejectTypeIEntryGivenAssessmentFromAnotherTenant()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync();
+        var foreignTenantId = Uuid.CreateVersion4();
+        var foreignAssessmentId = Uuid.CreateVersion4();
+        var asOf = DateTimeOffset.UtcNow.AddMinutes(-1);
+        var evaluation = ReadinessRules.Evaluate(fixture.ProgramId, asOf, null, [], [],
+            new Dictionary<Uuid, ControlVersionView?>());
+        await ProgramManagementServices.SeedAsync(fixture.Provider,
+            new ReadinessLedger(foreignTenantId, fixture.ProgramId), ledger =>
+                Command(ledger.Record(0, foreignAssessmentId, asOf, null, evaluation,
+                    RbacIds.Member(foreignTenantId, Uuid.CreateVersion4()), "Foreign runner",
+                    DateTimeOffset.UtcNow)));
+        var foreignLedger = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new ReadinessLedger(foreignTenantId, fixture.ProgramId));
+        Assert.NotNull(foreignLedger.Read(foreignAssessmentId));
+
+        // Act
+        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider,
+            fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId,
+                foreignAssessmentId, 0, "defer", "The source belongs to another tenant."),
+            RequestErrorKind.NotFound);
+
+        // Assert
+        var localAfter = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new ReadinessLedger(fixture.TenantId, fixture.ProgramId));
+        var foreignAfter = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new ReadinessLedger(foreignTenantId, fixture.ProgramId));
+        Assert.Empty(localAfter.TypeIEntryDecisions());
+        Assert.Empty(foreignAfter.TypeIEntryDecisions());
+    }
+
+    [Fact]
     public async Task ShouldRecordTypeIEntryWithFrozenAcknowledgedItemsGivenPlannedGapsAndProceed()
     {
         // Arrange
