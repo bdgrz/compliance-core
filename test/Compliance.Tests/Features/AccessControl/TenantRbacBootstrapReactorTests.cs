@@ -6,7 +6,52 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 public sealed class TenantRbacBootstrapReactorTests
 {
     [Fact]
-    public async Task ShouldLeaveInventoryGrantToDedicatedReactorGivenRegisteredTenant()
+    public async Task ShouldLeaveBuiltInRoleCatalogAndFeaturePermissionsToDedicatedReactorsGivenRegisteredTenant()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var scenario = new ReactorScenario().Given(
+            new TenantRegistered(tenantId, Uuid.CreateVersion4(), "Acme", "acme"));
+
+        // Act
+        await scenario.RunAsync(new TenantRbacBootstrapReactor(
+            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+
+        // Assert
+        Assert.DoesNotContain(scenario.SentRequests, request => request is DefineRole or RenameRole);
+        Assert.DoesNotContain(scenario.SentRequests, request => request is DefineTeam
+        {
+            TeamId: var teamId,
+        } && teamId == BuiltInRbac.ViewersTeamId(tenantId));
+        Assert.DoesNotContain(scenario.SentRequests, request => request is AssignTeamRole
+        {
+            TeamId: var teamId,
+            RoleId: var roleId,
+        } && teamId == BuiltInRbac.ViewersTeamId(tenantId) &&
+            roleId == BuiltInRbac.ViewerRoleId(tenantId));
+        Assert.DoesNotContain(scenario.SentRequests, request => request is AssignRolePermission
+        {
+            RoleId: var roleId,
+        } && roleId == BuiltInRbac.ViewerRoleId(tenantId));
+
+        var featurePermissions = new HashSet<string>(StringComparer.Ordinal)
+        {
+            RbacPermissions.ApplicationRestrictedRead,
+            RbacPermissions.ComplianceRecordRestrictedRead,
+            RbacPermissions.ComplianceRecordRestrictedWrite,
+            RbacPermissions.TechnologyInventoryRestrictedRead,
+            RbacPermissions.EvidenceRedactionPrepare,
+            RbacPermissions.EvidenceRedactionApprove,
+            RbacPermissions.EvidenceArtifactRead,
+        };
+        Assert.DoesNotContain(scenario.SentRequests, request => request is AssignRolePermission
+        {
+            Permission: var permission,
+        } && featurePermissions.Contains(permission));
+    }
+
+    [Fact]
+    public async Task ShouldKeepCoreAccessGrantsInBootstrapGivenRegisteredTenant()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -19,56 +64,36 @@ public sealed class TenantRbacBootstrapReactorTests
             new InMemoryProjectionCheckpointStore(), scenario.Requests));
 
         // Assert
-        Assert.Contains(scenario.SentRequests, request => request is DefineTeam);
-        Assert.Contains(scenario.SentRequests, request => request is DefineRole
-        {
-            RoleId: var roleId,
-            Name: BuiltInRbac.ViewerRoleName,
-        } && roleId == BuiltInRbac.ViewerRoleId(tenantId));
-        Assert.DoesNotContain(scenario.SentRequests, request => request is AssignRolePermission
-        {
-            Permission: RbacPermissions.ApplicationInventoryManage,
-        });
         Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
         {
             RoleId: var roleId,
-            Permission: RbacPermissions.ApplicationRestrictedRead,
+            Permission: RbacPermissions.TenantAccess,
         } && roleId == BuiltInRbac.TenantAdministrationRoleId(tenantId));
         Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
         {
             RoleId: var roleId,
-            Permission: RbacPermissions.ApplicationRestrictedRead,
-        } && roleId == BuiltInRbac.ComplianceManagementRoleId(tenantId));
-        Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
-        {
-            RoleId: var roleId,
-            Permission: RbacPermissions.ComplianceRecordRestrictedRead,
+            Permission: RbacPermissions.TenantRbacManage,
         } && roleId == BuiltInRbac.TenantAdministrationRoleId(tenantId));
         Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
         {
             RoleId: var roleId,
-            Permission: RbacPermissions.ComplianceRecordRestrictedRead,
-        } && roleId == BuiltInRbac.ComplianceManagementRoleId(tenantId));
-        Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
-        {
-            RoleId: var roleId,
-            Permission: RbacPermissions.ComplianceRecordRestrictedWrite,
+            Permission: RbacPermissions.ProgramManage,
         } && roleId == BuiltInRbac.TenantAdministrationRoleId(tenantId));
         Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
         {
             RoleId: var roleId,
-            Permission: RbacPermissions.ComplianceRecordRestrictedWrite,
+            Permission: RbacPermissions.TenantAccess,
         } && roleId == BuiltInRbac.ComplianceManagementRoleId(tenantId));
         Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
         {
             RoleId: var roleId,
-            Permission: RbacPermissions.TechnologyInventoryRestrictedRead,
-        } && roleId == BuiltInRbac.TenantAdministrationRoleId(tenantId));
+            Permission: RbacPermissions.ProgramManage,
+        } && roleId == BuiltInRbac.ComplianceManagementRoleId(tenantId));
         Assert.Contains(scenario.SentRequests, request => request is AssignRolePermission
         {
             RoleId: var roleId,
-            Permission: RbacPermissions.TechnologyInventoryRestrictedRead,
-        } && roleId == BuiltInRbac.ComplianceManagementRoleId(tenantId));
+            Permission: RbacPermissions.TenantAccess,
+        } && roleId == BuiltInRbac.ComplianceParticipationRoleId(tenantId));
     }
 
     [Fact]
@@ -96,6 +121,41 @@ public sealed class TenantRbacBootstrapReactorTests
         } && teamId == BuiltInRbac.AdministratorsTeamId(tenantId) &&
             memberId == RbacIds.Member(tenantId, creatorId));
         Assert.DoesNotContain(scenario.SentRequests, request => request is ActivateTenant);
+    }
+
+    [Fact]
+    public async Task ShouldProvisionCreatorWorkspaceBeforeNonCriticalDefaultsGivenTenantRegistration()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var creatorId = Uuid.CreateVersion4();
+        var adminTeamId = BuiltInRbac.AdministratorsTeamId(tenantId);
+        var adminRoleId = BuiltInRbac.TenantAdministrationRoleId(tenantId);
+        var memberId = RbacIds.Member(tenantId, creatorId);
+        var scenario = new ReactorScenario().Given(
+            new TenantRegistered(tenantId, creatorId, "Acme", "acme",
+                "Acme LLC", CreatorIsAdministrator: true, ActivationRequired: true));
+
+        // Act
+        await scenario.RunAsync(new TenantRbacBootstrapReactor(
+            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+
+        // Assert
+        // These commands all descend from this TenantRegistered source event. Membership starts
+        // projecting before the core admin grants, and activation is triggered only after those
+        // grants and the admin team-role link have been sent.
+        Assert.Collection(scenario.SentRequests.Take(7),
+            request => Assert.Equal(new DefineTeam(tenantId, adminTeamId,
+                BuiltInRbac.AdministratorsTeamName), request),
+            request => Assert.Equal(new RegisterMember(tenantId, creatorId), request),
+            request => Assert.Equal(new AssignTeamRole(tenantId, adminTeamId, adminRoleId), request),
+            request => Assert.Equal(new AssignRolePermission(tenantId, adminRoleId,
+                RbacPermissions.TenantAccess), request),
+            request => Assert.Equal(new AssignRolePermission(tenantId, adminRoleId,
+                RbacPermissions.TenantRbacManage), request),
+            request => Assert.Equal(new AssignRolePermission(tenantId, adminRoleId,
+                RbacPermissions.ProgramManage), request),
+            request => Assert.Equal(new AssignTeamMember(tenantId, adminTeamId, memberId), request));
     }
 
     [Fact]
@@ -149,4 +209,5 @@ public sealed class TenantRbacBootstrapReactorTests
         Assert.DoesNotContain(scenario.SentRequests, request => request is RegisterMember);
         Assert.DoesNotContain(scenario.SentRequests, request => request is AssignTeamMember);
     }
+
 }

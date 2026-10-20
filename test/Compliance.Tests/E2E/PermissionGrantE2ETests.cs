@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Tests.E2E;
 
 /// <summary>
 ///     Exercises the real permission-grant round trip against a live Fitz broker: register a
-///     tenant (which bootstraps built-in teams/roles/permissions through real
+///     tenant (which provisions built-in teams, the role catalog, and permissions through real
 ///     <see cref="FitzPermissionProjection" /> writes), then confirm the creator can actually read
 ///     a permission-gated resource. This is precisely the path that silently never worked when
 ///     <c>PermissionProjectionState.RolePermissions</c> was a <c>Dictionary&lt;Uuid, ...&gt;</c> --
@@ -39,7 +39,7 @@ public sealed class PermissionGrantE2ETests(BrokerStackFixture broker)
         var tenantId = Uuid.Parse(tenant.TenantId, CultureInfo.InvariantCulture);
         var administratorsTeamId = BuiltInRbac.AdministratorsTeamId(tenantId);
 
-        // Act: TenantRbacBootstrapReactor grants the creator TenantAccess asynchronously, through
+        // Act: tenant bootstrap grants the creator TenantAccess asynchronously, through
         // a real write -> real materialize -> real read cycle, so poll rather than assume it has
         // landed by the time RegisterTenant returns.
         HttpResponseMessage? getTeamResponse = null;

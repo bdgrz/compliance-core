@@ -445,7 +445,8 @@ public sealed class ArtifactMetadataAccessTests
             Provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         }
 
-        public static async Task<Fixture> CreateAsync(string classification = "restricted", bool legacy = false)
+        public static async Task<Fixture> CreateAsync(string classification = "restricted", bool legacy = false,
+            bool includeRedactionPermissions = true)
         {
             var fixture = new Fixture();
             await ProgramManagementServices.SeedAsync(fixture.Provider, new Tenant(fixture.TenantId), tenant =>
@@ -456,7 +457,13 @@ public sealed class ArtifactMetadataAccessTests
             if (legacy)
                 await fixture.SeedLegacyRbacAsync();
             else
+            {
+                await fixture.RunReactorAsync("BuiltInRoleCatalogV1");
                 await fixture.RunReactorAsync("TenantRbacBootstrap");
+                await fixture.RunReactorAsync("EvidenceArtifactReadPermissionV1");
+                if (includeRedactionPermissions)
+                    await fixture.RunReactorAsync("EvidenceRedactionPermissionsV1");
+            }
             await fixture.ProjectAsync();
             await ProgramManagementServices.SeedAsync(fixture.Provider,
                 new EvidenceArtifact(fixture.TenantId, fixture.ArtifactId), artifact => artifact.Register(

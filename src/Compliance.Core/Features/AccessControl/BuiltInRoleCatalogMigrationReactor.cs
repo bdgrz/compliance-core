@@ -2,7 +2,10 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-/// <summary>Replays tenant registrations to migrate existing tenants to the accepted built-in role catalog.</summary>
+/// <summary>
+/// Replays tenant registrations to migrate existing tenants and initialize new tenants' built-in role catalog.
+/// This is the sole writer to built-in <c>rbac-roles</c> streams.
+/// </summary>
 public sealed partial class BuiltInRoleCatalogMigrationReactor(
     IProjectionCheckpointStore checkpoints,
     IRequestBus bus)

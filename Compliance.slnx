@@ -9,5 +9,6 @@
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/Compliance.OpenApiExport/Compliance.OpenApiExport.csproj" />
+    <Project Path="tools/Compliance.BrowserE2EHost/Compliance.BrowserE2EHost.csproj" />
   </Folder>
 </Solution>

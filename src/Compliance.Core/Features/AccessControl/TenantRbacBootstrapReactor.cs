@@ -11,71 +11,54 @@ public sealed partial class TenantRbacBootstrapReactor(
     public async ValueTask HandleAsync(IReactorContext<TenantRegistered> context, CancellationToken ct)
     {
         var tenantId = context.Trigger.TenantId;
+        // BuiltInRoleCatalogMigrationReactor owns all rbac-roles streams, including defining
+        // current names for new registrations and renaming legacy roles. Feature-specific
+        // permission backfills likewise own their individual role-permission streams.
+        var ownerBecomesAdministrator = context.Trigger.CreatorIsAdministrator ||
+                                        context.Trigger.FirstAdministratorEmail is null;
         List<IRequest> commands =
         [
-            new DefineTeam(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
-                BuiltInRbac.AdministratorsTeamName),
+            (new DefineTeam(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
+                BuiltInRbac.AdministratorsTeamName)),
+        ];
+
+        // Let membership projection start as soon as the admin team exists. The admin role link
+        // and core grants stay ahead of the assignment event that triggers tenant activation.
+        if (ownerBecomesAdministrator)
+        {
+            commands.Add(new RegisterMember(tenantId, context.Trigger.OwnerUserId));
+        }
+
+        commands.Add(new AssignTeamRole(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
+            BuiltInRbac.TenantAdministrationRoleId(tenantId)));
+        commands.Add(new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
+            RbacPermissions.TenantAccess));
+        commands.Add(new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
+            RbacPermissions.TenantRbacManage));
+        commands.Add(new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
+            RbacPermissions.ProgramManage));
+
+        if (ownerBecomesAdministrator)
+        {
+            var memberId = RbacIds.Member(tenantId, context.Trigger.OwnerUserId);
+            commands.Add(new AssignTeamMember(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), memberId));
+        }
+
+        commands.AddRange(
+        [
             new DefineTeam(tenantId, BuiltInRbac.PowerUsersTeamId(tenantId), BuiltInRbac.PowerUsersTeamName),
             new DefineTeam(tenantId, BuiltInRbac.StandardUsersTeamId(tenantId), BuiltInRbac.StandardUsersTeamName),
-            new DefineTeam(tenantId, BuiltInRbac.ViewersTeamId(tenantId), BuiltInRbac.ViewersTeamName),
-            new DefineRole(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
-                BuiltInRbac.TenantAdministrationRoleName),
-            new DefineRole(tenantId, BuiltInRbac.ComplianceManagementRoleId(tenantId),
-                BuiltInRbac.ComplianceManagementRoleName),
-            new DefineRole(tenantId, BuiltInRbac.ComplianceParticipationRoleId(tenantId),
-                BuiltInRbac.ComplianceParticipationRoleName),
-            new DefineRole(tenantId, BuiltInRbac.ViewerRoleId(tenantId), BuiltInRbac.ViewerRoleName),
-            new AssignTeamRole(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
-                BuiltInRbac.TenantAdministrationRoleId(tenantId)),
             new AssignTeamRole(tenantId, BuiltInRbac.PowerUsersTeamId(tenantId),
                 BuiltInRbac.ComplianceManagementRoleId(tenantId)),
             new AssignTeamRole(tenantId, BuiltInRbac.StandardUsersTeamId(tenantId),
                 BuiltInRbac.ComplianceParticipationRoleId(tenantId)),
-            new AssignTeamRole(tenantId, BuiltInRbac.ViewersTeamId(tenantId), BuiltInRbac.ViewerRoleId(tenantId)),
-            new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
-                RbacPermissions.TenantAccess),
-            new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
-                RbacPermissions.TenantRbacManage),
-            new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
-                RbacPermissions.ProgramManage),
-            new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
-                RbacPermissions.ApplicationRestrictedRead),
-            new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
-                RbacPermissions.ComplianceRecordRestrictedRead),
-            new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
-                RbacPermissions.ComplianceRecordRestrictedWrite),
-            new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId),
-                RbacPermissions.TechnologyInventoryRestrictedRead),
             new AssignRolePermission(tenantId, BuiltInRbac.ComplianceManagementRoleId(tenantId),
                 RbacPermissions.TenantAccess),
             new AssignRolePermission(tenantId, BuiltInRbac.ComplianceManagementRoleId(tenantId),
                 RbacPermissions.ProgramManage),
-            new AssignRolePermission(tenantId, BuiltInRbac.ComplianceManagementRoleId(tenantId),
-                RbacPermissions.ApplicationRestrictedRead),
-            new AssignRolePermission(tenantId, BuiltInRbac.ComplianceManagementRoleId(tenantId),
-                RbacPermissions.ComplianceRecordRestrictedRead),
-            new AssignRolePermission(tenantId, BuiltInRbac.ComplianceManagementRoleId(tenantId),
-                RbacPermissions.ComplianceRecordRestrictedWrite),
-            new AssignRolePermission(tenantId, BuiltInRbac.ComplianceManagementRoleId(tenantId),
-                RbacPermissions.TechnologyInventoryRestrictedRead),
             new AssignRolePermission(tenantId, BuiltInRbac.ComplianceParticipationRoleId(tenantId),
                 RbacPermissions.TenantAccess),
-            new AssignRolePermission(tenantId, BuiltInRbac.ViewerRoleId(tenantId), RbacPermissions.TenantAccess),
-            new AssignRolePermission(tenantId, BuiltInRbac.TenantAdministrationRoleId(tenantId), RbacPermissions.EvidenceRedactionPrepare),
-            new AssignRolePermission(tenantId, BuiltInRbac.ComplianceManagementRoleId(tenantId), RbacPermissions.EvidenceRedactionPrepare),
-            new AssignRolePermission(tenantId, BuiltInRbac.ComplianceParticipationRoleId(tenantId), RbacPermissions.EvidenceRedactionPrepare),
-            new AssignRolePermission(tenantId, BuiltInRbac.ComplianceManagementRoleId(tenantId), RbacPermissions.EvidenceRedactionApprove),
-            new AssignRolePermission(tenantId, BuiltInRbac.ViewerRoleId(tenantId), RbacPermissions.EvidenceArtifactRead),
-        ];
-
-        // Historic registrations without an invitation and verified self-service registrations
-        // both name their first administrator in the tenant registration event.
-        if (context.Trigger.CreatorIsAdministrator || context.Trigger.FirstAdministratorEmail is null)
-        {
-            var memberId = RbacIds.Member(tenantId, context.Trigger.OwnerUserId);
-            commands.Add(new RegisterMember(tenantId, context.Trigger.OwnerUserId));
-            commands.Add(new AssignTeamMember(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), memberId));
-        }
+        ]);
 
         foreach (var command in commands)
             await bus.SendReactionAsync(command, context, ct);
