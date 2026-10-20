@@ -21,6 +21,7 @@ professional engagements, and enforced independence.
 | Document | What it establishes |
 | --- | --- |
 | [Product brief](product-brief.md) | Customer, business thesis, objectives, commercial model, journey, and release boundaries |
+| [User journeys and flows](user-journeys.md) | Mermaid maps for MVP workflows and later lifecycle, firm, and commercial journeys; includes story coverage |
 | [Business operations](business-operations.md) | Multiple organizations per account, client management delegation, organization billing, add-on acceptance, and commercial readiness decisions |
 | [Domain model](domain-model.md) | Process spine, cohesive ownership, relationships, and cross-workflow rules |
 | [Canonical entity model](canonical-entity-model.md) | Approved identity, workforce, inventory, access, and provenance vocabulary |
