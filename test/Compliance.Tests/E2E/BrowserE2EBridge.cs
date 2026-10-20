@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Channels;
 using Bdgrz.Compliance.Features.Tenants;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
@@ -146,6 +145,7 @@ sealed class UnixDomainTokenMailbox : IEmailChallengeDelivery, ITenantInvitation
     const int MaximumRequestBytes = 4096;
     const int MaximumTimeoutMilliseconds = 60_000;
     const int DefaultMaximumConcurrentConnections = 64;
+    const int DefaultMaximumDeliveryKeys = 256;
     static readonly TimeSpan DefaultRequestLineReadDeadline = TimeSpan.FromSeconds(5);
     static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -153,7 +153,9 @@ sealed class UnixDomainTokenMailbox : IEmailChallengeDelivery, ITenantInvitation
         $"bdgrz-e2e-mailbox-{Guid.NewGuid():N}");
     readonly string _socketPath;
     readonly CancellationTokenSource _stopping = new();
-    readonly ConcurrentDictionary<DeliveryKey, Channel<string>> _deliveries = new();
+    readonly object _deliveryGate = new();
+    readonly Dictionary<DeliveryKey, DeliverySlot> _deliveries = [];
+    readonly int _maximumDeliveryKeys;
     readonly ConcurrentDictionary<long, Task> _connections = new();
     readonly SemaphoreSlim _connectionSlots;
     readonly TimeSpan _requestLineReadDeadline;
@@ -161,23 +163,27 @@ sealed class UnixDomainTokenMailbox : IEmailChallengeDelivery, ITenantInvitation
     Socket? _listener;
     Task? _acceptLoop;
     long _connectionId;
+    int _pendingTokenCount;
     int _started;
     int _disposed;
 
     public UnixDomainTokenMailbox() : this(DefaultMaximumConcurrentConnections,
-        DefaultRequestLineReadDeadline)
+        DefaultRequestLineReadDeadline, maximumDeliveryKeys: DefaultMaximumDeliveryKeys)
     {
     }
 
     internal UnixDomainTokenMailbox(int maximumConcurrentConnections, TimeSpan requestLineReadDeadline,
-        Func<Socket, CancellationToken, Task>? afterAcceptAsync = null)
+        Func<Socket, CancellationToken, Task>? afterAcceptAsync = null,
+        int maximumDeliveryKeys = DefaultMaximumDeliveryKeys)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumConcurrentConnections);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(requestLineReadDeadline, TimeSpan.Zero);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumDeliveryKeys);
         _connectionSlots = new SemaphoreSlim(maximumConcurrentConnections,
             maximumConcurrentConnections);
         _requestLineReadDeadline = requestLineReadDeadline;
         _afterAcceptAsync = afterAcceptAsync;
+        _maximumDeliveryKeys = maximumDeliveryKeys;
         _socketPath = Path.Combine(_directoryPath, "mailbox.sock");
     }
 
@@ -211,16 +217,14 @@ sealed class UnixDomainTokenMailbox : IEmailChallengeDelivery, ITenantInvitation
         string token, CancellationToken ct)
     {
         _ = challengeId;
-        _ = userId;
-        return QueueDeliveryAsync("email_verification", emailAddress, token, ct);
+        return QueueDeliveryAsync("email_verification", userId, emailAddress, token, ct);
     }
 
     ValueTask IEmailChallengeDelivery.SendRecoveryAsync(Uuid challengeId, Uuid userId,
         string emailAddress, string token, CancellationToken ct)
     {
         _ = challengeId;
-        _ = userId;
-        return QueueDeliveryAsync("email_recovery", emailAddress, token, ct);
+        return QueueDeliveryAsync("email_recovery", userId, emailAddress, token, ct);
     }
 
     ValueTask IEmailChallengeDelivery.SendRecoveryCompletedAsync(Uuid challengeId, Uuid userId,
@@ -237,23 +241,58 @@ sealed class UnixDomainTokenMailbox : IEmailChallengeDelivery, ITenantInvitation
         string emailAddress, string token, CancellationToken ct)
     {
         _ = attemptId;
-        _ = tenantId;
-        return QueueDeliveryAsync("tenant_invitation", emailAddress, token, ct);
+        return QueueDeliveryAsync("tenant_invitation", tenantId, emailAddress, token, ct);
     }
 
-    ValueTask QueueDeliveryAsync(string delivery, string emailAddress, string token,
+    ValueTask QueueDeliveryAsync(string delivery, Uuid scopeId, string emailAddress, string token,
         CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
         ArgumentException.ThrowIfNullOrWhiteSpace(emailAddress);
         ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        if (scopeId == Uuid.Empty)
+            throw new ArgumentException("A recipient scope is required.", nameof(scopeId));
+        if (!EmailAddresses.TryNormalize(emailAddress, out var normalizedEmail))
+            throw new ArgumentException("A valid recipient address is required.", nameof(emailAddress));
 
-        var key = new DeliveryKey(delivery, emailAddress.Trim().ToUpperInvariant());
-        var channel = _deliveries.GetOrAdd(key, static _ => Channel.CreateUnbounded<string>(
-            new UnboundedChannelOptions { SingleReader = false, SingleWriter = false }));
-        if (!channel.Writer.TryWrite(token))
-            throw new InvalidOperationException("The browser E2E mailbox has closed.");
+        var key = new DeliveryKey(delivery, normalizedEmail, scopeId);
+        lock (_deliveryGate)
+        {
+            if (!_deliveries.TryGetValue(key, out var slot))
+            {
+                if (_deliveries.Count >= _maximumDeliveryKeys ||
+                    _pendingTokenCount >= _maximumDeliveryKeys)
+                    throw new MailboxCapacityExceededException();
+
+                slot = new DeliverySlot();
+                _deliveries.Add(key, slot);
+            }
+
+            if (slot.Waiters.First is { } firstWaiter)
+            {
+                slot.Waiters.RemoveFirst();
+                firstWaiter.Value.Node = null;
+                firstWaiter.Value.Completion.TrySetResult(new MailboxResponse("ok", token));
+                RemoveIfEmpty(key, slot);
+            }
+            else if (slot.PendingToken is null)
+            {
+                if (_pendingTokenCount >= _maximumDeliveryKeys)
+                {
+                    RemoveIfEmpty(key, slot);
+                    throw new MailboxCapacityExceededException();
+                }
+
+                slot.PendingToken = token;
+                _pendingTokenCount++;
+            }
+            else
+            {
+                // Keep only the newest pending challenge for a recipient and delivery type.
+                slot.PendingToken = token;
+            }
+        }
         return ValueTask.CompletedTask;
     }
 
@@ -380,10 +419,18 @@ sealed class UnixDomainTokenMailbox : IEmailChallengeDelivery, ITenantInvitation
             !TryGetString(root, "op", out var operation) || operation != "consume" ||
             !TryGetString(root, "delivery", out var delivery) ||
             !TryGetString(root, "email", out var email) ||
-            string.IsNullOrWhiteSpace(email) || email.Length > 320)
+            string.IsNullOrWhiteSpace(email))
             return new MailboxResponse("invalid_request");
 
         if (delivery is not ("email_verification" or "email_recovery" or "tenant_invitation"))
+            return new MailboxResponse("invalid_request");
+
+        var scopeField = delivery == "tenant_invitation" ? "tenant_id" : "user_id";
+        var otherScopeField = delivery == "tenant_invitation" ? "user_id" : "tenant_id";
+        if (root.TryGetProperty(otherScopeField, out _) ||
+            !TryGetString(root, scopeField, out var rawScopeId) ||
+            !Uuid.TryParse(rawScopeId, out var scopeId) || scopeId == Uuid.Empty ||
+            !EmailAddresses.TryNormalize(email, out var normalizedEmail))
             return new MailboxResponse("invalid_request");
 
         var timeout = 30_000;
@@ -393,29 +440,70 @@ sealed class UnixDomainTokenMailbox : IEmailChallengeDelivery, ITenantInvitation
              timeout is < 0 or > MaximumTimeoutMilliseconds))
             return new MailboxResponse("invalid_request");
 
-        var key = new DeliveryKey(delivery, email.Trim().ToUpperInvariant());
-        var channel = _deliveries.GetOrAdd(key, static _ => Channel.CreateUnbounded<string>(
-            new UnboundedChannelOptions { SingleReader = false, SingleWriter = false }));
-        if (channel.Reader.TryRead(out var token))
-            return new MailboxResponse("ok", token);
-        if (timeout == 0)
-            return new MailboxResponse("timeout");
+        var key = new DeliveryKey(delivery, normalizedEmail, scopeId);
+        Waiter waiter;
+        lock (_deliveryGate)
+        {
+            if (_deliveries.TryGetValue(key, out var slot))
+            {
+                if (slot.PendingToken is { } token)
+                {
+                    slot.PendingToken = null;
+                    _pendingTokenCount--;
+                    RemoveIfEmpty(key, slot);
+                    return new MailboxResponse("ok", token);
+                }
+
+                if (timeout == 0)
+                    return new MailboxResponse("timeout");
+
+                waiter = new Waiter();
+                waiter.Node = slot.Waiters.AddLast(waiter);
+            }
+            else
+            {
+                // A zero-timeout miss is lookup-only. Do not allocate an empty slot.
+                if (timeout == 0)
+                    return new MailboxResponse("timeout");
+                if (_deliveries.Count >= _maximumDeliveryKeys)
+                    return new MailboxResponse("capacity_exceeded");
+
+                var newSlot = new DeliverySlot();
+                waiter = new Waiter();
+                waiter.Node = newSlot.Waiters.AddLast(waiter);
+                _deliveries.Add(key, newSlot);
+            }
+        }
 
         using var wait = CancellationTokenSource.CreateLinkedTokenSource(ct);
         wait.CancelAfter(timeout);
-        try
+        using var registration = wait.Token.Register(() => CompleteWaiter(key, waiter,
+            ct.IsCancellationRequested ? "closed" : "timeout"));
+        return await waiter.Completion.Task.ConfigureAwait(false);
+    }
+
+    void CompleteWaiter(DeliveryKey key, Waiter waiter, string status)
+    {
+        lock (_deliveryGate)
         {
-            token = await channel.Reader.ReadAsync(wait.Token).ConfigureAwait(false);
-            return new MailboxResponse("ok", token);
+            if (waiter.Node is not { } node)
+                return;
+
+            if (_deliveries.TryGetValue(key, out var slot))
+            {
+                slot.Waiters.Remove(node);
+                RemoveIfEmpty(key, slot);
+            }
+
+            waiter.Node = null;
+            waiter.Completion.TrySetResult(new MailboxResponse(status));
         }
-        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
-        {
-            return new MailboxResponse("timeout");
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            return new MailboxResponse("closed");
-        }
+    }
+
+    void RemoveIfEmpty(DeliveryKey key, DeliverySlot slot)
+    {
+        if (slot.PendingToken is null && slot.Waiters.Count == 0)
+            _deliveries.Remove(key);
     }
 
     static bool TryGetString(JsonElement root, string name, out string value)
@@ -482,6 +570,11 @@ sealed class UnixDomainTokenMailbox : IEmailChallengeDelivery, ITenantInvitation
         }
         finally
         {
+            lock (_deliveryGate)
+            {
+                _deliveries.Clear();
+                _pendingTokenCount = 0;
+            }
             _connectionSlots.Dispose();
             _stopping.Dispose();
             if (File.Exists(_socketPath))
@@ -491,7 +584,29 @@ sealed class UnixDomainTokenMailbox : IEmailChallengeDelivery, ITenantInvitation
         }
     }
 
-    readonly record struct DeliveryKey(string Delivery, string Email);
+    readonly record struct DeliveryKey(string Delivery, string Email, Uuid ScopeId);
+    sealed class DeliverySlot
+    {
+        public string? PendingToken { get; set; }
+        public LinkedList<Waiter> Waiters { get; } = new();
+    }
+
+    sealed class Waiter
+    {
+        public TaskCompletionSource<MailboxResponse> Completion { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public LinkedListNode<Waiter>? Node { get; set; }
+    }
+
+    sealed class MailboxCapacityExceededException
+        : InvalidOperationException
+    {
+        public MailboxCapacityExceededException()
+            : base("The browser E2E mailbox has reached its delivery capacity")
+        {
+        }
+    }
+
     sealed record MailboxResponse(string Status, string? Token = null);
 }
 

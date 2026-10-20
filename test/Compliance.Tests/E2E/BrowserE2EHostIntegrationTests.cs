@@ -37,7 +37,7 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker)
         using var issued = await client.PostAsync($"{addressPath}/challenges", null);
         Assert.Equal(HttpStatusCode.NoContent, issued.StatusCode);
         var token = await BrowserE2EBridgeTests.ConsumeAsync(browserHost.MailboxSocketPath,
-            "email_verification", email);
+            "email_verification", email, session.Id);
         using var verified = await client.PostAsJsonAsync($"{addressPath}/verifications",
             new VerificationDocument(token));
 

@@ -32,7 +32,7 @@ try
 {
     browserHost = await BrowserE2EHost.StartAsync(shutdown.Token);
     var ready = new ReadyMessage("ready", browserHost.BaseUri.ToString(),
-        new MailboxMessage("unix", browserHost.MailboxSocketPath, "jsonl-v1"));
+        new MailboxMessage("unix", browserHost.MailboxSocketPath, "jsonl-v2"));
     await Console.Out.WriteLineAsync(JsonSerializer.Serialize(ready,
         new JsonSerializerOptions(JsonSerializerDefaults.Web)));
     await Console.Out.FlushAsync();

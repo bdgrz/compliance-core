@@ -29,7 +29,7 @@ forwarder, and mailbox have started:
   "mailbox": {
     "transport": "unix",
     "path": "/tmp/bdgrz-e2e-mailbox-<random>/mailbox.sock",
-    "protocol": "jsonl-v1"
+    "protocol": "jsonl-v2"
   }
 }
 ```
@@ -47,17 +47,36 @@ socket and directory. `SIGINT` and `SIGTERM` also trigger that cleanup.
 ## Delivery mailbox protocol
 
 Connect to the ready message's Unix socket path. Send one UTF-8 JSON object followed by a
-newline, then read one UTF-8 JSON response line. A request consumes the next matching delivery
-once:
+newline, then read one UTF-8 JSON response line. The protocol identifier is `jsonl-v2`. A request
+consumes one matching delivery. The recipient scope is required so messages for two users or
+tenants that share an email address cannot cross:
 
 ```json
-{"op":"consume","delivery":"email_verification","email":"person@example.com","timeout_ms":30000}
+{"op":"consume","delivery":"email_verification","email":"person@example.com","user_id":"<user UUID>","timeout_ms":30000}
+```
+
+Recovery uses the same `user_id` field. Invitation requests use the tenant the acceptance UI is
+currently viewing:
+
+```json
+{"op":"consume","delivery":"tenant_invitation","email":"person@example.com","tenant_id":"<tenant UUID>","timeout_ms":30000}
 ```
 
 `delivery` is `email_verification`, `email_recovery`, or `tenant_invitation`. `timeout_ms` is
-optional and defaults to 30000; the accepted range is 0 through 60000. A successful response is
-`{"status":"ok","token":"..."}`. A wait that expires returns `{"status":"timeout"}`;
-malformed requests or request lines that are not completed within five seconds return
+optional and defaults to 30000; the accepted range is 0 through 60000. `email` is normalized with
+the same rules as the application before matching. `user_id` is required for verification and
+recovery; `tenant_id` is required for invitations. Missing, malformed, or mismatched scope fields
+return `{"status":"invalid_request"}`.
+
+A successful response is `{"status":"ok","token":"..."}`. A wait that expires returns
+`{"status":"timeout"}`. A zero-timeout lookup never creates mailbox state. Positive-timeout
+waiters and their empty keys are removed on timeout. The mailbox retains at most 256 live keys,
+with one pending token slot per key (so at most 256 tokens are retained); a new consume key at
+capacity returns `{"status":"capacity_exceeded"}`. When a newer delivery arrives before a token
+is consumed, it replaces the prior pending token for that logical key. A delivery that needs a new
+key at capacity fails with a sanitized capacity exception so the delivery reactor records failure.
+
+Malformed requests or request lines that are not completed within five seconds return
 `{"status":"invalid_request"}`. The mailbox serves at most 64 clients at a time; excess clients
 receive `{"status":"busy"}`. A token can be consumed once.
 
