@@ -634,6 +634,7 @@ public sealed class BrowserE2EHost : IAsyncDisposable
 
     public System.Uri BaseUri => _proxy.BaseUri;
     public string MailboxSocketPath => _mailbox.SocketPath;
+    internal IServiceProvider Services => _factory.Services;
 
     public static async Task<BrowserE2EHost> StartAsync(CancellationToken ct = default)
     {
