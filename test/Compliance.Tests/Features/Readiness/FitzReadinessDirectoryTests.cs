@@ -103,7 +103,7 @@ public sealed class FitzReadinessDirectoryTests
         Assert.Equal(old.InputFingerprint, storedOld.InputFingerprint);
         AssertGapEqual(oldGap, Assert.Single(storedOld.Gaps));
         Assert.NotNull(storedCurrent);
-        Assert.Equal("readiness-rules/12", storedCurrent.RuleVersion);
+        Assert.Equal("readiness-rules/13", storedCurrent.RuleVersion);
         Assert.Equal(evaluation.InputFingerprint, storedCurrent.InputFingerprint);
         Assert.Equal(scopeSnapshot, Assert.Single(storedCurrent.AccessReviewScopes));
         Assert.Equal(current.Gaps.Count, storedCurrent.GapCount);

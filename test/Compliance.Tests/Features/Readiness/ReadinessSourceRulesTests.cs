@@ -43,6 +43,63 @@ public sealed class ReadinessSourceRulesTests
     }
 
     [Fact]
+    public void ShouldKeepWorkforceCompletenessExplicitGivenRosterSnapshotAvailability()
+    {
+        // Arrange
+        var snapshot = new ReadinessWorkforceRosterSnapshotInput(Uuid.CreateVersion4(),
+            new string('a', 64), AsOf.AddDays(-1), 1);
+        var scenarios = new (ReadinessSourceSet Sources, string SnapshotStatus,
+            string? SnapshotGapKind)[]
+        {
+            (ReadinessSourceSet.Empty, "assessed", "workforce_roster_snapshot_missing"),
+            (ReadinessSourceSet.Empty with
+            {
+                WorkforceRosterSnapshot = snapshot with { RowCount = 0 },
+            }, "assessed", "workforce_roster_snapshot_empty"),
+            (ReadinessSourceSet.Empty with { WorkforceRosterSnapshot = snapshot },
+                "assessed", null),
+            (ReadinessSourceSet.Empty with
+            {
+                TruncatedFamilies = ["workforce_roster_snapshots"],
+            }, "not_assessed", null),
+        };
+        const string expectedExplanation = "The rules verify only an integrity-checked workforce-roster snapshot available as of this assessment, when one exists; they do not assess workforce completeness beyond it.";
+
+        // Act
+        var evaluations = scenarios.Select(scenario => (scenario,
+            Evaluation: Evaluate(scenario.Sources))).ToArray();
+
+        // Assert
+        foreach (var (scenario, evaluation) in evaluations)
+        {
+            var workforceInput = Assert.Single(evaluation.Inputs,
+                input => input.Family == "workforce");
+            var snapshotInput = Assert.Single(evaluation.Inputs,
+                input => input.Family == "workforce_roster_snapshot");
+            var workforceGap = Assert.Single(evaluation.Gaps,
+                gap => gap.Kind == "input_not_assessed" && gap.Subject == "workforce");
+
+            Assert.Equal("not_assessed", workforceInput.Status);
+            Assert.Equal(expectedExplanation, workforceInput.Explanation);
+            Assert.Equal(scenario.SnapshotStatus, snapshotInput.Status);
+            Assert.Equal(expectedExplanation + " Review this gap manually.",
+                workforceGap.Explanation);
+            if (scenario.Sources.TruncatedFamilies.Contains("workforce_roster_snapshots"))
+                Assert.Contains(evaluation.Gaps, gap => gap.Kind == "source_truncated" &&
+                                                       gap.Subject == "workforce_roster_snapshots");
+            if (scenario.SnapshotGapKind is { } snapshotGapKind)
+                Assert.Contains(evaluation.Gaps, gap => gap.Kind == snapshotGapKind);
+            else
+            {
+                Assert.DoesNotContain(evaluation.Gaps,
+                    gap => gap.Kind == "workforce_roster_snapshot_missing");
+                Assert.DoesNotContain(evaluation.Gaps,
+                    gap => gap.Kind == "workforce_roster_snapshot_empty");
+            }
+        }
+    }
+
+    [Fact]
     public void ShouldAssessProviderAndEmitStableReviewGapGivenMaterialProviderWithoutReview()
     {
         // Arrange

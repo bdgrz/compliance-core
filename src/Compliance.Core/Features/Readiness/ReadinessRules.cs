@@ -14,7 +14,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Readiness;
 
 /// <summary>
-///     Version 12 of the readiness rules (M0-D23: R1-08 owns rule definitions). Rules
+///     Version 13 of the readiness rules (M0-D23: R1-08 owns rule definitions). Rules
 ///     evaluate only recorded inputs as of an exact time. A met rule never states that a
 ///     criterion is satisfied, that controls operate, or that an audit would succeed; source
 ///     families the rules do not yet assess are recorded as explicit gaps, never as positives.
@@ -28,13 +28,15 @@ namespace Bdgrz.Compliance.Features.Readiness;
 ///     assessing workforce completeness. Version 10 links unresolved provider coverage gaps to
 ///     distinct readiness gaps. Version 11 records declared catalog support limitations for
 ///     the explicit categories of approved, effective as-of boundaries. Version 12 selects mapped
-///     control intervals from original approvals and retirements known at the as-of instant. Risk rule is the
-///     conservative provisional R1-08 choice (#492): every program risk must be residual
-///     assessed or accepted with an active acceptance; any other status is a gap.
+///     control intervals from original approvals and retirements known at the as-of instant.
+///     Version 13 makes explicit that workforce completeness beyond the verified roster
+///     snapshot remains not assessed. Risk rule is the conservative provisional R1-08 choice
+///     (#492): every program risk must be residual assessed or accepted with an active
+///     acceptance; any other status is a gap.
 /// </summary>
 public static class ReadinessRules
 {
-    public const string Version = "readiness-rules/12";
+    public const string Version = "readiness-rules/13";
     public const string CatalogSupportDeclared = "catalog_support_declared";
     public const string CriterionMapped = "criterion_has_accepted_mapping";
     public const string MappedControlEffective = "mapped_control_has_effective_version";
@@ -171,11 +173,17 @@ public static class ReadinessRules
             accessReviewScopes);
         foreach (var family in UnassessedFamilies)
         {
+            var explanation = family == "workforce"
+                ? "The rules verify only an integrity-checked workforce-roster snapshot available as of " +
+                  "this assessment, when one exists; they do not assess workforce completeness beyond it."
+                : $"Readiness rules {Version} do not assess {family}; it remains an acknowledged gap.";
             inputs.Add(new ReadinessInputView(family, "not_assessed", 0,
-                $"Readiness rules {Version} do not assess {family}; it remains an acknowledged gap."));
+                explanation));
             gaps.Add(new ReadinessGapView(GapIdFor(programId, SourceFamilyAssessed, family),
                 "input_not_assessed", family, SourceFamilyAssessed,
-                $"The {family} source family was not assessed by {Version}; review it manually.",
+                family == "workforce"
+                    ? explanation + " Review this gap manually."
+                    : $"The {family} source family was not assessed by {Version}; review it manually.",
                 []));
         }
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(fingerprint.ToString()));
