@@ -80,9 +80,13 @@ public sealed class ReadinessSourceRulesTests
                 gap => gap.Kind == "input_not_assessed" && gap.Subject == "workforce");
 
             Assert.Equal("not_assessed", workforceInput.Status);
+            Assert.Equal(expectedExplanation, workforceInput.Explanation);
             Assert.Equal(scenario.SnapshotStatus, snapshotInput.Status);
             Assert.Equal(expectedExplanation + " Review this gap manually.",
                 workforceGap.Explanation);
+            if (scenario.Sources.TruncatedFamilies.Contains("workforce_roster_snapshots"))
+                Assert.Contains(evaluation.Gaps, gap => gap.Kind == "source_truncated" &&
+                                                       gap.Subject == "workforce_roster_snapshots");
             if (scenario.SnapshotGapKind is { } snapshotGapKind)
                 Assert.Contains(evaluation.Gaps, gap => gap.Kind == snapshotGapKind);
             else
