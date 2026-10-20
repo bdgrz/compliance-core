@@ -670,6 +670,11 @@ public sealed class BrowserE2EHost : IAsyncDisposable
                     builder.UseSetting("COMPLIANCE_HOST_MODE", "standalone");
                     builder.ConfigureTestServices(services =>
                     {
+                        // Keep developer login and DeveloperUserRegistration enabled, but use production
+                        // creator-admin registration semantics for tenant creation and authorization.
+                        services.RemoveAll<PlatformOperatorAuthority>();
+                        services.AddSingleton(new PlatformOperatorAuthority([Uuid.CreateVersion4()],
+                            developerAuthentication: false));
                         services.RemoveAll<IEmailChallengeDelivery>();
                         services.AddSingleton<IEmailChallengeDelivery>(mailbox);
                         services.RemoveAll<ITenantInvitationDelivery>();

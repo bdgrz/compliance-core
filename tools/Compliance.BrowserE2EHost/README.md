@@ -71,10 +71,11 @@ return `{"status":"invalid_request"}`.
 A successful response is `{"status":"ok","token":"..."}`. A wait that expires returns
 `{"status":"timeout"}`. A zero-timeout lookup never creates mailbox state. Positive-timeout
 waiters and their empty keys are removed on timeout. The mailbox retains at most 256 live keys,
-with one pending token slot per key (so at most 256 tokens are retained); a new consume key at
-capacity returns `{"status":"capacity_exceeded"}`. When a newer delivery arrives before a token
-is consumed, it replaces the prior pending token for that logical key. A delivery that needs a new
-key at capacity fails with a sanitized capacity exception so the delivery reactor records failure.
+with at most one pending token per key (256 pending tokens total). Up to 64 additional tokens can
+be in active responses, bounded by the connection limit. A new consume key at capacity returns
+`{"status":"capacity_exceeded"}`. When a newer delivery arrives before a token is consumed, it
+replaces the prior pending token for that logical key. A delivery that needs a new key at capacity
+fails with a sanitized capacity exception so the delivery reactor records failure.
 
 Malformed requests or request lines that are not completed within five seconds return
 `{"status":"invalid_request"}`. The mailbox serves at most 64 clients at a time; excess clients
