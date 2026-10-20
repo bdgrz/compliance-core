@@ -593,7 +593,7 @@ public sealed class EvidenceRedactionCompositionTests
     public async Task ShouldBackfillOnlyFourPermissionsGivenCompletedExistingCatalogCheckpoint()
     {
         // Arrange
-        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync(includeRedactionPermissions: false);
         await fixture.RunReactorAsync("BuiltInRoleCatalogV1");
         var derived = await SeedDerivedAsync(fixture);
         await GrantPairAsync(fixture, fixture.UserId, derived);
@@ -605,6 +605,9 @@ public sealed class EvidenceRedactionCompositionTests
             (BuiltInRbac.ComplianceManagementRoleId(fixture.TenantId), RbacPermissions.EvidenceRedactionApprove)
         };
         // Synthetic missing fixed-catalog state models an existing tenant without these new permissions.
+        foreach (var (role, permission) in assignments)
+            await ProgramManagementServices.SeedAsync(fixture.Provider,
+                new RolePermission(fixture.TenantId, role, permission), item => item.Assign());
         foreach (var (role, permission) in assignments)
             await ProgramManagementServices.SeedAsync(fixture.Provider, new RolePermission(fixture.TenantId, role, permission), item => item.Remove());
         await fixture.ProjectAsync();

@@ -652,7 +652,10 @@ public static class ComplianceServiceCollectionExtensions
             new EventSourcedTenantDirectory<TenantRegistered, TenantRegistered>(
                 provider.GetRequiredService<IDomainEventReader>(),
                 EventStreamPattern.ForPattern("bdgrz", "tenants"),
-                domainEvent => new TenantId(((TenantRegistered)domainEvent).TenantId.ToString())));
+                domainEvent => new TenantId(((TenantRegistered)domainEvent).TenantId.ToString()),
+                timeProvider: provider.GetRequiredService<TimeProvider>(),
+                notifier: provider.GetService<IDomainEventNotifier>() ??
+                          provider.GetService<IEventStore>() as IDomainEventNotifier));
 
         var portia = services
             .AddPortia()

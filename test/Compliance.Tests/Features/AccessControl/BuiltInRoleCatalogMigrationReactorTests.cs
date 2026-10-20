@@ -6,7 +6,7 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 public sealed class BuiltInRoleCatalogMigrationReactorTests
 {
     [Fact]
-    public async Task ShouldRenameStableRolesAndAddViewerGivenExistingTenantRegistration()
+    public async Task ShouldOwnBuiltInRoleCatalogGivenExistingOrNewTenantRegistration()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -22,6 +22,14 @@ public sealed class BuiltInRoleCatalogMigrationReactorTests
         {
             RoleId: var roleId, Name: BuiltInRbac.TenantAdministrationRoleName,
         } && roleId == BuiltInRbac.TenantAdministrationRoleId(tenantId));
+        Assert.Contains(scenario.SentRequests, request => request is RenameRole
+        {
+            RoleId: var roleId, Name: BuiltInRbac.ComplianceManagementRoleName,
+        } && roleId == BuiltInRbac.ComplianceManagementRoleId(tenantId));
+        Assert.Contains(scenario.SentRequests, request => request is RenameRole
+        {
+            RoleId: var roleId, Name: BuiltInRbac.ComplianceParticipationRoleName,
+        } && roleId == BuiltInRbac.ComplianceParticipationRoleId(tenantId));
         Assert.Contains(scenario.SentRequests, request => request is DefineRole
         {
             RoleId: var roleId, Name: BuiltInRbac.ViewerRoleName,

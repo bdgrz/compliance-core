@@ -6,13 +6,12 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace Bdgrz.Compliance.Tests.E2E;
 
 [Collection(BrokerCollectionDefinition.Name)]
 [Trait("Category", "BrokerIntegration")]
-public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, ITestOutputHelper output)
+public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker)
     : IClassFixture<BrokerStackFixture>
 {
     [Fact]
@@ -65,47 +64,30 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
             });
         Assert.Equal(HttpStatusCode.Forbidden, unverifiedRegistration.StatusCode);
 
+        var registrationSlug = $"browser-{Guid.NewGuid():N}"[..24];
         using var registered = await client.PostAsJsonAsync("/api/v1/tenants", new
         {
             name = "Browser E2E creator organization",
-            slug = $"browser-{Guid.NewGuid():N}"[..24],
+            slug = registrationSlug,
             legal_name = "Browser E2E creator legal entity",
         });
         Assert.Equal(HttpStatusCode.OK, registered.StatusCode);
         var tenant = await registered.Content.ReadFromJsonAsync<TenantRegistrationDocument>();
         Assert.NotNull(tenant);
 
-        var initialSlugHttpStatus = -1;
-        using (var initialSlugTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(2)))
-        {
-            try
-            {
-                using var initialSlugResponse = await client.GetAsync(
-                    $"/api/v1/tenant-slugs/{tenant.Slug}/mine", initialSlugTimeout.Token);
-                initialSlugHttpStatus = (int)initialSlugResponse.StatusCode;
-            }
-            catch (OperationCanceledException) when (initialSlugTimeout.IsCancellationRequested)
-            {
-                Assert.Fail("Initial creator slug resolver timed out: http=request_timeout.");
-            }
-            catch (HttpRequestException)
-            {
-                Assert.Fail("Initial creator slug resolver failed: http=transport_error.");
-            }
-        }
-        Assert.True(initialSlugHttpStatus is (int)HttpStatusCode.NotFound or (int)HttpStatusCode.OK,
-            $"Unexpected initial creator slug resolver HTTP status {initialSlugHttpStatus}.");
-
         var provisioning = await WaitForCompletedProvisioningAsync(client, tenant.TenantId,
-            session.Id, tenant.Slug, browserHost, output);
+            session.Id, tenant.Slug, browserHost);
         Assert.Equal(tenant.TenantId, provisioning.TenantId);
         Assert.Equal("completed", provisioning.Status);
 
         var slugResolution = await WaitForCreatorSlugResolutionAsync(client, tenant.Slug,
-            tenant.TenantId, session.Id, browserHost, initialSlugHttpStatus, output);
+            tenant.TenantId, session.Id, browserHost);
         Assert.Equal(tenant.TenantId, slugResolution.TenantId);
         Assert.Equal(tenant.Slug, slugResolution.CurrentSlug);
         Assert.False(slugResolution.Redirect);
+
+        using var workspaceResponse = await client.GetAsync($"/api/v1/tenants/{tenant.TenantId}/members");
+        Assert.Equal(HttpStatusCode.OK, workspaceResponse.StatusCode);
     }
 
     static async Task WaitForAddressReservationAsync(HttpClient client, string path)
@@ -138,10 +120,8 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
     }
 
     static async Task<TenantProvisioningStatusDocument> WaitForCompletedProvisioningAsync(
-        HttpClient client, string tenantId, string userId, string slug,
-        BrowserE2EHost browserHost, ITestOutputHelper output)
+        HttpClient client, string tenantId, string userId, string slug, BrowserE2EHost browserHost)
     {
-        var started = System.Diagnostics.Stopwatch.GetTimestamp();
         var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         var lastHttpStatus = 0;
         var lastStatus = "unavailable";
@@ -166,11 +146,7 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
                         if (statusProgression.Count == 0 || statusProgression[^1] != lastStatus)
                             statusProgression.Add(lastStatus);
                         if (lastStatus == "completed")
-                        {
-                            output.WriteLine($"Creator provisioning status: {string.Join("->", statusProgression)}; " +
-                                $"reads={reads}; elapsed_ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0}.");
                             return provisioning;
-                        }
 
                         if (lastStatus == "rejected")
                         {
@@ -206,14 +182,12 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
     }
 
     static async Task<TenantSlugResolutionDocument> WaitForCreatorSlugResolutionAsync(
-        HttpClient client, string slug, string tenantId, string userId, BrowserE2EHost browserHost,
-        int initialHttpStatus, ITestOutputHelper output)
+        HttpClient client, string slug, string tenantId, string userId, BrowserE2EHost browserHost)
     {
-        var started = System.Diagnostics.Stopwatch.GetTimestamp();
         var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         var lastHttpStatus = 0;
         var reads = 0;
-        var statusProgression = new List<int> { initialHttpStatus };
+        var statusProgression = new List<int>();
         while (DateTimeOffset.UtcNow < deadline)
         {
             reads++;
@@ -223,18 +197,14 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
                 using var response = await client.GetAsync(
                     $"/api/v1/tenant-slugs/{slug}/mine", requestTimeout.Token);
                 lastHttpStatus = (int)response.StatusCode;
-                if (statusProgression[^1] != lastHttpStatus)
+                if (statusProgression.Count == 0 || statusProgression[^1] != lastHttpStatus)
                     statusProgression.Add(lastHttpStatus);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     var resolution = await response.Content.ReadFromJsonAsync<TenantSlugResolutionDocument>(
                         requestTimeout.Token);
                     if (resolution is not null)
-                    {
-                        output.WriteLine($"Creator slug resolution HTTP: {string.Join("->", statusProgression)}; " +
-                            $"reads={reads}; elapsed_ms={System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0}.");
                         return resolution;
-                    }
                 }
                 else if (response.StatusCode != HttpStatusCode.NotFound)
                 {
@@ -270,19 +240,48 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var memberships = scope.ServiceProvider.GetRequiredService<ITenantMembershipDirectoryReader>();
         var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
+        var checkpoints = scope.ServiceProvider.GetRequiredService<IProjectionCheckpointStore>();
         var tenant = await reader.HydrateAsync(new Tenant(tenantId), CancellationToken.None);
         var slugAggregate = await reader.HydrateAsync(new TenantSlug(slug), CancellationToken.None);
         var member = await reader.HydrateAsync(new Member(tenantId, userId), CancellationToken.None);
         var memberId = RbacIds.Member(tenantId, userId);
         var administratorAssignment = await reader.HydrateAsync(new TeamMember(tenantId,
             BuiltInRbac.AdministratorsTeamId(tenantId), memberId), CancellationToken.None);
+        var administratorsTeam = await reader.HydrateAsync(new Team(tenantId,
+            BuiltInRbac.AdministratorsTeamId(tenantId)), CancellationToken.None);
+        var powerUsersTeam = await reader.HydrateAsync(new Team(tenantId,
+            BuiltInRbac.PowerUsersTeamId(tenantId)), CancellationToken.None);
+        var standardUsersTeam = await reader.HydrateAsync(new Team(tenantId,
+            BuiltInRbac.StandardUsersTeamId(tenantId)), CancellationToken.None);
+        var administratorRole = await reader.HydrateAsync(new Role(tenantId,
+            BuiltInRbac.TenantAdministrationRoleId(tenantId)), CancellationToken.None);
+        var complianceManagementRole = await reader.HydrateAsync(new Role(tenantId,
+            BuiltInRbac.ComplianceManagementRoleId(tenantId)), CancellationToken.None);
+        var participationRole = await reader.HydrateAsync(new Role(tenantId,
+            BuiltInRbac.ComplianceParticipationRoleId(tenantId)), CancellationToken.None);
+        var administratorTeamRole = await reader.HydrateAsync(new TeamRole(tenantId,
+            BuiltInRbac.AdministratorsTeamId(tenantId), BuiltInRbac.TenantAdministrationRoleId(tenantId)),
+            CancellationToken.None);
+        var powerUsersTeamRole = await reader.HydrateAsync(new TeamRole(tenantId,
+            BuiltInRbac.PowerUsersTeamId(tenantId), BuiltInRbac.ComplianceManagementRoleId(tenantId)),
+            CancellationToken.None);
+        var standardUsersTeamRole = await reader.HydrateAsync(new TeamRole(tenantId,
+            BuiltInRbac.StandardUsersTeamId(tenantId), BuiltInRbac.ComplianceParticipationRoleId(tenantId)),
+            CancellationToken.None);
         var membership = await memberships.GetAsync(tenantId.ToString(), userId, CancellationToken.None);
         var tenantSlugConfirmed = false;
         var tenantActivated = false;
+        var creatorIsAdministrator = false;
+        var firstAdministratorEmailPresent = false;
         var sourceRecordsRead = 0;
         await foreach (var record in events.ReadAsync(new EventStreamAddress("bdgrz", "tenants",
                            tenantId.ToString()), 0, CancellationToken.None))
         {
+            if (record.Event is TenantRegistered registration)
+            {
+                creatorIsAdministrator = registration.CreatorIsAdministrator;
+                firstAdministratorEmailPresent = registration.FirstAdministratorEmail is not null;
+            }
             tenantSlugConfirmed |= record.Event is TenantSlugConfirmed;
             tenantActivated |= record.Event is TenantActivated;
             sourceRecordsRead++;
@@ -290,8 +289,15 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
                 break;
         }
 
+        var bootstrapCheckpointAdvanced = await HasAdvancedAsync(scope.ServiceProvider,
+            checkpoints, "TenantRbacBootstrap");
+        var catalogCheckpointAdvanced = await HasAdvancedAsync(scope.ServiceProvider,
+            checkpoints, "BuiltInRoleCatalogV1");
+
         return new ReadinessSnapshot(
             tenant.IsRegistered,
+            creatorIsAdministrator,
+            firstAdministratorEmailPresent,
             tenantSlugConfirmed,
             tenantActivated,
             tenant.HasCompletedActivation,
@@ -301,7 +307,28 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
             member.IsRegistered,
             member.IsAccessEligibleOn(DateOnly.FromDateTime(DateTime.UtcNow)),
             membership is not null && membership.TenantId == tenantId,
-            administratorAssignment.IsAssigned);
+            administratorAssignment.IsAssigned,
+            administratorsTeam.IsActive,
+            powerUsersTeam.IsActive,
+            standardUsersTeam.IsActive,
+            administratorRole.IsActive,
+            complianceManagementRole.IsActive,
+            participationRole.IsActive,
+            administratorTeamRole.IsAssigned,
+            powerUsersTeamRole.IsAssigned,
+            standardUsersTeamRole.IsAssigned,
+            bootstrapCheckpointAdvanced,
+            catalogCheckpointAdvanced);
+    }
+
+    static async Task<bool> HasAdvancedAsync(IServiceProvider services,
+        IProjectionCheckpointStore checkpoints, string workloadName)
+    {
+        var registration = services.GetServices<WorkloadRegistration>()
+            .Single(workload => workload.Name == workloadName);
+        var reactor = (Reactor)services.GetRequiredService(registration.ComponentType);
+        var checkpoint = await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern));
+        return checkpoint != ProjectionCheckpoint.Start;
     }
 
     sealed record RegistrationDocument(
@@ -321,6 +348,8 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
         bool Redirect);
     sealed record ReadinessSnapshot(
         bool TenantRegistered,
+        bool CreatorIsAdministrator,
+        bool FirstAdministratorEmailPresent,
         bool TenantSlugConfirmed,
         bool TenantActivated,
         bool TenantHasCompletedActivation,
@@ -330,5 +359,17 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker, IT
         bool MemberRegistered,
         bool MemberEligible,
         bool MembershipProjected,
-        bool AdministratorTeamMemberAssigned);
+        bool AdministratorTeamMemberAssigned,
+        bool AdministratorsTeamDefined,
+        bool PowerUsersTeamDefined,
+        bool StandardUsersTeamDefined,
+        bool AdministratorRoleDefined,
+        bool ComplianceManagementRoleDefined,
+        bool ParticipationRoleDefined,
+        bool AdministratorRoleAssignedToTeam,
+        bool ComplianceManagementRoleAssignedToTeam,
+        bool ParticipationRoleAssignedToTeam,
+        bool TenantRbacBootstrapCheckpointAdvanced,
+        bool BuiltInRoleCatalogCheckpointAdvanced);
+
 }

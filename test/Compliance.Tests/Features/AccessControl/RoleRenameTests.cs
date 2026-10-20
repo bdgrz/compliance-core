@@ -47,7 +47,7 @@ public sealed class RoleRenameTests
     }
 
     [Fact]
-    public void ShouldPreserveMigratedNameGivenBootstrapReplay()
+    public void ShouldPreserveCurrentNameGivenIdempotentRoleDefinition()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -58,10 +58,10 @@ public sealed class RoleRenameTests
             .Given(DomainEventSeed.Attach(new RoleRenamed(tenantId, roleId,
                 BuiltInRbac.ComplianceManagementRoleName), roleId, 2));
 
-        // Act: the bootstrap's original DefineRole command is replayed after migration.
+        // Act: applying an idempotent definition after migration leaves the accepted name intact.
         var result = role.Define("Compliance Manager");
 
-        // Assert: it is idempotent and does not reintroduce the legacy name.
+        // Assert: the aggregate remains unchanged and does not reintroduce the legacy name.
         Assert.True(result.IsSuccess);
         Assert.Empty(history.PendingEvents);
     }
