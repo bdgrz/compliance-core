@@ -73,13 +73,13 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
                 var teamIds = await ReadTwoHttpPagesAsync(owner,
                     teamsPath + "?search=Matrix&limit=1", "team_id");
                 var roleIds = await ReadTwoHttpPagesAsync(owner,
-                    rolesPath + "?search=Matrix&limit=1", "role_id");
+                    rolesPath + "?search=i&limit=1", "role_id");
                 AssertIds(scope.TeamIds, teamIds);
                 AssertIds(scope.RoleIds, roleIds);
                 Assert.Empty(Ids(await ReadHttpPageAsync(owner,
                     teamsPath + "?search=" + (scope == scopeA ? "Matrix-B" : "Matrix-A")), "team_id"));
-                Assert.Empty(Ids(await ReadHttpPageAsync(owner,
-                    rolesPath + "?search=" + (scope == scopeA ? "Matrix-B" : "Matrix-A")), "role_id"));
+                var foreignRoleIds = scope == scopeA ? scopeB.RoleIds : scopeA.RoleIds;
+                Assert.Empty(roleIds.Intersect(foreignRoleIds));
 
                 var membersPath = teamsPath + "/" + scope.AdministratorsTeamId + "/members";
                 var permissionsPath = rolesPath + "/" + scope.AdministrationRoleId + "/permissions";
@@ -166,9 +166,9 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
                 foreach (var scope in new[] { scopeA, scopeB })
                 {
                     AssertIds(scope.TeamIds, await ReadTwoMcpPagesAsync(mcp,
-                        "bdgrz.rbac.team.list", scope.TenantId, "team_id"));
+                        "bdgrz.rbac.team.list", scope.TenantId, "team_id", "Matrix"));
                     AssertIds(scope.RoleIds, await ReadTwoMcpPagesAsync(mcp,
-                        "bdgrz.rbac.role.list", scope.TenantId, "role_id"));
+                        "bdgrz.rbac.role.list", scope.TenantId, "role_id", "i"));
                     var members = await ReadMcpPageAsync(mcp, "bdgrz.rbac.team-member.list",
                         new Dictionary<string, object?>
                         {
@@ -593,20 +593,24 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
         _ = await WaitForPageAsync(owner, teamsPath,
             page => Ids(page, "team_id").Contains(administratorsTeam));
         var teamIds = new[] { Uuid.CreateVersion4().ToString(), Uuid.CreateVersion4().ToString() };
-        var roleIds = new[] { Uuid.CreateVersion4().ToString(), Uuid.CreateVersion4().ToString() };
+        var roleIds = new[]
+        {
+            BuiltInRbac.TenantAdministrationRoleId(tenantId).ToString(),
+            BuiltInRbac.ComplianceManagementRoleId(tenantId).ToString(),
+            BuiltInRbac.ComplianceParticipationRoleId(tenantId).ToString(),
+            BuiltInRbac.ViewerRoleId(tenantId).ToString(),
+        };
         for (var index = 0; index < 2; index++)
         {
             await PostUntilNoContentAsync(owner, teamsPath + "/" + teamIds[index],
                 new { name = namePrefix + "-team-" + index });
-            await PostUntilNoContentAsync(owner, rolesPath + "/" + roleIds[index],
-                new { name = namePrefix + "-role-" + index });
             await PostUntilNoContentAsync(owner,
                 teamsPath + "/" + teamIds[index] + "/roles/" + administrationRole, new { });
         }
         _ = await WaitForPageAsync(owner, teamsPath + "?search=Matrix",
             page => Ids(page, "team_id").Length == 2);
-        _ = await WaitForPageAsync(owner, rolesPath + "?search=Matrix",
-            page => Ids(page, "role_id").Length == 2);
+        _ = await WaitForPageAsync(owner, rolesPath + "?search=i",
+            page => roleIds.All(id => Ids(page, "role_id").Contains(id)));
         return new TenantRbacScope(tenantId, teamIds, roleIds,
             administratorsTeam, administrationRole, RbacIds.Member(tenantId, userId).ToString(),
             new[] { administratorsTeam }.Concat(teamIds).OrderBy(id => id, StringComparer.Ordinal)
@@ -773,12 +777,12 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
     }
 
     static async Task<IReadOnlyList<string>> ReadTwoMcpPagesAsync(McpScenario mcp, string tool,
-        Uuid tenantId, string property)
+        Uuid tenantId, string property, string search)
     {
         var input = new Dictionary<string, object?>
         {
             ["tenant_id"] = tenantId.ToString(),
-            ["search"] = "Matrix",
+            ["search"] = search,
             ["limit"] = 1,
         };
         var pages = await ReadAllMcpPagesAsync(mcp, tool, input);

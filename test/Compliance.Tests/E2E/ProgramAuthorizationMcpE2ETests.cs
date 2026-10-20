@@ -113,14 +113,7 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                 Assert.True(standingDenied,
                     $"The member did not reach active ungranted state; last GET: {lastStandingResponse}");
 
-                var roleId = Uuid.CreateVersion4();
-                var rolePath = $"/api/v1/tenants/{tenantId}/roles/{roleId}";
-                using (var defined = await administrator.PostAsJsonAsync(rolePath,
-                           new { name = "Reader" }))
-                    Assert.Equal(HttpStatusCode.NoContent, defined.StatusCode);
-                using (var assigned = await administrator.PostAsync(
-                           $"{rolePath}/permissions/{RbacPermissions.TenantAccess}", null))
-                    Assert.Equal(HttpStatusCode.NoContent, assigned.StatusCode);
+                var roleId = BuiltInRbac.ViewerRoleId(tenantId);
                 var grantId = Uuid.CreateVersion4();
                 var grantPath = $"/api/v1/tenants/{tenantId}/access-grants/{grantId}";
                 var proposal = new

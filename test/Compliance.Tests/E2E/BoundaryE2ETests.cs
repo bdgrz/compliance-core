@@ -65,6 +65,7 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
         var tenant = await tenantResponse.Content.ReadFromJsonAsync<TenantDocument>();
         Assert.NotNull(tenant);
         var programsPath = $"/api/v1/tenants/{tenant.TenantId}/programs";
+        await WaitForFounderAdministrationAsync(owner, tenant.TenantId, ownerId);
         await AccessGrantE2ESupport.IssueFounderOrganizationGrantAsync(owner, tenant.TenantId);
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         ProgramDocument? program = null;
@@ -858,6 +859,9 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
         Assert.Equal(HttpStatusCode.NotFound, crossTenantVersion.StatusCode);
 
         var applicationsPath = $"/api/v1/tenants/{tenant.TenantId}/applications";
+        var peoplePath = $"/api/v1/tenants/{tenant.TenantId}/people";
+        var systemOwnerId = await RecordPersonAsync(owner, peoplePath, "Payroll system owner");
+        var accessOwnerId = await RecordPersonAsync(owner, peoplePath, "Payroll access owner");
         ApplicationRegistrationDocument? application = null;
         deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
@@ -866,6 +870,12 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
             {
                 name = "Payroll",
                 purpose = "Run payroll for the boundary impact preview.",
+                owner_reference = "Finance",
+                classification = "internal",
+                system_owner_person_id = systemOwnerId,
+                access_owner_person_id = accessOwnerId,
+                application_kind = "saas",
+                criticality = "high",
             });
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -1120,6 +1130,50 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
         return builder.Build();
     }
 
+    static async Task WaitForFounderAdministrationAsync(HttpClient owner, string tenantId,
+        string ownerId)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
+        string? lastObservation = null;
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            using var response = await owner.GetAsync(
+                $"/api/v1/tenants/{tenantId}/members/{ownerId}/access");
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                var permissions = document.RootElement.GetProperty("effective_permissions")
+                    .EnumerateArray().Select(permission => permission.GetString()).ToArray();
+                if (permissions.Contains(RbacPermissions.TenantRbacManage, StringComparer.Ordinal))
+                    return;
+                lastObservation = $"200 OK; effective permissions: {string.Join(", ", permissions)}";
+            }
+            else
+                lastObservation = $"{(int)response.StatusCode} {await response.Content.ReadAsStringAsync()}";
+            await Task.Delay(250);
+        }
+        throw new TimeoutException($"Founder {ownerId} in tenant {tenantId} did not acquire " +
+            $"{RbacPermissions.TenantRbacManage}; last access response: {lastObservation}");
+    }
+
+    static async Task<Guid> RecordPersonAsync(HttpClient owner, string peoplePath,
+        string displayName)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            using var response = await owner.PostAsJsonAsync(peoplePath,
+                new { display_name = displayName });
+            if (response.StatusCode == HttpStatusCode.OK)
+                return (await response.Content.ReadFromJsonAsync<PersonRegistrationDocument>())!
+                    .PersonId;
+            Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,
+                await response.Content.ReadAsStringAsync());
+            await Task.Delay(250);
+        }
+        throw new InvalidOperationException("Person recording never became authorized.");
+    }
+
     sealed class SourceReader(Aggregate source) : IAggregateReader
     {
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
@@ -1128,6 +1182,8 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
     }
 
     sealed record TenantDocument([property: JsonPropertyName("tenant_id")] string TenantId);
+    sealed record PersonRegistrationDocument(
+        [property: JsonPropertyName("person_id")] Guid PersonId);
     sealed record WaiverDocument(
         [property: JsonPropertyName("waiver_id")] string WaiverId,
         string Status,
