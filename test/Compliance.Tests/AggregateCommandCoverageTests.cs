@@ -326,6 +326,11 @@ public sealed class AggregateCommandCoverageTests
                     publish(new());
                 }
 
+                void PublishTargetTypedCallbackInsideLocal(System.Action<SampleFact> publish)
+                {
+                    var task = Task.Run(() => publish(new()));
+                }
+
                 void PublishLocal()
                 {
                     var fact = new SampleFact();
@@ -372,6 +377,8 @@ public sealed class AggregateCommandCoverageTests
             factNames, publisherNames, allMethods);
         var targetTypedCallback = AggregateFactConstructionNames(
             methods["PublishTargetTypedCallback"], factNames, publisherNames, allMethods);
+        var targetTypedCallbackInsideLocal = AggregateFactConstructionNames(
+            methods["PublishTargetTypedCallbackInsideLocal"], factNames, publisherNames, allMethods);
         var local = AggregateFactConstructionNames(methods["PublishLocal"], factNames,
             publisherNames, allMethods);
         var factory = AggregateFactConstructionNames(methods["PublishFactory"], factNames,
@@ -386,6 +393,7 @@ public sealed class AggregateCommandCoverageTests
         Assert.Equal(factNames, direct);
         Assert.Equal(factNames, targetTypedDirect);
         Assert.Equal(factNames, targetTypedCallback);
+        Assert.Equal(factNames, targetTypedCallbackInsideLocal);
         Assert.Equal(factNames, local);
         Assert.Equal(factNames, factory);
         Assert.Equal(factNames, prepared);
@@ -911,16 +919,16 @@ public sealed class AggregateCommandCoverageTests
         SyntaxNode method, HashSet<string> factNames,
         IReadOnlyList<MethodDeclarationSyntax> siblingMethods)
     {
-        var declaration = creation.Ancestors().OfType<VariableDeclarationSyntax>()
-            .FirstOrDefault();
-        if (declaration is not null)
-            return SimpleName(declaration.Type);
-
         var argument = creation.Ancestors().OfType<ArgumentSyntax>()
             .FirstOrDefault(candidate => candidate.Expression.Span.Contains(creation.Span));
         var invocation = argument?.Parent?.Parent as InvocationExpressionSyntax;
         if (argument is null || invocation is null)
-            return null;
+        {
+            var declaration = creation.Ancestors().OfType<VariableDeclarationSyntax>()
+                .FirstOrDefault(candidate => candidate.Variables.Any(variable =>
+                    variable.Initializer?.Value == creation));
+            return declaration is null ? null : SimpleName(declaration.Type);
+        }
 
         var methodName = InvocationName(invocation);
         if (methodName is null)

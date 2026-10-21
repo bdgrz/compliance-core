@@ -50,11 +50,12 @@ The JSON contains the fact-to-reducer-to-emitter map, the separate
 aggregate-to-command-to-handler map, and each producer operation that still
 lacks a registered route. It records direct aggregate references and the
 helper-service paths used by commands; use the aggregate owner to join the
-maps. The producer call graph is a source-derived syntactic heuristic matched
-by method name and compatible arity; it does not resolve receiver or symbol
-identity, so route rows are candidates for human review rather than semantic
-proof. The regression checks those candidates against actual mutation targets
-and records the exceptions below.
+maps. Publisher detection uses conventional publisher names and callback type
+syntax. The producer call graph is a source-derived syntactic heuristic matched
+by method name and compatible arity. Neither scan resolves receiver or symbol
+identity, so same-named calls on unrelated objects can be candidates for human
+review rather than semantic proof. The regression checks those candidates
+against actual mutation targets and records the exceptions below.
 Legacy emitters that have no current caller remain explicit until a verified
 stream migration preserves replay; the inventory does not treat their stored
 event types as safe to delete. The command route proves that the handler can
