@@ -1,15 +1,17 @@
 # Aggregate and command-handler coverage audit
 
-Captured 2026-10-21 at source commit `a0cef38ade2533332c06922df0e696a202e75fd5`.
+Captured 2026-10-21 at source commit `ff7266fd54fe06d4ffa1a14e75360ee173d497dc`.
 The row-level source map is [`aggregate-command-coverage.json`](aggregate-command-coverage.json).
 
 ## Method
 
 The inventory scans C# declarations, `On<Fact>` reducer registrations, event
 construction (including target-typed constructors), `IRequest` contracts,
-`IRequestHandler` implementations, handler registrations, and aggregate
-references in handler and shared-helper code. The JSON map includes relative
-source paths and test files that mention each event, request, or aggregate.
+`IRequestHandler` implementations, handler registrations, and typed aggregate
+mutation targets in handler and shared-helper code. It checks every callable
+fact-producing aggregate operation against registered command and
+internal-reaction routes, including facts built by the shared
+`ResponsibilitySet` helper. The JSON map includes relative source paths and test files that mention each event, request, or aggregate.
 Those test paths are navigation evidence; they do not prove that a test asserts
 the full replay or behavior invariant for that row.
 
@@ -27,8 +29,9 @@ requirement by itself.
 - **20 contracts have neither a reducer nor a current producer.** Seven are
   confirmed feature gaps; 13 are superseded by current events or accepted
   decisions, as listed below.
-- **99 aggregate roots.** Every root maps to at least one command or internal
-  reaction path. Three roots are reached through shared helper services:
+- **99 aggregate roots.** 98 have a registered command or internal-reaction
+  mutation path. `LegacyWorkAssignmentLedger` is a read-only replay adapter for
+  old assignment streams. Three roots are reached through shared helper services:
   `PopulationSnapshot` and `PopulationSnapshotChunk` through
   `PopulationSnapshotFreezer`, and `TenantManagerGuard` through
   `TenantManagerInvariant`.
@@ -43,17 +46,28 @@ requirement by itself.
   inventoried separately because they forward to Common/Core requests and do
   not own aggregates.
 
-The JSON contains the fact-to-reducer-to-emitter map and the separate
-aggregate-to-command-to-handler map. It records direct aggregate references and
-the helper-service paths used by commands; use the aggregate owner to join the
-two maps. The command route proves that the handler can execute that aggregate,
-not that every command listed for an aggregate emits every fact on its stream.
+The JSON contains the fact-to-reducer-to-emitter map, the separate
+aggregate-to-command-to-handler map, and each producer operation that still
+lacks a registered route. It records direct aggregate references and the
+helper-service paths used by commands; use the aggregate owner to join the
+maps. Publisher detection uses conventional publisher names and callback type
+syntax. The producer call graph is a source-derived syntactic heuristic matched
+by method name and compatible arity. Neither scan resolves receiver or symbol
+identity, so same-named calls on unrelated objects can be candidates for human
+review rather than semantic proof. The regression checks those candidates
+against actual mutation targets and records the exceptions below.
+Legacy emitters that have no current caller remain explicit until a verified
+stream migration preserves replay; the inventory does not treat their stored
+event types as safe to delete. The command route proves that the handler can
+execute that aggregate, not that every command listed for an aggregate emits
+every fact on its stream.
 The composition regression test checks the inventory against compiled event,
 request, and aggregate types, checks reducer owners and emitter paths against a
-Roslyn scan of `src`, checks command routes in both directions, and checks each
-listed Common/Core handler against Portia's actual registered handler
-descriptors. App adapter rows identify their forwarded Core request and
-handler type separately from the Core registration count.
+Roslyn scan of `src`, checks syntactic producer route candidates and command
+routes in both directions, and checks each listed Common/Core handler against
+Portia's actual registered handler descriptors. App adapter rows identify
+their forwarded Core request and handler type separately from the Core
+registration count.
 
 ## Confirmed fact gaps
 
@@ -62,6 +76,35 @@ handler type separately from the Core registration count.
 | `AuditObservationRecorded`, `AuditObservationFindingLinked` | [#301](https://github.com/bdgrz/compliance-core/issues/301) | Blocked by Type I baseline #298 and entry decision #297. |
 | `OwnAttestRecordPackagePrepared`, `OwnAttestRecordDeliveryRecorded`, `OwnAttestRecordDeliveryVerified`, `DeliveredEngagementHoldReleased` | [#545](https://github.com/bdgrz/compliance-core/issues/545), [#546](https://github.com/bdgrz/compliance-core/issues/546) | Evidence governance #285 and service engagements #269 remain open; M0-D27 #125 defines the package and delivery boundary. |
 | `TenantOffboardingCompleted` | [#128](https://github.com/bdgrz/compliance-core/issues/128) | Export #545, retention #546, and advisory-retention decision #346 gate the complete lifecycle. |
+
+## Aggregate fact producers without registered command routes
+
+The route guard also checks each callable aggregate operation that constructs a replayable fact, rather than
+only checking that each aggregate root has at least one command. It finds **30 producer operations**
+that do not reach a registered command or internal-reaction handler:
+
+| Current path | Producer operations | Owning issue or disposition |
+| --- | --- | --- |
+| No source caller or registered request route | `AuditPackage.RecordBuildProgress` | [#302](https://github.com/bdgrz/compliance-core/issues/302) |
+| No source caller or registered request route | `ArtifactDisposition.Approve`, `ArtifactDisposition.RequestExecution` | [#285](https://github.com/bdgrz/compliance-core/issues/285) |
+| No source caller or registered request route | `TypeIIPeriod.RecordCloseValidation`, `TypeIIPeriod.AmendClose` | [#310](https://github.com/bdgrz/compliance-core/issues/310) |
+| No source caller or registered request route | `ClientExport.Request`, `ClientExport.RecordAttestPackageDelivery` | [#545](https://github.com/bdgrz/compliance-core/issues/545) |
+| No source caller or registered request route | `MethodologyTemplate.ReviseDraftWithAcceptedContribution`, `TemplateApplication.RecordDraftCreated` | [#276](https://github.com/bdgrz/compliance-core/issues/276) |
+| No source caller or registered request route | `ProgramRollover.Revise`, `ProgramRollover.RecordNextPeriodCreated` | [#316](https://github.com/bdgrz/compliance-core/issues/316) |
+| No source caller or registered request route | `TypeIIPlan.Revise`, `ManagementAssertion.Revise` | [#303](https://github.com/bdgrz/compliance-core/issues/303) |
+| Legacy emitter with no current caller | `ImportBatch.Cancel` | [#1022](https://github.com/bdgrz/compliance-core/issues/1022); retain event replay until a verified stream migration is delivered. |
+| Direct aggregate-executor call from delivery reactor | `TenantInvitation.RecordDeliverySent`, `TenantInvitation.RecordDeliveryFailure` | [#127](https://github.com/bdgrz/compliance-core/issues/127) |
+| Direct aggregate-executor call from delivery reactor | `EmailAddress.RecordDeliverySent`, `RecordDeliveryFailure`, `RecordRecoveryDeliverySent`, `RecordRecoveryDeliveryFailure` | Needs a specific backend issue; #127's backend children are closed and no open email-challenge issue owns this route. |
+| Direct aggregate-executor call from digest processor | `WorkDigestDispatch.Schedule`, `StartAttempt`, `RecordSent`, `RecordSkipped`, `RecordPermanentRejection`, `RecordUnknown`, `RecordInterruptedAttempt`, `RecordTransientRejection`, `RecordRetryWindowExpired`, `RecordMissedWeek` | [#121](https://github.com/bdgrz/compliance-core/issues/121) |
+
+The direct reactor and processor paths currently execute aggregate methods and can persist their facts;
+they bypass the registered request-handler composition. They are listed because the requested wiring
+requires all fact-producing aggregate operations to have an explicit registered request path. They do
+not count as missing event construction. `ImportBatch.Cancel` is a duplicate legacy producer for
+`ApplicationImportCanceled`; the active cancellation handler executes the source ledger operation.
+Its event contract and reducer remain until the old batch-stream history has a verified migration.
+The source-linked rows, caller paths, and issue dispositions are in `unwiredAggregateProducers` in
+the JSON map.
 
 ## Superseded or deferred contracts
 
