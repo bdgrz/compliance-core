@@ -12,15 +12,15 @@ namespace Bdgrz.Compliance.Features.Remediation;
 /// </summary>
 public sealed class RemediationLedger : Aggregate
 {
-    public const string Open = "open";
-    public const string Remediated = "remediated";
-    public const string Closed = "closed";
-    public const string Accepted = "accepted";
-    public const string Overdue = "overdue";
-    public const string Unresolved = "unresolved";
-    public const string Completed = "completed";
-    public const string RiskAcceptance = "risk_acceptance";
-    public const string Waiver = "waiver";
+    public const string Open = FindingStates.Open;
+    public const string Remediated = FindingStates.Remediated;
+    public const string Closed = FindingStates.Closed;
+    public const string Accepted = FindingStates.Accepted;
+    public const string Overdue = FindingStates.Overdue;
+    public const string Unresolved = FindingStates.Unresolved;
+    public const string Completed = FindingStates.Completed;
+    public const string RiskAcceptance = FindingStates.RiskAcceptance;
+    public const string Waiver = FindingStates.Waiver;
     const int MaximumTextLength = 4000;
 
     static readonly string[] SourceKinds = ["manual", "readiness_gap", "control_occurrence",
@@ -34,12 +34,22 @@ public sealed class RemediationLedger : Aggregate
 
     readonly Uuid _tenantId;
     readonly Dictionary<Uuid, FindingState> _findings = [];
+    Uuid? _migrationId;
 
     public RemediationLedger(Uuid tenantId, Uuid programId)
-        : base(programId, new EventStreamAddress(tenantId.ToString(), "remediation",
+        : base(programId, new EventStreamAddress(tenantId.ToString(), FindingAggregate.LegacySourceArea,
             programId.ToString()))
     {
         _tenantId = tenantId;
+        On<RemediationPartitioningStarted>(ev =>
+        {
+            if (ev.TenantId != tenantId || ev.ProgramId != programId ||
+                ev.MigrationId == Uuid.Empty || ev.PreFenceProgramVersion != Version ||
+                _migrationId is not null)
+                throw new InvalidOperationException(
+                    "The remediation partitioning fence is duplicated, out of scope, or does not identify the exact source stream head.");
+            _migrationId = ev.MigrationId;
+        });
         On<FindingRaised>(ev => _findings[ev.FindingId] = new FindingState(ev));
         On<FindingRevised>(ev =>
         {
@@ -111,6 +121,8 @@ public sealed class RemediationLedger : Aggregate
     }
 
     public bool Contains(Uuid findingId) => _findings.ContainsKey(findingId);
+    public bool IsPartitioningStarted => _migrationId is not null;
+    public Uuid? MigrationId => _migrationId;
 
     public CommandFailure? Raise(Uuid findingId, FindingSource source, string title,
         string description, string severity, string affectedScope, Uuid ownerMemberId,
@@ -118,6 +130,8 @@ public sealed class RemediationLedger : Aggregate
         DateTimeOffset raisedAt)
     {
         ArgumentNullException.ThrowIfNull(links);
+        if (IsPartitioningStarted)
+            return PartitioningStartedFailure();
         if (_findings.TryGetValue(findingId, out var existing))
             return existing.Raised.Source == source &&
                    StringComparer.Ordinal.Equals(existing.Raised.Title, title?.Trim())
@@ -175,6 +189,8 @@ public sealed class RemediationLedger : Aggregate
         string description, Uuid ownerMemberId, DateOnly dueOn, ActorReference actor,
         DateTimeOffset at)
     {
+        if (IsPartitioningStarted)
+            return PartitioningStartedFailure();
         if (_findings.TryGetValue(findingId, out var existing) &&
             existing.Actions.Exists(action => action.ActionId == actionId))
             return null;
@@ -273,6 +289,8 @@ public sealed class RemediationLedger : Aggregate
     public CommandFailure? Reopen(Uuid findingId, long expectedRevision, string reason,
         ActorReference actor, DateTimeOffset at)
     {
+        if (IsPartitioningStarted)
+            return PartitioningStartedFailure();
         if (!_findings.TryGetValue(findingId, out var finding))
             return CommandFailure.MissingRecord("The finding was not found.");
         if (expectedRevision != finding.Revision)
@@ -330,6 +348,8 @@ public sealed class RemediationLedger : Aggregate
 
     CommandFailure? Writable(Uuid findingId, long expectedRevision)
     {
+        if (IsPartitioningStarted)
+            return PartitioningStartedFailure();
         if (!_findings.TryGetValue(findingId, out var finding))
             return CommandFailure.MissingRecord("The finding was not found.");
         if (expectedRevision != finding.Revision)
@@ -339,6 +359,10 @@ public sealed class RemediationLedger : Aggregate
             ? CommandFailure.StateConflict("The finding is closed. Reopen it to change it.")
             : null;
     }
+
+    static CommandFailure PartitioningStartedFailure() =>
+        CommandFailure.StateConflict(
+            "Legacy finding writes are fenced while the per-finding migration is active.");
 
     static CommandFailure? ValidateTriage(string severity, Uuid ownerMemberId, DateOnly dueOn) =>
         !Severities.Contains(severity) || ownerMemberId == Uuid.Empty || dueOn == default

@@ -1,37 +1,75 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-21",
-  "sourceCommit": "ff7266fd54fe06d4ffa1a14e75360ee173d497dc",
-  "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions.",
+  "sourceCommit": "f054498a56b8e86f3d6019b5e09eb8784be05e8e",
+  "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The 2026-10-21 capture includes the in-progress, uncommitted per-finding migration changes for issue #1022; migration facts are classified separately from business aggregate facts, and FindingAggregate command routing remains an explicit issue-owned gap. The map now includes the bounded per-program migration coordinator and its named direct request route; regular FindingAggregate business command/read cutover remains open under #1022. The legacy fence is emitted by a lightweight aggregate on the source stream address, while RemediationLedger only reduces the marker to reject legacy writes. The seven legacy finding-scope checks are listed separately as source-stream replay guards, not as state-owning reducers.",
+  "factReplayGuards": [
+    {
+      "fact": "CorrectiveActionAdded",
+      "aggregate": "RemediationMigrationFenceAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
+    },
+    {
+      "fact": "CorrectiveActionCompleted",
+      "aggregate": "RemediationMigrationFenceAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
+    },
+    {
+      "fact": "FindingAcceptanceLinked",
+      "aggregate": "RemediationMigrationFenceAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
+    },
+    {
+      "fact": "FindingClosed",
+      "aggregate": "RemediationMigrationFenceAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
+    },
+    {
+      "fact": "FindingRaised",
+      "aggregate": "RemediationMigrationFenceAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
+    },
+    {
+      "fact": "FindingReopened",
+      "aggregate": "RemediationMigrationFenceAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
+    },
+    {
+      "fact": "FindingRevised",
+      "aggregate": "RemediationMigrationFenceAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
+    }
+  ],
   "counts": {
-    "domainEventContracts": 404,
-    "factsWithReducer": 383,
+    "domainEventContracts": 409,
+    "factsWithReducer": 388,
     "factsWithAggregateEmitter": 381,
     "auditFactsWithoutReducer": 1,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 99,
-    "aggregateTypesWithCommandPath": 98,
-    "requestContracts": 648,
-    "commonRequestContracts": 646,
+    "aggregateTypes": 102,
+    "aggregateTypesWithCommandPath": 101,
+    "requestContracts": 649,
+    "commonRequestContracts": 647,
     "requestClassificationCounts": {
       "command": 347,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 13,
+      "internal_reaction": 14,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 590,
+    "registeredCoreHandlerRegistrations": 591,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 30,
+    "unwiredAggregateProducerOperations": 37,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 10,
       "direct_reactor_executor": 6,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 13
-    }
+      "no_registered_request_route": 20
+    },
+    "factReplayGuardRows": 7
   },
   "facts": [
     {
@@ -1275,168 +1313,6 @@
       "note": "#301; blocked by #298 and #297"
     },
     {
-      "fact": "AuditorRequestAssigned",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestAssigned.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditorRequestCommentRecorded",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestCommentRecorded.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditorRequestRecorded",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestRecorded.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditorRequestReopened",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestReopened.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditorRequestResolved",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestResolved.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditorRequestRevised",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestRevised.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditorResponseDelivered",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorResponseDelivered.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditorResponseDisclosureReviewed",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorResponseDisclosureReviewed.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditorResponseDispositionRecorded",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorResponseDispositionRecorded.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditorResponseSubmitted",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorResponseSubmitted.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditorRequest",
-          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
       "fact": "AuditOutcomeRecorded",
       "contract": "src/Compliance.Common/Features/Examinations/AuditOutcomeRecorded.cs",
       "reducers": [
@@ -1777,6 +1653,168 @@
     {
       "fact": "AuditResponseDraftRevised",
       "contract": "src/Compliance.Common/Features/AuditorRequests/AuditResponseDraftRevised.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorRequestAssigned",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestAssigned.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorRequestCommentRecorded",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestCommentRecorded.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorRequestRecorded",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestRecorded.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorRequestReopened",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestReopened.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorRequestResolved",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestResolved.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorRequestRevised",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestRevised.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorResponseDelivered",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorResponseDelivered.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorResponseDisclosureReviewed",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorResponseDisclosureReviewed.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorResponseDispositionRecorded",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorResponseDispositionRecorded.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditorRequest",
+          "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditorResponseSubmitted",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/AuditorResponseSubmitted.cs",
       "reducers": [
         {
           "aggregate": "AuditorRequest",
@@ -2775,14 +2813,20 @@
       "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionAdded.cs",
       "reducers": [
         {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        },
+        {
           "aggregate": "RemediationLedger",
           "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
         }
       ],
       "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
       ],
@@ -2794,14 +2838,20 @@
       "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionCompleted.cs",
       "reducers": [
         {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        },
+        {
           "aggregate": "RemediationLedger",
           "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
         }
       ],
       "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
       ],
@@ -3338,14 +3388,21 @@
       "contract": "src/Compliance.Common/Features/Remediation/FindingAcceptanceLinked.cs",
       "reducers": [
         {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        },
+        {
           "aggregate": "RemediationLedger",
           "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
         }
       ],
       "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -3354,35 +3411,123 @@
       "contract": "src/Compliance.Common/Features/Remediation/FindingClosed.cs",
       "reducers": [
         {
-          "aggregate": "RemediationLedger",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "FindingRaised",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingRaised.cs",
-      "reducers": [
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        },
         {
           "aggregate": "RemediationLedger",
           "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
         }
       ],
       "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FindingHistoryEventImported",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingHistoryEventImported.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/E2E/FindingMigrationE2ETests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
+      ],
+      "disposition": "migration_fact",
+      "note": "Pairs a migrated source event identity, physical offset, aggregate version, kind, hash, and source time with its typed target fact. Retain until legacy-stream parity is verified."
+    },
+    {
+      "fact": "FindingMigrationCompleted",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingMigrationCompleted.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingMigrationAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
+      ],
+      "disposition": "migration_fact",
+      "note": "Persists the bounded finding migration fence/cursor/completion state; retain until parity and legacy writer cutover are verified."
+    },
+    {
+      "fact": "FindingMigrationProgressed",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingMigrationProgressed.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingMigrationAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
+      ],
+      "disposition": "migration_fact",
+      "note": "Persists the bounded finding migration fence/cursor/completion state; retain until parity and legacy writer cutover are verified."
+    },
+    {
+      "fact": "FindingMigrationStarted",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingMigrationStarted.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingMigrationAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
+      ],
+      "disposition": "migration_fact",
+      "note": "Persists the bounded finding migration fence/cursor/completion state; retain until parity and legacy writer cutover are verified."
+    },
+    {
+      "fact": "FindingRaised",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingRaised.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        },
+        {
+          "aggregate": "RemediationLedger",
+          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+        "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/FindingTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Examinations/FindingTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3392,14 +3537,20 @@
       "contract": "src/Compliance.Common/Features/Remediation/FindingReopened.cs",
       "reducers": [
         {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        },
+        {
           "aggregate": "RemediationLedger",
           "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
         }
       ],
       "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -3410,17 +3561,23 @@
       "contract": "src/Compliance.Common/Features/Remediation/FindingRevised.cs",
       "reducers": [
         {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        },
+        {
           "aggregate": "RemediationLedger",
           "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
         }
       ],
       "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/FindingTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Examinations/FindingTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3597,6 +3754,15 @@
       "note": ""
     },
     {
+      "fact": "IndependenceRuleVersionRatified",
+      "contract": "src/Compliance.Common/Features/AccessControl/IndependenceRuleVersionRatified.cs",
+      "reducers": [],
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "superseded_vocabulary",
+      "note": "M0-D26 #124 uses IndependenceRuleRatificationRecorded"
+    },
+    {
       "fact": "IndependenceRulesRevised",
       "contract": "src/Compliance.Common/Features/AccessControl/IndependenceRulesRevised.cs",
       "reducers": [
@@ -3611,15 +3777,6 @@
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
-    },
-    {
-      "fact": "IndependenceRuleVersionRatified",
-      "contract": "src/Compliance.Common/Features/AccessControl/IndependenceRuleVersionRatified.cs",
-      "reducers": [],
-      "emitters": [],
-      "testSymbolReferences": [],
-      "disposition": "superseded_vocabulary",
-      "note": "M0-D26 #124 uses IndependenceRuleRatificationRecorded"
     },
     {
       "fact": "InformationAssetRevisionRecorded",
@@ -5019,6 +5176,29 @@
       "note": ""
     },
     {
+      "fact": "RemediationPartitioningStarted",
+      "contract": "src/Compliance.Common/Features/Remediation/RemediationPartitioningStarted.cs",
+      "reducers": [
+        {
+          "aggregate": "RemediationLedger",
+          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
+        },
+        {
+          "aggregate": "RemediationMigrationFenceAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
+      ],
+      "disposition": "migration_fact",
+      "note": "Fences legacy finding writes at the exact source aggregate version before per-finding history import; retain through verified migration and writer cutover."
+    },
+    {
       "fact": "RepresentationLetterRecorded",
       "contract": "src/Compliance.Common/Features/Examinations/RepresentationLetterRecorded.cs",
       "reducers": [
@@ -6291,6 +6471,25 @@
       "note": ""
     },
     {
+      "fact": "TenantIdentityProviderTestRequested",
+      "contract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestRequested.cs",
+      "reducers": [
+        {
+          "aggregate": "TenantIdentityProvider",
+          "source": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "TenantIdentityProviderTested",
       "contract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTested.cs",
       "reducers": [
@@ -6323,25 +6522,6 @@
       ],
       "disposition": "legacy_replay",
       "note": "Reducer retained for compatibility/replay; there is no current producer."
-    },
-    {
-      "fact": "TenantIdentityProviderTestRequested",
-      "contract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestRequested.cs",
-      "reducers": [
-        {
-          "aggregate": "TenantIdentityProvider",
-          "source": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
     },
     {
       "fact": "TenantInvitationAccepted",
@@ -6560,26 +6740,6 @@
       "note": ""
     },
     {
-      "fact": "TenantSlugChanged",
-      "contract": "src/Compliance.Common/Features/Tenants/TenantSlugChanged.cs",
-      "reducers": [
-        {
-          "aggregate": "Tenant",
-          "source": "src/Compliance.Core/Features/Tenants/Tenant.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Tenants/Tenant.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantSlugChangeAttributionTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantTests.cs",
-        "test/Compliance.Tests/Features/Tenants/ChangeTenantSlugHandlerTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
       "fact": "TenantSlugChangeRejected",
       "contract": "src/Compliance.Common/Features/Tenants/TenantSlugChangeRejected.cs",
       "reducers": [
@@ -6609,6 +6769,26 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Tenants/TenantSlugChangeAttributionTests.cs",
+        "test/Compliance.Tests/Features/Tenants/ChangeTenantSlugHandlerTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TenantSlugChanged",
+      "contract": "src/Compliance.Common/Features/Tenants/TenantSlugChanged.cs",
+      "reducers": [
+        {
+          "aggregate": "Tenant",
+          "source": "src/Compliance.Core/Features/Tenants/Tenant.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Tenants/Tenant.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantSlugChangeAttributionTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantTests.cs",
         "test/Compliance.Tests/Features/Tenants/ChangeTenantSlugHandlerTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -6709,24 +6889,6 @@
       "note": ""
     },
     {
-      "fact": "TenantSlugSurrendered",
-      "contract": "src/Compliance.Common/Features/Tenants/TenantSlugSurrendered.cs",
-      "reducers": [
-        {
-          "aggregate": "TenantSlug",
-          "source": "src/Compliance.Core/Features/Tenants/TenantSlug.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Tenants/TenantSlug.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantSlugTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
       "fact": "TenantSlugSurrenderFailed",
       "contract": "src/Compliance.Common/Features/Tenants/TenantSlugSurrenderFailed.cs",
       "reducers": [
@@ -6774,6 +6936,24 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Tenants/TenantTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TenantSlugSurrendered",
+      "contract": "src/Compliance.Common/Features/Tenants/TenantSlugSurrendered.cs",
+      "reducers": [
+        {
+          "aggregate": "TenantSlug",
+          "source": "src/Compliance.Core/Features/Tenants/TenantSlug.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Tenants/TenantSlug.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantSlugTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -7246,65 +7426,6 @@
       "note": ""
     },
     {
-      "fact": "WorkforceObservationResolved",
-      "contract": "src/Compliance.Common/Features/Workforce/WorkforceObservationResolved.cs",
-      "reducers": [
-        {
-          "aggregate": "WorkforceObservationResolution",
-          "source": "src/Compliance.Core/Features/Workforce/WorkforceObservationResolution.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Workforce/WorkforceObservationResolution.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/PersonalWorkforceObservationTransportTests.cs",
-        "test/Compliance.Tests/Features/Workforce/WorkforceObservationResolutionTests.cs",
-        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "WorkforceSourceObserved",
-      "contract": "src/Compliance.Common/Features/Workforce/WorkforceSourceObserved.cs",
-      "reducers": [
-        {
-          "aggregate": "WorkforceSourceObservation",
-          "source": "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/FitzWorkforceSourceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Workforce/WorkforceSourceObservationTests.cs",
-        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "WorkforceSourceReconciled",
-      "contract": "src/Compliance.Common/Features/Workforce/WorkforceSourceReconciled.cs",
-      "reducers": [
-        {
-          "aggregate": "WorkforceSourceObservation",
-          "source": "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/FitzWorkforceSourceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
       "fact": "WorkItemAssigned",
       "contract": "src/Compliance.Common/Features/Work/WorkItemAssigned.cs",
       "reducers": [
@@ -7405,6 +7526,65 @@
         "test/Compliance.Tests/Features/Workforce/FitzWorkRelationshipDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs",
         "test/Compliance.Tests/Features/Workforce/FitzWorkforceObservationDirectoryTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WorkforceObservationResolved",
+      "contract": "src/Compliance.Common/Features/Workforce/WorkforceObservationResolved.cs",
+      "reducers": [
+        {
+          "aggregate": "WorkforceObservationResolution",
+          "source": "src/Compliance.Core/Features/Workforce/WorkforceObservationResolution.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/WorkforceObservationResolution.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/PersonalWorkforceObservationTransportTests.cs",
+        "test/Compliance.Tests/Features/Workforce/WorkforceObservationResolutionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WorkforceSourceObserved",
+      "contract": "src/Compliance.Common/Features/Workforce/WorkforceSourceObserved.cs",
+      "reducers": [
+        {
+          "aggregate": "WorkforceSourceObservation",
+          "source": "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/FitzWorkforceSourceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Workforce/WorkforceSourceObservationTests.cs",
+        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WorkforceSourceReconciled",
+      "contract": "src/Compliance.Common/Features/Workforce/WorkforceSourceReconciled.cs",
+      "reducers": [
+        {
+          "aggregate": "WorkforceSourceObservation",
+          "source": "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/FitzWorkforceSourceDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -7694,49 +7874,6 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "AuditorRequest",
-      "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs",
-      "appliedFacts": [
-        "AuditorRequestAssigned",
-        "AuditorRequestCommentRecorded",
-        "AuditorRequestRecorded",
-        "AuditorRequestReopened",
-        "AuditorRequestResolved",
-        "AuditorRequestRevised",
-        "AuditorResponseDelivered",
-        "AuditorResponseDisclosureReviewed",
-        "AuditorResponseDispositionRecorded",
-        "AuditorResponseSubmitted",
-        "AuditResponseDraftCreated",
-        "AuditResponseDraftRevised",
-        "SampleSelectionRecorded"
-      ],
-      "commandRequests": [
-        "AmendSampleSelection",
-        "AssignAuditorRequest",
-        "CreateAuditResponseDraft",
-        "DeliverAuditResponse",
-        "RecordAuditorRequest",
-        "RecordAuditorRequestComment",
-        "RecordAuditorResponseDisposition",
-        "RecordSampleSelection",
-        "ReopenAuditorRequest",
-        "ResolveAuditorRequest",
-        "ReviewAuditResponse",
-        "ReviseAuditResponseDraft",
-        "ReviseAuditorRequest",
-        "SubmitAuditResponse"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs",
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditorRequests/SampleSelectionCommandHandlerTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "AuditOutcome",
       "source": "src/Compliance.Core/Features/Examinations/AuditOutcome.cs",
       "appliedFacts": [
@@ -7827,6 +7964,49 @@
         "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationTests.cs",
         "test/Compliance.Tests/Features/AuditPopulations/DefineAuditPopulationHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPopulations/GenerateAuditPopulationExportHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/SampleSelectionCommandHandlerTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "AuditorRequest",
+      "source": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs",
+      "appliedFacts": [
+        "AuditorRequestAssigned",
+        "AuditorRequestCommentRecorded",
+        "AuditorRequestRecorded",
+        "AuditorRequestReopened",
+        "AuditorRequestResolved",
+        "AuditorRequestRevised",
+        "AuditorResponseDelivered",
+        "AuditorResponseDisclosureReviewed",
+        "AuditorResponseDispositionRecorded",
+        "AuditorResponseSubmitted",
+        "AuditResponseDraftCreated",
+        "AuditResponseDraftRevised",
+        "SampleSelectionRecorded"
+      ],
+      "commandRequests": [
+        "AmendSampleSelection",
+        "AssignAuditorRequest",
+        "CreateAuditResponseDraft",
+        "DeliverAuditResponse",
+        "RecordAuditorRequest",
+        "RecordAuditorRequestComment",
+        "RecordAuditorResponseDisposition",
+        "RecordSampleSelection",
+        "ReopenAuditorRequest",
+        "ResolveAuditorRequest",
+        "ReviewAuditResponse",
+        "ReviseAuditResponseDraft",
+        "ReviseAuditorRequest",
+        "SubmitAuditResponse"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs",
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditorRequests/SampleSelectionCommandHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -8578,6 +8758,48 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/ExaminationSignOffTests.cs",
         "test/Compliance.Tests/Features/Examinations/RecordManagementExaminationReviewHandlerTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "FindingAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+      "appliedFacts": [
+        "CorrectiveActionAdded",
+        "CorrectiveActionCompleted",
+        "FindingAcceptanceLinked",
+        "FindingClosed",
+        "FindingHistoryEventImported",
+        "FindingRaised",
+        "FindingReopened",
+        "FindingRevised"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "MigrateFindingHistory"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/E2E/FindingMigrationE2ETests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route",
+      "note": "The registered route currently imports legacy history only. Seven business producer operations still need the production command/read cutover under #1022."
+    },
+    {
+      "aggregate": "FindingMigrationAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs",
+      "appliedFacts": [
+        "FindingMigrationCompleted",
+        "FindingMigrationProgressed",
+        "FindingMigrationStarted"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "MigrateFindingHistory"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9481,7 +9703,8 @@
         "FindingClosed",
         "FindingRaised",
         "FindingReopened",
-        "FindingRevised"
+        "FindingRevised",
+        "RemediationPartitioningStarted"
       ],
       "commandRequests": [
         "AddCorrectiveAction",
@@ -9504,6 +9727,22 @@
         "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/WorkDigestContentReaderTests.cs",
         "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "RemediationMigrationFenceAggregate",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs",
+      "appliedFacts": [
+        "RemediationPartitioningStarted"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "MigrateFindingHistory"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10427,42 +10666,6 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "WorkforceObservationResolution",
-      "source": "src/Compliance.Core/Features/Workforce/WorkforceObservationResolution.cs",
-      "appliedFacts": [
-        "WorkforceObservationResolved"
-      ],
-      "commandRequests": [
-        "ResolveWorkforceObservation"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/PersonalWorkforceObservationTransportTests.cs",
-        "test/Compliance.Tests/Features/Workforce/WorkforceObservationResolutionTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
-      "aggregate": "WorkforceSourceObservation",
-      "source": "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs",
-      "appliedFacts": [
-        "WorkforceSourceObserved",
-        "WorkforceSourceReconciled"
-      ],
-      "commandRequests": [
-        "ReconcileWorkforceSourceObservation",
-        "RecordWorkforceSourceObservation"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs",
-        "test/Compliance.Tests/Features/Workforce/PersonalWorkforceObservationTransportTests.cs",
-        "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs",
-        "test/Compliance.Tests/Features/Workforce/WorkforceSourceObservationTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "WorkItemAssignment",
       "source": "src/Compliance.Core/Features/Work/WorkItemAssignment.cs",
       "appliedFacts": [
@@ -10505,6 +10708,42 @@
         "test/Compliance.Tests/Features/Workforce/WorkRelationshipTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceRosterReconciliationTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceRosterSnapshotTests.cs",
+        "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/WorkforceSourceObservationTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "WorkforceObservationResolution",
+      "source": "src/Compliance.Core/Features/Workforce/WorkforceObservationResolution.cs",
+      "appliedFacts": [
+        "WorkforceObservationResolved"
+      ],
+      "commandRequests": [
+        "ResolveWorkforceObservation"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/PersonalWorkforceObservationTransportTests.cs",
+        "test/Compliance.Tests/Features/Workforce/WorkforceObservationResolutionTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "WorkforceSourceObservation",
+      "source": "src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs",
+      "appliedFacts": [
+        "WorkforceSourceObserved",
+        "WorkforceSourceReconciled"
+      ],
+      "commandRequests": [
+        "ReconcileWorkforceSourceObservation",
+        "RecordWorkforceSourceObservation"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs",
+        "test/Compliance.Tests/Features/Workforce/PersonalWorkforceObservationTransportTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceSourceObservationTests.cs"
       ],
@@ -14738,19 +14977,6 @@
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
-      "request": "GetAuditorRequest",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/GetAuditorRequest.cs",
-      "interfaces": "IRequest<AuditorRequestView>, IProgramReadRequest, ICallable",
-      "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
-      "note": "Read/reconstruction request; it does not own a business mutation."
-    },
-    {
       "request": "GetAuditOutcome",
       "contract": "src/Compliance.Common/Features/Examinations/GetAuditOutcome.cs",
       "interfaces": "IRequest<AuditOutcomeView>, IProgramReadRequest, ICallable",
@@ -14819,6 +15045,19 @@
       "request": "GetAuditPopulation",
       "contract": "src/Compliance.Common/Features/AuditPopulations/GetAuditPopulation.cs",
       "interfaces": "IRequest<AuditPopulationView>, IProgramReadRequest, ICallable",
+      "classification": "query_or_reconstruction",
+      "handlers": [],
+      "handlerRegistration": false,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
+      "request": "GetAuditorRequest",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/GetAuditorRequest.cs",
+      "interfaces": "IRequest<AuditorRequestView>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
       "handlers": [],
       "handlerRegistration": false,
@@ -16954,6 +17193,61 @@
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
+      "request": "GetWorkItem",
+      "contract": "src/Compliance.Common/Features/Work/GetWorkItem.cs",
+      "interfaces": "IRequest<WorkItemDetailView>, IProgramReadRequest, ICallable",
+      "classification": "query_or_reconstruction",
+      "handlers": [
+        {
+          "name": "GetWorkItemHandler",
+          "source": "src/Compliance.Core/Features/Work/GetWorkItemHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "WorkCommands"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
+        "test/Compliance.Tests/Features/Work/AccessReviewWorkQueueVisibilityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkCompositionTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs"
+      ],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
+      "request": "GetWorkRelationship",
+      "contract": "src/Compliance.Common/Features/Workforce/GetWorkRelationship.cs",
+      "interfaces": "IRequest<WorkRelationshipView>, IWorkforceRequest, ICallable",
+      "classification": "query_or_reconstruction",
+      "handlers": [
+        {
+          "name": "GetWorkRelationshipHandler",
+          "source": "src/Compliance.Core/Features/Workforce/GetWorkRelationshipHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/WorkforceRosterSnapshotTests.cs",
+        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
+      ],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
       "request": "GetWorkforceRosterSnapshot",
       "contract": "src/Compliance.Common/Features/Workforce/GetWorkforceRosterSnapshot.cs",
       "interfaces": "IRequest<WorkforceRosterSnapshotView>, IWorkforceRequest, ICallable",
@@ -17014,61 +17308,6 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs"
-      ],
-      "note": "Read/reconstruction request; it does not own a business mutation."
-    },
-    {
-      "request": "GetWorkItem",
-      "contract": "src/Compliance.Common/Features/Work/GetWorkItem.cs",
-      "interfaces": "IRequest<WorkItemDetailView>, IProgramReadRequest, ICallable",
-      "classification": "query_or_reconstruction",
-      "handlers": [
-        {
-          "name": "GetWorkItemHandler",
-          "source": "src/Compliance.Core/Features/Work/GetWorkItemHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [
-        "WorkCommands"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
-        "test/Compliance.Tests/Features/Work/AccessReviewWorkQueueVisibilityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
-        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkCompositionTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs"
-      ],
-      "note": "Read/reconstruction request; it does not own a business mutation."
-    },
-    {
-      "request": "GetWorkRelationship",
-      "contract": "src/Compliance.Common/Features/Workforce/GetWorkRelationship.cs",
-      "interfaces": "IRequest<WorkRelationshipView>, IWorkforceRequest, ICallable",
-      "classification": "query_or_reconstruction",
-      "handlers": [
-        {
-          "name": "GetWorkRelationshipHandler",
-          "source": "src/Compliance.Core/Features/Workforce/GetWorkRelationshipHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/WorkforceRosterSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -17806,19 +18045,6 @@
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
-      "request": "ListAuditorRequests",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/ListAuditorRequests.cs",
-      "interfaces": "IRequest<Page<AuditorRequestSummaryView>>, IProgramReadRequest, ICallable",
-      "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
-      "note": "Read/reconstruction request; it does not own a business mutation."
-    },
-    {
       "request": "ListAuditPackages",
       "contract": "src/Compliance.Common/Features/AuditPackages/ListAuditPackages.cs",
       "interfaces": "IRequest<Page<AuditPackageSummaryView>>, IProgramReadRequest, ICallable",
@@ -17848,6 +18074,19 @@
       "request": "ListAuditPopulationRows",
       "contract": "src/Compliance.Common/Features/AuditPopulations/ListAuditPopulationRows.cs",
       "interfaces": "IRequest<Page<AuditPopulationRowView>>, IProgramReadRequest, ICallable",
+      "classification": "query_or_reconstruction",
+      "handlers": [],
+      "handlerRegistration": false,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
+      "request": "ListAuditorRequests",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/ListAuditorRequests.cs",
+      "interfaces": "IRequest<Page<AuditorRequestSummaryView>>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
       "handlers": [],
       "handlerRegistration": false,
@@ -18821,6 +19060,25 @@
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
+      "request": "ListOperationalProcessRevisions",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/ListOperationalProcessRevisions.cs",
+      "interfaces": "IRequest<Page<OperationalProcessView>>, ITechnologyInventoryRequest, ICallable",
+      "classification": "query_or_reconstruction",
+      "handlers": [
+        {
+          "name": "ListOperationalProcessRevisionsHandler",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/ListOperationalProcessRevisionsHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
       "request": "ListOperationalProcesses",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/ListOperationalProcesses.cs",
       "interfaces": "IRequest<Page<OperationalProcessView>>, ITechnologyInventoryRequest, ICallable",
@@ -18840,25 +19098,6 @@
         "test/Compliance.Tests/Features/TechnologyInventory/TechnologyInventoryScopedGrantTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs"
       ],
-      "note": "Read/reconstruction request; it does not own a business mutation."
-    },
-    {
-      "request": "ListOperationalProcessRevisions",
-      "contract": "src/Compliance.Common/Features/TechnologyInventory/ListOperationalProcessRevisions.cs",
-      "interfaces": "IRequest<Page<OperationalProcessView>>, ITechnologyInventoryRequest, ICallable",
-      "classification": "query_or_reconstruction",
-      "handlers": [
-        {
-          "name": "ListOperationalProcessRevisionsHandler",
-          "source": "src/Compliance.Core/Features/TechnologyInventory/ListOperationalProcessRevisionsHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -19045,28 +19284,6 @@
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
-      "request": "ListPrograms",
-      "contract": "src/Compliance.Common/Features/Programs/ListPrograms.cs",
-      "interfaces": "IRequest<Page<ProgramView>>, IProgramManagementRequest, ICallable",
-      "classification": "query_or_reconstruction",
-      "handlers": [
-        {
-          "name": "ListProgramsHandler",
-          "source": "src/Compliance.Core/Features/Programs/ListProgramsHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs",
-        "test/Compliance.Tests/Features/Programs/ProgramAndClientServicePagedReadContractTests.cs"
-      ],
-      "note": "Read/reconstruction request; it does not own a business mutation."
-    },
-    {
       "request": "ListProgramSnapshots",
       "contract": "src/Compliance.Common/Features/Snapshots/ListProgramSnapshots.cs",
       "interfaces": "IRequest<Page<SnapshotView>>, IProgramReadRequest, ICallable",
@@ -19086,6 +19303,28 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Snapshots/SnapshotPagedReadContractTests.cs"
+      ],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
+      "request": "ListPrograms",
+      "contract": "src/Compliance.Common/Features/Programs/ListPrograms.cs",
+      "interfaces": "IRequest<Page<ProgramView>>, IProgramManagementRequest, ICallable",
+      "classification": "query_or_reconstruction",
+      "handlers": [
+        {
+          "name": "ListProgramsHandler",
+          "source": "src/Compliance.Core/Features/Programs/ListProgramsHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Programs/ProgramAndClientServicePagedReadContractTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -19380,28 +19619,6 @@
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
-      "request": "ListRoles",
-      "contract": "src/Compliance.Common/Features/AccessControl/ListRoles.cs",
-      "interfaces": "IRequest<Page<RoleView>>, ITenantAccessRequest, ICallable",
-      "classification": "query_or_reconstruction",
-      "handlers": [
-        {
-          "name": "ListRolesHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/ListRolesHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/RbacPagedReadContractTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/RoleQueryHandlerTests.cs"
-      ],
-      "note": "Read/reconstruction request; it does not own a business mutation."
-    },
-    {
       "request": "ListRoleTeams",
       "contract": "src/Compliance.Common/Features/AccessControl/ListRoleTeams.cs",
       "interfaces": "IRequest<Page<RoleTeamView>>, ITenantAccessRequest, ICallable",
@@ -19420,6 +19637,28 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ListRoleTeamsHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/RbacPagedReadContractTests.cs"
+      ],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
+      "request": "ListRoles",
+      "contract": "src/Compliance.Common/Features/AccessControl/ListRoles.cs",
+      "interfaces": "IRequest<Page<RoleView>>, ITenantAccessRequest, ICallable",
+      "classification": "query_or_reconstruction",
+      "handlers": [
+        {
+          "name": "ListRolesHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ListRolesHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/RbacPagedReadContractTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/RoleQueryHandlerTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -19829,6 +20068,51 @@
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
+      "request": "ListWorkRelationships",
+      "contract": "src/Compliance.Common/Features/Workforce/ListWorkRelationships.cs",
+      "interfaces": "IRequest<Page<WorkRelationshipView>>, IWorkforceRequest, ICallable",
+      "classification": "query_or_reconstruction",
+      "handlers": [
+        {
+          "name": "ListWorkRelationshipsHandler",
+          "source": "src/Compliance.Core/Features/Workforce/ListWorkRelationshipsHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/FitzWorkRelationshipDirectoryTests.cs"
+      ],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
+      "request": "ListWorkReminders",
+      "contract": "src/Compliance.Common/Features/Work/ListWorkReminders.cs",
+      "interfaces": "IRequest<IReadOnlyList<WorkReminderView>>, IProgramReadRequest, ICallable",
+      "classification": "query_or_reconstruction",
+      "handlers": [
+        {
+          "name": "ListWorkRemindersHandler",
+          "source": "src/Compliance.Core/Features/Work/ListWorkRemindersHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkReminderTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueTests.cs",
+        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs"
+      ],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
       "request": "ListWorkforceObservations",
       "contract": "src/Compliance.Common/Features/Workforce/ListWorkforceObservations.cs",
       "interfaces": "IRequest<Page<WorkforceObservationView>>, IWorkforceRequest, ICallable",
@@ -19909,51 +20193,6 @@
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
-      "request": "ListWorkRelationships",
-      "contract": "src/Compliance.Common/Features/Workforce/ListWorkRelationships.cs",
-      "interfaces": "IRequest<Page<WorkRelationshipView>>, IWorkforceRequest, ICallable",
-      "classification": "query_or_reconstruction",
-      "handlers": [
-        {
-          "name": "ListWorkRelationshipsHandler",
-          "source": "src/Compliance.Core/Features/Workforce/ListWorkRelationshipsHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/FitzWorkRelationshipDirectoryTests.cs"
-      ],
-      "note": "Read/reconstruction request; it does not own a business mutation."
-    },
-    {
-      "request": "ListWorkReminders",
-      "contract": "src/Compliance.Common/Features/Work/ListWorkReminders.cs",
-      "interfaces": "IRequest<IReadOnlyList<WorkReminderView>>, IProgramReadRequest, ICallable",
-      "classification": "query_or_reconstruction",
-      "handlers": [
-        {
-          "name": "ListWorkRemindersHandler",
-          "source": "src/Compliance.Core/Features/Work/ListWorkRemindersHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkReminderTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueTests.cs",
-        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs"
-      ],
-      "note": "Read/reconstruction request; it does not own a business mutation."
-    },
-    {
       "request": "MarkAdvisorHandoffReadyForReview",
       "contract": "src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs",
       "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
@@ -19978,6 +20217,35 @@
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "MigrateFindingHistory",
+      "contract": "src/Compliance.Common/Features/Remediation/MigrateFindingHistory.cs",
+      "interfaces": "IRequest, IProgramScopedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "MigrateFindingHistoryHandler",
+          "source": "src/Compliance.Core/Features/Remediation/MigrateFindingHistoryHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FindingAggregate",
+        "FindingMigrationAggregate",
+        "RemediationMigrationFenceAggregate"
+      ],
+      "aggregateTargets": [
+        "FindingAggregate",
+        "FindingMigrationAggregate",
+        "RemediationMigrationFenceAggregate"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
+      ],
+      "note": "Named direct migration worker; ExpectedSourceOffset advances at most one physical source record and retries the latest exact offset idempotently."
     },
     {
       "request": "OffboardTenant",
@@ -21612,81 +21880,6 @@
       "note": ""
     },
     {
-      "request": "RecordAuditorRequest",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequest.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "RecordAuditorRequestHandler",
-          "source": "src/Compliance.Core/Features/AuditorRequests/RecordAuditorRequestHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditorRequest"
-      ],
-      "aggregateTargets": [
-        "AuditorRequest"
-      ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs"
-      ],
-      "note": ""
-    },
-    {
-      "request": "RecordAuditorRequestComment",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequestComment.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "RecordAuditorRequestCommentHandler",
-          "source": "src/Compliance.Core/Features/AuditorRequests/RecordAuditorRequestCommentHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditorRequest"
-      ],
-      "aggregateTargets": [
-        "AuditorRequest"
-      ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs"
-      ],
-      "note": ""
-    },
-    {
-      "request": "RecordAuditorResponseDisposition",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/RecordAuditorResponseDisposition.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "RecordAuditorResponseDispositionHandler",
-          "source": "src/Compliance.Core/Features/AuditorRequests/RecordAuditorResponseDispositionHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditorRequest"
-      ],
-      "aggregateTargets": [
-        "AuditorRequest"
-      ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs"
-      ],
-      "note": ""
-    },
-    {
       "request": "RecordAuditPackageBuildResult",
       "contract": "src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs",
       "interfaces": "IRequest",
@@ -21758,6 +21951,81 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPopulations/AuditPopulationCommandHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "RecordAuditorRequest",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequest.cs",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "classification": "command",
+      "handlers": [
+        {
+          "name": "RecordAuditorRequestHandler",
+          "source": "src/Compliance.Core/Features/AuditorRequests/RecordAuditorRequestHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "AuditorRequest"
+      ],
+      "aggregateTargets": [
+        "AuditorRequest"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "RecordAuditorRequestComment",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequestComment.cs",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "classification": "command",
+      "handlers": [
+        {
+          "name": "RecordAuditorRequestCommentHandler",
+          "source": "src/Compliance.Core/Features/AuditorRequests/RecordAuditorRequestCommentHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "AuditorRequest"
+      ],
+      "aggregateTargets": [
+        "AuditorRequest"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "RecordAuditorResponseDisposition",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/RecordAuditorResponseDisposition.cs",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "classification": "command",
+      "handlers": [
+        {
+          "name": "RecordAuditorResponseDispositionHandler",
+          "source": "src/Compliance.Core/Features/AuditorRequests/RecordAuditorResponseDispositionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "AuditorRequest"
+      ],
+      "aggregateTargets": [
+        "AuditorRequest"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs"
       ],
       "note": ""
     },
@@ -22740,32 +23008,6 @@
       "note": ""
     },
     {
-      "request": "RecordWorkforceSourceObservation",
-      "contract": "src/Compliance.Common/Features/Workforce/RecordWorkforceSourceObservation.cs",
-      "interfaces": "IRequest<WorkforceSourceRegistration>, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "RecordWorkforceSourceObservationHandler",
-          "source": "src/Compliance.Core/Features/Workforce/RecordWorkforceSourceObservationHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "WorkforceSourceObservation"
-      ],
-      "aggregateTargets": [
-        "WorkforceSourceObservation"
-      ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs",
-        "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs"
-      ],
-      "note": ""
-    },
-    {
       "request": "RecordWorkRelationship",
       "contract": "src/Compliance.Common/Features/Workforce/RecordWorkRelationship.cs",
       "interfaces": "IRequest<WorkRelationshipRegistration>, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
@@ -22788,6 +23030,32 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/RecordWorkRelationshipHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "RecordWorkforceSourceObservation",
+      "contract": "src/Compliance.Common/Features/Workforce/RecordWorkforceSourceObservation.cs",
+      "interfaces": "IRequest<WorkforceSourceRegistration>, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
+      "classification": "command",
+      "handlers": [
+        {
+          "name": "RecordWorkforceSourceObservationHandler",
+          "source": "src/Compliance.Core/Features/Workforce/RecordWorkforceSourceObservationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "WorkforceSourceObservation"
+      ],
+      "aggregateTargets": [
+        "WorkforceSourceObservation"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs",
+        "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs"
       ],
       "note": ""
     },
@@ -24277,31 +24545,6 @@
       "note": ""
     },
     {
-      "request": "ReviseAuditorRequest",
-      "contract": "src/Compliance.Common/Features/AuditorRequests/ReviseAuditorRequest.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "ReviseAuditorRequestHandler",
-          "source": "src/Compliance.Core/Features/AuditorRequests/ReviseAuditorRequestHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditorRequest"
-      ],
-      "aggregateTargets": [
-        "AuditorRequest"
-      ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs"
-      ],
-      "note": ""
-    },
-    {
       "request": "ReviseAuditPopulationDefinition",
       "contract": "src/Compliance.Common/Features/AuditPopulations/ReviseAuditPopulationDefinition.cs",
       "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
@@ -24348,6 +24591,31 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "ReviseAuditorRequest",
+      "contract": "src/Compliance.Common/Features/AuditorRequests/ReviseAuditorRequest.cs",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "classification": "command",
+      "handlers": [
+        {
+          "name": "ReviseAuditorRequestHandler",
+          "source": "src/Compliance.Core/Features/AuditorRequests/ReviseAuditorRequestHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "AuditorRequest"
+      ],
+      "aggregateTargets": [
+        "AuditorRequest"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs"
       ],
       "note": ""
     },
@@ -26058,6 +26326,76 @@
         }
       ],
       "methodArgumentCount": 2
+    },
+    {
+      "fact": "CorrectiveActionAdded",
+      "aggregate": "FindingAggregate",
+      "method": "AddAction",
+      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 7
+    },
+    {
+      "fact": "FindingClosed",
+      "aggregate": "FindingAggregate",
+      "method": "Close",
+      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 9
+    },
+    {
+      "fact": "CorrectiveActionCompleted",
+      "aggregate": "FindingAggregate",
+      "method": "CompleteAction",
+      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 7
+    },
+    {
+      "fact": "FindingAcceptanceLinked",
+      "aggregate": "FindingAggregate",
+      "method": "LinkAcceptance",
+      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 8
+    },
+    {
+      "fact": "FindingRaised",
+      "aggregate": "FindingAggregate",
+      "method": "Raise",
+      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 10
+    },
+    {
+      "fact": "FindingReopened",
+      "aggregate": "FindingAggregate",
+      "method": "Reopen",
+      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 4
+    },
+    {
+      "fact": "FindingRevised",
+      "aggregate": "FindingAggregate",
+      "method": "Revise",
+      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 9
     },
     {
       "fact": "ApplicationImportCanceled",

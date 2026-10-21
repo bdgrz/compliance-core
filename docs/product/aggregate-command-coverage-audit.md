@@ -1,11 +1,12 @@
 # Aggregate and command-handler coverage audit
 
-Captured 2026-10-21 at source commit `ff7266fd54fe06d4ffa1a14e75360ee173d497dc`.
+Captured 2026-10-21 at source commit `f054498a56b8e86f3d6019b5e09eb8784be05e8e`, with the current uncommitted finding-migration slice included in the row map.
 The row-level source map is [`aggregate-command-coverage.json`](aggregate-command-coverage.json).
 
 ## Method
 
-The inventory scans C# declarations, `On<Fact>` reducer registrations, event
+The inventory scans C# declarations, `On<Fact>` reducer registrations, explicit
+source-stream replay guards, event
 construction (including target-typed constructors), `IRequest` contracts,
 `IRequestHandler` implementations, handler registrations, and typed aggregate
 mutation targets in handler and shared-helper code. It checks every callable
@@ -21,32 +22,42 @@ requirement by itself.
 
 ## Current coverage
 
-- **404 domain-event contracts.** There are 396 aggregate reducer
-  registrations across 383 fact contracts. The 381 currently emitted
+- **409 domain-event contracts.** There are 409 aggregate reducer
+  registrations across 388 fact contracts. The 381 currently emitted business
   aggregate facts have reducers. `UserIdentityAuthenticated` is emitted
   through the audit path and has no aggregate reducer. Two reducer-only facts
-  remain for replay compatibility.
+  remain for replay compatibility. Five migration-control facts are inventoried
+  separately from business facts.
 - **20 contracts have neither a reducer nor a current producer.** Seven are
   confirmed feature gaps; 13 are superseded by current events or accepted
   decisions, as listed below.
-- **99 aggregate roots.** 98 have a registered command or internal-reaction
-  mutation path. `LegacyWorkAssignmentLedger` is a read-only replay adapter for
-  old assignment streams. Three roots are reached through shared helper services:
+- **102 aggregate roots.** 101 have a registered command or internal-reaction
+  mutation path. `FindingAggregate`, `FindingMigrationAggregate`, and the
+  lightweight `RemediationMigrationFenceAggregate` are reached
+  through the new migration request; the seven normal finding producer methods
+  still need production command and reader cutover under #1022.
+  `LegacyWorkAssignmentLedger` is a read-only replay adapter for old assignment
+  streams. Three roots are reached through shared helper services:
   `PopulationSnapshot` and `PopulationSnapshotChunk` through
   `PopulationSnapshotFreezer`, and `TenantManagerGuard` through
   `TenantManagerInvariant`.
-- **648 request contracts** were found across Common and Core, including 646
-  Common contracts. The scan classifies 347 handled commands, 13 handled
+- **7 source-stream replay guards.** `RemediationMigrationFenceAggregate`
+  validates the tenant, program, and finding identity of legacy finding facts
+  while replaying the source stream; those scope checks are listed separately
+  from state-owning reducers.
+- **649 request contracts** were found across Common and Core, including 647
+  Common contracts. The scan classifies 347 handled commands, 14 handled
   internal reaction commands, 13 commands without handlers, 274 read or
   reconstruction requests, and one internal executor context. The 13 missing
   command handlers comprise eight active gaps and five readiness-import
   commands deferred by M0-D04.
-- All **590 Common/Core handler registrations** composed by `AddCompliance`
+- All **591 Common/Core handler registrations** composed by `AddCompliance`
   have a matching handler class. The app layer has two MCP forwarding adapters,
   inventoried separately because they forward to Common/Core requests and do
   not own aggregates.
 
-The JSON contains the fact-to-reducer-to-emitter map, the separate
+The JSON contains the fact-to-reducer-to-emitter map, source-stream replay
+guards kept separate from reducers, the separate
 aggregate-to-command-to-handler map, and each producer operation that still
 lacks a registered route. It records direct aggregate references and the
 helper-service paths used by commands; use the aggregate owner to join the
@@ -80,7 +91,7 @@ registration count.
 ## Aggregate fact producers without registered command routes
 
 The route guard also checks each callable aggregate operation that constructs a replayable fact, rather than
-only checking that each aggregate root has at least one command. It finds **30 producer operations**
+only checking that each aggregate root has at least one command. It finds **37 producer operations**
 that do not reach a registered command or internal-reaction handler:
 
 | Current path | Producer operations | Owning issue or disposition |
@@ -96,6 +107,7 @@ that do not reach a registered command or internal-reaction handler:
 | Direct aggregate-executor call from delivery reactor | `TenantInvitation.RecordDeliverySent`, `TenantInvitation.RecordDeliveryFailure` | [#127](https://github.com/bdgrz/compliance-core/issues/127) |
 | Direct aggregate-executor call from delivery reactor | `EmailAddress.RecordDeliverySent`, `RecordDeliveryFailure`, `RecordRecoveryDeliverySent`, `RecordRecoveryDeliveryFailure` | Needs a specific backend issue; #127's backend children are closed and no open email-challenge issue owns this route. |
 | Direct aggregate-executor call from digest processor | `WorkDigestDispatch.Schedule`, `StartAttempt`, `RecordSent`, `RecordSkipped`, `RecordPermanentRejection`, `RecordUnknown`, `RecordInterruptedAttempt`, `RecordTransientRejection`, `RecordRetryWindowExpired`, `RecordMissedWeek` | [#121](https://github.com/bdgrz/compliance-core/issues/121) |
+| No registered request route for the in-progress per-finding boundary | `FindingAggregate.Raise`, `Revise`, `AddAction`, `CompleteAction`, `LinkAcceptance`, `Close`, `Reopen` | [#1022](https://github.com/bdgrz/compliance-core/issues/1022); the system migration request now routes fence, import, and cursor facts; production finding commands and readers still use the legacy root. |
 
 The direct reactor and processor paths currently execute aggregate methods and can persist their facts;
 they bypass the registered request-handler composition. They are listed because the requested wiring
@@ -139,27 +151,32 @@ The five missing readiness-import commands remain deferred under M0-D04:
 
 ## Multi-owner facts
 
-Eight event contracts have reducer registrations in more than one aggregate.
-The JSON names every owner and source file. These are existing shared or
-compatibility facts: import cancellation is applied by the batch and import
-ledger; responsibility facts are applied by their owning source records;
-work-item assignment facts retain the legacy adapter; and technology
-revision facts are shared across the related inventory roots. The follow-up
-coverage guard will preserve this explicit ownership list.
+Sixteen event contracts have reducer registrations in more than one aggregate.
+The JSON names every owner and source file. Seven finding events are a temporary
+dual-replay state while the per-finding target is built; their old reducer can be
+removed only after source-to-target parity and consumer cutover. The migration
+fence is emitted by a lightweight source-stream aggregate and reduced by that
+aggregate plus the legacy writer root, which uses it to reject further writes.
+The remaining eight are existing shared or compatibility facts: import cancellation is
+applied by the batch and import ledger; responsibility facts are applied by
+their owning source records; work-item assignment facts retain the legacy
+adapter; and technology revision facts are shared across the related inventory
+roots. The follow-up coverage guard will preserve this explicit ownership list.
 
-## Next implementation slice
+## Current implementation slice
 
-The first dependency-free slice in this issue is a regression guard that
-requires an explicit inventory row for every event, request, and aggregate
-contract. It requires every emitted aggregate fact to name its reducer owner
-and emitter, every aggregate to reach a registered command or internal
-reaction handler, and every handled request to match its registered handler
-type. Requests without handlers must remain explicitly classified with an
-issue or accepted deferral. The guard does not close the seven feature gaps;
-those stay with their owning issues.
+The source-linked coverage guard inventories every event, request, aggregate,
+reducer, emitter, and registered handler. The active #1022 slice now has a
+bounded per-finding command aggregate, a bounded per-program migration
+coordinator, a read-side history fold, an exact versioned legacy fence, and
+paired source-lineage imports. A named system request processes one physical
+source offset per call, including audit cursor progress. Production finding
+command and reader cutover, full source-to-target parity proof, and legacy-root
+pruning remain open. The guard does not close the seven
+policy-gated feature gaps; those stay with their owning issues.
 
-For the next feature track, Jev's `jev-1.13.0` Choice favored the Type I
-observation path (0.55 probability; confidence 0.44) over finishing the
-regression guard (0.36). This is only a prioritization signal. Live GitHub state
-still shows #297 and #298 open, so #301 remains blocked until its accepted Type
-I baseline and entry-decision prerequisites are complete.
+Jev's `jev-1.13.0` Choice favored `finish_finding_migration` (0.56) over
+`audit_observation_facts` (0.43), with 0.49 confidence. This is a
+prioritization signal, not a domain decision. GitHub still shows #297 and #298
+open, so #301 remains blocked until its Type I baseline and entry-decision
+prerequisites are complete.
