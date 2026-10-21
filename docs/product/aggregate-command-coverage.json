@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-21",
-  "sourceCommit": "a0cef38ade2533332c06922df0e696a202e75fd5",
-  "method": "Roslyn syntax inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed event constructors, On<Fact> reducer registrations, IRequest contracts, IRequestHandler classes, AddRequestHandler registrations, and direct aggregate references. Known helper service paths are recorded explicitly. Test paths are symbol references only, not proof that the assertion covers a specific invariant.",
+  "sourceCommit": "5bbf23d1b76bcf321f0da2b2b388d997d1325188",
+  "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction in aggregate operations and declared helper emitters, On<Fact> reducer registrations, IRequest contracts, IRequestHandler classes, AddRequestHandler registrations, direct aggregate references, and aggregate-to-handler call reachability. Comparison-only fact constructions are excluded from emitter rows. Known shared-helper paths are recorded explicitly. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions.",
   "counts": {
     "domainEventContracts": 404,
     "factsWithReducer": 383,
@@ -23,8 +23,14 @@
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 592,
-    "unregisteredCoreHandlerClasses": 0
+    "registeredCoreHandlerRegistrations": 590,
+    "unregisteredCoreHandlerClasses": 0,
+    "unwiredAggregateProducerOperations": 21,
+    "unwiredAggregateProducerClassifications": {
+      "no_registered_request_route": 12,
+      "direct_reactor_executor": 6,
+      "direct_processor_executor": 3
+    }
   },
   "facts": [
     {
@@ -617,10 +623,7 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Commit.cs",
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.EffectVerification.cs",
-        "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs",
-        "src/Compliance.Core/Features/Applications/GetApplicationImportProgressHandler.cs"
+        "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs",
@@ -26285,6 +26288,283 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionFieldPresenceHttpTests.cs"
       ]
+    }
+  ],
+  "unwiredAggregateProducers": [
+    {
+      "fact": "AuditPackageBuildProgressRecorded",
+      "aggregate": "AuditPackage",
+      "method": "RecordBuildProgress",
+      "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 302,
+      "callerSources": []
+    },
+    {
+      "fact": "ArtifactDispositionApproved",
+      "aggregate": "ArtifactDisposition",
+      "method": "Approve",
+      "source": "src/Compliance.Core/Features/Retention/ArtifactDisposition.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 285,
+      "callerSources": []
+    },
+    {
+      "fact": "ArtifactDispositionExecutionRequested",
+      "aggregate": "ArtifactDisposition",
+      "method": "RequestExecution",
+      "source": "src/Compliance.Core/Features/Retention/ArtifactDisposition.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 285,
+      "callerSources": []
+    },
+    {
+      "fact": "TenantInvitationDeliverySent",
+      "aggregate": "TenantInvitation",
+      "method": "RecordDeliverySent",
+      "source": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs",
+      "classification": "direct_reactor_executor",
+      "ownerIssue": 127,
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
+          "methods": [
+            "RecordDeliverySent"
+          ]
+        }
+      ]
+    },
+    {
+      "fact": "TenantInvitationDeliveryFailed",
+      "aggregate": "TenantInvitation",
+      "method": "RecordDeliveryFailure",
+      "source": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs",
+      "classification": "direct_reactor_executor",
+      "ownerIssue": 127,
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
+          "methods": [
+            "RecordDeliveryFailure"
+          ]
+        }
+      ]
+    },
+    {
+      "fact": "ObservationPeriodCloseProposed",
+      "aggregate": "TypeIIPeriod",
+      "method": "RecordCloseValidation",
+      "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 310,
+      "callerSources": []
+    },
+    {
+      "fact": "TypeIIPeriodCloseAmended",
+      "aggregate": "TypeIIPeriod",
+      "method": "AmendClose",
+      "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 310,
+      "callerSources": []
+    },
+    {
+      "fact": "ClientExportRequested",
+      "aggregate": "ClientExport",
+      "method": "Request",
+      "source": "src/Compliance.Core/Features/Exports/ClientExport.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 545,
+      "callerSources": []
+    },
+    {
+      "fact": "ClientExportAttestPackageDeliveryRecorded",
+      "aggregate": "ClientExport",
+      "method": "RecordAttestPackageDelivery",
+      "source": "src/Compliance.Core/Features/Exports/ClientExport.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 545,
+      "callerSources": []
+    },
+    {
+      "fact": "TemplateApplicationDraftCreated",
+      "aggregate": "TemplateApplication",
+      "method": "RecordDraftCreated",
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 276,
+      "callerSources": []
+    },
+    {
+      "fact": "ProgramRolloverRevised",
+      "aggregate": "ProgramRollover",
+      "method": "Revise",
+      "source": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 316,
+      "callerSources": []
+    },
+    {
+      "fact": "ProgramNextPeriodCreated",
+      "aggregate": "ProgramRollover",
+      "method": "RecordNextPeriodCreated",
+      "source": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 316,
+      "callerSources": []
+    },
+    {
+      "fact": "EmailChallengeDeliverySent",
+      "aggregate": "EmailAddress",
+      "method": "RecordDeliverySent",
+      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+      "classification": "direct_reactor_executor",
+      "ownerIssue": null,
+      "followUpIssueNeeded": true,
+      "followUpReason": "The active email challenge flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "methods": [
+            "RecordDeliverySent"
+          ]
+        }
+      ]
+    },
+    {
+      "fact": "EmailChallengeDeliveryFailed",
+      "aggregate": "EmailAddress",
+      "method": "RecordDeliveryFailure",
+      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+      "classification": "direct_reactor_executor",
+      "ownerIssue": null,
+      "followUpIssueNeeded": true,
+      "followUpReason": "The active email challenge flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "methods": [
+            "RecordDeliveryFailure"
+          ]
+        }
+      ]
+    },
+    {
+      "fact": "EmailChallengeDeliverySent",
+      "aggregate": "EmailAddress",
+      "method": "RecordRecoveryDeliverySent",
+      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+      "classification": "direct_reactor_executor",
+      "ownerIssue": null,
+      "followUpIssueNeeded": true,
+      "followUpReason": "The active email recovery flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "methods": [
+            "RecordRecoveryDeliverySent"
+          ]
+        }
+      ]
+    },
+    {
+      "fact": "EmailChallengeDeliveryFailed",
+      "aggregate": "EmailAddress",
+      "method": "RecordRecoveryDeliveryFailure",
+      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+      "classification": "direct_reactor_executor",
+      "ownerIssue": null,
+      "followUpIssueNeeded": true,
+      "followUpReason": "The active email recovery flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "methods": [
+            "RecordRecoveryDeliveryFailure"
+          ]
+        }
+      ]
+    },
+    {
+      "fact": "WorkDigestDispatchScheduled",
+      "aggregate": "WorkDigestDispatch",
+      "method": "Schedule",
+      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
+      "classification": "direct_processor_executor",
+      "ownerIssue": 121,
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
+          "methods": [
+            "Schedule"
+          ]
+        }
+      ]
+    },
+    {
+      "fact": "WorkDigestDispatchAttemptStarted",
+      "aggregate": "WorkDigestDispatch",
+      "method": "StartAttempt",
+      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
+      "classification": "direct_processor_executor",
+      "ownerIssue": 121,
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
+          "methods": [
+            "StartAttempt"
+          ]
+        }
+      ]
+    },
+    {
+      "fact": "WorkDigestDispatchOutcomeRecorded",
+      "aggregate": "WorkDigestDispatch",
+      "method": "RecordOutcome",
+      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
+      "classification": "direct_processor_executor",
+      "ownerIssue": 121,
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
+          "methods": [
+            "RecordSent",
+            "RecordSkipped",
+            "RecordPermanentRejection",
+            "RecordUnknown",
+            "RecordInterruptedAttempt",
+            "RecordTransientRejection",
+            "RecordRetryWindowExpired",
+            "RecordMissedWeek"
+          ]
+        }
+      ]
+    },
+    {
+      "fact": "TypeIIPlanRevised",
+      "aggregate": "TypeIIPlan",
+      "method": "Revise",
+      "source": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 303,
+      "callerSources": []
+    },
+    {
+      "fact": "ManagementAssertionRevised",
+      "aggregate": "ManagementAssertion",
+      "method": "Revise",
+      "source": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 303,
+      "callerSources": []
+    }
+  ],
+  "factEmissionHelpers": [
+    {
+      "name": "ResponsibilitySet",
+      "source": "src/Compliance.Core/Features/Responsibilities/ResponsibilitySet.cs",
+      "routeThroughMethod": "GetResponsibilitySet",
+      "note": "Aggregate roots pass their RaiseEvent callback into this helper; the helper constructs ResponsibilityAssigned and ResponsibilityRevoked."
     }
   ]
 }

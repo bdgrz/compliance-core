@@ -165,6 +165,9 @@ public sealed class AggregateCommandCoverageTests
         var aggregateNames = root.GetProperty("aggregates").EnumerateArray()
             .Select(static aggregate => aggregate.GetProperty("aggregate").GetString()!)
             .ToHashSet(StringComparer.Ordinal);
+        var helperRows = root.GetProperty("factEmissionHelpers").EnumerateArray().ToArray();
+        var helperNames = helperRows.Select(static helper =>
+            helper.GetProperty("name").GetString()!).ToHashSet(StringComparer.Ordinal);
         var facts = root.GetProperty("facts").EnumerateArray().ToArray();
         var factNames = facts.Select(static fact => fact.GetProperty("fact").GetString()!)
             .ToHashSet(StringComparer.Ordinal);
@@ -198,24 +201,12 @@ public sealed class AggregateCommandCoverageTests
                 actualReducers.Add((SimpleName(generic.TypeArgumentList.Arguments[0]),
                     aggregate.Identifier.ValueText, relativePath));
             }
-            foreach (var creation in syntaxRoot.DescendantNodes().OfType<ObjectCreationExpressionSyntax>())
-            {
-                var fact = SimpleName(creation.Type);
-                if (factNames.Contains(fact))
-                    actualEmitters.Add((fact, relativePath));
-            }
-            foreach (var variable in syntaxRoot.DescendantNodes().OfType<VariableDeclaratorSyntax>())
-            {
-                if (variable.Initializer?.Value is not ImplicitObjectCreationExpressionSyntax)
-                    continue;
-                var declaration = variable.Ancestors().OfType<VariableDeclarationSyntax>()
-                    .FirstOrDefault();
-                if (declaration is null)
-                    continue;
-                var fact = SimpleName(declaration.Type);
-                if (factNames.Contains(fact))
-                    actualEmitters.Add((fact, relativePath));
-            }
+            foreach (var aggregate in syntaxRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
+                         .Where(type => aggregateNames.Contains(type.Identifier.ValueText) ||
+                             helperNames.Contains(type.Identifier.ValueText)))
+                foreach (var method in aggregate.Members.OfType<MethodDeclarationSyntax>())
+                    foreach (var fact in AggregateFactConstructionNames(method, factNames))
+                        actualEmitters.Add((fact, relativePath));
         }
         var expectedReducers = facts.SelectMany(fact => fact.GetProperty("reducers").EnumerateArray()
             .Select(reducer => (Fact: fact.GetProperty("fact").GetString()!,
@@ -242,6 +233,195 @@ public sealed class AggregateCommandCoverageTests
                 $"{row.Fact}/{row.Source}")) + Environment.NewLine +
             "Extra: " + string.Join(", ", extraEmitters.Select(static row =>
                 $"{row.Fact}/{row.Source}")));
+    }
+
+    [Fact]
+    public void ShouldReachEveryAggregateFactEmitterThroughARegisteredRequestGivenCoverageMap()
+    {
+        // Arrange
+        using var inventory = ReadInventory();
+        var root = inventory.RootElement;
+        var aggregateRows = root.GetProperty("aggregates").EnumerateArray().ToArray();
+        var aggregateNames = aggregateRows.Select(static aggregate =>
+            aggregate.GetProperty("aggregate").GetString()!).ToHashSet(StringComparer.Ordinal);
+        var factRows = root.GetProperty("facts").EnumerateArray()
+            .ToDictionary(static fact => fact.GetProperty("fact").GetString()!, StringComparer.Ordinal);
+        var aggregateFactNames = factRows.Where(static fact =>
+                fact.Value.GetProperty("reducers").GetArrayLength() > 0)
+            .Select(static fact => fact.Key).ToHashSet(StringComparer.Ordinal);
+        var repositoryRoot = FindRepositoryRoot();
+        var sourceFiles = Directory.EnumerateFiles(Path.Combine(repositoryRoot, "src"), "*.cs",
+            SearchOption.AllDirectories).ToArray();
+        var sourceRoots = sourceFiles.ToDictionary(
+            path => Path.GetRelativePath(repositoryRoot, path).Replace('\\', '/'),
+            path => CSharpSyntaxTree.ParseText(File.ReadAllText(path)).GetRoot(),
+            StringComparer.Ordinal);
+        var typeSources = sourceRoots.SelectMany(pair => pair.Value.DescendantNodes()
+                .OfType<BaseTypeDeclarationSyntax>()
+                .Select(type => (Name: type.Identifier.ValueText, pair.Key)))
+            .GroupBy(static type => type.Name, StringComparer.Ordinal)
+            .ToDictionary(static group => group.Key,
+                static group => group.Select(static type => type.Key).Distinct(StringComparer.Ordinal)
+                    .ToArray(), StringComparer.Ordinal);
+        var helperProducerFacts = new List<(string Helper, string RouteThroughMethod,
+            string Method, string Fact)>();
+        foreach (var helper in root.GetProperty("factEmissionHelpers").EnumerateArray())
+        {
+            var helperName = helper.GetProperty("name").GetString()!;
+            var helperSource = helper.GetProperty("source").GetString()!;
+            var routeThroughMethod = helper.GetProperty("routeThroughMethod").GetString()!;
+            if (!sourceRoots.TryGetValue(helperSource, out var helperRoot))
+                continue;
+            foreach (var helperType in helperRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
+                         .Where(type => type.Identifier.ValueText == helperName))
+                foreach (var method in helperType.Members.OfType<MethodDeclarationSyntax>())
+                    foreach (var fact in AggregateFactConstructionNames(method, aggregateFactNames))
+                        helperProducerFacts.Add((helperName, routeThroughMethod,
+                            method.Identifier.ValueText, fact));
+        }
+        var requests = root.GetProperty("requests").EnumerateArray().ToArray();
+        var aggregateMethods = new Dictionary<string,
+            Dictionary<string, HashSet<string>>>(StringComparer.Ordinal);
+        var producerMethods = new HashSet<(string Fact, string Aggregate, string Method, string Source)>();
+
+        // Act
+        foreach (var (source, syntaxRoot) in sourceRoots)
+        {
+            foreach (var aggregate in syntaxRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
+                         .Where(type => aggregateNames.Contains(type.Identifier.ValueText)))
+            {
+                var aggregateName = aggregate.Identifier.ValueText;
+                if (!aggregateMethods.TryGetValue(aggregateName, out var methods))
+                    aggregateMethods.Add(aggregateName,
+                        methods = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal));
+
+                foreach (var method in aggregate.Members.OfType<MethodDeclarationSyntax>())
+                {
+                    var methodName = method.Identifier.ValueText;
+                    if (!methods.TryGetValue(methodName, out var calls))
+                        methods.Add(methodName, calls = new HashSet<string>(StringComparer.Ordinal));
+                    calls.UnionWith(method.DescendantNodes().OfType<InvocationExpressionSyntax>()
+                        .Select(InvocationName).Where(static name => name is not null).Cast<string>());
+                    foreach (var fact in AggregateFactConstructionNames(method, aggregateFactNames))
+                        producerMethods.Add((fact, aggregateName, methodName, source));
+                    foreach (var helperProducer in helperProducerFacts.Where(helper =>
+                                 calls.Contains(helper.Method) &&
+                                 calls.Contains(helper.RouteThroughMethod)))
+                        producerMethods.Add((helperProducer.Fact, aggregateName, methodName, source));
+                }
+            }
+        }
+
+        var actualUnwired = new HashSet<(string Fact, string Aggregate, string Method, string Source)>();
+        foreach (var producer in producerMethods)
+        {
+            var reachable = false;
+            foreach (var request in requests.Where(request =>
+                         request.GetProperty("classification").GetString() is "command" or "internal_reaction" &&
+                         request.GetProperty("handlerRegistration").GetBoolean() &&
+                         request.GetProperty("aggregateTargets").EnumerateArray()
+                             .Any(target => target.GetString() == producer.Aggregate)))
+            {
+                var routeSources = request.GetProperty("handlers").EnumerateArray()
+                    .Where(static handler => handler.GetProperty("registered").GetBoolean())
+                    .Select(static handler => handler.GetProperty("source").GetString()!)
+                    .Concat(request.GetProperty("helperServices").EnumerateArray()
+                        .SelectMany(helper => typeSources.GetValueOrDefault(helper.GetString()!) ?? []))
+                    .Distinct(StringComparer.Ordinal);
+                var pendingMethods = new Queue<string>(routeSources.Where(sourceRoots.ContainsKey)
+                    .SelectMany(source => sourceRoots[source]
+                        .DescendantNodes().OfType<InvocationExpressionSyntax>()
+                        .Select(InvocationName).Where(static name => name is not null)
+                        .Cast<string>()));
+                var visitedMethods = new HashSet<string>(StringComparer.Ordinal);
+                while (pendingMethods.TryDequeue(out var methodName))
+                {
+                    if (!visitedMethods.Add(methodName))
+                        continue;
+                    if (methodName == producer.Method)
+                    {
+                        reachable = true;
+                        break;
+                    }
+                    if (aggregateMethods.TryGetValue(producer.Aggregate, out var methods) &&
+                        methods.TryGetValue(methodName, out var nestedCalls))
+                        foreach (var nestedCall in nestedCalls)
+                            pendingMethods.Enqueue(nestedCall);
+                }
+                if (reachable)
+                    break;
+            }
+
+            if (!reachable)
+                actualUnwired.Add(producer);
+        }
+        var unwiredRows = root.GetProperty("unwiredAggregateProducers").EnumerateArray().ToArray();
+        var expectedUnwired = unwiredRows
+            .Select(producer => (Fact: producer.GetProperty("fact").GetString()!,
+                Aggregate: producer.GetProperty("aggregate").GetString()!,
+                Method: producer.GetProperty("method").GetString()!,
+                Source: producer.GetProperty("source").GetString()!)).ToHashSet();
+        var routeCounts = root.GetProperty("counts");
+        var expectedRouteGapCounts = unwiredRows.GroupBy(row =>
+                row.GetProperty("classification").GetString()!)
+            .ToDictionary(static group => group.Key, static group => group.Count(),
+                StringComparer.Ordinal);
+        var missingPaths = expectedUnwired.Except(actualUnwired).ToArray();
+        var extraPaths = actualUnwired.Except(expectedUnwired).ToArray();
+        var invalidGapEvidence = new List<string>();
+        foreach (var producer in unwiredRows)
+        {
+            var fact = producer.GetProperty("fact").GetString()!;
+            var aggregate = producer.GetProperty("aggregate").GetString()!;
+            var method = producer.GetProperty("method").GetString()!;
+            var classification = producer.GetProperty("classification").GetString();
+            var ownerIssue = producer.GetProperty("ownerIssue").ValueKind == JsonValueKind.Number;
+            var followUpIssueNeeded = producer.TryGetProperty("followUpIssueNeeded", out var needed) &&
+                needed.GetBoolean();
+            var followUpReason = producer.TryGetProperty("followUpReason", out var reason) &&
+                !string.IsNullOrWhiteSpace(reason.GetString());
+            var callerRows = producer.GetProperty("callerSources").EnumerateArray().ToArray();
+            var callerSources = callerRows.Select(static caller =>
+                caller.GetProperty("source").GetString()!).ToArray();
+            if (classification is not ("direct_reactor_executor" or "direct_processor_executor" or
+                    "no_registered_request_route"))
+                invalidGapEvidence.Add($"{fact}: unknown producer route classification {classification}");
+            if (!ownerIssue && !(followUpIssueNeeded && followUpReason))
+                invalidGapEvidence.Add($"{fact}: missing owning issue or follow-up issue disposition");
+            if (classification == "no_registered_request_route" && callerSources.Length != 0)
+                invalidGapEvidence.Add($"{fact}: no-route classification lists direct callers");
+            if (classification is "direct_reactor_executor" or "direct_processor_executor" &&
+                callerSources.Length == 0)
+                invalidGapEvidence.Add($"{fact}: direct executor path is missing its caller");
+            foreach (var caller in callerRows)
+            {
+                var callerSource = caller.GetProperty("source").GetString()!;
+                var callerMethods = caller.GetProperty("methods").EnumerateArray()
+                    .Select(static item => item.GetString()!).ToHashSet(StringComparer.Ordinal);
+                if (!sourceRoots.TryGetValue(callerSource, out var callerRoot) ||
+                    !callerRoot.DescendantNodes().OfType<InvocationExpressionSyntax>()
+                        .Any(invocation => callerMethods.Contains(InvocationName(invocation) ?? "")))
+                    invalidGapEvidence.Add($"{fact}: {callerSource} does not call a listed aggregate operation");
+            }
+        }
+
+        // Assert
+        Assert.True(missingPaths.Length == 0 && extraPaths.Length == 0 &&
+            invalidGapEvidence.Count == 0 &&
+            routeCounts.GetProperty("unwiredAggregateProducerOperations").GetInt32() ==
+                expectedUnwired.Count &&
+            routeCounts.GetProperty("unwiredAggregateProducerClassifications").EnumerateObject()
+                .ToDictionary(static entry => entry.Name, static entry => entry.Value.GetInt32(),
+                    StringComparer.Ordinal).OrderBy(static item => item.Key, StringComparer.Ordinal)
+                .SequenceEqual(expectedRouteGapCounts.OrderBy(static item => item.Key,
+                    StringComparer.Ordinal)),
+            "Unwired aggregate producer inventory differs from registered request reachability." +
+            Environment.NewLine + "Missing: " + string.Join(", ", missingPaths.Select(static row =>
+                $"{row.Fact}/{row.Aggregate}.{row.Method}/{row.Source}")) +
+            Environment.NewLine + "Extra: " + string.Join(", ", extraPaths.Select(static row =>
+                $"{row.Fact}/{row.Aggregate}.{row.Method}/{row.Source}")) +
+            Environment.NewLine + "Invalid route evidence: " +
+            string.Join(", ", invalidGapEvidence));
     }
 
     [Fact]
@@ -335,6 +515,8 @@ public sealed class AggregateCommandCoverageTests
             registeredHandlers.OrderBy(static registration => registration.Request,
                 StringComparer.Ordinal).ThenBy(static registration => registration.Handler,
                 StringComparer.Ordinal));
+        Assert.Equal(registeredHandlers.Count, inventory.RootElement.GetProperty("counts")
+            .GetProperty("registeredCoreHandlerRegistrations").GetInt32());
     }
 
     [Fact]
@@ -455,6 +637,47 @@ public sealed class AggregateCommandCoverageTests
                    firstArgument is IdentifierNameSyntax identifier &&
                        requestVariables.Contains(identifier.Identifier.ValueText);
         });
+    }
+
+    static string? InvocationName(InvocationExpressionSyntax invocation) => invocation.Expression switch
+    {
+        IdentifierNameSyntax identifier => identifier.Identifier.ValueText,
+        GenericNameSyntax generic => generic.Identifier.ValueText,
+        MemberAccessExpressionSyntax { Name: IdentifierNameSyntax identifier } => identifier.Identifier.ValueText,
+        MemberAccessExpressionSyntax { Name: GenericNameSyntax generic } => generic.Identifier.ValueText,
+        _ => null,
+    };
+
+    static HashSet<string> AggregateFactConstructionNames(SyntaxNode method,
+        HashSet<string> factNames)
+    {
+        var constructed = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var creation in method.DescendantNodes().OfType<ObjectCreationExpressionSyntax>())
+        {
+            var fact = SimpleName(creation.Type);
+            var compared = creation.Ancestors().OfType<BinaryExpressionSyntax>().Any(binary =>
+                (binary.IsKind(SyntaxKind.EqualsExpression) ||
+                 binary.IsKind(SyntaxKind.NotEqualsExpression)) &&
+                binary.Span.Contains(creation.Span));
+            if (factNames.Contains(fact) && !compared)
+                constructed.Add(fact);
+        }
+        foreach (var creation in method.DescendantNodes()
+                     .OfType<ImplicitObjectCreationExpressionSyntax>())
+        {
+            var declaration = creation.Ancestors().OfType<VariableDeclarationSyntax>()
+                .FirstOrDefault();
+            if (declaration is null)
+                continue;
+            var fact = SimpleName(declaration.Type);
+            var compared = creation.Ancestors().OfType<BinaryExpressionSyntax>().Any(binary =>
+                (binary.IsKind(SyntaxKind.EqualsExpression) ||
+                 binary.IsKind(SyntaxKind.NotEqualsExpression)) &&
+                binary.Span.Contains(creation.Span));
+            if (factNames.Contains(fact) && !compared)
+                constructed.Add(fact);
+        }
+        return constructed;
     }
 
     static string FindRepositoryRoot()
