@@ -275,7 +275,7 @@ The following is a static source inventory, including internal operations. Queri
 | Commands | 238 |
 | Queries | 272 |
 | Events | 404 |
-| Aggregates | 85 |
+| Aggregates | 99 |
 | Models and supporting contracts | 569 |
 | Reactors | 33 |
 | Projectors | 78 |
@@ -283,6 +283,9 @@ The following is a static source inventory, including internal operations. Queri
 | Additional custom HTTP route registrations | 1 |
 
 Reconciled 2026-10-19. All 404 declared event types now have a recorded requirement mapping or explicit exclusion in the [event source reconciliation](domain-event-list.md#source-declaration-reconciliation). The HTTP route table below mirrors the typed registrations in `Program.cs`; it does not imply that every command has or should have an HTTP route.
+
+The aggregate count and source list were reconciled on 2026-10-21 against the
+[aggregate and command-handler audit](aggregate-command-coverage-audit.md).
 
 ### Existing commands
 
@@ -1751,7 +1754,9 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [AccessGrant](../../src/Compliance.Core/Features/AccessControl/AccessGrant.cs#L5)
 - [FirmStaffDirectory](../../src/Compliance.Core/Features/AccessControl/FirmStaffDirectory.cs#L8)
+- [FirmProfessionalDutyCatalog](../../src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs#L10)
 - [IndependenceLedger](../../src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs#L7)
+- [IndependenceRuleRatificationCatalog](../../src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs#L8)
 - [IndependenceRuleCatalog](../../src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs#L8)
 - [Member](../../src/Compliance.Core/Features/AccessControl/Member.cs#L5)
 - [Role](../../src/Compliance.Core/Features/AccessControl/Role.cs#L5)
@@ -1780,6 +1785,10 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [AuditPackage](../../src/Compliance.Core/Features/AuditPackages/AuditPackage.cs#L17)
 
+#### AuditPopulations
+
+- [AuditPopulation](../../src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs#L14)
+
 #### Applications
 
 - [ApplicationImportLedger](../../src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs#L8)
@@ -1791,6 +1800,10 @@ These 140 requirement-backed event contracts have been added since the existing-
 #### Boundaries
 
 - [SystemBoundary](../../src/Compliance.Core/Features/Boundaries/SystemBoundary.cs#L7)
+
+#### Changes
+
+- [SignificantChange](../../src/Compliance.Core/Features/Changes/SignificantChange.cs#L10)
 
 #### Commitments
 
@@ -1818,7 +1831,12 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [EvidenceArtifact](../../src/Compliance.Core/Features/Evidence/EvidenceArtifact.cs#L12)
 - [EvidenceRedaction](../../src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs#L9)
+- [EvidenceSupport](../../src/Compliance.Core/Features/Evidence/EvidenceSupport.cs#L9)
 - [EvidenceRequestLedger](../../src/Compliance.Core/Features/Evidence/EvidenceRequestLedger.cs#L11)
+
+#### Exports
+
+- [ClientExport](../../src/Compliance.Core/Features/Exports/ClientExport.cs#L14)
 
 #### Examinations
 
@@ -1828,6 +1846,16 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [AuditOutcome](../../src/Compliance.Core/Features/Examinations/AuditOutcome.cs#L10)
 - [ExaminationSignOff](../../src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs#L11)
 - [TypeIIPlan](../../src/Compliance.Core/Features/Examinations/TypeIIPlan.cs#L14)
+
+#### Incidents
+
+- [ComplianceIncident](../../src/Compliance.Core/Features/Incidents/ComplianceIncident.cs#L10)
+
+#### MethodologyTemplates
+
+- [MethodologyTemplate](../../src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs#L10)
+- [MethodologyTemplateContribution](../../src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs#L10)
+- [TemplateApplication](../../src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs#L10)
 
 #### SystemDescription
 
@@ -1852,6 +1880,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [ClientService](../../src/Compliance.Core/Features/Programs/ClientService.cs#L7)
 - [ComplianceProgram](../../src/Compliance.Core/Features/Programs/ComplianceProgram.cs#L7)
+- [ProgramRollover](../../src/Compliance.Core/Features/Programs/ProgramRollover.cs#L15)
 
 #### Providers
 
@@ -1906,12 +1935,14 @@ These 140 requirement-backed event contracts have been added since the existing-
 #### UserIdentities
 
 - [EmailAddress](../../src/Compliance.Core/Features/UserIdentities/EmailAddress.cs#L9)
+- [TenantIdentityProvider](../../src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs#L11)
 - [UserIdentity](../../src/Compliance.Core/Features/UserIdentities/UserIdentity.cs#L7)
 
 #### Work
 
 - [WorkItemAssignment](../../src/Compliance.Core/Features/Work/WorkItemAssignment.cs#L10)
 - [LegacyWorkAssignmentLedger](../../src/Compliance.Core/Features/Work/LegacyWorkAssignmentLedger.cs#L6) (read-only legacy stream adapter)
+- [WorkDigestDispatch](../../src/Compliance.Core/Features/Work/WorkDigestDispatch.cs#L6)
 - [WorkDigestPreference](../../src/Compliance.Core/Features/Work/WorkDigestPreference.cs#L9)
 - [WeeklyWorkDigest](../../src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs#L11)
 
