@@ -526,10 +526,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaPost<OffboardTenant>("/api/v1/tenants/{tenant_id}/offboarding")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapPortiaPost<GrantPlatformOperator>("/api/v1/platform/operator-grants")
+    app.MapPortiaPut<GrantPlatformOperator>("/api/v1/platform/operator-grants/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
-    app.MapPortiaPost<RevokePlatformOperator>("/api/v1/platform/operator-revocations")
+    app.MapPortiaPut<RevokePlatformOperator>("/api/v1/platform/operator-revocations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
     app.MapPortiaGet<ListPlatformOperators, PlatformOperatorRosterView>("/api/v1/platform/operators")

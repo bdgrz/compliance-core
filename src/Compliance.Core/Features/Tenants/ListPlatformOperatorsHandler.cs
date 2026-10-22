@@ -9,6 +9,6 @@ public sealed class ListPlatformOperatorsHandler(IAggregateReader reader)
         IRequestContext<ListPlatformOperators> context, CancellationToken ct)
     {
         var roster = await reader.HydrateAsync(new PlatformOperatorRoster(), ct).ConfigureAwait(false);
-        return Result<PlatformOperatorRosterView>.Success(new PlatformOperatorRosterView(roster.ActiveOperators));
+        return Result<PlatformOperatorRosterView>.Success(new PlatformOperatorRosterView(roster.Version, roster.Operators));
     }
 }

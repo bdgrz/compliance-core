@@ -159,20 +159,23 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
             _ = await ordinaryMcp.When("bdgrz.platform.tenant.list",
                 new Dictionary<string, object?>()).ExpectFailure();
 
-            using var deniedGrant = await ordinaryClient.PostAsJsonAsync(
-                "/api/v1/platform/operator-grants", new
+            var initialRoster = await ReadRosterAsync(operatorClient);
+            using var deniedGrant = await ordinaryClient.PutAsJsonAsync(
+                $"/api/v1/platform/operator-grants/{Guid.NewGuid()}", new
                 {
                     user_id = operatorId.ToString(),
                     reason = "Attempt without platform access",
+                    expected_revision = initialRoster.GetProperty("revision").GetUInt64(),
                 });
             Assert.Equal(HttpStatusCode.Forbidden, deniedGrant.StatusCode);
             _ = await ordinaryMcp.When("bdgrz.platform.operator.list",
                 new Dictionary<string, object?>()).ExpectFailure();
-            using var unknownUserGrant = await operatorClient.PostAsJsonAsync(
-                "/api/v1/platform/operator-grants", new
+            using var unknownUserGrant = await operatorClient.PutAsJsonAsync(
+                $"/api/v1/platform/operator-grants/{Guid.NewGuid()}", new
                 {
                     user_id = Uuid.CreateVersion4().ToString(),
                     reason = "Unknown user must not become the last operator",
+                    expected_revision = initialRoster.GetProperty("revision").GetUInt64(),
                 });
             Assert.Equal(HttpStatusCode.Conflict, unknownUserGrant.StatusCode);
 
@@ -191,12 +194,14 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                 {
                     ["user_id"] = ordinaryId.ToString(),
                     ["reason"] = "Rotate platform operations",
+                    ["command_id"] = Guid.NewGuid().ToString(),
+                    ["expected_revision"] = initialRoster.GetProperty("revision").GetUInt64(),
                 }).ExpectSuccess();
             using var grantedRoster = await ordinaryClient.GetAsync("/api/v1/platform/operators");
             Assert.Equal(HttpStatusCode.OK, grantedRoster.StatusCode);
             using var grantedDocument = JsonDocument.Parse(await grantedRoster.Content.ReadAsStreamAsync());
-            Assert.Contains(grantedDocument.RootElement.GetProperty("user_ids").EnumerateArray(),
-                item => item.GetString() == ordinaryId.ToString());
+            Assert.Contains(grantedDocument.RootElement.GetProperty("operators").EnumerateArray(),
+                item => item.GetProperty("user_id").GetString() == ordinaryId.ToString());
             if (worker is not null)
             {
                 await using var scope = worker.Services.CreateAsyncScope();
@@ -212,16 +217,24 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                 {
                     ["user_id"] = operatorId.ToString(),
                     ["reason"] = "Transfer platform operations",
+                    ["command_id"] = Guid.NewGuid().ToString(),
+                    ["expected_revision"] = grantedDocument.RootElement.GetProperty("revision").GetUInt64(),
+                    ["assignment_id"] = grantedDocument.RootElement.GetProperty("operators").EnumerateArray()
+                        .Single(item => item.GetProperty("user_id").GetString() == operatorId.ToString())
+                        .GetProperty("assignment_id").GetString(),
                 }).ExpectSuccess();
             using var revokedAccess = await operatorClient.GetAsync("/api/v1/platform/operators");
             Assert.Equal(HttpStatusCode.Forbidden, revokedAccess.StatusCode);
             _ = await operatorMcp.When("bdgrz.platform.operator.list",
                 new Dictionary<string, object?>()).ExpectFailure();
-            using var lastOperator = await ordinaryClient.PostAsJsonAsync(
-                "/api/v1/platform/operator-revocations", new
+            var soleRoster = await ReadRosterAsync(ordinaryClient);
+            using var lastOperator = await ordinaryClient.PutAsJsonAsync(
+                $"/api/v1/platform/operator-revocations/{Guid.NewGuid()}", new
                 {
                     user_id = ordinaryId.ToString(),
                     reason = "Would leave no operator",
+                    expected_revision = soleRoster.GetProperty("revision").GetUInt64(),
+                    assignment_id = soleRoster.GetProperty("operators")[0].GetProperty("assignment_id").GetString(),
                 });
             Assert.Equal(HttpStatusCode.Conflict, lastOperator.StatusCode);
 
@@ -238,12 +251,20 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                 {
                     ["user_id"] = operatorId.ToString(),
                     ["reason"] = "Complete roster rotation test",
+                    ["command_id"] = Guid.NewGuid().ToString(),
+                    ["expected_revision"] = soleRoster.GetProperty("revision").GetUInt64(),
                 }).ExpectSuccess();
+            var restoredRoster = await ReadRosterAsync(operatorClient);
             _ = await operatorMcp.When("bdgrz.platform.operator.revoke",
                 new Dictionary<string, object?>
                 {
                     ["user_id"] = ordinaryId.ToString(),
                     ["reason"] = "Restore initial operator for the next host mode",
+                    ["command_id"] = Guid.NewGuid().ToString(),
+                    ["expected_revision"] = restoredRoster.GetProperty("revision").GetUInt64(),
+                    ["assignment_id"] = restoredRoster.GetProperty("operators").EnumerateArray()
+                        .Single(item => item.GetProperty("user_id").GetString() == ordinaryId.ToString())
+                        .GetProperty("assignment_id").GetString(),
                 }).ExpectSuccess();
         }
         finally
@@ -254,6 +275,14 @@ public sealed class OperatorPortfolioE2ETests(BrokerStackFixture broker)
                 worker.Dispose();
             }
         }
+    }
+
+    static async Task<JsonElement> ReadRosterAsync(HttpClient client)
+    {
+        using var response = await client.GetAsync("/api/v1/platform/operators");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStreamAsync());
+        return document.RootElement.Clone();
     }
 
     static HttpClient CreateClient(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> factory,

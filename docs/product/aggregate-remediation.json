@@ -44,9 +44,10 @@
       "name": "Explicit identity and retries",
       "state": "in_progress",
       "completedPullRequests": [
-        1033
+        1033,
+        1035
       ],
-      "issue": 1034
+      "issue": 1036
     },
     {
       "order": 3,
@@ -173,7 +174,16 @@
           "issue": 1034,
           "implementation": "src/Compliance.Core/Features/AccessControl/TeamRole.cs",
           "proof": "test/Compliance.Tests/Features/AccessControl/TeamRoleTests.cs",
-          "scope": "TeamRole only: required operation identity, exact assignment episode, native facts, both directory views and source-stable bootstrap/cleanup effects. TeamMember, Member and PlatformOperatorRoster remain open."
+          "scope": "TeamRole only: required operation identity, exact assignment episode, native facts, both directory views and source-stable bootstrap/cleanup effects. TeamMember, Member and PlatformOperatorRoster remain open.",
+          "pullRequest": 1035,
+          "mergedCommit": "fb4ff895cfdb4fd34a8c24aa6eebadaef989953c",
+          "ownerState": "complete"
+        },
+        {
+          "issue": 1036,
+          "implementation": "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs",
+          "proof": "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
+          "scope": "PlatformOperatorRoster: required typed operation identity, original revision, exact active assignment slots, native fact retries and stable seed creation. Last-operator authority remains atomic. Member and TeamMember remain open."
         }
       ]
     },
