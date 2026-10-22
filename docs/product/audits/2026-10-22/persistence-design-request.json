@@ -1,0 +1,110 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "issue": 1030,
+    "scope": "Parent: #1022. Baseline observation: CORE-01 (P1). Depends on delivered #1028/#1029.\n\nObservable gap: fourteen aggregate guards serialize statically typed DomainEvent as `{}`. Several other nominal payload budgets exceed the pinned Fitz operation limit. FitzEventStore serializes after opening an append session and can begin a batch before finding an oversized later event. KV writes need real route/key/value overhead.\n\nAllowed scope: shared concrete generated event sizing; corrections to audited event guards/budgets; shared whole-attributed-batch event-store preflight and notifier forwarding; KV write framing guard; transport-independent validation mapping; application composition; focused regressions and serializer/SDK boundary proof; remediation ledger updates. No aggregate boundary split, business-policy change, new lifetime cap, unrelated identity contract, deployment or environment reset.\n\nAcceptance:\n- Focused RED before implementation, starting with oversized concrete incident event admitted by individually valid fields.\n- Preflight all actual serialized envelopes before any append session opens; enforce `envelope bytes + UTF8(route) + 26 <= 65535` and KV `value + route + key + 20 <= 65535`.\n- Reject oversized later events before any batch append, including large attribution, Unicode and serializer failures; preserve exact valid-boundary batches, read paths, cancellation and event notifications.\n- Oversize rejection maps to ordinary nontransient request validation for result/no-result dispatch without bypassing authorization.\n- Replace the fourteen base-event calls; correct additional nominal budgets; use concrete generated metadata with coverage of affected event types.\n- Focused/full backend units, format, Release build, bounded Jev design and immutable-head preflight, adversarial review, final-head CI, squash merge and readback.\n\nStopping point: CORE-01 persistence safety delivered and source-backed coverage recorded; the structural content splits remain in their owning later families.\n",
+    "pinnedConstraints": {
+      "wireOperationPayloadMaximumBytes": 65535,
+      "largestCorrelatedExtendedTransportFrameBytes": 65551,
+      "streamAppend": {
+        "messageType": 601,
+        "requestHeaderBytes": 5,
+        "correlationRecordBytes": 11,
+        "portiaUsesRouteMetadata": true,
+        "portiaPassesSeparateDiscriminator": false,
+        "operationPayloadFormula": "8 sessionId +8 expectedOffset +4 bodyLength +E serializedEventEnvelope +1 metadataFlag +4 metadataLength +R UTF8(streamRoute) +1 discriminatorFlag = E+R+26",
+        "serializedEventEnvelopeMaximumFormula": "E <=65535-26-R =65509-R",
+        "fullCorrelatedFrameFormula": "E+R+42 <=65551",
+        "eventEnvelopeIncludes": "Portia discriminator name/version, serialized DomainEventMetadata and concrete event payload; a domain-payload-only gate does not measure full envelope."
+      },
+      "kvWrite": {
+        "operationPayloadFormula": "8 transactionId +4 routeLength +R routeUTF8 +4 keyLength +K keyBytes +4 valueLength +V valueBytes =V+R+K+20",
+        "valueMaximumFormula": "V <=65515-R-K",
+        "note": "KvPut104 has one-byte opcode; correlated transport adds14 bytes. Generic MaxFrameSize65551 is not a value limit."
+      },
+      "evidence": [
+        {
+          "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FrameCodec.cs",
+          "line": 32,
+          "claim": "EncodeInto rejects payload.Length > ushort.MaxValue.",
+          "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Protocol/FrameCodec.cs#L32"
+        },
+        {
+          "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FrameCodec.cs",
+          "line": 89,
+          "claim": "MaxTransportFrameSize =11 correlation +5 max header +65535 payload.",
+          "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Protocol/FrameCodec.cs#L89"
+        },
+        {
+          "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FrameCodec.cs",
+          "line": 99,
+          "claim": "EncodeCorrelated applies same65535 operation payload ceiling.",
+          "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Protocol/FrameCodec.cs#L99"
+        },
+        {
+          "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/StreamSession.cs",
+          "line": 38,
+          "claim": "Append operation constructs sessionId+offset+body length/body+metadata flag/length+metadata+discriminator flag.",
+          "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Domains/Stream/StreamSession.cs#L38"
+        },
+        {
+          "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/StreamSession.cs",
+          "line": 68,
+          "claim": "Whole operation payload goes to StreamAppend.",
+          "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Domains/Stream/StreamSession.cs#L68"
+        },
+        {
+          "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FitzConnection.cs",
+          "line": 412,
+          "claim": "Request bytes pass through FrameCodec.Encode or EncodeCorrelated.",
+          "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Connection/FitzConnection.cs#L412"
+        },
+        {
+          "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/JsonDomainEventSerializer.cs",
+          "line": 102,
+          "claim": "Actual durable event serializes runtime payload plus discriminator/version and metadata envelope.",
+          "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Core/Events/JsonDomainEventSerializer.cs#L102"
+        },
+        {
+          "path": "/tmp/compliance-aggregate-audit-20261022/framework/FitzEventStore.cs",
+          "line": 145,
+          "claim": "Portia includes stream route metadata on each append and passes full serialized event body.",
+          "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Fitz/Events/FitzEventStore.cs#L145"
+        },
+        {
+          "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/KvTransaction.cs",
+          "line": 305,
+          "claim": "KV writes encode txId,route,key length/key,value length/value before codec.",
+          "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Domains/Kv/KvTransaction.cs#L305"
+        }
+      ],
+      "budgetConsequence": "64KiB=65536 already exceeds65535 operation bytes before ANY Portia envelope/append metadata.128/256/384/512KiB thresholds are incompatible with one Fitz record even after fixing base type erasure.48KiB and32KiB concrete payload budgets leave margin but are not exact envelope/frame proof."
+    },
+    "observed": "14 factories return DomainEvent or Fits receives DomainEvent; default generic JSON yields {}. Other guards have 64-512KiB budgets. AggregateRepository stamps attribution before IEventStore.AppendAsync. FitzEventStore opens a session before serializing each event. Core generated JSON context already lists audited concrete event contracts.",
+    "candidateA": "Use runtime event type with Core generated JsonTypeInfo for the existing aggregate guards; 48KiB payload budget as an early storage margin. Wrap IEventStore to serialize and size the entire attributed batch before delegating, forwarding reads and IDomainEventNotifier. Wrap IKvClient transactions to validate Insert/Put using actual route and key bytes; map stream oversize exceptions through a shared IRequestBus wrapper after normal authorization. Preserve original service lifetimes with keyed registrations.",
+    "candidateB": "Only change generic serialization in aggregates; use 65536 as payload ceiling; rely on Fitz codec errors after session opens.",
+    "candidateC": "Change every factory and call site to generic Emit<TEvent> with JsonTypeInfo and still add exact attributed-batch storage guard.",
+    "accepted": "Do not alter aggregate business boundaries or approval policies in this slice. No new lifetime caps or broad compatibility paths. Serializer failures must fail before any append; unknown internal serializer errors are not client validation."
+  },
+  "questions": {
+    "design": {
+      "type": "choice",
+      "instructions": "Which candidate most directly provides full pinned-transport safety in this bounded slice with least unnecessary call-site churn?",
+      "criteria": {
+        "A": "Runtime generated event metadata at aggregate guards, whole attributed batch preflight, exact KV overhead and consistent result mapping.",
+        "B": "Only aggregate generic JSON replacement and a 65536-byte payload cap.",
+        "C": "Generic factory conversion of every call site plus whole-batch guard.",
+        "needs_refinement": "No candidate meets accepted scope/safety because of a concrete missing contract."
+      }
+    },
+    "validationBoundary": {
+      "type": "choice",
+      "instructions": "Which exceptions should the shared request result bridge classify as client validation?",
+      "criteria": {
+        "known_stream_limit": "Only a known preflight stream-frame oversize rejection before any append in that batch; preserve authorization, cancellation, concurrency and serializer failures.",
+        "all_persistence_errors": "Every event-store/KV/serialization exception, including projector failures and unknown outcomes.",
+        "none": "Never return validation for an oversize authored event; propagate every size rejection as an unhandled exception."
+      }
+    }
+  }
+}

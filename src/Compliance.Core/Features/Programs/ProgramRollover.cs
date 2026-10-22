@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -17,7 +18,7 @@ public sealed class ProgramRollover : Aggregate
     const int MaximumRecords = 2000;
     const int MaximumCommitments = 1000;
     const int MaximumVersions = 32;
-    const int MaximumEventBytes = 256 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 4000;
     const int MaximumComparisonMeasures = 5;
     static readonly HashSet<string> RecordTypes = new(StringComparer.Ordinal)
@@ -230,7 +231,7 @@ public sealed class ProgramRollover : Aggregate
                 !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The program-rollover transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The complete program-rollover state exceeds its bounded event size.");
         RaiseEvent(ev);
         return null;

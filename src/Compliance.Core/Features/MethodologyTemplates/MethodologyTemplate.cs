@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -11,7 +12,7 @@ public sealed class MethodologyTemplate : Aggregate
 {
     const int MaximumVersions = 64;
     const int MaximumRecords = 100;
-    const int MaximumEventBytes = 256 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 2000;
     static readonly HashSet<string> TemplateKinds = new(StringComparer.Ordinal)
         { "soc2", "iso27001", "custom" };
@@ -246,7 +247,7 @@ public sealed class MethodologyTemplate : Aggregate
             (creating ? _current is not null : _current is null || !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The methodology-template transition is invalid.");
         var ev = createEvent(Uuid.Empty, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The methodology-template snapshot exceeds the bounded event payload.");
         RaiseEvent(ev);
         return null;

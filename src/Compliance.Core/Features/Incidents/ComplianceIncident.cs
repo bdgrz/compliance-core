@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -11,7 +12,7 @@ public sealed class ComplianceIncident : Aggregate
 {
     const int MaximumVersions = 32;
     const int MaximumReferences = 1000;
-    const int MaximumEventBytes = 256 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 4000;
     static readonly HashSet<string> IncidentKinds = new(StringComparer.Ordinal)
         { "security", "availability", "operational", "privacy", "other" };
@@ -278,7 +279,7 @@ public sealed class ComplianceIncident : Aggregate
                 !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The compliance-incident transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The complete incident chronology exceeds the bounded event payload.");
         RaiseEvent(ev);
         return null;

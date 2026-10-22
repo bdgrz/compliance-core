@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Versioning;
@@ -9,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 public sealed class ManagementRepresentationLetter : Aggregate
 {
     const int MaximumSigners = 8;
-    const int MaximumEventBytes = 64 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     static readonly HashSet<string> ExecutiveRoles = new(StringComparer.OrdinalIgnoreCase)
         { "ceo", "ciso" };
 
@@ -118,7 +119,7 @@ public sealed class ManagementRepresentationLetter : Aggregate
             (creating ? _current is not null : _current is null || !ValidTransition(_current, state)))
             return Invalid("The representation letter transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The complete representation letter exceeds the bounded event payload.");
         RaiseEvent(ev);
         return null;

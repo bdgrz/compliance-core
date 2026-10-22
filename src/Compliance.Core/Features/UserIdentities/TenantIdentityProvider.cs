@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -11,7 +12,7 @@ namespace Bdgrz.Compliance.Features.UserIdentities;
 public sealed class TenantIdentityProvider : Aggregate
 {
     const int MaximumTests = 100;
-    const int MaximumEventBytes = 128 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 1000;
     static readonly HashSet<string> CredentialSchemes = new(StringComparer.Ordinal)
         { "vault", "secret", "aws-secretsmanager", "azure-key-vault", "gcp-secret-manager" };
@@ -478,7 +479,7 @@ public sealed class TenantIdentityProvider : Aggregate
         string.IsNullOrEmpty(reference.Query) && string.IsNullOrEmpty(reference.Fragment) &&
         string.IsNullOrEmpty(reference.UserInfo);
 
-    static bool Fits<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value).Length <= MaximumEventBytes;
+    static bool Fits(DomainEvent value) => DomainEventPayload.Size(value) <= MaximumEventBytes;
     static string StateDigest(TenantIdentityProviderView state)
     {
         var legacyTestHistory = state.TestHistory.Select(test => new

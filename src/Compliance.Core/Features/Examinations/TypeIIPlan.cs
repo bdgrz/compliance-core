@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -17,7 +18,7 @@ public sealed class TypeIIPlan : Aggregate
     const int MaximumControls = 512;
     const int MaximumGaps = 1000;
     const int MaximumChanges = 512;
-    const int MaximumEventBytes = 384 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 2000;
     static readonly HashSet<string> TrustCategories = new(StringComparer.Ordinal)
         { "security", "availability", "confidentiality", "processing_integrity", "privacy" };
@@ -229,7 +230,7 @@ public sealed class TypeIIPlan : Aggregate
                 : _current is null || !ValidTransition(_current, state, actorMemberId)))
             return Invalid("The Type II plan transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The complete Type II plan exceeds the bounded event payload.");
         RaiseEvent(ev);
         return null;

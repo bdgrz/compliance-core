@@ -30,13 +30,12 @@ sealed class ActivationReactionProbe
     internal static void Install(IServiceCollection services, ActivationReactionProbe probe)
     {
         var registration = services.Last(descriptor => descriptor.ServiceType == typeof(IRequestBus));
-        if (registration.ImplementationType is not { } implementationType)
-            throw new InvalidOperationException("The request bus registration must use an implementation type.");
-
         _ = services.Remove(registration);
         services.AddSingleton(probe);
         services.AddScoped<IRequestBus>(provider => new RecordingBus(
-            (IRequestBus)ActivatorUtilities.CreateInstance(provider, implementationType), probe));
+            (IRequestBus)(registration.ImplementationInstance ?? registration.ImplementationFactory?.Invoke(provider) ??
+                ActivatorUtilities.CreateInstance(provider, registration.ImplementationType ??
+                    throw new InvalidOperationException("The request bus registration requires an implementation."))), probe));
     }
 
     void Record(Result result, long started)

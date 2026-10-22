@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -18,7 +19,7 @@ public sealed class ClientExport : Aggregate
     const int MaximumBuildAttempts = 32;
     const int MaximumAttestDeliveryAttempts = 32;
     const int MaximumTextLength = 4000;
-    const int MaximumEventBytes = 512 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     static readonly HashSet<string> Scopes = new(StringComparer.Ordinal)
     {
         "organization", "engagement_collaboration"
@@ -233,7 +234,7 @@ public sealed class ClientExport : Aggregate
             (creating ? _current is not null : _current is null || !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The client-export transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The complete client-export state exceeds the bounded event payload.");
         RaiseEvent(ev);
         return null;
