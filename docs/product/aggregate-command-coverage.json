@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-22",
-  "sourceCommit": "f054498a56b8e86f3d6019b5e09eb8784be05e8e",
+  "sourceCommit": "4ca1e8a6936b4eb03af413b5861256228576ca13",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The 2026-10-22 capture records the FindingAggregate native v2 business route, migration-aware readers, and one-step migration command for #1026. The program-wide RemediationLedger remains a fenced legacy history source and compatibility reader; its command methods are retained until deployment-specific parity is verified.",
   "factReplayGuards": [
     {
