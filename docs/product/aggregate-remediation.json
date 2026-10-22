@@ -43,8 +43,10 @@
       "order": 2,
       "name": "Explicit identity and retries",
       "state": "in_progress",
-      "completedPullRequests": [],
-      "issue": 1032
+      "completedPullRequests": [
+        1033
+      ],
+      "issue": 1034
     },
     {
       "order": 3,
@@ -162,7 +164,16 @@
           "issue": 1032,
           "implementation": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
           "proof": "test/Compliance.Tests/Features/AccessControl/RolePermissionTests.cs",
-          "scope": "RolePermission only: required typed operation identity, exact assignment episodes and selected native facts; complete bootstrap replaces twelve backfill reactors. TeamRole, TeamMember, Member and PlatformOperatorRoster remain open."
+          "scope": "RolePermission only: required typed operation identity, exact assignment episodes and selected native facts; complete bootstrap replaces twelve backfill reactors. TeamRole, TeamMember, Member and PlatformOperatorRoster remain open.",
+          "pullRequest": 1033,
+          "mergedCommit": "fce4a35732de949ba08f27423dd1736e796f85b9",
+          "ownerState": "complete"
+        },
+        {
+          "issue": 1034,
+          "implementation": "src/Compliance.Core/Features/AccessControl/TeamRole.cs",
+          "proof": "test/Compliance.Tests/Features/AccessControl/TeamRoleTests.cs",
+          "scope": "TeamRole only: required operation identity, exact assignment episode, native facts, both directory views and source-stable bootstrap/cleanup effects. TeamMember, Member and PlatformOperatorRoster remain open."
         }
       ]
     },

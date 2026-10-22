@@ -14,8 +14,8 @@ public sealed class FitzTeamRoleDirectoryReaderTests
     {
         // Arrange
         var client = new InMemoryKvClient();
-        await ApplyAsync(client, new TeamRoleAssigned(TenantId, TeamId, Uuid.CreateVersion4()));
-        await ApplyAsync(client, new TeamRoleAssigned(TenantId, TeamId, Uuid.CreateVersion4()));
+        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, Uuid.CreateVersion4()));
+        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, Uuid.CreateVersion4()));
         var reader = new FitzTeamRoleDirectoryReader(client);
 
         // Act
@@ -34,8 +34,8 @@ public sealed class FitzTeamRoleDirectoryReaderTests
         // Arrange
         var client = new InMemoryKvClient();
         var role = Uuid.CreateVersion4();
-        await ApplyAsync(client, new TeamRoleAssigned(TenantId, TeamId, role));
-        await ApplyAsync(client, new TeamRoleAssigned(TenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4()));
+        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, role));
+        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4()));
         var reader = new FitzTeamRoleDirectoryReader(client);
 
         // Act
@@ -54,9 +54,9 @@ public sealed class FitzTeamRoleDirectoryReaderTests
         var client = new InMemoryKvClient();
         var kept = Uuid.CreateVersion4();
         var removed = Uuid.CreateVersion4();
-        await ApplyAsync(client, new TeamRoleAssigned(TenantId, TeamId, kept));
-        await ApplyAsync(client, new TeamRoleAssigned(TenantId, TeamId, removed));
-        await ApplyAsync(client, new TeamRoleRemoved(TenantId, TeamId, removed));
+        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, kept));
+        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, removed));
+        await ApplyAsync(client, RbacTeamRoleFacts.Removed(TenantId, TeamId, removed));
         var reader = new FitzTeamRoleDirectoryReader(client);
 
         // Act

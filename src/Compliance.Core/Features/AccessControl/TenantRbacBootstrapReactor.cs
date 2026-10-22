@@ -28,8 +28,7 @@ public sealed partial class TenantRbacBootstrapReactor(
             commands.Add(new RegisterMember(tenantId, context.Trigger.OwnerUserId));
         }
 
-        commands.Add(new AssignTeamRole(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
-            adminRoleId));
+        commands.Add(RbacTeamRoleEffects.Assign(sourceEventId, tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), adminRoleId));
         commands.Add(RbacPermissionEffects.Assign(sourceEventId, tenantId, adminRoleId, RbacPermissions.TenantAccess));
         commands.Add(RbacPermissionEffects.Assign(sourceEventId, tenantId, adminRoleId, RbacPermissions.TenantRbacManage));
         commands.Add(RbacPermissionEffects.Assign(sourceEventId, tenantId, adminRoleId, RbacPermissions.ProgramManage));
@@ -48,11 +47,9 @@ public sealed partial class TenantRbacBootstrapReactor(
             new DefineTeam(tenantId, BuiltInRbac.PowerUsersTeamId(tenantId), BuiltInRbac.PowerUsersTeamName),
             new DefineTeam(tenantId, BuiltInRbac.StandardUsersTeamId(tenantId), BuiltInRbac.StandardUsersTeamName),
             new DefineTeam(tenantId, BuiltInRbac.ViewersTeamId(tenantId), BuiltInRbac.ViewersTeamName),
-            new AssignTeamRole(tenantId, BuiltInRbac.PowerUsersTeamId(tenantId),
-                BuiltInRbac.ComplianceManagementRoleId(tenantId)),
-            new AssignTeamRole(tenantId, BuiltInRbac.StandardUsersTeamId(tenantId),
-                BuiltInRbac.ComplianceParticipationRoleId(tenantId)),
-            new AssignTeamRole(tenantId, BuiltInRbac.ViewersTeamId(tenantId), BuiltInRbac.ViewerRoleId(tenantId)),
+            RbacTeamRoleEffects.Assign(sourceEventId, tenantId, BuiltInRbac.PowerUsersTeamId(tenantId), BuiltInRbac.ComplianceManagementRoleId(tenantId)),
+            RbacTeamRoleEffects.Assign(sourceEventId, tenantId, BuiltInRbac.StandardUsersTeamId(tenantId), BuiltInRbac.ComplianceParticipationRoleId(tenantId)),
+            RbacTeamRoleEffects.Assign(sourceEventId, tenantId, BuiltInRbac.ViewersTeamId(tenantId), BuiltInRbac.ViewerRoleId(tenantId)),
         ]);
         commands.AddRange(BuiltInRolePermissions.Create(sourceEventId, tenantId)
             .Where(grant => grant.RoleId != adminRoleId || grant.Permission is not

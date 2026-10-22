@@ -14,7 +14,7 @@ public sealed class ListRoleTeamsHandlerTests
     {
         // Arrange
         var reader = new FakeRoleTeamDirectoryReader();
-        reader.Teams[(TenantId, RoleId)] = [new RoleTeamView(RoleId, TeamId)];
+        reader.Teams[(TenantId, RoleId)] = [new RoleTeamView(RoleId, TeamId, Uuid.CreateVersion4(), 1)];
         var handler = new ListRoleTeamsHandler(reader);
         var context = new RequestContext<ListRoleTeams>(new ListRoleTeams(TenantId, RoleId), Actor());
 

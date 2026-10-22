@@ -114,9 +114,7 @@ public sealed class TenantManagerInvariantTests
         var actor = tenant.Administrators[0];
 
         // Act
-        var role = await tenant.SendAsync(actor, new RemoveTeamRole(tenant.TenantId,
-            BuiltInRbac.AdministratorsTeamId(tenant.TenantId),
-            BuiltInRbac.TenantAdministrationRoleId(tenant.TenantId)));
+        var role = await tenant.SendAsync(actor, new RemoveTeamRole(tenant.TenantId, BuiltInRbac.AdministratorsTeamId(tenant.TenantId), BuiltInRbac.TenantAdministrationRoleId(tenant.TenantId), Uuid.CreateVersion4(), 1, RbacTeamRoleFacts.AssignmentId(tenant.TenantId, BuiltInRbac.AdministratorsTeamId(tenant.TenantId), BuiltInRbac.TenantAdministrationRoleId(tenant.TenantId))));
         var manage = await tenant.SendAsync(actor, new RemoveRolePermission(tenant.TenantId, BuiltInRbac.TenantAdministrationRoleId(tenant.TenantId), RbacPermissions.TenantRbacManage, Uuid.CreateVersion4(), 1, RbacPermissionFacts.AssignmentId(tenant.TenantId, BuiltInRbac.TenantAdministrationRoleId(tenant.TenantId), RbacPermissions.TenantRbacManage)));
         var access = await tenant.SendAsync(actor, new RemoveRolePermission(tenant.TenantId, BuiltInRbac.TenantAdministrationRoleId(tenant.TenantId), RbacPermissions.TenantAccess, Uuid.CreateVersion4(), 1, RbacPermissionFacts.AssignmentId(tenant.TenantId, BuiltInRbac.TenantAdministrationRoleId(tenant.TenantId), RbacPermissions.TenantAccess)));
 

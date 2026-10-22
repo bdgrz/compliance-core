@@ -55,7 +55,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant:access"));
-        state.Apply(new TeamRoleAssigned(tenantId, teamId, roleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
 
         var json = JsonSerializer.SerializeToUtf8Bytes(state, ComplianceCoreJsonContext.Default.PermissionProjectionState);
 
@@ -85,7 +85,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant:access"));
 
         // Act
-        state.Apply(new TeamRoleAssigned(tenantId, teamId, roleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
 
         // Assert
         var grant = Assert.Single(state.Materialize());
@@ -106,7 +106,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(new MemberRegistered(tenantId, memberId, Uuid.CreateVersion4(), "firm_staff"));
         state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
         state.Apply(new RoleDefined(tenantId, roleId, "Tenant Administration"));
-        state.Apply(new TeamRoleAssigned(tenantId, teamId, roleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
 
         // Act
@@ -131,7 +131,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, legacyRoleId, "Legacy custom administrator"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, legacyRoleId, RbacPermissions.TenantRbacManage));
-        state.Apply(new TeamRoleAssigned(tenantId, teamId, legacyRoleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, legacyRoleId));
 
         // Act
         var grants = state.Materialize();
@@ -158,7 +158,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Tenant Administration"));
-        state.Apply(new TeamRoleAssigned(tenantId, teamId, roleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
 
         // Act
@@ -197,7 +197,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId, oldEpisodeId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
-        state.Apply(new TeamRoleAssigned(tenantId, teamId, roleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "program:read"));
 
         // Act
@@ -227,7 +227,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant:access"));
-        state.Apply(new TeamRoleAssigned(tenantId, teamId, roleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
 
         // Act
         state.Apply(new TeamMemberRemoved(tenantId, teamId, memberId));
@@ -249,7 +249,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
-        state.Apply(new TeamRoleAssigned(tenantId, teamId, roleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant.access"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "program.manage"));
 

@@ -246,7 +246,7 @@ public sealed class TechnologyInventoryScopedGrantTests
             var member = await ProgramManagementServices.HydrateAsync(Services, new Member(TenantId, UserId));
             await ProgramManagementServices.SeedAsync(Services, new Role(TenantId, viewerRoleId), role => role.Define("Viewer"));
             await ProgramManagementServices.SeedAsync(Services, new Team(TenantId, viewerTeamId), team => team.Define("Viewers"));
-            await ProgramManagementServices.SeedAsync(Services, new TeamRole(TenantId, viewerTeamId, viewerRoleId), assignment => assignment.Assign());
+            await RbacTeamRoleFacts.GrantAsync(Services, TenantId, viewerTeamId, viewerRoleId);
             await ProgramManagementServices.SeedAsync(Services, new TeamMember(TenantId, viewerTeamId, memberId), assignment => assignment.Assign(member.MembershipEpisodeId));
             await RbacPermissionFacts.GrantAsync(Services, TenantId, viewerRoleId, RbacPermissions.TenantAccess);
             await ProgramManagementServices.SeedAsync(Services, new Role(TenantId, leadRoleId), role => role.Define("Compliance Lead"));

@@ -22,7 +22,8 @@ sealed class FitzRoleTeamDirectoryReader(IKvClient client)
         {
             case TeamRoleAssigned assigned:
                 await RoleTeamDirectorySchema.Directory.InsertAsync(
-                    Transaction, new RoleTeamView(assigned.RoleId, assigned.TeamId), ct).ConfigureAwait(false);
+                    Transaction, new RoleTeamView(assigned.RoleId, assigned.TeamId, assigned.CommandId,
+                        assigned.ExpectedRevision + 1), ct).ConfigureAwait(false);
                 break;
             case TeamRoleRemoved removed:
                 await RoleTeamDirectorySchema.Directory.DeleteAsync(

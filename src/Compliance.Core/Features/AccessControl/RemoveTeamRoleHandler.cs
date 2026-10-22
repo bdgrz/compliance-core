@@ -4,13 +4,19 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 
 public sealed class RemoveTeamRoleHandler(IAggregateExecutor executor) : IRequestHandler<RemoveTeamRole>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<RemoveTeamRole> context, CancellationToken ct) =>
-        context.Request.TeamId == BuiltInRbac.AdministratorsTeamId(context.Request.TenantId) &&
-        context.Request.RoleId == BuiltInRbac.TenantAdministrationRoleId(context.Request.TenantId)
-            ? ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The Administrators team keeps the Tenant Administration role.")))
-            : executor.ExecuteAsync(
-            new TeamRole(context.Request.TenantId, context.Request.TeamId, context.Request.RoleId),
-            assignment => AggregateOutcome.CommitOnSuccess(assignment.Remove()),
-            context, ct);
+    public ValueTask<Result> HandleAsync(IRequestContext<RemoveTeamRole> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        if (request.TenantId == Uuid.Empty || request.TeamId == Uuid.Empty || request.RoleId == Uuid.Empty)
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A tenant, team and role are required.")));
+        if (request.TeamId == BuiltInRbac.AdministratorsTeamId(request.TenantId) &&
+            request.RoleId == BuiltInRbac.TenantAdministrationRoleId(request.TenantId))
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The Administrators team keeps the Tenant Administration role.")));
+        return executor.ExecuteAsync(
+            new TeamRole(request.TenantId, request.TeamId, request.RoleId, request.CommandId),
+            assignment => AggregateOutcome.CommitOnSuccess(assignment.Remove(request.CommandId, request.ExpectedRevision,
+                request.AssignmentId, RbacOperationActor.From(context.Actor))), context, ct);
+    }
 }

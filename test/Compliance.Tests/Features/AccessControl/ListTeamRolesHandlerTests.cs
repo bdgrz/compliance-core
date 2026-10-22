@@ -14,7 +14,7 @@ public sealed class ListTeamRolesHandlerTests
     {
         // Arrange
         var reader = new FakeTeamRoleDirectoryReader();
-        reader.Roles[(TenantId, TeamId)] = [new TeamRoleView(TeamId, RoleId)];
+        reader.Roles[(TenantId, TeamId)] = [new TeamRoleView(TeamId, RoleId, Uuid.CreateVersion4(), 1)];
         var handler = new ListTeamRolesHandler(reader);
         var context = new RequestContext<ListTeamRoles>(new ListTeamRoles(TenantId, TeamId), Actor());
 
@@ -69,7 +69,7 @@ public sealed class ListTeamRolesHandlerTests
     {
         // Arrange
         var reader = new FakeTeamRoleDirectoryReader();
-        reader.Roles[(TenantId, TeamId)] = [new TeamRoleView(Uuid.CreateVersion4(), RoleId)];
+        reader.Roles[(TenantId, TeamId)] = [new TeamRoleView(Uuid.CreateVersion4(), RoleId, Uuid.CreateVersion4(), 1)];
         var handler = new ListTeamRolesHandler(reader);
         var context = new RequestContext<ListTeamRoles>(new ListTeamRoles(TenantId, TeamId), Actor());
 

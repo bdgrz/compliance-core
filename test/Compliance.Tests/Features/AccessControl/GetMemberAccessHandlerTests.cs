@@ -627,9 +627,7 @@ public sealed class GetMemberAccessHandlerTests
                         Assert.True(member.Remove().IsSuccess);
                     break;
                 case TeamRole teamRole:
-                    Assert.True(teamRole.Assign().IsSuccess);
-                    if (TeamRoleRemoved)
-                        Assert.True(teamRole.Remove().IsSuccess);
+                    RbacTeamRoleFacts.Hydrate(teamRole, TeamRoleRemoved);
                     break;
             }
             return ValueTask.FromResult(aggregate);

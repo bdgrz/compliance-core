@@ -17,7 +17,7 @@ public sealed class RoleCleanupReactorTests
         var permissions = new FakeRolePermissionDirectoryReader(
             new RolePermissionView(RoleId, "controls.read", Uuid.CreateVersion4(), 1), new RolePermissionView(RoleId, "controls.manage", Uuid.CreateVersion4(), 1));
         var teams = new FakeRoleTeamDirectoryReader(
-            new RoleTeamView(RoleId, firstTeam), new RoleTeamView(RoleId, secondTeam));
+            new RoleTeamView(RoleId, firstTeam, Uuid.CreateVersion4(), 1), new RoleTeamView(RoleId, secondTeam, Uuid.CreateVersion4(), 1));
         var scenario = new ReactorScenario().Given(new RoleDeleted(TenantId, RoleId));
 
         // Act
@@ -84,6 +84,46 @@ public sealed class RoleCleanupReactorTests
         var reactor = new RoleCleanupReactor(checkpoints, scenario.Requests,
             new FakeRolePermissionDirectoryReader(new RolePermissionView(Uuid.CreateVersion4(), "controls.read",
                 Uuid.CreateVersion4(), 1)), new FakeRoleTeamDirectoryReader());
+
+        // Act
+        await Assert.ThrowsAsync<InvalidOperationException>(() => scenario.RunAsync(reactor));
+
+        // Assert
+        Assert.Empty(scenario.SentRequests);
+        Assert.Equal(ProjectionCheckpoint.Start,
+            await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
+    }
+
+    [Fact]
+    public async Task ShouldBindTeamRoleRemovalToTheDiscoveredEpisodeGivenCleanupReplay()
+    {
+        // Arrange
+        var row = new RoleTeamView(RoleId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), 5);
+        var scenario = new ReactorScenario().Given(new RoleDeleted(TenantId, RoleId));
+        var reactor = new RoleCleanupReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests,
+            new FakeRolePermissionDirectoryReader(), new FakeRoleTeamDirectoryReader(row));
+        await scenario.RunAsync(reactor);
+
+        // Act
+        await scenario.RunAsync(reactor);
+
+        // Assert
+        var first = Assert.IsType<RemoveTeamRole>(scenario.SentRequests[0]);
+        Assert.Equal(first, scenario.SentRequests[1]);
+        Assert.Equal(row.AssignmentId, first.AssignmentId);
+        Assert.Equal(row.Revision, first.ExpectedRevision);
+        Assert.NotEqual(Uuid.Empty, first.CommandId);
+    }
+
+    [Fact]
+    public async Task ShouldRetainTheCheckpointGivenAForeignTeamRoleRow()
+    {
+        // Arrange
+        var scenario = new ReactorScenario().Given(new RoleDeleted(TenantId, RoleId));
+        var checkpoints = new InMemoryProjectionCheckpointStore();
+        var reactor = new RoleCleanupReactor(checkpoints, scenario.Requests,
+            new FakeRolePermissionDirectoryReader(), new FakeRoleTeamDirectoryReader(
+                new RoleTeamView(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1)));
 
         // Act
         await Assert.ThrowsAsync<InvalidOperationException>(() => scenario.RunAsync(reactor));

@@ -22,7 +22,7 @@ public sealed class RemoveTeamRoleRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new RemoveTeamRole(TenantId, TeamId, RoleId))
+            .When(new RemoveTeamRole(TenantId, TeamId, RoleId, Uuid.CreateVersion4(), 1, RbacTeamRoleFacts.AssignmentId(TenantId, TeamId, RoleId)))
             // Assert
             .ExpectAuthorized()
             .ExpectHandled()
@@ -40,12 +40,16 @@ public sealed class RemoveTeamRoleRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new RemoveTeamRole(TenantId, TeamId, RoleId))
+            .When(new RemoveTeamRole(TenantId, TeamId, RoleId, Uuid.CreateVersion4(), 1, RbacTeamRoleFacts.AssignmentId(TenantId, TeamId, RoleId)))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();
     }
 
-    static Task Seed(ServiceProvider provider) => RbacManagementServices.SeedAsync(provider,
-        new TeamRole(TenantId, TeamId, RoleId), teamRole => teamRole.Assign());
+    static Task Seed(ServiceProvider provider)
+    {
+        var commandId = RbacTeamRoleFacts.AssignmentId(TenantId, TeamId, RoleId);
+        return RbacManagementServices.SeedAsync(provider, new TeamRole(TenantId, TeamId, RoleId, commandId),
+            teamRole => teamRole.Assign(commandId, 0, RbacTeamRoleFacts.Actor));
+    }
 }
