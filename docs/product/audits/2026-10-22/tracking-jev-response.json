@@ -1,0 +1,28 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "preflight": {
+      "type": "choice",
+      "choice": "bounded_ready",
+      "confidence": 0.6,
+      "probabilities": {
+        "bounded_ready": 0.8,
+        "needs_revision": 0.2
+      }
+    },
+    "retryScope": {
+      "type": "choice",
+      "choice": "selected_facts",
+      "confidence": 1.0,
+      "probabilities": {
+        "selected_facts": 1.0,
+        "lifetime_receipts": 0.0,
+        "current_state_only": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 3133,
+    "output_tokens": 83
+  }
+}

@@ -1,0 +1,1322 @@
+{
+  "schemaVersion": 1,
+  "trackingIssue": 1022,
+  "baseline": {
+    "sourceCommit": "4c255f56bfec727ac1f6e841c09935a4ce69ec4c",
+    "auditedAt": "2026-10-22",
+    "aggregateClasses": 103,
+    "reactorClasses": 33,
+    "initiatingWorkflows": 13,
+    "activeObservations": 81,
+    "priorityCounts": {
+      "P1": 7,
+      "P2": 74
+    },
+    "filesSha256": {
+      "audit.json": "c52cec5d2fc2ca65e98ff2478138389c8a84994ee9b644d3fe7762c4e7801756",
+      "choreography.json": "21047ac1110f49f5b735c4dd1240c1c5227e6950da1b6251c2697beac533c94a",
+      "payload.json": "0e3587c776480faab10ab4e1a8161df7a71ba65e06906edf4cc99a8b23218638"
+    }
+  },
+  "families": [
+    {
+      "order": 0,
+      "name": "Tracking and CI",
+      "state": "awaiting_merged_readback",
+      "completedPullRequests": [],
+      "issue": 1028
+    },
+    {
+      "order": 1,
+      "name": "Persistence safety",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 2,
+      "name": "Explicit identity and retries",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 3,
+      "name": "Administrator safety",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 4,
+      "name": "Identity recovery",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 5,
+      "name": "Independence",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 6,
+      "name": "Incidents and impact",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 7,
+      "name": "Imports",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 8,
+      "name": "Reactor recovery",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 9,
+      "name": "Identity and catalogs",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 10,
+      "name": "Operations and campaigns",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 11,
+      "name": "Evidence and assurance",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 12,
+      "name": "Versioned content",
+      "state": "pending",
+      "completedPullRequests": []
+    },
+    {
+      "order": 13,
+      "name": "Process and legacy cleanup",
+      "state": "pending",
+      "completedPullRequests": []
+    }
+  ],
+  "observations": [
+    {
+      "id": "ACCESS-01",
+      "priority": "P1",
+      "title": "Restoration can release a tenant-manager withdrawal before its delayed source mutation commits",
+      "affectedAggregates": [
+        "TenantManagerGuard",
+        "Member",
+        "TeamMember"
+      ],
+      "deliveryFamilies": [
+        3
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-02",
+      "priority": "P1",
+      "title": "Tenant-wide independence history has invented lifetime caps that can forbid revocation",
+      "affectedAggregates": [
+        "IndependenceLedger"
+      ],
+      "deliveryFamilies": [
+        5
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-08",
+      "priority": "P1",
+      "title": "Old successful RBAC requests can resurrect removed authority or mutate a new membership episode",
+      "affectedAggregates": [
+        "RolePermission",
+        "TeamRole",
+        "TeamMember",
+        "Member",
+        "PlatformOperatorRoster"
+      ],
+      "deliveryFamilies": [
+        2
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-12",
+      "priority": "P1",
+      "title": "Identity-recovery cross-stream sequence can be orphaned and its durable claim overwritten",
+      "affectedAggregates": [
+        "EmailAddress",
+        "UserIdentity"
+      ],
+      "deliveryFamilies": [
+        4
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "CORE-01",
+      "priority": "P1",
+      "title": "Fourteen aggregate payload guards measure base DomainEvent as empty JSON",
+      "affectedAggregates": [
+        "ComplianceIncident",
+        "SignificantChange",
+        "ProgramRollover",
+        "AuditPackage",
+        "MethodologyTemplate",
+        "MethodologyTemplateContribution",
+        "TemplateApplication",
+        "AuditPopulation",
+        "ClientExport",
+        "ManagementAssertion",
+        "TypeIIPlan",
+        "ManagementRepresentationLetter",
+        "AuditOutcome",
+        "TypeIIPeriod"
+      ],
+      "deliveryFamilies": [
+        1
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOT-01",
+      "priority": "P1",
+      "title": "Application business state is reconstructed from live source ledger settlement",
+      "affectedAggregates": [
+        "DeclaredApplication"
+      ],
+      "deliveryFamilies": [
+        7
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOT-08",
+      "priority": "P1",
+      "title": "Incident resolution treats caller supplied work ids as completed-work proof",
+      "affectedAggregates": [
+        "ComplianceIncident"
+      ],
+      "deliveryFamilies": [
+        6
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-03",
+      "priority": "P2",
+      "title": "Firm staff catalog combines unrelated staff lifecycles and permanently stops at1000 identities",
+      "affectedAggregates": [
+        "FirmStaffDirectory"
+      ],
+      "deliveryFamilies": [
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-04",
+      "priority": "P2",
+      "title": "Global professional-duty catalog serializes unrelated signed designations and retains every assertion/decision",
+      "affectedAggregates": [
+        "FirmProfessionalDutyCatalog"
+      ],
+      "deliveryFamilies": [
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-05",
+      "priority": "P2",
+      "title": "Independence rule sequencing retains a full history and invents a100-version lifetime limit",
+      "affectedAggregates": [
+        "IndependenceRuleCatalog"
+      ],
+      "deliveryFamilies": [
+        5
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-06",
+      "priority": "P2",
+      "title": "Rule-ratification ordering is valid but lifetime history caps prevent future governance",
+      "affectedAggregates": [
+        "IndependenceRuleRatificationCatalog"
+      ],
+      "deliveryFamilies": [
+        5
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-07",
+      "priority": "P2",
+      "title": "OIDC connection has a lifetime ceiling on tests and credential rotation",
+      "affectedAggregates": [
+        "TenantIdentityProvider"
+      ],
+      "deliveryFamilies": [
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-09",
+      "priority": "P2",
+      "title": "Team and role creation silently accept changed content on the same identity",
+      "affectedAggregates": [
+        "Team",
+        "Role"
+      ],
+      "deliveryFamilies": [
+        2
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-10",
+      "priority": "P2",
+      "title": "Several owner methods reject exact successful retries or lose original intent across later revisions",
+      "affectedAggregates": [
+        "AccessGrant",
+        "Tenant",
+        "Person",
+        "ServiceIdentity",
+        "WorkRelationship",
+        "TenantIdentityProvider",
+        "Member"
+      ],
+      "deliveryFamilies": [
+        2
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-11",
+      "priority": "P2",
+      "title": "Mailbox-keyed invitation conflates all future invitation lifecycles and reissues exact retries",
+      "affectedAggregates": [
+        "TenantInvitation"
+      ],
+      "deliveryFamilies": [
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-13",
+      "priority": "P2",
+      "title": "Email and invitation roots persist transport delivery receipts as domain facts",
+      "affectedAggregates": [
+        "EmailAddress",
+        "TenantInvitation"
+      ],
+      "deliveryFamilies": [
+        9,
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-14",
+      "priority": "P2",
+      "title": "Slug owner appends duplicate claims and pure rejection response receipts",
+      "affectedAggregates": [
+        "TenantSlug"
+      ],
+      "deliveryFamilies": [
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-15",
+      "priority": "P2",
+      "title": "TenantOwner is an idempotent duplicate of tenant registration with no independent rule",
+      "affectedAggregates": [
+        "TenantOwner"
+      ],
+      "deliveryFamilies": [
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-16",
+      "priority": "P2",
+      "title": "Tenant root accumulates previous slug history solely to swallow late saga acknowledgements",
+      "affectedAggregates": [
+        "Tenant"
+      ],
+      "deliveryFamilies": [
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ACCESS-17",
+      "priority": "P2",
+      "title": "Provider presentation observations make authentication owner replay grow per login",
+      "affectedAggregates": [
+        "UserIdentity"
+      ],
+      "deliveryFamilies": [
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-01",
+      "priority": "P2",
+      "title": "Program evidence-request ledger is a parent roster of independent request lifecycles",
+      "affectedAggregates": [
+        "EvidenceRequestLedger"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-02",
+      "priority": "P2",
+      "title": "AuditPackage accumulates independent versions and fulfillment lifecycles behind caps",
+      "affectedAggregates": [
+        "AuditPackage"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-03",
+      "priority": "P2",
+      "title": "AuditorRequest owns comment, response and sample histories that need independent boundaries",
+      "affectedAggregates": [
+        "AuditorRequest"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-04",
+      "priority": "P2",
+      "title": "AuditPopulation bundles immutable versions and exports into the live reconciliation owner",
+      "affectedAggregates": [
+        "AuditPopulation"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-05",
+      "priority": "P2",
+      "title": "Handling classification is permanently blocked after32 historical decisions",
+      "affectedAggregates": [
+        "EvidenceHandlingPolicy"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-06",
+      "priority": "P2",
+      "title": "Redaction history capacity can prevent approval of a valid current preparation",
+      "affectedAggregates": [
+        "EvidenceRedaction"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-07",
+      "priority": "P2",
+      "title": "EvidenceRedaction receives and reads a live waiver aggregate",
+      "affectedAggregates": [
+        "EvidenceRedaction"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-08",
+      "priority": "P2",
+      "title": "Every artifact download extends the artifact stream and identical request can append again",
+      "affectedAggregates": [
+        "EvidenceArtifact"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-09",
+      "priority": "P2",
+      "title": "Auditor comment creation has no stable identity and repeats on exact request retry",
+      "affectedAggregates": [
+        "AuditorRequest"
+      ],
+      "deliveryFamilies": [
+        2
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-10",
+      "priority": "P2",
+      "title": "Server-generated timestamps are part of immutable retry intent",
+      "affectedAggregates": [
+        "ArtifactDisclosure",
+        "ArtifactEngagementHold",
+        "EvidenceHandlingPolicy",
+        "AuditPackage",
+        "AuditPopulation",
+        "AuditorRequest"
+      ],
+      "deliveryFamilies": [
+        2,
+        9,
+        10,
+        11,
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-11",
+      "priority": "P2",
+      "title": "Several mutations reject an already accepted exact retry before recognizing its command",
+      "affectedAggregates": [
+        "ClientService",
+        "ComplianceProgram",
+        "EvidenceRequestLedger",
+        "ExaminationEngagement",
+        "AuditPopulation",
+        "AuditorRequest",
+        "ManagementAssertion",
+        "TypeIIPlan",
+        "ProgramRollover"
+      ],
+      "deliveryFamilies": [
+        2,
+        10,
+        11,
+        12,
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-12",
+      "priority": "P2",
+      "title": "Retention owner accumulates independent legal-hold histories and technical binding facts",
+      "affectedAggregates": [
+        "ArtifactRetention"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-13",
+      "priority": "P2",
+      "title": "Eight-link amendment limits invent lifetime business limits despite immutable snapshot identities",
+      "affectedAggregates": [
+        "ExaminationEngagement",
+        "ImmutableSnapshot",
+        "PopulationSnapshot"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-14",
+      "priority": "P2",
+      "title": "Population storage chunk is modeled as a domain aggregate and event",
+      "affectedAggregates": [
+        "PopulationSnapshotChunk"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-15",
+      "priority": "P2",
+      "title": "Domain decisions carry bounded technical execution and successor receipts",
+      "affectedAggregates": [
+        "ArtifactDisposition",
+        "ClientExport",
+        "ProgramRollover"
+      ],
+      "deliveryFamilies": [
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-16",
+      "priority": "P2",
+      "title": "Program retains criteria-selection history and shares revision with unrelated plan edits",
+      "affectedAggregates": [
+        "ComplianceProgram"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ASSURE-17",
+      "priority": "P2",
+      "title": "Approval workflows retain complete immutable version histories and impose version caps",
+      "affectedAggregates": [
+        "ManagementAssertion",
+        "TypeIIPlan",
+        "ProgramRollover"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "CHOREO-03",
+      "priority": "P2",
+      "title": "Guard withdrawal and membership retirement obligations lack recovery fact consumers",
+      "affectedAggregates": [
+        "TenantManagerGuard"
+      ],
+      "deliveryFamilies": [
+        3,
+        8
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "CHOREO-04",
+      "priority": "P2",
+      "title": "Type II date reservation choreography has holds but no recovery reactor",
+      "affectedAggregates": [
+        "TypeIIObservationCalendar",
+        "TypeIIPeriod"
+      ],
+      "deliveryFamilies": [
+        8
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "CHOREO-05",
+      "priority": "P2",
+      "title": "Different source imports acquire target holds in opposite order and can deadlock",
+      "affectedAggregates": [
+        "ApplicationImportLedger",
+        "DeclaredApplication"
+      ],
+      "deliveryFamilies": [
+        7
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "CHOREO-06",
+      "priority": "P2",
+      "title": "Relationship cleanup checkpoints discovery without proving directories cover source facts",
+      "affectedAggregates": [],
+      "deliveryFamilies": [
+        8
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "CHOREO-07",
+      "priority": "P2",
+      "title": "Email delivery has at-least-once effects and conflates uncertain transport failure with rejection",
+      "affectedAggregates": [],
+      "deliveryFamilies": [
+        9,
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "CHOREO-08",
+      "priority": "P2",
+      "title": "Tenant slug outcome receiver is not replay-safe and can block the global checkpoint",
+      "affectedAggregates": [
+        "Tenant"
+      ],
+      "deliveryFamilies": [
+        8
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "CHOREO-09",
+      "priority": "P2",
+      "title": "Obsolete or dependency-blocked impact reactions return permanent conflicts",
+      "affectedAggregates": [],
+      "deliveryFamilies": [
+        6
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "CHOREO-10",
+      "priority": "P2",
+      "title": "Generated due-occurrence fact has no downstream materialization consumer",
+      "affectedAggregates": [
+        "TypeIIPeriod"
+      ],
+      "deliveryFamilies": [
+        8
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-01",
+      "priority": "P2",
+      "title": "Program mapping and criterion ledgers serialize independent tuple lifecycles",
+      "affectedAggregates": [
+        "ControlCriterionMappingLedger",
+        "CriterionApplicabilityLedger"
+      ],
+      "deliveryFamilies": [
+        10
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-02",
+      "priority": "P2",
+      "title": "ControlEvaluationLedger retains every independent evaluation and retest in a program stream",
+      "affectedAggregates": [
+        "ControlEvaluationLedger"
+      ],
+      "deliveryFamilies": [
+        10
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-03",
+      "priority": "P2",
+      "title": "Control operations combines program plan roster and unbounded occurrence lifecycles",
+      "affectedAggregates": [
+        "ControlOperationsLedger"
+      ],
+      "deliveryFamilies": [
+        10
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-04",
+      "priority": "P2",
+      "title": "RiskGovernanceLedger pools unrelated risks and child action lifecycles",
+      "affectedAggregates": [
+        "RiskGovernanceLedger"
+      ],
+      "deliveryFamilies": [
+        10
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-05",
+      "priority": "P2",
+      "title": "Catalog-shaped owners retain unrelated training and overlay version lines",
+      "affectedAggregates": [
+        "TrainingCatalog",
+        "CriteriaTextOverlayLedger"
+      ],
+      "deliveryFamilies": [
+        10
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-06",
+      "priority": "P2",
+      "title": "Finding still hides corrective-action ownership behind a fifty-action lifetime cap",
+      "affectedAggregates": [
+        "FindingAggregate"
+      ],
+      "deliveryFamilies": [
+        10
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-07",
+      "priority": "P2",
+      "title": "Access and policy campaign parents retain independent decisions, people and histories",
+      "affectedAggregates": [
+        "AccessPopulation",
+        "AccessReviewCampaign",
+        "AccessReviewSystemLedger",
+        "PolicyDistributionCampaign"
+      ],
+      "deliveryFamilies": [
+        10
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-08",
+      "priority": "P2",
+      "title": "Readiness comments, gap plans and assessment history share management entry revision",
+      "affectedAggregates": [
+        "ReadinessLedger"
+      ],
+      "deliveryFamilies": [
+        10
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-09",
+      "priority": "P2",
+      "title": "Observation lifecycle capacity is limited by retained historical count",
+      "affectedAggregates": [
+        "TypeIIObservationCalendar",
+        "TypeIIPeriod"
+      ],
+      "deliveryFamilies": [
+        8
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-10",
+      "priority": "P2",
+      "title": "Type II calendar holds have no automatic recovery for interrupted multi-stream sequences",
+      "affectedAggregates": [
+        "TypeIIObservationCalendar",
+        "TypeIIPeriod"
+      ],
+      "deliveryFamilies": [
+        8
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-11",
+      "priority": "P2",
+      "title": "Owner methods execute live SeparationOfDutiesWaiver aggregate behavior",
+      "affectedAggregates": [
+        "AccessReviewCampaign",
+        "AccessReviewSystemLedger",
+        "ControlCriterionMappingLedger",
+        "ControlDraft",
+        "ControlEvaluationLedger",
+        "ControlOperationsLedger",
+        "CriterionApplicabilityLedger",
+        "FindingAggregate",
+        "Policy",
+        "ReadinessLedger",
+        "RiskEvaluation",
+        "RiskGovernanceLedger"
+      ],
+      "deliveryFamilies": [
+        10,
+        11,
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-12",
+      "priority": "P2",
+      "title": "Domain event streams carry migration and transport process records",
+      "affectedAggregates": [
+        "FindingAggregate",
+        "FindingMigrationAggregate",
+        "RemediationMigrationFenceAggregate",
+        "TypeIIPeriod",
+        "WeeklyWorkDigest",
+        "WorkDigestDispatch",
+        "WorkItemAssignment"
+      ],
+      "deliveryFamilies": [
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-13",
+      "priority": "P2",
+      "title": "Several single-lifecycle owners retain full read histories as command state",
+      "affectedAggregates": [
+        "ControlDraft",
+        "ControlEvaluationPlan",
+        "Policy",
+        "RiskEvaluation",
+        "RiskMethod",
+        "WorkItemAssignment"
+      ],
+      "deliveryFamilies": [
+        12,
+        9,
+        10,
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-15",
+      "priority": "P2",
+      "title": "Exact successful command retries conflict, duplicate facts, or overwrite newer settings",
+      "affectedAggregates": [
+        "AccessPopulation",
+        "ControlCriterionMappingLedger",
+        "ControlDraft",
+        "ControlEvaluationLedger",
+        "ControlOperationsLedger",
+        "CriterionApplicabilityLedger",
+        "Policy",
+        "RiskDraft",
+        "RiskGovernanceLedger",
+        "RiskMethod",
+        "TrainingCatalog",
+        "WorkDigestPreference",
+        "WorkItemAssignment"
+      ],
+      "deliveryFamilies": [
+        2,
+        9,
+        10,
+        12,
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-16",
+      "priority": "P2",
+      "title": "Reused decision keys acknowledge changed intent without comparing the accepted fact",
+      "affectedAggregates": [
+        "AccessReviewCampaign",
+        "AccessReviewSystemLedger",
+        "ControlEvaluationLedger",
+        "ControlOperationsLedger",
+        "PolicyDistributionCampaign",
+        "ReadinessLedger",
+        "RiskEvaluation",
+        "RiskGovernanceLedger",
+        "TypeIIObservationCalendar"
+      ],
+      "deliveryFamilies": [
+        2,
+        8,
+        10
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "OPS-17",
+      "priority": "P2",
+      "title": "Type II state-snapshot events grow with all prior close snapshots and expected rows",
+      "affectedAggregates": [
+        "TypeIIPeriod"
+      ],
+      "deliveryFamilies": [
+        8
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOT-02",
+      "priority": "P2",
+      "title": "Import source stream combines lifetime claims, execution process and acceptance authority",
+      "affectedAggregates": [
+        "ApplicationImportLedger",
+        "DeclaredApplication",
+        "ImportBatch"
+      ],
+      "deliveryFamilies": [
+        7
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOT-03",
+      "priority": "P2",
+      "title": "Scope retains complete history, calls live owners and ignores changed retry intent",
+      "affectedAggregates": [
+        "SystemInstanceAccessReviewScope"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOT-04",
+      "priority": "P2",
+      "title": "Application accumulates relationship identities and lifecycle histories",
+      "affectedAggregates": [
+        "DeclaredApplication"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOT-05",
+      "priority": "P2",
+      "title": "Instance/application revision and legacy cancel paths lack exact logical retry handling",
+      "affectedAggregates": [
+        "DeclaredSystemInstance",
+        "DeclaredApplication",
+        "ImportBatch"
+      ],
+      "deliveryFamilies": [
+        2,
+        7
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOT-06",
+      "priority": "P2",
+      "title": "Change and incident copy lifetime chronology and cap versions at32",
+      "affectedAggregates": [
+        "SignificantChange",
+        "ComplianceIncident"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOT-07",
+      "priority": "P2",
+      "title": "Fresh server timestamps defeat retry equality for change and incident commands",
+      "affectedAggregates": [
+        "SignificantChange",
+        "ComplianceIncident"
+      ],
+      "deliveryFamilies": [
+        2,
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTACCESS-01",
+      "priority": "P2",
+      "title": "Boundary and commitment owners invoke another live aggregate to decide waiver authority",
+      "affectedAggregates": [
+        "SystemBoundary",
+        "CommitmentDraft"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTACCESS-02",
+      "priority": "P2",
+      "title": "Continuing boundary and commitment roots retain all historical approvals and responsibility lifecycles",
+      "affectedAggregates": [
+        "SystemBoundary",
+        "CommitmentDraft"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTACCESS-03",
+      "priority": "P2",
+      "title": "System-description exports and binding histories share the revision of narrative drafting and approval",
+      "affectedAggregates": [
+        "SystemDescription"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTACCESS-04",
+      "priority": "P2",
+      "title": "Decision and mutation retry handling differs from the required exact-intent contract",
+      "affectedAggregates": [
+        "SystemBoundary",
+        "CommitmentDraft",
+        "SystemDescription"
+      ],
+      "deliveryFamilies": [
+        2,
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTACCESS-05",
+      "priority": "P2",
+      "title": "System-description source and period-change count caps turn storage limits into business limits",
+      "affectedAggregates": [
+        "SystemDescription"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTASSURE-01",
+      "priority": "P2",
+      "title": "Advisor handoff retains all independently identified feedback and discussion history",
+      "affectedAggregates": [
+        "AdvisorHandoff"
+      ],
+      "deliveryFamilies": [
+        11
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTASSURE-02",
+      "priority": "P2",
+      "title": "Methodology template keeps every independently identified version behind64-version lifetime cap",
+      "affectedAggregates": [
+        "MethodologyTemplate"
+      ],
+      "deliveryFamilies": [
+        12
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTASSURE-03",
+      "priority": "P2",
+      "title": "Template application mixes downstream creation receipts with successor adoption histories",
+      "affectedAggregates": [
+        "TemplateApplication"
+      ],
+      "deliveryFamilies": [
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTASSURE-04",
+      "priority": "P2",
+      "title": "Retry identities are lost or compared with newly generated presentation/time",
+      "affectedAggregates": [
+        "AdvisorHandoff",
+        "MethodologyTemplate",
+        "MethodologyTemplateContribution",
+        "TemplateApplication"
+      ],
+      "deliveryFamilies": [
+        2,
+        11,
+        12,
+        13
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTTECH-01",
+      "priority": "P2",
+      "title": "Location, process and provider registers make name uniqueness serialize every record lifecycle",
+      "affectedAggregates": [
+        "LocationRegister",
+        "OperationalProcessRegister",
+        "ProviderRegister"
+      ],
+      "deliveryFamilies": [
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTTECH-02",
+      "priority": "P2",
+      "title": "Inventory create retries compare mutable current state and revision retries always become stale",
+      "affectedAggregates": [
+        "TechnologyComponent",
+        "InformationAsset",
+        "DataFlow",
+        "LocationRegister",
+        "OperationalProcessRegister"
+      ],
+      "deliveryFamilies": [
+        2,
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTTECH-03",
+      "priority": "P2",
+      "title": "Tenant-wide provider assurance histories and200-record caps block future independent evidence decisions",
+      "affectedAggregates": [
+        "ProviderAssuranceRegister"
+      ],
+      "deliveryFamilies": [
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTTECH-04",
+      "priority": "P2",
+      "title": "Provider gaps retain every expired risk acceptance and stop accepting links after50",
+      "affectedAggregates": [
+        "ProviderAssuranceRegister"
+      ],
+      "deliveryFamilies": [
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    },
+    {
+      "id": "ROOTTECH-05",
+      "priority": "P2",
+      "title": "Data-flow complete carried-asset facts are limited by an unexplained100-item cap",
+      "affectedAggregates": [
+        "DataFlow"
+      ],
+      "deliveryFamilies": [
+        9
+      ],
+      "state": "pending",
+      "evidence": []
+    }
+  ],
+  "closedDesignQuestions": [
+    {
+      "id": "OPS-14",
+      "decision": "Retain RiskDraft and notification-consent ownership separately."
+    }
+  ],
+  "priorDelivery": {
+    "pullRequest": 1027,
+    "mergeCommit": "4c255f56bfec727ac1f6e841c09935a4ce69ec4c",
+    "issue": 1026,
+    "state": "partial; hosted CI absent at merge; remaining acceptance stays open",
+    "remainingObservations": [
+      "OPS-06",
+      "OPS-11",
+      "OPS-12"
+    ],
+    "accepted": "Per-finding native facts/readers, source-qualified work identities, bounded AuditObservation model. Model-only AuditObservation does not complete #301.",
+    "supersedingDecision": "Pre-release histories are disposable. Remove compatibility/migration paths during owning structural corrections; no deployment or environment reset authorized."
+  }
+}

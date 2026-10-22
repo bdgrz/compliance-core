@@ -1,0 +1,2827 @@
+{
+  "sourceCommit": "4c255f56bfec727ac1f6e841c09935a4ce69ec4c",
+  "reactorCoverage": {
+    "discovered": 33,
+    "reviewed": 33,
+    "sourceLinesRead": 1371,
+    "registration": "All33 classes have explicit AddReactor registrations. Workload enablement verified for standalone/worker hosts; no deployment or runtime activation claim.",
+    "framework": "Pinned Portia0.8.1: ReactionExecutionContext CauseId=source EventId, CorrelationId inherited (27-29); SendReactionAsync delegates to RequestBus child context; RequestMetadata.FromParent mints NEW random RequestId for each send/attempt, so stable RequestId is NOT supplied by existing SendReactionAsync calls. ReactorRunner101 invokes effects before checkpoint104-107; exception retains checkpoint, so effects may repeat. Business/effect-key receiver dedup is required; no blanket condemnation of direct executor/writer paths.",
+    "readOnly": "No source changes, tests, deployment or external writes.",
+    "frameworkEvidence": [
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/framework/ReactionExecutionContext.cs",
+        "line": 27,
+        "claim": "Stable source cause/correlation, random execution ID.",
+        "localEvidence": "framework-source/ReactionExecutionContext.cs",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Abstractions/Reactions/ReactionExecutionContext.cs#L27"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/framework/ReactorRunner.cs",
+        "line": 101,
+        "claim": "Effects execute before checkpoint save; errors propagate.",
+        "localEvidence": "framework-source/ReactorRunner.cs",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Core/Reactions/ReactorRunner.cs#L101"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/framework/RequestMetadata.cs",
+        "line": 26,
+        "claim": "FromParent creates fresh random RequestId with inherited correlation/source cause.",
+        "localEvidence": "framework-source/RequestMetadata.cs",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Abstractions/Requests/RequestMetadata.cs#L26"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/framework/RequestBusExtensions.cs",
+        "line": 24,
+        "claim": "SendReactionAsync requires successful result before reaction can checkpoint.",
+        "localEvidence": "framework-source/RequestBusExtensions.cs",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Abstractions/Requests/RequestBusExtensions.cs#L24"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/framework/RequestBusExtensions.cs",
+        "line": 93,
+        "claim": "Child send creates context with RequestMetadata.FromParent.",
+        "localEvidence": "framework-source/RequestBusExtensions.cs",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Abstractions/Requests/RequestBusExtensions.cs#L93"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/framework/RequestBus.cs",
+        "line": 345,
+        "claim": "No durable request dedup before handler invocation in pinned request bus.",
+        "localEvidence": "framework-source/RequestBus.cs",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Core/Requests/RequestBus.cs#L345"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/framework/AggregateRepository.cs",
+        "line": 73,
+        "claim": "Pending changes append using expected physical revision; concurrency is preserved.",
+        "localEvidence": "framework-source/AggregateRepository.cs",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Core/Aggregates/AggregateRepository.cs#L73"
+      }
+    ],
+    "sourceAnchorVerified": "4c255f56bfec727ac1f6e841c09935a4ce69ec4c",
+    "candidateCounts": {
+      "total": 10,
+      "duplicateCrossGroupFindings": 2,
+      "sourceGapContractQuestion": 1,
+      "externalDeliveryPolicyQuestion": 1
+    },
+    "frameworkPackage": {
+      "package": "Cntryl.Portia",
+      "version": "0.8.1",
+      "sourceCommit": "a8118d48a9917bb3de15d7d2922fded38e37faf8",
+      "checkpointSemantics": "Source-backed at-least-once effect execution: checkpoint follows successful reaction, so crash/checkpoint-write failure can replay receiver effects. This is not a runtime observation."
+    }
+  },
+  "reactors": [
+    {
+      "name": "AcceptedStaffDirectoryReconciliationReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/AcceptedStaffDirectoryReconciliationReactor.cs",
+      "triggerFacts": [
+        "ServiceEngagementAcceptanceRecorded"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1357,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AcceptedStaffDirectoryReconciliationReactor.cs",
+          "line": 5,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AcceptedStaffDirectoryReconciliationReactor.cs",
+          "line": 10,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1357,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/DirectoryReevaluationDiscovery.cs",
+          "line": 65,
+          "claim": "Acceptance-side scan replays exact status sources."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluationHandler.cs",
+          "line": 25,
+          "claim": "Receiver verifies exact cause and both source hashes before owner command."
+        }
+      ],
+      "targetOwnerCommands": "DirectoryReevaluationDiscovery -> RecordDirectoryIndependenceReevaluation -> client IndependenceLedger owner.",
+      "stableCorrelationRequestId": "Exact acceptance source stream checked; command binds directory/acceptance event IDs, resource offsets, hashes and staff identity. Dual acceptance/status trigger design recovers ordering races. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Discovery validates retained source acceptance and scans authoritative directory changes; command failure propagates. Per-tenant registration uses effectively unbounded failed-pass retry with short delay. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "AccessReviewGrantBackfillReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/AccessReviewGrantBackfillReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1368,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AccessReviewGrantBackfillReactor.cs",
+          "line": 8,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AccessReviewGrantBackfillReactor.cs",
+          "line": 13,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1368,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "ApplicationImportGrantBackfillReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/ApplicationImportGrantBackfillReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1360,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ApplicationImportGrantBackfillReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ApplicationImportGrantBackfillReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1360,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "ApplicationInventoryGrantBackfillReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/ApplicationInventoryGrantBackfillReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1351,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ApplicationInventoryGrantBackfillReactor.cs",
+          "line": 8,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ApplicationInventoryGrantBackfillReactor.cs",
+          "line": 13,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1351,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "BuiltInRoleCatalogMigrationReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/BuiltInRoleCatalogMigrationReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1340,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/BuiltInRoleCatalogMigrationReactor.cs",
+          "line": 9,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/BuiltInRoleCatalogMigrationReactor.cs",
+          "line": 14,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1340,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RenameRoleHandler.cs",
+          "line": 9,
+          "claim": "Only system built-in catalog migration admitted."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/Role.cs",
+          "line": 33,
+          "claim": "Rename defines once/changes only differing current name."
+        }
+      ],
+      "targetOwnerCommands": "RenameRole/DefineRole -> Role; DefineTeam -> Team; AssignTeamRole -> TeamRole; AssignRolePermission -> RolePermission.",
+      "stableCorrelationRequestId": "Deterministic built-in role/team/assignment IDs; committed registration context carried by each command. Fixed command sequence rather than random child identities. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Sequential awaited sends; intermediate durable owner writes replay as current-state no-ops. No projection decision. Role catalog own independent checkpoint. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "ComplianceRecordRestrictedAccessGrantBackfillReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/ComplianceRecordRestrictedAccessGrantBackfillReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1353,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ComplianceRecordRestrictedAccessGrantBackfillReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ComplianceRecordRestrictedAccessGrantBackfillReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1353,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "EvidenceArtifactReadPermissionReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/EvidenceArtifactReadPermissionReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1339,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/EvidenceArtifactReadPermissionReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/EvidenceArtifactReadPermissionReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1339,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "EvidenceRedactionPermissionsReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/EvidenceRedactionPermissionsReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1338,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/EvidenceRedactionPermissionsReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/EvidenceRedactionPermissionsReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1338,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "FirmStaffStatusReevaluationReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs",
+      "triggerFacts": [
+        "FirmStaffChangeRecorded"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1355,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs",
+          "line": 5,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs",
+          "line": 10,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1355,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/DirectoryReevaluationDiscovery.cs",
+          "line": 10,
+          "claim": "Coverage of authoritative acceptance sources required."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/DirectoryReevaluationDiscovery.cs",
+          "line": 57,
+          "claim": "Expected and observed locator sets must match and source snapshot stable."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluationAuthorizer.cs",
+          "line": 10,
+          "claim": "Only two named direct internal workers."
+        }
+      ],
+      "targetOwnerCommands": "DirectoryReevaluationDiscovery -> RecordDirectoryIndependenceReevaluation -> client IndependenceLedger owner for each registered tenant.",
+      "stableCorrelationRequestId": "Exact global staff-directory source and retained status decision checked; command contains source pair IDs/hashes/offsets and receiver verifies named worker+causation. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Discovery checks locator checkpoint/source coverage, deduplicates immutable locator IDs, validates expected set and rereads source history; lag throws transient to keep checkpoint. Opposite acceptance-side trigger covers later acceptances. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "ProviderInventoryGrantBackfillReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/ProviderInventoryGrantBackfillReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1364,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ProviderInventoryGrantBackfillReactor.cs",
+          "line": 8,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ProviderInventoryGrantBackfillReactor.cs",
+          "line": 13,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1364,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "RoleCleanupReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs",
+      "triggerFacts": [
+        "RoleDeleted"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1380,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs",
+          "line": 10,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs",
+          "line": 15,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1380,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 39,
+          "claim": "Absent permission removal fails."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TeamRole.cs",
+          "line": 36,
+          "claim": "Absent team-role removal fails."
+        }
+      ],
+      "targetOwnerCommands": "RemoveRolePermission / RemoveTeamRole -> relationship owners discovered from permission/team directories.",
+      "stableCorrelationRequestId": "Original RoleDeleted context; deterministic child tuple keys; no durable target manifest. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Both discovery readers may lag deletion cause and no coverage check; false empty enumeration checkpoints permanently. Partial cleanup replay can hit non-idempotent NotFound removal until projection catches up. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-06"
+      ],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "TeamCleanupReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/TeamCleanupReactor.cs",
+      "triggerFacts": [
+        "TeamDeleted"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1379,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TeamCleanupReactor.cs",
+          "line": 11,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TeamCleanupReactor.cs",
+          "line": 16,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1379,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TeamMember.cs",
+          "line": 46,
+          "claim": "Absent removal returns NotFound, contradicting no-op comment."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RemoveTeamMemberHandler.cs",
+          "line": 26,
+          "claim": "Removal command delegates to owner."
+        }
+      ],
+      "targetOwnerCommands": "RemoveTeamMember -> deterministic team+member assignment owners discovered from team member directory.",
+      "stableCorrelationRequestId": "Original TeamDeleted context sent for every existing child tuple. No explicit cleanup manifest or source coverage seal. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "No directory checkpoint/source completeness check before enumeration. Empty/lagging page returns success and checkpoints; no later source trigger guarantees missed children revisited. Replayed removals return NotFound if stale directory still lists removed rows. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-06"
+      ],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "TechnologyInventoryGrantBackfillReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/TechnologyInventoryGrantBackfillReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1362,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TechnologyInventoryGrantBackfillReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TechnologyInventoryGrantBackfillReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1362,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "TenantRbacBootstrapReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1337,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+          "line": 5,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+          "line": 10,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1337,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RegisterMemberHandler.cs",
+          "line": 11,
+          "claim": "Member owns episode registration/cleanup."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignTeamMemberHandler.cs",
+          "line": 15,
+          "claim": "Source member registration/episode checked at admission."
+        }
+      ],
+      "targetOwnerCommands": "DefineTeam/RegisterMember/AssignTeamRole/AssignRolePermission/AssignTeamMember -> their distinct RBAC owners.",
+      "stableCorrelationRequestId": "Stable tenant/member/team tuple IDs and original TenantRegistered context; explicit order admin team -> member -> role/core grants -> admin assignment -> other defaults. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Awaited whole sequence replay after failure; final admin TeamMemberAssigned fact is separate activation trigger. Independent role catalog/backfill reactors can run concurrently; activation waits required source/projection prerequisites. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "WorkforceGrantBackfillReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/WorkforceGrantBackfillReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1366,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/WorkforceGrantBackfillReactor.cs",
+          "line": 8,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/WorkforceGrantBackfillReactor.cs",
+          "line": 13,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1366,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "WorkforcePersonalDetailsGrantBackfillReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/WorkforcePersonalDetailsGrantBackfillReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1372,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/WorkforcePersonalDetailsGrantBackfillReactor.cs",
+          "line": 10,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/WorkforcePersonalDetailsGrantBackfillReactor.cs",
+          "line": 15,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1372,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "WorkforceRestrictedFieldGrantBackfillReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/WorkforceRestrictedFieldGrantBackfillReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1370,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/WorkforceRestrictedFieldGrantBackfillReactor.cs",
+          "line": 9,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/WorkforceRestrictedFieldGrantBackfillReactor.cs",
+          "line": 14,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1370,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignRolePermissionHandler.cs",
+          "line": 9,
+          "claim": "Command delegates to owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 32,
+          "claim": "Owner assigns only when currently unassigned."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RbacManagementAuthorizer.cs",
+          "line": 18,
+          "claim": "Trusted reactor principal admitted; human fixed-role edits forbidden."
+        }
+      ],
+      "targetOwnerCommands": "AssignRolePermission -> deterministic tenant+role+permission RolePermission owner; fixed role grant only, no artifact or data access grant.",
+      "stableCorrelationRequestId": "Committed TenantRegistered context is passed to SendReactionAsync; target has deterministic tuple key. Reactor does not mint a per-grant operation ID; exact request metadata inheritance verified centrally. RolePermission.Assign uses current-state no-op, not historical durable request dedup. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "All sends awaited; command failure propagates to framework checkpoint replay. Successful prior grants become current-state no-op on replay. Independent named checkpoint allows narrow historical backfill without replaying unrelated bootstrap. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "ApplicationImportExecutionReactor",
+      "source": "src/Compliance.Core/Features/Applications/ApplicationImportExecutionReactor.cs",
+      "triggerFacts": [
+        "ApplicationImportPlanSealed"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1359,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportExecutionReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportExecutionReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1359,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ExecuteApplicationImportHandler.cs",
+          "line": 24,
+          "claim": "Plan applied in retained row order."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs",
+          "line": 70,
+          "claim": "Retirement and other pending effects mutually hold targets."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
+          "line": 122,
+          "claim": "Test proves single-plan crash resumption."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
+          "line": 438,
+          "claim": "Test proves rollback logically releases linked-target reservation."
+        }
+      ],
+      "targetOwnerCommands": "ExecuteApplicationImport -> source ApplicationImportLedger coordinator; ApplyApplicationImportEffect -> DeclaredApplication owners.",
+      "stableCorrelationRequestId": "Validates bound tenant and exact ledger stream from ImportBatch; stable batch/row/application IDs and frozen plan hash. Receiver recognizes previously durable target effects and committed/failed/canceled terminal plan. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Durable ApplicationImportPlanSealed triggers replay after partial effect crash. Executor checks tenant active each row, transient lag preserves checkpoint, permanent rejection writes rollback fact that logically releases pending effects. Target acquisition order is plan row order, not canonical target order, so cross-source cycles remain. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-05"
+      ],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "LinkImpactReviewWorkReactor",
+      "source": "src/Compliance.Core/Features/Changes/LinkImpactReviewWorkReactor.cs",
+      "triggerFacts": [
+        "SignificantChangeImpactAssessed"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1383,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Changes/LinkImpactReviewWorkReactor.cs",
+          "line": 5,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/LinkImpactReviewWorkReactor.cs",
+          "line": 10,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1383,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/LinkImpactReviewWorkHandler.cs",
+          "line": 24,
+          "claim": "Only current assessment accepted."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
+          "line": 160,
+          "claim": "Owner recognizes already-linked current expected work."
+        }
+      ],
+      "targetOwnerCommands": "LinkImpactReviewWork -> same SignificantChange owner after source assessment fact.",
+      "stableCorrelationRequestId": "Validates source stream/tenant/state/current contentVersion from committed trigger; command identifies change+contentVersion but receiver uses latest current assessment. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "No-op on no work. If newer content supersedes trigger before processing, receiver returns permanent Conflict instead of terminal superseded no-op; per-tenant queue can stall on obsolete cause. Current owner command otherwise idempotently recognizes already linked set. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-09"
+      ],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "SystemDescriptionDecisionReactor",
+      "source": "src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs",
+      "triggerFacts": [
+        "SystemDescriptionApproved",
+        "SystemDescriptionNoChangeRecorded"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1385,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs",
+          "line": 8,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs",
+          "line": 13,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1385,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/RecordSignificantChangeSystemDescriptionDecisionHandler.cs",
+          "line": 31,
+          "claim": "Receiver resolves exact approved source proof."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/RecordSignificantChangeSystemDescriptionDecisionHandler.cs",
+          "line": 41,
+          "claim": "Current-assessment race returns non-transient Conflict."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
+          "line": 221,
+          "claim": "Required work links gate description decision."
+        }
+      ],
+      "targetOwnerCommands": "RecordSignificantChangeSystemDescriptionDecision / RecordComplianceIncidentSystemDescriptionDecision -> owning change/incident.",
+      "stableCorrelationRequestId": "Checks exact source SystemDescription stream, committed approval/version/no-change decision. Correlation uses change/incident version and assessment digest; receiver rechecks authoritative description proof. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Some superseded current assessments are skipped before dispatch; race after reactor read still causes receiver permanent Conflict. Required review-work linking may not yet have caught up: receiver conflict has no transient flag. These paths can stall or fault per-tenant description workload rather than retry as pending/superseded. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-09"
+      ],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "ControlEvaluationDeviationFindingReactor",
+      "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluationDeviationFindingReactor.cs",
+      "triggerFacts": [
+        "ControlEvaluationSubmitted"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1387,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Evaluations/ControlEvaluationDeviationFindingReactor.cs",
+          "line": 9,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evaluations/ControlEvaluationDeviationFindingReactor.cs",
+          "line": 14,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1387,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evaluations/RaiseEvaluationDeviationFindingHandler.cs",
+          "line": 23,
+          "claim": "Receiver verifies submitted material source and exact expected finding ID."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/FindingAggregate.Receipts.cs",
+          "line": 93,
+          "claim": "Routed owner command preserves source-derived identity."
+        }
+      ],
+      "targetOwnerCommands": "RaiseEvaluationDeviationFinding -> FindingAggregate owner through RoutedFinding.",
+      "stableCorrelationRequestId": "Finding ID derives deviationId; command retains evaluation+deviation identity, receiver requires submitted material deviation with matching FindingId. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Each material deviation send awaited; repeated submissions use same finding identity. Failure retries existing batch from checkpoint; receiver owns local finding creation rule. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "EvidenceArtifactInspectionEffectsReactor",
+      "source": "src/Compliance.Core/Features/Evidence/EvidenceArtifactInspectionEffectsReactor.cs",
+      "triggerFacts": [
+        "EvidenceArtifactInspected"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1329,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Evidence/EvidenceArtifactInspectionEffectsReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/EvidenceArtifactInspectionEffectsReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1329,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/EvidenceArtifactStorageReconciler.cs",
+          "line": 16,
+          "claim": "Current canonical owner source drives effects."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/EvidenceArtifactStorageReconciler.cs",
+          "line": 27,
+          "claim": "Storage effects reflect accepted owner verdict with idempotent fallback."
+        }
+      ],
+      "targetOwnerCommands": "EvidenceArtifactStorageReconciler -> artifact content-store quarantine/delete/release effects based on current EvidenceArtifact owner state.",
+      "stableCorrelationRequestId": "Exact tenant/artifact/source stream checked; current registration binds content hash/length and exact owner state. No new business decision authored by reactor. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Reconciler uses idempotent storage outcomes (quarantine/open fallback, delete NotFound success, release/open fallback). Failed reconciliation throws keeping checkpoint. Direct storage effect is appropriate recovery; it is not a projector deciding policy. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "No direct foreign aggregate mutation. External content-store reconciliation observes owner decision; no new policy decision or owner fact."
+    },
+    {
+      "name": "ControlOccurrenceFindingReactor",
+      "source": "src/Compliance.Core/Features/Remediation/ControlOccurrenceFindingReactor.cs",
+      "triggerFacts": [
+        "ControlOccurrenceAttested",
+        "ControlOccurrenceReviewed"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1381,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Remediation/ControlOccurrenceFindingReactor.cs",
+          "line": 11,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/ControlOccurrenceFindingReactor.cs",
+          "line": 16,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1381,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/RaiseOccurrenceFindingHandler.cs",
+          "line": 24,
+          "claim": "Receiver verifies authoritative source occurrence then invokes Finding owner."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/FindingAggregate.Receipts.cs",
+          "line": 93,
+          "claim": "Routed creation business fact supports stable source identity replay."
+        }
+      ],
+      "targetOwnerCommands": "RaiseOccurrenceFinding -> FindingAggregate owner through RoutedFinding.",
+      "stableCorrelationRequestId": "Finding ID derives exact attestation ID or review decision+action index. Source text/version included in command. Stable routed identity prevents duplicated findings even resubmission. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Awaited sends; failure propagates checkpoint; repeated native finding command must compare same routed identity/intent. Receiver reads authoritative occurrence before deriving owner/admission values. Not direct aggregate mutation. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "BoundaryRiskReassessmentReactor",
+      "source": "src/Compliance.Core/Features/Risks/BoundaryRiskReassessmentReactor.cs",
+      "triggerFacts": [
+        "BoundaryApproved"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1377,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Risks/BoundaryRiskReassessmentReactor.cs",
+          "line": 10,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/BoundaryRiskReassessmentReactor.cs",
+          "line": 15,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1377,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RaiseRiskReassessmentTriggersHandler.cs",
+          "line": 20,
+          "claim": "Directory discovery coverage checked."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs",
+          "line": 582,
+          "claim": "Target trigger identity stable."
+        }
+      ],
+      "targetOwnerCommands": "RaiseRiskReassessmentTriggers -> per-program RiskGovernanceLedger owner.",
+      "stableCorrelationRequestId": "Approved boundary draftVersionId is stable source reference; original boundary first approval skipped after source hydration; deterministic target trigger tuple. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Receiver caught-up discovery and stable trigger IDs make whole cause replay safe. Reads source SystemBoundary to identify owning program; aggregate-to-aggregate live read not inside target owner. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "RiskMethodReassessmentReactor",
+      "source": "src/Compliance.Core/Features/Risks/RiskMethodReassessmentReactor.cs",
+      "triggerFacts": [
+        "RiskMethodVersionPublished"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1375,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskMethodReassessmentReactor.cs",
+          "line": 9,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskMethodReassessmentReactor.cs",
+          "line": 14,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1375,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RaiseRiskReassessmentTriggersHandler.cs",
+          "line": 20,
+          "claim": "Discovery requires caught-up directory."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs",
+          "line": 582,
+          "claim": "Trigger stable identity prevents duplicate append."
+        }
+      ],
+      "targetOwnerCommands": "RaiseRiskReassessmentTriggers -> per-program RiskGovernanceLedger owner.",
+      "stableCorrelationRequestId": "MethodVersionId is source reference and deterministic TriggerId derives program+risk+kind+source. First version skipped. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Receiver validates risk directory caught up, reads each current evaluation, appends stable triggers once. Whole cause replay is safe through trigger identity; no arbitrary technical receipt event added by reactor. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "TenantInvitationDeliveryReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
+      "triggerFacts": [
+        "TenantMemberInvited"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1327,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
+          "line": 8,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
+          "line": 13,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1327,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/SmtpTenantInvitationDelivery.cs",
+          "line": 23,
+          "claim": "Stable Message-ID but ordinary SendMailAsync."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs",
+          "line": 137,
+          "claim": "Owner decides matching delivery attempt outcome."
+        }
+      ],
+      "targetOwnerCommands": "ITenantInvitationDelivery external SMTP; directly record outcome in same TenantInvitation owner.",
+      "stableCorrelationRequestId": "DeliveryAttemptFor(invited) stable and token derivation tied to exact accepted invitation event. New RequestDispatchContext(actor) does not preserve original reactor request metadata for saved outcome. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency. Direct fresh RequestDispatchContext(actor) also loses source cause; same-owner result checks still prevent duplicate terminal owner events.",
+      "checkpointFailureRetry": "Skips expired/superseded/accepted/terminal attempts. Sends before durable in-flight claim and records result after send; exception is terminal failed; crash after SMTP accept before outcome can resend. Stable Message-ID is not provider idempotency evidence. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-07"
+      ],
+      "directAggregateMutation": "Direct same-owner mutation+writer, not cross-owner policy bypass; external send occurs before owner result save."
+    },
+    {
+      "name": "TenantInvitationReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantInvitationReactor.cs",
+      "triggerFacts": [
+        "TenantInvitationAccepted"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1318,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantInvitationReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantInvitationReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1318,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantActivationPolicy.cs",
+          "line": 44,
+          "claim": "Permanent error policy advances after in-process budget."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/ActivateTenantHandler.cs",
+          "line": 30,
+          "claim": "Activation waits registered member/current admin episode and required read authority."
+        }
+      ],
+      "targetOwnerCommands": "RegisterMember; ProvisionGuestProgramAccess per invitation scope; AssignTeamMember to role/admin; ActivateTenant -> distinct owners.",
+      "stableCorrelationRequestId": "User/invitation/program/team IDs fixed in accepted fact; original context sent. Guest program loop preserves accepted program ordering but no competing multi-hold invariant identified; commands are independent derived grants. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Committed acceptance drives replay of partially completed sequence. TenantActivationPolicy locally retries transient activation then propagates to durable retry. After permanent failure budget it logs and advances checkpoint, leaving partial provisioning for explicit new invitation/operator action. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain_with_limitations",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "TenantRegistrationReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs",
+      "triggerFacts": [
+        "TenantRegistered",
+        "TenantSlugChangeRequested",
+        "TenantSlugChanged",
+        "TenantSlugSurrenderRequested"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1317,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs",
+          "line": 5,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs",
+          "line": 10,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1317,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantSlug.cs",
+          "line": 41,
+          "claim": "Slug emits decision even on same owner registration."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantOwner.cs",
+          "line": 25,
+          "claim": "Owner register is current-state no-op."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantInvitationIssuer.cs",
+          "line": 40,
+          "claim": "Invocation mints invitation attempt ID."
+        }
+      ],
+      "targetOwnerCommands": "RegisterTenantSlug -> TenantSlug, RegisterTenantOwner -> TenantOwner, optional InviteTenantMember -> TenantInvitation; changes/surrenders -> slug owner.",
+      "stableCorrelationRequestId": "Registered tenantId is stable original create identity; slug string derives slug owner key; reaction inherits committed context. Invitation issuer mints a new attempt per handler invocation, so replay may reissue after prior delivery failure. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Owner registration idempotent; slug Register can emit repeated registration/rejection facts. New slug is claimed before old slug surrender. Receivers do not all recognize already-processed outcomes after state progresses. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-08"
+      ],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "TenantSelfServiceActivationReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantSelfServiceActivationReactor.cs",
+      "triggerFacts": [
+        "TeamMemberAssigned"
+      ],
+      "registrationActivation": {
+        "scope": "PerTenant",
+        "compositionLine": 1343,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantSelfServiceActivationReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantSelfServiceActivationReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1343,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantActivationPolicy.cs",
+          "line": 84,
+          "claim": "Transient wait bounded locally then durable retry."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/ActivateTenantHandler.cs",
+          "line": 16,
+          "claim": "Rejected registration/previously activated is terminal no-op."
+        }
+      ],
+      "targetOwnerCommands": "ActivateTenant -> Tenant owner, after exact administrators-team assignment for registered creator.",
+      "stableCorrelationRequestId": "Stable team assignment trigger; creator/member identity checked from Tenant source. Original cause flows through activation command. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Per-tenant checkpoint with TenantActivationPolicy; transient projection lag keeps durable checkpoint; permanent budget logs/abandons. Activation itself guards slug confirmation and current admin prerequisite. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain_with_limitations",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "TenantSlugReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs",
+      "triggerFacts": [
+        "TenantSlugRegistered",
+        "TenantSlugRegistrationRejected",
+        "TenantSlugSurrendered",
+        "TenantSlugSurrenderRejected"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1374,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs",
+          "line": 5,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs",
+          "line": 10,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1374,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+          "line": 133,
+          "claim": "Confirm handles current confirmed slug only, not historical completion after progression."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+          "line": 152,
+          "claim": "Duplicate rejection fails because tenant is no longer pending."
+        }
+      ],
+      "targetOwnerCommands": "ConfirmTenantSlug/RejectTenantSlug/ConfirmTenantSlugSurrender/RejectTenantSlugSurrender -> Tenant owner.",
+      "stableCorrelationRequestId": "Committed slug-owner decision context; target tenant command key is stable tenantId+slug, but no processed slug decision identity retained. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Failure propagates on global checkpoint. Tenant.RejectSlug lacks no-op path after rejected outcome and ConfirmSlug fails after later surrender/change; exact replay can become permanent conflict. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-08"
+      ],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "EmailChallengeDeliveryReactor",
+      "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+      "triggerFacts": [
+        "EmailChallengeIssued",
+        "IdentityRecoveryChallengeIssued"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1332,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "line": 8,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "line": 13,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1332,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/SmtpEmailChallengeDelivery.cs",
+          "line": 50,
+          "claim": "Message-ID deterministic but no provider idempotent API."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+          "line": 168,
+          "claim": "Owner evaluates matching challenge result."
+        }
+      ],
+      "targetOwnerCommands": "IEmailChallengeDelivery external verification/recovery SMTP; same EmailAddress owner direct outcome save.",
+      "stableCorrelationRequestId": "ChallengeId stable from committed issued fact; deterministic derivation key/hash validation; direct save uses fresh RequestDispatchContext(actor) without original cause metadata. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency. Direct fresh RequestDispatchContext(actor) also loses source cause; same-owner result checks still prevent duplicate terminal owner events.",
+      "checkpointFailureRetry": "Skips expired/superseded/terminal owner state. External SMTP occurs before durable attempt claim; exception becomes failed, replay after accepted send+save failure can resend. Matching owner outcome idempotency does not make SMTP send idempotent. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-07"
+      ],
+      "directAggregateMutation": "Direct same-owner EmailAddress mutation+writer; external effect handled directly, no foreign aggregate policy executed."
+    },
+    {
+      "name": "EmailReservationReactor",
+      "source": "src/Compliance.Core/Features/UserIdentities/EmailReservationReactor.cs",
+      "triggerFacts": [
+        "UserIdentityRegistered"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1331,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailReservationReactor.cs",
+          "line": 5,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailReservationReactor.cs",
+          "line": 10,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1331,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/ReserveEmailHandler.cs",
+          "line": 13,
+          "claim": "Receiver delegates reserve to normalized email owner."
+        }
+      ],
+      "targetOwnerCommands": "ReserveEmail -> normalized EmailAddress owner.",
+      "stableCorrelationRequestId": "User identity registration committed source; normalized email key supplies conflict identity. Context passed directly to bus.SendAsync, no minted child identity. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Conflict is explicitly terminal for one contested email so checkpoint advances; other command failures throw. Owner EmailAddress.Reserve decides uniqueness, so no projection authority. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "retain",
+      "findingIds": [],
+      "directAggregateMutation": "IRequestBus command; receiving owner decides and IAggregateExecutor uses physical expected position."
+    },
+    {
+      "name": "IdentityRecoveryNoticeReactor",
+      "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecoveryNoticeReactor.cs",
+      "triggerFacts": [
+        "IdentityRecoveryChallengeCompleted"
+      ],
+      "registrationActivation": {
+        "scope": "Global",
+        "compositionLine": 1333,
+        "workerActivation": "Registered in AddCompliance. Program412 starts workers only in Standalone; dedicated Worker path Program2512-2516 adds workers. API mode does not run reactors. PerTenant workloads discovered from registered tenants via event-sourced tenant directory, including provisioning tenants.",
+        "principal": "ComplianceReactorPrincipalProvider emits bdgrz.system reactor:<registered workload name>."
+      },
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/IdentityRecoveryNoticeReactor.cs",
+          "line": 6,
+          "claim": "Assigned reactor source and committed trigger interfaces."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/IdentityRecoveryNoticeReactor.cs",
+          "line": 11,
+          "claim": "Reaction body/target command or external effect."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1333,
+          "claim": "Registered workload scope/name."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/SmtpEmailChallengeDelivery.cs",
+          "line": 31,
+          "claim": "Completion notice ordinary SMTP with deterministic Message-ID."
+        }
+      ],
+      "targetOwnerCommands": "IEmailChallengeDelivery.SendRecoveryCompletedAsync external SMTP only.",
+      "stableCorrelationRequestId": "Stable completed ChallengeId passed as effect ID, but no durable notice dispatch/in-flight/outcome owner. Framework: source CauseId and correlation stay bound, but child RequestId is fresh random for each SendReactionAsync attempt; this row relies only on explicitly named business/effect keys for idempotency.",
+      "checkpointFailureRetry": "Notice exceptions propagate dedicated checkpoint. Crash after SMTP accept before checkpoint repeats send; no unknown/authorization state. Trigger is completion only, so it cannot recover uncompleted identity replacement. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "verdict": "repair",
+      "findingIds": [
+        "CHOREO-01",
+        "CHOREO-07"
+      ],
+      "directAggregateMutation": "No aggregate mutation; external effect only."
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Identity replacement recovery",
+      "originalInvariant": "One verified email proof authorizes exactly one old->replacement provider identity, which belongs to same user; replacement becomes usable and old identity is revoked, with completion notice.",
+      "admissionReservation": "EmailAddress claims exact challenge+oldID+replacementID before target changes. Replacement identity is checked from source but not reserved; claim lacks provider+subject needed for reconstruction.",
+      "canonicalOrder": "Email claim -> replacement register -> old revoke -> email complete. This is explicit sequential order but no target hold prevents replacement identity being registered elsewhere between check and write.",
+      "durableTrigger": "IdentityRecoveryChallengeClaimed persists intermediate obligation, but no reactor consumes it. Existing IdentityRecoveryNoticeReactor observes only completion.",
+      "receiverOwnedRule": "UserIdentity.Register owns unique provider identity binding; Revoke owns old association transition; EmailAddress owns proof claim/completion.",
+      "valueProofs": "Handler has fresh replacement OIDC proof plus email token. Durable claim stores only derived replacementID; it is insufficient to independently reconstruct Register(provider,subject).",
+      "releaseFailureRecovery": "9 immediate OCC attempts and exact personal endpoint retry can resume after expiry for claimed pair. Crash/persistent failure has no autonomous owner command/reservation recovery.",
+      "missingStep": "Durable reconstructible recovery intent with provider-proof admission, replacement reservation and a recovery reactor completing/aborting exact sequence.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/CompleteIdentityRecoveryHandler.cs",
+          "line": 62,
+          "claim": "First durable claim then three later owner saves."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/CompleteIdentityRecoveryHandler.cs",
+          "line": 69,
+          "claim": "Replacement registration can fail after claim."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+          "line": 105,
+          "claim": "Exact pair claim supports personal retry after expiry."
+        },
+        {
+          "path": "src/Compliance.Common/Features/UserIdentities/IdentityRecoveryChallengeClaimed.cs",
+          "line": 7,
+          "claim": "Durable record lacks provider/subject proof."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+          "line": 58,
+          "claim": "Hydration by ID cannot register without provider+subject."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+          "line": 41,
+          "claim": "Tests happy path/exact endpoint replay, no crash recovery reactor."
+        }
+      ],
+      "findingIds": [
+        "CHOREO-01"
+      ]
+    },
+    {
+      "name": "Tenant administrator withdrawal/restoration",
+      "originalInvariant": "At least one source-active current-episode tenant administrator must remain through every suspension, deprovision or admin-team removal.",
+      "admissionReservation": "TenantManagerGuard serializes withdrawal on observed Sequence using source active-admin witness. Restoration removes reason before source reinstatement/reassignment and has no operation/episode token.",
+      "canonicalOrder": "Guard withdrawal -> Member/TeamMember destructive update. Restoration reverses guard first -> source update; this can expose a still in-flight withdrawal as safe witness.",
+      "durableTrigger": "TenantManagerWithdrawn/Restored persist guards, but no reactor consumes these for commit/release/reconciliation.",
+      "receiverOwnedRule": "Guard decides another administrator remains; Member/TeamMember own actual source lifecycle. Guard accepts scalar bool witness, not a live aggregate.",
+      "valueProofs": "Witness service hydrates source Member and TeamMember/current episode; directory is discovery only. Proof not tied to durable per-operation hold when Restore clears reason.",
+      "releaseFailureRecovery": "Immediate executor retries protect guard OCC; crashed withdrawal strands exclusion. Concurrent restore can erase reservation for pending destructive request and permit two source removals.",
+      "missingStep": "Operation-scoped hold/complete/release protocol and recovery reactor. Restore may clear only a proven completed opposite operation; source transitions must fence exact membership episode/operation.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantManagerInvariant.cs",
+          "line": 34,
+          "claim": "Witness read occurs before serialized guard append."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantManagerInvariant.cs",
+          "line": 59,
+          "claim": "Restoration explicitly precedes source change."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/SuspendMemberHandler.cs",
+          "line": 36,
+          "claim": "Guard withdrawal commits before Member suspension."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ReinstateMemberHandler.cs",
+          "line": 18,
+          "claim": "Restore occurs before Member.Reinstate."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/Member.cs",
+          "line": 133,
+          "claim": "Reinstate no-ops if pending suspension has not yet committed."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignTeamMemberHandler.cs",
+          "line": 23,
+          "claim": "Reassignment clears all reasons before source append."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs",
+          "line": 11,
+          "claim": "Test covers mutual suspension but not restore-between-hold-and-source race."
+        }
+      ],
+      "findingIds": [
+        "CHOREO-02",
+        "CHOREO-03"
+      ]
+    },
+    {
+      "name": "Membership deprovision cleanup",
+      "originalInvariant": "Deprovisioned membership episode loses team assignments/direct grants and a later membership episode cannot inherit old authority.",
+      "admissionReservation": "Destructive episode transition follows tenant manager hold, then synchronous MemberAuthorityCleanup enumerates team and grant directories.",
+      "canonicalOrder": "Team assignment iteration then grant iteration; order not canonical but no multiple reservation acquisitions here. Source retirement/cleanup must fence episode.",
+      "durableTrigger": "MemberDeprovisioned establishes cleanup obligation, but no reactor consumes it; RegisterMember also retries cleanup before new episode.",
+      "receiverOwnedRule": "Member owns episode/cleanup-complete; individual TeamMember and AccessGrant decide remove/revoke. Eligibility checks elsewhere use current episode to deny obsolete links.",
+      "valueProofs": "Cleanup rereads discovered owners and grants; directory discovery lacks complete source checkpoint/epoch proof.",
+      "releaseFailureRecovery": "Repeated personal Deprovision/RegisterMember can retry, and remove/revoke loops handle OCC. Crash can leave cleanup incomplete forever; lagging discovery can falsely mark complete before all old relationships appear.",
+      "missingStep": "MemberDeprovisioned recovery reactor with complete authoritative relationship discovery/source coverage and episode-bound commands; completion only after proofs cover all old authority.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/DeprovisionMemberHandler.cs",
+          "line": 41,
+          "claim": "Deprovision source committed before later cleanup."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "line": 15,
+          "claim": "Unsealed team directory discovery."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "line": 25,
+          "claim": "Unsealed grant discovery."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "line": 36,
+          "claim": "Marks cleanup complete after current directory set only."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RegisterMemberHandler.cs",
+          "line": 13,
+          "claim": "Later registration can opportunistically retry cleanup."
+        }
+      ],
+      "findingIds": [
+        "CHOREO-03",
+        "CHOREO-06"
+      ]
+    },
+    {
+      "name": "Type II period date reservation and close",
+      "originalInvariant": "All active program period current/pending date ranges are non-overlapping; date changes and close freeze preserve exact accepted period decision.",
+      "admissionReservation": "Calendar reserves before period create/amend; pending amendment holds both ranges. Close freeze happens before calendar range release.",
+      "canonicalOrder": "Calendar -> Period -> Calendar completion; fixed single-resource ordering, no multiple independent bucket reservations today.",
+      "durableTrigger": "ObservationPeriodReserved/AmendmentReserved and CloseFrozen durable facts exist, but no reactor consumes them to complete/release interrupted operations.",
+      "receiverOwnedRule": "Calendar owns overlap/admission; TypeIIPeriod owns approved opening, range amendment and close approval/freeze.",
+      "valueProofs": "Immutable TypeIIPlanView/opening hash/current period/close snapshot proof supplied by handlers, no projected overlap check.",
+      "releaseFailureRecovery": "Returned amendment failures run cancellation and caller exact retries can complete; crash after any successful first append bypasses release/completion. No automatic operation status/recovery.",
+      "missingStep": "Durable operation ID and recovery reactor that reconciles authoritative period outcome and either completes reserved dates or releases canceled hold; close-frozen fact releases exact reservation.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/StartTypeIIObservationPeriodHandler.cs",
+          "line": 91,
+          "claim": "Reserve precedes create."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/AmendTypeIIObservationPeriodHandler.cs",
+          "line": 62,
+          "claim": "Pending hold precedes amendment."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/AmendTypeIIObservationPeriodHandler.cs",
+          "line": 75,
+          "claim": "Cancellation only on returned failure."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/FreezeTypeIIPeriodCloseHandler.cs",
+          "line": 65,
+          "claim": "Freeze precedes release."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+          "line": 340,
+          "claim": "Both held and current date ranges block admission."
+        }
+      ],
+      "findingIds": [
+        "CHOREO-04"
+      ]
+    },
+    {
+      "name": "Application import frozen plan and target effects",
+      "originalInvariant": "A personally accepted source snapshot publishes all intended application effects only after every exact target effect is durable and verified; canceled/failed plans publish none.",
+      "admissionReservation": "ApplicationImportLedger seals complete immutable plan and allows one accepting batch per source. Target owner records invisible pending effect and blocks incompatible later changes until source commit/rollback durable.",
+      "canonicalOrder": "Plan order is original batch rows then retirement rows. No canonical ordering by target ApplicationId across source ledgers; opposite plans can acquire target holds in opposite order.",
+      "durableTrigger": "ApplicationImportPlanSealed -> ApplicationImportExecutionReactor -> ExecuteApplicationImport -> per-row ApplyApplicationImportEffect, then source commit. Actual source trigger exists and is registered.",
+      "receiverOwnedRule": "DeclaredApplication owns expected revision/pending effect conflict; source ledger owns full plan/parity/commit. Methods currently receive live ledger/batch objects rather than immutable owner proofs.",
+      "valueProofs": "Plan hash+row ID/target expected revision and exact event ID/version proofs bind commit. Source reader guards only apply committed target effects; projections remain read views.",
+      "releaseFailureRecovery": "Receiver dedups batch+row and recognizes committed terminal state; crash after partial effects replays from seal. Permanent rejection records rollback, settled guard logically releases effects. Transient conflict lacks deadlock abort and can retry forever.",
+      "missingStep": "Acquire targets in canonical identity order and add recoverable deadlock/failure release policy across different source imports; replace live aggregate arguments with bounded immutable proofs.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs",
+          "line": 83,
+          "claim": "Plan start/rows/seal persisted as one accepted operation."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportExecutionReactor.cs",
+          "line": 13,
+          "claim": "Validates exact source stream before recovery command."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ExecuteApplicationImportHandler.cs",
+          "line": 24,
+          "claim": "Target writes follow plan order."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs",
+          "line": 115,
+          "claim": "Batch input rows precede retirements, no target sort."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs",
+          "line": 70,
+          "claim": "Retirement blocks on other unsettled effects and vice versa."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportWriteGuard.cs",
+          "line": 15,
+          "claim": "Authoritative source settlement controls target visibility/release."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
+          "line": 122,
+          "claim": "Focused source test proves single-plan crash replay."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
+          "line": 438,
+          "claim": "Focused test proves durable rollback release."
+        }
+      ],
+      "findingIds": [
+        "CHOREO-05"
+      ]
+    },
+    {
+      "name": "Tenant registration, slug change and bootstrap",
+      "originalInvariant": "A normalized slug has one tenant owner and once surrendered is retired forever; tenant activates only after slug confirmation and provisioned creator/admin prerequisites.",
+      "admissionReservation": "Tenant registration records Pending slug, availability guard is advisory. Slug owner decides uniqueness; registration fact drives owner/RBAC/slug commands independently.",
+      "canonicalOrder": "New slug claim -> Tenant confirmation/change -> old slug surrender. RBAC core grants precede admin assignment; separate activation reactor handles later readiness.",
+      "durableTrigger": "TenantRegistered triggers global TenantRegistration and multiple catalog/backfill reactors; TenantSlugRegistered/Rejected triggers global TenantSlug reactor. TenantSlugChangeRequested and TenantSlugChanged drive claim/surrender facts.",
+      "receiverOwnedRule": "TenantSlug owns claim/retirement; Tenant owns pending/confirmed/activated lifecycle; RBAC owners decide distinct assignment facts. No projector authors policy.",
+      "valueProofs": "Preflight hydration is admission advice only; final slug owner enforces uniqueness. Activation reads current source member/team episode and waits permission/membership projections.",
+      "releaseFailureRecovery": "All sequences are committed-fact reactor driven, but exact confirmation/rejection receiver replay not robust after outcome/state progression. Failed checkpoint can cause global permanent conflict; no fact-specific terminal superseded handling.",
+      "missingStep": "Retain processed slug decision identity/outcome and make exact completed/rejected replay no-op even after later tenant transitions; distinguish changed intent from harmless historical cause.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/RegisterTenantHandler.cs",
+          "line": 29,
+          "claim": "Request ID chooses stable tenant create stream."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/RegisterTenantSlugAvailabilityGuard.cs",
+          "line": 20,
+          "claim": "Preflight explicitly advisory."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs",
+          "line": 14,
+          "claim": "Committed registration fans out to owner commands."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs",
+          "line": 14,
+          "claim": "Slug owner decision commands target Tenant."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+          "line": 152,
+          "claim": "RejectSlug lacks exact terminal retry handling."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+          "line": 25,
+          "claim": "Admin grants before triggering assignment."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/ActivateTenantHandler.cs",
+          "line": 30,
+          "claim": "Activation waits source membership and read prerequisites."
+        }
+      ],
+      "findingIds": [
+        "CHOREO-08"
+      ]
+    },
+    {
+      "name": "Invitation acceptance and guest/admin provisioning",
+      "originalInvariant": "Only exact invitation token recipient accepts; guest scope/expiry/actor frozen in acceptance determines membership and grants; administrator activation needs same authorized invitee.",
+      "admissionReservation": "Invitation owner accepts token and records fixed scope. Receiver handlers verify current member episode/program before deterministic grant.",
+      "canonicalOrder": "Register member -> fixed guest scopes -> role/admin assignment -> activation. Independent grants, not atomic multi-reservation business group.",
+      "durableTrigger": "TenantInvitationAccepted drives per-tenant TenantInvitationReactor. Delivery has separate MemberInvited trigger and checkpoint.",
+      "receiverOwnedRule": "Member owns episode; AccessGrant owns terms/episode; Tenant owns activation. Reactor does not become business decision authority.",
+      "valueProofs": "Accepted fact contains guest scope/expiry/attribution; guest grant IDs derive tenant/member/episode/program; receiver binds those values.",
+      "releaseFailureRecovery": "Whole sequence retries from acceptance. Activation transient wait preserves checkpoint; permanent policy budget logs/advances (explicit operator-new-invitation remediation). Grant current source checks can fail closed.",
+      "missingStep": "No observed missing cross-owner trigger for ordinary provisioning; operational abandoned status is log-only and may benefit from durable disposition, but no speculative correctness finding assigned.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantInvitationReactor.cs",
+          "line": 35,
+          "claim": "Committed acceptance commands registration first."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ProvisionGuestProgramAccessHandler.cs",
+          "line": 27,
+          "claim": "Exact guest membership episode checked."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ProvisionGuestProgramAccessHandler.cs",
+          "line": 40,
+          "claim": "Deterministic episode/program grant ID."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantActivationPolicy.cs",
+          "line": 53,
+          "claim": "Permanent abandonment budget explicit."
+        }
+      ],
+      "findingIds": []
+    },
+    {
+      "name": "Challenge/invitation/notice email delivery",
+      "originalInvariant": "External delivery should reflect exact accepted token/recipient attempt and ambiguous external outcome must not be blindly retried as definitely failed.",
+      "admissionReservation": "Current owner state checked; stable challenge/attempt IDs and deterministic token derivation. No durable in-flight external effect reservation in challenge/invitation reactors.",
+      "canonicalOrder": "Read owner -> SMTP Send -> record owner delivery result -> checkpoint. Notice is Send -> checkpoint only.",
+      "durableTrigger": "Issued/invited/completed committed facts have dedicated registered reactors.",
+      "receiverOwnedRule": "Same EmailAddress/TenantInvitation owner validates matching attempt outcome; ordinary SMTP transport cannot guarantee idempotency from Message-ID alone.",
+      "valueProofs": "Exact token derivation key/hash checked; stable effect ID in SMTP Message-ID. Transport result does not distinguish definitely rejected vs accepted-but-reply-lost.",
+      "releaseFailureRecovery": "Exceptions converted to terminal failed owner state, or notice exception retries; crash after SMTP acceptance before save/checkpoint repeats send. Direct writer outcomes lose original reaction causation by new dispatch context.",
+      "missingStep": "Durable delivery process claim-before-send, explicit Unknown outcome and reconciliation/reissue policy; use idempotent provider effect key if supported and preserve original cause metadata.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "line": 52,
+          "claim": "SMTP send before save."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "line": 61,
+          "claim": "All noncancel exceptions treated failed."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
+          "line": 53,
+          "claim": "Same pattern invitation send."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/IdentityRecoveryNoticeReactor.cs",
+          "line": 18,
+          "claim": "Notice sends directly before checkpoint."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/SmtpEmailChallengeDelivery.cs",
+          "line": 50,
+          "claim": "Stable Message-ID then ordinary SMTP send."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
+          "line": 114,
+          "claim": "Existing digest processor demonstrates claim-before-send and explicit Unknown alternative."
+        }
+      ],
+      "findingIds": [
+        "CHOREO-07"
+      ]
+    },
+    {
+      "name": "Findings derived from operation/evaluation decisions",
+      "originalInvariant": "Each failed/skipped attestation, requested review action or submitted material deviation establishes one source-derived finding obligation.",
+      "admissionReservation": "Reactor filters accepted committed fact and derives deterministic target identity; receiver checks authoritative source and chooses value owner/default due terms.",
+      "canonicalOrder": "Each finding independent; requested actions iterated deterministically by original action index; no shared multi-hold invariant.",
+      "durableTrigger": "ControlOccurrenceAttested/Reviewed and ControlEvaluationSubmitted have registered per-tenant reactors.",
+      "receiverOwnedRule": "FindingAggregate owns creation/closure; source operations/evaluation retains original accepted decision; receiver routes commands, no projector decision.",
+      "valueProofs": "Exact source record/IDs and business text/version, finding identity derived from source ID. Native routed code dedups existing source identity even random transport RequestId changes.",
+      "releaseFailureRecovery": "Awaited failures keep checkpoint; native source-derived target identity makes repeat no-op. Finding migration must be ready or reaction stays pending.",
+      "missingStep": "No missing fact-root consumer in inspected path. Harden explicit source-fact validation/complete intent proofs as other aggregate audit identifies; preserve owner-based idempotency.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Remediation/ControlOccurrenceFindingReactor.cs",
+          "line": 25,
+          "claim": "Deterministic attestation finding ID."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evaluations/ControlEvaluationDeviationFindingReactor.cs",
+          "line": 20,
+          "claim": "Material deviation source-derived finding command."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/RoutedFinding.cs",
+          "line": 28,
+          "claim": "Receiver invokes FindingAggregate owner with derived key."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/FindingAggregate.Receipts.cs",
+          "line": 112,
+          "claim": "Existing routed source identity no-op."
+        }
+      ],
+      "findingIds": []
+    },
+    {
+      "name": "Risk method/boundary reassessment obligations",
+      "originalInvariant": "A successor method or approved boundary change establishes reassessment obligations for affected assessed risks; same cause must not duplicate triggers.",
+      "admissionReservation": "Committed fact filter skips initial definition; receiver requires caught-up risk discovery and source current evaluation.",
+      "canonicalOrder": "No multiple reservation group; appends stable obligations within current program governance owner.",
+      "durableTrigger": "RiskMethodVersionPublished/BoundaryApproved each have registered per-tenant reactor.",
+      "receiverOwnedRule": "RiskGovernanceLedger.RaiseTrigger decides accepted obligation using derived risk+kind+source ID; projections discover candidates only.",
+      "valueProofs": "Receiver reads each RiskEvaluation authority; method ID skips risks already on new method. No live foreign aggregate inside RiskGovernance command, only risk IDs/source terms.",
+      "releaseFailureRecovery": "Stable TriggerIdFor makes whole cause repeat no-op; projection lag returns transient, checkpoint remains. New acceptance/inherent assessments define trigger resolution on read.",
+      "missingStep": "No missing recovery step identified for already emitted cause; future split must preserve obligation identity/source and complete discovery.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskMethodReassessmentReactor.cs",
+          "line": 19,
+          "claim": "Skip first method, route successor cause."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/BoundaryRiskReassessmentReactor.cs",
+          "line": 22,
+          "claim": "Load authoritative owning boundary."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RaiseRiskReassessmentTriggersHandler.cs",
+          "line": 20,
+          "claim": "Require discovery source coverage."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs",
+          "line": 582,
+          "claim": "Stable trigger tuple."
+        }
+      ],
+      "findingIds": []
+    },
+    {
+      "name": "Firm staff directory/client acceptance reconciliation",
+      "originalInvariant": "Every accepted staff assignment must receive reevaluation for every later applicable retained status decision, independent of event ordering or projection lag.",
+      "admissionReservation": "Dual source reactors cover status-before-acceptance and acceptance-before-status; discovery verifies locator coverage then exact authoritative immutable source set.",
+      "canonicalOrder": "Deterministic discovered source pair commands; independent target reassessment owner; no reservation acquisition.",
+      "durableTrigger": "FirmStaffChangeRecorded + ServiceEngagementAcceptanceRecorded both have registered reactors with independent global/per-tenant checkpoints.",
+      "receiverOwnedRule": "Named authorized command handler verifies cause/source hashes/offsets, then IndependenceLedger decides current reevaluation action.",
+      "valueProofs": "Immutable directory status source and exact original accepted fact are value proofs bound to source event IDs/hash/offsets; projection rows validated as discovery, not authority.",
+      "releaseFailureRecovery": "Transient discovery/source changes hold checkpoint; receiver stable source-pair rule supports repeated command. Inactive client keeps pending. No automatic skip of unproven source rows.",
+      "missingStep": "No missing fact-root or receiver-authority step identified; retain dual triggers/source validation.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/DirectoryReevaluationDiscovery.cs",
+          "line": 10,
+          "claim": "Locator must cover all authoritative acceptances."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/DirectoryReevaluationDiscovery.cs",
+          "line": 57,
+          "claim": "Complete expected source set and stable source snapshot required."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/DirectoryReevaluationDiscovery.cs",
+          "line": 65,
+          "claim": "Acceptance-side sweep handles preexisting status facts."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluationHandler.cs",
+          "line": 25,
+          "claim": "Receiver exact immutable source pair verified."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluationAuthorizer.cs",
+          "line": 10,
+          "claim": "Named direct worker admission."
+        }
+      ],
+      "findingIds": []
+    },
+    {
+      "name": "Significant-change work and system-description follow-up",
+      "originalInvariant": "Impact assessment related work must be linked before exact independent description disposition can settle current assessment; superseded facts must not mutate new assessment.",
+      "admissionReservation": "Reactor validates source event identity/version, receiver rereads latest exact assessment and source description correlation.",
+      "canonicalOrder": "Work-link and description reactors are independent checkpoints; no ordering guarantee ensures work-link result before description decision command.",
+      "durableTrigger": "ImpactAssessed and DescriptionApproved/NoChangeRecorded all have registered per-tenant reactors.",
+      "receiverOwnedRule": "SignificantChange/ComplianceIncident own link and final disposition; receiver verifies source description fact then exact current digest.",
+      "valueProofs": "Source description version/decision, assessment contentVersion/hash and current owner revision are compared.",
+      "releaseFailureRecovery": "If work linking lags or source becomes superseded between reads, receiver returns non-transient Conflict; no terminal superseded disposition in LinkImpactReviewWorkHandler. Repeated obsolete cause can block later source events.",
+      "missingStep": "Classify pending dependency as transient and historical superseded/already completed exact source as explicit terminal no-op after proof; retain changed-intent conflict. Recovery must not let old fact decide new assessment.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Changes/LinkImpactReviewWorkHandler.cs",
+          "line": 24,
+          "claim": "Current-only receiver can reject obsolete trigger."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs",
+          "line": 47,
+          "claim": "Description event dispatches to current assessment."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/RecordSignificantChangeSystemDescriptionDecisionHandler.cs",
+          "line": 41,
+          "claim": "Race is permanent Conflict."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
+          "line": 221,
+          "claim": "Missing work link returns state conflict with no transient semantics."
+        }
+      ],
+      "findingIds": [
+        "CHOREO-09"
+      ]
+    },
+    {
+      "name": "Type II expected occurrence generation",
+      "originalInvariant": "The selected due expected-occurrence identities are durably established once per generation key so downstream work materialization can be retried without duplicates.",
+      "admissionReservation": "TypeIIPeriod calculates exact manifest subset and records batch; no downstream admission/owner creation occurs in handler.",
+      "canonicalOrder": "Sorted occurrence IDs, but no multi-owner reservation sequence exists yet.",
+      "durableTrigger": "DueControlOccurrencesGenerated exists; no reactor, handler, scheduler or projector consumes it outside TypeIIPeriod fold/serialization registration in entire src tree.",
+      "receiverOwnedRule": "No target occurrence owner is reached by generation fact. ControlOperationsLedger recurring occurrences have independent control-period identity and derive virtual expected work on reads.",
+      "valueProofs": "Generation fact provides IDs/dates but current source registry has no continuation contract.",
+      "releaseFailureRecovery": "Exact repeated generation key no-op; different empty batches consume cap/revision. Materialization/recovery absent, so only batch receipt persists.",
+      "missingStep": "Either implement fact-root materialization with receiver-owned commands/deterministic IDs and recovery, or change API/domain wording to explicitly mean freeze selection only. This is a source-backed gap with contract intent needing confirmation.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/GenerateDueControlOccurrencesHandler.cs",
+          "line": 20,
+          "claim": "Handler ends after TypeIIPeriod batch event."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 137,
+          "claim": "Comment promises downstream scheduler may materialize retained batch."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 170,
+          "claim": "Only generated event emitted."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1317,
+          "claim": "Complete33-reactor registry has no generated occurrence consumer."
+        }
+      ],
+      "findingIds": [
+        "CHOREO-10"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "CHOREO-01",
+      "severity": "P1",
+      "title": "Identity replacement claim has no reconstructible autonomous recovery",
+      "affected": [
+        "CompleteIdentityRecoveryHandler",
+        "EmailAddress",
+        "UserIdentity",
+        "IdentityRecoveryNoticeReactor"
+      ],
+      "rules": [
+        9,
+        11
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/CompleteIdentityRecoveryHandler.cs",
+          "line": 62,
+          "claim": "First durable claim then three later owner saves."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/CompleteIdentityRecoveryHandler.cs",
+          "line": 69,
+          "claim": "Replacement registration can fail after claim."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+          "line": 105,
+          "claim": "Exact pair claim supports personal retry after expiry."
+        },
+        {
+          "path": "src/Compliance.Common/Features/UserIdentities/IdentityRecoveryChallengeClaimed.cs",
+          "line": 7,
+          "claim": "Durable record lacks provider/subject proof."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+          "line": 58,
+          "claim": "Hydration by ID cannot register without provider+subject."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+          "line": 41,
+          "claim": "Tests happy path/exact endpoint replay, no crash recovery reactor."
+        }
+      ],
+      "interleaving": [
+        "EmailAddress claim commits for oldO/replacementR.",
+        "Host exits before R.Register; no committed reactor consumes claim and claim has no replacement provider/subject.",
+        "Alternatively R.Register commits then host exits before O.Revoke; both identities authenticate until user repeats endpoint.",
+        "An ordinary provider continuation can register R to another user between initial check and save, leaving a claimed recovery that cannot finish."
+      ],
+      "impact": "Security recovery may leave compromised old association active or durable proof consumed without completion; existing completion-notice reactor cannot help until sequence is already finished.",
+      "correction": "Persist admitted replacement provider proof/intent or reserve replacement owner before claiming source; add named recovery commands/reactor over durable accepted intent, owner-specific exact idempotency and explicit failed/release path. Acquire any multiple owner holds canonically. Never let reactor invent fresh OIDC proof after crash.",
+      "confidence": "confirmed",
+      "canonicalFindingId": "ACCESS-12",
+      "countAsAdditionalDefect": false
+    },
+    {
+      "id": "CHOREO-02",
+      "severity": "P1",
+      "title": "A concurrent restore can erase an in-flight last-administrator withdrawal",
+      "affected": [
+        "TenantManagerGuard",
+        "TenantManagerInvariant",
+        "SuspendMemberHandler",
+        "ReinstateMemberHandler",
+        "AssignTeamMemberHandler"
+      ],
+      "rules": [
+        9,
+        11
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantManagerInvariant.cs",
+          "line": 34,
+          "claim": "Witness read occurs before serialized guard append."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantManagerInvariant.cs",
+          "line": 59,
+          "claim": "Restoration explicitly precedes source change."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/SuspendMemberHandler.cs",
+          "line": 36,
+          "claim": "Guard withdrawal commits before Member suspension."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ReinstateMemberHandler.cs",
+          "line": 18,
+          "claim": "Restore occurs before Member.Reinstate."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/Member.cs",
+          "line": 133,
+          "claim": "Reinstate no-ops if pending suspension has not yet committed."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignTeamMemberHandler.cs",
+          "line": 23,
+          "claim": "Reassignment clears all reasons before source append."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs",
+          "line": 11,
+          "claim": "Test covers mutual suspension but not restore-between-hold-and-source race."
+        }
+      ],
+      "interleaving": [
+        "Only administrators A and B are active. Suspend(B) commits guard withdrawalB, pauses before Member B suspension.",
+        "Reinstate(B) clears guard reason; Member B is still unsuspended, so reinstate no-ops.",
+        "Suspend(A) observes guard B restored and source B active, and commits withdrawalA.",
+        "Both pending Member suspension writes commit; A and B are now both suspended."
+      ],
+      "impact": "The named at-least-one-active-administrator invariant can be violated despite guard OCC because restoration cancels another operation reservation without fencing its pending source write.",
+      "correction": "Use immutable operation/episode-specific withdrawal reservations and source transition proofs. Restore only completed opposite operation, and fence source mutation to same reservation generation. Add recovery over durable guard/source facts. Reversing order alone is insufficient without handling concurrent inverse commands.",
+      "confidence": "confirmed",
+      "canonicalFindingId": "ACCESS-01",
+      "countAsAdditionalDefect": false
+    },
+    {
+      "id": "CHOREO-03",
+      "severity": "P2",
+      "title": "Guard withdrawal and membership retirement obligations lack recovery fact consumers",
+      "affected": [
+        "TenantManagerGuard",
+        "DeprovisionMemberHandler",
+        "MemberAuthorityCleanup"
+      ],
+      "rules": [
+        9,
+        11
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantManagerInvariant.cs",
+          "line": 34,
+          "claim": "Witness read occurs before serialized guard append."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantManagerInvariant.cs",
+          "line": 59,
+          "claim": "Restoration explicitly precedes source change."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/SuspendMemberHandler.cs",
+          "line": 36,
+          "claim": "Guard withdrawal commits before Member suspension."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ReinstateMemberHandler.cs",
+          "line": 18,
+          "claim": "Restore occurs before Member.Reinstate."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/Member.cs",
+          "line": 133,
+          "claim": "Reinstate no-ops if pending suspension has not yet committed."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AssignTeamMemberHandler.cs",
+          "line": 23,
+          "claim": "Reassignment clears all reasons before source append."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs",
+          "line": 11,
+          "claim": "Test covers mutual suspension but not restore-between-hold-and-source race."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/DeprovisionMemberHandler.cs",
+          "line": 41,
+          "claim": "Deprovision source committed before later cleanup."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "line": 15,
+          "claim": "Unsealed team directory discovery."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "line": 25,
+          "claim": "Unsealed grant discovery."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "line": 36,
+          "claim": "Marks cleanup complete after current directory set only."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RegisterMemberHandler.cs",
+          "line": 13,
+          "claim": "Later registration can opportunistically retry cleanup."
+        }
+      ],
+      "interleaving": [
+        "Guard withdrawal commits; source suspend/removal save fails/crashes. No recovery reactor releases or finishes hold.",
+        "MemberDeprovisioned commits; host exits before team/grant cleanup. Only another personal deprovision/register call resumes it."
+      ],
+      "impact": "Valid administrators can remain excluded by orphan hold and source relationships can remain uncleaned indefinitely. Later onboarding depends on manual/opportunistic retry.",
+      "correction": "Introduce named recovery workflows over withdrawal/deprovision accepted facts; record operation identity, target episode and exact source outcome. Complete cleanup from source-complete discovery and release hold only after proving no pending destructive source transition.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "CHOREO-04",
+      "severity": "P2",
+      "title": "Type II date reservation choreography has holds but no recovery reactor",
+      "affected": [
+        "TypeIIObservationCalendar",
+        "TypeIIPeriod"
+      ],
+      "rules": [
+        9,
+        11
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/StartTypeIIObservationPeriodHandler.cs",
+          "line": 91,
+          "claim": "Reserve precedes create."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/AmendTypeIIObservationPeriodHandler.cs",
+          "line": 62,
+          "claim": "Pending hold precedes amendment."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/AmendTypeIIObservationPeriodHandler.cs",
+          "line": 75,
+          "claim": "Cancellation only on returned failure."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/FreezeTypeIIPeriodCloseHandler.cs",
+          "line": 65,
+          "claim": "Freeze precedes release."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+          "line": 340,
+          "claim": "Both held and current date ranges block admission."
+        }
+      ],
+      "interleaving": [
+        "Start reserves calendar dates then process exits before period creation.",
+        "Amend reserves second range then exits before period update or completion.",
+        "Freeze commits closed snapshot then exits before calendar release."
+      ],
+      "impact": "Active or pending date ranges can stay blocked indefinitely; ordinary retries can recover some cases but user has to know and repeat exact original request.",
+      "correction": "Drive start/amend/close completion from durable facts via idempotent named owner commands; persist operation identity and release/abort proof. Keep hold-first non-overlap invariant, and never timeout-release an ambiguous committed intent.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "CHOREO-05",
+      "severity": "P2",
+      "title": "Different source imports acquire target holds in opposite order and can deadlock",
+      "affected": [
+        "ApplicationImportLedger",
+        "ApplicationImportExecutionReactor",
+        "ExecuteApplicationImportHandler",
+        "DeclaredApplication"
+      ],
+      "rules": [
+        11
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs",
+          "line": 83,
+          "claim": "Plan start/rows/seal persisted as one accepted operation."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportExecutionReactor.cs",
+          "line": 13,
+          "claim": "Validates exact source stream before recovery command."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ExecuteApplicationImportHandler.cs",
+          "line": 24,
+          "claim": "Target writes follow plan order."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs",
+          "line": 115,
+          "claim": "Batch input rows precede retirements, no target sort."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs",
+          "line": 70,
+          "claim": "Retirement blocks on other unsettled effects and vice versa."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportWriteGuard.cs",
+          "line": 15,
+          "claim": "Authoritative source settlement controls target visibility/release."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
+          "line": 122,
+          "claim": "Focused source test proves single-plan crash replay."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
+          "line": 438,
+          "claim": "Focused test proves durable rollback release."
+        }
+      ],
+      "interleaving": [
+        "Source X seals plan [linkA,retireB] while source Y seals [linkB,retireA]; both acceptance preflights occur before effects.",
+        "X records pending linkA and Y records pending linkB.",
+        "X retirementB sees Y unsettled effect and returns transient. Y retirementA sees X unsettled effect and returns transient.",
+        "Both checkpoint replays repeat their already-recorded first effect and wait on the second; no permanent rejection triggers rollback."
+      ],
+      "impact": "Both imports and manual changes to held targets can remain pending forever until a user cancels one plan. Single-plan crash-resume tests do not cover cross-source reservation cycles.",
+      "correction": "Canonical target acquisition order by ApplicationId for all plans/sources, with explicit held resource manifest/recovery and defined deadlock cancellation/release. Preserve all-or-none source publish and durable rollback visibility; do not weaken to projection checks.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "CHOREO-06",
+      "severity": "P2",
+      "title": "Relationship cleanup checkpoints discovery without proving directories cover source facts",
+      "affected": [
+        "TeamCleanupReactor",
+        "RoleCleanupReactor",
+        "MemberAuthorityCleanup"
+      ],
+      "rules": [
+        10,
+        11
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/DeprovisionMemberHandler.cs",
+          "line": 41,
+          "claim": "Deprovision source committed before later cleanup."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "line": 15,
+          "claim": "Unsealed team directory discovery."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "line": 25,
+          "claim": "Unsealed grant discovery."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "line": 36,
+          "claim": "Marks cleanup complete after current directory set only."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RegisterMemberHandler.cs",
+          "line": 13,
+          "claim": "Later registration can opportunistically retry cleanup."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TeamCleanupReactor.cs",
+          "line": 25,
+          "claim": "Team cleanup trusts paged directory."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs",
+          "line": 26,
+          "claim": "Role permission cleanup trusts directory."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs",
+          "line": 41,
+          "claim": "Role team cleanup trusts directory."
+        }
+      ],
+      "interleaving": [
+        "Relationship source assignment is committed but corresponding directory projector lags.",
+        "Deletion/deprovision fact is handled first; directory returns no child relationship.",
+        "Reactor checkpoints deletion or cleanup-complete fact is emitted.",
+        "Directory later exposes old relationship; no new deletion fact is emitted to repeat cleanup."
+      ],
+      "impact": "Cleanup can declare completion while orphan assignments/grants remain. Existing source eligibility checks may deny obsolete authority, so this finding does not by itself prove unauthorized access.",
+      "correction": "Use source-complete checkpoint/epoch proof and receiver-owned terminal removal commands, or authoritative per-owner discovery. Record recoverable manifest/cleanup obligation; repeat after projection catch-up rather than accepting incomplete enumeration. Make absence removal a safe exact no-op for cleanup keys without hiding genuinely foreign targets.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "CHOREO-07",
+      "severity": "P2",
+      "title": "Email delivery has at-least-once effects and conflates uncertain transport failure with rejection",
+      "affected": [
+        "EmailChallengeDeliveryReactor",
+        "TenantInvitationDeliveryReactor",
+        "IdentityRecoveryNoticeReactor"
+      ],
+      "rules": [
+        11
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "line": 52,
+          "claim": "SMTP send before save."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "line": 61,
+          "claim": "All noncancel exceptions treated failed."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
+          "line": 53,
+          "claim": "Same pattern invitation send."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/IdentityRecoveryNoticeReactor.cs",
+          "line": 18,
+          "claim": "Notice sends directly before checkpoint."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/SmtpEmailChallengeDelivery.cs",
+          "line": 50,
+          "claim": "Stable Message-ID then ordinary SMTP send."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
+          "line": 114,
+          "claim": "Existing digest processor demonstrates claim-before-send and explicit Unknown alternative."
+        }
+      ],
+      "interleaving": [
+        "SMTP relay accepts message. Process dies or storage/checkpoint write fails before delivery success recorded.",
+        "Source event replays and same message is sent again; deterministic Message-ID alone does not guarantee relay dedup.",
+        "A transport exception after relay acceptance is recorded as terminal failed; any explicit reissue can repeat same accepted intent while application claims failure."
+      ],
+      "impact": "Source admits duplicate verification/invitation/security notices after send-before-save/checkpoint, and can label an accepted message failed after ambiguous SMTP exception. Whether duplicates require remediation depends on the product delivery policy; no exactly-once guarantee is inferred.",
+      "correction": "Document accepted at-least-once delivery semantics. Where uncertain sends must not be blindly retried or falsely classified, use durable claim-before-send with stable effect key, distinguish definite rejection from Unknown, and reconcile or require evidence-backed reissue. Preserve original causation in the process ledger.",
+      "confidence": "confirmed_source_behavior_delivery_policy_needs_confirmation",
+      "policyQuestion": "No exactly-once SMTP requirement is established by this audit. At-least-once duplicate delivery may be an accepted policy; confirm it explicitly. Transport exception classification is source-confirmed and can label an accepted message failed."
+    },
+    {
+      "id": "CHOREO-08",
+      "severity": "P2",
+      "title": "Tenant slug outcome receiver is not replay-safe and can block the global checkpoint",
+      "affected": [
+        "TenantRegistrationReactor",
+        "TenantSlugReactor",
+        "Tenant"
+      ],
+      "rules": [
+        20
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/RegisterTenantHandler.cs",
+          "line": 29,
+          "claim": "Request ID chooses stable tenant create stream."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/RegisterTenantSlugAvailabilityGuard.cs",
+          "line": 20,
+          "claim": "Preflight explicitly advisory."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs",
+          "line": 14,
+          "claim": "Committed registration fans out to owner commands."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs",
+          "line": 14,
+          "claim": "Slug owner decision commands target Tenant."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+          "line": 152,
+          "claim": "RejectSlug lacks exact terminal retry handling."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+          "line": 25,
+          "claim": "Admin grants before triggering assignment."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/ActivateTenantHandler.cs",
+          "line": 30,
+          "claim": "Activation waits source membership and read prerequisites."
+        }
+      ],
+      "interleaving": [
+        "Slug owner rejects registration; TenantSlugReactor calls RejectSlug, which persists TenantSlugRejected.",
+        "Checkpoint save fails. On replay RejectSlug sees tenant already Rejected, not Pending, and returns permanent Conflict.",
+        "For successful confirmation, caller can start surrender after confirmation but before replay; ConfirmSlug on Surrendering likewise conflicts."
+      ],
+      "impact": "One ordinary crash/checkpoint failure can prevent global slug reactor advancing to later tenant slug decisions, including its own later surrender acknowledgement.",
+      "correction": "Record exact processed slug decision key/outcome and return historical success for same decision after later state progression; reject changed intent. Treat proven already-resolved/superseded source as terminal no-op and retain authoritative uniqueness in slug owner.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "CHOREO-09",
+      "severity": "P2",
+      "title": "Obsolete or dependency-blocked impact reactions return permanent conflicts",
+      "affected": [
+        "LinkImpactReviewWorkReactor",
+        "SystemDescriptionDecisionReactor",
+        "RecordSignificantChangeSystemDescriptionDecisionHandler"
+      ],
+      "rules": [
+        11,
+        20
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Changes/LinkImpactReviewWorkHandler.cs",
+          "line": 24,
+          "claim": "Current-only receiver can reject obsolete trigger."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs",
+          "line": 47,
+          "claim": "Description event dispatches to current assessment."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/RecordSignificantChangeSystemDescriptionDecisionHandler.cs",
+          "line": 41,
+          "claim": "Race is permanent Conflict."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
+          "line": 221,
+          "claim": "Missing work link returns state conflict with no transient semantics."
+        }
+      ],
+      "interleaving": [
+        "Change assessment fact waits in reactor queue; a successor content version becomes current before reaction executes. LinkImpactReviewWorkHandler rejects old cause with non-transient Conflict.",
+        "Or description decision reaction runs before independent work-link reactor; current owner refuses missing links with non-transient conflict.",
+        "Framework retains checkpoint after error; receiver can never accept obsolete version, so per-tenant queue is stuck or workload failure budget exhausts."
+      ],
+      "impact": "Later valid change/description facts behind obsolete cause may not be processed; an ordinary dependency lag can be escalated as permanent failure.",
+      "correction": "Distinguish pending current dependency (transient) from proven superseded historical cause (terminal no-op/disposition). Use exact source cause and stable business decision key; never let old trigger decide new assessment.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "CHOREO-10",
+      "severity": "P2",
+      "title": "Generated due-occurrence fact has no downstream materialization consumer",
+      "affected": [
+        "TypeIIPeriod",
+        "GenerateDueControlOccurrencesHandler"
+      ],
+      "rules": [
+        11
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/GenerateDueControlOccurrencesHandler.cs",
+          "line": 20,
+          "claim": "Handler ends after TypeIIPeriod batch event."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 137,
+          "claim": "Comment promises downstream scheduler may materialize retained batch."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 170,
+          "claim": "Only generated event emitted."
+        },
+        {
+          "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+          "line": 1317,
+          "claim": "Complete33-reactor registry has no generated occurrence consumer."
+        }
+      ],
+      "interleaving": [
+        "Caller invokes generation; TypeIIPeriod records selected occurrence IDs and returns success.",
+        "No registered or unregistered source consumer creates/updates corresponding occurrence owners from DueControlOccurrencesGenerated.",
+        "Restart replays batch into same period only; there is no continuation to recover."
+      ],
+      "impact": "The current path proves durable selection only, although comments describe later materialization. If generation is expected to produce operating work, accepted intent stops at a technical receipt.",
+      "correction": "Define generation contract explicitly. If it creates work, add committed-fact reactor issuing stable ID commands to occurrence owners with correct admission proofs/recovery. If intentionally selection-only, reclassify and name it accordingly; no false completion claim.",
+      "confidence": "source_gap_contract_intent_needs_confirmation"
+    }
+  ]
+}
