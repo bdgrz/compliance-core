@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -13,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 public sealed class ExaminationSignOff : Aggregate
 {
     const int MaximumItems = 1000;
-    const int MaximumEventBytes = 128 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 4000;
     static readonly HashSet<string> ExecutiveRoles = new(StringComparer.OrdinalIgnoreCase)
         { "ceo", "ciso" };
@@ -55,7 +56,7 @@ public sealed class ExaminationSignOff : Aggregate
             normalized.Decision, 1, actorMemberId, signer.Role, approverDisplay.Trim(),
             signedOffAt, signedOffAt);
         var ev = new ExaminationSignedOff(_tenantId, Id, 1, actorMemberId, state, signedOffAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The complete examination sign-off exceeds the bounded event payload.");
         RaiseEvent(ev);
         return null;

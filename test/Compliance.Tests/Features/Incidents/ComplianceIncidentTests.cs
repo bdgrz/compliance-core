@@ -18,6 +18,26 @@ public sealed class ComplianceIncidentTests
     static readonly DateTimeOffset Now = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public void ShouldRejectOversizedConcreteEventGivenIndividuallyValidIncidentFields()
+    {
+        // Arrange
+        var incident = NewIncident();
+        var scenario = new AggregateScenario<ComplianceIncidentAggregate>(incident);
+        var content = Content() with
+        {
+            AffectedSystemIds = Enumerable.Range(0, 1000).Select(_ => Uuid.CreateVersion4()).ToArray(),
+            EvidenceArtifactIds = Enumerable.Range(0, 1000).Select(_ => Uuid.CreateVersion4()).ToArray(),
+        };
+
+        // Act
+        var failure = incident.Record(content, RecorderId, "Compliance lead", Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
     public void ShouldRecordNativeIncidentWithoutInventingSourceReferenceGivenManualCapture()
     {
         // Arrange

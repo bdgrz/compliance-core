@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -10,7 +11,7 @@ namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 public sealed class MethodologyTemplateContribution : Aggregate
 {
     const int MaximumTextLength = 2000;
-    const int MaximumEventBytes = 128 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     static readonly HashSet<string> RecordKinds = new(StringComparer.Ordinal)
         { "control", "policy", "evidence_request", "risk" };
 
@@ -309,7 +310,7 @@ public sealed class MethodologyTemplateContribution : Aggregate
         state.UpdatedAt,
     });
     static string Digest<T>(T value) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(value))).ToLowerInvariant();
-    static bool Fits<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value).Length <= MaximumEventBytes;
+    static bool Fits(DomainEvent value) => DomainEventPayload.Size(value) <= MaximumEventBytes;
     static bool Bounded(string? value, int min, int max) => value is not null && value.Trim().Length >= min &&
         value.Trim().Length <= max && !value.Any(char.IsControl);
     static bool Token(string? value, int max) => Bounded(value, 1, max) && value!.Trim().All(character =>

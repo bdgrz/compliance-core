@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Versioning;
@@ -12,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 public sealed class AuditOutcome : Aggregate
 {
     const int MaximumTextLength = 4000;
-    const int MaximumEventBytes = 64 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
 
     readonly Uuid _tenantId;
     readonly Uuid _programId;
@@ -100,7 +101,7 @@ public sealed class AuditOutcome : Aggregate
 
     static string Digest<T>(T content) => Convert.ToHexString(
         SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(content))).ToLowerInvariant();
-    static bool Fits(DomainEvent ev) => JsonSerializer.SerializeToUtf8Bytes(ev).Length <= MaximumEventBytes;
+    static bool Fits(DomainEvent ev) => DomainEventPayload.Size(ev) <= MaximumEventBytes;
     static CommandFailure Invalid(string message) => CommandFailure.InvalidContent(message);
     static bool Bounded(string? value, int minimum, int maximum) => value is not null &&
         value.Trim().Length >= minimum && value.Trim().Length <= maximum;

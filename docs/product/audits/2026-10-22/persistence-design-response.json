@@ -1,0 +1,30 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "design": {
+      "type": "choice",
+      "choice": "A",
+      "confidence": 0.97,
+      "probabilities": {
+        "A": 0.98,
+        "B": 0.0,
+        "C": 0.01,
+        "needs_refinement": 0.01
+      }
+    },
+    "validationBoundary": {
+      "type": "choice",
+      "choice": "known_stream_limit",
+      "confidence": 1.0,
+      "probabilities": {
+        "known_stream_limit": 1.0,
+        "all_persistence_errors": 0.0,
+        "none": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 3134,
+    "output_tokens": 97
+  }
+}

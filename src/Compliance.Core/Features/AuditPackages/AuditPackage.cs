@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Security.Cryptography;
@@ -22,7 +23,7 @@ public sealed class AuditPackage : Aggregate
     const int MaximumValidationFindings = 256;
     const int MaximumDisclosures = 64;
     const int MaximumDeliveries = 128;
-    const int MaximumEventBytes = 512 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumNameLength = 200;
     const int MaximumTextLength = 2000;
     const int MaximumTokenLength = 100;
@@ -1054,5 +1055,5 @@ public sealed class AuditPackage : Aggregate
 
     static CommandFailure Invalid(string message) => CommandFailure.InvalidContent(message);
 
-    static bool Fits(DomainEvent ev) => JsonSerializer.SerializeToUtf8Bytes(ev).Length <= MaximumEventBytes;
+    static bool Fits(DomainEvent ev) => DomainEventPayload.Size(ev) <= MaximumEventBytes;
 }

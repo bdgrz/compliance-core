@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -17,7 +18,7 @@ public sealed class AuditPopulation : Aggregate
     const int MaximumSources = 1000;
     const int MaximumVersions = 64;
     const int MaximumExports = 256;
-    const int MaximumEventBytes = 512 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 4000;
     const int MaximumFields = 128;
     const int MaximumFieldValueLength = 2000;
@@ -436,7 +437,7 @@ public sealed class AuditPopulation : Aggregate
                 !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The audit-population transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The complete audit-population state exceeds the bounded event payload.");
         RaiseEvent(ev);
         return null;

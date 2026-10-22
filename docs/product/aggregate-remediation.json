@@ -22,15 +22,19 @@
     {
       "order": 0,
       "name": "Tracking and CI",
-      "state": "awaiting_merged_readback",
-      "completedPullRequests": [],
-      "issue": 1028
+      "state": "complete",
+      "completedPullRequests": [
+        1029
+      ],
+      "issue": 1028,
+      "mergedCommit": "416104ab6ce6ae4acc070dcdf254dc3582c1e754"
     },
     {
       "order": 1,
       "name": "Persistence safety",
-      "state": "pending",
-      "completedPullRequests": []
+      "state": "awaiting_merged_readback",
+      "completedPullRequests": [],
+      "issue": 1030
     },
     {
       "order": 2,
@@ -188,8 +192,15 @@
       "deliveryFamilies": [
         1
       ],
-      "state": "pending",
-      "evidence": []
+      "state": "awaiting_merged_readback",
+      "evidence": [
+        {
+          "issue": 1030,
+          "implementation": "src/Compliance.Core/Hosting/Persistence",
+          "proof": "test/Compliance.Tests/Hosting/Persistence",
+          "scope": "Fourteen concrete payload guards, other oversized nominal budgets, attributed whole-batch preflight, actual KV operation overhead, notifier forwarding and request validation mapping. Structural owner/content corrections remain separate."
+        }
+      ]
     },
     {
       "id": "ROOT-01",

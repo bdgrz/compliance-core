@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -19,7 +20,7 @@ public sealed class TypeIIPeriod : Aggregate
     const int MaximumOccurrences = 10000;
     const int MaximumAmendments = 64;
     const int MaximumOccurrenceGenerationBatches = 256;
-    const int MaximumEventBytes = 512 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 2000;
     static readonly HashSet<string> ExecutiveRoles = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -169,7 +170,7 @@ public sealed class TypeIIPeriod : Aggregate
             throughDate, ids, actorMemberId, actorDisplay.Trim(), generatedAt);
         var ev = new DueControlOccurrencesGenerated(_tenantId, Id, current.Revision + 1,
             generationKey, throughDate, ids, actorMemberId, actorDisplay.Trim(), generatedAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The occurrence generation batch exceeds the bounded event payload.");
 
         RaiseEvent(ev);
@@ -425,7 +426,7 @@ public sealed class TypeIIPeriod : Aggregate
                 !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The Type II period transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The complete Type II period state exceeds the bounded event payload.");
         RaiseEvent(ev);
         return null;

@@ -1,0 +1,31 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "risk": {
+      "type": "choice",
+      "choice": "no_demonstrated_gap",
+      "confidence": 0.51,
+      "probabilities": {
+        "payload_alias_after_preflight": 0.24,
+        "notification_capability": 0.02,
+        "framing_formula": 0.11,
+        "no_demonstrated_gap": 0.63
+      }
+    },
+    "snapshot": {
+      "type": "choice",
+      "choice": "owned_roundtrip_snapshot",
+      "confidence": 1.0,
+      "probabilities": {
+        "owned_roundtrip_snapshot": 1.0,
+        "ignore_mutation": 0.0,
+        "unbounded_receipts": 0.0,
+        "upstream_only": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 4140,
+    "output_tokens": 127
+  }
+}

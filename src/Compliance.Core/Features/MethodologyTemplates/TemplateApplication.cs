@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -11,7 +12,7 @@ public sealed class TemplateApplication : Aggregate
 {
     const int MaximumDrafts = 100;
     const int MaximumSuccessorDecisions = 64;
-    const int MaximumEventBytes = 256 * 1024;
+    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 2000;
 
     readonly Uuid _tenantId;
@@ -193,7 +194,7 @@ public sealed class TemplateApplication : Aggregate
             (creating ? _current is not null : _current is null || !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The template-application transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
+        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The template-application snapshot exceeds the bounded event payload.");
         RaiseEvent(ev);
         return null;

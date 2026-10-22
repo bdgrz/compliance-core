@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.AuditPackages;
@@ -1521,6 +1522,7 @@ public static class ComplianceServiceCollectionExtensions
                     Cntryl.Fitz.KvDurability.Sync))
             .RequireAuthorization(options => options.AllowAnonymous<StartIdentityRecovery>());
 
+        services.AddPersistenceSafety();
         services.AddHostedService<PlatformOperatorRosterBootstrap>();
         return portia;
     }
