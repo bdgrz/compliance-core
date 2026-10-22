@@ -24,22 +24,21 @@ public sealed class PlatformOperatorRosterBootstrap(IServiceScopeFactory scopes,
             throw new InvalidOperationException(
                 "Configure PlatformOperators:UserIds to seed the initial operator roster.");
 
+        var command = new SeedPlatformOperatorRoster(PlatformOperatorRoster.CreationId,
+            [.. configuration.BootstrapUserIds]);
+        var bus = services.GetRequiredService<IRequestBus>();
+        Result result;
         try
         {
-            var result = await services.GetRequiredService<IRequestBus>().SendAsync(
-                new SeedPlatformOperatorRoster([.. configuration.BootstrapUserIds]),
-                RequestActor.System, cancellationToken).ConfigureAwait(false);
-            if (!result.IsSuccess)
-                throw new InvalidOperationException($"Operator roster bootstrap failed: {result.Error.Message}");
+            result = await bus.SendAsync(command, RequestActor.System, cancellationToken).ConfigureAwait(false);
         }
         catch (EventStreamConcurrencyException)
         {
-            // Another host may have seeded the fixed stream at the same time.
-            roster = await reader.HydrateAsync(new PlatformOperatorRoster(), cancellationToken)
-                .ConfigureAwait(false);
-            if (!roster.IsInitialized)
-                throw;
+            // Resolve the exact accepted creation after another host won the append.
+            result = await bus.SendAsync(command, RequestActor.System, cancellationToken).ConfigureAwait(false);
         }
+        if (!result.IsSuccess)
+            throw new InvalidOperationException($"Operator roster bootstrap failed: {result.Error.Message}");
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
