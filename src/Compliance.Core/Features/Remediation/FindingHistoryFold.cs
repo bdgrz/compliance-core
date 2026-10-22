@@ -57,6 +57,8 @@ public sealed class FindingHistoryFold
         ulong lastSourceProgramVersion = 0;
         DateTimeOffset? priorOccurredAt = null;
         FindingHistoryEventImported? pendingImport = null;
+        FindingRaisedV2? pendingCreation = null;
+        var requests = new HashSet<Uuid>();
 
         await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
         {
@@ -65,6 +67,20 @@ public sealed class FindingHistoryFold
                 metadata.AggregateVersion != expectedVersion || metadata.OccurredOn == default ||
                 priorOccurredAt is { } prior && metadata.OccurredOn < prior)
                 throw new InvalidOperationException("The finding stream history is invalid.");
+
+            var isInitial = false;
+            if (pendingCreation is { } creation)
+            {
+                if (!FindingEventFacts.IsInitialActionFor(creation, record.Event))
+                    throw new InvalidOperationException("The routed finding creation pair is invalid.");
+                pendingCreation = null;
+                isInitial = true;
+            }
+            if (FindingEventFacts.RequestId(record.Event) is { } requestId &&
+                (requestId == Uuid.Empty || !isInitial && !requests.Add(requestId)))
+                throw new InvalidOperationException("A finding request identity appears more than once.");
+            if (record.Event is FindingRaisedV2 { InitialActionSha256: not null } raised)
+                pendingCreation = raised;
 
             if (record.Event is FindingHistoryEventImported imported)
             {
@@ -121,7 +137,7 @@ public sealed class FindingHistoryFold
             expectedVersion++;
         }
 
-        if (pendingImport is not null)
+        if (pendingImport is not null || pendingCreation is not null)
             throw new InvalidOperationException(
                 "The finding stream ends with an unpaired legacy-import marker.");
 
@@ -137,6 +153,7 @@ public sealed class FindingHistoryFold
         entry = null!;
         acceptance = null;
         closure = null;
+        domainEvent = FindingEventFacts.Business(domainEvent);
         switch (domainEvent)
         {
             case FindingRaised ev when InScope(ev.TenantId, ev.ProgramId, ev.FindingId,

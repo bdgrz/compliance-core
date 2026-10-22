@@ -14,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 static class TypeIIPlanSourceValidator
 {
     public static async ValueTask<Result<TypeIIPlanSourceValidation>> ValidateAsync(
-        IAggregateReader reader, Uuid tenantId, Uuid programId, Uuid examinationId,
+        IAggregateReader reader, IDomainEventReader events, Uuid tenantId, Uuid programId, Uuid examinationId,
         TypeIIPlanContent content, DateTimeOffset proposedAt, CancellationToken ct)
     {
         if (content is null || content.ExaminationId != examinationId ||
@@ -64,7 +64,7 @@ static class TypeIIPlanSourceValidator
                 source.Kind == "change" && source.RecordId == change.ChangeId)))
             return Failure(RequestErrorKind.Conflict,
                 "Every carried-forward source, gap, and required change must belong to the exact frozen baseline.");
-        var findings = await ValidateCarriedForwardFindingsAsync(reader, tenantId, programId,
+        var findings = await ValidateCarriedForwardFindingsAsync(reader, events, tenantId, programId,
             content, proposedAt, ct).ConfigureAwait(false);
         if (!findings.IsSuccess)
             return Result<TypeIIPlanSourceValidation>.Failure(findings.Error!);
@@ -132,13 +132,15 @@ static class TypeIIPlanSourceValidator
             source.Revision == reference.Version &&
             HashEquals(source.ContentSha256, reference.ContentSha256)));
 
-    static async ValueTask<Result> ValidateCarriedForwardFindingsAsync(IAggregateReader reader,
+    static async ValueTask<Result> ValidateCarriedForwardFindingsAsync(IAggregateReader reader, IDomainEventReader events,
         Uuid tenantId, Uuid programId, TypeIIPlanContent content, DateTimeOffset asOf,
         CancellationToken ct)
     {
-        var ledger = await reader.HydrateAsync(new RemediationLedger(tenantId, programId), ct)
+        var source = await new FindingReadSource(reader, events).ReadAsync(tenantId, programId, asOf, ct)
             .ConfigureAwait(false);
-        var current = ledger.ReadAll(asOf);
+        if (!source.IsSuccess)
+            return Result.Failure(source.Error);
+        var current = source.Value.Findings;
         var required = current.Where(finding => finding.Status is RemediationLedger.Open or
             RemediationLedger.Remediated).ToArray();
         var planned = content.CarriedForwardGaps.Where(gap => gap.SourceKind == "finding")
@@ -153,7 +155,7 @@ static class TypeIIPlanSourceValidator
             if (gap is null)
                 return Conflict("A current finding is missing from the Type II opening plan.");
             var identity = FindingContentIdentityFactory.Create(finding,
-                ledger.ReadClosures(finding.FindingId));
+                source.Value.ReadClosures(finding.FindingId));
             var accepted = finding.ReadinessStatus == RemediationLedger.Accepted;
             if (gap.SourceVersionId != identity.VersionId || gap.SourceVersion != identity.Revision ||
                 !HashEquals(gap.SourceSha256, identity.ContentSha256) ||

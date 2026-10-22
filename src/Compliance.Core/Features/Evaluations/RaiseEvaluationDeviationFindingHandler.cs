@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Evaluations;
 ///     due in 30 days at medium severity, matching the occurrence-finding product default.
 /// </summary>
 public sealed class RaiseEvaluationDeviationFindingHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock)
+    IAggregateReader reader, IDomainEventReader events, TimeProvider clock)
     : IRequestHandler<RaiseEvaluationDeviationFinding>
 {
     public const string ProcessId = "reactor:" + ControlEvaluationDeviationFindingReactor.WorkloadName;
@@ -36,7 +36,7 @@ public sealed class RaiseEvaluationDeviationFindingHandler(IAggregateExecutor ex
         var now = clock.GetUtcNow();
         var actor = ActorReference.ForSystemProcess(ProcessId,
             ControlEvaluationDeviationFindingReactor.WorkloadName);
-        return await RoutedFinding.RaiseAsync(executor, context, request.TenantId,
+        return await RoutedFinding.RaiseAsync(executor, reader, events, context, request.TenantId,
             request.ProgramId, request.FindingId,
             new FindingSource("evaluation_deviation", deviation.DeviationId,
                 request.EvaluationId.ToString(), deviation.Description),

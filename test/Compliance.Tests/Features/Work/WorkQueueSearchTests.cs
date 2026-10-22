@@ -216,8 +216,10 @@ public sealed class WorkQueueSearchTests
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var client = new InMemoryKvClient();
         var evidence = new FitzEvidenceWorkItemDirectory(client);
-        var corrective = new FitzCorrectiveActionWorkItemDirectory(client);
-        var closure = new FitzFindingClosureWorkItemDirectory(client);
+        await using var findingScope = fixture.Provider.CreateAsyncScope();
+        var findingSource = new FindingReadSource(findingScope.ServiceProvider.GetRequiredService<IAggregateReader>(), events);
+        var corrective = new FitzCorrectiveActionWorkItemDirectory(client, findingSource, TimeProvider.System);
+        var closure = new FitzFindingClosureWorkItemDirectory(client, findingSource, TimeProvider.System);
         await CatchUpAsync(events, fixture.TenantId, evidence, evidence, evidence.ApplyAsync);
         await CatchUpAsync(events, fixture.TenantId, corrective, corrective, corrective.ApplyAsync);
         await CatchUpAsync(events, fixture.TenantId, closure, closure, closure.ApplyAsync);

@@ -20,6 +20,34 @@ public sealed class FindingTypeIBaselineSourceContributorTests
     static readonly DateTimeOffset AfterTypeIDate = new(2026, 2, 1, 0, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public async Task ShouldCaptureRecordedFindingGivenDifferentBusinessAndEnvelopeTimes()
+    {
+        // Arrange
+        var fixture = await Fixture(includeLaterRevision: false, recordedAt: RaisedAt.AddSeconds(1));
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(1, Assert.Single(result.Value.Sources).Revision);
+    }
+
+    [Fact]
+    public async Task ShouldExcludeBackdatedFindingGivenEnvelopeRecordedAfterCutoff()
+    {
+        // Arrange
+        var fixture = await Fixture(includeLaterRevision: false, recordedAt: AfterTypeIDate);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Empty(result.Value.Sources);
+    }
+
+    [Fact]
     public async Task ShouldCaptureAuditorFindingAsOfTypeIDateGivenLaterRevision()
     {
         // Arrange
@@ -46,7 +74,7 @@ public sealed class FindingTypeIBaselineSourceContributorTests
         Assert.Matches("^[0-9a-f]{64}$", laterFinding.ContentSha256);
     }
 
-    static async Task<FixtureState> Fixture(bool includeLaterRevision)
+    static async Task<FixtureState> Fixture(bool includeLaterRevision, DateTimeOffset? recordedAt = null)
     {
         var raised = new FindingRaised(TenantId, ProgramId, FindingId, 1,
             new FindingSource("examination_item", ExaminationItemId, "item-v1",
@@ -58,7 +86,7 @@ public sealed class FindingTypeIBaselineSourceContributorTests
         {
             DomainEventSeed.Attach(raised, ProgramId, 1,
                 eventId: Uuid.CreateVersion5(FindingId, "finding_raised_v1"),
-                occurredOn: RaisedAt),
+                occurredOn: recordedAt ?? RaisedAt),
         };
         if (includeLaterRevision)
             sourceEvents.Add(DomainEventSeed.Attach(new FindingRevised(TenantId, ProgramId,

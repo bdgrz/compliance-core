@@ -449,7 +449,8 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             Reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             Writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-            Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader, Clock);
+            Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader,
+                (IDomainEventReader)scope.ServiceProvider.GetRequiredService<IEventStore>(), Clock);
         }
 
         public ProposeTypeIIOperatingPlan Request(TypeIIPlanContent content) =>

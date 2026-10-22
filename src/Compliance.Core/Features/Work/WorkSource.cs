@@ -31,7 +31,7 @@ static class WorkSource
 
     /// <summary>Loads open work; <paramref name="workItemId" /> narrows the result to one item.</summary>
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader,
+        IAggregateReader reader, IDomainEventReader events,
         Uuid tenantId, Uuid programId, DateOnly today, DateOnly horizon, DateTimeOffset now,
         Uuid? workItemId, IBoundaryDirectoryReader? boundaries,
         IReadOnlySet<string> projectedKinds,
@@ -79,18 +79,22 @@ static class WorkSource
         }
         if (!projectedKinds.Contains(FindingClosureWork.Kind))
         {
-            var findings = await reader.HydrateAsync(new RemediationLedger(tenantId, programId), ct)
+            var findings = await new FindingReadSource(reader, events).ReadAsync(tenantId, programId, now, ct)
                 .ConfigureAwait(false);
-            foreach (var finding in findings.ReadAll(now))
+            if (!findings.IsSuccess)
+                return Result<IReadOnlyList<WorkCandidate>>.Failure(findings.Error);
+            foreach (var finding in findings.Value.Findings)
                 if (FindingClosureWork.Candidate(finding) is { } candidate &&
                     (workItemId is not { } wantedClosure || candidate.WorkItemId == wantedClosure))
                     candidates.Add(candidate);
         }
         if (!projectedKinds.Contains(CorrectiveAction))
         {
-            var remediation = await reader.HydrateAsync(new RemediationLedger(tenantId, programId), ct)
+            var remediation = await new FindingReadSource(reader, events).ReadAsync(tenantId, programId, now, ct)
                 .ConfigureAwait(false);
-            foreach (var finding in remediation.ReadAll(now)
+            if (!remediation.IsSuccess)
+                return Result<IReadOnlyList<WorkCandidate>>.Failure(remediation.Error);
+            foreach (var finding in remediation.Value.Findings
                          .Where(static finding => finding.Status != RemediationLedger.Closed))
                 foreach (var action in finding.CorrectiveActions.Where(action =>
                              action.Status == RemediationLedger.Open &&

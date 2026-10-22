@@ -8,26 +8,41 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     assessment as the source version, and a control occurrence must have been recorded.
 /// </summary>
 public sealed class RaiseFindingHandler(IAggregateExecutor executor, IAggregateReader reader,
-    TimeProvider clock) : IRequestHandler<RaiseFinding, FindingRegistration>
+    IDomainEventReader events, TimeProvider clock) : IRequestHandler<RaiseFinding, FindingRegistration>
 {
     public async ValueTask<Result<FindingRegistration>> HandleAsync(
         IRequestContext<RaiseFinding> context, CancellationToken ct)
     {
         var request = context.Request;
+        var actor = OperationsActor.From(context.Actor, request.TenantId);
+        var now = clock.GetUtcNow();
+        var selected = await reader.HydrateAsync(new FindingAggregate(request.TenantId, request.ProgramId,
+            context.RequestId, context.RequestId), ct).ConfigureAwait(false);
+        if (selected.HasSelectedReceipt)
+        {
+            var failure = selected.Raise(context.RequestId, request.Source, request.Title, request.Description,
+                request.Severity, request.AffectedScope, request.OwnerMemberId, request.DueOn, request.Links ?? [],
+                ActorReference.ForMember(actor.MemberId, actor.Display), now);
+            return failure is null ? Result<FindingRegistration>.Success(new FindingRegistration(context.RequestId, 1))
+                : Result<FindingRegistration>.Failure(failure.ToRequestError());
+        }
         if (await SourceErrorAsync(request, ct).ConfigureAwait(false) is { } sourceError)
             return Result<FindingRegistration>.Failure(sourceError);
         if (!await RemediationCommands.IsActiveMemberAsync(reader, request.TenantId,
                 request.OwnerMemberId, ct).ConfigureAwait(false))
             return Result<FindingRegistration>.Failure(RemediationCommands.InactiveOwner());
-        var actor = OperationsActor.From(context.Actor, request.TenantId);
-        return await executor.ExecuteAsync(new RemediationLedger(request.TenantId,
-                request.ProgramId),
-            ledger =>
+        var ready = await FindingStreamRouting.EnsureReadyAsync(executor, reader, events, context,
+            request.TenantId, request.ProgramId, now, ct).ConfigureAwait(false);
+        if (!ready.IsSuccess)
+            return Result<FindingRegistration>.Failure(ready.Error);
+        return await executor.ExecuteAsync(new FindingAggregate(request.TenantId,
+                request.ProgramId, context.RequestId, context.RequestId),
+            finding =>
             {
-                var failure = ledger.Raise(context.RequestId, request.Source, request.Title,
+                var failure = finding.Raise(context.RequestId, request.Source, request.Title,
                     request.Description, request.Severity, request.AffectedScope,
                     request.OwnerMemberId, request.DueOn, request.Links ?? [],
-                    ActorReference.ForMember(actor.MemberId, actor.Display), clock.GetUtcNow());
+                    ActorReference.ForMember(actor.MemberId, actor.Display), now);
                 return CommandFailureRequestAdapter.ToOutcome(failure,
                     new FindingRegistration(context.RequestId, 1));
             }, context, ct).ConfigureAwait(false);

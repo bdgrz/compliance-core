@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -8,24 +9,54 @@ namespace Bdgrz.Compliance.Tests.Features.Remediation;
 public sealed class FindingAggregateBoundaryTests
 {
     [Fact]
+    public void ShouldRejectEmptySourceBootstrapAfterConcurrentLegacyAppendGivenStaleFenceSnapshot()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var findingId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
+        var raised = DomainEventSeed.Attach(new FindingRaised(tenantId, programId, findingId, 1,
+            new FindingSource("manual", null, null, "Gap."), "Gap", "Gap found.", "medium",
+            "All", Uuid.CreateVersion4(), DateOnly.FromDateTime(now.UtcDateTime).AddDays(10),
+            [], actor, now), programId, 1, occurredOn: now);
+        var sourceWithConcurrentWrite = new AggregateScenario<RemediationMigrationFenceAggregate>(
+            new RemediationMigrationFenceAggregate(tenantId, programId)).Given(raised).Aggregate;
+
+        // Act
+        var result = sourceWithConcurrentWrite.BeginPartitioning(
+            Uuid.CreateVersion5(programId, "finding-history-v1-empty-bootstrap"),
+            ActorReference.ForSystemProcess("migration:FindingHistoryV1",
+                "Finding history migration"), now.AddSeconds(1), expectedPreFenceProgramVersion: 0);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(CommandFailureCode.StateConflict, result.Code);
+        Assert.Empty(new AggregateScenario<RemediationMigrationFenceAggregate>(
+            sourceWithConcurrentWrite).PendingEvents);
+    }
+
+    [Fact]
     public void ShouldTreatExactRaiseRetryAsSuccessAndRejectConflictingReuseGivenFindingWasRaised()
     {
         // Arrange
         var now = DateTimeOffset.UtcNow;
         var actor = Bdgrz.Compliance.Features.AccessControl.ActorReference.ForMember(
             Uuid.CreateVersion4(), "Lead");
+        var requestId = Uuid.CreateVersion4();
         var finding = new FindingAggregate(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            Uuid.CreateVersion4());
+            Uuid.CreateVersion4(), requestId);
         var source = new FindingSource("manual", null, null, "Gap.");
         var owner = Uuid.CreateVersion4();
         var dueOn = DateOnly.FromDateTime(now.UtcDateTime).AddDays(10);
 
         // Act
-        var first = finding.Raise(source, "Gap", "Gap found.", "medium", "All", owner,
+        var first = finding.Raise(requestId, source, "Gap", "Gap found.", "medium", "All", owner,
             dueOn, [], actor, now);
-        var retry = finding.Raise(source, "Gap", "Gap found.", "medium", "All", owner,
+        var retry = finding.Raise(requestId, source, "Gap", "Gap found.", "medium", "All", owner,
             dueOn, [], actor, now);
-        var conflictingReuse = finding.Raise(source, "Different title", "Gap found.",
+        var conflictingReuse = finding.Raise(requestId, source, "Different title", "Gap found.",
             "medium", "All", owner, dueOn, [], actor, now);
 
         // Assert
@@ -326,7 +357,7 @@ public sealed class FindingAggregateBoundaryTests
         Assert.Equal(1UL, hydratedVersion);
 
         // Act
-        var result = finding.LinkAcceptance(staleHistory, 1, "waiver", Uuid.CreateVersion4(),
+        var result = finding.LinkAcceptance(Uuid.CreateVersion4(), staleHistory, 1, "waiver", Uuid.CreateVersion4(),
             null, now.AddDays(30), actor, now);
 
         // Assert

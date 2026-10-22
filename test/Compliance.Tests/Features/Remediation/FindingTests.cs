@@ -12,6 +12,57 @@ namespace Bdgrz.Compliance.Tests.Features.Remediation;
 public sealed class FindingTests
 {
     [Fact]
+    public async Task ShouldRecognizeOlderActionRequestGivenOwnerSuspendedAfterLaterRevision()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var registration = await fixture.AsAsync(fixture.LeadUserId, fixture.Raise(fixture.LeadMemberId));
+        var request = new AddCorrectiveAction(fixture.TenantId, fixture.ProgramId, registration.FindingId,
+            1, "Repair", fixture.OwnerMemberId, fixture.Today.AddDays(5));
+        var metadata = new RequestMetadata(Uuid.CreateVersion4(), Uuid.CreateVersion4(), null);
+        await fixture.Scenario(fixture.LeadUserId).GivenMetadata(metadata).When(request).ExpectSuccess();
+        await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(fixture.TenantId, fixture.ProgramId,
+            registration.FindingId, 2, "low", fixture.LeadMemberId, fixture.Today.AddDays(6),
+            "All", null, "Later triage"));
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new Member(fixture.TenantId,
+            fixture.OwnerUserId), member => member.Suspend(fixture.LeadMemberId, "Lead",
+                DateTimeOffset.UtcNow, "Owner left"));
+        var before = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new FindingAggregate(fixture.TenantId, fixture.ProgramId, registration.FindingId));
+
+        // Act
+        var retry = await fixture.Scenario(fixture.LeadUserId).GivenMetadata(metadata).When(request).ExpectSuccess();
+        var after = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new FindingAggregate(fixture.TenantId, fixture.ProgramId, registration.FindingId));
+
+        // Assert
+        Assert.Equal(3, retry.Value.Revision);
+        Assert.Equal(before.Version, after.Version);
+    }
+
+    [Fact]
+    public async Task ShouldWriteToPerFindingStreamGivenEmptyLegacySource()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var request = fixture.Raise(fixture.OwnerMemberId);
+
+        // Act
+        var registration = await fixture.AsAsync(fixture.LeadUserId, request);
+
+        // Assert
+        var migration = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new FindingMigrationAggregate(fixture.TenantId, fixture.ProgramId));
+        var target = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new FindingAggregate(fixture.TenantId, fixture.ProgramId, registration.FindingId));
+        var legacy = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new RemediationLedger(fixture.TenantId, fixture.ProgramId));
+        Assert.True(migration.IsComplete);
+        Assert.True(target.IsRecorded);
+        Assert.False(legacy.Contains(registration.FindingId));
+    }
+
+    [Fact]
     public async Task ShouldCloseAndReopenWithHistoryGivenVerifiedRemediation()
     {
         // Arrange

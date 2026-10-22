@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-10-21",
+  "capturedAt": "2026-10-22",
   "sourceCommit": "f054498a56b8e86f3d6019b5e09eb8784be05e8e",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The 2026-10-21 capture includes the in-progress, uncommitted per-finding migration changes for issue #1022; migration facts are classified separately from business aggregate facts, and FindingAggregate command routing remains an explicit issue-owned gap. The map now includes the bounded per-program migration coordinator and its named direct request route; regular FindingAggregate business command/read cutover remains open under #1022. The legacy fence is emitted by a lightweight aggregate on the source stream address, while RemediationLedger only reduces the marker to reject legacy writes. The seven legacy finding-scope checks are listed separately as source-stream replay guards, not as state-owning reducers.",
   "factReplayGuards": [
@@ -41,13 +41,13 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 409,
-    "factsWithReducer": 388,
-    "factsWithAggregateEmitter": 381,
+    "domainEventContracts": 411,
+    "factsWithReducer": 392,
+    "factsWithAggregateEmitter": 385,
     "auditFactsWithoutReducer": 1,
-    "factsWithoutReducerOrEmitter": 20,
+    "factsWithoutReducerOrEmitter": 18,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 102,
+    "aggregateTypes": 103,
     "aggregateTypesWithCommandPath": 101,
     "requestContracts": 649,
     "commonRequestContracts": 647,
@@ -62,12 +62,12 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 591,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 37,
+    "unwiredAggregateProducerOperations": 41,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 10,
       "direct_reactor_executor": 6,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 20
+      "no_registered_request_route": 24
     },
     "factReplayGuardRows": 7
   },
@@ -1295,22 +1295,76 @@
       "note": ""
     },
     {
+      "fact": "AuditObservationCorrected",
+      "contract": "src/Compliance.Common/Features/Examinations/AuditObservationCorrected.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditObservation",
+          "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/AuditObservationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": "Jev-locked received observation owner; bounded current state and command-selected durable receipt. Public source-authorized handler path remains under #301."
+    },
+    {
       "fact": "AuditObservationFindingLinked",
       "contract": "src/Compliance.Common/Features/Examinations/AuditObservationFindingLinked.cs",
-      "reducers": [],
-      "emitters": [],
-      "testSymbolReferences": [],
-      "disposition": "confirmed_gap",
-      "note": "#301; blocked by #298 and #297"
+      "reducers": [
+        {
+          "aggregate": "AuditObservation",
+          "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/AuditObservationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": "Jev-locked received observation owner; bounded current state and command-selected durable receipt. Public source-authorized handler path remains under #301."
+    },
+    {
+      "fact": "AuditObservationManagementResponseRecorded",
+      "contract": "src/Compliance.Common/Features/Examinations/AuditObservationManagementResponseRecorded.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditObservation",
+          "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/AuditObservationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": "Jev-locked received observation owner; bounded current state and command-selected durable receipt. Public source-authorized handler path remains under #301."
     },
     {
       "fact": "AuditObservationRecorded",
       "contract": "src/Compliance.Common/Features/Examinations/AuditObservationRecorded.cs",
-      "reducers": [],
-      "emitters": [],
-      "testSymbolReferences": [],
-      "disposition": "confirmed_gap",
-      "note": "#301; blocked by #298 and #297"
+      "reducers": [
+        {
+          "aggregate": "AuditObservation",
+          "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/AuditObservationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": "Jev-locked received observation owner; bounded current state and command-selected durable receipt. Public source-authorized handler path remains under #301."
     },
     {
       "fact": "AuditOutcomeRecorded",
@@ -2967,8 +3021,8 @@
       "reducers": [],
       "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "confirmed_gap",
-      "note": "#545/#546; #285 and #269 remain open; M0-D27 #125 governs"
+      "disposition": "superseded_by_decision",
+      "note": "2026-10-22 Jev-locked reuse of canonical ArtifactEngagementHoldReleased; compatibility-only unused placeholder, no duplicate new business emission. Exact source/package/delivery/hold authority remains with the canonical owner."
     },
     {
       "fact": "DirectoryIndependenceReevaluated",
@@ -4401,8 +4455,8 @@
       "reducers": [],
       "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "confirmed_gap",
-      "note": "#545; blocked by #285 and #269; M0-D27 #125 governs"
+      "disposition": "superseded_by_decision",
+      "note": "2026-10-22 Jev-locked reuse of canonical ClientExportAttestPackageDeliveryRecorded; compatibility-only unused placeholder, no duplicate new business emission. Exact source/package/delivery/hold authority remains with the canonical owner."
     },
     {
       "fact": "OwnAttestRecordDeliveryVerified",
@@ -4410,8 +4464,8 @@
       "reducers": [],
       "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "confirmed_gap",
-      "note": "#545; blocked by #285 and #269; M0-D27 #125 governs"
+      "disposition": "superseded_by_decision",
+      "note": "2026-10-22 Jev-locked reuse of canonical ClientExportAttestPackageDeliveryRecorded; compatibility-only unused placeholder, no duplicate new business emission. Exact source/package/delivery/hold authority remains with the canonical owner."
     },
     {
       "fact": "OwnAttestRecordPackagePrepared",
@@ -4419,8 +4473,8 @@
       "reducers": [],
       "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "confirmed_gap",
-      "note": "#545; blocked by #285 and #269; M0-D27 #125 governs"
+      "disposition": "superseded_by_decision",
+      "note": "2026-10-22 Jev-locked reuse of canonical ClientExportBuilt; compatibility-only unused placeholder, no duplicate new business emission. Exact source/package/delivery/hold authority remains with the canonical owner."
     },
     {
       "fact": "PartnerIndependenceEvaluationRecorded",
@@ -7872,6 +7926,24 @@
         "test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "AuditObservation",
+      "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+      "appliedFacts": [
+        "AuditObservationCorrected",
+        "AuditObservationFindingLinked",
+        "AuditObservationManagementResponseRecorded",
+        "AuditObservationRecorded"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/AuditObservationTests.cs"
+      ],
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 301,
+      "note": "Bounded received auditor observation/exception domain layer; public adapters remain disabled until exact examination/snapshot/finding source authorization is supplied under #301."
     },
     {
       "aggregate": "AuditOutcome",
@@ -26173,7 +26245,7 @@
       "note": "The nested IRequest is passed directly to AggregateExecutor; it is not dispatched."
     }
   ],
-  "scope": "Common/Core request and aggregate coverage; Core handler registrations are composed by AddCompliance. Two app-layer MCP forwarding adapters are inventoried separately because they pass requests into the Core bus and do not own aggregates.",
+  "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",
   "applicationAdapters": [
     {
       "request": "ReviseApplicationMcpInput",
@@ -26220,6 +26292,46 @@
       "ownerIssue": 285,
       "callerSources": [],
       "methodArgumentCount": 4
+    },
+    {
+      "fact": "AuditObservationCorrected",
+      "aggregate": "AuditObservation",
+      "method": "Correct",
+      "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 301,
+      "callerSources": [],
+      "methodArgumentCount": 8
+    },
+    {
+      "fact": "AuditObservationFindingLinked",
+      "aggregate": "AuditObservation",
+      "method": "LinkFinding",
+      "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 301,
+      "callerSources": [],
+      "methodArgumentCount": 6
+    },
+    {
+      "fact": "AuditObservationRecorded",
+      "aggregate": "AuditObservation",
+      "method": "Record",
+      "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 301,
+      "callerSources": [],
+      "methodArgumentCount": 5
+    },
+    {
+      "fact": "AuditObservationManagementResponseRecorded",
+      "aggregate": "AuditObservation",
+      "method": "Respond",
+      "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 301,
+      "callerSources": [],
+      "methodArgumentCount": 7
     },
     {
       "fact": "AuditPackageBuildProgressRecorded",

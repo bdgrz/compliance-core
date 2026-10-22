@@ -84,7 +84,7 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
         var today = todayOverride ?? DateOnly.FromDateTime(now.UtcDateTime);
         var projectedKinds = _accountableWorkItems.SelectMany(static reader =>
                 reader.ProjectedKinds).ToHashSet(StringComparer.Ordinal);
-        var work = await WorkSource.LoadAsync(reader, tenantId, programId, today,
+        var work = await WorkSource.LoadAsync(reader, queueConsistency.EventReader, tenantId, programId, today,
             today.AddDays(horizonDays), now, workItemId, boundaries,
             projectedKinds, ct)
             .ConfigureAwait(false);

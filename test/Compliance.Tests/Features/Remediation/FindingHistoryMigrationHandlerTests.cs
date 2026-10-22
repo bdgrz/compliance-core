@@ -196,6 +196,114 @@ public sealed class FindingHistoryMigrationHandlerTests
     }
 
     [Fact]
+    public async Task ShouldReadCompletedMigrationFromFindingAggregateGivenLegacyHistory()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var findingId = Uuid.CreateVersion4();
+        var ownerId = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
+        var dueOn = DateOnly.FromDateTime(Now.UtcDateTime).AddDays(14);
+        var raised = new FindingRaised(tenantId, programId, findingId, 1,
+            new FindingSource("manual", null, null, "Gap."), "Gap", "Gap found.",
+            "medium", "All", ownerId, dueOn, [], actor, Now);
+        var revised = new FindingRevised(tenantId, programId, findingId, 2, "high",
+            ownerId, dueOn.AddDays(10), "All users", "Access was too broad.",
+            "Narrowed the affected scope.", actor, Now.AddSeconds(1));
+        var sourceStream = new EventStreamAddress(tenantId.ToString(),
+            FindingAggregate.LegacySourceArea, programId.ToString());
+        await fixture.Events.AppendAsync(sourceStream, 0,
+        [
+            DomainEventSeed.Attach(raised, programId, 1, occurredOn: Now),
+            DomainEventSeed.Attach(revised, programId, 2, occurredOn: Now.AddSeconds(1)),
+        ]);
+        var legacy = await fixture.Reader.HydrateAsync(new RemediationLedger(tenantId, programId));
+        var expectedHistory = Assert.IsType<FindingView>(legacy.Read(findingId, Now)).History.ToArray();
+        var worker = RequestActor.CreateSystem(MigrationWorker, "bdgrz.system");
+        var migrationRequest = new MigrateFindingHistory(tenantId, programId,
+            Uuid.CreateVersion4());
+        Assert.True((await fixture.DispatchAsync(migrationRequest, worker)).IsSuccess);
+        var sourceRecords = await fixture.ReadAsync(sourceStream);
+        var fenceRecord = Assert.Single(sourceRecords, static record =>
+            record.Event is RemediationPartitioningStarted);
+        for (ulong offset = 0; offset < fenceRecord.ResourceOffset; offset++)
+            Assert.True((await fixture.DispatchAsync(migrationRequest with
+            {
+                ExpectedSourceOffset = offset,
+            }, worker)).IsSuccess);
+        Assert.True((await fixture.DispatchAsync(migrationRequest with
+        {
+            ExpectedSourceOffset = fenceRecord.ResourceOffset,
+        }, worker)).IsSuccess);
+
+        using var services = new ServiceCollection()
+            .AddSingleton<IDomainEventReader>(fixture.Events)
+            .AddSingleton<IAggregateReader>(new LegacySuppressingReader(fixture.Reader))
+            .AddSingleton<TimeProvider>(new FixedClock(Now))
+            .BuildServiceProvider();
+        var handler = ActivatorUtilities.CreateInstance<GetFindingHandler>(services);
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<GetFinding>(new GetFinding(
+            tenantId, programId, findingId), worker), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(2, result.Value.Revision);
+        Assert.Equal("high", result.Value.Severity);
+        Assert.Equal("Access was too broad.", result.Value.RootCause);
+        Assert.Equal(2, result.Value.History.Count);
+        Assert.Equal(expectedHistory, result.Value.History);
+    }
+
+    [Fact]
+    public async Task ShouldReadLegacyFindingWhileMigrationIsIncompleteGivenTargetPrefix()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var findingId = Uuid.CreateVersion4();
+        var ownerId = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
+        var dueOn = DateOnly.FromDateTime(Now.UtcDateTime).AddDays(14);
+        var raised = new FindingRaised(tenantId, programId, findingId, 1,
+            new FindingSource("manual", null, null, "Gap."), "Gap", "Gap found.",
+            "medium", "All", ownerId, dueOn, [], actor, Now);
+        var revised = new FindingRevised(tenantId, programId, findingId, 2, "high",
+            ownerId, dueOn.AddDays(10), "All users", "Access was too broad.",
+            "Narrowed the affected scope.", actor, Now.AddSeconds(1));
+        var sourceStream = new EventStreamAddress(tenantId.ToString(),
+            FindingAggregate.LegacySourceArea, programId.ToString());
+        await fixture.Events.AppendAsync(sourceStream, 0,
+        [
+            DomainEventSeed.Attach(raised, programId, 1, occurredOn: Now),
+            DomainEventSeed.Attach(revised, programId, 2, occurredOn: Now.AddSeconds(1)),
+        ]);
+        var worker = RequestActor.CreateSystem(MigrationWorker, "bdgrz.system");
+        var migrationRequest = new MigrateFindingHistory(tenantId, programId,
+            Uuid.CreateVersion4());
+        Assert.True((await fixture.DispatchAsync(migrationRequest, worker)).IsSuccess);
+        Assert.True((await fixture.DispatchAsync(migrationRequest with
+        {
+            ExpectedSourceOffset = 0,
+        }, worker)).IsSuccess);
+        var handler = new GetFindingHandler(fixture.Reader, fixture.Events,
+            new FixedClock(Now));
+
+        // Act
+        var result = await handler.HandleAsync(new RequestContext<GetFinding>(new GetFinding(
+            tenantId, programId, findingId), worker), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(2, result.Value.Revision);
+        Assert.Equal("high", result.Value.Severity);
+    }
+
+    [Fact]
     public async Task ShouldRejectUnregisteredMigrationWorkerGivenSystemActor()
     {
         // Arrange
@@ -263,6 +371,15 @@ public sealed class FindingHistoryMigrationHandlerTests
     sealed class FixedClock(DateTimeOffset now) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    sealed class LegacySuppressingReader(IAggregateReader inner) : IAggregateReader
+    {
+        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
+            CancellationToken ct = default) where TAggregate : Aggregate =>
+            aggregate is RemediationLedger
+                ? ValueTask.FromResult(aggregate)
+                : inner.HydrateAsync(aggregate, ct);
     }
 
     sealed class RecordingExecutor : IAggregateExecutor

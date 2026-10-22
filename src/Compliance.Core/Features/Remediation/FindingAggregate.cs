@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     One finding's bounded command state. Its stream is tenant and program scoped; audit history,
 ///     linked acceptances, and prior closures are reconstructed by read-side folds.
 /// </summary>
-public sealed class FindingAggregate : Aggregate
+public sealed partial class FindingAggregate : Aggregate
 {
     public const string Area = "findings";
     internal const string LegacySourceArea = "remediation";
@@ -47,7 +47,7 @@ public sealed class FindingAggregate : Aggregate
     FindingHistoryEventImported? _lastImported;
     FindingHistoryEventImported? _pendingImport;
 
-    public FindingAggregate(Uuid tenantId, Uuid programId, Uuid findingId)
+    public FindingAggregate(Uuid tenantId, Uuid programId, Uuid findingId, Uuid? selectedRequestId = null)
         : base(StreamId(programId, findingId), new EventStreamAddress(tenantId.ToString(), Area,
             StreamId(programId, findingId).ToString()))
     {
@@ -57,8 +57,16 @@ public sealed class FindingAggregate : Aggregate
         _tenantId = tenantId;
         _programId = programId;
         _findingId = findingId;
+        _selectedRequestId = selectedRequestId;
 
         On<FindingRaised>(Apply);
+        On<FindingRaisedV2>(ApplyNative);
+        On<FindingRevisedV2>(ApplyNative);
+        On<CorrectiveActionAddedV2>(ApplyNative);
+        On<CorrectiveActionCompletedV2>(ApplyNative);
+        On<FindingAcceptanceLinkedV2>(ApplyNative);
+        On<FindingClosedV2>(ApplyNative);
+        On<FindingReopenedV2>(ApplyNative);
         On<FindingRevised>(Apply);
         On<CorrectiveActionAdded>(Apply);
         On<CorrectiveActionCompleted>(Apply);
@@ -85,17 +93,26 @@ public sealed class FindingAggregate : Aggregate
     public IReadOnlyList<CorrectiveActionView> CorrectiveActions => _actions.AsReadOnly();
     public FindingClosureView? Closure => _closure;
 
-    public CommandFailure? Raise(FindingSource source, string title, string description,
+    public CommandFailure? Raise(Uuid requestId, FindingSource source, string title, string description,
         string severity, string affectedScope, Uuid ownerMemberId, DateOnly dueOn,
-        IReadOnlyList<FindingLink> links, ActorReference raisedBy, DateTimeOffset raisedAt)
+        IReadOnlyList<FindingLink> links, ActorReference raisedBy, DateTimeOffset raisedAt) =>
+        RaiseCore(requestId, source, title, description, severity, affectedScope, ownerMemberId,
+            dueOn, links, raisedBy, raisedAt, "manual", null);
+
+    CommandFailure? RaiseCore(Uuid requestId, FindingSource source, string title, string description,
+        string severity, string affectedScope, Uuid ownerMemberId, DateOnly dueOn,
+        IReadOnlyList<FindingLink> links, ActorReference raisedBy, DateTimeOffset raisedAt,
+        string creationKind, CorrectiveActionAddedV2? initialAction)
     {
         EnsureImportComplete();
         ArgumentNullException.ThrowIfNull(links);
+        if (CheckRequest(requestId) is { } requestFailure)
+            return requestFailure;
+        if (_selectedReceipt is not null)
+            return RetryRaise(source, title, description, severity, affectedScope, ownerMemberId,
+                dueOn, links, raisedBy, creationKind, initialAction);
         if (IsRecorded)
-            return _raised!.Source == source &&
-                   StringComparer.Ordinal.Equals(_raised.Title, title?.Trim())
-                ? null
-                : CommandFailure.StateConflict("The finding request was already recorded.");
+            return ChangedRequest();
         if (source is null || !SourceKinds.Contains(source.Kind) ||
             string.IsNullOrWhiteSpace(source.SourceText) || source.SourceText.Length > 8000 ||
             source.Version is { Length: > 200 } ||
@@ -115,14 +132,13 @@ public sealed class FindingAggregate : Aggregate
             return CommandFailure.InvalidContent(
                 "Each finding link needs a known kind and a reference of at most 500 characters.");
 
-        var ev = new FindingRaised(_tenantId, _programId, _findingId, 1, source, title.Trim(),
+        var ev = new FindingRaisedV2(requestId, _tenantId, _programId, _findingId, 1, source, title.Trim(),
             description.Trim(), severity, affectedScope.Trim(), ownerMemberId, dueOn,
             links.Select(static link => link with { Reference = link.Reference.Trim() }).ToArray(),
-            raisedBy, raisedAt);
-        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingRaised))
+            raisedBy, raisedAt, creationKind, initialAction is null ? null : FindingEventFacts.Hash(initialAction));
+        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingRaisedV2))
             return EventTooLarge();
-        RaiseEvent(ev);
-        return null;
+        return EmitNative(ev);
     }
 
     /// <summary>Imports one lineage-checked legacy fact while a program is fenced for migration.</summary>
@@ -180,15 +196,23 @@ public sealed class FindingAggregate : Aggregate
     /// <summary>Rejects a replay that ended after an import marker without its paired fact.</summary>
     public void EnsureImportComplete()
     {
+        if (_pendingCreation is not null)
+            throw new InvalidOperationException("The finding stream ends with an incomplete routed creation.");
         if (_pendingImport is not null)
             throw new InvalidOperationException(
                 "The finding stream ends with an unpaired legacy-import marker.");
     }
 
-    public CommandFailure? Revise(long expectedRevision, string severity, Uuid ownerMemberId,
+    public CommandFailure? Revise(Uuid requestId, long expectedRevision, string severity, Uuid ownerMemberId,
         DateOnly dueOn, string affectedScope, string? rootCause, string reason,
         ActorReference actor, DateTimeOffset at)
     {
+        if (CheckRequest(requestId) is { } requestFailure)
+            return requestFailure;
+        if (TryRetry(requestId, expectedRevision, out var retryFailure, severity: severity,
+                owner: ownerMemberId, due: dueOn, scope: affectedScope, cause: rootCause,
+                text: reason, actor: actor))
+            return retryFailure;
         if (Writable(expectedRevision) is { } blocked)
             return blocked;
         if (ValidateTriage(severity, ownerMemberId, dueOn) is { } triage)
@@ -201,21 +225,24 @@ public sealed class FindingAggregate : Aggregate
         if (_severity == severity && _ownerMemberId == ownerMemberId && _dueOn == dueOn &&
             _affectedScope == affectedScope.Trim() && _rootCause == cleanCause)
             return CommandFailure.InvalidContent("The finding revision changes nothing.");
-        var ev = new FindingRevised(_tenantId, _programId, _findingId, expectedRevision + 1,
+        var ev = new FindingRevisedV2(requestId, _tenantId, _programId, _findingId, expectedRevision + 1,
             severity, ownerMemberId, dueOn, affectedScope.Trim(), cleanCause, reason.Trim(), actor,
             at);
-        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingRevised))
+        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingRevisedV2))
             return EventTooLarge();
-        RaiseEvent(ev);
-        return null;
+        return EmitNative(ev);
     }
 
-    public CommandFailure? AddAction(long expectedRevision, Uuid actionId, string description,
+    public CommandFailure? AddAction(Uuid requestId, long expectedRevision, Uuid actionId, string description,
         Uuid ownerMemberId, DateOnly dueOn, ActorReference actor, DateTimeOffset at)
     {
         EnsureImportComplete();
-        if (_actions.Exists(action => action.ActionId == actionId))
-            return null;
+        if (CheckRequest(requestId) is { } requestFailure)
+            return requestFailure;
+        if (_selectedReceipt is not null)
+            return RetryAction(expectedRevision, actionId, description, ownerMemberId, dueOn, actor);
+        if (actionId == Uuid.Empty)
+            return CommandFailure.InvalidContent("A corrective action needs a nonempty identity.");
         if (Writable(expectedRevision) is { } blocked)
             return blocked;
         if (!IsBoundedText(description, MaximumTextLength) || ownerMemberId == Uuid.Empty ||
@@ -224,20 +251,23 @@ public sealed class FindingAggregate : Aggregate
                 "A corrective action needs a description of at most 4000 characters, an owner, and a due date.");
         if (_actions.Count >= 50)
             return CommandFailure.StateConflict("A finding can have at most 50 corrective actions.");
-        var ev = new CorrectiveActionAdded(_tenantId, _programId, _findingId,
+        var ev = new CorrectiveActionAddedV2(requestId, _tenantId, _programId, _findingId,
             expectedRevision + 1, new CorrectiveActionView(actionId, description.Trim(),
                 ownerMemberId, dueOn, Open, actor, at));
-        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.CorrectiveActionAdded))
+        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.CorrectiveActionAddedV2))
             return EventTooLarge();
-        RaiseEvent(ev);
-        return null;
+        return EmitNative(ev);
     }
 
-    public CommandFailure? CompleteAction(long expectedRevision, Uuid actionId,
+    public CommandFailure? CompleteAction(Uuid requestId, long expectedRevision, Uuid actionId,
         string resolutionNotes, IReadOnlyList<EvidenceReference> evidence, Uuid completerMemberId,
         ActorReference actor, DateTimeOffset at)
     {
         ArgumentNullException.ThrowIfNull(evidence);
+        if (CheckRequest(requestId) is { } requestFailure)
+            return requestFailure;
+        if (_selectedReceipt is not null)
+            return RetryCompletion(expectedRevision, actionId, resolutionNotes, evidence, completerMemberId, actor);
         if (Writable(expectedRevision) is { } blocked)
             return blocked;
         if (_actions.Find(action => action.ActionId == actionId) is not { } action)
@@ -247,20 +277,23 @@ public sealed class FindingAggregate : Aggregate
         if (!IsBoundedText(resolutionNotes, MaximumTextLength) || EvidenceProblem(evidence) is not null)
             return CommandFailure.InvalidContent(
                 "Completing a corrective action needs resolution notes and at least one valid evidence reference.");
-        var ev = new CorrectiveActionCompleted(_tenantId, _programId, _findingId,
+        var ev = new CorrectiveActionCompletedV2(requestId, _tenantId, _programId, _findingId,
             expectedRevision + 1, actionId, resolutionNotes.Trim(), AsUnresolved(evidence),
             completerMemberId, actor, at);
-        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.CorrectiveActionCompleted))
+        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.CorrectiveActionCompletedV2))
             return EventTooLarge();
-        RaiseEvent(ev);
-        return null;
+        return EmitNative(ev);
     }
 
-    public CommandFailure? LinkAcceptance(FindingHistoryFold history, long expectedRevision,
+    public CommandFailure? LinkAcceptance(Uuid requestId, FindingHistoryFold history, long expectedRevision,
         string kind, Uuid recordId, Uuid? decisionId, DateTimeOffset expiresAt,
         ActorReference actor, DateTimeOffset at)
     {
         ArgumentNullException.ThrowIfNull(history);
+        if (CheckRequest(requestId) is { } requestFailure)
+            return requestFailure;
+        if (_selectedReceipt is not null)
+            return RetryAcceptance(expectedRevision, kind, recordId, decisionId, actor);
         if (history.StreamVersion != Version)
             return CommandFailure.StateConflict(
                 "Finding history changed while validating the acceptance. Reload and retry.");
@@ -270,21 +303,25 @@ public sealed class FindingAggregate : Aggregate
             return CommandFailure.StateConflict("The acceptance is already linked to this finding.");
         if (expiresAt <= at)
             return CommandFailure.StateConflict("An expired acceptance cannot be linked.");
-        var ev = new FindingAcceptanceLinked(_tenantId, _programId, _findingId,
+        var ev = new FindingAcceptanceLinkedV2(requestId, _tenantId, _programId, _findingId,
             expectedRevision + 1, new FindingAcceptanceView(kind, recordId, decisionId,
                 expiresAt, actor, at));
-        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingAcceptanceLinked))
+        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingAcceptanceLinkedV2))
             return EventTooLarge();
-        RaiseEvent(ev);
-        return null;
+        return EmitNative(ev);
     }
 
-    public CommandFailure? Close(long expectedRevision, Uuid decisionId,
+    public CommandFailure? Close(Uuid requestId, long expectedRevision, Uuid decisionId,
         string verificationRationale, IReadOnlyList<EvidenceReference> resolutionEvidence,
         string rationale, Uuid closerMemberId, ActorReference actor, DateTimeOffset at,
         SeparationOfDutiesWaiver? waiver)
     {
         ArgumentNullException.ThrowIfNull(resolutionEvidence);
+        if (CheckRequest(requestId) is { } requestFailure)
+            return requestFailure;
+        if (_selectedReceipt is not null)
+            return RetryClosure(expectedRevision, decisionId, verificationRationale, resolutionEvidence,
+                rationale, closerMemberId, actor, waiver?.Id);
         if (Writable(expectedRevision) is { } blocked)
             return blocked;
         if (_actions.Count == 0 || _actions.Exists(static action => action.Status != Completed))
@@ -306,20 +343,24 @@ public sealed class FindingAggregate : Aggregate
         if (involved && waiver is null)
             return CommandFailure.ActorProhibited(
                 "A finding or corrective action owner cannot verify and close their own remediation.");
-        var ev = new FindingClosed(_tenantId, _programId, _findingId, expectedRevision + 1,
+        var ev = new FindingClosedV2(requestId, _tenantId, _programId, _findingId, expectedRevision + 1,
             new FindingClosureView(decisionId, verificationRationale.Trim(),
                 AsUnresolved(resolutionEvidence), rationale.Trim(), closerMemberId, actor, at,
                 waiver?.Id));
-        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingClosed))
+        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingClosedV2))
             return EventTooLarge();
-        RaiseEvent(ev);
-        return null;
+        return EmitNative(ev);
     }
 
-    public CommandFailure? Reopen(long expectedRevision, string reason, ActorReference actor,
+    public CommandFailure? Reopen(Uuid requestId, long expectedRevision, string reason, ActorReference actor,
         DateTimeOffset at)
     {
         EnsureImportComplete();
+        if (CheckRequest(requestId) is { } requestFailure)
+            return requestFailure;
+        if (_selectedReceipt is not null)
+            return _selectedReceipt is FindingReopenedV2 replay && replay.Revision - 1 == expectedRevision &&
+                replay.Reason == reason?.Trim() && SameActor(replay.ReopenedBy, actor) ? null : ChangedRequest();
         if (!IsRecorded)
             return CommandFailure.MissingRecord("The finding was not found.");
         if (expectedRevision != _revision)
@@ -329,12 +370,11 @@ public sealed class FindingAggregate : Aggregate
             return CommandFailure.StateConflict("Only a closed finding can be reopened.");
         if (!IsBoundedText(reason, MaximumTextLength))
             return CommandFailure.InvalidContent("Reopening a finding requires a reason.");
-        var ev = new FindingReopened(_tenantId, _programId, _findingId, expectedRevision + 1,
+        var ev = new FindingReopenedV2(requestId, _tenantId, _programId, _findingId, expectedRevision + 1,
             reason.Trim(), actor, at);
-        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingReopened))
+        if (!FitsEventPayload(ev, ComplianceCoreJsonContext.Default.FindingReopenedV2))
             return EventTooLarge();
-        RaiseEvent(ev);
-        return null;
+        return EmitNative(ev);
     }
 
     public CommandFailure? CheckHistoryVersion(ulong capturedHistoryVersion) =>
@@ -345,6 +385,8 @@ public sealed class FindingAggregate : Aggregate
 
     protected override void Apply(DomainEvent ev)
     {
+        if (_pendingCreation is not null && ev is not CorrectiveActionAddedV2)
+            throw new InvalidOperationException("A routed creation must be followed by its declared action.");
         if (ev is FindingHistoryEventImported)
         {
             base.Apply(ev);
@@ -366,6 +408,8 @@ public sealed class FindingAggregate : Aggregate
             return;
         }
 
+        if (FindingEventFacts.RequestId(ev) is null && _pendingCreation is not null)
+            throw new InvalidOperationException("A routed creation must be followed by its declared action.");
         base.Apply(ev);
     }
 
@@ -399,7 +443,7 @@ public sealed class FindingAggregate : Aggregate
         if (_raised is not null)
             throw new InvalidOperationException("A finding stream cannot be raised twice.");
         EnsureNextRevision(ev.Revision);
-        _raised = ev;
+        _raised = ev with { Links = Array.AsReadOnly(ev.Links.ToArray()) };
         _revision = ev.Revision;
         _severity = ev.Severity;
         _ownerMemberId = ev.OwnerMemberId;
@@ -428,7 +472,10 @@ public sealed class FindingAggregate : Aggregate
         if (_actions.Count >= 50 || _actions.Exists(action => action.ActionId == ev.Action.ActionId))
             throw new InvalidOperationException("The finding history exceeds its action bound.");
         _revision = ev.Revision;
-        _actions.Add(ev.Action);
+        _actions.Add(ev.Action with
+        {
+            Evidence = ev.Action.Evidence is null ? null : Array.AsReadOnly(ev.Action.Evidence.ToArray()),
+        });
     }
 
     void Apply(CorrectiveActionCompleted ev)
@@ -445,7 +492,7 @@ public sealed class FindingAggregate : Aggregate
         {
             Status = Completed,
             ResolutionNotes = ev.ResolutionNotes,
-            Evidence = ev.Evidence,
+            Evidence = Array.AsReadOnly(ev.Evidence.ToArray()),
             CompletedByMemberId = ev.CompletedByMemberId,
             CompletedBy = ev.CompletedBy,
             CompletedAt = ev.CompletedAt,
@@ -470,7 +517,7 @@ public sealed class FindingAggregate : Aggregate
             throw new InvalidOperationException(
                 "A finding can close only once after all corrective actions are complete.");
         _revision = ev.Revision;
-        _closure = ev.Closure;
+        _closure = ev.Closure with { ResolutionEvidence = Array.AsReadOnly(ev.Closure.ResolutionEvidence.ToArray()) };
     }
 
     void Apply(FindingReopened ev)

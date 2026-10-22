@@ -6,6 +6,7 @@ namespace Bdgrz.Compliance.Features.Work;
 public sealed class WorkQueueReadConsistency(IDomainEventReader events,
     IEnumerable<IAccountableWorkItemDirectoryReader>? accountableWorkItems = null)
 {
+    internal IDomainEventReader EventReader => events;
     readonly IAccountableWorkItemDirectoryReader[] _accountableWorkItems =
         accountableWorkItems?.OrderBy(static reader => reader.ProjectorName,
             StringComparer.Ordinal).ToArray() ?? [];

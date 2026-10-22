@@ -4,7 +4,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Evaluations;
 
 /// <summary>Lists a control's evaluations, newest first, keeping every prior decision visible.</summary>
-public sealed class ListControlEvaluationsHandler(IAggregateReader reader)
+public sealed class ListControlEvaluationsHandler(IAggregateReader reader, IDomainEventReader events)
     : IRequestHandler<ListControlEvaluations, Page<ControlEvaluationView>>
 {
     public async ValueTask<Result<Page<ControlEvaluationView>>> HandleAsync(
@@ -23,11 +23,13 @@ public sealed class ListControlEvaluationsHandler(IAggregateReader reader)
                 ControlOperationsSource.ControlNotFound());
         var ledger = await reader.HydrateAsync(new ControlEvaluationLedger(request.TenantId,
             request.ProgramId), ct).ConfigureAwait(false);
-        var remediation = await reader.HydrateAsync(new RemediationLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
+        var remediation = await new FindingReadSource(reader, events).ReadAsync(request.TenantId,
+            request.ProgramId, DateTimeOffset.UtcNow, ct).ConfigureAwait(false);
+        if (!remediation.IsSuccess)
+            return Result<Page<ControlEvaluationView>>.Failure(remediation.Error);
         var items = ledger.ReadControl(request.ControlId)
             .Where(view => request.State is null || view.State == request.State)
-            .Select(view => ControlEvaluationSource.WithRouting(view, remediation)).ToArray();
+            .Select(view => ControlEvaluationSource.WithRouting(view, remediation.Value)).ToArray();
         return ControlActivationSource.Paginate(items, request.Limit, request.Cursor,
             "control evaluations");
     }

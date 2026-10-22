@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     also becomes the finding's corrective action. Replays are idempotent by finding ID.
 /// </summary>
 public sealed class RaiseOccurrenceFindingHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock)
+    IAggregateReader reader, IDomainEventReader events, TimeProvider clock)
     : IRequestHandler<RaiseOccurrenceFinding>
 {
     public const int DefaultDueDays = RoutedFinding.DefaultDueDays;
@@ -38,7 +38,7 @@ public sealed class RaiseOccurrenceFindingHandler(IAggregateExecutor executor,
         var actor = ActorReference.ForSystemProcess(ProcessId,
             ControlOccurrenceFindingReactor.WorkloadName);
         var isRequestedAction = request.SourceKind == "occurrence_review";
-        return await RoutedFinding.RaiseAsync(executor, context, request.TenantId,
+        return await RoutedFinding.RaiseAsync(executor, reader, events, context, request.TenantId,
             request.ProgramId, request.FindingId,
             new FindingSource(request.SourceKind, request.OccurrenceId, request.SourceVersion,
                 request.SourceText),

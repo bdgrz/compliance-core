@@ -30,6 +30,11 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 RequestErrorKind.Validation,
                 "A finding baseline read requires its engagement and source context."));
 
+        var migration = await aggregates.HydrateAsync(new FindingMigrationAggregate(engagement.TenantId,
+            engagement.ProgramId), ct).ConfigureAwait(false);
+        if (migration.IsComplete)
+            return await ReadFindingStreamsAsync(engagement, ct).ConfigureAwait(false);
+
         var stream = new EventStreamAddress(engagement.TenantId.ToString(), "remediation",
             engagement.ProgramId.ToString());
         var historyRead = await ReadStreamTwiceAsync(stream, ct).ConfigureAwait(false);
@@ -48,9 +53,19 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 metadata.AggregateId != engagement.ProgramId || metadata.EventId == Uuid.Empty ||
                 !eventIds.Add(metadata.EventId) || metadata.AggregateVersion != expectedStreamVersion ||
                 metadata.OccurredOn == default || priorOccurredAt is { } prior &&
-                metadata.OccurredOn < prior || !TryReadFindingEvent(record.Event,
-                    engagement.TenantId, engagement.ProgramId, out var findingId,
-                    out var findingRevision, out var occurredAt))
+                metadata.OccurredOn < prior)
+                return InvalidHistory();
+            if (record.Event is RemediationPartitioningStarted marker)
+            {
+                if (marker.TenantId != engagement.TenantId || marker.ProgramId != engagement.ProgramId ||
+                    marker.PreFenceProgramVersion != expectedStreamVersion - 1)
+                    return InvalidHistory();
+                expectedStreamVersion++;
+                priorOccurredAt = metadata.OccurredOn;
+                continue;
+            }
+            if (!TryReadFindingEvent(record.Event, engagement.TenantId, engagement.ProgramId,
+                    out var findingId, out var findingRevision, out var occurredAt))
                 return InvalidHistory();
 
             if (!histories.TryGetValue(findingId, out var history))
@@ -62,11 +77,8 @@ public sealed class FindingTypeIBaselineSourceContributor(
             if (findingRevision != history.CurrentRevision + 1 ||
                 (history.CurrentRevision == 0) != isRaise)
                 return InvalidHistory();
-            if (occurredAt != metadata.OccurredOn)
-                return InvalidHistory();
-
             history.CurrentRevision = findingRevision;
-            if (occurredAt <= through)
+            if (occurredAt <= through && metadata.OccurredOn <= through)
             {
                 try
                 {
@@ -124,12 +136,69 @@ public sealed class FindingTypeIBaselineSourceContributor(
             new TypeIBaselineSourceContribution(Family, sources.AsReadOnly(), [], []));
     }
 
+    async ValueTask<Result<TypeIBaselineSourceContribution>> ReadFindingStreamsAsync(
+        ExaminationEngagementView engagement, CancellationToken ct)
+    {
+        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc));
+        var captured = await new FindingReadSource(aggregates, events).ReadAsync(engagement.TenantId,
+            engagement.ProgramId, through, ct).ConfigureAwait(false);
+        if (!captured.IsSuccess)
+            return Result<TypeIBaselineSourceContribution>.Failure(captured.Error);
+        var histories = new Dictionary<Uuid, FindingHistory>();
+        var imports = new Dictionary<Uuid, FindingHistoryEventImported>();
+        foreach (var record in captured.Value.SourceRecords)
+        {
+            if (record.Event is FindingHistoryEventImported marker)
+            {
+                imports[marker.FindingId] = marker;
+                continue;
+            }
+            if (!TryReadFindingEvent(record.Event, engagement.TenantId, engagement.ProgramId,
+                    out var findingId, out var revision, out var occurredAt))
+                return InvalidHistory();
+            if (!histories.TryGetValue(findingId, out var history))
+            {
+                history = new FindingHistory(findingId);
+                histories.Add(findingId, history);
+            }
+            if (revision != history.CurrentRevision + 1)
+                return InvalidHistory();
+            history.CurrentRevision = revision;
+            var metadata = record.Event.Metadata;
+            if (imports.Remove(findingId, out var lineage))
+                metadata = metadata with
+                {
+                    EventId = lineage.SourceEventId,
+                    AggregateVersion = lineage.SourceProgramStreamVersion,
+                    OccurredOn = lineage.SourceOccurredAt,
+                };
+            if (occurredAt <= through && metadata.OccurredOn <= through)
+            {
+                history.AsOfRevision = revision;
+                history.AsOfEvents.Add(Capture(record.Event, metadata, revision));
+            }
+        }
+        if (imports.Count != 0 || captured.Value.Findings.Count != histories.Count ||
+            captured.Value.Findings.Any(finding => !histories.TryGetValue(finding.FindingId, out var history) ||
+                history.CurrentRevision != finding.Revision))
+            return InvalidHistory();
+        var sources = histories.Values.Where(static history => history.AsOfRevision > 0)
+            .OrderBy(static history => history.FindingId.ToString(), StringComparer.Ordinal)
+            .Select(history => new TypeIBaselineSourceReference("finding", history.FindingId,
+                Uuid.CreateVersion5(history.FindingId, $"finding_v1:{history.AsOfRevision}"), history.AsOfRevision,
+                Digest(new FindingTypeIBaselineSourceContent(engagement.PeriodStart, engagement.TenantId,
+                    engagement.ProgramId, history.FindingId, history.AsOfRevision,
+                    Array.AsReadOnly(history.AsOfEvents.ToArray()))))).ToArray();
+        return Result<TypeIBaselineSourceContribution>.Success(new(Family, sources, [], []));
+    }
+
     static bool TryReadFindingEvent(DomainEvent domainEvent, Uuid tenantId, Uuid programId,
         out Uuid findingId, out long revision, out DateTimeOffset occurredAt)
     {
         findingId = Uuid.Empty;
         revision = 0;
         occurredAt = default;
+        domainEvent = FindingEventFacts.Business(domainEvent);
         switch (domainEvent)
         {
             case FindingRaised ev when ev.TenantId == tenantId && ev.ProgramId == programId &&
@@ -177,6 +246,12 @@ public sealed class FindingTypeIBaselineSourceContributor(
         DomainEventMetadata metadata, long findingRevision)
     {
         var context = ComplianceCoreJsonContext.Default;
+        if (FindingEventFacts.RequestId(domainEvent) is not null)
+        {
+            var business = FindingEventFacts.Business(domainEvent);
+            var legacy = Capture(business, metadata, findingRevision);
+            return legacy with { Payload = FindingEventFacts.Serialize(domainEvent) };
+        }
         var (kind, payload) = domainEvent switch
         {
             FindingRaised ev => ("finding_raised",
@@ -247,8 +322,12 @@ public sealed class FindingTypeIBaselineSourceContributor(
         left.Count == right.Count && left.Zip(right).All(pair =>
             pair.First.Stream == pair.Second.Stream && pair.First.NextCursor == pair.Second.NextCursor &&
             pair.First.Event?.GetType() == pair.Second.Event?.GetType() &&
-            pair.First.Event?.Metadata == pair.Second.Event?.Metadata &&
-            Equals(pair.First.Event, pair.Second.Event));
+            pair.First.Event?.Metadata.EventId == pair.Second.Event?.Metadata.EventId &&
+            pair.First.Event?.Metadata.AggregateId == pair.Second.Event?.Metadata.AggregateId &&
+            pair.First.Event?.Metadata.AggregateVersion == pair.Second.Event?.Metadata.AggregateVersion &&
+            pair.First.Event?.Metadata.OccurredOn == pair.Second.Event?.Metadata.OccurredOn &&
+            pair.First.Event is { } leftEvent && pair.Second.Event is { } rightEvent &&
+            FindingReadSource.PayloadHash(leftEvent) == FindingReadSource.PayloadHash(rightEvent));
 
     static Result<TypeIBaselineSourceContribution> InvalidHistory() =>
         InvalidHistory<TypeIBaselineSourceContribution>();

@@ -59,7 +59,7 @@ sealed class RemediationMigrationFenceAggregate : Aggregate
     }
 
     public CommandFailure? BeginPartitioning(Uuid migrationId, ActorReference actor,
-        DateTimeOffset at)
+        DateTimeOffset at, ulong? expectedPreFenceProgramVersion = null)
     {
         if (migrationId == Uuid.Empty || !ValidActor(actor) || at == default ||
             at.Offset != TimeSpan.Zero)
@@ -69,6 +69,9 @@ sealed class RemediationMigrationFenceAggregate : Aggregate
                 ? null
                 : CommandFailure.StateConflict(
                     "A different finding migration has already fenced this program.");
+        if (expectedPreFenceProgramVersion is { } expected && expected != Version)
+            return CommandFailure.StateConflict(
+                "The legacy remediation stream changed after its migration source was observed.");
 
         RaiseEvent(new RemediationPartitioningStarted(_tenantId, _programId, migrationId,
             Version, actor, at));

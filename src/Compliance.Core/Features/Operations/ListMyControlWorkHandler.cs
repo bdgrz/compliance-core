@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     materiality, then creation, then source ID (M0-D15).
 /// </summary>
 public sealed class ListMyControlWorkHandler(IAggregateReader reader,
-    OperatingAuthority authority, TimeProvider clock)
+    IDomainEventReader events, OperatingAuthority authority, TimeProvider clock)
     : IRequestHandler<ListMyControlWork, MyControlWorkView>
 {
     const int DefaultHorizonDays = 30;
@@ -66,9 +66,11 @@ public sealed class ListMyControlWorkHandler(IAggregateReader reader,
                         occurrence.DueOn, today, null), opened));
             }
         }
-        var remediation = await reader.HydrateAsync(new RemediationLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
-        foreach (var finding in remediation.ReadAll(clock.GetUtcNow())
+        var remediation = await new FindingReadSource(reader, events).ReadAsync(request.TenantId,
+            request.ProgramId, clock.GetUtcNow(), ct).ConfigureAwait(false);
+        if (!remediation.IsSuccess)
+            return Result<MyControlWorkView>.Failure(remediation.Error);
+        foreach (var finding in remediation.Value.Findings
                      .Where(static finding => finding.Status != RemediationLedger.Closed))
             foreach (var action in finding.CorrectiveActions.Where(action =>
                          action.OwnerMemberId == actor.MemberId &&

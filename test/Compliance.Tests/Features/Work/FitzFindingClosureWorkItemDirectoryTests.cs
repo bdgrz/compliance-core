@@ -21,17 +21,17 @@ public sealed class FitzFindingClosureWorkItemDirectoryTests
     public async Task ShouldProjectExactClosureRoundGivenCompletedActionsAndRevisionChanges()
     {
         // Arrange
-        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(), FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         var checkpoint = new ProjectionCheckpoint(new EventCursor("finding-closure-3"));
         await ApplyAsync(directory, ProjectionCheckpoint.Start, checkpoint, Raised(), Added(), Completed());
 
         // Act
-        var pending = await directory.LoadProgramAsync(_tenant, _program);
+        var pending = await directory.LoadProjectedProgramAsync(_tenant, _program);
         var first = Assert.Single(pending.Value);
         await ApplyAsync(directory, checkpoint, checkpoint, new FindingRevised(_tenant, _program,
             _finding, 4, "medium", _owner, DueOn(), "VPN", null, "Reassessed severity.", Actor(),
             _now.AddMinutes(3)));
-        var revised = await directory.LoadProgramAsync(_tenant, _program);
+        var revised = await directory.LoadProjectedProgramAsync(_tenant, _program);
 
         // Assert
         var second = Assert.Single(revised.Value);
@@ -51,21 +51,21 @@ public sealed class FitzFindingClosureWorkItemDirectoryTests
     public async Task ShouldRemoveClosureWorkGivenClosureAndCreateNewRoundGivenReopening()
     {
         // Arrange
-        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(), FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         await ApplyAsync(directory, ProjectionCheckpoint.Start, ProjectionCheckpoint.Start,
             Raised(), Added(), Completed());
-        var before = Assert.Single((await directory.LoadProgramAsync(_tenant, _program)).Value);
+        var before = Assert.Single((await directory.LoadProjectedProgramAsync(_tenant, _program)).Value);
         var closure = new FindingClosureView(Uuid.CreateVersion4(), "Verified independently.", [],
             "All corrected.", Uuid.CreateVersion4(), Actor(), _now.AddMinutes(3), null);
 
         // Act
         await ApplyAsync(directory, ProjectionCheckpoint.Start, ProjectionCheckpoint.Start,
             new FindingClosed(_tenant, _program, _finding, 4, closure));
-        var closed = await directory.LoadProgramAsync(_tenant, _program);
+        var closed = await directory.LoadProjectedProgramAsync(_tenant, _program);
         await ApplyAsync(directory, ProjectionCheckpoint.Start, ProjectionCheckpoint.Start,
             new FindingReopened(_tenant, _program, _finding, 5, "Verify new source facts.",
                 Actor(), _now.AddMinutes(4)));
-        var reopened = await directory.LoadProgramAsync(_tenant, _program);
+        var reopened = await directory.LoadProjectedProgramAsync(_tenant, _program);
 
         // Assert
         Assert.Empty(closed.Value);
@@ -81,12 +81,12 @@ public sealed class FitzFindingClosureWorkItemDirectoryTests
     public async Task ShouldOmitClosureWorkGivenNoActionsOrIncompleteActions(bool addAction)
     {
         // Arrange
-        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(), FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         var events = addAction ? new DomainEvent[] { Raised(), Added() } : [Raised()];
         await ApplyAsync(directory, ProjectionCheckpoint.Start, ProjectionCheckpoint.Start, events);
 
         // Act
-        var result = await directory.LoadProgramAsync(_tenant, _program);
+        var result = await directory.LoadProjectedProgramAsync(_tenant, _program);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -97,10 +97,10 @@ public sealed class FitzFindingClosureWorkItemDirectoryTests
     public async Task ShouldRemoveClosureRoundGivenNewCorrectiveAction()
     {
         // Arrange
-        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(), FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         await ApplyAsync(directory, ProjectionCheckpoint.Start, ProjectionCheckpoint.Start,
             Raised(), Added(), Completed());
-        Assert.Single((await directory.LoadProgramAsync(_tenant, _program)).Value);
+        Assert.Single((await directory.LoadProjectedProgramAsync(_tenant, _program)).Value);
 
         // Act
         await ApplyAsync(directory, ProjectionCheckpoint.Start, ProjectionCheckpoint.Start,
@@ -109,7 +109,7 @@ public sealed class FitzFindingClosureWorkItemDirectoryTests
                 ActionId = Uuid.CreateVersion4(),
                 Description = "Additional verification work.",
             }));
-        var result = await directory.LoadProgramAsync(_tenant, _program);
+        var result = await directory.LoadProjectedProgramAsync(_tenant, _program);
 
         // Assert
         Assert.Empty(result.Value);
@@ -124,7 +124,7 @@ public sealed class FitzFindingClosureWorkItemDirectoryTests
     public async Task ShouldRollBackWorkAndCheckpointGivenInvalidSourceEvent(string change)
     {
         // Arrange
-        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(), FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         var checkpoint = new ProjectionCheckpoint(new EventCursor("before-invalid"));
         await ApplyAsync(directory, ProjectionCheckpoint.Start, checkpoint, Raised(), Added());
         var completion = Completed();
@@ -144,31 +144,31 @@ public sealed class FitzFindingClosureWorkItemDirectoryTests
         // Assert
         Assert.IsType<InvalidOperationException>(error);
         Assert.Equal(checkpoint, await directory.LoadCheckpointAsync(_tenant));
-        Assert.Empty((await directory.LoadProgramAsync(_tenant, _program)).Value);
+        Assert.Empty((await directory.LoadProjectedProgramAsync(_tenant, _program)).Value);
     }
 
     [Fact]
     public async Task ShouldIsolateScopeAndReadAllPagesGivenManyClosureItems()
     {
         // Arrange
-        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(), FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
                          Identity(), ProjectionCheckpoint.Start)))
         {
             for (var index = 0; index < 205; index++)
             {
                 var finding = Uuid.CreateVersion4();
-                await directory.ApplyAsync(Raised() with { FindingId = finding });
-                await directory.ApplyAsync(Added() with { FindingId = finding });
-                await directory.ApplyAsync(Completed() with { FindingId = finding });
+                await FindingWorkProjectionTestSource.ApplyAsync(directory, Raised() with { FindingId = finding });
+                await FindingWorkProjectionTestSource.ApplyAsync(directory, Added() with { FindingId = finding });
+                await FindingWorkProjectionTestSource.ApplyAsync(directory, Completed() with { FindingId = finding });
             }
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
         // Act
-        var result = await directory.LoadProgramAsync(_tenant, _program);
-        var foreignTenant = await directory.LoadProgramAsync(Uuid.CreateVersion4(), _program);
-        var foreignProgram = await directory.LoadProgramAsync(_tenant, Uuid.CreateVersion4());
+        var result = await directory.LoadProjectedProgramAsync(_tenant, _program);
+        var foreignTenant = await directory.LoadProjectedProgramAsync(Uuid.CreateVersion4(), _program);
+        var foreignProgram = await directory.LoadProjectedProgramAsync(_tenant, Uuid.CreateVersion4());
 
         // Assert
         Assert.Equal(205, result.Value.Count);
@@ -182,12 +182,12 @@ public sealed class FitzFindingClosureWorkItemDirectoryTests
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(Identity(), previous));
         foreach (var ev in events)
-            await directory.ApplyAsync(ev);
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, ev);
         await batch.CommitAsync(next);
     }
 
     CheckpointIdentity Identity() => new(FitzFindingClosureWorkItemDirectory.ProjectorName,
-        EventStreamPattern.ForPattern(_tenant.ToString(), "remediation"));
+        EventStreamPattern.ForPattern(_tenant.ToString()));
     static ActorReference Actor() => ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
     static DateOnly DueOn() => new(2026, 10, 9);
     FindingRaised Raised() => new(_tenant, _program, _finding, 1,

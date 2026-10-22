@@ -13,24 +13,21 @@ static class RoutedFinding
     public const string DefaultSeverity = "medium";
 
     public static async ValueTask<Result> RaiseAsync<TRequest>(IAggregateExecutor executor,
+        IAggregateReader reader, IDomainEventReader events,
         IRequestContext<TRequest> context, Uuid tenantId, Uuid programId, Uuid findingId,
         FindingSource source, string title, string affectedScope, Uuid ownerMemberId,
         IReadOnlyList<FindingLink> links, string? correctiveAction, ActorReference actor,
         DateTimeOffset now, CancellationToken ct)
         where TRequest : IRequestBase
     {
+        var ready = await FindingStreamRouting.EnsureReadyAsync(executor, reader, events, context,
+            tenantId, programId, now, ct).ConfigureAwait(false);
+        if (!ready.IsSuccess)
+            return ready;
         var dueOn = DateOnly.FromDateTime(now.UtcDateTime).AddDays(DefaultDueDays);
-        return await executor.ExecuteAsync(new RemediationLedger(tenantId, programId), ledger =>
-        {
-            if (ledger.Contains(findingId))
-                return CommandFailureRequestAdapter.ToOutcome(null);
-            var failure = ledger.Raise(findingId, source, title, source.SourceText,
-                DefaultSeverity, affectedScope, ownerMemberId, dueOn, links, actor, now);
-            if (failure is null && correctiveAction is not null)
-                failure = ledger.AddAction(findingId, 1,
-                    Uuid.CreateVersion5(findingId, "corrective-action"), correctiveAction,
-                    ownerMemberId, dueOn, actor, now);
-            return CommandFailureRequestAdapter.ToOutcome(failure);
-        }, context, ct).ConfigureAwait(false);
+        return await executor.ExecuteAsync(new FindingAggregate(tenantId, programId, findingId, context.RequestId), finding =>
+            CommandFailureRequestAdapter.ToOutcome(finding.RaiseRouted(context.RequestId, source,
+                title, affectedScope, ownerMemberId, dueOn, links, correctiveAction, actor, now)),
+            context, ct).ConfigureAwait(false);
     }
 }

@@ -4,7 +4,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 
 /// <summary>Records completed corrective work by the action owner or a program manager.</summary>
 public sealed class CompleteCorrectiveActionHandler(IAggregateExecutor executor,
-    IAggregateReader reader, OperatingAuthority authority, TimeProvider clock)
+    IAggregateReader reader, IDomainEventReader events, OperatingAuthority authority, TimeProvider clock)
     : IRequestHandler<CompleteCorrectiveAction, FindingView>
 {
     public async ValueTask<Result<FindingView>> HandleAsync(
@@ -12,11 +12,11 @@ public sealed class CompleteCorrectiveActionHandler(IAggregateExecutor executor,
     {
         var request = context.Request;
         var now = clock.GetUtcNow();
-        var current = await reader.HydrateAsync(new RemediationLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
-        if (current.Read(request.FindingId, now) is not { } finding)
-            return Result<FindingView>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The finding was not found."));
+        var current = await new FindingReadSource(reader, events).ReadOneAsync(request.TenantId,
+            request.ProgramId, request.FindingId, now, ct).ConfigureAwait(false);
+        if (!current.IsSuccess)
+            return current;
+        var finding = current.Value;
         var actor = OperationsActor.From(context.Actor, request.TenantId);
         var action = finding.CorrectiveActions.FirstOrDefault(item =>
             item.ActionId == request.ActionId);
@@ -24,9 +24,9 @@ public sealed class CompleteCorrectiveActionHandler(IAggregateExecutor executor,
                 request.TenantId, actor, request.ProgramId, ct).ConfigureAwait(false))
             return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Only the corrective action owner or a program manager may complete it."));
-        return await RemediationCommands.ExecuteAsync(executor, context, request.TenantId,
-            request.ProgramId, request.FindingId, now, ledger => ledger.CompleteAction(
-                request.FindingId, request.ExpectedRevision, request.ActionId,
+        return await RemediationCommands.ExecuteAsync(executor, reader, events, context, request.TenantId,
+            request.ProgramId, request.FindingId, now, (aggregate, _) => aggregate.CompleteAction(context.RequestId,
+                request.ExpectedRevision, request.ActionId,
                 request.ResolutionNotes, request.Evidence ?? [], actor.MemberId,
                 ActorReference.ForMember(actor.MemberId, actor.Display), now), ct)
             .ConfigureAwait(false);

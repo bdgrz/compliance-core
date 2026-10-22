@@ -295,7 +295,7 @@ public sealed class ReviewerWorkAuthorityTests
                             new FitzControlDecisionWorkItemDirectory(client, provider.GetRequiredService<IAggregateReader>(),
                                 provider.GetRequiredService<OperatingAuthority>(), new(true), new(true)));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                            new FitzFindingClosureWorkItemDirectory(client));
+                            new FitzFindingClosureWorkItemDirectory(client, new FindingReadSource(provider.GetRequiredService<IAggregateReader>(), events), TimeProvider.System));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzControlEvaluationWorkItemDirectory(client));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>

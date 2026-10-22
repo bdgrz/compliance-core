@@ -528,6 +528,7 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
+        services.AddScoped<FindingReadSource>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();
         services.AddScoped<IProgramResourceScopeResolver, ProgramResourceScopeResolver>();
         services.AddScoped<BoundaryResponsibilityScopeValidator>();
