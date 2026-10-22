@@ -1,0 +1,87 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "issue": 1028,
+    "parent": 1022,
+    "sourceCommit": "4c255f56bfec727ac1f6e841c09935a4ce69ec4c",
+    "allowedScope": "Parent: #1022\n\nObservable gap: 81 audit observations have no delivery ledger; Actions and develop protection are disabled. PR #1027 delivered partial Finding acceptance without hosted CI.\n\nAllowed scope: immutable audit baseline, complete family assignment, fixed decisions and remaining Finding acceptance; locked backend CI and required Backend check. No domain behavior, deployment, environment reset or branch-policy changes outside develop.\n\nAcceptance: reconcile all 81 IDs and 103 owners, 33 reactors and 13 workflows against the baseline; validate pinned hashes and assignments; run format/Release build/full backend units; exact-head adversarial review, Jev preflight and hosted CI; squash merge and readback. No manufactured failing unit test for this evidence/CI slice.\n\nStopping point: merged tracking/CI foundation, #1022 and #1026 acceptance recorded, ready for CORE-01 persistence safety.\n",
+    "decisions": "# Aggregate and reactor remediation\n\nDelivery is tracked by [#1022](https://github.com/bdgrz/compliance-core/issues/1022).\n[The delivery ledger](aggregate-remediation.json) assigns all 81 active observations\n(seven P1, 74 P2) to ordered delivery families. Each family is a sequence of focused\nPRs, not permission to combine all its owners in one change. Shared observations\nremain open until every affected owner and continuation has evidence.\n\nThe immutable baseline is [the 103-owner audit](audits/2026-10-22/audit.json),\n[the 33-reactor and 13-workflow matrix](audits/2026-10-22/choreography.json), and\n[the concrete serializer and SDK analysis](audits/2026-10-22/payload.json), at\n`4c255f56bfec727ac1f6e841c09935a4ce69ec4c`. The ledger pins their SHA-256 hashes.\nBaseline findings are observations, not tests or proof of a corrected boundary.\nCHOREO-01/02 are aliases of ACCESS-12/01; OPS-14 is a closed design question and\ndoes not count toward the 81. The baseline records its own scope and limitations.\n\n## Accepted decisions\n\n- Pre-release histories are disposable. Replace stream layouts and contracts\n  directly and remove superseded runtime paths during each owning correction.\n  This supersedes earlier migration requirements in #1022/#1026. Deployment and\n  environment resets require separate authorization.\n- Retry-sensitive commands require typed client identity, bound from a required\n  route parameter and exposed to MCP. Creation identity suffices for exact\n  creation retries; repeated updates and assignment episodes need `CommandId`.\n  No server-generated substitute satisfies this contract. Conflicting body\n  duplicates fail validation.\n- Authorize before resolving previous intent. Compare command kind, owner,\n  lifecycle episode, original actor, canonical authored input and original\n  expected revision against the operation's accepted facts. Exact retries return\n  the original result without appending; changed intent conflicts. New operations\n  enforce expected revision. Keep execution-attempt identity separate and derive\n  reactor effects from source event, effect kind, target owner and lifecycle.\n- Use concrete generated serialization. Preflight the entire attributed batch\n  before opening an append session, including the envelope and actual SDK\n  overhead. Forward persistence notifications. A payload margin is not a frame\n  proof; KV values also include route/key/operation overhead.\n- Cross-owner decisions consume server-created immutable exact-scope proofs,\n  including source identity, event/position, revision, digest and required facts.\n  Baseline, readiness and historical decisions retain authoritative temporal reads.\n- Write verified immutable content before publishing a manifest. Technical\n  attempts, stages and cursors belong outside domain events. Document retained\n  state and physical replay separately; removing arrays does not shorten history.\n- Preserve permanent independence walls, complete import publication, fail-closed\n  disposal and current approval policies. Keep RiskDraft and notification consent\n  independently owned and SystemBoundary's conflict-relevant scope atomic.\n- Accepted identity recovery automatically completes the exact proven swap:\n  protect/register the replacement before revoking the old identity. Later\n  challenges cannot replace an accepted operation. Notices recover independently.\n\n## Ordered delivery\n\n| Order | Family | Completion evidence |\n| --- | --- | --- |\n| 0 | Tracking and CI | Every observation assigned; Finding acceptance reconciled; final-head Backend required. |\n| 1 | Persistence safety | Concrete serialization, attributed whole-batch preflight, stream/KV framing and validation mapping. |\n| 2 | Explicit identity and retries | Required typed identities across HTTP, MCP, queues and reactors; selected-fact retries for every audited mutation. |\n| 3 | Administrator safety | Fenced current-episode withdrawals/restorations and autonomous recovery. |\n| 4 | Identity recovery | Immutable accepted operation, replacement protection, automatic completion and independent notice. |\n| 5 | Independence | Permanent staff/user practice authorities and complete service epochs without lifetime caps. |\n| 6 | Incidents and impact | Authoritative completion proofs, exact assessment correlation, superseded work and dependency retries. |\n| 7 | Imports | Complete frozen batches, canonical holds, native target facts, settlement recovery and all-target publication. |\n| 8 | Reactor recovery | Slug replay, source-complete cleanup, late relationships, Type II holds and occurrence materialization. |\n| 9 | Identity and catalogs | Independent invitations, credentials/tests, delivery, staff/designations, normalized-name claims and assurance records. |\n| 10 | Operations and campaigns | Independent plans, occurrences, evaluations, mappings, actions, campaign items and readiness gaps. |\n| 11 | Evidence and assurance | Individual requests/feedback/responses, exact delivery authority, complete population reconciliation and disposal barriers. |\n| 12 | Versioned content | Narrow versions/proofs for criteria, policy, redaction, assertions, methodology, commitments, descriptions, changes and incidents. |\n| 13 | Process and legacy cleanup | Independent processes, hard-pruned superseded paths, full owner/event/command/reactor reconciliation. |\n\nAcquire multiple reservations in canonical stream-key order. Persist immutable\nintent sufficient to reconstruct each continuation. Cancellation fences the\nreceiving operation before releasing authority. If an executable permit cannot\nbe safely revoked, recover forward. Elapsed time, missing reads and unknown\nappend outcomes never justify release. Administrative restores wait for unfinished\nwithdrawals, restore the source first and release only after authoritative\neligibility proof. Cleanup targets old episodes and cannot remove newer authority.\n\nType II amendments retain both date ranges until applied. Recurring work has one\nidentity per control and business window; selected work is distinct from\nmaterialized work. Import commit publishes every target together; target replay\ndoes not mutate business state by consulting live settlement. Closure/freeze\ngates require complete authoritative coverage. Feedback admission serializes\nwith handoff revocation; auditor requests seal admission before resolution.\nPackage delivery binds exact manifest, archive, validation and recipient approval.\nReconcile unknown external effects before retry, preserving at-least-once\nchallenge/invitation delivery and the stricter unknown-send digest rule.\n\n## Acceptance and delivery record\n\nFor every behavior change, record focused RED and GREEN, whitespace validation,\nRelease build and full backend units. Test exact retries after later edits and\nnew lifecycle episodes, changed intent/actor/revision, malformed identities,\ncrash and unknown outcomes, cancellation races, projection lag and late facts,\nformer-cap boundaries, concrete frame boundaries, Unicode and attribution.\nUse bounded Jev design and immutable-head preflight questions with source\nevidence; record disagreements and the adopted decision.\n\nOpen one PR at a time, adversarially review its immutable head, require hosted CI,\nsquash merge, and read back merged source and issue acceptance. A ledger row may\nbe complete only with merged evidence for its full scope. A family is complete\nonly when all rows, resulting owners and recovery continuations are accounted for.\nIncomplete replacements stay disabled. Completion ends on clean, synced\n`develop`; deployment and environment resets are separate operations.\n\nPR #1027 is accepted source evidence for the per-finding cutover and the\nmodel-only AuditObservation. It did not resolve OPS-06/11/12, complete #301,\nremove legacy paths, or run hosted CI. #1026 therefore remains open pending\nthe remaining acceptance and final-head verification.\n",
+    "ledgerSummary": {
+      "active": 81,
+      "P1": 7,
+      "P2": 74,
+      "allAssigned": true,
+      "allPending": true,
+      "closedDesignQuestion": "OPS-14"
+    },
+    "ci": "name: CI\n\non:\n  push:\n    branches:\n      - develop\n      - main\n  pull_request:\n  workflow_dispatch:\n\npermissions:\n  contents: read\n  packages: read\n\nconcurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: true\n\nenv:\n  GITHUB_TOKEN: ${{ github.token }}\n\njobs:\n  backend:\n    name: Backend\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v7\n\n      - name: Setup dotnet\n        uses: actions/setup-dotnet@v6\n        with:\n          global-json-file: global.json\n          cache: true\n          cache-dependency-path: \"**/packages.lock.json\"\n\n      - name: Restore\n        run: dotnet restore Compliance.slnx --locked-mode\n\n      - name: Format\n        # The build enforces configured style and analyzer diagnostics.\n        run: dotnet format whitespace Compliance.slnx --verify-no-changes --no-restore\n\n      - name: Build\n        run: dotnet build Compliance.slnx --configuration Release --no-restore\n\n      - name: Test\n        run: dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter \"Category!=BrokerIntegration&Category!=WebIntegration\"\n",
+    "developRules": {
+      "name": "Protect Develop",
+      "target": "branch",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/develop"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "require_code_owner_review": false,
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "allowed_merge_methods": [
+              "squash"
+            ]
+          }
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": true,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "Backend",
+                "integration_id": 15368
+              }
+            ]
+          }
+        }
+      ],
+      "bypass_actors": []
+    },
+    "priorDelivery": "#1027 lacks hosted CI; #1026 and #301 remain open. OPS-06, OPS-11, OPS-12 remain pending."
+  },
+  "questions": {
+    "preflight": {
+      "type": "choice",
+      "instructions": "Given the stated user decisions and actual changes, is this evidence/CI slice ready for final-head adversarial review and CI, without claiming domain remediation?",
+      "criteria": {
+        "bounded_ready": "The changes are bounded tracking/CI groundwork; all active observations remain pending and prior incomplete acceptance stays open.",
+        "needs_revision": "A concrete contradiction in the supplied state, premature closure, authorization expansion or incomplete coverage needs correction before review."
+      }
+    },
+    "retryScope": {
+      "type": "choice",
+      "instructions": "Which retry resolution contract follows the accepted decisions?",
+      "criteria": {
+        "selected_facts": "Authorize first; compare typed operation identity against selected accepted facts including original actor, kind, canonical input and expected revision; exact retry returns original result.",
+        "lifetime_receipts": "Retain an accumulating dictionary of every command receipt in each aggregate.",
+        "current_state_only": "Compare retries against mutable current state and only the newest revision."
+      }
+    }
+  }
+}

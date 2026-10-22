@@ -14,16 +14,15 @@ acceptance and exit; its child PRs and final PR to `develop` each require review
 and final-head checks. Keep WIP = 1 throughout.
 
 `main` is the release branch. Promote only by opening a pull request from this
-repository's `develop` branch to `main`. The promotion must pass the regular
-validation, dependency review, and native AMD64 and ARM64 container checks. Use
-a merge commit for the promotion so `main` retains the history of `develop`;
-topic branches continue to use squash merges.
+repository's `develop` branch to `main`. The promotion must pass backend
+validation. Native AMD64 and ARM64 container qualification runs after successful
+CI on `main`. Use a merge commit for promotion so `main` retains the history of
+`develop`; topic branches continue to use squash merges.
 
-Pull requests into `develop` require `Validate` and `Dependency review`. The
-native container matrix is skipped for develop-bound pull requests and pushes.
-Pull requests into `main` also run `Promotion source`, which rejects a branch
-other than this repository's `develop` branch, and run both native container
-builds. Pushes to `main` and manual CI dispatch also run the native matrix.
+Pull requests into `develop` require the `Backend` check on the final head.
+`ci.yml` runs locked restore, whitespace validation, Release build and backend
+unit tests on pull requests and pushes to `develop` and `main`. Container builds
+remain in `containers.yml`, after successful CI on `main` or manual dispatch.
 
 ## Change workflow
 

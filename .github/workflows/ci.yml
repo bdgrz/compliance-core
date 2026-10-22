@@ -23,7 +23,7 @@ jobs:
   backend:
     name: Backend
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -37,7 +37,7 @@ jobs:
           cache-dependency-path: "**/packages.lock.json"
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore Compliance.slnx --locked-mode
 
       - name: Format
         # The build enforces configured style and analyzer diagnostics.

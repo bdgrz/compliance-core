@@ -1,0 +1,1539 @@
+{
+  "sourceCommit": "4c255f56bfec727ac1f6e841c09935a4ce69ec4c",
+  "findingId": "CORE-01",
+  "scope": "Global source pass of all aggregate payload-size gates in Compliance.Core; runtime probe evidence supplied by root; pinned package source inspected without repository modifications or tests.",
+  "affectedAggregateCount": 14,
+  "affectedAggregates": [
+    {
+      "aggregate": "ComplianceIncident",
+      "path": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 262144,
+      "nominalThresholdKiB": 256,
+      "serializeLine": 281,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "ComplianceIncidentImpactAssessed",
+        "ComplianceIncidentRecorded",
+        "ComplianceIncidentRevised",
+        "ComplianceIncidentSystemDescriptionDecisionRecorded",
+        "IncidentResolutionRecorded"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs",
+          "line": 14,
+          "claim": "Nominal MaximumEventBytes is256*1024=262144 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Incidents/ComplianceIncident.cs#L14"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs",
+          "line": 281,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Incidents/ComplianceIncident.cs#L281"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs",
+          "line": 273,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Incidents/ComplianceIncident.cs#L273"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs",
+          "line": 280,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Incidents/ComplianceIncident.cs#L280"
+        }
+      ]
+    },
+    {
+      "aggregate": "SignificantChange",
+      "path": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 262144,
+      "nominalThresholdKiB": 256,
+      "serializeLine": 277,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "ImpactReviewWorkLinked",
+        "SignificantChangeImpactAssessed",
+        "SignificantChangeRecorded",
+        "SignificantChangeRevised",
+        "SignificantChangeSystemDescriptionDecisionRecorded"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
+          "line": 14,
+          "claim": "Nominal MaximumEventBytes is256*1024=262144 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Changes/SignificantChange.cs#L14"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
+          "line": 277,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Changes/SignificantChange.cs#L277"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
+          "line": 269,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Changes/SignificantChange.cs#L269"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
+          "line": 276,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Changes/SignificantChange.cs#L276"
+        }
+      ]
+    },
+    {
+      "aggregate": "ProgramRollover",
+      "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 262144,
+      "nominalThresholdKiB": 256,
+      "serializeLine": 233,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "ProgramNextPeriodCreated",
+        "ProgramRolloverApproved",
+        "ProgramRolloverDecisionRecorded",
+        "ProgramRolloverProposed",
+        "ProgramRolloverRevised"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+          "line": 20,
+          "claim": "Nominal MaximumEventBytes is256*1024=262144 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Programs/ProgramRollover.cs#L20"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+          "line": 233,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Programs/ProgramRollover.cs#L233"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+          "line": 225,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Programs/ProgramRollover.cs#L225"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+          "line": 232,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Programs/ProgramRollover.cs#L232"
+        }
+      ]
+    },
+    {
+      "aggregate": "AuditPackage",
+      "path": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
+      "method": "Fits(DomainEvent)",
+      "nominalThresholdBytes": 524288,
+      "nominalThresholdKiB": 512,
+      "serializeLine": 1057,
+      "callLine": 542,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "AuditPackageAmended",
+        "AuditPackageBuildFailed",
+        "AuditPackageBuildProgressRecorded",
+        "AuditPackageBuildRequested",
+        "AuditPackageBuilt",
+        "AuditPackageCreated",
+        "AuditPackageDelivered",
+        "AuditPackageDisclosureApproved",
+        "AuditPackageValidated",
+        "AuditPackageValidationOverrideApproved"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
+          "line": 25,
+          "claim": "Nominal MaximumEventBytes is512*1024=524288 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditPackages/AuditPackage.cs#L25"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
+          "line": 1057,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditPackages/AuditPackage.cs#L1057"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
+          "line": 536,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditPackages/AuditPackage.cs#L536"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
+          "line": 541,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditPackages/AuditPackage.cs#L541"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
+          "line": 542,
+          "claim": "Payload-size helper invoked here.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditPackages/AuditPackage.cs#L542"
+        }
+      ]
+    },
+    {
+      "aggregate": "MethodologyTemplate",
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 262144,
+      "nominalThresholdKiB": 256,
+      "serializeLine": 249,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "MethodologyTemplateCreated",
+        "MethodologyTemplateDraftReviewed",
+        "MethodologyTemplateDraftRevised",
+        "MethodologyTemplateRetired",
+        "MethodologyTemplateVersionPublished"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+          "line": 14,
+          "claim": "Nominal MaximumEventBytes is256*1024=262144 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs#L14"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+          "line": 249,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs#L249"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+          "line": 242,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs#L242"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+          "line": 248,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs#L248"
+        }
+      ]
+    },
+    {
+      "aggregate": "MethodologyTemplateContribution",
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+      "method": "Emit -> Fits<T> with T=DomainEvent",
+      "nominalThresholdBytes": 131072,
+      "nominalThresholdKiB": 128,
+      "serializeLine": 312,
+      "callLine": 155,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "MethodologyTemplateContributionAccepted",
+        "MethodologyTemplateContributionProposed",
+        "MethodologyTemplateContributionReviewed"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+          "line": 13,
+          "claim": "Nominal MaximumEventBytes is128*1024=131072 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs#L13"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+          "line": 312,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs#L312"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+          "line": 148,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs#L148"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+          "line": 154,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs#L154"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+          "line": 155,
+          "claim": "Payload-size helper invoked here.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs#L155"
+        }
+      ]
+    },
+    {
+      "aggregate": "TemplateApplication",
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 262144,
+      "nominalThresholdKiB": 256,
+      "serializeLine": 196,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "MethodologyTemplateApplied",
+        "TemplateApplicationDraftCreated",
+        "TemplateSuccessorAdoptionProposed",
+        "TemplateSuccessorDispositionRecorded"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+          "line": 14,
+          "claim": "Nominal MaximumEventBytes is256*1024=262144 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs#L14"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+          "line": 196,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs#L196"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+          "line": 189,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs#L189"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+          "line": 195,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs#L195"
+        }
+      ]
+    },
+    {
+      "aggregate": "AuditPopulation",
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 524288,
+      "nominalThresholdKiB": 512,
+      "serializeLine": 439,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "AuditPopulationAmended",
+        "AuditPopulationDefined",
+        "AuditPopulationDefinitionRevised",
+        "AuditPopulationExportGenerated",
+        "AuditPopulationFactRecorded",
+        "AuditPopulationFrozen",
+        "AuditPopulationGenerated",
+        "AuditPopulationReconciled",
+        "AuditPopulationRowClassified"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs",
+          "line": 20,
+          "claim": "Nominal MaximumEventBytes is512*1024=524288 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs#L20"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs",
+          "line": 439,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs#L439"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs",
+          "line": 431,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs#L431"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs",
+          "line": 438,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs#L438"
+        }
+      ]
+    },
+    {
+      "aggregate": "ClientExport",
+      "path": "src/Compliance.Core/Features/Exports/ClientExport.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 524288,
+      "nominalThresholdKiB": 512,
+      "serializeLine": 236,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "ClientExportAttestPackageDeliveryRecorded",
+        "ClientExportBuildFailed",
+        "ClientExportBuilt",
+        "ClientExportDelivered",
+        "ClientExportRequested"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Exports/ClientExport.cs",
+          "line": 21,
+          "claim": "Nominal MaximumEventBytes is512*1024=524288 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Exports/ClientExport.cs#L21"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Exports/ClientExport.cs",
+          "line": 236,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Exports/ClientExport.cs#L236"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Exports/ClientExport.cs",
+          "line": 229,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Exports/ClientExport.cs#L229"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Exports/ClientExport.cs",
+          "line": 235,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Exports/ClientExport.cs#L235"
+        }
+      ]
+    },
+    {
+      "aggregate": "ManagementAssertion",
+      "path": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 262144,
+      "nominalThresholdKiB": 256,
+      "serializeLine": 183,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "ManagementAssertionApproved",
+        "ManagementAssertionRecorded",
+        "ManagementAssertionRevised"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+          "line": 18,
+          "claim": "Nominal MaximumEventBytes is256*1024=262144 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ManagementAssertion.cs#L18"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+          "line": 183,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ManagementAssertion.cs#L183"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+          "line": 175,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ManagementAssertion.cs#L175"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+          "line": 182,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ManagementAssertion.cs#L182"
+        }
+      ]
+    },
+    {
+      "aggregate": "TypeIIPlan",
+      "path": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 393216,
+      "nominalThresholdKiB": 384,
+      "serializeLine": 232,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "TypeIIPlanApproved",
+        "TypeIIPlanProposed",
+        "TypeIIPlanReviewed",
+        "TypeIIPlanRevised"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+          "line": 20,
+          "claim": "Nominal MaximumEventBytes is384*1024=393216 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/TypeIIPlan.cs#L20"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+          "line": 232,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/TypeIIPlan.cs#L232"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+          "line": 224,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/TypeIIPlan.cs#L224"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+          "line": 231,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/TypeIIPlan.cs#L231"
+        }
+      ]
+    },
+    {
+      "aggregate": "ManagementRepresentationLetter",
+      "path": "src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 65536,
+      "nominalThresholdKiB": 64,
+      "serializeLine": 121,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "ManagementRepresentationLetterSigned",
+        "RepresentationLetterRecorded"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs",
+          "line": 12,
+          "claim": "Nominal MaximumEventBytes is64*1024=65536 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs#L12"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs",
+          "line": 121,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs#L121"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs",
+          "line": 114,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs#L114"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs",
+          "line": 120,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs#L120"
+        }
+      ]
+    },
+    {
+      "aggregate": "AuditOutcome",
+      "path": "src/Compliance.Core/Features/Examinations/AuditOutcome.cs",
+      "method": "Fits(DomainEvent)",
+      "nominalThresholdBytes": 65536,
+      "nominalThresholdKiB": 64,
+      "serializeLine": 103,
+      "callLine": 49,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "AuditOutcomeRecorded"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditOutcome.cs",
+          "line": 15,
+          "claim": "Nominal MaximumEventBytes is64*1024=65536 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/AuditOutcome.cs#L15"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditOutcome.cs",
+          "line": 103,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/AuditOutcome.cs#L103"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditOutcome.cs",
+          "line": 49,
+          "claim": "Payload-size helper invoked here.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/AuditOutcome.cs#L49"
+        }
+      ]
+    },
+    {
+      "aggregate": "TypeIIPeriod",
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "method": "Emit",
+      "nominalThresholdBytes": 524288,
+      "nominalThresholdKiB": 512,
+      "serializeLine": 428,
+      "callLine": null,
+      "staticType": "Cntryl.Portia.DomainEvent",
+      "probeConsequence": "Measures {} (2 UTF8 bytes) for derived event payload under pinned JIT/.NET10 behavior; predicate never rejects an oversized derived event because of business payload size.",
+      "affectedEvents": [
+        "ObservationPeriodAmended",
+        "ObservationPeriodCloseFrozen",
+        "ObservationPeriodCloseProposed",
+        "ObservationPeriodStarted",
+        "TypeIIPeriodCloseAmended",
+        "TypeIIPeriodCloseApproved"
+      ],
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 22,
+          "claim": "Nominal MaximumEventBytes is512*1024=524288 bytes.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L22"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 428,
+          "claim": "Calls generic SerializeToUtf8Bytes with statically DomainEvent; derived business payload is not selected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L428"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 420,
+          "claim": "Factory return type is DomainEvent; var ev therefore has static DomainEvent type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L420"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 427,
+          "claim": "Value assigned from base-returning factory.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L427"
+        }
+      ],
+      "exception": "GenerateDueOccurrences at172 serializes concrete DueControlOccurrencesGenerated, correctly selecting payload; its512KiB limit still cannot establish transport fit."
+    }
+  ],
+  "safeSerializationGates": [
+    {
+      "aggregate": "FindingAggregate",
+      "path": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Explicit JsonTypeInfo<TEvent> passed at every native command event call; native validation uses runtime-type source-generated FindingEventFacts.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+          "line": 613,
+          "claim": "Explicit JsonTypeInfo<TEvent> passed at every native command event call; native validation uses runtime-type source-generated FindingEventFacts.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Remediation/FindingAggregate.cs#L613"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+          "line": 614,
+          "claim": "Explicit JsonTypeInfo<TEvent> passed at every native command event call; native validation uses runtime-type source-generated FindingEventFacts.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Remediation/FindingAggregate.cs#L614"
+        }
+      ]
+    },
+    {
+      "aggregate": "AuditObservation",
+      "path": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+      "nominalThresholdBytes": 32768,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Generic T plus matching JsonTypeInfo<T> from concrete generated context.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+          "line": 194,
+          "claim": "Generic T plus matching JsonTypeInfo<T> from concrete generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/AuditObservation.cs#L194"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+          "line": 200,
+          "claim": "Generic T plus matching JsonTypeInfo<T> from concrete generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/AuditObservation.cs#L200"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+          "line": 240,
+          "claim": "Generic T plus matching JsonTypeInfo<T> from concrete generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/AuditObservation.cs#L240"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+          "line": 242,
+          "claim": "Generic T plus matching JsonTypeInfo<T> from concrete generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/AuditObservation.cs#L242"
+        }
+      ]
+    },
+    {
+      "aggregate": "ExaminationEngagement",
+      "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Uses value.GetType() and ComplianceCoreJsonContext.Default.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+          "line": 532,
+          "claim": "Uses value.GetType() and ComplianceCoreJsonContext.Default.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs#L532"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+          "line": 533,
+          "claim": "Uses value.GetType() and ComplianceCoreJsonContext.Default.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs#L533"
+        }
+      ]
+    },
+    {
+      "aggregate": "SystemDescription",
+      "path": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Uses runtime value.GetType() with generated context.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs",
+          "line": 678,
+          "claim": "Uses runtime value.GetType() with generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/SystemDescription/SystemDescription.cs#L678"
+        },
+        {
+          "path": "src/Compliance.Core/Features/SystemDescription/SystemDescription.cs",
+          "line": 679,
+          "claim": "Uses runtime value.GetType() with generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/SystemDescription/SystemDescription.cs#L679"
+        }
+      ]
+    },
+    {
+      "aggregate": "EvidenceRedaction",
+      "path": "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Uses runtime value.GetType() with generated context.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs",
+          "line": 177,
+          "claim": "Uses runtime value.GetType() with generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs#L177"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs",
+          "line": 178,
+          "claim": "Uses runtime value.GetType() with generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs#L178"
+        }
+      ]
+    },
+    {
+      "aggregate": "AuditorRequest",
+      "path": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Delegate returns DomainEvent but serializer explicitly receives ev.GetType() and generated context.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs",
+          "line": 674,
+          "claim": "Delegate returns DomainEvent but serializer explicitly receives ev.GetType() and generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs#L674"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs",
+          "line": 680,
+          "claim": "Delegate returns DomainEvent but serializer explicitly receives ev.GetType() and generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs#L680"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs",
+          "line": 681,
+          "claim": "Delegate returns DomainEvent but serializer explicitly receives ev.GetType() and generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs#L681"
+        }
+      ]
+    },
+    {
+      "aggregate": "IndependenceLedger",
+      "path": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Uses runtime value.GetType() with generated context.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
+          "line": 163,
+          "claim": "Uses runtime value.GetType() with generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs#L163"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
+          "line": 164,
+          "claim": "Uses runtime value.GetType() with generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs#L164"
+        }
+      ]
+    },
+    {
+      "aggregate": "IndependenceRuleCatalog",
+      "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Uses runtime value.GetType() with generated context.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs",
+          "line": 72,
+          "claim": "Uses runtime value.GetType() with generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs#L72"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs",
+          "line": 73,
+          "claim": "Uses runtime value.GetType() with generated context.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs#L73"
+        }
+      ]
+    },
+    {
+      "aggregate": "ProviderRegister",
+      "path": "src/Compliance.Core/Features/Providers/ProviderRegister.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Concrete generated ProviderRecorded/ProviderRevised type info.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderRegister.cs",
+          "line": 54,
+          "claim": "Concrete generated ProviderRecorded/ProviderRevised type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Providers/ProviderRegister.cs#L54"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderRegister.cs",
+          "line": 75,
+          "claim": "Concrete generated ProviderRecorded/ProviderRevised type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Providers/ProviderRegister.cs#L75"
+        }
+      ]
+    },
+    {
+      "aggregate": "ProviderAssuranceRegister",
+      "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Concrete generated event type info for every guarded event.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
+          "line": 100,
+          "claim": "Concrete generated event type info for every guarded event.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs#L100"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
+          "line": 124,
+          "claim": "Concrete generated event type info for every guarded event.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs#L124"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
+          "line": 174,
+          "claim": "Concrete generated event type info for every guarded event.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs#L174"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
+          "line": 220,
+          "claim": "Concrete generated event type info for every guarded event.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs#L220"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
+          "line": 277,
+          "claim": "Concrete generated event type info for every guarded event.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs#L277"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
+          "line": 341,
+          "claim": "Concrete generated event type info for every guarded event.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs#L341"
+        }
+      ]
+    },
+    {
+      "aggregate": "CommitmentDraft",
+      "path": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Concrete generated type info for create/revise.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+          "line": 185,
+          "claim": "Concrete generated type info for create/revise.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Commitments/CommitmentDraft.cs#L185"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+          "line": 215,
+          "claim": "Concrete generated type info for create/revise.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Commitments/CommitmentDraft.cs#L215"
+        }
+      ]
+    },
+    {
+      "aggregate": "RiskDraft",
+      "path": "src/Compliance.Core/Features/Risks/RiskDraft.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Concrete generated type info for create/revise.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskDraft.cs",
+          "line": 68,
+          "claim": "Concrete generated type info for create/revise.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Risks/RiskDraft.cs#L68"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskDraft.cs",
+          "line": 93,
+          "claim": "Concrete generated type info for create/revise.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Risks/RiskDraft.cs#L93"
+        }
+      ]
+    },
+    {
+      "aggregate": "ControlDraft",
+      "path": "src/Compliance.Core/Features/Controls/ControlDraft.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Concrete generated type info for guarded draft create/revise/discard/approve.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Controls/ControlDraft.cs",
+          "line": 367,
+          "claim": "Concrete generated type info for guarded draft create/revise/discard/approve.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Controls/ControlDraft.cs#L367"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Controls/ControlDraft.cs",
+          "line": 410,
+          "claim": "Concrete generated type info for guarded draft create/revise/discard/approve.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Controls/ControlDraft.cs#L410"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Controls/ControlDraft.cs",
+          "line": 517,
+          "claim": "Concrete generated type info for guarded draft create/revise/discard/approve.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Controls/ControlDraft.cs#L517"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Controls/ControlDraft.cs",
+          "line": 766,
+          "claim": "Concrete generated type info for guarded draft create/revise/discard/approve.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Controls/ControlDraft.cs#L766"
+        }
+      ]
+    },
+    {
+      "aggregate": "Policy",
+      "path": "src/Compliance.Core/Features/Policies/Policy.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Size<T>(T,JsonTypeInfo<T>) preserves concrete source-generated event type.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Policies/Policy.cs",
+          "line": 268,
+          "claim": "Size<T>(T,JsonTypeInfo<T>) preserves concrete source-generated event type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Policies/Policy.cs#L268"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Policies/Policy.cs",
+          "line": 326,
+          "claim": "Size<T>(T,JsonTypeInfo<T>) preserves concrete source-generated event type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Policies/Policy.cs#L326"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Policies/Policy.cs",
+          "line": 601,
+          "claim": "Size<T>(T,JsonTypeInfo<T>) preserves concrete source-generated event type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Policies/Policy.cs#L601"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Policies/Policy.cs",
+          "line": 602,
+          "claim": "Size<T>(T,JsonTypeInfo<T>) preserves concrete source-generated event type.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Policies/Policy.cs#L602"
+        }
+      ]
+    },
+    {
+      "aggregate": "CriteriaTextOverlayLedger",
+      "path": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Concrete revised event with generated type info.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs",
+          "line": 52,
+          "claim": "Concrete revised event with generated type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs#L52"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs",
+          "line": 54,
+          "claim": "Concrete revised event with generated type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs#L54"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs",
+          "line": 55,
+          "claim": "Concrete revised event with generated type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs#L55"
+        }
+      ]
+    },
+    {
+      "aggregate": "ImportBatch",
+      "path": "src/Compliance.Core/Features/Applications/ImportBatch.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Concrete staged event with generated type info.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/ImportBatch.cs",
+          "line": 101,
+          "claim": "Concrete staged event with generated type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/ImportBatch.cs#L101"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ImportBatch.cs",
+          "line": 105,
+          "claim": "Concrete staged event with generated type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/ImportBatch.cs#L105"
+        }
+      ]
+    },
+    {
+      "aggregate": "ApplicationImportLedger",
+      "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Frozen plan/start rows measured with matching concrete type info.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs",
+          "line": 89,
+          "claim": "Frozen plan/start rows measured with matching concrete type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs#L89"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs",
+          "line": 90,
+          "claim": "Frozen plan/start rows measured with matching concrete type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs#L90"
+        }
+      ]
+    },
+    {
+      "aggregate": "ApplicationImportLedger",
+      "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Retirement start/rows measured with matching concrete type info.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs",
+          "line": 72,
+          "claim": "Retirement start/rows measured with matching concrete type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs#L72"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs",
+          "line": 73,
+          "claim": "Retirement start/rows measured with matching concrete type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs#L73"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs",
+          "line": 98,
+          "claim": "Retirement start/rows measured with matching concrete type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs#L98"
+        }
+      ]
+    },
+    {
+      "aggregate": "ApplicationImportLedger",
+      "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Commit.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Committed marker uses concrete generated type info.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Commit.cs",
+          "line": 53,
+          "claim": "Committed marker uses concrete generated type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/ApplicationImportLedger.Commit.cs#L53"
+        }
+      ]
+    },
+    {
+      "aggregate": "DeclaredApplication",
+      "path": "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs",
+      "nominalThresholdBytes": 49152,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Import effect uses concrete generated type info.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs",
+          "line": 80,
+          "claim": "Import effect uses concrete generated type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs#L80"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs",
+          "line": 81,
+          "claim": "Import effect uses concrete generated type info.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs#L81"
+        }
+      ]
+    },
+    {
+      "aggregate": "TenantIdentityProvider",
+      "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+      "nominalThresholdBytes": 131072,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 58,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs#L58"
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 89,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs#L89"
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 122,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs#L122"
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 152,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs#L152"
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 177,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs#L177"
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 481,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs#L481"
+        }
+      ]
+    },
+    {
+      "aggregate": "ExaminationSignOff",
+      "path": "src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs",
+      "nominalThresholdBytes": 131072,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "var ev = new ExaminationSignedOff, so generic concrete serialization selects business payload.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs",
+          "line": 57,
+          "claim": "var ev = new ExaminationSignedOff, so generic concrete serialization selects business payload.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs#L57"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs",
+          "line": 58,
+          "claim": "var ev = new ExaminationSignedOff, so generic concrete serialization selects business payload.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs#L58"
+        }
+      ]
+    },
+    {
+      "aggregate": "TypeIIObservationCalendar",
+      "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+      "nominalThresholdBytes": 32768,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Both calls have concrete ObservationPeriodReserved/ObservationPeriodAmendmentReserved static event types.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+          "line": 69,
+          "claim": "Both calls have concrete ObservationPeriodReserved/ObservationPeriodAmendmentReserved static event types.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs#L69"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+          "line": 71,
+          "claim": "Both calls have concrete ObservationPeriodReserved/ObservationPeriodAmendmentReserved static event types.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs#L71"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+          "line": 112,
+          "claim": "Both calls have concrete ObservationPeriodReserved/ObservationPeriodAmendmentReserved static event types.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs#L112"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
+          "line": 114,
+          "claim": "Both calls have concrete ObservationPeriodReserved/ObservationPeriodAmendmentReserved static event types.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs#L114"
+        }
+      ]
+    },
+    {
+      "aggregate": "TypeIIPeriod.GenerateDueOccurrences",
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "nominalThresholdBytes": 524288,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "var ev = new DueControlOccurrencesGenerated; this one path is concrete even though Emit is affected.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 170,
+          "claim": "var ev = new DueControlOccurrencesGenerated; this one path is concrete even though Emit is affected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L170"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 172,
+          "claim": "var ev = new DueControlOccurrencesGenerated; this one path is concrete even though Emit is affected.",
+          "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L172"
+        }
+      ]
+    }
+  ],
+  "additionalTransportIncompatibleNominalGates": [
+    {
+      "aggregate": "TenantIdentityProvider",
+      "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+      "nominalThresholdBytes": 131072,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 58,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 89,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 122,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 152,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 177,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+          "line": 481,
+          "claim": "Bare generic Fits<T> but EVERY call passes a variable constructed as a concrete event type; no base type erasure. Default reflection serializer remains used."
+        }
+      ]
+    },
+    {
+      "aggregate": "ExaminationSignOff",
+      "path": "src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs",
+      "nominalThresholdBytes": 131072,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "var ev = new ExaminationSignedOff, so generic concrete serialization selects business payload.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs",
+          "line": 57,
+          "claim": "var ev = new ExaminationSignedOff, so generic concrete serialization selects business payload."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs",
+          "line": 58,
+          "claim": "var ev = new ExaminationSignedOff, so generic concrete serialization selects business payload."
+        }
+      ]
+    },
+    {
+      "aggregate": "TypeIIPeriod.GenerateDueOccurrences",
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "nominalThresholdBytes": 524288,
+      "classification": "safe_from_base_type_erasure_only",
+      "reason": "var ev = new DueControlOccurrencesGenerated; this one path is concrete even though Emit is affected.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 170,
+          "claim": "var ev = new DueControlOccurrencesGenerated; this one path is concrete even though Emit is affected."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 172,
+          "claim": "var ev = new DueControlOccurrencesGenerated; this one path is concrete even though Emit is affected."
+        }
+      ]
+    }
+  ],
+  "pinnedSdk": {
+    "package": "Cntryl.Fitz.Core",
+    "version": "2.0.0",
+    "nupkgPath": "/tmp/compliance-domain-nuget-20261022-retry/cntryl.fitz.core/2.0.0/cntryl.fitz.core.2.0.0.nupkg",
+    "nupkgSha256": "00f6b75147837675203126528d2ca3971676dc25b2f838b3b00b1a5118eddcc9",
+    "nupkgSha512Base64": "ykMQ7hbE/8h5Foj6ozozukczR8r4Byj2NpWx8OomYf1TaxUHs+WvB+F+H65+kKq00EiB6YsBvxfx92GrkF1TVQ==",
+    "lockContentHash": "ykMQ7hbE/8h5Foj6ozozukczR8r4Byj2NpWx8OomYf1TaxUHs+WvB+F+H65+kKq00EiB6YsBvxfx92GrkF1TVQ==",
+    "matchesRepositoryLock": true,
+    "nuspecPath": "/tmp/compliance-domain-nuget-20261022-retry/cntryl.fitz.core/2.0.0/cntryl.fitz.core.nuspec",
+    "packageRepository": "https://github.com/cntryl/fitz-dotnet",
+    "packageRepositoryCommit": "d52cb2ee54cad8b90095f64b42789ffea34a439a",
+    "portiaVersion": "0.8.1",
+    "portiaRepositoryCommit": "a8118d48a9917bb3de15d7d2922fded38e37faf8",
+    "sourceArtifacts": [
+      {
+        "repository": "https://github.com/cntryl/fitz-dotnet",
+        "commit": "d52cb2ee54cad8b90095f64b42789ffea34a439a",
+        "repositoryPath": "src/Fitz.Core/Protocol/FrameCodec.cs",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Protocol/FrameCodec.cs",
+        "capturedPath": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FrameCodec.cs",
+        "sha256": "2545114c840fafee157938f9f8d62aad04043e96bc2c695dcfb17fbb8de156ea"
+      },
+      {
+        "repository": "https://github.com/cntryl/fitz-dotnet",
+        "commit": "d52cb2ee54cad8b90095f64b42789ffea34a439a",
+        "repositoryPath": "src/Fitz.Core/FitzLimits.cs",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/FitzLimits.cs",
+        "capturedPath": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FitzLimits.cs",
+        "sha256": "2ba258e139f8d8a2dec4f68459f256b0c6fc55f7be516a4be34f4de56e9965bc"
+      },
+      {
+        "repository": "https://github.com/cntryl/fitz-dotnet",
+        "commit": "d52cb2ee54cad8b90095f64b42789ffea34a439a",
+        "repositoryPath": "src/Fitz.Core/Domains/Stream/StreamSession.cs",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Domains/Stream/StreamSession.cs",
+        "capturedPath": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/StreamSession.cs",
+        "sha256": "dadb2628864cda330d3bcda5265678877b5f640c75a33c15f123257f1299b907"
+      },
+      {
+        "repository": "https://github.com/cntryl/fitz-dotnet",
+        "commit": "d52cb2ee54cad8b90095f64b42789ffea34a439a",
+        "repositoryPath": "src/Fitz.Core/Domains/Kv/KvTransaction.cs",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Domains/Kv/KvTransaction.cs",
+        "capturedPath": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/KvTransaction.cs",
+        "sha256": "d0749b57a390ad07d9ee7e79412ceae8e5418ddf5124358b8184c1ebe6373187"
+      },
+      {
+        "repository": "https://github.com/cntryl/fitz-dotnet",
+        "commit": "d52cb2ee54cad8b90095f64b42789ffea34a439a",
+        "repositoryPath": "src/Fitz.Core/Connection/FitzConnection.cs",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Connection/FitzConnection.cs",
+        "capturedPath": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FitzConnection.cs",
+        "sha256": "0df266740d1279c01b47bfc8dda887f47051a203bdaba0d80317a2eb7533038a"
+      },
+      {
+        "repository": "https://github.com/cntryl/fitz-dotnet",
+        "commit": "d52cb2ee54cad8b90095f64b42789ffea34a439a",
+        "repositoryPath": "src/Fitz.Core/Protocol/MessageTypes.cs",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Protocol/MessageTypes.cs",
+        "capturedPath": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/MessageTypes.cs",
+        "sha256": "25c98c9cd9856c3cc1a09fcc803debe53f274172a48d6b1c383dba185d29bfb9"
+      },
+      {
+        "repository": "https://github.com/cntryl/portia",
+        "commit": "a8118d48a9917bb3de15d7d2922fded38e37faf8",
+        "repositoryPath": "src/Portia.Core/Events/JsonDomainEventSerializer.cs",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Core/Events/JsonDomainEventSerializer.cs",
+        "capturedPath": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/JsonDomainEventSerializer.cs",
+        "sha256": "bfeba246780165c17e422ac914a8495f2f6fe8ddbe6f91786c4fde591008f4ad"
+      },
+      {
+        "repository": "https://github.com/cntryl/portia",
+        "commit": "a8118d48a9917bb3de15d7d2922fded38e37faf8",
+        "repositoryPath": "src/Portia.Abstractions/Events/DomainEvent.cs",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Abstractions/Events/DomainEvent.cs",
+        "capturedPath": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/DomainEvent.cs",
+        "sha256": "307555c23434388bc35e6bfbf219f39596e7c4cb73044325e67ef22988765ddb"
+      }
+    ],
+    "lockEvidence": {
+      "path": "src/Compliance.Core/packages.lock.json",
+      "line": 46,
+      "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/src/Compliance.Core/packages.lock.json#L46",
+      "claim": "Exact resolved2.0.0 package content hash verified from local nupkg bytes."
+    },
+    "nuspecEvidence": {
+      "path": "/tmp/compliance-domain-nuget-20261022-retry/cntryl.fitz.core/2.0.0/cntryl.fitz.core.nuspec",
+      "sha256": "9e58e74397189ae5243c45feec6d35d9e50a3c82e497a8ea22295c110b108d8c",
+      "claim": "Nuspec Repository element pins fitz-dotnet commit d52cb2ee54cad8b90095f64b42789ffea34a439a; source read from git object, not checkout head."
+    }
+  },
+  "constraints": {
+    "wireOperationPayloadMaximumBytes": 65535,
+    "largestCorrelatedExtendedTransportFrameBytes": 65551,
+    "streamAppend": {
+      "messageType": 601,
+      "requestHeaderBytes": 5,
+      "correlationRecordBytes": 11,
+      "portiaUsesRouteMetadata": true,
+      "portiaPassesSeparateDiscriminator": false,
+      "operationPayloadFormula": "8 sessionId +8 expectedOffset +4 bodyLength +E serializedEventEnvelope +1 metadataFlag +4 metadataLength +R UTF8(streamRoute) +1 discriminatorFlag = E+R+26",
+      "serializedEventEnvelopeMaximumFormula": "E <=65535-26-R =65509-R",
+      "fullCorrelatedFrameFormula": "E+R+42 <=65551",
+      "eventEnvelopeIncludes": "Portia discriminator name/version, serialized DomainEventMetadata and concrete event payload; a domain-payload-only gate does not measure full envelope."
+    },
+    "kvWrite": {
+      "operationPayloadFormula": "8 transactionId +4 routeLength +R routeUTF8 +4 keyLength +K keyBytes +4 valueLength +V valueBytes =V+R+K+20",
+      "valueMaximumFormula": "V <=65515-R-K",
+      "note": "KvPut104 has one-byte opcode; correlated transport adds14 bytes. Generic MaxFrameSize65551 is not a value limit."
+    },
+    "evidence": [
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FrameCodec.cs",
+        "line": 32,
+        "claim": "EncodeInto rejects payload.Length > ushort.MaxValue.",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Protocol/FrameCodec.cs#L32"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FrameCodec.cs",
+        "line": 89,
+        "claim": "MaxTransportFrameSize =11 correlation +5 max header +65535 payload.",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Protocol/FrameCodec.cs#L89"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FrameCodec.cs",
+        "line": 99,
+        "claim": "EncodeCorrelated applies same65535 operation payload ceiling.",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Protocol/FrameCodec.cs#L99"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/StreamSession.cs",
+        "line": 38,
+        "claim": "Append operation constructs sessionId+offset+body length/body+metadata flag/length+metadata+discriminator flag.",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Domains/Stream/StreamSession.cs#L38"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/StreamSession.cs",
+        "line": 68,
+        "claim": "Whole operation payload goes to StreamAppend.",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Domains/Stream/StreamSession.cs#L68"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/FitzConnection.cs",
+        "line": 412,
+        "claim": "Request bytes pass through FrameCodec.Encode or EncodeCorrelated.",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Connection/FitzConnection.cs#L412"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/JsonDomainEventSerializer.cs",
+        "line": 102,
+        "claim": "Actual durable event serializes runtime payload plus discriminator/version and metadata envelope.",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Core/Events/JsonDomainEventSerializer.cs#L102"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/framework/FitzEventStore.cs",
+        "line": 145,
+        "claim": "Portia includes stream route metadata on each append and passes full serialized event body.",
+        "url": "https://github.com/cntryl/portia/blob/a8118d48a9917bb3de15d7d2922fded38e37faf8/src/Portia.Fitz/Events/FitzEventStore.cs#L145"
+      },
+      {
+        "path": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/KvTransaction.cs",
+        "line": 305,
+        "claim": "KV writes encode txId,route,key length/key,value length/value before codec.",
+        "url": "https://github.com/cntryl/fitz-dotnet/blob/d52cb2ee54cad8b90095f64b42789ffea34a439a/src/Fitz.Core/Domains/Kv/KvTransaction.cs#L305"
+      }
+    ],
+    "budgetConsequence": "64KiB=65536 already exceeds65535 operation bytes before ANY Portia envelope/append metadata.128/256/384/512KiB thresholds are incompatible with one Fitz record even after fixing base type erasure.48KiB and32KiB concrete payload budgets leave margin but are not exact envelope/frame proof."
+  },
+  "reproduction": {
+    "rootProbePath": "/tmp/compliance-aggregate-audit-20261022/serializer-probe/result.json",
+    "result": {
+      "package": "Cntryl.Portia.Abstractions",
+      "packageVersion": "0.8.1",
+      "packageRepositoryCommit": "a8118d48a9917bb3de15d7d2922fded38e37faf8",
+      "declaredBytes": 2,
+      "declaredJson": "{}",
+      "concreteBytes": 100011,
+      "inputStringLength": 100000
+    },
+    "probeProgramPath": "/tmp/compliance-aggregate-audit-20261022/serializer-probe/Program.cs",
+    "pinnedBaseTypePath": "/tmp/compliance-aggregate-audit-20261022/pinned-sdk/DomainEvent.cs",
+    "limits": [
+      "Probe demonstrates .NET10 JIT behavior for one derived100000-character event against pinned Portia.Abstractions0.8.1; it does not construct every affected aggregate request.",
+      "Static C# factory/helper return types prove same base-type selection at14 gates.",
+      "No broker append was executed; wire limit and operation overhead are established from exact package source.",
+      "Existing ShouldFitSlimClosureRowAndNativeEventInPinnedFitzFramesGivenMaximumActions encodes raw row/event JSON directly with FrameCodec; it omits actual KV/StreamAppend operation fields and durable Portia envelope, so this test alone does not prove complete wire fit."
+    ],
+    "closureTestEvidence": [
+      {
+        "path": "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs",
+        "line": 226,
+        "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs#L226",
+        "claim": "Serializes concrete event payload without Portia durable envelope."
+      },
+      {
+        "path": "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs",
+        "line": 230,
+        "url": "https://github.com/bdgrz/compliance-core/blob/4c255f56bfec727ac1f6e841c09935a4ce69ec4c/test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs#L230",
+        "claim": "Raw row/event JSON passed to frame encoder without actual KV/StreamAppend operation encoding."
+      }
+    ]
+  },
+  "correction": [
+    "Preserve concrete event type through generic Emit<TEvent> plus JsonTypeInfo<TEvent>, or explicitly select runtime event type using generated metadata; avoid default generic serialization of DomainEvent.",
+    "Enforce a storage-boundary byte check using the same actual durable IDomainEventSerializer and the full StreamAppend operation representation, accounting for route metadata and optional discriminator; reject before external append.",
+    "Measure KV projection writes with their real route/key/value operation payload, not value JSON alone.",
+    "Replace aggregate history/child accumulation with correct boundaries and immutable content/manifest primitives rather than raising byte or lifetime caps.",
+    "Add future regression coverage for above-threshold business payloads and exact-boundary full SDK operations, including worst escaping/multibyte text, metadata and route/key overhead; this audit itself made no test/source changes."
+  ],
+  "aotAssessment": {
+    "observed": "Bare JsonSerializer.SerializeToUtf8Bytes<T>(value) uses default reflection-based metadata when no explicit type info/options is supplied; safe concrete calls still use that overload.",
+    "currentPublishConfiguration": {
+      "path": "src/Compliance.App/Compliance.App.csproj",
+      "line": 3,
+      "claim": "PublishAot defaults false unless explicitly overridden."
+    },
+    "verdict": "No independent AOT defect claimed. No native publish/reflection-disabled execution performed; root serializer probe is JIT. Correction should use already available generated contexts to avoid relying on reflection."
+  }
+}
