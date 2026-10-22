@@ -528,6 +528,8 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
+        services.AddScoped<FindingReadSource>();
+        services.AddScoped<FindingHistoryMigrationStatusReader>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();
         services.AddScoped<IProgramResourceScopeResolver, ProgramResourceScopeResolver>();
         services.AddScoped<BoundaryResponsibilityScopeValidator>();
@@ -1045,6 +1047,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReopenFindingHandler>()
             .AddRequestHandler<GetFindingHandler>()
             .AddRequestHandler<ListFindingsHandler>()
+            .AddRequestHandler<MigrateFindingHistoryHandler>()
+            .AddRequestAuthorizer<MigrateFindingHistoryAuthorizer>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.OpenEvidenceRequestHandler>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.FulfilEvidenceRequestHandler>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.CancelEvidenceRequestHandler>()

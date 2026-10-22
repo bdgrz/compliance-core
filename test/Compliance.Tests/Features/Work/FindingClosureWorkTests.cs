@@ -150,7 +150,9 @@ public sealed class FindingClosureWorkTests
         var fixture = await OperationsFixture.CreateAsync();
         var finding = await ReadyAsync(fixture, fixture.OwnerUserId);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
-        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient());
+        await using var findingScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(),
+            new FindingReadSource(findingScope.ServiceProvider.GetRequiredService<IAggregateReader>(), events), TimeProvider.System);
         var consistency = new WorkQueueReadConsistency(events, [directory]);
         var lagging = await consistency.CaptureAsync(fixture.TenantId, CancellationToken.None);
         var pattern = directory.SourcePattern(fixture.TenantId);

@@ -18,7 +18,9 @@ static class ProgramManagementServices
         Action<PortiaBuilder> handlers, Action<IServiceCollection>? services = null)
     {
         var collection = new ServiceCollection();
-        collection.AddSingleton<IEventStore>(new InMemoryEventStore());
+        var eventStore = new InMemoryEventStore();
+        collection.AddSingleton<IEventStore>(eventStore);
+        collection.AddSingleton<IDomainEventReader>(eventStore);
         collection.AddSingleton(permissions);
         collection.AddSingleton<IAccessGrantPermissionAuthorizer>(
             new PermissionBackedAccessGrantPermissionAuthorizer(permissions));

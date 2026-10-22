@@ -221,6 +221,7 @@ public sealed class PolicyAcknowledgementIndependenceTests
         Assert.Equal("record_acknowledgement", item.NextAction);
         await AttestAssignmentHistoryFixture.SeedAsync(fixture.Provider, fixture.Source.TenantId,
             fixture.Source.ManagerUserId, revoked);
+        await CatchUpWorkAsync(fixture.Provider, fixture.Source.TenantId);
 
         // Act
         var denied = await fixture.AcknowledgeAsync(fixture.Source.ManagerUserId, fixture.Source.NonMemberPersonId);

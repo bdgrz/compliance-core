@@ -5,12 +5,13 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
 
-sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
+sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client,
+    FindingReadSource findings, TimeProvider clock)
     : FitzKvProjectionStore(client,
-        "kv://bdgrz/accountable-work-items/corrective-actions-v1", ProjectorName),
+        "kv://bdgrz/accountable-work-items/corrective-actions-v3", ProjectorName),
       IAccountableWorkItemDirectoryReader, ICorrectiveActionWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemCorrectiveActionV1";
+    public const string ProjectorName = "AccountableWorkItemCorrectiveActionV3";
     const string RevisionKey = ProjectorName;
 
     string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
@@ -18,7 +19,7 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
     public IReadOnlyCollection<string> ProjectedKinds => [WorkSource.CorrectiveAction];
 
     public EventStreamPattern SourcePattern(Uuid tenantId) =>
-        EventStreamPattern.ForPattern(tenantId.ToString(), "remediation");
+        EventStreamPattern.ForPattern(tenantId.ToString());
 
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
         CancellationToken ct = default) => base.LoadCheckpointAsync(new CheckpointIdentity(
@@ -34,6 +35,26 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        domainEvent = FindingEventFacts.Business(domainEvent);
+        var (programId, findingId) = domainEvent switch
+        {
+            FindingRaised ev => (ev.ProgramId, ev.FindingId),
+            FindingRevised ev => (ev.ProgramId, ev.FindingId),
+            CorrectiveActionAdded ev => (ev.ProgramId, ev.FindingId),
+            CorrectiveActionCompleted ev => (ev.ProgramId, ev.FindingId),
+            FindingAcceptanceLinked ev => (ev.ProgramId, ev.FindingId),
+            FindingClosed ev => (ev.ProgramId, ev.FindingId),
+            FindingReopened ev => (ev.ProgramId, ev.FindingId),
+            _ => (Uuid.Empty, Uuid.Empty),
+        };
+        // Both source generations advance the tenant checkpoint. Only the canonical target
+        // business fact changes work; its preceding import marker is lineage, not another fact.
+        if (programId == Uuid.Empty && findingId == Uuid.Empty)
+            return;
+        if (domainEvent.Metadata.AggregateId == programId)
+            return;
+        if (domainEvent.Metadata.AggregateId != FindingAggregate.StreamId(programId, findingId))
+            throw new InvalidOperationException("Finding work must originate from its canonical finding stream.");
         switch (domainEvent)
         {
             case FindingRaised raised:
@@ -67,7 +88,34 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
         await IncrementRevisionAsync(ct).ConfigureAwait(false);
     }
 
+    public ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+        Uuid programId, CancellationToken ct = default) =>
+        LoadProgramAsync(tenantId, programId, clock.GetUtcNow(), DateOnly.MaxValue, null, ct);
+
     public async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+        Uuid programId, DateTimeOffset now, DateOnly horizon, Uuid? workItemId,
+        CancellationToken ct = default)
+    {
+        var source = await findings.ReadAsync(tenantId, programId, now, ct).ConfigureAwait(false);
+        if (!source.IsSuccess)
+            return Result<IReadOnlyList<WorkCandidate>>.Failure(source.Error);
+        var expected = Candidates(source.Value, tenantId, programId);
+        if (!source.Value.UsesFindingStreams)
+            return Result<IReadOnlyList<WorkCandidate>>.Success(expected);
+        var projected = await LoadProjectedProgramAsync(tenantId, programId, ct).ConfigureAwait(false);
+        if (!projected.IsSuccess)
+            return projected;
+        var confirmed = await findings.ReadAsync(tenantId, programId, now, ct).ConfigureAwait(false);
+        if (!confirmed.IsSuccess)
+            return Result<IReadOnlyList<WorkCandidate>>.Failure(confirmed.Error);
+        if (!confirmed.Value.UsesFindingStreams || !SameHeads(source.Value, confirmed.Value) ||
+            !SameCandidates(expected, projected.Value))
+            return Result<IReadOnlyList<WorkCandidate>>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Finding work has not reached its current source, or the source changed. Retry.", isTransient: true));
+        return projected;
+    }
+
+    public async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProjectedProgramAsync(Uuid tenantId,
         Uuid programId, CancellationToken ct = default)
     {
         var candidates = new List<WorkCandidate>();
@@ -99,7 +147,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
         var finding = new CorrectiveActionFindingContext(raised.TenantId, raised.ProgramId,
             raised.FindingId, raised.Title, raised.Severity, raised.Revision);
         var existing = await CorrectiveActionWorkItemDirectorySchema.FindingContexts.GetAsync(
-            Transaction, raised.FindingId, ct).ConfigureAwait(false);
+            Transaction, CorrectiveActionWorkItemDirectorySchema.FindingKey(raised.ProgramId,
+                raised.FindingId), ct).ConfigureAwait(false);
         if (existing is null)
             await CorrectiveActionWorkItemDirectorySchema.FindingContexts.InsertAsync(Transaction,
                 finding, ct).ConfigureAwait(false);
@@ -117,7 +166,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
         {
             var page = await CorrectiveActionWorkItemDirectorySchema.WorkItems.QueryAsync(
                 Transaction, CorrectiveActionWorkItemDirectorySchema.ByFinding.Query()
-                    .WithPrefix(revised.FindingId.ToString()).Take(200).After(cursor), ct)
+                    .WithPrefix(revised.ProgramId.ToString(), revised.FindingId.ToString())
+                    .Take(200).After(cursor), ct)
                 .ConfigureAwait(false);
             foreach (var existing in page.Items)
             {
@@ -154,7 +204,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
         var workItem = AccountableWorkItemView.FromCandidate(added.TenantId,
             added.ProgramId, candidate);
         var existing = await CorrectiveActionWorkItemDirectorySchema.WorkItems.GetAsync(
-            Transaction, candidate.WorkItemId, ct).ConfigureAwait(false);
+            Transaction, CorrectiveActionWorkItemDirectorySchema.WorkItemKey(added.ProgramId,
+                candidate.WorkItemId), ct).ConfigureAwait(false);
         if (existing is null)
             await CorrectiveActionWorkItemDirectorySchema.WorkItems.InsertAsync(Transaction,
                 workItem, ct).ConfigureAwait(false);
@@ -173,7 +224,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
             completed.Revision, ct).ConfigureAwait(false);
         var workItemId = WorkCandidate.IdFor(completed.ActionId, WorkSource.CorrectiveAction);
         var existing = await CorrectiveActionWorkItemDirectorySchema.WorkItems.GetAsync(
-            Transaction, workItemId, ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
+            Transaction, CorrectiveActionWorkItemDirectorySchema.WorkItemKey(completed.ProgramId,
+                workItemId), ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
             "A corrective action cannot complete before its open event is projected.");
         ValidateWorkItem(existing, completed.TenantId, completed.ProgramId,
             completed.FindingId, completed.ActionId);
@@ -190,7 +242,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
         {
             var page = await CorrectiveActionWorkItemDirectorySchema.WorkItems.QueryAsync(
                 Transaction, CorrectiveActionWorkItemDirectorySchema.ByFinding.Query()
-                    .WithPrefix(closed.FindingId.ToString()).Take(200).After(cursor), ct)
+                    .WithPrefix(closed.ProgramId.ToString(), closed.FindingId.ToString())
+                    .Take(200).After(cursor), ct)
                 .ConfigureAwait(false);
             foreach (var item in page.Items)
             {
@@ -208,7 +261,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
         string? severity = null)
     {
         var current = await CorrectiveActionWorkItemDirectorySchema.FindingContexts.GetAsync(
-            Transaction, findingId, ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
+            Transaction, CorrectiveActionWorkItemDirectorySchema.FindingKey(programId, findingId),
+            ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
             "A finding event cannot be projected before its raised event.");
         if (current.TenantId != tenantId || current.ProgramId != programId ||
             revision != current.Revision + 1)
@@ -247,4 +301,31 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client)
 
     static RequestError InvalidScope() => new(RequestErrorKind.Conflict,
         "The corrective action work projection has an invalid tenant, program, or source scope.");
+
+    static WorkCandidate[] Candidates(FindingReadSnapshot source, Uuid tenantId, Uuid programId) =>
+        source.Findings
+                .Where(static finding => finding.Status != FindingStates.Closed)
+                .SelectMany(finding => finding.CorrectiveActions
+                    .Where(static action => action.Status == FindingStates.Open)
+                    .Select(action => new WorkCandidate(WorkCandidate.IdFor(action.ActionId,
+                            WorkSource.CorrectiveAction), WorkSource.CorrectiveAction, action.ActionId,
+                        null, finding.FindingId, action.Description,
+                        $"Corrective action for finding \"{finding.Title}\".", action.DueOn,
+                        RemediationLedger.Materiality(finding.Severity), "complete",
+                        $"/api/v1/tenants/{tenantId}/programs/{programId}/findings/{finding.FindingId}/corrective-actions/{action.ActionId}/completions",
+                        new OperatingHolder(OperatingAuthority.MemberHolder, action.OwnerMemberId),
+                        null, new HashSet<Uuid>(), action.AddedAt))).ToArray();
+
+    static bool SameCandidates(WorkCandidate[] expected, IReadOnlyList<WorkCandidate> actual) =>
+        expected.Length == actual.Count && expected.OrderBy(static item => item.WorkItemId.ToString(), StringComparer.Ordinal)
+            .Zip(actual.OrderBy(static item => item.WorkItemId.ToString(), StringComparer.Ordinal))
+            .All(static pair => pair.First.Excluded.SetEquals(pair.Second.Excluded) &&
+                pair.First with { ProgramId = pair.Second.ProgramId, Excluded = pair.Second.Excluded } == pair.Second);
+
+    static bool SameHeads(FindingReadSnapshot left, FindingReadSnapshot right) =>
+        left.SourceRecords.Count == right.SourceRecords.Count &&
+        left.SourceRecords.Zip(right.SourceRecords).All(static pair =>
+            pair.First.Stream == pair.Second.Stream &&
+            pair.First.Event.Metadata == pair.Second.Event.Metadata &&
+            FindingReadSource.PayloadHash(pair.First.Event) == FindingReadSource.PayloadHash(pair.Second.Event));
 }

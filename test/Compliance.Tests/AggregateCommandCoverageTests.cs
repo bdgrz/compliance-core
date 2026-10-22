@@ -71,6 +71,7 @@ public sealed class AggregateCommandCoverageTests
                 "audit_only" => !hasReducer && hasEmitter && hasNote,
                 "legacy_replay" => hasReducer && !hasEmitter && hasNote,
                 "confirmed_gap" => !hasReducer && !hasEmitter && hasNote,
+                "migration_fact" => hasReducer && hasEmitter && hasNote,
                 "superseded_by_decision" or "superseded_vocabulary" =>
                     !hasReducer && !hasEmitter && hasNote,
                 _ => false,
@@ -81,6 +82,48 @@ public sealed class AggregateCommandCoverageTests
 
         // Assert
         Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
+    }
+
+    [Fact]
+    public void ShouldInventorySourceStreamFenceReplayGuardsGivenLegacyFactsAreNotReducers()
+    {
+        // Arrange
+        using var inventory = ReadInventory();
+        var root = inventory.RootElement;
+        var expectedFacts = new[]
+        {
+            "CorrectiveActionAdded", "CorrectiveActionCompleted", "FindingAcceptanceLinked",
+            "FindingClosed", "FindingRaised", "FindingReopened", "FindingRevised",
+        };
+        var replayGuards = root.GetProperty("factReplayGuards").EnumerateArray()
+            .Where(static guard => guard.GetProperty("aggregate").GetString() ==
+                "RemediationMigrationFenceAggregate")
+            .Select(static guard => guard.GetProperty("fact").GetString()!)
+            .Order(StringComparer.Ordinal).ToArray();
+        var legacyReducers = root.GetProperty("facts").EnumerateArray()
+            .Where(fact => expectedFacts.Contains(fact.GetProperty("fact").GetString(),
+                StringComparer.Ordinal))
+            .SelectMany(fact => fact.GetProperty("reducers").EnumerateArray()
+                .Select(reducer => reducer.GetProperty("aggregate").GetString()!))
+            .ToArray();
+        var fenceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(),
+            "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"));
+        var fenceSyntax = CSharpSyntaxTree.ParseText(fenceSource).GetRoot();
+        var apply = fenceSyntax.DescendantNodes().OfType<MethodDeclarationSyntax>()
+            .Single(method => method.Identifier.ValueText == "Apply" &&
+                method.ParameterList.Parameters.Single().Type?.ToString() == "DomainEvent");
+        var guardedFacts = apply.DescendantNodes().OfType<CasePatternSwitchLabelSyntax>()
+            .SelectMany(static label => label.Pattern.DescendantNodesAndSelf()
+                .OfType<DeclarationPatternSyntax>())
+            .Select(static pattern => pattern.Type.ToString())
+            .Order(StringComparer.Ordinal).ToArray();
+
+        // Act
+
+        // Assert
+        Assert.Equal(expectedFacts.Order(StringComparer.Ordinal), replayGuards);
+        Assert.DoesNotContain("RemediationMigrationFenceAggregate", legacyReducers);
+        Assert.Equal(expectedFacts.Order(StringComparer.Ordinal), guardedFacts);
     }
 
     [Fact]
@@ -126,9 +169,19 @@ public sealed class AggregateCommandCoverageTests
         var missingPaths = expectedRouted.Except(requestMutations).ToArray();
         var undeclaredRoutedPaths = requestMutations.Except(expectedRouted).ToArray();
         var invalidReadOnlyRoots = explicitlyReadOnly.Where(requestMutations.Contains).ToArray();
+        var pendingRoutesWithoutEvidence = aggregateRows.Where(static aggregate =>
+                aggregate.GetProperty("commandRouteDisposition").GetString() ==
+                    "pending_command_route")
+            .Where(static aggregate =>
+                aggregate.GetProperty("ownerIssue").ValueKind != JsonValueKind.Number ||
+                string.IsNullOrWhiteSpace(aggregate.GetProperty("note").GetString()) ||
+                aggregate.GetProperty("commandRequests").GetArrayLength() != 0 ||
+                aggregate.GetProperty("internalReactionRequests").GetArrayLength() != 0)
+            .Select(static aggregate => aggregate.GetProperty("aggregate").GetString()!).ToArray();
         var missingDisposition = aggregateRows.Where(static aggregate =>
                 aggregate.GetProperty("commandRouteDisposition").GetString() is not
-                    ("registered_command_route" or "read_only_legacy_replay"))
+                    ("registered_command_route" or "read_only_legacy_replay" or
+                     "pending_command_route"))
             .Select(static aggregate => aggregate.GetProperty("aggregate").GetString()!).ToArray();
 
         // Assert
@@ -137,6 +190,7 @@ public sealed class AggregateCommandCoverageTests
         Assert.Empty(undeclaredRoutedPaths);
         Assert.Empty(invalidReadOnlyRoots);
         Assert.Empty(missingDisposition);
+        Assert.Empty(pendingRoutesWithoutEvidence);
         Assert.Equal(expectedRouted.Count, root.GetProperty("counts")
             .GetProperty("aggregateTypesWithCommandPath").GetInt32());
     }
@@ -409,6 +463,7 @@ public sealed class AggregateCommandCoverageTests
         var counts = root.GetProperty("counts");
         var facts = root.GetProperty("facts").EnumerateArray().ToArray();
         var aggregates = root.GetProperty("aggregates").EnumerateArray().ToArray();
+        var replayGuards = root.GetProperty("factReplayGuards").EnumerateArray().ToArray();
         var requests = root.GetProperty("requests").EnumerateArray().ToArray();
         var producers = root.GetProperty("unwiredAggregateProducers").EnumerateArray().ToArray();
         var handlerTypes = typeof(RemediationLedger).Assembly.GetTypes()
@@ -461,6 +516,7 @@ public sealed class AggregateCommandCoverageTests
             fact.GetProperty("reducers").GetArrayLength() > 0 &&
             fact.GetProperty("emitters").GetArrayLength() == 0));
         AssertCount("aggregateTypes", aggregates.Length);
+        AssertCount("factReplayGuardRows", replayGuards.Length);
         AssertCount("aggregateTypesWithCommandPath", aggregates.Count(static aggregate =>
             aggregate.GetProperty("commandRouteDisposition").GetString() ==
             "registered_command_route"));

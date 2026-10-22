@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     authoritative program streams. Unresolved textual support remains represented by its
 ///     canonical owning record; this preview does not verify artifact existence or content.
 /// </summary>
-public sealed class EvidenceControlImpactContributor(IAggregateReader reader)
+public sealed class EvidenceControlImpactContributor(IAggregateReader reader, IDomainEventReader events)
     : IControlImpactContributor
 {
     public string Context => "evidence";
@@ -63,10 +63,12 @@ public sealed class EvidenceControlImpactContributor(IAggregateReader reader)
                 AddArtifact(item.Reference,
                     $"Evaluation {evaluation.EvaluationId} inspected artifact version {item.Version}.");
         }
-        var remediation = await reader.HydrateAsync(new RemediationLedger(subject.TenantId,
-            subject.ProgramId), ct).ConfigureAwait(false);
+        var remediation = await new FindingReadSource(reader, events).ReadAsync(subject.TenantId,
+            subject.ProgramId, DateTimeOffset.MinValue, ct).ConfigureAwait(false);
+        if (!remediation.IsSuccess)
+            return Result<ControlImpactContribution>.Failure(remediation.Error);
         foreach (var finding in ControlImpactRelationships.Findings(subject, operations,
-                     linkedEvaluations, remediation))
+                     linkedEvaluations, remediation.Value))
         {
             foreach (var action in finding.CorrectiveActions.Where(static item => item.Evidence is { Count: > 0 }))
             {
@@ -76,7 +78,7 @@ public sealed class EvidenceControlImpactContributor(IAggregateReader reader)
                         $"Corrective action evidence for linked finding {finding.FindingId} (revision {finding.Revision}) remains retained.")));
                 AddSupport(action.Evidence!, $"Corrective action {action.ActionId}");
             }
-            foreach (var closure in remediation.ReadClosures(finding.FindingId))
+            foreach (var closure in remediation.Value.ReadClosures(finding.FindingId))
             {
                 records.Add(new ControlAffectedRecord(subject.TenantId, Context,
                     "finding_closure", closure.DecisionId, null,

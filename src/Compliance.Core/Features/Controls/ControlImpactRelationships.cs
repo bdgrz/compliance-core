@@ -10,12 +10,12 @@ static class ControlImpactRelationships
 {
     public static IReadOnlyList<FindingView> Findings(ControlDraft subject,
         ControlOperationsLedger operations, IReadOnlyList<ControlEvaluationView> evaluations,
-        RemediationLedger remediation)
+        FindingReadSnapshot remediation)
     {
         var evaluationIds = evaluations.Select(static evaluation => evaluation.EvaluationId).ToHashSet();
         var deviationIds = evaluations.SelectMany(static evaluation => evaluation.Deviations)
             .Select(static deviation => deviation.DeviationId).ToHashSet();
-        return [.. remediation.ReadAll(DateTimeOffset.MinValue).Where(finding =>
+        return [.. remediation.Findings.Where(finding =>
             finding.Links.Any(MatchesLink) ||
             finding.Source.RecordId is { } sourceId &&
             (finding.Source.Kind is "control_occurrence" or "occurrence_review" &&

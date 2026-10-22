@@ -21,27 +21,27 @@ public sealed class FitzCorrectiveActionWorkItemDirectoryTests
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
         var now = new DateTimeOffset(2026, 10, 4, 12, 0, 0, TimeSpan.Zero);
         var dueOn = new DateOnly(2026, 10, 9);
-        var directory = new FitzCorrectiveActionWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzCorrectiveActionWorkItemDirectory(new InMemoryKvClient(), FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         var checkpoint = new ProjectionCheckpoint(new EventCursor("remediation-cursor"));
         var identity = new CheckpointIdentity(FitzCorrectiveActionWorkItemDirectory.ProjectorName,
-            EventStreamPattern.ForPattern(tenantId.ToString(), "remediation"));
+            EventStreamPattern.ForPattern(tenantId.ToString()));
 
         // Act
         await using (var batch = await directory.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(FindingRaisedEvent(tenantId, programId, findingId,
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, FindingRaisedEvent(tenantId, programId, findingId,
                 "high", actor, now));
-            await directory.ApplyAsync(new CorrectiveActionAdded(tenantId, programId, findingId, 2,
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, new CorrectiveActionAdded(tenantId, programId, findingId, 2,
                 new CorrectiveActionView(actionId, "Remove legacy access", ownerId, dueOn,
                     RemediationLedger.Open, actor, now.AddMinutes(1))));
-            await directory.ApplyAsync(new FindingRevised(tenantId, programId, findingId, 3,
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, new FindingRevised(tenantId, programId, findingId, 3,
                 "medium", ownerId, dueOn, "Production environment", null,
                 "Severity was reassessed.", actor, now.AddMinutes(2)));
             await batch.CommitAsync(checkpoint);
         }
 
-        var result = await directory.LoadProgramAsync(tenantId, programId,
+        var result = await directory.LoadProjectedProgramAsync(tenantId, programId,
             CancellationToken.None);
 
         // Assert
@@ -77,25 +77,25 @@ public sealed class FitzCorrectiveActionWorkItemDirectoryTests
         var ownerId = Uuid.CreateVersion4();
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
         var now = new DateTimeOffset(2026, 10, 4, 12, 0, 0, TimeSpan.Zero);
-        var directory = new FitzCorrectiveActionWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzCorrectiveActionWorkItemDirectory(new InMemoryKvClient(), FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         var identity = new CheckpointIdentity(FitzCorrectiveActionWorkItemDirectory.ProjectorName,
-            EventStreamPattern.ForPattern(tenantId.ToString(), "remediation"));
+            EventStreamPattern.ForPattern(tenantId.ToString()));
 
         // Act
         await using (var batch = await directory.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(FindingRaisedEvent(tenantId, programId, findingId,
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, FindingRaisedEvent(tenantId, programId, findingId,
                 "high", actor, now));
-            await directory.ApplyAsync(new CorrectiveActionAdded(tenantId, programId, findingId, 2,
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, new CorrectiveActionAdded(tenantId, programId, findingId, 2,
                 new CorrectiveActionView(actionId, "Remove legacy access", ownerId,
                     new DateOnly(2026, 10, 9), RemediationLedger.Open, actor, now.AddMinutes(1))));
-            await directory.ApplyAsync(new CorrectiveActionCompleted(tenantId, programId, findingId,
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, new CorrectiveActionCompleted(tenantId, programId, findingId,
                 3, actionId, "Removed.", [], ownerId, actor, now.AddMinutes(2)));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
-        var result = await directory.LoadProgramAsync(tenantId, programId,
+        var result = await directory.LoadProjectedProgramAsync(tenantId, programId,
             CancellationToken.None);
 
         // Assert
@@ -112,9 +112,9 @@ public sealed class FitzCorrectiveActionWorkItemDirectoryTests
         var programId = Uuid.CreateVersion4();
         var findingId = Uuid.CreateVersion4();
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
-        var directory = new FitzCorrectiveActionWorkItemDirectory(new InMemoryKvClient());
+        var directory = new FitzCorrectiveActionWorkItemDirectory(new InMemoryKvClient(), FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         var identity = new CheckpointIdentity(FitzCorrectiveActionWorkItemDirectory.ProjectorName,
-            EventStreamPattern.ForPattern(tenantId.ToString(), "remediation"));
+            EventStreamPattern.ForPattern(tenantId.ToString()));
         var action = new CorrectiveActionAdded(tenantId, programId, findingId, 2,
             new CorrectiveActionView(Uuid.CreateVersion4(), "Remove legacy access",
                 Uuid.CreateVersion4(), new DateOnly(2026, 10, 9), RemediationLedger.Open,
@@ -124,9 +124,9 @@ public sealed class FitzCorrectiveActionWorkItemDirectoryTests
         await using (var batch = await directory.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await directory.ApplyAsync(action));
+                await FindingWorkProjectionTestSource.ApplyAsync(directory, action));
 
-        var result = await directory.LoadProgramAsync(tenantId, programId,
+        var result = await directory.LoadProjectedProgramAsync(tenantId, programId,
             CancellationToken.None);
 
         // Assert
@@ -148,24 +148,24 @@ public sealed class FitzCorrectiveActionWorkItemDirectoryTests
         var ownerId = Uuid.CreateVersion4();
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
         var now = new DateTimeOffset(2026, 10, 4, 12, 0, 0, TimeSpan.Zero);
-        var directory = new FitzCorrectiveActionWorkItemDirectory(client);
+        var directory = new FitzCorrectiveActionWorkItemDirectory(client, FindingWorkProjectionTestSource.Unused, TimeProvider.System);
         var identity = new CheckpointIdentity(FitzCorrectiveActionWorkItemDirectory.ProjectorName,
-            EventStreamPattern.ForPattern(tenantId.ToString(), "remediation"));
+            EventStreamPattern.ForPattern(tenantId.ToString()));
 
         // Act
         await using (var batch = await directory.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(FindingRaisedEvent(tenantId, programId, findingId,
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, FindingRaisedEvent(tenantId, programId, findingId,
                 "high", actor, now));
-            await directory.ApplyAsync(new CorrectiveActionAdded(tenantId, programId, findingId, 2,
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, new CorrectiveActionAdded(tenantId, programId, findingId, 2,
                 new CorrectiveActionView(actionId, "Remove legacy access", ownerId,
                     new DateOnly(2026, 10, 9), RemediationLedger.Open, actor, now.AddMinutes(1))));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
-        var ownerResult = await directory.LoadProgramAsync(tenantId, programId,
+        var ownerResult = await directory.LoadProjectedProgramAsync(tenantId, programId,
             CancellationToken.None);
-        var otherTenantResult = await directory.LoadProgramAsync(otherTenantId, programId,
+        var otherTenantResult = await directory.LoadProjectedProgramAsync(otherTenantId, programId,
             CancellationToken.None);
 
         // Assert

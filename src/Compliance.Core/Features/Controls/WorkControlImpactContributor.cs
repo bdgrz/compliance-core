@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     requests from their authoritative program streams. Cadence plans represent future work;
 ///     no actor visibility or queue date horizon can hide a retained relationship.
 /// </summary>
-public sealed class WorkControlImpactContributor(IAggregateReader reader)
+public sealed class WorkControlImpactContributor(IAggregateReader reader, IDomainEventReader events)
     : IControlImpactContributor
 {
     public string Context => "work";
@@ -25,8 +25,10 @@ public sealed class WorkControlImpactContributor(IAggregateReader reader)
             subject.ProgramId), ct).ConfigureAwait(false);
         var evaluations = await reader.HydrateAsync(new ControlEvaluationLedger(subject.TenantId,
             subject.ProgramId), ct).ConfigureAwait(false);
-        var remediation = await reader.HydrateAsync(new RemediationLedger(subject.TenantId,
-            subject.ProgramId), ct).ConfigureAwait(false);
+        var remediation = await new FindingReadSource(reader, events).ReadAsync(subject.TenantId,
+            subject.ProgramId, DateTimeOffset.MinValue, ct).ConfigureAwait(false);
+        if (!remediation.IsSuccess)
+            return Result<ControlImpactContribution>.Failure(remediation.Error);
         var evidence = await reader.HydrateAsync(new EvidenceRequestLedger(subject.TenantId,
             subject.ProgramId), ct).ConfigureAwait(false);
         var records = new List<ControlAffectedRecord>();
@@ -47,7 +49,7 @@ public sealed class WorkControlImpactContributor(IAggregateReader reader)
                 string.Create(CultureInfo.InvariantCulture,
                     $"The {evaluation.State} evaluation (revision {evaluation.Revision}) retains this Control version; review its applicability after the decision.")));
         foreach (var finding in ControlImpactRelationships.Findings(subject, operations,
-                     linkedEvaluations, remediation))
+                     linkedEvaluations, remediation.Value))
         {
             records.Add(new ControlAffectedRecord(subject.TenantId, Context,
                 "finding", finding.FindingId, null,

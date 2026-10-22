@@ -11,10 +11,10 @@ static class ControlEvaluationSource
 
     /// <summary>Marks submitted material deviations whose finding now exists as routed.</summary>
     public static ControlEvaluationView WithRouting(ControlEvaluationView view,
-        RemediationLedger remediation)
+        FindingReadSnapshot remediation)
     {
         static EvaluationDeviationView Route(EvaluationDeviationView deviation,
-            RemediationLedger remediation) =>
+            FindingReadSnapshot remediation) =>
             deviation.FindingId is { } findingId && remediation.Contains(findingId)
                 ? deviation with { Status = ControlEvaluationLedger.RoutedToFinding }
                 : deviation;

@@ -42,7 +42,7 @@ public sealed class StartTypeIIObservationPeriodHandler(IAggregateExecutor execu
 
         var content = planVersion.Content;
         var now = clock.GetUtcNow();
-        var checkedSources = await TypeIIPlanSourceValidator.ValidateAsync(reader,
+        var checkedSources = await TypeIIPlanSourceValidator.ValidateAsync(reader, events,
             request.TenantId, request.ProgramId, request.ExaminationId, content, now, ct)
             .ConfigureAwait(false);
         if (!checkedSources.IsSuccess)
