@@ -167,8 +167,7 @@ public sealed class EvidenceRedactionCompositionTests
             await ProgramManagementServices.SeedAsync(fixture.Provider, new Member(fixture.TenantId, fixture.UserId),
                 member => member.Suspend(RbacIds.Member(fixture.TenantId, fixture.UserId), "Administrator", ArtifactMetadataAccessTests.Fixture.Now, "Paused member"));
         else if (fault == "permission")
-            await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new RolePermission(fixture.TenantId, BuiltInRbac.TenantAdministrationRoleId(fixture.TenantId), RbacPermissions.EvidenceRedactionPrepare), item => item.Remove());
+            await RbacPermissionFacts.RevokeAsync(fixture.Provider, fixture.TenantId, BuiltInRbac.TenantAdministrationRoleId(fixture.TenantId), RbacPermissions.EvidenceRedactionPrepare);
         else
             // Synthetic accepted history exercises the existing denial-only wall, not professional authority.
             await AttestAssignmentHistoryFixture.SeedAsync(fixture.Provider, fixture.TenantId, fixture.UserId);
@@ -213,8 +212,7 @@ public sealed class EvidenceRedactionCompositionTests
         if (fault is "original" or "derived")
             Assert.True((await fixture.DispatchAsync(new RevokeAccessGrant(fixture.TenantId, grants[fault == "original" ? 0 : 1]))).IsSuccess);
         else if (fault == "permission")
-            await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new RolePermission(fixture.TenantId, BuiltInRbac.ComplianceManagementRoleId(fixture.TenantId), RbacPermissions.EvidenceRedactionApprove), item => item.Remove());
+            await RbacPermissionFacts.RevokeAsync(fixture.Provider, fixture.TenantId, BuiltInRbac.ComplianceManagementRoleId(fixture.TenantId), RbacPermissions.EvidenceRedactionApprove);
         else if (fault == "attest_history")
             await AttestAssignmentHistoryFixture.SeedAsync(fixture.Provider, fixture.TenantId, lead);
         if (fault == "admin")
@@ -271,8 +269,7 @@ public sealed class EvidenceRedactionCompositionTests
             await ProgramManagementServices.SeedAsync(fixture.Provider, new Member(fixture.TenantId, approver),
                 member => member.Suspend(RbacIds.Member(fixture.TenantId, fixture.UserId), "Administrator", ArtifactMetadataAccessTests.Fixture.Now, "Paused approver"));
         else if (fault == "approver_permission_removed")
-            await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new RolePermission(fixture.TenantId, BuiltInRbac.TenantAdministrationRoleId(fixture.TenantId), RbacPermissions.TenantRbacManage), item => item.Remove());
+            await RbacPermissionFacts.RevokeAsync(fixture.Provider, fixture.TenantId, BuiltInRbac.TenantAdministrationRoleId(fixture.TenantId), RbacPermissions.TenantRbacManage);
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider, new EvidenceRedaction(fixture.TenantId, prepared.Value.RedactionId));
 
         // Act
@@ -381,8 +378,7 @@ public sealed class EvidenceRedactionCompositionTests
             waiverId = recorded.Value.WaiverId;
         }
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider, new SeparationOfDutiesWaiver(fixture.TenantId, waiverId));
-        fixture.Faults.OnArtifactRead = () => ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RolePermission(fixture.TenantId, BuiltInRbac.TenantAdministrationRoleId(fixture.TenantId), RbacPermissions.TenantRbacManage), item => item.Remove());
+        fixture.Faults.OnArtifactRead = () => RbacPermissionFacts.RevokeAsync(fixture.Provider, fixture.TenantId, BuiltInRbac.TenantAdministrationRoleId(fixture.TenantId), RbacPermissions.TenantRbacManage);
 
         // Act
         var result = approval ? await DispatchAsync(fixture, approver, new ApproveSeparationOfDutiesWaiver(fixture.TenantId, waiverId)) :
@@ -590,11 +586,11 @@ public sealed class EvidenceRedactionCompositionTests
     }
 
     [Fact]
-    public async Task ShouldBackfillOnlyFourPermissionsGivenCompletedExistingCatalogCheckpoint()
+    public async Task ShouldPreserveRemovedRedactionAuthorityGivenFullBootstrapReplay()
     {
         // Arrange
-        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync(includeRedactionPermissions: false);
-        await fixture.RunReactorAsync("BuiltInRoleCatalogV1");
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        await fixture.AllowAsync();
         var derived = await SeedDerivedAsync(fixture);
         await GrantPairAsync(fixture, fixture.UserId, derived);
         var assignments = new[]
@@ -604,44 +600,29 @@ public sealed class EvidenceRedactionCompositionTests
             (BuiltInRbac.ComplianceParticipationRoleId(fixture.TenantId), RbacPermissions.EvidenceRedactionPrepare),
             (BuiltInRbac.ComplianceManagementRoleId(fixture.TenantId), RbacPermissions.EvidenceRedactionApprove)
         };
-        // Synthetic missing fixed-catalog state models an existing tenant without these new permissions.
         foreach (var (role, permission) in assignments)
-            await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new RolePermission(fixture.TenantId, role, permission), item => item.Assign());
-        foreach (var (role, permission) in assignments)
-            await ProgramManagementServices.SeedAsync(fixture.Provider, new RolePermission(fixture.TenantId, role, permission), item => item.Remove());
+            await RbacPermissionFacts.RevokeAsync(fixture.Provider, fixture.TenantId, role, permission);
         await fixture.ProjectAsync();
-        var request = new PrepareEvidenceRedaction(fixture.TenantId, Uuid.CreateVersion4(), 0, fixture.ArtifactId, derived, "Manual", "Private fields");
+        var request = new PrepareEvidenceRedaction(fixture.TenantId, Uuid.CreateVersion4(), 0,
+            fixture.ArtifactId, derived, "Manual", "Private fields");
         Assert.False((await DispatchAsync(fixture, fixture.UserId, request)).IsSuccess);
         var before = await fixture.TenantEventsAsync();
-        await using var scope = fixture.Provider.CreateAsyncScope();
-        var services = scope.ServiceProvider;
-        var oldRegistration = Assert.Single(services.GetServices<WorkloadRegistration>(), item => item.Name == "BuiltInRoleCatalogV1");
-        var oldReactor = (Reactor)services.GetRequiredService(oldRegistration.ComponentType);
-        var checkpoints = services.GetRequiredService<IProjectionCheckpointStore>();
-        var identity = new CheckpointIdentity(oldReactor.Name, oldReactor.Pattern);
-        var oldCheckpoint = await checkpoints.LoadAsync(identity);
 
         // Act
-        await fixture.RunReactorAsync("EvidenceRedactionPermissionsV1");
+        await fixture.ReplayBootstrapAsync();
         await fixture.ProjectAsync();
+        var result = await DispatchAsync(fixture, fixture.UserId, request);
         var after = await fixture.TenantEventsAsync();
-        await fixture.RunReactorAsync("EvidenceRedactionPermissionsV1");
-        var repeated = await fixture.TenantEventsAsync();
-        var enabled = await DispatchAsync(fixture, fixture.UserId, request);
 
         // Assert
-        Assert.True(enabled.IsSuccess, enabled.Error?.Message);
-        Assert.Equal(oldCheckpoint, await checkpoints.LoadAsync(identity));
-        Assert.Equal(before.Count + 4, after.Count);
-        Assert.Equal(after.Count, repeated.Count);
-        Assert.Equal(before.OfType<AccessGrantIssued>().Count(), after.OfType<AccessGrantIssued>().Count());
-        Assert.Equal(before.OfType<RoleDefined>().Count(), after.OfType<RoleDefined>().Count());
-        Assert.Equal(before.OfType<MemberRegistered>().Count(), after.OfType<MemberRegistered>().Count());
+        Assert.False(result.IsSuccess);
+        Assert.Equal(before.Count, after.Count);
         foreach (var (role, permission) in assignments)
         {
-            var retained = await ProgramManagementServices.HydrateAsync(fixture.Provider, new RolePermission(fixture.TenantId, role, permission));
-            Assert.True(retained.IsAssigned);
+            var retained = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+                new RolePermission(fixture.TenantId, role, permission));
+            Assert.False(retained.IsAssigned);
+            Assert.Equal(2UL, retained.Version);
         }
     }
 

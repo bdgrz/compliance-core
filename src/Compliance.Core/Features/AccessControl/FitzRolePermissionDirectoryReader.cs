@@ -22,7 +22,8 @@ sealed class FitzRolePermissionDirectoryReader(IKvClient client)
         {
             case RolePermissionAssigned assigned:
                 await RolePermissionDirectorySchema.Directory.InsertAsync(
-                    Transaction, new RolePermissionView(assigned.RoleId, assigned.Permission), ct).ConfigureAwait(false);
+                    Transaction, new RolePermissionView(assigned.RoleId, assigned.Permission, assigned.CommandId,
+                        assigned.ExpectedRevision + 1), ct).ConfigureAwait(false);
                 break;
             case RolePermissionRemoved removed:
                 await RolePermissionDirectorySchema.Directory.DeleteAsync(

@@ -28,7 +28,7 @@ public sealed partial class RoleCleanupReactor(
             foreach (var permission in page.Items)
             {
                 await bus.SendReactionAsync(
-                        new RemoveRolePermission(tenantId, roleId, permission.Permission), context, ct)
+                        RbacPermissionEffects.Remove(context.Trigger.Metadata.EventId, tenantId, roleId, permission), context, ct)
                     .ConfigureAwait(false);
             }
 

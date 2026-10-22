@@ -248,11 +248,11 @@ public sealed class TechnologyInventoryScopedGrantTests
             await ProgramManagementServices.SeedAsync(Services, new Team(TenantId, viewerTeamId), team => team.Define("Viewers"));
             await ProgramManagementServices.SeedAsync(Services, new TeamRole(TenantId, viewerTeamId, viewerRoleId), assignment => assignment.Assign());
             await ProgramManagementServices.SeedAsync(Services, new TeamMember(TenantId, viewerTeamId, memberId), assignment => assignment.Assign(member.MembershipEpisodeId));
-            await ProgramManagementServices.SeedAsync(Services, new RolePermission(TenantId, viewerRoleId, RbacPermissions.TenantAccess), permission => permission.Assign());
+            await RbacPermissionFacts.GrantAsync(Services, TenantId, viewerRoleId, RbacPermissions.TenantAccess);
             await ProgramManagementServices.SeedAsync(Services, new Role(TenantId, leadRoleId), role => role.Define("Compliance Lead"));
-            await ProgramManagementServices.SeedAsync(Services, new RolePermission(TenantId, leadRoleId, RbacPermissions.TechnologyInventoryManage), permission => permission.Assign());
+            await RbacPermissionFacts.GrantAsync(Services, TenantId, leadRoleId, RbacPermissions.TechnologyInventoryManage);
             if (condition != "manage_only")
-                await ProgramManagementServices.SeedAsync(Services, new RolePermission(TenantId, leadRoleId, RbacPermissions.TechnologyInventoryRestrictedRead), permission => permission.Assign());
+                await RbacPermissionFacts.GrantAsync(Services, TenantId, leadRoleId, RbacPermissions.TechnologyInventoryRestrictedRead);
             var author = ActorReference.ForMember(memberId, "Administrator");
             var assetIds = resourceType == TechnologyInventoryResourceTypes.InformationAsset
                 ? new[] { ResourceId, OtherAssetId } : [OtherAssetId];

@@ -1336,9 +1336,6 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<IdentityDirectoryProjector>("UserIdentityDirectory", WorkloadScope.Global)
             .AddProjector<EmailAddressDirectoryProjector>("EmailAddressDirectory", WorkloadScope.Global)
             .AddReactor<TenantRbacBootstrapReactor>("TenantRbacBootstrap", WorkloadScope.Global)
-            .AddReactor<EvidenceRedactionPermissionsReactor>("EvidenceRedactionPermissionsV1", WorkloadScope.Global)
-            .AddReactor<EvidenceArtifactReadPermissionReactor>("EvidenceArtifactReadPermissionV1", WorkloadScope.Global)
-            .AddReactor<BuiltInRoleCatalogMigrationReactor>("BuiltInRoleCatalogV1", WorkloadScope.Global)
             // Creator activation follows its durable team assignment on a tenant workload,
             // so a stalled activation cannot hold the global RBAC bootstrap cursor.
             .AddReactor<TenantSelfServiceActivationReactor>("TenantSelfServiceActivationV1",
@@ -1347,31 +1344,11 @@ public static class ComplianceServiceCollectionExtensions
                     options.MaximumFailureDelay = TimeSpan.FromSeconds(2);
                     options.FailureAttemptLimit = TenantActivationPolicy.WorkloadFailureAttemptLimit;
                 })
-            // This narrow backfill has its own checkpoint so it can safely replay historical
-            // registrations without restoring intentionally removed memberships or grants.
-            .AddReactor<ApplicationInventoryGrantBackfillReactor>(
-                "ApplicationInventoryGrantBackfillV1", WorkloadScope.Global)
-            .AddReactor<ComplianceRecordRestrictedAccessGrantBackfillReactor>(
-                "ComplianceRecordRestrictedAccessGrantBackfillV1", WorkloadScope.Global)
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AcceptedStaffDirectoryReconciliationReactor>(AcceptedStaffDirectoryReconciliationReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<ApplicationImportExecutionReactor>(ApplicationImportExecutionReactor.WorkloadName, WorkloadScope.PerTenant)
-            .AddReactor<ApplicationImportGrantBackfillReactor>(
-                ApplicationImportGrantBackfillReactor.WorkloadName, WorkloadScope.Global)
-            .AddReactor<TechnologyInventoryGrantBackfillReactor>(
-                "TechnologyInventoryGrantBackfillV1", WorkloadScope.Global)
-            .AddReactor<ProviderInventoryGrantBackfillReactor>(
-                "ProviderInventoryGrantBackfillV1", WorkloadScope.Global)
-            .AddReactor<WorkforceGrantBackfillReactor>(
-                "WorkforceGrantBackfillV1", WorkloadScope.Global)
-            .AddReactor<AccessReviewGrantBackfillReactor>(
-                "AccessReviewGrantBackfillV1", WorkloadScope.Global)
-            .AddReactor<WorkforceRestrictedFieldGrantBackfillReactor>(
-                "WorkforceRestrictedFieldGrantBackfillV1", WorkloadScope.Global)
-            .AddReactor<WorkforcePersonalDetailsGrantBackfillReactor>(
-                WorkforcePersonalDetailsGrantBackfillReactor.WorkloadName, WorkloadScope.Global)
             .AddReactor<TenantSlugReactor>("TenantSlug", WorkloadScope.Global)
             .AddReactor<RiskMethodReassessmentReactor>("RiskMethodReassessmentV1",
                 WorkloadScope.PerTenant)

@@ -22,7 +22,7 @@ public sealed class RemoveRolePermissionRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new RemoveRolePermission(TenantId, RoleId, Permission))
+            .When(new RemoveRolePermission(TenantId, RoleId, Permission, Uuid.CreateVersion4(), 1, RbacPermissionFacts.AssignmentId(TenantId, RoleId, Permission)))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();
@@ -39,12 +39,17 @@ public sealed class RemoveRolePermissionRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new RemoveRolePermission(TenantId, RoleId, Permission))
+            .When(new RemoveRolePermission(TenantId, RoleId, Permission, Uuid.CreateVersion4(), 1, RbacPermissionFacts.AssignmentId(TenantId, RoleId, Permission)))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();
     }
 
-    static Task Seed(ServiceProvider provider) => RbacManagementServices.SeedAsync(provider,
-        new RolePermission(TenantId, RoleId, Permission), rolePermission => rolePermission.Assign());
+    static Task Seed(ServiceProvider provider)
+    {
+        var commandId = RbacPermissionFacts.AssignmentId(TenantId, RoleId, Permission);
+        return RbacManagementServices.SeedAsync(provider,
+            new RolePermission(TenantId, RoleId, Permission, commandId),
+            permission => permission.Assign(commandId, 0, RbacPermissionFacts.Actor));
+    }
 }

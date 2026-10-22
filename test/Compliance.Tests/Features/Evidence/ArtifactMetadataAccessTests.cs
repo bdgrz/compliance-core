@@ -317,34 +317,31 @@ public sealed class ArtifactMetadataAccessTests
     }
 
     [Fact]
-    public async Task ShouldBackfillPermissionWithoutGrantsGivenCompletedLegacyCatalogCheckpoint()
+    public async Task ShouldPreserveRemovedArtifactPermissionGivenFullBootstrapReplay()
     {
         // Arrange
-        await using var fixture = await Fixture.CreateAsync(legacy: true);
-        await fixture.RunReactorAsync("BuiltInRoleCatalogV1");
+        await using var fixture = await Fixture.CreateAsync();
+        await fixture.AllowAsync();
+        await RbacPermissionFacts.RevokeAsync(fixture.Provider, fixture.TenantId,
+            BuiltInRbac.ViewerRoleId(fixture.TenantId), RbacPermissions.EvidenceArtifactRead);
         await fixture.ProjectAsync();
         var before = await fixture.TenantEventsAsync();
-        var permission = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new RolePermission(fixture.TenantId, BuiltInRbac.ViewerRoleId(fixture.TenantId), RbacPermissions.EvidenceArtifactRead));
-        Assert.False(permission.IsAssigned);
 
         // Act
-        await fixture.RunReactorAsync("EvidenceArtifactReadPermissionV1");
+        await fixture.ReplayBootstrapAsync();
         await fixture.ProjectAsync();
-        var after = await fixture.TenantEventsAsync();
         var result = await fixture.ReadAsync();
-        await fixture.RunReactorAsync("EvidenceArtifactReadPermissionV1");
+        var after = await fixture.TenantEventsAsync();
 
         // Assert
         Assert.Equal(RequestErrorKind.NotFound, result.Error!.Kind);
-        Assert.Equal(before.OfType<AccessGrantIssued>().Count(), after.OfType<AccessGrantIssued>().Count());
-        Assert.Equal(before.OfType<TeamMemberAssigned>().Count(), after.OfType<TeamMemberAssigned>().Count());
-        Assert.Equal(before.OfType<RoleDefined>().Count(), after.OfType<RoleDefined>().Count());
-        Assert.Equal(before.Count + 1, after.Count);
-        Assert.Equal(after.Count, (await fixture.TenantEventsAsync()).Count);
-        Assert.True((await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new RolePermission(fixture.TenantId, BuiltInRbac.ViewerRoleId(fixture.TenantId), RbacPermissions.EvidenceArtifactRead))).IsAssigned);
-        Assert.True((await fixture.DispatchAsync(fixture.Grant(fixture.ArtifactId, BuiltInRbac.ViewerRoleId(fixture.TenantId)))).IsSuccess);
+        Assert.Equal(before.Count, after.Count);
+        var permission = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new RolePermission(fixture.TenantId, BuiltInRbac.ViewerRoleId(fixture.TenantId), RbacPermissions.EvidenceArtifactRead));
+        Assert.False(permission.IsAssigned);
+        Assert.Equal(2UL, permission.Version);
+        await RbacPermissionFacts.GrantAsync(fixture.Provider, fixture.TenantId,
+            BuiltInRbac.ViewerRoleId(fixture.TenantId), RbacPermissions.EvidenceArtifactRead);
         await fixture.ProjectAsync();
         Assert.True((await fixture.ReadAsync()).IsSuccess);
     }
@@ -445,8 +442,7 @@ public sealed class ArtifactMetadataAccessTests
             Provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         }
 
-        public static async Task<Fixture> CreateAsync(string classification = "restricted", bool legacy = false,
-            bool includeRedactionPermissions = true)
+        public static async Task<Fixture> CreateAsync(string classification = "restricted")
         {
             var fixture = new Fixture();
             await ProgramManagementServices.SeedAsync(fixture.Provider, new Tenant(fixture.TenantId), tenant =>
@@ -454,16 +450,7 @@ public sealed class ArtifactMetadataAccessTests
                 Assert.True(tenant.Register(fixture.UserId, "Artifact test client", "artifact-test").IsSuccess);
                 return tenant.ConfirmSlug("artifact-test");
             });
-            if (legacy)
-                await fixture.SeedLegacyRbacAsync();
-            else
-            {
-                await fixture.RunReactorAsync("BuiltInRoleCatalogV1");
-                await fixture.RunReactorAsync("TenantRbacBootstrap");
-                await fixture.RunReactorAsync("EvidenceArtifactReadPermissionV1");
-                if (includeRedactionPermissions)
-                    await fixture.RunReactorAsync("EvidenceRedactionPermissionsV1");
-            }
+            await fixture.RunReactorAsync("TenantRbacBootstrap");
             await fixture.ProjectAsync();
             await ProgramManagementServices.SeedAsync(fixture.Provider,
                 new EvidenceArtifact(fixture.TenantId, fixture.ArtifactId), artifact => artifact.Register(
@@ -520,8 +507,7 @@ public sealed class ArtifactMetadataAccessTests
             if (change == "revoked")
                 Assert.True((await DispatchAsync(new RevokeAccessGrant(TenantId, grant))).IsSuccess);
             else if (change == "permission_removed")
-                await ProgramManagementServices.SeedAsync(Provider,
-                    new RolePermission(TenantId, BuiltInRbac.ViewerRoleId(TenantId), RbacPermissions.EvidenceArtifactRead), item => item.Remove());
+                await RbacPermissionFacts.RevokeAsync(Provider, TenantId, BuiltInRbac.ViewerRoleId(TenantId), RbacPermissions.EvidenceArtifactRead);
             else if (change == "inactive_tenant")
                 await ProgramManagementServices.SeedAsync(Provider, new Tenant(TenantId), item => item.Suspend(UserId, "Paused client", Now));
             else
@@ -540,22 +526,13 @@ public sealed class ArtifactMetadataAccessTests
             return result;
         }
 
-        async Task SeedLegacyRbacAsync()
+        public async Task ReplayBootstrapAsync()
         {
-            // Canonical historical fixed-catalog source fixtures, before this permission existed.
-            await ProgramManagementServices.SeedAsync(Provider, new Member(TenantId, UserId), member => member.Register());
-            var member = await ProgramManagementServices.HydrateAsync(Provider, new Member(TenantId, UserId));
-            foreach (var role in new[] { BuiltInRbac.TenantAdministrationRoleId(TenantId),
-                         BuiltInRbac.ComplianceManagementRoleId(TenantId), BuiltInRbac.ComplianceParticipationRoleId(TenantId) })
-                await ProgramManagementServices.SeedAsync(Provider, new Role(TenantId, role), item => item.Define("Historic fixed role"));
-            var team = BuiltInRbac.AdministratorsTeamId(TenantId);
-            var administrator = BuiltInRbac.TenantAdministrationRoleId(TenantId);
-            await ProgramManagementServices.SeedAsync(Provider, new Team(TenantId, team), item => item.Define("Administrators"));
-            await ProgramManagementServices.SeedAsync(Provider, new TeamRole(TenantId, team, administrator), item => item.Assign());
-            await ProgramManagementServices.SeedAsync(Provider, new TeamMember(TenantId, team, RbacIds.Member(TenantId, UserId)), item =>
-                item.Assign(member.MembershipEpisodeId));
-            foreach (var permission in new[] { RbacPermissions.TenantAccess, RbacPermissions.TenantRbacManage })
-                await ProgramManagementServices.SeedAsync(Provider, new RolePermission(TenantId, administrator, permission), item => item.Assign());
+            await using var scope = Provider.CreateAsyncScope();
+            var checkpoints = scope.ServiceProvider.GetRequiredService<IProjectionCheckpointStore>();
+            await checkpoints.SaveAsync(new CheckpointIdentity("TenantRbacBootstrap",
+                EventStreamPattern.ForPattern("bdgrz", "tenants")), ProjectionCheckpoint.Start);
+            await RunReactorAsync("TenantRbacBootstrap");
         }
 
         public async Task RunReactorAsync(string name)

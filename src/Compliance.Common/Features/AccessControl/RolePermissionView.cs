@@ -2,4 +2,4 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-public sealed record RolePermissionView(Uuid RoleId, string Permission);
+public sealed record RolePermissionView(Uuid RoleId, string Permission, Uuid AssignmentId, ulong Revision);

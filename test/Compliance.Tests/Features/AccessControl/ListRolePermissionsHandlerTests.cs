@@ -13,7 +13,7 @@ public sealed class ListRolePermissionsHandlerTests
     {
         // Arrange
         var reader = new FakeRolePermissionDirectoryReader();
-        reader.Permissions[(TenantId, RoleId)] = [new RolePermissionView(RoleId, "controls.read")];
+        reader.Permissions[(TenantId, RoleId)] = [new RolePermissionView(RoleId, "controls.read", Uuid.CreateVersion4(), 1)];
         var handler = new ListRolePermissionsHandler(reader);
         var context = new RequestContext<ListRolePermissions>(new ListRolePermissions(TenantId, RoleId), Actor());
 

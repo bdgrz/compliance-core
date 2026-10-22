@@ -19,15 +19,17 @@ public sealed class InternalRbacTests
         var team = new Team(TenantId, TeamId);
         var teamMember = new TeamMember(TenantId, TeamId, member.Id);
         var role = new Role(TenantId, RoleId);
-        var read = new RolePermission(TenantId, RoleId, "controls.read");
-        var manage = new RolePermission(TenantId, RoleId, "controls.manage");
+        var readId = Uuid.CreateVersion4();
+        var manageId = Uuid.CreateVersion4();
+        var read = new RolePermission(TenantId, RoleId, "controls.read", readId);
+        var manage = new RolePermission(TenantId, RoleId, "controls.manage", manageId);
         var teamRole = new TeamRole(TenantId, TeamId, RoleId);
         _ = member.Register();
         _ = team.Define("Compliance administrators");
         _ = teamMember.Assign();
         _ = role.Define("Compliance administrator");
-        _ = read.Assign();
-        _ = manage.Assign();
+        _ = read.Assign(readId, 0, RbacPermissionFacts.Actor);
+        _ = manage.Assign(manageId, 0, RbacPermissionFacts.Actor);
         _ = teamRole.Assign();
 
         // Act
@@ -57,12 +59,13 @@ public sealed class InternalRbacTests
     public void ShouldNormalizeIdentitiesGivenPermissionRelationships()
     {
         // Arrange
-        var first = new RolePermission(TenantId, RoleId, " Controls.Read ");
+        var id = Uuid.CreateVersion4();
+        var first = new RolePermission(TenantId, RoleId, " Controls.Read ", id);
         var repeated = new RolePermission(TenantId, RoleId, "controls.read");
         var member = new Member(TenantId, UserId);
 
         // Act
-        var assignment = first.Assign();
+        var assignment = first.Assign(id, 0, RbacPermissionFacts.Actor);
 
         // Assert
         Assert.Equal(first.Id, repeated.Id);
@@ -104,7 +107,7 @@ public sealed class InternalRbacTests
         state.Apply(new TeamMemberAssigned(TenantId, TeamId, memberId));
         state.Apply(new TeamRoleAssigned(TenantId, TeamId, RoleId));
 
-        state.Apply(new RolePermissionAssigned(TenantId, RoleId, "controls.read"));
+        state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "controls.read"));
         Assert.Contains(new PermissionGrant(memberId, "controls.read"), state.Materialize());
 
         // Act
@@ -127,7 +130,7 @@ public sealed class InternalRbacTests
         state.Apply(new TeamMemberAssigned(TenantId, TeamId, memberId));
         state.Apply(new TeamRoleAssigned(TenantId, TeamId, RoleId));
 
-        state.Apply(new RolePermissionAssigned(TenantId, RoleId, "controls.read"));
+        state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "controls.read"));
         Assert.Contains(new PermissionGrant(memberId, "controls.read"), state.Materialize());
 
         // Act

@@ -73,7 +73,7 @@ public sealed class ProviderAuthorizationTests
         }
         await ProgramManagementServices.SeedAsync(provider, new Role(tenantId, roleId), role => role.Define("Authored role"));
         foreach (var permission in allowed)
-            await ProgramManagementServices.SeedAsync(provider, new RolePermission(tenantId, roleId, permission), item => item.Assign());
+            await RbacPermissionFacts.GrantAsync(provider, tenantId, roleId, permission);
         var actor = condition == "operator" ? new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim("iss", "platform"), new Claim("sub", userId.ToString()), new Claim("role", "operator")], "Operator"))
             : ProgramManagementServices.Actor(userId);
@@ -99,7 +99,7 @@ public sealed class ProviderAuthorizationTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ShouldBackfillOnlyProviderAuthoringGrantsGivenNewOrRetainedTenantRegistration(bool historical)
+    public async Task ShouldGrantProviderAuthoringOnlyToManagersGivenTenantRegistration(bool historical)
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -108,14 +108,14 @@ public sealed class ProviderAuthorizationTests
         var scenario = new ReactorScenario().Given(ev);
 
         // Act
-        await scenario.RunAsync(new ProviderInventoryGrantBackfillReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests));
+        await scenario.RunAsync(new TenantRbacBootstrapReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests));
 
         // Assert
-        Assert.Equal(2, scenario.SentRequests.Count);
-        Assert.All(scenario.SentRequests, request => Assert.Equal(RbacPermissions.ProviderInventoryManage,
-            Assert.IsType<AssignRolePermission>(request).Permission));
+        var grants = scenario.SentRequests.OfType<AssignRolePermission>()
+            .Where(grant => grant.Permission == RbacPermissions.ProviderInventoryManage).ToArray();
+        Assert.Equal(2, grants.Length);
         Assert.Equal(new[] { BuiltInRbac.TenantAdministrationRoleId(tenantId), BuiltInRbac.ComplianceManagementRoleId(tenantId) }.Order(),
-            scenario.SentRequests.Cast<AssignRolePermission>().Select(static request => request.RoleId).Order());
+            grants.Select(static request => request.RoleId).Order());
     }
 
     sealed class Grants(Uuid tenantId, Uuid userId, Uuid roleId, bool programOnly) : IAccessGrantDirectory
@@ -147,6 +147,6 @@ public sealed class ProviderAuthorizationTests
     {
         public ValueTask<Page<RolePermissionView>> ListAsync(Uuid tenantId, Uuid roleId, int? limit, string? cursor,
             string? search, bool descending, CancellationToken ct = default) => ValueTask.FromResult(new Page<RolePermissionView>(
-                allowed.Select(permission => new RolePermissionView(roleId, permission)).ToArray(), null));
+                allowed.Select(permission => new RolePermissionView(roleId, permission, Uuid.CreateVersion4(), 1)).ToArray(), null));
     }
 }
