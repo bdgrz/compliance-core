@@ -328,8 +328,7 @@ public sealed class FitzPermissionAuthorizerTests
             await permissions.ApplyAsync(new RoleDefined(tenantId, roleId, "Tenant Administration"));
             await permissions.ApplyAsync(new TeamMemberAssigned(tenantId, teamId, memberId));
             await permissions.ApplyAsync(new TeamRoleAssigned(tenantId, teamId, roleId));
-            await permissions.ApplyAsync(new RolePermissionAssigned(tenantId, roleId,
-                RbacPermissions.TenantAccess));
+            await permissions.ApplyAsync(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var membershipIdentity = new CheckpointIdentity("TenantMembership",
@@ -373,8 +372,7 @@ public sealed class FitzPermissionAuthorizerTests
         await permissions.ApplyAsync(new TeamMemberAssigned(tenantId, teamId,
             RbacIds.Member(tenantId, userId)));
         await permissions.ApplyAsync(new TeamRoleAssigned(tenantId, teamId, roleId));
-        await permissions.ApplyAsync(new RolePermissionAssigned(tenantId, roleId,
-            RbacPermissions.TenantAccess));
+        await permissions.ApplyAsync(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 

@@ -291,8 +291,6 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker)
 
         var bootstrapCheckpointAdvanced = await HasAdvancedAsync(scope.ServiceProvider,
             checkpoints, "TenantRbacBootstrap");
-        var catalogCheckpointAdvanced = await HasAdvancedAsync(scope.ServiceProvider,
-            checkpoints, "BuiltInRoleCatalogV1");
 
         return new ReadinessSnapshot(
             tenant.IsRegistered,
@@ -317,8 +315,7 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker)
             administratorTeamRole.IsAssigned,
             powerUsersTeamRole.IsAssigned,
             standardUsersTeamRole.IsAssigned,
-            bootstrapCheckpointAdvanced,
-            catalogCheckpointAdvanced);
+            bootstrapCheckpointAdvanced);
     }
 
     static async Task<bool> HasAdvancedAsync(IServiceProvider services,
@@ -369,7 +366,6 @@ public sealed class BrowserE2EHostIntegrationTests(BrokerStackFixture broker)
         bool AdministratorRoleAssignedToTeam,
         bool ComplianceManagementRoleAssignedToTeam,
         bool ParticipationRoleAssignedToTeam,
-        bool TenantRbacBootstrapCheckpointAdvanced,
-        bool BuiltInRoleCatalogCheckpointAdvanced);
+        bool TenantRbacBootstrapCheckpointAdvanced);
 
 }

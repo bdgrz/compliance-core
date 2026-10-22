@@ -588,7 +588,7 @@ public sealed class GetMemberAccessHandlerTests
         public ValueTask<Page<RolePermissionView>> ListAsync(Uuid tenantId, Uuid roleId,
             int? limit, string? cursor, string? search, bool descending, CancellationToken ct = default) =>
             ValueTask.FromResult(new Page<RolePermissionView>(
-                roleId == RoleId ? [new RolePermissionView(RoleId, RbacPermissions.ProgramManage)] : [], null));
+                roleId == RoleId ? [new RolePermissionView(RoleId, RbacPermissions.ProgramManage, Uuid.CreateVersion4(), 1)] : [], null));
     }
 
     sealed class RbacSourceReader : IAggregateReader
@@ -619,9 +619,7 @@ public sealed class GetMemberAccessHandlerTests
                         Assert.True(team.Delete().IsSuccess);
                     break;
                 case RolePermission permission:
-                    Assert.True(permission.Assign().IsSuccess);
-                    if (PermissionRemoved)
-                        Assert.True(permission.Remove().IsSuccess);
+                    RbacPermissionFacts.Hydrate(permission, PermissionRemoved);
                     break;
                 case TeamMember member:
                     Assert.True(member.Assign().IsSuccess);

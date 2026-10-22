@@ -792,7 +792,7 @@ public sealed class AccessGrantPermissionAuthorizerTests
         public ValueTask<Page<RolePermissionView>> ListAsync(Uuid tenantId, Uuid roleId, int? limit,
             string? cursor, string? search, bool descending, CancellationToken ct = default) =>
             ValueTask.FromResult(new Page<RolePermissionView>(permissions.Select(permission =>
-                new RolePermissionView(roleId, permission)).ToArray(), null));
+                new RolePermissionView(roleId, permission, Uuid.CreateVersion4(), 1)).ToArray(), null));
     }
 
     sealed class RbacSourceReader : IAggregateReader
@@ -821,9 +821,7 @@ public sealed class AccessGrantPermissionAuthorizerTests
                         Assert.True(team.Delete().IsSuccess);
                     break;
                 case RolePermission rolePermission:
-                    Assert.True(rolePermission.Assign().IsSuccess);
-                    if (PermissionRemoved)
-                        Assert.True(rolePermission.Remove().IsSuccess);
+                    RbacPermissionFacts.Hydrate(rolePermission, PermissionRemoved);
                     break;
                 case TeamMember teamMember when TeamMemberEpisodeId is { } episodeId:
                     Assert.True(teamMember.Assign(episodeId).IsSuccess);

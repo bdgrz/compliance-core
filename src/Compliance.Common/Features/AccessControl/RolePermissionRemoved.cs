@@ -3,4 +3,5 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 [Discriminator("bdgrz.rbac.role-permission.removed", 1)]
-public sealed record RolePermissionRemoved(Uuid TenantId, Uuid RoleId, string Permission) : DomainEvent;
+public sealed record RolePermissionRemoved(Uuid TenantId, Uuid RoleId, string Permission,
+    Uuid CommandId, ulong ExpectedRevision, ActorAttribution Actor, Uuid AssignmentId) : DomainEvent;

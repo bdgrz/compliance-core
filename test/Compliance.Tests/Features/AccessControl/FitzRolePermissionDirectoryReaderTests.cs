@@ -64,12 +64,37 @@ public sealed class FitzRolePermissionDirectoryReaderTests
         Assert.Equal("controls.read", result.Permission);
     }
 
+    [Fact]
+    public async Task ShouldExposeExactRemovalInputsGivenAReplacementAssignment()
+    {
+        // Arrange
+        var reader = new FitzRolePermissionDirectoryReader(new InMemoryKvClient());
+        var assignment = Uuid.CreateVersion4();
+        var identity = new CheckpointIdentity("RolePermissionDirectory", EventStreamPattern.ForPattern(TenantId.ToString()));
+        await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
+        {
+            await reader.ApplyAsync(RbacPermissionFacts.Assigned(TenantId, RoleId, "controls.read"));
+            await reader.ApplyAsync(RbacPermissionFacts.Removed(TenantId, RoleId, "controls.read"));
+            await reader.ApplyAsync(new RolePermissionAssigned(TenantId, RoleId, "controls.read", assignment, 2,
+                RbacPermissionFacts.Actor));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+
+        // Act
+        var page = await reader.ListAsync(TenantId, RoleId, null, null, null, descending: false);
+
+        // Assert
+        var row = Assert.Single(page.Items);
+        Assert.Equal(assignment, row.AssignmentId);
+        Assert.Equal(3UL, row.Revision);
+    }
+
     static async Task SeedAsync(InMemoryKvClient client, Uuid roleId, string permission)
     {
         var repository = new FitzRolePermissionDirectoryReader(client);
         var identity = new CheckpointIdentity("RolePermissionDirectory", EventStreamPattern.ForPattern(TenantId.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
-        await repository.ApplyAsync(new RolePermissionAssigned(TenantId, roleId, permission));
+        await repository.ApplyAsync(RbacPermissionFacts.Assigned(TenantId, roleId, permission));
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 }

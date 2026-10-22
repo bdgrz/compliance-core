@@ -32,15 +32,19 @@
     {
       "order": 1,
       "name": "Persistence safety",
-      "state": "awaiting_merged_readback",
-      "completedPullRequests": [],
-      "issue": 1030
+      "state": "complete",
+      "completedPullRequests": [
+        1031
+      ],
+      "issue": 1030,
+      "mergedCommit": "7323bb3179766d93d6e7a4df1e4460ab1c689962"
     },
     {
       "order": 2,
       "name": "Explicit identity and retries",
-      "state": "pending",
-      "completedPullRequests": []
+      "state": "in_progress",
+      "completedPullRequests": [],
+      "issue": 1032
     },
     {
       "order": 3,
@@ -152,8 +156,15 @@
       "deliveryFamilies": [
         2
       ],
-      "state": "pending",
-      "evidence": []
+      "state": "in_progress",
+      "evidence": [
+        {
+          "issue": 1032,
+          "implementation": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "proof": "test/Compliance.Tests/Features/AccessControl/RolePermissionTests.cs",
+          "scope": "RolePermission only: required typed operation identity, exact assignment episodes and selected native facts; complete bootstrap replaces twelve backfill reactors. TeamRole, TeamMember, Member and PlatformOperatorRoster remain open."
+        }
+      ]
     },
     {
       "id": "ACCESS-12",
@@ -192,13 +203,15 @@
       "deliveryFamilies": [
         1
       ],
-      "state": "awaiting_merged_readback",
+      "state": "complete",
       "evidence": [
         {
           "issue": 1030,
           "implementation": "src/Compliance.Core/Hosting/Persistence",
           "proof": "test/Compliance.Tests/Hosting/Persistence",
-          "scope": "Fourteen concrete payload guards, other oversized nominal budgets, attributed whole-batch preflight, actual KV operation overhead, notifier forwarding and request validation mapping. Structural owner/content corrections remain separate."
+          "scope": "Fourteen concrete payload guards, other oversized nominal budgets, attributed whole-batch preflight, actual KV operation overhead, notifier forwarding and request validation mapping. Structural owner/content corrections remain separate.",
+          "pullRequest": 1031,
+          "mergedCommit": "7323bb3179766d93d6e7a4df1e4460ab1c689962"
         }
       ]
     },

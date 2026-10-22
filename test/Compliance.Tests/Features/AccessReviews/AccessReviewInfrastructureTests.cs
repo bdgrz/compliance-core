@@ -100,13 +100,15 @@ public sealed class AccessReviewInfrastructureTests
             new TenantRegistered(tenantId, Uuid.CreateVersion4(), "Acme", "acme"));
 
         // Act
-        await scenario.RunAsync(new AccessReviewGrantBackfillReactor(
+        await scenario.RunAsync(new TenantRbacBootstrapReactor(
             new InMemoryProjectionCheckpointStore(), scenario.Requests));
 
         // Assert
-        Assert.Equal(2, scenario.SentRequests.Count);
-        Assert.All(scenario.SentRequests, request => Assert.Equal(RbacPermissions.AccessReviewManage,
-            Assert.IsType<AssignRolePermission>(request).Permission));
+        var grants = scenario.SentRequests.OfType<AssignRolePermission>()
+            .Where(grant => grant.Permission == RbacPermissions.AccessReviewManage).ToArray();
+        Assert.Equal(2, grants.Length);
+        Assert.Equal(new[] { BuiltInRbac.TenantAdministrationRoleId(tenantId),
+            BuiltInRbac.ComplianceManagementRoleId(tenantId) }.Order(), grants.Select(grant => grant.RoleId).Order());
     }
 
     static async Task ProjectAsync(FitzAccessPopulationDirectory directory, Uuid tenantId,
