@@ -12,12 +12,19 @@ sealed class PersistenceEventStore(IEventStore inner, IDomainEventSerializer ser
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentNullException.ThrowIfNull(events);
         ct.ThrowIfCancellationRequested();
-        foreach (var ev in events)
+        DomainEvent[] pending = [.. events];
+        var snapshots = new DomainEvent[pending.Length];
+        for (var index = 0; index < pending.Length; index++)
         {
             ct.ThrowIfCancellationRequested();
-            FitzFrameLimits.CheckEvent(stream, serializer.Serialize(ev).Length);
+            var envelope = serializer.Serialize(pending[index]);
+            FitzFrameLimits.CheckEvent(stream, envelope.Length);
+            var snapshot = serializer.Deserialize(envelope);
+            if (!serializer.Serialize(snapshot).Span.SequenceEqual(envelope.Span))
+                throw new InvalidOperationException("A persisted event must preserve its canonical envelope through serialization.");
+            snapshots[index] = snapshot;
         }
-        return inner.AppendAsync(stream, expectedStreamPosition, events, ct);
+        return inner.AppendAsync(stream, expectedStreamPosition, snapshots, ct);
     }
 
     public IAsyncEnumerable<DomainEventRecord> ReadAsync(EventStreamAddress stream, ulong fromOffset,

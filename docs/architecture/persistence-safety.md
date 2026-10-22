@@ -17,8 +17,12 @@ The application decorates `IEventStore` after Portia composition. Aggregate save
 have already attached their final actor/execution/causation metadata when they
 reach this boundary. `PersistenceEventStore` serializes every event in the batch
 with the same registered durable serializer and checks all of them before
-calling the inner store. An oversized later event or a serialization failure
-therefore opens no append session. The inner store retains batch validation,
+calling the inner store. It round-trips each checked envelope into a detached,
+privately owned event and verifies exact canonical-byte parity. Only those
+snapshots reach the inner append, so caller-owned nested collections cannot
+change the actual payload while opening the session yields. A parity or
+serialization failure opens no append session. An oversized later event also
+rejects the whole batch before a session opens. The inner store retains batch validation,
 OCC, synchronous commit and rollback behavior. Reads and event notifications
 forward to the original store. Reader/writer/notifier aliases resolve the same
 decorator; original service lifetimes and disposal stay owned by DI.
@@ -57,10 +61,20 @@ an oversized later event and oversized KV writes were accepted. Boundary tests
 use real attributed envelopes, Unicode route/key bytes and the pinned SDK codec,
 including exactly 65,535 operation bytes and one byte over. Other tests cover
 large save attribution through production composition, whole-batch serializer
-failure, notifications, aliases and validation/error propagation.
+failure, payload mutation while opening a session, notifications, aliases and
+validation/error propagation. Immutable-head review reproduced the mutation
+gap and made its correction a durable regression.
 
 This correction changes neither retained aggregate state nor physical replay
 length. Existing histories, broad snapshot payloads, per-owner lifetime caps and
 immutable-content/manifest corrections remain assigned to their structural
 delivery families. Removing arrays later will not shorten existing replay; no
 snapshot, truncation, new lifetime cap or environment reset is implied here.
+
+Jev evidence includes the initial design and immutable-head preflight plus a
+bounded refinement question in `docs/product/audits/2026-10-22/`. The first
+preflight requested revision (0.58); its follow-up assigned no demonstrated
+blocking gap (0.63), but the mutation regression disproved that assessment.
+The adopted detached-snapshot correction follows the executable result. Jev
+assigned 1.00 to that conditional correction; probabilities do not replace the
+regression, full suite, adversarial review or final-head CI.

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,51 @@ public sealed class EventPersistenceFrameTests
     static readonly DateTimeOffset Now = new(2026, 10, 22, 12, 0, 0, TimeSpan.Zero);
     static readonly EventStreamAddress Stream = new("ténant", "events", "récord");
     readonly Uuid _aggregate = Uuid.CreateVersion4();
+
+    [Fact]
+    public async Task ShouldRejectBeforeSessionGivenEnvelopeCannotRoundTripExactly()
+    {
+        // Arrange
+        using var provider = Compose();
+        var serializer = new NonCanonicalSerializer(provider.GetRequiredService<IDomainEventSerializer>());
+        var streams = new RecordingStreamClient();
+        var store = Guard(new FitzEventStore(streams, serializer), serializer);
+
+        // Act
+        var failure = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await store.AppendAsync(Stream, 0, [Event("Acme", 1)]));
+
+        // Assert
+        Assert.Contains("canonical envelope", failure.Message, StringComparison.Ordinal);
+        Assert.Equal(0, streams.Begins);
+        Assert.Empty(streams.Bodies);
+    }
+
+    [Fact]
+    public async Task ShouldPersistCheckedSnapshotGivenPayloadChangesWhileSessionOpens()
+    {
+        // Arrange
+        using var provider = Compose();
+        var serializer = provider.GetRequiredService<IDomainEventSerializer>();
+        var ids = new List<Uuid> { Uuid.CreateVersion4() };
+        var streams = new RecordingStreamClient
+        {
+            Beginning = () => ids.AddRange(Enumerable.Range(0, 2000).Select(_ => Uuid.CreateVersion4())),
+        };
+        var store = Guard(new FitzEventStore(streams, serializer), serializer);
+        var ev = new DueControlOccurrencesGenerated(Uuid.CreateVersion4(), _aggregate, 1,
+            "window", new DateOnly(2026, 10, 22), ids, Uuid.CreateVersion4(), "Lead", Now);
+        ev.AttachMetadata(Event("metadata", 1).Metadata);
+        var checkedBytes = serializer.Serialize(ev).ToArray();
+
+        // Act
+        await store.AppendAsync(Stream, 0, [ev]);
+
+        // Assert
+        Assert.Equal(2001, ids.Count);
+        Assert.Equal(checkedBytes, Assert.Single(streams.Bodies));
+        Assert.Single(Assert.IsType<DueControlOccurrencesGenerated>(serializer.Deserialize(streams.Bodies[0])).OccurrenceIds);
+    }
 
     [Fact]
     public async Task ShouldRejectWholeBatchBeforeSessionGivenOversizedLaterEvent()
@@ -201,6 +247,18 @@ public sealed class EventPersistenceFrameTests
         public DomainEvent Deserialize(ReadOnlyMemory<byte> data) => inner.Deserialize(data);
     }
 
+    sealed class NonCanonicalSerializer(IDomainEventSerializer inner) : IDomainEventSerializer
+    {
+        public ReadOnlyMemory<byte> Serialize(DomainEvent ev) => inner.Serialize(ev);
+        public DomainEvent Deserialize(ReadOnlyMemory<byte> data)
+        {
+            var ev = (TenantRegistered)inner.Deserialize(data);
+            var changed = ev with { Name = "Changed while snapshotting" };
+            changed.AttachMetadata(ev.Metadata);
+            return changed;
+        }
+    }
+
     sealed class RecordingStreamClient : IStreamClient, IStreamSession
     {
         public int Begins { get; private set; }
@@ -208,10 +266,12 @@ public sealed class EventPersistenceFrameTests
         public List<byte[]> Bodies { get; } = [];
         public List<byte[]> Metadata { get; } = [];
         public List<ulong> Offsets { get; } = [];
+        public Action? Beginning { get; init; }
 
         public Task<IStreamSession> BeginAsync(string route, ReadOnlyMemory<byte>? ingestMetadata = null,
             CancellationToken ct = default)
         {
+            Beginning?.Invoke();
             Begins++;
             return Task.FromResult<IStreamSession>(this);
         }
