@@ -42,7 +42,7 @@ public sealed partial class RoleCleanupReactor(
                 .ConfigureAwait(false);
             foreach (var team in page.Items)
             {
-                await bus.SendReactionAsync(new RemoveTeamRole(tenantId, team.TeamId, roleId), context, ct)
+                await bus.SendReactionAsync(RbacTeamRoleEffects.Remove(context.Trigger.Metadata.EventId, tenantId, roleId, team), context, ct)
                     .ConfigureAwait(false);
             }
 

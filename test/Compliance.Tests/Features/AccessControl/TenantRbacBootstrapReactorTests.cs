@@ -84,7 +84,9 @@ public sealed class TenantRbacBootstrapReactorTests
         Assert.Contains(new DefineRole(tenantId, adminRoleId, BuiltInRbac.TenantAdministrationRoleName), prior);
         Assert.Contains(new DefineTeam(tenantId, adminTeamId, BuiltInRbac.AdministratorsTeamName), prior);
         Assert.Contains(new RegisterMember(tenantId, creatorId), prior);
-        Assert.Contains(new AssignTeamRole(tenantId, adminTeamId, adminRoleId), prior);
+        Assert.Contains(prior, request => request is AssignTeamRole assignment &&
+            assignment.TenantId == tenantId && assignment.TeamId == adminTeamId && assignment.RoleId == adminRoleId &&
+            assignment.CommandId != Uuid.Empty && assignment.ExpectedRevision == 0);
         AssertPermissions(prior.OfType<AssignRolePermission>().ToArray(), adminRoleId,
             RbacPermissions.TenantAccess, RbacPermissions.TenantRbacManage, RbacPermissions.ProgramManage);
         Assert.DoesNotContain(prior, request => request is DefineRole role && role.RoleId != adminRoleId);
@@ -163,10 +165,7 @@ public sealed class TenantRbacBootstrapReactorTests
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
-        await using var provider = RbacManagementServices.Build(allowed: true, portia => portia
-            .AddRequestHandler<DefineRoleHandler>().AddRequestHandler<DefineTeamHandler>()
-            .AddRequestHandler<AssignTeamRoleHandler>().AddRequestHandler<AssignRolePermissionHandler>()
-            .AddRequestHandler<RemoveRolePermissionHandler>());
+        await using var provider = BootstrapServices();
         await using var scope = provider.CreateAsyncScope();
         var inner = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var bus = new InterruptedBus(inner, interruption);
@@ -227,13 +226,67 @@ public sealed class TenantRbacBootstrapReactorTests
             workload.Name is "BuiltInRoleCatalogV1" or "EvidenceRedactionPermissionsV1" or "EvidenceArtifactReadPermissionV1");
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    public async Task ShouldFinishWithoutRestoringRemovedTeamRolesGivenAnUnknownLinkAppendOutcome(int interruption)
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        await using var provider = BootstrapServices();
+        await using var scope = provider.CreateAsyncScope();
+        var inner = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var bus = new InterruptedBus(inner, interruption, interruptRoleLinks: true);
+        var scenario = new ReactorScenario().Given(new TenantRegistered(tenantId, Uuid.CreateVersion4(),
+            "Acme", "acme", "Acme LLC", "admin@example.com"));
+        var checkpoints = new InMemoryProjectionCheckpointStore();
+        var reactor = new TenantRbacBootstrapReactor(checkpoints, bus);
+        await Assert.ThrowsAsync<IOException>(() => scenario.RunAsync(reactor));
+        var interrupted = bus.RoleGrants[^1];
+        Assert.Equal(ProjectionCheckpoint.Start,
+            await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
+        var removed = interrupted.TeamId != BuiltInRbac.AdministratorsTeamId(tenantId);
+        if (removed)
+            Assert.True((await inner.SendAsync(new RemoveTeamRole(tenantId, interrupted.TeamId, interrupted.RoleId,
+                Uuid.CreateVersion4(), 1, interrupted.CommandId), RequestActor.System)).IsSuccess);
+
+        // Act
+        await scenario.RunAsync(reactor);
+        await scenario.RunAsync(reactor);
+
+        // Assert
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var grants = bus.RoleGrants.Distinct().ToArray();
+        Assert.Equal(4, grants.Length);
+        foreach (var grant in grants)
+        {
+            var owner = await reader.HydrateAsync(new TeamRole(tenantId, grant.TeamId, grant.RoleId));
+            var isRemoved = removed && grant == interrupted;
+            Assert.Equal(!isRemoved, owner.IsAssigned);
+            Assert.Equal(isRemoved ? 2UL : 1UL, owner.Version);
+            Assert.Equal(isRemoved ? null : (Uuid?)grant.CommandId, owner.AssignmentId);
+        }
+        Assert.All(bus.Identities, identity => Assert.Equal(identity.Typed, identity.Metadata));
+        Assert.Equal(36, bus.Grants.Distinct().Count());
+        Assert.NotEqual(ProjectionCheckpoint.Start,
+            await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
+    }
+
+    static ServiceProvider BootstrapServices() => RbacManagementServices.Build(allowed: true, portia => portia
+        .AddRequestHandler<DefineRoleHandler>().AddRequestHandler<DefineTeamHandler>()
+        .AddRequestHandler<AssignTeamRoleHandler>().AddRequestHandler<AssignRolePermissionHandler>()
+        .AddRequestHandler<RemoveRolePermissionHandler>().AddRequestHandler<RemoveTeamRoleHandler>());
+
     static void AssertPermissions(IReadOnlyList<AssignRolePermission> grants, Uuid roleId, params string[] expected) =>
         Assert.Equal(expected.Order(StringComparer.Ordinal),
             grants.Where(grant => grant.RoleId == roleId).Select(grant => grant.Permission).Order(StringComparer.Ordinal));
 
-    sealed class InterruptedBus(IRequestBus inner, int interruption) : IRequestBus
+    sealed class InterruptedBus(IRequestBus inner, int interruption, bool interruptRoleLinks = false) : IRequestBus
     {
         public List<AssignRolePermission> Grants { get; } = [];
+        public List<AssignTeamRole> RoleGrants { get; } = [];
         public List<(Uuid Typed, Uuid Metadata)> Identities { get; } = [];
         public RequestDispatchContext CreateContext(ClaimsPrincipal actor, RequestMetadata? metadata = null) =>
             inner.CreateContext(actor, metadata);
@@ -247,8 +300,15 @@ public sealed class TenantRbacBootstrapReactorTests
             {
                 Grants.Add(grant);
                 Identities.Add((grant.CommandId, context.RequestId));
-                if (Grants.Count == interruption)
+                if (!interruptRoleLinks && Grants.Count == interruption)
                     throw new IOException("Interrupted after the owner committed and before checkpointing.");
+            }
+            if (request is AssignTeamRole roleGrant)
+            {
+                RoleGrants.Add(roleGrant);
+                Identities.Add((roleGrant.CommandId, context.RequestId));
+                if (interruptRoleLinks && RoleGrants.Count == interruption)
+                    throw new IOException("Interrupted after the team role committed and before checkpointing.");
             }
             return result;
         }

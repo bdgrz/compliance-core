@@ -121,7 +121,7 @@ public sealed class RbacPagedReadContractTests
             new RolePermissionView(Uuid.CreateVersion4(), "controls.read", Uuid.CreateVersion4(), 1),
         ], null);
         readers.RoleTeams.Page = new Page<RoleTeamView>([
-            new RoleTeamView(Uuid.CreateVersion4(), Uuid.CreateVersion4()),
+            new RoleTeamView(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1),
         ], null);
 
         // Act

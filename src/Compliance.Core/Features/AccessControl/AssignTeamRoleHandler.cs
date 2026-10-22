@@ -4,9 +4,15 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 
 public sealed class AssignTeamRoleHandler(IAggregateExecutor executor) : IRequestHandler<AssignTeamRole>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<AssignTeamRole> context, CancellationToken ct) =>
-        executor.ExecuteAsync(
-            new TeamRole(context.Request.TenantId, context.Request.TeamId, context.Request.RoleId),
-            assignment => AggregateOutcome.CommitOnSuccess(assignment.Assign()),
-            context, ct);
+    public ValueTask<Result> HandleAsync(IRequestContext<AssignTeamRole> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        if (request.TenantId == Uuid.Empty || request.TeamId == Uuid.Empty || request.RoleId == Uuid.Empty)
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A tenant, team and role are required.")));
+        return executor.ExecuteAsync(
+            new TeamRole(request.TenantId, request.TeamId, request.RoleId, request.CommandId),
+            assignment => AggregateOutcome.CommitOnSuccess(assignment.Assign(request.CommandId, request.ExpectedRevision,
+                RbacOperationActor.From(context.Actor))), context, ct);
+    }
 }

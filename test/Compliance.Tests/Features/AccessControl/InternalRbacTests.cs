@@ -23,18 +23,18 @@ public sealed class InternalRbacTests
         var manageId = Uuid.CreateVersion4();
         var read = new RolePermission(TenantId, RoleId, "controls.read", readId);
         var manage = new RolePermission(TenantId, RoleId, "controls.manage", manageId);
-        var teamRole = new TeamRole(TenantId, TeamId, RoleId);
+        var teamRoleId = Uuid.CreateVersion4();
+        var teamRole = new TeamRole(TenantId, TeamId, RoleId, teamRoleId);
         _ = member.Register();
         _ = team.Define("Compliance administrators");
-        _ = teamMember.Assign();
+        _ = teamMember.Assign(member.MembershipEpisodeId);
         _ = role.Define("Compliance administrator");
         _ = read.Assign(readId, 0, RbacPermissionFacts.Actor);
         _ = manage.Assign(manageId, 0, RbacPermissionFacts.Actor);
-        _ = teamRole.Assign();
+        _ = teamRole.Assign(teamRoleId, 0, RbacTeamRoleFacts.Actor);
 
         // Act
-        var permissions = Rbac(member, team, teamMember, role, read, manage, teamRole)
-            .GetPermissions(member.Id);
+        var permissions = PermissionsFor(member.Id, member, team, teamMember, role, read, manage, teamRole);
 
         // Assert
         Assert.Equal(["controls.manage", "controls.read"], permissions);
@@ -105,7 +105,7 @@ public sealed class InternalRbacTests
         state.Apply(new TeamDefined(TenantId, TeamId, "Reviewers"));
         state.Apply(new RoleDefined(TenantId, RoleId, "Control reviewer"));
         state.Apply(new TeamMemberAssigned(TenantId, TeamId, memberId));
-        state.Apply(new TeamRoleAssigned(TenantId, TeamId, RoleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(TenantId, TeamId, RoleId));
 
         state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "controls.read"));
         Assert.Contains(new PermissionGrant(memberId, "controls.read"), state.Materialize());
@@ -128,7 +128,7 @@ public sealed class InternalRbacTests
         state.Apply(new TeamDefined(TenantId, TeamId, "Reviewers"));
         state.Apply(new RoleDefined(TenantId, RoleId, "Control reviewer"));
         state.Apply(new TeamMemberAssigned(TenantId, TeamId, memberId));
-        state.Apply(new TeamRoleAssigned(TenantId, TeamId, RoleId));
+        state.Apply(RbacTeamRoleFacts.Assigned(TenantId, TeamId, RoleId));
 
         state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "controls.read"));
         Assert.Contains(new PermissionGrant(memberId, "controls.read"), state.Materialize());
@@ -155,13 +155,14 @@ public sealed class InternalRbacTests
         Assert.Equal(first, second);
     }
 
-    static RbacGraph Rbac(params Aggregate[] aggregates)
+    static string[] PermissionsFor(Uuid memberId, params Aggregate[] aggregates)
     {
-        var graph = new RbacGraph(TenantId);
+        var graph = new PermissionProjectionState();
         foreach (var aggregate in aggregates)
             foreach (var domainEvent in new AggregateScenario<Aggregate>(aggregate).PendingEvents)
                 graph.Apply(domainEvent);
-        return graph;
+        return graph.Materialize().Where(grant => grant.MemberId == memberId)
+            .Select(grant => grant.Permission).Order(StringComparer.Ordinal).ToArray();
     }
 
     static Uuid Id(string value) => Uuid.Parse(value, CultureInfo.InvariantCulture);
