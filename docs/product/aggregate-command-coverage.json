@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "capturedAt": "2026-10-22",
   "sourceCommit": "f054498a56b8e86f3d6019b5e09eb8784be05e8e",
-  "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The 2026-10-21 capture includes the in-progress, uncommitted per-finding migration changes for issue #1022; migration facts are classified separately from business aggregate facts, and FindingAggregate command routing remains an explicit issue-owned gap. The map now includes the bounded per-program migration coordinator and its named direct request route; regular FindingAggregate business command/read cutover remains open under #1022. The legacy fence is emitted by a lightweight aggregate on the source stream address, while RemediationLedger only reduces the marker to reject legacy writes. The seven legacy finding-scope checks are listed separately as source-stream replay guards, not as state-owning reducers.",
+  "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The 2026-10-22 capture records the FindingAggregate native v2 business route, migration-aware readers, and one-step migration command for #1026. The program-wide RemediationLedger remains a fenced legacy history source and compatibility reader; its command methods are retained until deployment-specific parity is verified.",
   "factReplayGuards": [
     {
       "fact": "CorrectiveActionAdded",
@@ -41,33 +41,33 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 411,
-    "factsWithReducer": 392,
-    "factsWithAggregateEmitter": 385,
+    "domainEventContracts": 418,
+    "factsWithReducer": 399,
+    "factsWithAggregateEmitter": 392,
     "auditFactsWithoutReducer": 1,
     "factsWithoutReducerOrEmitter": 18,
     "legacyReducerOnlyFacts": 2,
     "aggregateTypes": 103,
-    "aggregateTypesWithCommandPath": 101,
+    "aggregateTypesWithCommandPath": 100,
     "requestContracts": 649,
     "commonRequestContracts": 647,
     "requestClassificationCounts": {
       "command": 347,
-      "confirmed_command_gap": 8,
       "deferred_command": 5,
-      "internal_executor_context": 1,
+      "confirmed_command_gap": 8,
       "internal_reaction": 14,
-      "query_or_reconstruction": 274
+      "query_or_reconstruction": 274,
+      "internal_executor_context": 1
     },
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 591,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 41,
     "unwiredAggregateProducerClassifications": {
-      "direct_processor_executor": 10,
+      "no_registered_request_route": 17,
       "direct_reactor_executor": 6,
-      "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 24
+      "legacy_emitter_to_prune": 8,
+      "direct_processor_executor": 10
     },
     "factReplayGuardRows": 7
   },
@@ -2876,13 +2876,32 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "CorrectiveActionAddedV2",
+      "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionAddedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.Receipts.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -2901,13 +2920,31 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "CorrectiveActionCompletedV2",
+      "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionCompletedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3451,11 +3488,29 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FindingAcceptanceLinkedV2",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingAcceptanceLinkedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3474,12 +3529,30 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FindingClosedV2",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingClosedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3574,7 +3647,6 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
@@ -3585,6 +3657,25 @@
       ],
       "disposition": "aggregate_fact",
       "note": ""
+    },
+    {
+      "fact": "FindingRaisedV2",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingRaisedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": "Emitted by manual and routed creation; the optional initial routed action is a separate v2 fact in the same finding stream."
     },
     {
       "fact": "FindingReopened",
@@ -3600,12 +3691,30 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FindingReopenedV2",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingReopenedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3624,7 +3733,6 @@
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
         "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
       ],
       "testSymbolReferences": [
@@ -3632,6 +3740,25 @@
         "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FindingRevisedV2",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingRevisedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8838,24 +8965,40 @@
       "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
       "appliedFacts": [
         "CorrectiveActionAdded",
+        "CorrectiveActionAddedV2",
         "CorrectiveActionCompleted",
+        "CorrectiveActionCompletedV2",
         "FindingAcceptanceLinked",
+        "FindingAcceptanceLinkedV2",
         "FindingClosed",
+        "FindingClosedV2",
         "FindingHistoryEventImported",
         "FindingRaised",
+        "FindingRaisedV2",
         "FindingReopened",
-        "FindingRevised"
+        "FindingReopenedV2",
+        "FindingRevised",
+        "FindingRevisedV2"
       ],
-      "commandRequests": [],
+      "commandRequests": [
+        "RaiseFinding",
+        "ReviseFinding",
+        "AddCorrectiveAction",
+        "CompleteCorrectiveAction",
+        "LinkFindingAcceptance",
+        "CloseFinding",
+        "ReopenFinding"
+      ],
       "internalReactionRequests": [
-        "MigrateFindingHistory"
+        "MigrateFindingHistory",
+        "RaiseOccurrenceFinding"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/FindingMigrationE2ETests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
-      "note": "The registered route currently imports legacy history only. Seven business producer operations still need the production command/read cutover under #1022."
+      "note": "Owns native v2 finding mutations and imports fenced legacy history with exact per-finding lineage; migration and business writes use this program-qualified stream."
     },
     {
       "aggregate": "FindingMigrationAggregate",
@@ -9778,15 +9921,7 @@
         "FindingRevised",
         "RemediationPartitioningStarted"
       ],
-      "commandRequests": [
-        "AddCorrectiveAction",
-        "CloseFinding",
-        "CompleteCorrectiveAction",
-        "LinkFindingAcceptance",
-        "RaiseFinding",
-        "ReopenFinding",
-        "ReviseFinding"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
@@ -9800,7 +9935,8 @@
         "test/Compliance.Tests/Features/Work/WorkDigestContentReaderTests.cs",
         "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "read_only_legacy_replay",
+      "note": "Retained as the fenced legacy history source and compatibility reader; production finding commands no longer route mutations here."
     },
     {
       "aggregate": "RemediationMigrationFenceAggregate",
@@ -11142,7 +11278,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [
-        "RemediationLedger"
+        "FindingAggregate"
       ],
       "helperServices": [
         "RemediationCommands"
@@ -12780,7 +12916,7 @@
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "RemediationLedger"
+        "FindingAggregate"
       ],
       "helperServices": [
         "RemediationCommands"
@@ -12892,7 +13028,7 @@
         "RemediationLedger"
       ],
       "aggregateTargets": [
-        "RemediationLedger"
+        "FindingAggregate"
       ],
       "helperServices": [
         "RemediationCommands"
@@ -17686,7 +17822,7 @@
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "RemediationLedger"
+        "FindingAggregate"
       ],
       "helperServices": [
         "RemediationCommands"
@@ -20293,7 +20429,7 @@
     {
       "request": "MigrateFindingHistory",
       "contract": "src/Compliance.Common/Features/Remediation/MigrateFindingHistory.cs",
-      "interfaces": "IRequest, IProgramScopedRequest",
+      "interfaces": "IRequest",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -21500,7 +21636,7 @@
         "RemediationLedger"
       ],
       "aggregateTargets": [
-        "RemediationLedger"
+        "FindingAggregate"
       ],
       "helperServices": [
         "RemediationCommands"
@@ -21527,8 +21663,12 @@
       "directAggregateReferences": [
         "ControlOperationsLedger"
       ],
-      "aggregateTargets": [],
-      "helperServices": [],
+      "aggregateTargets": [
+        "FindingAggregate"
+      ],
+      "helperServices": [
+        "RoutedFinding"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs"
       ],
@@ -23676,7 +23816,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [
-        "RemediationLedger"
+        "FindingAggregate"
       ],
       "helperServices": [
         "RemediationCommands"
@@ -24873,7 +25013,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [
-        "RemediationLedger"
+        "FindingAggregate"
       ],
       "helperServices": [
         "RemediationCommands"
@@ -26440,76 +26580,6 @@
       "methodArgumentCount": 2
     },
     {
-      "fact": "CorrectiveActionAdded",
-      "aggregate": "FindingAggregate",
-      "method": "AddAction",
-      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1022,
-      "callerSources": [],
-      "methodArgumentCount": 7
-    },
-    {
-      "fact": "FindingClosed",
-      "aggregate": "FindingAggregate",
-      "method": "Close",
-      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1022,
-      "callerSources": [],
-      "methodArgumentCount": 9
-    },
-    {
-      "fact": "CorrectiveActionCompleted",
-      "aggregate": "FindingAggregate",
-      "method": "CompleteAction",
-      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1022,
-      "callerSources": [],
-      "methodArgumentCount": 7
-    },
-    {
-      "fact": "FindingAcceptanceLinked",
-      "aggregate": "FindingAggregate",
-      "method": "LinkAcceptance",
-      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1022,
-      "callerSources": [],
-      "methodArgumentCount": 8
-    },
-    {
-      "fact": "FindingRaised",
-      "aggregate": "FindingAggregate",
-      "method": "Raise",
-      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1022,
-      "callerSources": [],
-      "methodArgumentCount": 10
-    },
-    {
-      "fact": "FindingReopened",
-      "aggregate": "FindingAggregate",
-      "method": "Reopen",
-      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1022,
-      "callerSources": [],
-      "methodArgumentCount": 4
-    },
-    {
-      "fact": "FindingRevised",
-      "aggregate": "FindingAggregate",
-      "method": "Revise",
-      "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1022,
-      "callerSources": [],
-      "methodArgumentCount": 9
-    },
-    {
       "fact": "ApplicationImportCanceled",
       "aggregate": "ImportBatch",
       "method": "Cancel",
@@ -26560,6 +26630,90 @@
       "ownerIssue": 316,
       "callerSources": [],
       "methodArgumentCount": 8
+    },
+    {
+      "fact": "CorrectiveActionAdded",
+      "aggregate": "RemediationLedger",
+      "method": "AddAction",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 8
+    },
+    {
+      "fact": "FindingClosed",
+      "aggregate": "RemediationLedger",
+      "method": "Close",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 10
+    },
+    {
+      "fact": "CorrectiveActionCompleted",
+      "aggregate": "RemediationLedger",
+      "method": "CompleteAction",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 8
+    },
+    {
+      "fact": "FindingAcceptanceLinked",
+      "aggregate": "RemediationLedger",
+      "method": "LinkAcceptance",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 8
+    },
+    {
+      "fact": "FindingRaised",
+      "aggregate": "RemediationLedger",
+      "method": "Raise",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 11
+    },
+    {
+      "fact": "FindingReopened",
+      "aggregate": "RemediationLedger",
+      "method": "Reopen",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 5
+    },
+    {
+      "fact": "FindingRevised",
+      "aggregate": "RemediationLedger",
+      "method": "Revise",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 10
     },
     {
       "fact": "TemplateApplicationDraftCreated",

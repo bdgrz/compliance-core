@@ -35,7 +35,9 @@ public sealed class FindingReadSource(IAggregateReader reader, IDomainEventReade
         foreach (var record in before.Value)
         {
             if (!TryIdentity(record.Event, out var sourceTenant, out var sourceProgram, out var findingId) ||
-                sourceTenant != tenantId || record.Stream != new FindingAggregate(sourceTenant, sourceProgram, findingId).Stream)
+                sourceTenant != tenantId || record.Stream != new FindingAggregate(sourceTenant,
+                    sourceProgram, findingId).Stream || record.Event.Metadata.AggregateId !=
+                    FindingAggregate.StreamId(sourceProgram, findingId))
                 return InvalidSource();
             if (sourceProgram == programId)
                 ids.Add(findingId);

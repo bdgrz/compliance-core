@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Remediation;
 using Cntryl.Portia;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -99,6 +100,43 @@ public sealed class ComplianceCompositionTests
 
         // Assert
         await host.StopAsync();
+    }
+
+    [Fact]
+    public async Task ShouldAllowOnlyNamedMigrationProcessGivenProductionCompositionAuthorization()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
+                ["Fitz:ApplicationName"] = "compliance",
+            })
+            .Build();
+        _ = services.AddCompliance(configuration);
+        await using var provider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateScopes = true });
+        await using var scope = provider.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var request = new MigrateFindingHistory(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            Uuid.CreateVersion4());
+        var metadata = new RequestMetadata(Uuid.CreateVersion4(), Uuid.CreateVersion4(), null);
+
+        // Act
+        var named = await bus.AuthorizeAsync(request, new RequestDispatchContext(
+            RequestActor.CreateSystem("migration:FindingHistoryV1", "bdgrz.system"),
+            new DirectInvocation(), metadata), CancellationToken.None);
+        var generic = await bus.AuthorizeAsync(request, new RequestDispatchContext(
+            RequestActor.System, new DirectInvocation(), metadata), CancellationToken.None);
+        var member = await bus.AuthorizeAsync(request, new RequestDispatchContext(
+            RequestActor.Anonymous,
+            new DirectInvocation(), metadata), CancellationToken.None);
+
+        // Assert
+        Assert.True(named.IsSuccess, named.Error?.Message);
+        Assert.Equal(RequestErrorKind.Forbidden, generic.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Forbidden, member.Error?.Kind);
     }
 
     static HostApplicationBuilder Compose()

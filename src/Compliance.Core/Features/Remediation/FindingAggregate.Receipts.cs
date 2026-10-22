@@ -141,6 +141,9 @@ public sealed partial class FindingAggregate
         if (actor is not { Kind: "member" or "system_process" or "platform_operator" or "firm_staff", Id.Length: > 0, Display.Length: > 0 } ||
             at == default || at.Offset != TimeSpan.Zero)
             throw new InvalidOperationException("The native finding attribution is invalid.");
+        if (_closure is not null && ev is not FindingReopenedV2 ||
+            _closure is null && ev is FindingReopenedV2)
+            throw new InvalidOperationException("A closed finding may only be reopened, and an open finding cannot be reopened.");
         var isInitial = false;
         if (_pendingCreation is { } pending)
         {

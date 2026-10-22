@@ -105,14 +105,21 @@ public sealed partial class FindingAggregate : Aggregate
         string creationKind, CorrectiveActionAddedV2? initialAction)
     {
         EnsureImportComplete();
-        ArgumentNullException.ThrowIfNull(links);
         if (CheckRequest(requestId) is { } requestFailure)
             return requestFailure;
         if (_selectedReceipt is not null)
+        {
+            if (links is null)
+                return CommandFailure.InvalidContent(
+                    "Each finding link needs a known kind and a reference of at most 500 characters.");
             return RetryRaise(source, title, description, severity, affectedScope, ownerMemberId,
                 dueOn, links, raisedBy, creationKind, initialAction);
+        }
         if (IsRecorded)
             return ChangedRequest();
+        if (links is null)
+            return CommandFailure.InvalidContent(
+                "Each finding link needs a known kind and a reference of at most 500 characters.");
         if (source is null || !SourceKinds.Contains(source.Kind) ||
             string.IsNullOrWhiteSpace(source.SourceText) || source.SourceText.Length > 8000 ||
             source.Version is { Length: > 200 } ||
@@ -245,6 +252,8 @@ public sealed partial class FindingAggregate : Aggregate
             return CommandFailure.InvalidContent("A corrective action needs a nonempty identity.");
         if (Writable(expectedRevision) is { } blocked)
             return blocked;
+        if (_actions.Exists(action => action.ActionId == actionId))
+            return CommandFailure.StateConflict("A corrective action identity cannot be reused.");
         if (!IsBoundedText(description, MaximumTextLength) || ownerMemberId == Uuid.Empty ||
             dueOn == default)
             return CommandFailure.InvalidContent(
@@ -263,11 +272,16 @@ public sealed partial class FindingAggregate : Aggregate
         string resolutionNotes, IReadOnlyList<EvidenceReference> evidence, Uuid completerMemberId,
         ActorReference actor, DateTimeOffset at)
     {
-        ArgumentNullException.ThrowIfNull(evidence);
         if (CheckRequest(requestId) is { } requestFailure)
             return requestFailure;
         if (_selectedReceipt is not null)
+        {
+            if (evidence is null)
+                return CommandFailure.InvalidContent("The finding requires valid evidence references.");
             return RetryCompletion(expectedRevision, actionId, resolutionNotes, evidence, completerMemberId, actor);
+        }
+        if (evidence is null)
+            return CommandFailure.InvalidContent("The finding requires valid evidence references.");
         if (Writable(expectedRevision) is { } blocked)
             return blocked;
         if (_actions.Find(action => action.ActionId == actionId) is not { } action)
@@ -316,12 +330,17 @@ public sealed partial class FindingAggregate : Aggregate
         string rationale, Uuid closerMemberId, ActorReference actor, DateTimeOffset at,
         SeparationOfDutiesWaiver? waiver)
     {
-        ArgumentNullException.ThrowIfNull(resolutionEvidence);
         if (CheckRequest(requestId) is { } requestFailure)
             return requestFailure;
         if (_selectedReceipt is not null)
+        {
+            if (resolutionEvidence is null)
+                return CommandFailure.InvalidContent("The finding requires valid evidence references.");
             return RetryClosure(expectedRevision, decisionId, verificationRationale, resolutionEvidence,
                 rationale, closerMemberId, actor, waiver?.Id);
+        }
+        if (resolutionEvidence is null)
+            return CommandFailure.InvalidContent("The finding requires valid evidence references.");
         if (Writable(expectedRevision) is { } blocked)
             return blocked;
         if (_actions.Count == 0 || _actions.Exists(static action => action.Status != Completed))

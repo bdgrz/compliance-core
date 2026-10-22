@@ -32,6 +32,8 @@ static class FindingClosureWork
 
     public static WorkCandidate? Candidate(FindingView finding) => Candidate(new FindingClosureWorkState(
         finding.TenantId, finding.ProgramId, finding.FindingId, finding.Revision, finding.Title,
-        finding.Severity, finding.OwnerMemberId, finding.DueOn, finding.CorrectiveActions.ToArray(),
+        finding.Severity, finding.OwnerMemberId, finding.DueOn,
+        finding.CorrectiveActions.Select(static action => new FindingClosureActionState(action.ActionId,
+            action.OwnerMemberId, action.Status, action.CompletedByMemberId)).ToArray(),
         finding.Closure is not null, finding.History[^1].At));
 }

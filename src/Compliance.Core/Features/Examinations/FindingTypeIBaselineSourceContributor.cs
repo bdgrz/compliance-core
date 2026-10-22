@@ -45,28 +45,39 @@ public sealed class FindingTypeIBaselineSourceContributor(
             DateTimeKind.Utc));
         var histories = new Dictionary<Uuid, FindingHistory>();
         var eventIds = new HashSet<Uuid>();
-        ulong expectedStreamVersion = 1;
+        ulong expectedProgramVersion = 1;
+        ulong expectedResourceOffset = 0;
         DateTimeOffset? priorOccurredAt = null;
         foreach (var record in historyRead.Value)
         {
             if (record.Stream != stream || record.Event?.Metadata is not { } metadata ||
                 metadata.AggregateId != engagement.ProgramId || metadata.EventId == Uuid.Empty ||
-                !eventIds.Add(metadata.EventId) || metadata.AggregateVersion != expectedStreamVersion ||
+                record.ResourceOffset != expectedResourceOffset || !eventIds.Add(metadata.EventId) ||
+                metadata.AggregateVersion != (metadata.IsAudit ? expectedProgramVersion - 1 : expectedProgramVersion) ||
                 metadata.OccurredOn == default || priorOccurredAt is { } prior &&
                 metadata.OccurredOn < prior)
-                return InvalidHistory();
+                return InvalidHistory("The remediation source metadata or physical offsets are invalid.");
+            if (metadata.IsAudit)
+            {
+                if (record.Event is RemediationPartitioningStarted)
+                    return InvalidHistory("The remediation partitioning fence cannot be an audit record.");
+                expectedResourceOffset++;
+                priorOccurredAt = metadata.OccurredOn;
+                continue;
+            }
             if (record.Event is RemediationPartitioningStarted marker)
             {
                 if (marker.TenantId != engagement.TenantId || marker.ProgramId != engagement.ProgramId ||
-                    marker.PreFenceProgramVersion != expectedStreamVersion - 1)
-                    return InvalidHistory();
-                expectedStreamVersion++;
+                    marker.PreFenceProgramVersion != expectedProgramVersion - 1)
+                    return InvalidHistory("The remediation partitioning fence does not match its source version.");
+                expectedProgramVersion++;
+                expectedResourceOffset++;
                 priorOccurredAt = metadata.OccurredOn;
                 continue;
             }
             if (!TryReadFindingEvent(record.Event, engagement.TenantId, engagement.ProgramId,
                     out var findingId, out var findingRevision, out var occurredAt))
-                return InvalidHistory();
+                return InvalidHistory("The remediation stream contains an unsupported finding fact.");
 
             if (!histories.TryGetValue(findingId, out var history))
             {
@@ -76,10 +87,12 @@ public sealed class FindingTypeIBaselineSourceContributor(
             var isRaise = record.Event is FindingRaised;
             if (findingRevision != history.CurrentRevision + 1 ||
                 (history.CurrentRevision == 0) != isRaise)
-                return InvalidHistory();
+                return InvalidHistory("The remediation finding history is not contiguous.");
             history.CurrentRevision = findingRevision;
             if (occurredAt <= through && metadata.OccurredOn <= through)
             {
+                if (history.AsOfRevision + 1 != findingRevision)
+                    return InvalidHistory("The Type I finding history is not a complete prefix.");
                 try
                 {
                     history.AsOfEvents.Add(Capture(record.Event, metadata, findingRevision));
@@ -87,29 +100,33 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 catch (Exception exception) when (exception is ArgumentException or JsonException or
                     InvalidOperationException or NotSupportedException)
                 {
-                    return InvalidHistory();
+                    return InvalidHistory("A remediation finding fact could not be captured.");
                 }
                 history.AsOfRevision = findingRevision;
             }
-            expectedStreamVersion++;
+            expectedProgramVersion++;
+            expectedResourceOffset++;
             priorOccurredAt = metadata.OccurredOn;
         }
 
-        try
+        if (!historyRead.Value.Any(static record => record.Event!.Metadata.IsAudit))
         {
-            var ledger = await aggregates.HydrateAsync(new RemediationLedger(engagement.TenantId,
-                engagement.ProgramId), ct).ConfigureAwait(false);
-            var currentViews = ledger.ReadAll(through);
-            if (ledger.CommittedStreamPosition != (ulong)historyRead.Value.Count ||
-                currentViews.Count != histories.Count || currentViews.Any(view =>
-                    view.TenantId != engagement.TenantId || view.ProgramId != engagement.ProgramId ||
-                    !histories.TryGetValue(view.FindingId, out var history) ||
-                    view.Revision != history.CurrentRevision))
+            try
+            {
+                var ledger = await aggregates.HydrateAsync(new RemediationLedger(engagement.TenantId,
+                    engagement.ProgramId), ct).ConfigureAwait(false);
+                var currentViews = ledger.ReadAll(through);
+                if (ledger.Version != expectedProgramVersion - 1 ||
+                    currentViews.Count != histories.Count || currentViews.Any(view =>
+                        view.TenantId != engagement.TenantId || view.ProgramId != engagement.ProgramId ||
+                        !histories.TryGetValue(view.FindingId, out var history) ||
+                        view.Revision != history.CurrentRevision))
+                    return InvalidHistory("The remediation stream and aggregate state disagree.");
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or ArgumentException)
+            {
                 return InvalidHistory();
-        }
-        catch (Exception exception) when (exception is InvalidOperationException or ArgumentException)
-        {
-            return InvalidHistory();
+            }
         }
 
         var sources = new List<TypeIBaselineSourceReference>();
@@ -174,6 +191,8 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 };
             if (occurredAt <= through && metadata.OccurredOn <= through)
             {
+                if (history.AsOfRevision + 1 != revision)
+                    return InvalidHistory();
                 history.AsOfRevision = revision;
                 history.AsOfEvents.Add(Capture(record.Event, metadata, revision));
             }
@@ -313,24 +332,34 @@ public sealed class FindingTypeIBaselineSourceContributor(
         {
             if (records.Count >= MaximumEvents)
                 return InvalidHistory<IReadOnlyList<ReadRecord>>();
-            records.Add(new ReadRecord(record.Stream, record.Event, record.NextCursor));
+            records.Add(new ReadRecord(record.Stream, record.Event, record.ResourceOffset,
+                record.NextCursor));
         }
         return Result<IReadOnlyList<ReadRecord>>.Success(records.AsReadOnly());
     }
 
     static bool SameHistory(IReadOnlyList<ReadRecord> left, IReadOnlyList<ReadRecord> right) =>
         left.Count == right.Count && left.Zip(right).All(pair =>
-            pair.First.Stream == pair.Second.Stream && pair.First.NextCursor == pair.Second.NextCursor &&
+            pair.First.Stream == pair.Second.Stream &&
+            pair.First.ResourceOffset == pair.Second.ResourceOffset &&
+            pair.First.NextCursor == pair.Second.NextCursor &&
             pair.First.Event?.GetType() == pair.Second.Event?.GetType() &&
-            pair.First.Event?.Metadata.EventId == pair.Second.Event?.Metadata.EventId &&
-            pair.First.Event?.Metadata.AggregateId == pair.Second.Event?.Metadata.AggregateId &&
-            pair.First.Event?.Metadata.AggregateVersion == pair.Second.Event?.Metadata.AggregateVersion &&
-            pair.First.Event?.Metadata.OccurredOn == pair.Second.Event?.Metadata.OccurredOn &&
+            SameMetadata(pair.First.Event?.Metadata, pair.Second.Event?.Metadata) &&
             pair.First.Event is { } leftEvent && pair.Second.Event is { } rightEvent &&
             FindingReadSource.PayloadHash(leftEvent) == FindingReadSource.PayloadHash(rightEvent));
 
+    static bool SameMetadata(DomainEventMetadata? left, DomainEventMetadata? right) =>
+        left is not null && right is not null && left.EventId == right.EventId &&
+        left.AggregateId == right.AggregateId && left.AggregateVersion == right.AggregateVersion &&
+        left.OccurredOn == right.OccurredOn && left.CorrelationId == right.CorrelationId &&
+        left.CausationId == right.CausationId && left.IsAudit == right.IsAudit &&
+        left.ExecutionId == right.ExecutionId && Equals(left.Actor, right.Actor);
+
     static Result<TypeIBaselineSourceContribution> InvalidHistory() =>
         InvalidHistory<TypeIBaselineSourceContribution>();
+
+    static Result<TypeIBaselineSourceContribution> InvalidHistory(string message) =>
+        Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict, message));
 
     static Result<T> InvalidHistory<T>() => Result<T>.Failure(new RequestError(
         RequestErrorKind.Conflict, "The remediation source stream is invalid or inconsistent."));
@@ -343,5 +372,6 @@ public sealed class FindingTypeIBaselineSourceContributor(
         public List<FindingTypeIBaselineSourceEvent> AsOfEvents { get; } = [];
     }
 
-    sealed record ReadRecord(EventStreamAddress Stream, DomainEvent? Event, EventCursor NextCursor);
+    sealed record ReadRecord(EventStreamAddress Stream, DomainEvent? Event, ulong ResourceOffset,
+        EventCursor NextCursor);
 }

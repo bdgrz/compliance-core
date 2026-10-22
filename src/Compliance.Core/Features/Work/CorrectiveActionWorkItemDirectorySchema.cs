@@ -1,4 +1,5 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Remediation;
 
 namespace Bdgrz.Compliance.Features.Work;
 
@@ -12,8 +13,8 @@ static class CorrectiveActionWorkItemDirectorySchema
 
     public static readonly KvDirectory<CorrectiveActionFindingContext, Uuid> FindingContexts =
         new("finding_contexts", ComplianceCoreJsonContext.Default.CorrectiveActionFindingContext,
-            static finding => finding.FindingId,
-            static findingId => [findingId.ToString()], []);
+            static finding => FindingKey(finding.ProgramId, finding.FindingId),
+            static key => [key.ToString()], []);
 
     public static readonly KvDirectoryIndex<AccountableWorkItemView> ByProgram = new(
         "by_program", 1, static item =>
@@ -21,10 +22,16 @@ static class CorrectiveActionWorkItemDirectorySchema
 
     public static readonly KvDirectoryIndex<AccountableWorkItemView> ByFinding = new(
         "by_finding", 1, static item =>
-            [item.FindingId!.Value.ToString(), item.WorkItemId.ToString()]);
+            [item.ProgramId.ToString(), item.FindingId!.Value.ToString(), item.WorkItemId.ToString()]);
 
     public static readonly KvDirectory<AccountableWorkItemView, Uuid> WorkItems = new(
         "accountable_work_items", ComplianceCoreJsonContext.Default.AccountableWorkItemView,
-        static item => item.WorkItemId,
-        static workItemId => [workItemId.ToString()], [ByProgram, ByFinding]);
+        static item => WorkItemKey(item.ProgramId, item.WorkItemId),
+        static key => [key.ToString()], [ByProgram, ByFinding]);
+
+    public static Uuid FindingKey(Uuid programId, Uuid findingId) =>
+        FindingAggregate.StreamId(programId, findingId);
+
+    public static Uuid WorkItemKey(Uuid programId, Uuid workItemId) =>
+        Uuid.CreateVersion5(programId, $"accountable-work-item:{workItemId}");
 }

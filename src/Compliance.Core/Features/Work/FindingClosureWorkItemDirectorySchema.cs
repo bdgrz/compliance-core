@@ -1,4 +1,5 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Remediation;
 
 namespace Bdgrz.Compliance.Features.Work;
 
@@ -10,6 +11,6 @@ static class FindingClosureWorkItemDirectorySchema
 
     public static readonly KvDirectory<FindingClosureWorkState, Uuid> Findings = new(
         "findings", ComplianceCoreJsonContext.Default.FindingClosureWorkState,
-        static finding => finding.FindingId,
-        static findingId => [findingId.ToString()], [ByProgram]);
+        static finding => FindingAggregate.StreamId(finding.ProgramId, finding.FindingId),
+        static key => [key.ToString()], [ByProgram]);
 }

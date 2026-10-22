@@ -1180,6 +1180,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(AccountableWorkItemProjectionRevision))]
 [JsonSerializable(typeof(CorrectiveActionFindingContext))]
 [JsonSerializable(typeof(FindingClosureWorkState))]
+[JsonSerializable(typeof(FindingClosureActionState))]
 [JsonSerializable(typeof(RiskGovernanceWorkRevision))]
 [JsonSerializable(typeof(RiskTreatmentActionWorkState))]
 [JsonSerializable(typeof(ControlEvaluationWorkState))]

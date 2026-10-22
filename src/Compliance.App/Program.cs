@@ -14,7 +14,11 @@ using Microsoft.OpenApi;
 var hostMode = ComplianceHostModeParser.Parse(
     Environment.GetEnvironmentVariable("COMPLIANCE_HOST_MODE"));
 
-if (hostMode.RunsApi())
+if (FindingHistoryMigrationCli.IsRequested(args))
+{
+    Environment.ExitCode = await FindingHistoryMigrationCli.RunAsync(args);
+}
+else if (hostMode.RunsApi())
 {
     await RunApiAsync(args, hostMode);
 }

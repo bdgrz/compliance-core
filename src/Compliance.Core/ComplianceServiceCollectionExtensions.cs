@@ -529,6 +529,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
         services.AddScoped<FindingReadSource>();
+        services.AddScoped<FindingHistoryMigrationStatusReader>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();
         services.AddScoped<IProgramResourceScopeResolver, ProgramResourceScopeResolver>();
         services.AddScoped<BoundaryResponsibilityScopeValidator>();

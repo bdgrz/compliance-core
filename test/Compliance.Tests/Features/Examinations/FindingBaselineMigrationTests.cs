@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,25 +50,44 @@ public sealed class FindingBaselineMigrationTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ShouldPreserveExactBaselineIdentityGivenMigrationAfterCutoffAndPhysicalAudits(bool includeAudit)
+    public async Task ShouldPreserveExactBaselineIdentityGivenMigrationAfterCutoffAndSeparateAuditSession(bool includeAudit)
     {
         // Arrange
         await using var fixture = new Fixture();
         var raised = new FindingRaised(fixture.Tenant, fixture.Program, fixture.Finding, 1,
             new FindingSource("manual", null, null, "Exact wording"), "Gap", "Description", "medium", "All",
             fixture.Member, new DateOnly(2026, 3, 1), [], fixture.Actor, Fixture.Before);
-        var source = new List<DomainEvent>
-        {
-            DomainEventSeed.Attach(raised, fixture.Program, 1,
-                eventId: Uuid.CreateVersion5(fixture.Finding, "original-raise"), occurredOn: Fixture.Before.AddSeconds(1)),
-        };
+        var sourceRaise = DomainEventSeed.Attach(raised, fixture.Program, 1,
+            eventId: Uuid.CreateVersion5(fixture.Finding, "original-raise"), occurredOn: Fixture.Before.AddSeconds(1));
+        await fixture.Store.AppendAsync(fixture.Legacy, 0, [sourceRaise]);
+        ulong nextSourceOffset = 1;
         if (includeAudit)
-            source.Add(DomainEventSeed.Attach(raised with { }, fixture.Program, 1, isAudit: true,
-                occurredOn: Fixture.Before.AddSeconds(2)));
-        source.Add(DomainEventSeed.Attach(new FindingRevised(fixture.Tenant, fixture.Program, fixture.Finding,
-            2, "high", fixture.Member, new DateOnly(2026, 3, 2), "Later scope", null, "After cutoff",
-            fixture.Actor, Fixture.After), fixture.Program, 2, occurredOn: Fixture.After.AddSeconds(1)));
-        await fixture.Store.AppendAsync(fixture.Legacy, 0, source.ToArray());
+            await fixture.RecordAuditAsync();
+        var sourceRevision = DomainEventSeed.Attach(new FindingRevised(fixture.Tenant, fixture.Program,
+            fixture.Finding, 2, "high", fixture.Member, new DateOnly(2026, 3, 2), "Later scope", null,
+            "After cutoff", fixture.Actor, Fixture.After), fixture.Program, 2,
+            occurredOn: Fixture.After.AddSeconds(1));
+        await fixture.Store.AppendAsync(fixture.Legacy, nextSourceOffset, [sourceRevision]);
+        if (includeAudit)
+        {
+            var physicalRecords = await fixture.ReadLegacyRecordsAsync();
+            Assert.Collection(physicalRecords,
+                record =>
+                {
+                    Assert.Equal(0UL, record.ResourceOffset);
+                    Assert.Equal(1UL, record.Event!.Metadata.AggregateVersion);
+                    Assert.False(record.Event.Metadata.IsAudit);
+                },
+                record =>
+                {
+                    Assert.Equal(1UL, record.ResourceOffset);
+                    Assert.Equal(2UL, record.Event!.Metadata.AggregateVersion);
+                    Assert.False(record.Event.Metadata.IsAudit);
+                });
+            var patternRecords = await fixture.ReadRemediationRecordsAsync();
+            Assert.Contains(patternRecords, static record =>
+                record.Event is UserIdentityAuthenticated && record.Event.Metadata.IsAudit);
+        }
         var before = await fixture.ReadAsync();
         Assert.True(before.IsSuccess, before.Error?.Message);
 
@@ -94,9 +114,9 @@ public sealed class FindingBaselineMigrationTests
         Assert.Equal(before.Value.Sources[0], Assert.Single(afterNative.Value.Sources));
         var lineage = await FindingHistoryFold.ReadAsync(fixture.Store, fixture.Tenant,
             fixture.Program, fixture.Finding, CancellationToken.None);
-        Assert.Equal(raised.Metadata.EventId, lineage.SourceLineage[0].SourceEventId);
-        Assert.Equal(raised.Metadata.OccurredOn, lineage.SourceLineage[0].SourceOccurredAt);
-        Assert.Equal(includeAudit ? 2UL : 1UL, lineage.SourceLineage[1].SourceProgramStreamOffset);
+        Assert.Equal(sourceRaise.Metadata.EventId, lineage.SourceLineage[0].SourceEventId);
+        Assert.Equal(sourceRaise.Metadata.OccurredOn, lineage.SourceLineage[0].SourceOccurredAt);
+        Assert.Equal(1UL, lineage.SourceLineage[1].SourceProgramStreamOffset);
     }
 
     [Theory]
@@ -156,6 +176,33 @@ public sealed class FindingBaselineMigrationTests
                     new DateOnly(2026, 1, 31), null, ["security"], Uuid.CreateVersion4(), [], "draft", 1,
                     After, Member, "Lead"), CancellationToken.None);
 
+        public async ValueTask<IReadOnlyList<DomainEventRecord>> ReadLegacyRecordsAsync()
+        {
+            var records = new List<DomainEventRecord>();
+            await foreach (var record in Store.ReadAsync(Legacy, 0))
+                records.Add(record);
+            return records.AsReadOnly();
+        }
+
+        public async ValueTask<IReadOnlyList<DomainEventRecord>> ReadRemediationRecordsAsync()
+        {
+            var records = new List<DomainEventRecord>();
+            await foreach (var record in Store.ReadAsync(
+                               EventStreamPattern.ForPattern(Tenant.ToString(), "remediation"),
+                               EventCursor.Start, CancellationToken.None))
+                records.Add(record);
+            return records.AsReadOnly();
+        }
+
+        public async Task RecordAuditAsync()
+        {
+            var executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+            var result = await executor.ExecuteAsync(new LegacyAuditAggregate(Program, Legacy, Member),
+                aggregate => AggregateOutcome.Commit(aggregate.RecordAudit()),
+                new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            Assert.True(result.IsSuccess, result.Error?.Message);
+        }
+
         public async Task MigrateAsync()
         {
             var request = new MigrateFindingHistory(Tenant, Program, Uuid.CreateVersion4());
@@ -178,6 +225,25 @@ public sealed class FindingBaselineMigrationTests
         {
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
+        }
+    }
+
+    sealed class LegacyAuditAggregate : Aggregate
+    {
+        readonly Uuid _memberId;
+
+        public LegacyAuditAggregate(Uuid programId, EventStreamAddress stream, Uuid memberId)
+            : base(programId, stream)
+        {
+            _memberId = memberId;
+            On<FindingRaised>(static _ => { });
+            On<FindingRevised>(static _ => { });
+        }
+
+        public Result RecordAudit()
+        {
+            AuditEvent(new UserIdentityAuthenticated(_memberId, "test-provider", "audit-subject"));
+            return Result.Success;
         }
     }
 }

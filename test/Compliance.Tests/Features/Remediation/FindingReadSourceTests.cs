@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Tests.Features.Operations;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
+using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Remediation;
@@ -99,6 +100,37 @@ public sealed class FindingReadSourceTests
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal(registration.FindingId, Assert.Single(result.Value.Findings).FindingId);
+    }
+
+    [Fact]
+    public async Task ShouldRejectWrongAggregateIdentityGivenCanonicalFindingStream()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var registration = await fixture.AsAsync(fixture.LeadUserId,
+            fixture.Raise(fixture.OwnerMemberId));
+        var target = new FindingAggregate(fixture.TenantId, fixture.ProgramId,
+            registration.FindingId);
+        var current = await ProgramManagementServices.HydrateAsync(fixture.Provider, target);
+        var now = DateTimeOffset.UtcNow;
+        var malformed = DomainEventSeed.Attach(new FindingRevisedV2(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.ProgramId, registration.FindingId, current.Revision + 1,
+            "high", fixture.OwnerMemberId, fixture.Today.AddDays(10), "All", null,
+            "Malformed aggregate identity.", ActorReference.ForMember(fixture.LeadMemberId,
+                "Lead"), now), fixture.ProgramId, current.Version + 1, occurredOn: now);
+        await fixture.Provider.GetRequiredService<IEventStore>().AppendAsync(target.Stream,
+            current.Version, [malformed]);
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var source = new FindingReadSource(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>());
+
+        // Act
+        var result = await source.ReadAsync(fixture.TenantId, fixture.ProgramId, now,
+            CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
     }
 
     sealed class FreshEventReader(IDomainEventReader inner, Func<Task>? beforeSecondPatternRead = null,

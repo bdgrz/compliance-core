@@ -8,10 +8,10 @@ namespace Bdgrz.Compliance.Features.Work;
 sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client,
     FindingReadSource findings, TimeProvider clock)
     : FitzKvProjectionStore(client,
-        "kv://bdgrz/accountable-work-items/corrective-actions-v2", ProjectorName),
+        "kv://bdgrz/accountable-work-items/corrective-actions-v3", ProjectorName),
       IAccountableWorkItemDirectoryReader, ICorrectiveActionWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemCorrectiveActionV2";
+    public const string ProjectorName = "AccountableWorkItemCorrectiveActionV3";
     const string RevisionKey = ProjectorName;
 
     string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
@@ -147,7 +147,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client,
         var finding = new CorrectiveActionFindingContext(raised.TenantId, raised.ProgramId,
             raised.FindingId, raised.Title, raised.Severity, raised.Revision);
         var existing = await CorrectiveActionWorkItemDirectorySchema.FindingContexts.GetAsync(
-            Transaction, raised.FindingId, ct).ConfigureAwait(false);
+            Transaction, CorrectiveActionWorkItemDirectorySchema.FindingKey(raised.ProgramId,
+                raised.FindingId), ct).ConfigureAwait(false);
         if (existing is null)
             await CorrectiveActionWorkItemDirectorySchema.FindingContexts.InsertAsync(Transaction,
                 finding, ct).ConfigureAwait(false);
@@ -165,7 +166,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client,
         {
             var page = await CorrectiveActionWorkItemDirectorySchema.WorkItems.QueryAsync(
                 Transaction, CorrectiveActionWorkItemDirectorySchema.ByFinding.Query()
-                    .WithPrefix(revised.FindingId.ToString()).Take(200).After(cursor), ct)
+                    .WithPrefix(revised.ProgramId.ToString(), revised.FindingId.ToString())
+                    .Take(200).After(cursor), ct)
                 .ConfigureAwait(false);
             foreach (var existing in page.Items)
             {
@@ -202,7 +204,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client,
         var workItem = AccountableWorkItemView.FromCandidate(added.TenantId,
             added.ProgramId, candidate);
         var existing = await CorrectiveActionWorkItemDirectorySchema.WorkItems.GetAsync(
-            Transaction, candidate.WorkItemId, ct).ConfigureAwait(false);
+            Transaction, CorrectiveActionWorkItemDirectorySchema.WorkItemKey(added.ProgramId,
+                candidate.WorkItemId), ct).ConfigureAwait(false);
         if (existing is null)
             await CorrectiveActionWorkItemDirectorySchema.WorkItems.InsertAsync(Transaction,
                 workItem, ct).ConfigureAwait(false);
@@ -221,7 +224,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client,
             completed.Revision, ct).ConfigureAwait(false);
         var workItemId = WorkCandidate.IdFor(completed.ActionId, WorkSource.CorrectiveAction);
         var existing = await CorrectiveActionWorkItemDirectorySchema.WorkItems.GetAsync(
-            Transaction, workItemId, ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
+            Transaction, CorrectiveActionWorkItemDirectorySchema.WorkItemKey(completed.ProgramId,
+                workItemId), ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
             "A corrective action cannot complete before its open event is projected.");
         ValidateWorkItem(existing, completed.TenantId, completed.ProgramId,
             completed.FindingId, completed.ActionId);
@@ -238,7 +242,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client,
         {
             var page = await CorrectiveActionWorkItemDirectorySchema.WorkItems.QueryAsync(
                 Transaction, CorrectiveActionWorkItemDirectorySchema.ByFinding.Query()
-                    .WithPrefix(closed.FindingId.ToString()).Take(200).After(cursor), ct)
+                    .WithPrefix(closed.ProgramId.ToString(), closed.FindingId.ToString())
+                    .Take(200).After(cursor), ct)
                 .ConfigureAwait(false);
             foreach (var item in page.Items)
             {
@@ -256,7 +261,8 @@ sealed class FitzCorrectiveActionWorkItemDirectory(IKvClient client,
         string? severity = null)
     {
         var current = await CorrectiveActionWorkItemDirectorySchema.FindingContexts.GetAsync(
-            Transaction, findingId, ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
+            Transaction, CorrectiveActionWorkItemDirectorySchema.FindingKey(programId, findingId),
+            ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
             "A finding event cannot be projected before its raised event.");
         if (current.TenantId != tenantId || current.ProgramId != programId ||
             revision != current.Revision + 1)

@@ -1,4 +1,3 @@
-using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Remediation;
@@ -9,4 +8,4 @@ namespace Bdgrz.Compliance.Features.Remediation;
 /// </summary>
 [Discriminator("bdgrz.remediation.migrate-finding-history", 1)]
 public sealed record MigrateFindingHistory(Uuid TenantId, Uuid ProgramId, Uuid MigrationId,
-    ulong? ExpectedSourceOffset = null) : IRequest, IProgramScopedRequest;
+    ulong? ExpectedSourceOffset = null) : IRequest;

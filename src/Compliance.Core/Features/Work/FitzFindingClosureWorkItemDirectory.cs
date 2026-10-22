@@ -7,10 +7,10 @@ namespace Bdgrz.Compliance.Features.Work;
 /// <summary>Projects independent closure work without changing the finding workflow.</summary>
 sealed class FitzFindingClosureWorkItemDirectory(IKvClient client,
     FindingReadSource findings, TimeProvider clock)
-    : FitzKvProjectionStore(client, "kv://bdgrz/accountable-work-items/finding-closure-v2",
+    : FitzKvProjectionStore(client, "kv://bdgrz/accountable-work-items/finding-closure-v3",
         ProjectorName), IAccountableWorkItemDirectoryReader, IFindingClosureWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemFindingClosureV2";
+    public const string ProjectorName = "AccountableWorkItemFindingClosureV3";
 
     string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
     public IReadOnlyCollection<string> ProjectedKinds => [FindingClosureWork.Kind];
@@ -48,7 +48,7 @@ sealed class FitzFindingClosureWorkItemDirectory(IKvClient client,
         if (domainEvent.Metadata.AggregateId != FindingAggregate.StreamId(scope.ProgramId, scope.FindingId))
             throw new InvalidOperationException("Finding work must originate from its canonical finding stream.");
         var current = await FindingClosureWorkItemDirectorySchema.Findings.GetAsync(Transaction,
-            scope.FindingId, ct).ConfigureAwait(false);
+            FindingAggregate.StreamId(scope.ProgramId, scope.FindingId), ct).ConfigureAwait(false);
         if (domainEvent is FindingRaised raised)
         {
             if (current is not null || raised.Revision != 1 || raised.OwnerMemberId == Uuid.Empty)
@@ -130,7 +130,7 @@ sealed class FitzFindingClosureWorkItemDirectory(IKvClient client,
                 if (finding.TenantId != tenantId || finding.ProgramId != programId ||
                     finding.FindingId == Uuid.Empty || finding.OwnerMemberId == Uuid.Empty ||
                     finding.Revision < 1 || finding.Actions is null || finding.Actions.Any(static action =>
-                        action.OwnerMemberId == Uuid.Empty || action.ActionId == Uuid.Empty ||
+                        action is null || action.OwnerMemberId == Uuid.Empty || action.ActionId == Uuid.Empty ||
                         action.Status is not (RemediationLedger.Open or RemediationLedger.Completed) ||
                         action.Status == RemediationLedger.Completed &&
                         action.CompletedByMemberId is null ||
@@ -153,7 +153,12 @@ sealed class FitzFindingClosureWorkItemDirectory(IKvClient client,
             ev.Action.OwnerMemberId == Uuid.Empty || ev.Action.ActionId == Uuid.Empty ||
             current.Actions.Any(action => action.ActionId == ev.Action.ActionId))
             throw new InvalidOperationException("A finding closure projection requires a new open corrective action.");
-        return current with { Actions = [.. current.Actions, ev.Action], ChangedAt = ev.Action.AddedAt };
+        return current with
+        {
+            Actions = [.. current.Actions, new FindingClosureActionState(ev.Action.ActionId,
+                ev.Action.OwnerMemberId, ev.Action.Status, null)],
+            ChangedAt = ev.Action.AddedAt,
+        };
     }
 
     static FindingClosureWorkState CompleteAction(FindingClosureWorkState current,
@@ -166,15 +171,8 @@ sealed class FitzFindingClosureWorkItemDirectory(IKvClient client,
         return current with
         {
             Actions = current.Actions.Select(action => action.ActionId != ev.ActionId ? action :
-                action with
-                {
-                    Status = RemediationLedger.Completed,
-                    CompletedByMemberId = ev.CompletedByMemberId,
-                    CompletedBy = ev.CompletedBy,
-                    CompletedAt = ev.CompletedAt,
-                    ResolutionNotes = ev.ResolutionNotes,
-                    Evidence = ev.Evidence,
-                }).ToArray(),
+                action with { Status = RemediationLedger.Completed, CompletedByMemberId = ev.CompletedByMemberId })
+                .ToArray(),
             ChangedAt = ev.CompletedAt,
         };
     }

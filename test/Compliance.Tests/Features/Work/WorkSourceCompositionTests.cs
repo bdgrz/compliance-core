@@ -313,7 +313,7 @@ public sealed class WorkSourceCompositionTests
 
         // Act
         var launchLag = await Scenario().When(request).ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpPolicyCampaignProjectionAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var pending = await Scenario().When(request).ExpectSuccess();
         var campaignWork = Assert.Single(pending.Value.Items,
             item => item.Kind == PolicyCampaignWork.Acknowledgement);
@@ -330,7 +330,7 @@ public sealed class WorkSourceCompositionTests
             });
         var acknowledgementLag = await Scenario().When(request)
             .ExpectFailure(RequestErrorKind.Conflict);
-        await CatchUpPolicyCampaignProjectionAsync(provider, fixture.TenantId);
+        await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
         var reconciled = await Scenario().When(request).ExpectSuccess();
 
         // Assert
@@ -886,6 +886,7 @@ public sealed class WorkSourceCompositionTests
         // Act
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.OwnerUserId,
             revoked: true);
+        await CatchUpAsync(provider, fixture.TenantId);
         var denied = await Scenario().When(Complete(blocked)).ExpectFailure(RequestErrorKind.Forbidden);
         var after = await Scenario().When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine"))
             .ExpectSuccess();
@@ -915,6 +916,7 @@ public sealed class WorkSourceCompositionTests
         var item = Assert.Single(before.Value.Items);
         Assert.Equal("control_operating_plan_approval", item.Kind);
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.ApproverUserId);
+        await CatchUpAsync(provider, fixture.TenantId);
 
         // Act
         var oversight = await Scenario(fixture.ApproverUserId)
@@ -950,6 +952,7 @@ public sealed class WorkSourceCompositionTests
             item.WorkItemId, 0, fixture.ApproverMemberId)).ExpectSuccess();
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.ApproverUserId,
             revoked: revoked);
+        await CatchUpAsync(provider, fixture.TenantId);
 
         // Act
         await PersonalOperatingPlanApprovalTransportTests.HttpAsync(provider, fixture.ApproverUserId,
@@ -999,6 +1002,7 @@ public sealed class WorkSourceCompositionTests
         await CatchUpAsync(provider, fixture.TenantId);
         await AttestAssignmentHistoryFixture.SeedAsync(provider,
             otherTenant ? Uuid.CreateVersion4() : fixture.TenantId, fixture.OwnerUserId, practice: practice);
+        await CatchUpAsync(provider, fixture.TenantId);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
 
@@ -1039,6 +1043,7 @@ public sealed class WorkSourceCompositionTests
         var item = before.Value.Items[0];
         Assert.Null(item.AssigneeMemberId);
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId, fixture.OwnerUserId);
+        await CatchUpAsync(provider, fixture.TenantId);
 
         // Act
         var team = await Scenario(fixture.OwnerUserId)
@@ -1092,6 +1097,7 @@ public sealed class WorkSourceCompositionTests
         var item = before.Value.Items[0];
         await AttestAssignmentHistoryFixture.SeedAsync(provider, fixture.TenantId,
             fixture.OwnerUserId, revoked);
+        await CatchUpAsync(provider, fixture.TenantId);
 
         // Act
         var readable = await Scenario().When(new GetControlOccurrence(fixture.TenantId,
@@ -1154,6 +1160,7 @@ public sealed class WorkSourceCompositionTests
         else
             await ProgramManagementServices.SeedAsync(provider, new Member(fixture.TenantId, fixture.OwnerUserId),
                 member => member.Deprovision(fixture.LeadMemberId, "Lead", DateTimeOffset.UtcNow, "Left."));
+        await CatchUpAsync(provider, fixture.TenantId);
 
         // Act
         var team = await Scenario().When(new ListWork(fixture.TenantId,
@@ -1230,6 +1237,7 @@ public sealed class WorkSourceCompositionTests
         await provider.GetRequiredService<IEventStore>().AppendAsync(new EventStreamAddress(
             fixture.TenantId.ToString(), "rbac-members", fixture.OwnerMemberId.ToString()),
             1, [malformed]);
+        await CatchUpAsync(provider, fixture.TenantId);
 
         // Act
         await Scenario().When(new GetControlOccurrence(fixture.TenantId, fixture.ProgramId,
@@ -1268,6 +1276,7 @@ public sealed class WorkSourceCompositionTests
                 fixture.TenantId.ToString(), "rbac-members", fixture.OwnerMemberId.ToString()),
                 1, [malformed]);
         }
+        await CatchUpAsync(provider, fixture.TenantId);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
 

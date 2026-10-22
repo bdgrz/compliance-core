@@ -1,6 +1,10 @@
+using System.Reflection;
+using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Work;
+using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 
@@ -8,6 +12,9 @@ namespace Bdgrz.Compliance.Tests.Features.Work;
 
 public sealed class FitzFindingClosureWorkItemDirectoryTests
 {
+    delegate byte[] CorrelatedFrameEncoder(ulong correlationId, ushort messageType,
+        ReadOnlySpan<byte> payload);
+
     readonly Uuid _tenant = Uuid.CreateVersion4();
     readonly Uuid _program = Uuid.CreateVersion4();
     readonly Uuid _finding = Uuid.CreateVersion4();
@@ -175,6 +182,91 @@ public sealed class FitzFindingClosureWorkItemDirectoryTests
         Assert.Equal(205, result.Value.Select(static item => item.WorkItemId).Distinct().Count());
         Assert.Empty(foreignTenant.Value);
         Assert.Empty(foreignProgram.Value);
+    }
+
+    [Fact]
+    public async Task ShouldFitSlimClosureRowAndNativeEventInPinnedFitzFramesGivenMaximumActions()
+    {
+        // Arrange
+        var client = new InMemoryKvClient();
+        var directory = new FitzFindingClosureWorkItemDirectory(client,
+            FindingWorkProjectionTestSource.Unused, TimeProvider.System);
+        const string baseRoute = "kv://bdgrz/accountable-work-items/finding-closure-v3";
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
+                         Identity(), ProjectionCheckpoint.Start)))
+        {
+            await FindingWorkProjectionTestSource.ApplyAsync(directory, Raised());
+            for (var index = 0; index < 50; index++)
+            {
+                var actionId = Uuid.CreateVersion4();
+                var owner = Uuid.CreateVersion4();
+                var addedAt = _now.AddMinutes(1 + index * 2);
+                await FindingWorkProjectionTestSource.ApplyAsync(directory,
+                    new CorrectiveActionAdded(_tenant, _program, _finding, 2 + index * 2,
+                        new CorrectiveActionView(actionId, "Repair", owner, DueOn(),
+                            RemediationLedger.Open, Actor(), addedAt)));
+                await FindingWorkProjectionTestSource.ApplyAsync(directory,
+                    new CorrectiveActionCompleted(_tenant, _program, _finding,
+                        3 + index * 2, actionId, new string('r', 4000),
+                        [new EvidenceReference(0, "artifact", new string('a', 500),
+                            new string('d', 500))], _completer, Actor(), addedAt.AddMinutes(1)));
+            }
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var route = Assert.Single(client.Operations
+            .Where(static operation => operation.Operation == KvTestOperation.Insert)
+            .Select(static operation => operation.Route).Distinct(StringComparer.Ordinal));
+        Assert.StartsWith(baseRoute, route, StringComparison.Ordinal);
+        var rowPayload = client.Snapshot(route).Select(static pair => pair.Value.ToArray())
+            .First(IsFindingClosureRow);
+        var nativeEvent = new CorrectiveActionCompletedV2(Uuid.CreateVersion4(), _tenant,
+            _program, _finding, 3, _action, new string('r', 4000),
+            [new EvidenceReference(0, "artifact", new string('a', 500),
+                new string('d', 500))], _completer, Actor(), _now);
+        var eventPayload = JsonSerializer.SerializeToUtf8Bytes(nativeEvent,
+            ComplianceCoreJsonContext.Default.CorrectiveActionCompletedV2);
+
+        // Act
+        var rowFrame = EncodeSdkFrame(1, "KvPut", rowPayload);
+        var eventFrame = EncodeSdkFrame(2, "StreamAppend", eventPayload);
+        using var row = JsonDocument.Parse(rowPayload);
+
+        // Assert
+        Assert.Equal(50, row.RootElement.GetProperty("actions").GetArrayLength());
+        Assert.False(row.RootElement.TryGetProperty("evidence", out _));
+        Assert.False(row.RootElement.TryGetProperty("resolution_notes", out _));
+        Assert.True(rowFrame.Length <= FitzLimits.MaxFrameSize);
+        Assert.True(eventPayload.Length <= 48 * 1024);
+        Assert.True(eventFrame.Length <= FitzLimits.MaxFrameSize);
+    }
+
+    static bool IsFindingClosureRow(byte[] payload)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(payload);
+            return document.RootElement.ValueKind == JsonValueKind.Object &&
+                   document.RootElement.TryGetProperty("actions", out _);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    static byte[] EncodeSdkFrame(ulong correlationId, string messageName, byte[] payload)
+    {
+        var assembly = typeof(FitzLimits).Assembly;
+        var codec = assembly.GetType("Cntryl.Fitz.Protocol.FrameCodec", throwOnError: true)!;
+        var encoder = codec.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+            .Single(static method => method.Name == "EncodeCorrelated")
+            .CreateDelegate<CorrelatedFrameEncoder>();
+        var messageTypes = assembly.GetType("Cntryl.Fitz.Protocol.MessageTypes", throwOnError: true)!;
+        var messageType = (ushort)(messageTypes.GetField(messageName,
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)!
+            .GetRawConstantValue() ?? throw new InvalidOperationException(
+                $"The pinned Fitz SDK has no {messageName} message type."));
+        return encoder(correlationId, messageType, payload);
     }
 
     async Task ApplyAsync(FitzFindingClosureWorkItemDirectory directory,

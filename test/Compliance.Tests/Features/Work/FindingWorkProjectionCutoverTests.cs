@@ -16,6 +16,8 @@ public sealed class FindingWorkProjectionCutoverTests
         // Arrange
         using var fixture = new Fixture();
         var otherProgram = Uuid.CreateVersion4();
+        Assert.NotEqual(FindingAggregate.StreamId(fixture.ProgramId, fixture.FindingId),
+            FindingAggregate.StreamId(otherProgram, fixture.FindingId));
         var actions = fixture.Actions();
         var closures = fixture.Closures();
         await using (var actionBatch = await actions.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(
@@ -80,8 +82,8 @@ public sealed class FindingWorkProjectionCutoverTests
         var closureProjector = new FindingClosureWorkItemProjector(closures);
 
         // Assert
-        Assert.Equal("AccountableWorkItemCorrectiveActionV2", actionProjector.Name);
-        Assert.Equal("AccountableWorkItemFindingClosureV2", closureProjector.Name);
+        Assert.Equal("AccountableWorkItemCorrectiveActionV3", actionProjector.Name);
+        Assert.Equal("AccountableWorkItemFindingClosureV3", closureProjector.Name);
         Assert.Equal(EventStreamPattern.ForTenant(), actionProjector.Pattern);
         Assert.Equal(EventStreamPattern.ForTenant(), closureProjector.Pattern);
         Assert.Equal(EventStreamPattern.ForPattern(fixture.TenantId.ToString()), actions.SourcePattern(fixture.TenantId));
