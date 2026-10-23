@@ -5,7 +5,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Builds acceptance evidence only from current client, firm-duty, ratification and boundary sources.</summary>
 sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateReader reader,
-    ProfessionalDutyAuthorityReader duties, CurrentRatifiedIndependenceRulesReader rulesReader,
+    FirmStaffViews staffViews, ProfessionalDutyAuthorityReader duties, CurrentRatifiedIndependenceRulesReader rulesReader,
     IBoundaryDirectoryReader boundaries, BoundaryHistoryReadConsistency boundaryConsistency,
     TimeProvider clock) : IServiceEngagementAcceptanceEvidenceReader
 {
@@ -30,10 +30,10 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
             ledger.History().Services.Any(item => item.RecordedAt > clock.GetUtcNow()))
             return Refuse(RequestErrorKind.Conflict, "A current source has an invalid future timestamp.", true);
 
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
         var partner = duty.Staff;
-        if (!MatchesCurrentStaff(partner, partner.StaffMemberId, partner.UserId, partner.Revision,
-                engagement.Content.Practice, directory.View().Staff))
+        if (await CurrentAsync(partner.StaffMemberId, partner.UserId, ct).ConfigureAwait(false) is not { } currentPartner ||
+            !MatchesCurrentStaff(currentPartner, partner.StaffMemberId, partner.UserId, partner.Revision,
+                engagement.Content.Practice))
             return Refuse(RequestErrorKind.Conflict,
                 "The designated partner no longer matches one current active firm-staff directory row.", true);
 
@@ -43,14 +43,12 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
         var currentStaff = new List<FirmStaffMemberView>(proposed.Length);
         foreach (var proposal in proposed)
         {
-            var match = directory.View().Staff.Where(item => item.StaffMemberId == proposal.StaffMemberId ||
-                item.UserId == proposal.UserId).ToArray();
-            if (match.Length != 1 || !MatchesCurrentStaff(match[0], proposal.StaffMemberId,
-                    proposal.UserId, proposal.DirectoryStaffRevision, proposal.Practice,
-                    directory.View().Staff))
+            if (await CurrentAsync(proposal.StaffMemberId, proposal.UserId, ct).ConfigureAwait(false) is not { } match ||
+                !MatchesCurrentStaff(match, proposal.StaffMemberId, proposal.UserId,
+                    proposal.DirectoryStaffRevision, proposal.Practice))
                 return Refuse(RequestErrorKind.Conflict,
                     "Every proposed assignee must match one current active firm-staff directory row.", true);
-            currentStaff.Add(match[0]);
+            currentStaff.Add(match);
         }
 
         var serviceIds = ledger.History().Services.Select(item => item.ServiceRecordId).ToArray();
@@ -156,11 +154,18 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
         return Result<ResolvedBoundary?>.Success(new ResolvedBoundary(version, approval));
     }
 
+    /// <summary>The one staff view both the staff record and the canonical-user claim agree on, or null.</summary>
+    async ValueTask<FirmStaffMemberView?> CurrentAsync(Uuid staffMemberId, Uuid userId, CancellationToken ct)
+    {
+        var byStaff = await staffViews.GetAsync(staffMemberId, ct).ConfigureAwait(false);
+        return byStaff is not null && byStaff.UserId == userId &&
+            await staffViews.FindByUserAsync(userId, ct).ConfigureAwait(false) == byStaff ? byStaff : null;
+    }
+
     static bool MatchesCurrentStaff(FirmStaffMemberView staff, Uuid staffMemberId, Uuid userId,
-        long revision, string practice, IReadOnlyList<FirmStaffMemberView> directory) =>
+        long revision, string practice) =>
         staff.IsActive && staff.StaffMemberId == staffMemberId && staff.UserId == userId &&
-        staff.Revision == revision && staff.Practice == practice &&
-        directory.Count(item => item.StaffMemberId == staffMemberId || item.UserId == userId) == 1;
+        staff.Revision == revision && staff.Practice == practice;
 
     static bool MatchesEvaluation(PartnerIndependenceEvaluationView evaluation, Uuid tenantId,
         ServiceEngagementView engagement, IndependenceRuleVersionView rules,

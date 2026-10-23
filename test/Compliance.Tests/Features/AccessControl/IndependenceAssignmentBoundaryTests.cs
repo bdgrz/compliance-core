@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +31,7 @@ public sealed class IndependenceAssignmentBoundaryTests
         }).Build();
         services.AddCompliance(configuration, developerAuthentication: true);
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(true));
         services.AddSingleton<ITenantActivity>(new ActiveTenant());
         services.AddSingleton<ITenantMembershipDirectoryReader>(new FixedMembershipDirectory(true));
@@ -54,18 +57,10 @@ public sealed class IndependenceAssignmentBoundaryTests
         // This exercises the defensive history wall without asserting any firm rule-set values.
         var newLead = new FirmStaffMemberView(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "advisory",
             "Synthetic current directory source", true, 1, operatorActor, Now);
-        var directory = await executor.ExecuteAsync(new FirmStaffDirectory(), current =>
-        {
-            var conflictEntry = current.Register(Uuid.CreateVersion4(), conflictingStaff!.StaffMemberId,
-                conflictingStaff.UserId, "advisory", "Synthetic current directory source", current.Sequence,
-                operatorActor, Now);
-            if (!conflictEntry.IsSuccess)
-                return AggregateOutcome.CommitOnSuccess(conflictEntry);
-            return AggregateOutcome.CommitOnSuccess(current.Register(Uuid.CreateVersion4(), newLead.StaffMemberId,
-                newLead.UserId, "advisory", "Synthetic current directory source", current.Sequence,
-                operatorActor, Now));
-        }, new RequestDispatchContext(actor), CancellationToken.None);
-        Assert.True(directory.IsSuccess, directory.Error?.Message);
+        await FirmStaffFacts.RegisterAsync(provider, conflictingStaff!.StaffMemberId, conflictingStaff.UserId,
+            "advisory", "Synthetic current directory source", operatorActor, Now);
+        await FirmStaffFacts.RegisterAsync(provider, newLead.StaffMemberId, newLead.UserId, "advisory",
+            "Synthetic current directory source", operatorActor, Now);
 
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var engagementId = Uuid.CreateVersion4();

@@ -3,9 +3,10 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregateReader reader,
-    IActualStaffEngagementLocatorReader locators, IRequestBus bus)
+    FirmStaffViews staffViews, IActualStaffEngagementLocatorReader locators, IRequestBus bus)
 {
-    public async ValueTask ReconcileStatusAsync(Uuid tenantId, IReactorContext<FirmStaffChangeRecorded> context, CancellationToken ct)
+    public async ValueTask ReconcileStatusAsync(Uuid tenantId, IReactorContext<FirmStaffChangeRecorded> context,
+        FirmStaffMemberView changed, CancellationToken ct)
     {
         var sources = await AcceptanceSourcesAsync(tenantId, ct).ConfigureAwait(false);
         var checkpoint = await locators.LoadCheckpointAsync(tenantId, ct).ConfigureAwait(false);
@@ -20,16 +21,16 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
             if (!ledger.MatchesAcceptanceSource((ServiceEngagementAcceptanceRecorded)original.Event))
                 throw new InvalidOperationException("Assignment discovery requires exact retained acceptance source.");
         var expected = accepted.Where(record => ((ServiceEngagementAcceptanceRecorded)record.Event).Acceptance.Assignments
-            .Any(staff => staff.StaffMemberId == context.Trigger.Staff.StaffMemberId && staff.UserId == context.Trigger.Staff.UserId &&
-                staff.Practice == context.Trigger.Staff.Practice))
-            .Select(record => LocatorId((ServiceEngagementAcceptanceRecorded)record.Event, context.Trigger.Staff.StaffMemberId,
-                context.Trigger.Staff.UserId)).ToHashSet();
+            .Any(staff => staff.StaffMemberId == changed.StaffMemberId && staff.UserId == changed.UserId &&
+                staff.Practice == changed.Practice))
+            .Select(record => LocatorId((ServiceEngagementAcceptanceRecorded)record.Event, changed.StaffMemberId,
+                changed.UserId)).ToHashSet();
         var seen = new HashSet<Uuid>();
         string? cursor = null;
         do
         {
-            var page = await locators.ListForStaffAsync(tenantId, context.Trigger.Staff.StaffMemberId,
-                context.Trigger.Staff.UserId, 200, cursor, ct).ConfigureAwait(false);
+            var page = await locators.ListForStaffAsync(tenantId, changed.StaffMemberId,
+                changed.UserId, 200, cursor, ct).ConfigureAwait(false);
             foreach (var row in page.Items)
             {
                 var source = accepted.SingleOrDefault(record => record.ResourceOffset == row.SourceResourceOffset &&
@@ -41,14 +42,14 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
                     row.SourcePayloadSha256 != IndependenceSourceDigest.AcceptanceEvent(acceptance) ||
                     !acceptance.Acceptance.Assignments.Any(staff => staff.StaffMemberId == row.StaffMemberId &&
                         staff.UserId == row.UserId && staff.Practice == row.Practice && staff.DirectoryStaffRevision == row.DirectoryStaffRevision &&
-                        staff.AssignedAt == row.AssignedAt) || row.StaffMemberId != context.Trigger.Staff.StaffMemberId ||
-                    row.UserId != context.Trigger.Staff.UserId || row.Practice != context.Trigger.Staff.Practice)
+                        staff.AssignedAt == row.AssignedAt) || row.StaffMemberId != changed.StaffMemberId ||
+                    row.UserId != changed.UserId || row.Practice != changed.Practice)
                     throw new InvalidOperationException("An assignment locator must match its exact authoritative acceptance.");
                 if (row.LocatorId != LocatorId(acceptance, row.StaffMemberId, row.UserId) || !expected.Contains(row.LocatorId))
                     throw new InvalidOperationException("An assignment locator must preserve its exact immutable source identity.");
                 if (!seen.Add(row.LocatorId))
                     throw Pending("Assignment discovery returned a duplicate immutable source row.");
-                if (row.DirectoryStaffRevision < context.Trigger.Staff.Revision)
+                if (row.DirectoryStaffRevision < changed.Revision)
                     await bus.SendReactionAsync(Command(tenantId, context.Source, source, row.StaffMemberId, row.UserId), context, ct)
                         .ConfigureAwait(false);
             }
@@ -68,20 +69,24 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
         var ledger = await reader.HydrateAsync(new IndependenceLedger(acceptance.TenantId), ct).ConfigureAwait(false);
         if (!ledger.MatchesAcceptanceSource(acceptance))
             throw new InvalidOperationException("Reconciliation requires the exact retained original acceptance.");
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
-        await foreach (var source in events.ReadAsync(directory.Stream, 0, ct).WithCancellation(ct).ConfigureAwait(false))
+        foreach (var staffMemberId in acceptance.Acceptance.Assignments.Select(staff => staff.StaffMemberId).Distinct())
         {
-            if (source.Stream != directory.Stream)
-                throw new InvalidOperationException("A directory cause must originate on its authoritative stream.");
-            if (source.Event is not FirmStaffChangeRecorded { Operation: "status" } change)
-                continue;
-            if (!directory.MatchesRetainedStatus(change))
-                throw Pending("Directory source history changed while accepted assignments were reconciled.");
-            foreach (var staff in acceptance.Acceptance.Assignments.Where(staff =>
-                         staff.StaffMemberId == change.Staff.StaffMemberId && staff.UserId == change.Staff.UserId &&
-                         staff.Practice == change.Staff.Practice && staff.DirectoryStaffRevision < change.Staff.Revision))
-                await bus.SendReactionAsync(Command(acceptance.TenantId, source, context.Source,
-                    staff.StaffMemberId, staff.UserId), context, ct).ConfigureAwait(false);
+            var record = await reader.HydrateAsync(new FirmStaffRecord(staffMemberId), ct).ConfigureAwait(false);
+            await foreach (var source in events.ReadAsync(record.Stream, 0, ct).WithCancellation(ct).ConfigureAwait(false))
+            {
+                if (source.Stream != record.Stream)
+                    throw new InvalidOperationException("A staff cause must originate on its authoritative record stream.");
+                if (source.Event is not FirmStaffChangeRecorded { ChangeKind: "status" } change)
+                    continue;
+                if (!record.MatchesRetainedChange(change))
+                    throw Pending("Staff source history changed while accepted assignments were reconciled.");
+                var changed = await staffViews.ReadAsync(change, ct).ConfigureAwait(false);
+                foreach (var staff in acceptance.Acceptance.Assignments.Where(staff =>
+                             staff.StaffMemberId == changed.StaffMemberId && staff.UserId == changed.UserId &&
+                             staff.Practice == changed.Practice && staff.DirectoryStaffRevision < changed.Revision))
+                    await bus.SendReactionAsync(Command(acceptance.TenantId, source, context.Source,
+                        staff.StaffMemberId, staff.UserId), context, ct).ConfigureAwait(false);
+            }
         }
     }
 

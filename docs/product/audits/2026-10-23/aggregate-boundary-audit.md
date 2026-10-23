@@ -138,7 +138,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 |---|---|---|---|---:|---|
 | AccessGrant | AccessControl | retain | ACCESS-10 (pending) | 0.21 | [source](../../../../src/Compliance.Core/Features/AccessControl/AccessGrant.cs) |
 | FirmProfessionalDutyCatalog | AccessControl | split | ACCESS-04 (pending) | 0.91 | [source](../../../../src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs) |
-| FirmStaffDirectory | AccessControl | split | ACCESS-03 (pending) | 0.91 | [source](../../../../src/Compliance.Core/Features/AccessControl/FirmStaffDirectory.cs) |
+| FirmStaffDirectory | AccessControl | split | ACCESS-03 (split into FirmStaffRecord and FirmStaffIdentityClaim) | 0.91 | `FirmStaffDirectory.cs` (removed by the FirmStaffRecord split, #1022) |
 | IndependenceLedger | AccessControl | split | ACCESS-02 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/AccessControl/IndependenceLedger.DirectoryReevaluation.cs) |
 | IndependenceRuleCatalog | AccessControl | narrow | ACCESS-05 (pending) | 0.67 | [source](../../../../src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs) |
 | IndependenceRuleRatificationCatalog | AccessControl | narrow | ACCESS-06 (pending) | 0.76 | [source](../../../../src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs) |

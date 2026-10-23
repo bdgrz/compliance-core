@@ -2,12 +2,10 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-public sealed class ListAssignableFirmStaffHandler(IAggregateReader reader)
+public sealed class ListAssignableFirmStaffHandler(IFirmStaffDirectoryReader directory)
     : IRequestHandler<ListAssignableFirmStaff, FirmStaffDirectoryView>
 {
-    public async ValueTask<Result<FirmStaffDirectoryView>> HandleAsync(IRequestContext<ListAssignableFirmStaff> context, CancellationToken ct)
-    {
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
-        return Result<FirmStaffDirectoryView>.Success(directory.View(activeOnly: true));
-    }
+    public async ValueTask<Result<FirmStaffDirectoryView>> HandleAsync(
+        IRequestContext<ListAssignableFirmStaff> context, CancellationToken ct) =>
+        Result<FirmStaffDirectoryView>.Success(await directory.ListAsync(true, ct).ConfigureAwait(false));
 }

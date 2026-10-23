@@ -1,4 +1,9 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +15,6 @@ public sealed class ServiceEngagementHandlerTests
     static readonly Uuid Tenant = Uuid.CreateVersion4();
     static readonly Uuid User = Uuid.CreateVersion4();
     static readonly Uuid Staff = Uuid.CreateVersion4();
-    static readonly ActorReference Operator = ActorReference.ForPlatformOperator(User, "Synthetic operator");
     static ClaimsPrincipal Actor => new(new ClaimsIdentity(
         [new Claim("iss", "bdgrz"), new Claim("sub", User.ToString())], "BdgrzSession"));
 
@@ -19,8 +23,8 @@ public sealed class ServiceEngagementHandlerTests
     {
         // Arrange
         var executor = new NoWriteExecutor();
-        var handler = new CreateServiceEngagementHandler(executor,
-            new ChangingDirectoryReader(Directory(), false), TimeProvider.System);
+        var handler = new CreateServiceEngagementHandler(executor, new FirmStaffViews(new NoReader(), Content()),
+            TimeProvider.System);
         var request = new CreateServiceEngagement(Tenant, Uuid.CreateVersion4(), 0, null!);
 
         // Act
@@ -39,12 +43,19 @@ public sealed class ServiceEngagementHandlerTests
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IImmutableContentStore>(Content());
+        services.AddScoped<FirmStaffViews>();
         services.AddPortia();
         await using var provider = services.BuildServiceProvider();
+        await FirmStaffFacts.RegisterAsync(provider, Staff, User, "advisory");
         await using var scope = provider.CreateAsyncScope();
-        var source = new ChangingDirectoryReader(Directory(), true);
+        var deactivated = false;
         var handler = new CreateServiceEngagementHandler(
-            scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), source, TimeProvider.System);
+            new AfterCommitExecutor(scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), async () =>
+            {
+                await FirmStaffFacts.SetStatusAsync(provider, Staff, false, "Synthetic deactivation");
+                deactivated = true;
+            }), scope.ServiceProvider.GetRequiredService<FirmStaffViews>(), TimeProvider.System);
         var request = new CreateServiceEngagement(Tenant, Uuid.CreateVersion4(), 0,
             new ServiceEngagementDraftContent("advisory", "Synthetic scope", new DateOnly(2026, 1, 1), null, Staff));
 
@@ -63,7 +74,7 @@ public sealed class ServiceEngagementHandlerTests
         var proposal = Assert.Single(draft.Staff);
         Assert.Equal("proposed", proposal.ProposalState);
         Assert.False(proposal.ProfessionalAccessGranted);
-        Assert.Equal(2, source.Reads);
+        Assert.True(deactivated);
     }
 
     [Fact]
@@ -71,7 +82,8 @@ public sealed class ServiceEngagementHandlerTests
     {
         // Arrange
         var executor = new NoWriteExecutor();
-        var handler = new RegisterFirmStaffHandler(executor, new MissingUserDirectory(), TimeProvider.System);
+        var handler = new RegisterFirmStaffHandler(new NativeOperationExecutor(new NoReader(), executor, Content()),
+            new MissingUserDirectory(), Content(), TimeProvider.System);
         var request = new RegisterFirmStaff(Staff, User, "advisory", "Synthetic staff provenance", 0);
 
         // Act
@@ -108,25 +120,34 @@ public sealed class ServiceEngagementHandlerTests
             ValueTask.FromResult(allowed);
     }
 
-    static FirmStaffDirectory Directory()
+    static FitzKvImmutableContentStore Content() =>
+        new(new PersistenceKvClient(new InMemoryKvClient()));
+
+    sealed class NoReader : IAggregateReader
     {
-        var directory = new FirmStaffDirectory();
-        Assert.True(directory.Register(Uuid.CreateVersion4(), Staff, User, "advisory", "Synthetic staff source",
-            0, Operator, DateTimeOffset.UtcNow).IsSuccess);
-        return directory;
+        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
+            CancellationToken ct = default) where TAggregate : Aggregate =>
+            throw new InvalidOperationException("No stream may be read.");
     }
 
-    sealed class ChangingDirectoryReader(FirmStaffDirectory directory, bool change) : IAggregateReader
+    sealed class AfterCommitExecutor(IAggregateExecutor inner, Func<Task> afterCommit) : IAggregateExecutor
     {
-        public int Reads { get; private set; }
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
+        public async ValueTask<Result> ExecuteAsync<TAggregate>(TAggregate aggregate,
+            Func<TAggregate, AggregateOutcome> operation, IExecutionContext context,
             CancellationToken ct = default) where TAggregate : Aggregate
         {
-            Assert.IsType<FirmStaffDirectory>(aggregate);
-            if (++Reads == 2 && change)
-                Assert.True(directory.SetStatus(Uuid.CreateVersion4(), Staff, false, "Synthetic deactivation",
-                    1, Operator, DateTimeOffset.UtcNow).IsSuccess);
-            return ValueTask.FromResult((TAggregate)(Aggregate)directory);
+            var result = await inner.ExecuteAsync(aggregate, operation, context, ct);
+            await afterCommit();
+            return result;
+        }
+
+        public async ValueTask<Result<TOut>> ExecuteAsync<TAggregate, TOut>(TAggregate aggregate,
+            Func<TAggregate, AggregateOutcome<TOut>> operation, IExecutionContext context,
+            CancellationToken ct = default) where TAggregate : Aggregate
+        {
+            var result = await inner.ExecuteAsync(aggregate, operation, context, ct);
+            await afterCommit();
+            return result;
         }
     }
 

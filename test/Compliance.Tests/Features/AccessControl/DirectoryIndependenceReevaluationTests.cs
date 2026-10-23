@@ -318,8 +318,7 @@ public sealed class DirectoryIndependenceReevaluationTests
         await RegisterTenantAsync(fixture);
         await RecordStatusAsync(fixture, false);
         await RecordStatusAsync(fixture, true);
-        var directory = await ProgramManagementServices.HydrateAsync(fixture.Provider, new FirmStaffDirectory());
-        var fresh = directory.Get(fixture.Staff.StaffMemberId)!;
+        var fresh = (await fixture.Services.GetRequiredService<FirmStaffViews>().GetAsync(fixture.Staff.StaffMemberId))!;
         Assert.Equal(3, fresh.Revision);
         var otherTenant = Uuid.CreateVersion4();
         await fixture.SeedOtherTenantAsync(otherTenant, fresh, clock.Now);
@@ -669,8 +668,8 @@ public sealed class DirectoryIndependenceReevaluationTests
     {
         var accepted = Assert.Single(await fixture.AcceptanceRecordsAsync());
         var statuses = new List<DomainEventRecord>();
-        await foreach (var source in fixture.Services.GetRequiredService<IDomainEventReader>().ReadAsync(new FirmStaffDirectory().Stream, 0))
-            if (source.Event is FirmStaffChangeRecorded { Operation: "status" })
+        await foreach (var source in fixture.Services.GetRequiredService<IDomainEventReader>().ReadAsync(new FirmStaffRecord(fixture.Staff.StaffMemberId).Stream, 0))
+            if (source.Event is FirmStaffChangeRecorded { ChangeKind: "status" })
                 statuses.Add(source);
         var status = statuses.Last();
         var change = (FirmStaffChangeRecorded)status.Event;
@@ -726,10 +725,9 @@ public sealed class DirectoryIndependenceReevaluationTests
         });
     }
 
-    static Task RecordStatusAsync(ActualStaffEngagementLocatorTests.Fixture fixture, bool active) =>
-        ProgramManagementServices.SeedAsync(fixture.Provider, new FirmStaffDirectory(), directory =>
-            directory.SetStatus(Uuid.CreateVersion4(), fixture.Staff.StaffMemberId, active,
-                "Synthetic operator status reason must stay out of client receipts", directory.Sequence,
-                ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Private synthetic status operator"),
-                new DateTimeOffset(2026, 10, 8, 12, 1, 0, TimeSpan.Zero)));
+    static Task<FirmStaffMemberView> RecordStatusAsync(ActualStaffEngagementLocatorTests.Fixture fixture, bool active) =>
+        FirmStaffFacts.SetStatusAsync(fixture.Provider, fixture.Staff.StaffMemberId, active,
+            "Synthetic operator status reason must stay out of client receipts",
+            new DateTimeOffset(2026, 10, 8, 12, 1, 0, TimeSpan.Zero),
+            ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Private synthetic status operator"));
 }

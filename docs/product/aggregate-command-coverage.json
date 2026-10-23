@@ -41,26 +41,26 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 422,
-    "factsWithReducer": 402,
-    "factsWithAggregateEmitter": 395,
+    "domainEventContracts": 425,
+    "factsWithReducer": 405,
+    "factsWithAggregateEmitter": 398,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 18,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 103,
-    "aggregateTypesWithCommandPath": 100,
-    "requestContracts": 659,
-    "commonRequestContracts": 657,
+    "aggregateTypes": 104,
+    "aggregateTypesWithCommandPath": 101,
+    "requestContracts": 662,
+    "commonRequestContracts": 660,
     "requestClassificationCounts": {
       "command": 347,
       "deferred_command": 5,
       "confirmed_command_gap": 8,
-      "internal_reaction": 24,
+      "internal_reaction": 27,
       "query_or_reconstruction": 274,
       "internal_executor_context": 1
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 601,
+    "registeredCoreHandlerRegistrations": 604,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 41,
     "unwiredAggregateProducerClassifications": {
@@ -3800,17 +3800,71 @@
       "contract": "src/Compliance.Common/Features/AccessControl/FirmStaffChangeRecorded.cs",
       "reducers": [
         {
-          "aggregate": "FirmStaffDirectory",
-          "source": "src/Compliance.Core/Features/AccessControl/FirmStaffDirectory.cs"
+          "aggregate": "FirmStaffRecord",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessControl/FirmStaffDirectory.cs"
+        "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/FirmStaffDirectoryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRetainedStatusTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FirmStaffIdentityClaimed",
+      "contract": "src/Compliance.Common/Features/AccessControl/FirmStaffIdentityClaimed.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmStaffIdentityClaim",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmStaffIdentityClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmStaffIdentityClaim.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FirmStaffRegistrationAccepted",
+      "contract": "src/Compliance.Common/Features/AccessControl/FirmStaffRegistrationAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmStaffRecord",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FirmStaffRegistrationRejected",
+      "contract": "src/Compliance.Common/Features/AccessControl/FirmStaffRegistrationRejected.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmStaffRecord",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9115,21 +9169,42 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "FirmStaffDirectory",
-      "source": "src/Compliance.Core/Features/AccessControl/FirmStaffDirectory.cs",
+      "aggregate": "FirmStaffIdentityClaim",
+      "source": "src/Compliance.Core/Features/AccessControl/FirmStaffIdentityClaim.cs",
       "appliedFacts": [
-        "FirmStaffChangeRecorded"
+        "FirmStaffIdentityClaimed"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "ClaimFirmStaffIdentity"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "FirmStaffRecord",
+      "source": "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs",
+      "appliedFacts": [
+        "FirmStaffChangeRecorded",
+        "FirmStaffRegistrationAccepted",
+        "FirmStaffRegistrationRejected"
       ],
       "commandRequests": [
         "RegisterFirmStaff",
         "SetFirmStaffStatus"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "ClaimFirmStaffIdentity",
+        "CompleteFirmStaffRegistration",
+        "RejectFirmStaffRegistration"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ActualStaffEngagementLocatorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmStaffDirectoryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRetainedStatusTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
@@ -11186,7 +11261,6 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "FirmStaffDirectory",
         "IndependenceLedger"
       ],
       "aggregateTargets": [
@@ -12641,7 +12715,6 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "FirmStaffDirectory",
         "IndependenceLedger"
       ],
       "aggregateTargets": [
@@ -13023,6 +13096,32 @@
       "note": ""
     },
     {
+      "request": "ClaimFirmStaffIdentity",
+      "contract": "src/Compliance.Common/Features/AccessControl/ClaimFirmStaffIdentity.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IFirmStaffRegistrationReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ClaimFirmStaffIdentityHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ClaimFirmStaffIdentityHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "FirmStaffIdentityClaim",
+        "FirmStaffRecord"
+      ],
+      "helperServices": [
+        "FirmStaffRegistrationReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
+      ],
+      "note": "System-only registration process receiver; permanently claims the canonical user and, when another staff record owns it, rejects the pending registration. No HTTP/MCP route."
+    },
+    {
       "request": "ClaimWorkItem",
       "contract": "src/Compliance.Common/Features/Work/ClaimWorkItem.cs",
       "interfaces": "IRequest<WorkItemDetailView>, IControlOperationRequest, ICallable",
@@ -13393,6 +13492,31 @@
         "test/Compliance.Tests/Features/UserIdentities/CompleteEmailChallengeConcurrencyTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "CompleteFirmStaffRegistration",
+      "contract": "src/Compliance.Common/Features/AccessControl/CompleteFirmStaffRegistration.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IFirmStaffRegistrationReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteFirmStaffRegistrationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/CompleteFirmStaffRegistrationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "FirmStaffRecord"
+      ],
+      "helperServices": [
+        "FirmStaffRegistrationReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
+      ],
+      "note": "System-only registration process receiver; completes the pending registration only with the exact permanent claim. No HTTP/MCP route."
     },
     {
       "request": "CompleteIdentityRecovery",
@@ -16575,9 +16699,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "FirmStaffDirectory"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -18579,9 +18701,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "FirmStaffDirectory"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -22810,7 +22930,7 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "FirmStaffDirectory",
+        "FirmStaffRecord",
         "IndependenceLedger"
       ],
       "aggregateTargets": [
@@ -22913,8 +23033,7 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "FirmProfessionalDutyCatalog",
-        "FirmStaffDirectory"
+        "FirmProfessionalDutyCatalog"
       ],
       "aggregateTargets": [
         "FirmProfessionalDutyCatalog"
@@ -23669,7 +23788,7 @@
     {
       "request": "RegisterFirmStaff",
       "contract": "src/Compliance.Common/Features/AccessControl/RegisterFirmStaff.cs",
-      "interfaces": "IRequest<FirmStaffMemberView>, IFirmStaffAdministrationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IFirmStaffAdministrationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -23679,17 +23798,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "FirmStaffDirectory"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "FirmStaffDirectory"
+        "FirmStaffRecord"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementHandlerTests.cs"
       ],
       "note": ""
     },
@@ -23837,6 +23955,31 @@
         "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "RejectFirmStaffRegistration",
+      "contract": "src/Compliance.Common/Features/AccessControl/RejectFirmStaffRegistration.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IFirmStaffRegistrationReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RejectFirmStaffRegistrationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/RejectFirmStaffRegistrationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "FirmStaffRecord"
+      ],
+      "helperServices": [
+        "FirmStaffRegistrationReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
+      ],
+      "note": "System-only registration process abort receiver; rejects only a pending registration whose canonical user another staff record claimed. No HTTP/MCP route."
     },
     {
       "request": "RejectTenantSlug",
@@ -26166,7 +26309,7 @@
     {
       "request": "SetFirmStaffStatus",
       "contract": "src/Compliance.Common/Features/AccessControl/SetFirmStaffStatus.cs",
-      "interfaces": "IRequest<FirmStaffMemberView>, IFirmStaffAdministrationRequest, ICallable",
+      "interfaces": "IRequest<FirmStaffMemberView>, IFirmStaffAdministrationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26176,15 +26319,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "FirmStaffDirectory"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "FirmStaffDirectory"
+        "FirmStaffRecord"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
       ],
       "note": ""
     },

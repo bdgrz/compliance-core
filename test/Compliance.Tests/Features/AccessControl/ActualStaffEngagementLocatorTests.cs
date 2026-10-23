@@ -276,6 +276,7 @@ public sealed class ActualStaffEngagementLocatorTests
         readonly ServiceProvider _provider;
         readonly AsyncServiceScope _scope;
         ActorReference _clientActor = null!;
+        FirmStaffMemberView _partner = null!;
         bool _bound;
         static readonly DateTimeOffset Now = new(2026, 10, 8, 12, 0, 0, TimeSpan.Zero);
         public Uuid Tenant { get; } = Uuid.CreateVersion4();
@@ -312,22 +313,13 @@ public sealed class ActualStaffEngagementLocatorTests
             var actor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator");
             FirmStaffMemberView? partner = null;
             var staff = new List<FirmStaffMemberView>();
-            await ProgramManagementServices.SeedAsync(fixture._provider, new FirmStaffDirectory(), directory =>
-            {
-                for (var i = 0; i < staffCount; i++)
-                {
-                    var registered = directory.Register(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-                        "attest", "Explicit synthetic assignee source", directory.Sequence, actor, Now);
-                    Assert.True(registered.IsSuccess);
-                    staff.Add(registered.Value!);
-                }
-                fixture.Staff = staff[0];
-                var registeredPartner = directory.Register(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-                    "attest", "Explicit synthetic partner identity source", directory.Sequence, actor, Now);
-                Assert.True(registeredPartner.IsSuccess);
-                partner = registeredPartner.Value;
-                return Result.Success;
-            });
+            for (var i = 0; i < staffCount; i++)
+                staff.Add(await FirmStaffFacts.RegisterAsync(fixture._provider, Uuid.CreateVersion4(),
+                    Uuid.CreateVersion4(), "attest", "Explicit synthetic assignee source", actor, Now));
+            fixture.Staff = staff[0];
+            partner = await FirmStaffFacts.RegisterAsync(fixture._provider, Uuid.CreateVersion4(),
+                Uuid.CreateVersion4(), "attest", "Explicit synthetic partner identity source", actor, Now);
+            fixture._partner = partner;
             var administrator = Uuid.CreateVersion4();
             var client = ActorReference.ForMember(RbacIds.Member(fixture.Tenant, administrator), "Synthetic client administrator");
             fixture._clientActor = client;
@@ -423,8 +415,7 @@ public sealed class ActualStaffEngagementLocatorTests
         {
             var assignee = assignedStaff ?? Staff;
             var at = recordedAt ?? Now;
-            var directory = await ProgramManagementServices.HydrateAsync(_provider, new FirmStaffDirectory());
-            var partner = Assert.Single(directory.View().Staff, item => item.StaffMemberId != assignee.StaffMemberId);
+            var partner = _partner;
             var administrator = Uuid.CreateVersion4();
             var client = ActorReference.ForMember(RbacIds.Member(otherTenant, administrator), "Synthetic second client administrator");
             var engagement = Uuid.CreateVersion4();

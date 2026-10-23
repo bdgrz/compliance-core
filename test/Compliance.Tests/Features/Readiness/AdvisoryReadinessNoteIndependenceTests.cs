@@ -783,21 +783,11 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         public async Task SeedStaffDirectoryAsync(FirmStaffMemberView staff, bool active = true,
             Uuid? userId = null)
         {
-            await ProgramManagementServices.SeedAsync(Provider, new FirmStaffDirectory(), directory =>
-            {
-                var registered = directory.Register(Uuid.CreateVersion4(), staff.StaffMemberId,
-                    userId ?? staff.UserId, staff.Practice, "Synthetic current directory identity",
-                    directory.Sequence, staff.Actor, staff.RecordedAt);
-                Assert.True(registered.IsSuccess, registered.Error?.Message);
-                if (!active)
-                {
-                    var disabled = directory.SetStatus(Uuid.CreateVersion4(), staff.StaffMemberId, false,
-                        "Synthetic inactive directory state", directory.Sequence, staff.Actor,
-                        staff.RecordedAt.AddSeconds(1));
-                    Assert.True(disabled.IsSuccess, disabled.Error?.Message);
-                }
-                return Result.Success;
-            });
+            await FirmStaffFacts.RegisterAsync(Provider, staff.StaffMemberId, userId ?? staff.UserId,
+                staff.Practice, "Synthetic current directory identity", staff.Actor, staff.RecordedAt);
+            if (!active)
+                await FirmStaffFacts.SetStatusAsync(Provider, staff.StaffMemberId, false,
+                    "Synthetic inactive directory state", staff.RecordedAt.AddSeconds(1), staff.Actor);
         }
 
         public async Task SeedLaterUnratifiedRuleDraftAsync(FirmStaffMemberView staff)
