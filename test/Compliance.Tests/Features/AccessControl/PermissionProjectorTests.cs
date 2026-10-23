@@ -15,7 +15,7 @@ public sealed class PermissionProjectorTests
         var otherTeamId = Uuid.CreateVersion4();
         var roleId = Uuid.CreateVersion4();
         var permission = RbacPermissions.TenantAccess;
-        DomainEvent removal = new TeamMemberRemoved(tenantId, removedTeamId, memberId);
+        DomainEvent removal = new TeamMemberRemoved(tenantId, removedTeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
         var removedPath = new MemberAccessEdge(removedTeamId, roleId, [permission]);
         var retainedPath = new MemberAccessEdge(otherTeamId, roleId, [permission]);
 

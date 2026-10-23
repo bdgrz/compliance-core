@@ -52,7 +52,7 @@ public sealed class DeprovisionMemberHandler(IAggregateExecutor executor, IAggre
         if (current.IsDeprovisionCleanupComplete)
             return Result.Success;
 
-        return await cleanup.CompleteAsync(context, request.TenantId, request.UserId, current.Id,
-            current.DeprovisionedByMemberId, current.DeprovisionedByDisplay!, ct).ConfigureAwait(false);
+        return await cleanup.CompleteAsync(context, current.TerminationProof ??
+            throw new InvalidOperationException("Retirement requires its source proof."), ct).ConfigureAwait(false);
     }
 }

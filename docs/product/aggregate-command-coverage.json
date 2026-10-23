@@ -49,18 +49,18 @@
     "legacyReducerOnlyFacts": 2,
     "aggregateTypes": 103,
     "aggregateTypesWithCommandPath": 100,
-    "requestContracts": 649,
-    "commonRequestContracts": 647,
+    "requestContracts": 651,
+    "commonRequestContracts": 649,
     "requestClassificationCounts": {
       "command": 347,
       "deferred_command": 5,
       "confirmed_command_gap": 8,
-      "internal_reaction": 14,
+      "internal_reaction": 16,
       "query_or_reconstruction": 274,
       "internal_executor_context": 1
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 591,
+    "registeredCoreHandlerRegistrations": 593,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 41,
     "unwiredAggregateProducerClassifications": {
@@ -7776,13 +7776,17 @@
         "AccessGrantRevoked"
       ],
       "commandRequests": [
+        "AssignTeamMember",
         "DeprovisionMember",
         "GrantAccess",
         "ProvisionGuestProgramAccess",
         "RegisterMember",
         "RevokeAccessGrant"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "CleanupRetiredMembershipRelationship",
+        "CompleteMemberRetirement"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AccessGrantTests.cs",
         "test/Compliance.Tests/Features/AccessControl/DeprovisionMemberHandlerTests.cs",
@@ -9314,7 +9318,9 @@
         "ReinstateMember",
         "SuspendMember"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "CompleteMemberRetirement"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/AccessGrantE2ESupport.cs",
         "test/Compliance.Tests/E2E/AccessReviewE2ETests.cs",
@@ -10359,7 +10365,10 @@
         "RegisterMember",
         "RemoveTeamMember"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "CleanupRetiredMembershipRelationship",
+        "CompleteMemberRetirement"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/BrowserE2EHostIntegrationTests.cs",
         "test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs",
@@ -12417,11 +12426,13 @@
         "TeamMember"
       ],
       "aggregateTargets": [
+        "AccessGrant",
         "TeamMember",
         "TenantManagerGuard"
       ],
       "helperServices": [
-        "TenantManagerInvariant"
+        "TenantManagerInvariant",
+        "MemberAuthorityCleanup"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ActivationReactionProbe.cs",
@@ -12847,6 +12858,32 @@
       "note": ""
     },
     {
+      "request": "CleanupRetiredMembershipRelationship",
+      "contract": "src/Compliance.Common/Features/AccessControl/CleanupRetiredMembershipRelationship.cs",
+      "interfaces": "IRequest, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CleanupRetiredMembershipRelationshipHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/CleanupRetiredMembershipRelationshipHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "AccessGrant",
+        "TeamMember"
+      ],
+      "helperServices": [
+        "MemberAuthorityCleanup"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs"
+      ],
+      "note": "System-only native-source recovery; required typed identity derives from exact source event, owner and episode. No HTTP/MCP route."
+    },
+    {
       "request": "CloseAdvisorHandoff",
       "contract": "src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs",
       "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
@@ -13090,6 +13127,33 @@
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "CompleteMemberRetirement",
+      "contract": "src/Compliance.Common/Features/AccessControl/CompleteMemberRetirement.cs",
+      "interfaces": "IRequest, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteMemberRetirementHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/CompleteMemberRetirementHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "AccessGrant",
+        "Member",
+        "TeamMember"
+      ],
+      "helperServices": [
+        "MemberAuthorityCleanup"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs"
+      ],
+      "note": "System-only native-source recovery; required typed identity derives from exact source event, owner and episode. No HTTP/MCP route."
     },
     {
       "request": "CompleteTenantOffboarding",

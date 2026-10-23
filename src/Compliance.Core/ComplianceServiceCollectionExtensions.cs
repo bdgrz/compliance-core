@@ -727,6 +727,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
             .AddRequestAuthorizer<RecordDirectoryIndependenceReevaluationAuthorizer>()
             .AddRequestHandler<RegisterMemberHandler>()
+            .AddRequestHandler<CompleteMemberRetirementHandler>()
+            .AddRequestHandler<CleanupRetiredMembershipRelationshipHandler>()
+            .AddRequestAuthorizer<MembershipRetirementAuthorizer>()
             .AddRequestHandler<SuspendMemberHandler>()
             .AddRequestHandler<ReinstateMemberHandler>()
             .AddRequestHandler<DeprovisionMemberHandler>()
@@ -1355,6 +1358,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<BoundaryRiskReassessmentReactor>("BoundaryRiskReassessmentV1",
                 WorkloadScope.PerTenant)
             .AddReactor<TeamCleanupReactor>("TeamCleanup", WorkloadScope.PerTenant)
+            .AddReactor<MemberRetirementReactor>("MemberRetirementV1", WorkloadScope.PerTenant,
+                options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<RetiredTeamAssignmentReactor>("RetiredTeamAssignmentV1", WorkloadScope.PerTenant,
+                options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<RetiredMemberGrantReactor>("RetiredMemberGrantV1", WorkloadScope.PerTenant,
+                options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<RoleCleanupReactor>("RoleCleanup", WorkloadScope.PerTenant)
             .AddReactor<ControlOccurrenceFindingReactor>(
                 ControlOccurrenceFindingReactor.WorkloadName, WorkloadScope.PerTenant)

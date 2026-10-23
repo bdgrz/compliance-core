@@ -8,6 +8,7 @@ public sealed class AccessGrant : Aggregate
     AccessGrantTerms? _terms;
     Uuid? _membershipEpisodeId;
     bool _isRevoked;
+    Uuid _issuedEventId;
 
     public bool IsRevoked => _isRevoked;
     public Uuid? MembershipEpisodeId => _membershipEpisodeId;
@@ -20,6 +21,7 @@ public sealed class AccessGrant : Aggregate
         {
             _terms = ev.Terms;
             _membershipEpisodeId = ev.MembershipEpisodeId;
+            _issuedEventId = ev.Metadata.EventId;
         });
         On<AccessGrantRevoked>(_ => _isRevoked = true);
     }
@@ -55,6 +57,21 @@ public sealed class AccessGrant : Aggregate
 
         RaiseEvent(new AccessGrantRevoked(_tenantId, Id, revokedBy, revokedAt));
         return Result.Success;
+    }
+
+    internal Result RevokeForRetirement(MembershipTerminationProof proof, Uuid issuedEventId,
+        DateTimeOffset revokedAt)
+    {
+        if (proof.TenantId != _tenantId || proof.MembershipEpisodeId == Uuid.Empty || proof.EventId == Uuid.Empty ||
+            issuedEventId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "Exact retirement and grant proofs are required."));
+        if (_terms is null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The proven grant is not available yet.", isTransient: true));
+        if (_isRevoked || _issuedEventId != issuedEventId || _membershipEpisodeId != proof.MembershipEpisodeId ||
+            _terms.Principal.Kind != AccessGrantPrincipalKind.Member || _terms.Principal.Id != proof.MemberId)
+            return Result.Success;
+        return Revoke(ActorReference.ForMember(proof.ActorMemberId, proof.ActorDisplay), revokedAt);
     }
 
     RequestError? Validate(AccessGrantTerms terms)

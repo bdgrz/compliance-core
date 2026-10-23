@@ -1444,8 +1444,8 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [EngagementManagementAcknowledged](../../src/Compliance.Common/Features/AccessControl/EngagementManagementAcknowledged.cs#L6) — `bdgrz.service-engagement.management-acknowledged` v1
 - [FirmStaffChangeRecorded](../../src/Compliance.Common/Features/AccessControl/FirmStaffChangeRecorded.cs#L6) — `bdgrz.firm-staff.changed` v1
 - [IndependenceRulesRevised](../../src/Compliance.Common/Features/AccessControl/IndependenceRulesRevised.cs#L6) — `bdgrz.independence.rules.revised` v1
-- [MemberDeprovisionCleanupCompleted](../../src/Compliance.Common/Features/AccessControl/MemberDeprovisionCleanupCompleted.cs#L6) — `bdgrz.rbac.member.deprovision_cleanup_completed` v1
-- [MemberDeprovisioned](../../src/Compliance.Common/Features/AccessControl/MemberDeprovisioned.cs#L6) — `bdgrz.rbac.member.deprovisioned` v1
+- [MemberDeprovisionCleanupCompleted](../../src/Compliance.Common/Features/AccessControl/MemberDeprovisionCleanupCompleted.cs#L6) — `bdgrz.rbac.member.deprovision_cleanup_completed` v2
+- [MemberDeprovisioned](../../src/Compliance.Common/Features/AccessControl/MemberDeprovisioned.cs#L6) — `bdgrz.rbac.member.deprovisioned` v2
 - [MemberRegistered](../../src/Compliance.Common/Features/AccessControl/MemberRegistered.cs#L6) — `bdgrz.rbac.member.registered` v1
 - [MemberReinstated](../../src/Compliance.Common/Features/AccessControl/MemberReinstated.cs#L6) — `bdgrz.rbac.member.reinstated` v1
 - [MemberSuspended](../../src/Compliance.Common/Features/AccessControl/MemberSuspended.cs#L6) — `bdgrz.rbac.member.suspended` v1
@@ -1464,7 +1464,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [TeamDefined](../../src/Compliance.Common/Features/AccessControl/TeamDefined.cs#L6) — `bdgrz.rbac.team.defined` v1
 - [TeamDeleted](../../src/Compliance.Common/Features/AccessControl/TeamDeleted.cs#L6) — `bdgrz.rbac.team.deleted` v1
 - [TeamMemberAssigned](../../src/Compliance.Common/Features/AccessControl/TeamMemberAssigned.cs#L6) — `bdgrz.rbac.team-member.assigned` v1
-- [TeamMemberRemoved](../../src/Compliance.Common/Features/AccessControl/TeamMemberRemoved.cs#L6) — `bdgrz.rbac.team-member.removed` v1
+- [TeamMemberRemoved](../../src/Compliance.Common/Features/AccessControl/TeamMemberRemoved.cs#L6) — `bdgrz.rbac.team-member.removed` v2
 - [TeamRoleAssigned](../../src/Compliance.Common/Features/AccessControl/TeamRoleAssigned.cs#L6) — `bdgrz.rbac.team-role.assigned` v1
 - [TeamRoleRemoved](../../src/Compliance.Common/Features/AccessControl/TeamRoleRemoved.cs#L6) — `bdgrz.rbac.team-role.removed` v1
 - [TenantManagerRestored](../../src/Compliance.Common/Features/AccessControl/TenantManagerRestored.cs#L7) — `bdgrz.rbac.manager_guard.restored` v1

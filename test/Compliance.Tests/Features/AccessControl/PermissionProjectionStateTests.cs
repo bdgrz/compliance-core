@@ -202,7 +202,7 @@ public sealed class PermissionProjectionStateTests
 
         // Act
         state.Apply(new MemberDeprovisioned(tenantId, memberId, userId, actorMemberId,
-            "Alex Admin", at, "Access is no longer required."));
+            "Alex Admin", at, "Access is no longer required.", oldEpisodeId));
         state.Apply(new MemberRegistered(tenantId, memberId, userId,
             MembershipEpisodeId: newEpisodeId));
         // A team assignment that was already in flight can project after the fresh invitation.
@@ -230,7 +230,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
 
         // Act
-        state.Apply(new TeamMemberRemoved(tenantId, teamId, memberId));
+        state.Apply(new TeamMemberRemoved(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
 
         // Assert
         Assert.Empty(state.Materialize());
@@ -257,7 +257,7 @@ public sealed class PermissionProjectionStateTests
         var before = Assert.Single(state.Explain(memberId));
         state.Apply(RbacPermissionFacts.Removed(tenantId, roleId, "program.manage"));
         var after = Assert.Single(state.Explain(memberId));
-        state.Apply(new TeamMemberRemoved(tenantId, teamId, memberId));
+        state.Apply(new TeamMemberRemoved(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
 
         // Assert
         Assert.Equal(teamId, before.TeamId);

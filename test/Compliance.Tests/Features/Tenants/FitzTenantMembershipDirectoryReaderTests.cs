@@ -111,14 +111,16 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
         var memberId = Uuid.CreateVersion4();
         var actorMemberId = Uuid.CreateVersion4();
         var deprovisionedAt = DateTimeOffset.UtcNow;
+        var membershipEpisodeId = Uuid.CreateVersion4();
         var identity = new CheckpointIdentity("TenantMembership",
             EventStreamPattern.ForPattern(TenantId.ToString()));
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new MemberRegistered(TenantId, memberId, UserId));
+            await reader.ApplyAsync(new MemberRegistered(TenantId, memberId, UserId,
+                MembershipEpisodeId: membershipEpisodeId));
             await reader.ApplyAsync(new MemberDeprovisioned(TenantId, memberId, UserId, actorMemberId,
-                "Alex Admin", deprovisionedAt, "Access is no longer required."));
+                "Alex Admin", deprovisionedAt, "Access is no longer required.", membershipEpisodeId));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -145,14 +147,16 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
         var memberId = Uuid.CreateVersion4();
         var actorMemberId = Uuid.CreateVersion4();
         var deprovisionedAt = DateTimeOffset.UtcNow;
+        var membershipEpisodeId = Uuid.CreateVersion4();
         var identity = new CheckpointIdentity("TenantMembership",
             EventStreamPattern.ForPattern(TenantId.ToString()));
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new MemberRegistered(TenantId, memberId, UserId));
+            await reader.ApplyAsync(new MemberRegistered(TenantId, memberId, UserId,
+                MembershipEpisodeId: membershipEpisodeId));
             await reader.ApplyAsync(new MemberDeprovisioned(TenantId, memberId, UserId, actorMemberId,
-                "Alex Admin", deprovisionedAt, "Access is no longer required."));
+                "Alex Admin", deprovisionedAt, "Access is no longer required.", membershipEpisodeId));
             await reader.ApplyAsync(new MemberRegistered(TenantId, memberId, UserId, "firm_staff"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }

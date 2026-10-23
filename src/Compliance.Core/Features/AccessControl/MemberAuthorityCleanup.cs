@@ -2,95 +2,178 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-/// <summary>Removes tenant RBAC and direct scoped grants from a terminated membership episode.</summary>
+/// <summary>Recovers exact retired-episode authority from native source facts, independently of directories.</summary>
 public sealed class MemberAuthorityCleanup(IAggregateReader reader, IAggregateExecutor executor,
-    ITeamMemberDirectoryReader teamMembers, IAccessGrantDirectory grants, TimeProvider clock)
+    IDomainEventReader events, IProjectionCheckpointStore checkpoints, TimeProvider clock)
 {
     const int MaximumAttempts = 5;
 
-    internal async ValueTask<Result> CompleteAsync(IExecutionContext context, Uuid tenantId,
-        Uuid userId, Uuid memberId, Uuid actorMemberId, string actorDisplay, CancellationToken ct)
+    internal async ValueTask<Result> ReconcileTeamAssignmentAsync(IExecutionContext parent,
+        AssignTeamMember assignment, Uuid episodeId, Uuid sourceEventId, ulong position, CancellationToken ct)
     {
-        var actor = ActorReference.ForMember(actorMemberId, actorDisplay);
-        var assignments = await teamMembers.ListMemberAssignmentsAsync(tenantId, memberId, ct)
-            .ConfigureAwait(false);
-        foreach (var assignment in assignments)
-        {
-            var removed = await RemoveTeamAssignmentAsync(context, tenantId, assignment.TeamId,
-                memberId, ct).ConfigureAwait(false);
-            if (!removed.IsSuccess)
-                return removed;
-        }
+        var member = await reader.HydrateAsync(Member.ForVerification(assignment.TenantId, assignment.MemberId,
+            episodeId), ct).ConfigureAwait(false);
+        if (member.TerminationProof is not { } proof)
+            return DependencyUnavailable();
+        var request = new CleanupRetiredMembershipRelationship(assignment.TenantId, assignment.MemberId, episodeId,
+            RetiredMembershipRelationshipKind.TeamAssignment, assignment.TeamId, sourceEventId, position, proof.EventId,
+            MemberRetirementEffects.RelationshipId(sourceEventId,
+                new TeamMember(assignment.TenantId, assignment.TeamId, assignment.MemberId).Stream,
+                episodeId, position, proof.EventId));
+        return await ReconcileAsync(Context(request, parent), ct).ConfigureAwait(false);
+    }
 
-        var grantSet = await grants.ListAsync(tenantId, ct).ConfigureAwait(false);
-        foreach (var grant in grantSet.Grants.Where(item => item.RevokedAt is null &&
-                     item.Terms.Principal.Kind == AccessGrantPrincipalKind.Member &&
-                     item.Terms.Principal.Id == memberId))
-        {
-            var revoked = await RevokeGrantAsync(context, tenantId, grant.GrantId, actor, ct)
-                .ConfigureAwait(false);
-            if (!revoked.IsSuccess)
-                return revoked;
-        }
+    internal ValueTask<Result> CompleteAsync(IExecutionContext parent, MembershipTerminationProof proof,
+        CancellationToken ct)
+    {
+        var request = MemberRetirementEffects.Complete(proof);
+        return CompleteAsync(Context(request, parent), ct);
+    }
 
-        return await executor.ExecuteAsync(new Member(tenantId, userId),
-            member => AggregateOutcome.CommitOnSuccess(
-                member.CompleteDeprovisionCleanup(clock.GetUtcNow())), context, ct)
+    internal async ValueTask<Result> CompleteAsync(IRequestContext<CompleteMemberRetirement> context,
+        CancellationToken ct)
+    {
+        var request = context.Request;
+        if (!RequestActor.IsSystem(context.Actor))
+            return Forbidden();
+        if (request.TenantId == Uuid.Empty || request.MemberId == Uuid.Empty ||
+            request.MembershipEpisodeId == Uuid.Empty || request.TerminationEventId == Uuid.Empty ||
+            request.CommandId != MemberRetirementEffects.CompletionId(request.TerminationEventId,
+                request.MemberId, request.MembershipEpisodeId))
+            return InvalidProof();
+        var member = await reader.HydrateAsync(Member.ForVerification(request.TenantId, request.MemberId,
+            request.MembershipEpisodeId), ct).ConfigureAwait(false);
+        if (member.TerminationProof is not { } proof || proof.EventId != request.TerminationEventId)
+            return InvalidProof();
+        if (member.SelectedCleanupCompleted)
+            return Result.Success;
+
+        foreach (var area in new[] { "rbac-team-members", "access-grants" })
+        {
+            var pattern = EventStreamPattern.ForPattern(request.TenantId.ToString(), area);
+            var cut = ProjectionCheckpoint.Start;
+            var candidates = new List<CleanupRetiredMembershipRelationship>();
+            await foreach (var record in events.ReadAsync(pattern, EventCursor.Start, ct)
+                               .WithCancellation(ct).ConfigureAwait(false))
+            {
+                cut = new ProjectionCheckpoint(record.NextCursor);
+                var candidate = record.Event switch
+                {
+                    TeamMemberAssigned assigned when assigned.TenantId == proof.TenantId &&
+                        assigned.MemberId == proof.MemberId && assigned.MembershipEpisodeId == proof.MembershipEpisodeId =>
+                        MemberRetirementEffects.Team(assigned, record.ResourceOffset, proof.EventId),
+                    AccessGrantIssued issued when issued.TenantId == proof.TenantId &&
+                        issued.Terms.Principal.Kind == AccessGrantPrincipalKind.Member &&
+                        issued.Terms.Principal.Id == proof.MemberId && issued.MembershipEpisodeId == proof.MembershipEpisodeId =>
+                        MemberRetirementEffects.Grant(issued, record.ResourceOffset, proof.EventId),
+                    _ => null,
+                };
+                if (candidate is null)
+                    continue;
+                if (record.Stream != MemberRetirementEffects.RelationshipStream(candidate) || record.Event.Metadata.IsAudit)
+                    return InvalidProof();
+                candidates.Add(candidate);
+            }
+            foreach (var candidate in candidates.OrderBy(static candidate =>
+                         MemberRetirementEffects.RelationshipStream(candidate).ToString(), StringComparer.Ordinal)
+                         .ThenBy(static candidate => candidate.SourcePosition))
+            {
+                var result = await ReconcileAsync(Context(candidate, context), ct).ConfigureAwait(false);
+                if (!result.IsSuccess)
+                    return result;
+            }
+            // Source discovery is technical progress, outside domain events. Always rescan from
+            // the source on recovery; a saved cut never permits skipping unfinished receivers.
+            await checkpoints.SaveAsync(new CheckpointIdentity($"MemberRetirementCoverage:{request.CommandId}",
+                pattern), cut, ct).ConfigureAwait(false);
+        }
+        return await RetryAsync(() => executor.ExecuteAsync(new Member(proof.TenantId, proof.UserId,
+                proof.MembershipEpisodeId), current => AggregateOutcome.CommitOnSuccess(
+                current.CompleteDeprovisionCleanup(proof, request.CommandId, clock.GetUtcNow())), context, ct), ct)
             .ConfigureAwait(false);
     }
 
-    async ValueTask<Result> RemoveTeamAssignmentAsync(IExecutionContext context, Uuid tenantId,
-        Uuid teamId, Uuid memberId, CancellationToken ct)
+    internal async ValueTask<Result> ReconcileAsync(IRequestContext<CleanupRetiredMembershipRelationship> context,
+        CancellationToken ct)
+    {
+        var request = context.Request;
+        if (!RequestActor.IsSystem(context.Actor))
+            return Forbidden();
+        if (request.TenantId == Uuid.Empty || request.MemberId == Uuid.Empty || request.TargetId == Uuid.Empty ||
+            request.MembershipEpisodeId == Uuid.Empty || request.SourceEventId == Uuid.Empty ||
+            request.TerminationEventId == Uuid.Empty || !Enum.IsDefined(request.Kind))
+            return InvalidProof();
+        var owner = request.Kind == RetiredMembershipRelationshipKind.TeamAssignment
+            ? RbacIds.TeamMember(request.TenantId, request.TargetId, request.MemberId) : request.TargetId;
+        if (request.CommandId != MemberRetirementEffects.RelationshipId(request.SourceEventId,
+                MemberRetirementEffects.RelationshipStream(request), request.MembershipEpisodeId, request.SourcePosition,
+                request.TerminationEventId))
+            return InvalidProof();
+        var stream = MemberRetirementEffects.RelationshipStream(request);
+        DomainEventRecord? source = null;
+        await foreach (var record in events.ReadAsync(stream, request.SourcePosition, ct)
+                           .WithCancellation(ct).ConfigureAwait(false))
+        {
+            source = record;
+            break;
+        }
+        if (source is null)
+            return DependencyUnavailable();
+        if (source.Stream != stream || source.ResourceOffset != request.SourcePosition ||
+            source.Event.Metadata.EventId != request.SourceEventId || source.Event.Metadata.AggregateId != owner ||
+            source.Event.Metadata.IsAudit || source.Event.Metadata.AggregateVersion != request.SourcePosition + 1)
+            return InvalidProof();
+        var exact = source.Event switch
+        {
+            TeamMemberAssigned assigned when request.Kind == RetiredMembershipRelationshipKind.TeamAssignment =>
+                MemberRetirementEffects.Team(assigned, source.ResourceOffset, request.TerminationEventId) == request,
+            AccessGrantIssued issued when request.Kind == RetiredMembershipRelationshipKind.DirectGrant &&
+                issued.Terms.Principal.Kind == AccessGrantPrincipalKind.Member =>
+                MemberRetirementEffects.Grant(issued, source.ResourceOffset, request.TerminationEventId) == request,
+            _ => false,
+        };
+        if (!exact)
+            return InvalidProof();
+        var member = await reader.HydrateAsync(Member.ForVerification(request.TenantId, request.MemberId,
+            request.MembershipEpisodeId), ct).ConfigureAwait(false);
+        if (member.TerminationProof is not { } proof)
+            return DependencyUnavailable();
+        if (proof.EventId != request.TerminationEventId)
+            return InvalidProof();
+        return request.Kind == RetiredMembershipRelationshipKind.TeamAssignment
+            ? await RetryAsync(() => executor.ExecuteAsync(new TeamMember(request.TenantId, request.TargetId,
+                    request.MemberId), current => AggregateOutcome.CommitOnSuccess(
+                    current.RemoveForRetirement(proof, request.SourceEventId)), context, ct), ct).ConfigureAwait(false)
+            : await RetryAsync(() => executor.ExecuteAsync(new AccessGrant(request.TenantId, request.TargetId),
+                    current => AggregateOutcome.CommitOnSuccess(current.RevokeForRetirement(proof,
+                        request.SourceEventId, clock.GetUtcNow())), context, ct), ct).ConfigureAwait(false);
+    }
+
+    static RequestContext<T> Context<T>(T request, IExecutionContext parent) where T : IRequestBase =>
+        new(request, new RequestDispatchContext(RequestActor.System,
+            metadata: RequestMetadata.FromRequest(request, parent)));
+
+    static async ValueTask<Result> RetryAsync(Func<ValueTask<Result>> action, CancellationToken ct)
     {
         for (var attempt = 0; attempt < MaximumAttempts; attempt++)
         {
-            var assignment = await reader.HydrateAsync(new TeamMember(tenantId, teamId, memberId), ct)
-                .ConfigureAwait(false);
-            if (!assignment.IsAssigned)
-                return Result.Success;
+            ct.ThrowIfCancellationRequested();
             try
             {
-                var result = await executor.ExecuteAsync(new TeamMember(tenantId, teamId, memberId),
-                    current => AggregateOutcome.CommitOnSuccess(current.Remove()), context, ct)
-                    .ConfigureAwait(false);
-                if (result.IsSuccess || result.Error is RequestError { Kind: RequestErrorKind.NotFound })
-                    return Result.Success;
-                return result;
+                return await action().ConfigureAwait(false);
             }
             catch (EventStreamConcurrencyException) when (attempt + 1 < MaximumAttempts)
             {
-                // Re-read and retry an assignment that changed during cleanup.
+                // Rehydrate the exact receiving scope; never retarget a newer assignment.
             }
         }
-        return RetryConflict();
+        return DependencyUnavailable();
     }
 
-    async ValueTask<Result> RevokeGrantAsync(IExecutionContext context, Uuid tenantId,
-        Uuid grantId, ActorReference actor, CancellationToken ct)
-    {
-        for (var attempt = 0; attempt < MaximumAttempts; attempt++)
-        {
-            var grant = await reader.HydrateAsync(new AccessGrant(tenantId, grantId), ct)
-                .ConfigureAwait(false);
-            if (grant.IsRevoked)
-                return Result.Success;
-            try
-            {
-                var result = await executor.ExecuteAsync(new AccessGrant(tenantId, grantId),
-                    current => AggregateOutcome.CommitOnSuccess(current.Revoke(actor, clock.GetUtcNow())),
-                    context, ct).ConfigureAwait(false);
-                if (result.IsSuccess || result.Error is RequestError { Kind: RequestErrorKind.Conflict })
-                    return Result.Success;
-                return result;
-            }
-            catch (EventStreamConcurrencyException) when (attempt + 1 < MaximumAttempts)
-            {
-                // Re-read and retry a grant that changed during cleanup.
-            }
-        }
-        return RetryConflict();
-    }
-
-    static Result RetryConflict() => Result.Failure(new RequestError(RequestErrorKind.Conflict,
-        "Membership authority changed during deprovisioning; retry.", isTransient: true));
+    static Result InvalidProof() => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+        "Membership cleanup requires the exact authoritative source fact and episode."));
+    static Result DependencyUnavailable() => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+        "Membership cleanup source authority is not available yet.", isTransient: true));
+    static Result Forbidden() => Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+        "Only system recovery may execute membership cleanup."));
 }

@@ -11955,9 +11955,9 @@
         "Member"
       ],
       "decisionStatus": "locked",
-      "compatibility": "Preserve discriminator/version and stored bytes. Payload-incompatible changes require explicit versioned decoder/upcaster; no direct event-store edits.",
+      "compatibility": "Direct pre-release v2 episode/source-fact cutover under #1022/#1040; superseded shapes are disposable. No environment reset is authorized.",
       "embedsWholeViewState": false,
-      "implementationStatus": "pending_behavioral_and_migration_proof",
+      "implementationStatus": "member_retirement_protocol_in_1040",
       "owningRootDecisions": [
         "Member"
       ]
@@ -11980,9 +11980,9 @@
         "Member"
       ],
       "decisionStatus": "locked",
-      "compatibility": "Preserve discriminator/version and stored bytes. Payload-incompatible changes require explicit versioned decoder/upcaster; no direct event-store edits.",
+      "compatibility": "Direct pre-release v2 episode/source-fact cutover under #1022/#1040; superseded shapes are disposable. No environment reset is authorized.",
       "embedsWholeViewState": false,
-      "implementationStatus": "pending_behavioral_and_migration_proof",
+      "implementationStatus": "member_retirement_protocol_in_1040",
       "owningRootDecisions": [
         "Member"
       ]
@@ -15144,9 +15144,9 @@
         "TeamMember"
       ],
       "decisionStatus": "locked",
-      "compatibility": "Preserve discriminator/version and stored bytes. Payload-incompatible changes require explicit versioned decoder/upcaster; no direct event-store edits.",
+      "compatibility": "Direct pre-release v2 episode/source-fact cutover under #1022/#1040; superseded shapes are disposable. No environment reset is authorized.",
       "embedsWholeViewState": false,
-      "implementationStatus": "pending_behavioral_and_migration_proof",
+      "implementationStatus": "member_retirement_protocol_in_1040",
       "owningRootDecisions": [
         "TeamMember"
       ]

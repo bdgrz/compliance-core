@@ -1,10 +1,13 @@
 using Cntryl.Portia;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 public sealed class Member : Aggregate
 {
     readonly Uuid _tenantId;
+    readonly Uuid _selectedEpisodeId;
     Uuid _userId;
     bool _isRegistered;
     string? _affiliation;
@@ -17,6 +20,9 @@ public sealed class Member : Aggregate
     string? _deprovisionedByDisplay;
     DateTimeOffset? _deprovisionedAt;
     string? _deprovisionReason;
+    MemberDeprovisioned? _currentTermination;
+    MemberDeprovisioned? _selectedTermination;
+    bool _selectedCleanupCompleted;
 
     public bool IsRegistered => _isRegistered;
     public string? Affiliation => _affiliation;
@@ -30,12 +36,20 @@ public sealed class Member : Aggregate
     public string? DeprovisionedByDisplay => _deprovisionedByDisplay;
     public DateTimeOffset? DeprovisionedAt => _deprovisionedAt;
     public string? DeprovisionReason => _deprovisionReason;
+    public bool SelectedCleanupCompleted => _selectedCleanupCompleted;
+    public MembershipTerminationProof? TerminationProof => _selectedTermination is { } fact
+        ? new MembershipTerminationProof(_tenantId, Id, fact.UserId, fact.MembershipEpisodeId,
+            fact.Metadata.EventId, fact.Metadata.AggregateVersion, fact.Metadata.AggregateVersion - 1,
+            Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(fact,
+                ComplianceCoreJsonContext.Default.MemberDeprovisioned))),
+            fact.DeprovisionedByMemberId, fact.DeprovisionedByDisplay)
+        : null;
 
     public bool IsAccessEligibleOn(DateOnly utcDate) => IsRegistered && !_isSuspended &&
         !_isDeprovisioned && (_membershipExpiresOn is not { } expiresOn || utcDate <= expiresOn);
 
-    public Member(Uuid tenantId, Uuid userId)
-        : this(tenantId, RbacIds.Member(tenantId, userId), userId)
+    public Member(Uuid tenantId, Uuid userId, Uuid selectedEpisodeId = default)
+        : this(tenantId, RbacIds.Member(tenantId, userId), userId, selectedEpisodeId)
     {
     }
 
@@ -43,14 +57,15 @@ public sealed class Member : Aggregate
     ///     Opens a member stream by member identity for read-only verification, such as checking
     ///     that a responsibility holder is still active. Commands require the user constructor.
     /// </summary>
-    public static Member ForVerification(Uuid tenantId, Uuid memberId) =>
-        new(tenantId, memberId, Uuid.Empty);
+    public static Member ForVerification(Uuid tenantId, Uuid memberId, Uuid selectedEpisodeId = default) =>
+        new(tenantId, memberId, Uuid.Empty, selectedEpisodeId);
 
-    Member(Uuid tenantId, Uuid memberId, Uuid userId)
+    Member(Uuid tenantId, Uuid memberId, Uuid userId, Uuid selectedEpisodeId)
         : base(memberId,
             new EventStreamAddress(tenantId.ToString(), "rbac-members", memberId.ToString()))
     {
         _tenantId = tenantId;
+        _selectedEpisodeId = selectedEpisodeId;
         _userId = userId;
         On<MemberRegistered>(registered =>
         {
@@ -68,11 +83,26 @@ public sealed class Member : Aggregate
             _isSuspended = false;
             _isDeprovisioned = false;
             _isDeprovisionCleanupComplete = false;
+            _currentTermination = null;
+            if (_selectedEpisodeId == Uuid.Empty)
+            {
+                _selectedTermination = null;
+                _selectedCleanupCompleted = false;
+            }
         });
         On<MemberSuspended>(_ => _isSuspended = true);
         On<MemberReinstated>(_ => _isSuspended = false);
         On<MemberDeprovisioned>(deprovisioned =>
         {
+            if (deprovisioned.TenantId != _tenantId || deprovisioned.MemberId != Id ||
+                RbacIds.Member(_tenantId, deprovisioned.UserId) != Id ||
+                deprovisioned.DeprovisionedByMemberId == Uuid.Empty ||
+                string.IsNullOrWhiteSpace(deprovisioned.DeprovisionedByDisplay) ||
+                string.IsNullOrWhiteSpace(deprovisioned.Reason) || deprovisioned.DeprovisionedAt == default ||
+                deprovisioned.UserId != _userId || !_isRegistered ||
+                deprovisioned.MembershipEpisodeId == Uuid.Empty ||
+                deprovisioned.MembershipEpisodeId != _membershipEpisodeId)
+                throw new InvalidOperationException("Membership retirement must identify its exact registered episode.");
             _isRegistered = false;
             _isSuspended = false;
             _isDeprovisioned = true;
@@ -81,8 +111,23 @@ public sealed class Member : Aggregate
             _deprovisionedByDisplay = deprovisioned.DeprovisionedByDisplay;
             _deprovisionedAt = deprovisioned.DeprovisionedAt;
             _deprovisionReason = deprovisioned.Reason;
+            _currentTermination = deprovisioned;
+            if (_selectedEpisodeId == Uuid.Empty || _selectedEpisodeId == deprovisioned.MembershipEpisodeId)
+                _selectedTermination = deprovisioned;
         });
-        On<MemberDeprovisionCleanupCompleted>(_ => _isDeprovisionCleanupComplete = true);
+        On<MemberDeprovisionCleanupCompleted>(completed =>
+        {
+            if (completed.TenantId != _tenantId || completed.MemberId != Id || !_isDeprovisioned ||
+                _isDeprovisionCleanupComplete || completed.CompletedAt == default ||
+                completed.MembershipEpisodeId != _membershipEpisodeId || _currentTermination is null ||
+                completed.TerminationEventId != _currentTermination.Metadata.EventId ||
+                completed.CommandId != MemberRetirementEffects.CompletionId(completed.TerminationEventId,
+                    Id, completed.MembershipEpisodeId))
+                throw new InvalidOperationException("Cleanup completion must prove the exact membership retirement.");
+            _isDeprovisionCleanupComplete = true;
+            if (_selectedTermination?.Metadata.EventId == completed.TerminationEventId)
+                _selectedCleanupCompleted = true;
+        });
     }
 
     public Result Register(string affiliation = "client_personnel",
@@ -166,15 +211,26 @@ public sealed class Member : Aggregate
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "Enter a deprovision reason of at most 1000 characters."));
 
+        if (_membershipEpisodeId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Membership retirement requires its registered episode."));
         RaiseEvent(new MemberDeprovisioned(_tenantId, Id, _userId, actorMemberId,
-            actorDisplay.Trim(), deprovisionedAt, reason.Trim()));
+            actorDisplay.Trim(), deprovisionedAt, reason.Trim(), _membershipEpisodeId));
         return Result.Success;
     }
 
-    public Result CompleteDeprovisionCleanup(DateTimeOffset completedAt)
+    public Result CompleteDeprovisionCleanup(MembershipTerminationProof proof, Uuid commandId,
+        DateTimeOffset completedAt)
     {
         EnsureUserIdentity();
-        if (!_isDeprovisioned)
+        if (proof is null || proof != TerminationProof || commandId != MemberRetirementEffects.CompletionId(proof.EventId,
+                Id, proof.MembershipEpisodeId))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Cleanup requires the exact original termination proof and operation."));
+        if (_selectedCleanupCompleted)
+            return Result.Success;
+        if (!_isDeprovisioned || _membershipEpisodeId != proof.MembershipEpisodeId ||
+            _currentTermination?.Metadata.EventId != proof.EventId)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Membership authority cleanup requires a deprovisioned member."));
         if (_isDeprovisionCleanupComplete)
@@ -183,7 +239,8 @@ public sealed class Member : Aggregate
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A cleanup completion timestamp is required."));
 
-        RaiseEvent(new MemberDeprovisionCleanupCompleted(_tenantId, Id, completedAt));
+        RaiseEvent(new MemberDeprovisionCleanupCompleted(_tenantId, Id, proof.MembershipEpisodeId,
+            proof.EventId, commandId, completedAt));
         return Result.Success;
     }
 

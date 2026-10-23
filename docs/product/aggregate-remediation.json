@@ -83,14 +83,17 @@
     {
       "order": 8,
       "name": "Reactor recovery",
-      "state": "pending",
-      "completedPullRequests": []
+      "state": "in_progress",
+      "completedPullRequests": [],
+      "issue": 1040
     },
     {
       "order": 9,
       "name": "Identity and catalogs",
       "state": "in_progress",
-      "completedPullRequests": [],
+      "completedPullRequests": [
+        1039
+      ],
       "issue": 1038
     },
     {
@@ -442,13 +445,16 @@
       "deliveryFamilies": [
         9
       ],
-      "state": "in_progress",
+      "state": "complete",
       "evidence": [
         {
           "issue": 1038,
           "implementation": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
           "proof": "test/Compliance.Tests/Features/UserIdentities/UserIdentityObservationTests.cs",
-          "scope": "Presentation uses independent audit sessions with immutable source registration proof. Association/revocation physical replay stays bounded; authoritative admission, audit races, unknown outcomes and projection rebuilding are covered."
+          "scope": "Presentation uses independent audit sessions with immutable source registration proof. Association/revocation physical replay stays bounded; authoritative admission, audit races, unknown outcomes and projection rebuilding are covered.",
+          "pullRequest": 1039,
+          "mergedCommit": "df1bc10742debbd99e11eda7a2e5ae65e9f48b81",
+          "ownerState": "complete"
         }
       ]
     },
@@ -711,8 +717,15 @@
         3,
         8
       ],
-      "state": "pending",
-      "evidence": []
+      "state": "in_progress",
+      "evidence": [
+        {
+          "issue": 1040,
+          "implementation": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "proof": "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs",
+          "scope": "Member retirement only: exact episode/source proof, complete native-source discovery with technical cuts, fenced relationship receivers and independent retirement/late-assignment/grant reactors. Manager withdrawal and other relationship cleanup owners remain open."
+        }
+      ]
     },
     {
       "id": "CHOREO-04",
@@ -750,8 +763,15 @@
       "deliveryFamilies": [
         8
       ],
-      "state": "pending",
-      "evidence": []
+      "state": "in_progress",
+      "evidence": [
+        {
+          "issue": 1040,
+          "implementation": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
+          "proof": "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs",
+          "scope": "Member retirement only: exact episode/source proof, complete native-source discovery with technical cuts, fenced relationship receivers and independent retirement/late-assignment/grant reactors. Manager withdrawal and other relationship cleanup owners remain open."
+        }
+      ]
     },
     {
       "id": "CHOREO-07",
