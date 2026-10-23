@@ -1,6 +1,6 @@
 {
   "status": "selected target schemas; disposable histories allow direct replacement",
-  "eventCount": 286,
+  "eventCount": 287,
   "events": [
     {
       "event": "AccessDecisionsRecorded",
@@ -5528,9 +5528,10 @@
           "required": true
         },
         {
-          "name": "Plan",
-          "type": "ApplicationImportPlanStarted",
-          "required": true
+          "name": "FrozenPlan",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ImportFrozenPlanIntent"
         },
         {
           "name": "Row",
@@ -5653,7 +5654,9 @@
           ]
         }
       ],
-      "changes": [],
+      "changes": [
+        "Replace the removed ApplicationImportPlanStarted payload with FrozenPlan, a verified reference to the sealed ImportFrozenPlanIntent; PlanSha256 remains the digest of that complete intent."
+      ],
       "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
       "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
       "resolvedIntentSchema": "ImportTargetGroupIntent",
@@ -23203,7 +23206,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",
@@ -23404,7 +23407,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",
@@ -23605,7 +23608,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",
@@ -35673,7 +35676,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",
@@ -35869,7 +35872,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",
@@ -36150,7 +36153,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",
@@ -36336,7 +36339,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",
@@ -36517,7 +36520,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",
@@ -36586,6 +36589,192 @@
       ],
       "changes": [],
       "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+      "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+      "resolvedIntentSchema": "AdministratorTransitionIntent",
+      "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+    },
+    {
+      "event": "TenantManagerSourceMutationAdmitted",
+      "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted",
+      "discriminatorVersion": 1,
+      "owner": "TenantManagerGuard",
+      "existingContract": null,
+      "status": "selected target schema; implementation pending",
+      "reason": "source admission contract; administrator-capable source mutation that changes no availability",
+      "fields": [
+        {
+          "name": "Owner",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Revision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "SourceProofs",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "Operation",
+          "type": "OperationProvenance",
+          "required": true
+        },
+        {
+          "name": "FirstResponse",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "OperationResult",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "contentSchemas": [
+        {
+          "field": "Intent",
+          "schema": "administrator-transition-intent.v1",
+          "recordType": "AdministratorTransitionIntent",
+          "fields": [
+            {
+              "name": "Header",
+              "type": "DurableIntentHeader",
+              "required": true
+            },
+            {
+              "name": "MemberId",
+              "type": "Uuid",
+              "required": true
+            },
+            {
+              "name": "MemberEpisodeId",
+              "type": "Uuid",
+              "required": true
+            },
+            {
+              "name": "MemberRevision",
+              "type": "ulong",
+              "required": true
+            },
+            {
+              "name": "AssignmentId",
+              "type": "Uuid?",
+              "required": true
+            },
+            {
+              "name": "AssignmentGeneration",
+              "type": "ulong?",
+              "required": true
+            },
+            {
+              "name": "ExpectedAssignmentRevision",
+              "type": "ulong?",
+              "required": true
+            },
+            {
+              "name": "TransitionKind",
+              "type": "AdministratorTransitionKind",
+              "required": true
+            },
+            {
+              "name": "Reason",
+              "type": "string?",
+              "required": true
+            },
+            {
+              "name": "GuardGeneration",
+              "type": "ulong",
+              "required": true
+            },
+            {
+              "name": "EligibilityRequirements",
+              "type": "ImmutableSelectionManifest",
+              "required": true,
+              "contentSchema": "SourceUseRequirement"
+            }
+          ],
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "variants": [
+            {
+              "recordType": "AdministratorTransitionIntent",
+              "schema": "administrator-transition-intent.v1",
+              "fields": [
+                {
+                  "name": "Header",
+                  "type": "DurableIntentHeader",
+                  "required": true
+                },
+                {
+                  "name": "MemberId",
+                  "type": "Uuid",
+                  "required": true
+                },
+                {
+                  "name": "MemberEpisodeId",
+                  "type": "Uuid",
+                  "required": true
+                },
+                {
+                  "name": "MemberRevision",
+                  "type": "ulong",
+                  "required": true
+                },
+                {
+                  "name": "AssignmentId",
+                  "type": "Uuid?",
+                  "required": true
+                },
+                {
+                  "name": "AssignmentGeneration",
+                  "type": "ulong?",
+                  "required": true
+                },
+                {
+                  "name": "ExpectedAssignmentRevision",
+                  "type": "ulong?",
+                  "required": true
+                },
+                {
+                  "name": "TransitionKind",
+                  "type": "AdministratorTransitionKind",
+                  "required": true
+                },
+                {
+                  "name": "Reason",
+                  "type": "string?",
+                  "required": true
+                },
+                {
+                  "name": "GuardGeneration",
+                  "type": "ulong",
+                  "required": true
+                },
+                {
+                  "name": "EligibilityRequirements",
+                  "type": "ImmutableSelectionManifest",
+                  "required": true,
+                  "contentSchema": "SourceUseRequirement"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "changes": [],
+      "reducerRule": "Validate owner/generation and that no contribution or pending transition exists for this member episode (or that the mutation cannot change availability); record the admitted source mutation so a later registration/withdrawal for the same episode observes it. Apply only this owner delta; never hydrate Member or TeamMember.",
       "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
       "resolvedIntentSchema": "AdministratorTransitionIntent",
       "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
@@ -36703,7 +36892,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",
@@ -36889,7 +37078,7 @@
               "contentSchema": "SourceUseRequirement"
             }
           ],
-          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+          "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
           "variants": [
             {
               "recordType": "AdministratorTransitionIntent",

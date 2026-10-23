@@ -1,6 +1,6 @@
 # Native operation acceptance and result lookup
 
-This is the exact prerequisite for [#1042](https://github.com/bdgrz/compliance-core/issues/1042). Current Portia/Fitz per-stream append does not provide it. The selected implementation must supply this contract before enabling the affected replacement paths.
+This is the exact prerequisite for [#1042](https://github.com/bdgrz/compliance-core/issues/1042). Current Portia/Fitz per-stream append does not provide it. The selected implementation must supply this contract before enabling the operation status/result routes keyed by bare operation id and cross-route duplicate detection; write paths use per-first-owner acceptance and do not wait on it (see "Scope of the realm-wide prerequisite").
 
 ## Binding and append
 
@@ -30,6 +30,14 @@ Root native acceptance carries `FirstResponse: ImmutableContentRef`. It referenc
 6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.
 
 Rebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event.
+
+## Scope of the realm-wide prerequisite
+
+Every selected public command resolves its FirstOwner from route values alone. SuspendMember, DeprovisionMember and ReinstateMember always admit on TenantManagerGuard; AssignTeamMember and RemoveTeamMember admit there exactly when the route team is the administrators team; every other command names its first owner in its route. No handler reads one stream to decide which stream receives the native admission.
+
+Per-first-owner acceptance therefore gives every write path its full guarantee: the native batch is one atomic append on the first owner stream at the hydrated physical tail, and the first-fact binding for `(Realm, LogicalId)` is read from that same stream before the append is attempted. Two concurrent equal intents collide on that stream's OCC; the loser rereads the binding and returns the winner's frozen first response. A changed intent under the same logical ID on the same first owner is Conflict. Nothing in this paragraph requires a KV before/after the append.
+
+The realm-wide atomic index tracked by #1042 is required for two things only: the operation status/result routes, which are keyed by `operation_id` without a resource route and must locate the first owner; and rejecting one logical ID that a client sends to two different routes, which per-first-owner acceptance would accept as two operations. Until #1042 passes its conformance cases, those routes and that cross-route check remain disabled, and a status/result lookup is available only where the caller also supplies the resource route that names the first owner. Write paths do not wait on #1042. The index, when built, is rebuilt from native facts without TTL exactly as described above; no separate KV before/after append implements it.
 
 ## Status/result authorization
 

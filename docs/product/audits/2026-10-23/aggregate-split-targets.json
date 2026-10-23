@@ -1613,7 +1613,7 @@
           ]
         }
       ],
-      "retainedCoordinatorOrGuard": "Keep all assertions needed for one round\u2019s conclusion atomic; a separate evaluation cannot share a program revision.",
+      "retainedCoordinatorOrGuard": "Keep all assertions needed for one round’s conclusion atomic; a separate evaluation cannot share a program revision.",
       "mustPreserve": "Material deviation source proof, immutable procedure version, reviewer independence, and explicit minor-deviation disposition.",
       "boundaryTests": [
         "Different evaluations update concurrently.",
@@ -1763,7 +1763,7 @@
         },
         {
           "proposedAggregate": "ControlOccurrence",
-          "identity": "(controlId, businessWindow)",
+          "identity": "(tenantId, programId, controlId, businessWindow)",
           "owns": "One planned/attested/corrected/reviewed occurrence for a control performance window.",
           "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
           "existingDomainEvents": [
@@ -1878,7 +1878,7 @@
         },
         {
           "proposedAggregate": "PolicyCampaignParticipant",
-          "identity": "(campaignId, participantId)",
+          "identity": "(campaignId, personId)",
           "owns": "Independent acknowledgement, completion, exception and delivery status.",
           "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
           "existingDomainEvents": [
@@ -2560,7 +2560,7 @@
         {
           "proposedAggregate": "RiskGovernance",
           "identity": "riskId",
-          "owns": "One risk\u2019s governance and reassessment obligations.",
+          "owns": "One risk’s governance and reassessment obligations.",
           "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
           "existingDomainEvents": [
             "RiskOwnerAssigned",

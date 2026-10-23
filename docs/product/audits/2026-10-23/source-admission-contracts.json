@@ -349,12 +349,13 @@
         },
         {
           "name": "ExpectedMemberRevision",
-          "type": "ulong",
+          "type": "long",
           "required": true
         }
       ],
       "events": [
-        "TenantManagerWithdrawalAccepted"
+        "TenantManagerWithdrawalAccepted",
+        "TenantManagerSourceMutationAdmitted"
       ],
       "http": {
         "method": "PUT",
@@ -362,15 +363,17 @@
       },
       "mcp": false,
       "entry": "authorized_existing_scope_http",
-      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedMemberRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation; a first administrators-team assignment registers availability only through TenantManagerRestorationAccepted (register_administrators_assignment) completed after TeamMemberAssigned. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedMemberRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
       "sourceContract": "src/Compliance.Common/Features/AccessControl/SuspendMember.cs",
       "tests": [
         "exact retry after later lifecycle",
         "changed actor/intent/original revision conflicts",
         "receiver fence versus delayed apply",
-        "unknown append and source authorization recovery"
+        "unknown append and source authorization recovery",
+        "non-administrator suspension racing pending administrator registration for the same episode",
+        "non-administrator team removal never reads the guard"
       ],
-      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "nonAdministratorBranch": "First owner is route-determined, never state-determined: SuspendMember, DeprovisionMember and ReinstateMember always append a guard fact first (TenantManagerWithdrawalAccepted, TenantManagerRestorationAccepted or TenantManagerSourceMutationAdmitted when the member episode has no contribution and no pending transition). AssignTeamMember and RemoveTeamMember append a guard fact first exactly when team_id equals BuiltInRbac.AdministratorsTeamId; for every other team the TeamMember owner is first and the guard is never read. A pending registration or restoration for the same member episode is incompatible with a later withdrawal or neutral mutation: the later guard admission withdraws or fences it, so completion of that registration can never register availability for a suspended, deprovisioned or removed source.",
       "expectedRevisionScope": {
         "field": "ExpectedMemberRevision",
         "owner": "Member",
@@ -381,7 +384,8 @@
         "responseType": "AdministratorTransitionResponse",
         "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
         "terminalResultType": "Unit"
-      }
+      },
+      "firstOwnerRule": "TenantManagerGuard (always)"
     },
     {
       "command": "DeprovisionMember",
@@ -416,12 +420,13 @@
         },
         {
           "name": "ExpectedMemberRevision",
-          "type": "ulong",
+          "type": "long",
           "required": true
         }
       ],
       "events": [
-        "TenantManagerWithdrawalAccepted"
+        "TenantManagerWithdrawalAccepted",
+        "TenantManagerSourceMutationAdmitted"
       ],
       "http": {
         "method": "PUT",
@@ -429,15 +434,17 @@
       },
       "mcp": false,
       "entry": "authorized_existing_scope_http",
-      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedMemberRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation; a first administrators-team assignment registers availability only through TenantManagerRestorationAccepted (register_administrators_assignment) completed after TeamMemberAssigned. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedMemberRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
       "sourceContract": "src/Compliance.Common/Features/AccessControl/DeprovisionMember.cs",
       "tests": [
         "exact retry after later lifecycle",
         "changed actor/intent/original revision conflicts",
         "receiver fence versus delayed apply",
-        "unknown append and source authorization recovery"
+        "unknown append and source authorization recovery",
+        "non-administrator suspension racing pending administrator registration for the same episode",
+        "non-administrator team removal never reads the guard"
       ],
-      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "nonAdministratorBranch": "First owner is route-determined, never state-determined: SuspendMember, DeprovisionMember and ReinstateMember always append a guard fact first (TenantManagerWithdrawalAccepted, TenantManagerRestorationAccepted or TenantManagerSourceMutationAdmitted when the member episode has no contribution and no pending transition). AssignTeamMember and RemoveTeamMember append a guard fact first exactly when team_id equals BuiltInRbac.AdministratorsTeamId; for every other team the TeamMember owner is first and the guard is never read. A pending registration or restoration for the same member episode is incompatible with a later withdrawal or neutral mutation: the later guard admission withdraws or fences it, so completion of that registration can never register availability for a suspended, deprovisioned or removed source.",
       "expectedRevisionScope": {
         "field": "ExpectedMemberRevision",
         "owner": "Member",
@@ -448,7 +455,8 @@
         "responseType": "AdministratorTransitionResponse",
         "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
         "terminalResultType": "Unit"
-      }
+      },
+      "firstOwnerRule": "TenantManagerGuard (always)"
     },
     {
       "command": "RemoveTeamMember",
@@ -483,33 +491,36 @@
         },
         {
           "name": "ExpectedAssignmentRevision",
-          "type": "ulong",
+          "type": "long",
           "required": true
         },
         {
           "name": "ExpectedAssignmentGeneration",
-          "type": "ulong",
+          "type": "long",
           "required": true
         }
       ],
       "events": [
-        "TenantManagerWithdrawalAccepted"
+        "TenantManagerWithdrawalAccepted",
+        "TenantManagerSourceMutationAdmitted"
       ],
       "http": {
         "method": "PUT",
-        "path": "/api/v1/tenants/{tenant_id}/members/{member_id}/RemoveTeamMember/{command_id}"
+        "path": "/api/v1/tenants/{tenant_id}/members/{member_id}/team-removals/{command_id}"
       },
       "mcp": false,
       "entry": "authorized_existing_scope_http",
-      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedAssignmentRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation; a first administrators-team assignment registers availability only through TenantManagerRestorationAccepted (register_administrators_assignment) completed after TeamMemberAssigned. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedAssignmentRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
       "sourceContract": "src/Compliance.Common/Features/AccessControl/RemoveTeamMember.cs",
       "tests": [
         "exact retry after later lifecycle",
         "changed actor/intent/original revision conflicts",
         "receiver fence versus delayed apply",
-        "unknown append and source authorization recovery"
+        "unknown append and source authorization recovery",
+        "non-administrator suspension racing pending administrator registration for the same episode",
+        "non-administrator team removal never reads the guard"
       ],
-      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "nonAdministratorBranch": "First owner is route-determined, never state-determined: SuspendMember, DeprovisionMember and ReinstateMember always append a guard fact first (TenantManagerWithdrawalAccepted, TenantManagerRestorationAccepted or TenantManagerSourceMutationAdmitted when the member episode has no contribution and no pending transition). AssignTeamMember and RemoveTeamMember append a guard fact first exactly when team_id equals BuiltInRbac.AdministratorsTeamId; for every other team the TeamMember owner is first and the guard is never read. A pending registration or restoration for the same member episode is incompatible with a later withdrawal or neutral mutation: the later guard admission withdraws or fences it, so completion of that registration can never register availability for a suspended, deprovisioned or removed source.",
       "expectedRevisionScope": {
         "field": "ExpectedAssignmentRevision",
         "owner": "TeamMember",
@@ -520,7 +531,8 @@
         "responseType": "AdministratorTransitionResponse",
         "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
         "terminalResultType": "Unit"
-      }
+      },
+      "firstOwnerRule": "TenantManagerGuard when team_id == BuiltInRbac.AdministratorsTeamId; otherwise TeamMember (route-determined)"
     },
     {
       "command": "ReinstateMember",
@@ -550,12 +562,13 @@
         },
         {
           "name": "ExpectedMemberRevision",
-          "type": "ulong",
+          "type": "long",
           "required": true
         }
       ],
       "events": [
-        "TenantManagerRestorationAccepted"
+        "TenantManagerRestorationAccepted",
+        "TenantManagerSourceMutationAdmitted"
       ],
       "http": {
         "method": "PUT",
@@ -563,15 +576,17 @@
       },
       "mcp": false,
       "entry": "authorized_existing_scope_http",
-      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedMemberRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation; a first administrators-team assignment registers availability only through TenantManagerRestorationAccepted (register_administrators_assignment) completed after TeamMemberAssigned. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedMemberRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
       "sourceContract": "src/Compliance.Common/Features/AccessControl/ReinstateMember.cs",
       "tests": [
         "exact retry after later lifecycle",
         "changed actor/intent/original revision conflicts",
         "receiver fence versus delayed apply",
-        "unknown append and source authorization recovery"
+        "unknown append and source authorization recovery",
+        "non-administrator suspension racing pending administrator registration for the same episode",
+        "non-administrator team removal never reads the guard"
       ],
-      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "nonAdministratorBranch": "First owner is route-determined, never state-determined: SuspendMember, DeprovisionMember and ReinstateMember always append a guard fact first (TenantManagerWithdrawalAccepted, TenantManagerRestorationAccepted or TenantManagerSourceMutationAdmitted when the member episode has no contribution and no pending transition). AssignTeamMember and RemoveTeamMember append a guard fact first exactly when team_id equals BuiltInRbac.AdministratorsTeamId; for every other team the TeamMember owner is first and the guard is never read. A pending registration or restoration for the same member episode is incompatible with a later withdrawal or neutral mutation: the later guard admission withdraws or fences it, so completion of that registration can never register availability for a suspended, deprovisioned or removed source.",
       "expectedRevisionScope": {
         "field": "ExpectedMemberRevision",
         "owner": "Member",
@@ -582,7 +597,8 @@
         "responseType": "AdministratorTransitionResponse",
         "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
         "terminalResultType": "Unit"
-      }
+      },
+      "firstOwnerRule": "TenantManagerGuard (always)"
     },
     {
       "command": "AssignTeamMember",
@@ -617,12 +633,12 @@
         },
         {
           "name": "ExpectedAssignmentRevision",
-          "type": "ulong",
+          "type": "long",
           "required": true
         },
         {
           "name": "ExpectedAssignmentGeneration",
-          "type": "ulong",
+          "type": "long",
           "required": true
         }
       ],
@@ -635,15 +651,17 @@
       },
       "mcp": false,
       "entry": "authorized_existing_scope_http",
-      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedAssignmentRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation; a first administrators-team assignment registers availability only through TenantManagerRestorationAccepted (register_administrators_assignment) completed after TeamMemberAssigned. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedAssignmentRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
       "sourceContract": "src/Compliance.Common/Features/AccessControl/AssignTeamMember.cs",
       "tests": [
         "exact retry after later lifecycle",
         "changed actor/intent/original revision conflicts",
         "receiver fence versus delayed apply",
-        "unknown append and source authorization recovery"
+        "unknown append and source authorization recovery",
+        "non-administrator suspension racing pending administrator registration for the same episode",
+        "non-administrator team removal never reads the guard"
       ],
-      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "nonAdministratorBranch": "First owner is route-determined, never state-determined: SuspendMember, DeprovisionMember and ReinstateMember always append a guard fact first (TenantManagerWithdrawalAccepted, TenantManagerRestorationAccepted or TenantManagerSourceMutationAdmitted when the member episode has no contribution and no pending transition). AssignTeamMember and RemoveTeamMember append a guard fact first exactly when team_id equals BuiltInRbac.AdministratorsTeamId; for every other team the TeamMember owner is first and the guard is never read. A pending registration or restoration for the same member episode is incompatible with a later withdrawal or neutral mutation: the later guard admission withdraws or fences it, so completion of that registration can never register availability for a suspended, deprovisioned or removed source.",
       "expectedRevisionScope": {
         "field": "ExpectedAssignmentRevision",
         "owner": "TeamMember",
@@ -654,7 +672,8 @@
         "responseType": "AdministratorTransitionResponse",
         "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
         "terminalResultType": "Unit"
-      }
+      },
+      "firstOwnerRule": "TenantManagerGuard when team_id == BuiltInRbac.AdministratorsTeamId; otherwise TeamMember (route-determined)"
     },
     {
       "command": "CancelAccessReviewDecisionBatch",
@@ -1635,7 +1654,7 @@
         },
         {
           "name": "Generation",
-          "type": "ulong",
+          "type": "long",
           "required": true
         },
         {
@@ -1687,7 +1706,7 @@
         },
         {
           "name": "Generation",
-          "type": "ulong",
+          "type": "long",
           "required": true
         },
         {
@@ -1739,7 +1758,7 @@
         },
         {
           "name": "Generation",
-          "type": "ulong",
+          "type": "long",
           "required": true
         },
         {

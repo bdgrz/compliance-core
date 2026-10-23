@@ -1,0 +1,93 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "fixedRules": [
+      "Tenant manager availability requires a registered unsuspended member plus a same-episode built-in Administrators team assignment; at least one eligible administrator must remain. The guard is a compact per-tenant stream of contributions and pending transitions.",
+      "Portia/Fitz per-stream append is atomic with OCC on one stream only; appends to two streams are never atomic. A read of stream A followed by an append to stream B can interleave with another writer's append to A.",
+      "Native acceptance binds (Realm, LogicalId) to the first native fact and freezes the first response; exact retries return it. Realm-wide atomic uniqueness across streams does not exist today and is tracked as prerequisite #1042.",
+      "Operation status/result GET routes are keyed by operation_id alone, without a resource route.",
+      "A durable process record (CAS, lease for workers only) exists per root source fact and reservation keys are acquired in canonical unsigned UTF8 stream-key order with no upgrades.",
+      "AcceptTenantInvitation is a one-time token consumption; the invitee holds only the token link. CompleteIdentityRecovery, also a token consumption, carries no ExpectedRevision.",
+      "Six typed-identity RBAC/operator commands already shipped with ulong ExpectedRevision; every other public expected revision/epoch/version field in the target design is signed long with checked conversion.",
+      "AcknowledgePolicy, RecordTrainingCompletion and ApproveCampaignWaiver carry PersonId; the participant child owner was keyed (campaignId, participantId) in one table and (campaignId, personId) in another."
+    ],
+    "counterexamples": {
+      "guardRace": "Prior design: SuspendMember reads the guard, finds no contribution for M3, and appends MemberSuspended directly to Member. Between that read and the append, AssignTeamMember(administrators, M3) admits on the guard and its eligibility proof observes M3 active. After both complete, the guard counts suspended M3 as an available administrator and lets the last real administrator withdraw.",
+      "acceptanceScope": "Prior statement: all replacement paths stay disabled until realm-wide atomic uniqueness exists. Yet every command's first owner is named by its route, so two concurrent equal intents already collide on one stream's OCC; only a status GET by bare operation_id and a client sending one UUID to two different routes need a cross-stream index.",
+      "tokenRevision": "Requiring ExpectedRevision on AcceptTenantInvitation forces the invitee to perform an authorized GET before consuming a token they received by email; the invitation lifecycle (pending/accepted/expired/canceled) already serializes acceptance.",
+      "processOrdering": "The reactor table listed eight receivers on ServiceEngagementAcceptanceRequested as separate rows; implementing them as independent reactors makes acquisition order depend on delivery order and can deadlock or commit permanent walls before all grants exist."
+    },
+    "adoptedCorrections": {
+      "guard": "First owner is route-determined. SuspendMember/DeprovisionMember/ReinstateMember always append a guard fact first: withdrawal, restoration, or TenantManagerSourceMutationAdmitted (no availability change) when the episode has no contribution and no pending transition. AssignTeamMember/RemoveTeamMember go guard-first exactly when the route team is the administrators team; other teams append to TeamMember directly. A pending registration and a later withdrawal/neutral mutation for one episode serialize on the guard stream.",
+      "acceptance": "Write paths use per-first-owner acceptance on the first owner stream. The realm-wide index (#1042) is required only for status/result routes keyed by operation_id alone and for rejecting one logical ID sent to two routes; those stay disabled until #1042 lands.",
+      "token": "AcceptTenantInvitation carries no ExpectedRevision, matching CompleteIdentityRecovery.",
+      "processes": "A normative processes array lists 29 processes; each is one durable record per root fact that dispatches receivers in stage order and acquires keys from the frozen manifest in canonical order. Shared source-use receivers are listed in every process that dispatches them.",
+      "types": "Administrator transition commands use signed long; the six shipped ulong commands are an explicit validator allowlist exception.",
+      "participantKey": "PolicyCampaignParticipant keyed (campaignId, personId)."
+    }
+  },
+  "questions": {
+    "guard_admission": {
+      "type": "choice",
+      "instructions": "Which protocol closes the guardRace counterexample without making the guard stream a bottleneck for mutations that cannot affect administrator availability?",
+      "criteria": {
+        "route_determined_guard_first": "Suspend/deprovision/reinstate always append a guard fact first (a neutral fact when nothing changes); team assignment/removal is guard-first only for the administrators team; non-administrator team mutations never touch the guard.",
+        "member_stream_eligibility_use": "Registration acquires a source-use grant on the Member stream before completing; suspension checks active grants on Member and conflicts. The guard is read only when a contribution exists.",
+        "read_guard_then_append": "Handler reads the guard to decide whether a contribution exists and appends to Member directly when none does (the prior design).",
+        "single_guard_for_all_member_mutations": "Every member and team mutation in the tenant, administrator or not, appends to the guard first."
+      }
+    },
+    "guard_race_closed": {
+      "type": "noul",
+      "instructions": "Given fixedRules about per-stream atomicity, does the adopted guard correction (`adoptedCorrections.guard`) make it impossible for a suspended, deprovisioned or administrators-team-removed member episode to be counted as an available administrator after a concurrent registration completes?"
+    },
+    "native_acceptance_scope": {
+      "type": "choice",
+      "instructions": "Which scoping of the realm-wide atomic uniqueness prerequisite is correct given that every command's first owner is named by its route?",
+      "criteria": {
+        "per_first_owner_writes_index_for_status": "Write paths rely on per-first-owner acceptance; the realm-wide index is needed only for status/result GETs keyed by bare operation_id and for cross-route duplicate IDs, so only those stay disabled.",
+        "block_all_paths": "All replacement write paths remain disabled until realm-wide atomic uniqueness exists.",
+        "resource_scoped_status_routes": "Change the status/result routes to include the resource route so no realm-wide index is ever needed and #1042 is closed as unnecessary."
+      }
+    },
+    "write_path_sufficiency": {
+      "type": "noul",
+      "instructions": "Is per-first-owner acceptance on the first owner stream sufficient for every write path's retry and conflict guarantees when the first owner is route-determined and no handler reads one stream to choose its append target?"
+    },
+    "token_consumption_revision": {
+      "type": "choice",
+      "instructions": "Should AcceptTenantInvitation require an authored ExpectedRevision?",
+      "criteria": {
+        "no_expected_revision": "No; the token and the invitation lifecycle serialize acceptance, matching CompleteIdentityRecovery.",
+        "required_expected_revision": "Yes; every mutation must carry the owner's expected revision for uniformity.",
+        "optional_expected_revision": "Optional; compare only when supplied."
+      }
+    },
+    "process_ownership": {
+      "type": "choice",
+      "instructions": "How should receiver dispatch order be owned for multi-receiver protocols such as engagement acceptance, bulk decisions and import execution?",
+      "criteria": {
+        "normative_process_record": "One durable process record per root fact owns stage order and canonical key acquisition; receivers are contracts the record dispatches, and shared receivers are listed in each process.",
+        "independent_reactors": "Each receiver is an independent reactor on the source fact; ordering emerges from guards rejecting out-of-order commands and retries.",
+        "single_monolithic_receiver": "Collapse each protocol into one receiver command that performs all acquisitions and appends itself."
+      }
+    },
+    "shipped_unsigned_exception": {
+      "type": "choice",
+      "instructions": "How should the six shipped ulong ExpectedRevision commands be handled relative to the signed-long rule?",
+      "criteria": {
+        "explicit_allowlist_exception": "Keep their shipped ulong, document the exact set, and have the validator allow only that set.",
+        "migrate_to_long_now": "Change the six shipped contracts to long as part of this design pass.",
+        "make_everything_ulong": "Switch the whole design to ulong expected values."
+      }
+    },
+    "participant_key": {
+      "type": "choice",
+      "instructions": "Which stream key is correct for the policy campaign participant child owner?",
+      "criteria": {
+        "campaign_person": "(campaignId, personId): the commands carry PersonId and audience membership is by person.",
+        "campaign_participant_mapping": "(campaignId, participantId) with a separate participant-to-person mapping."
+      }
+    }
+  }
+}
