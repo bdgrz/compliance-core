@@ -29,6 +29,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Spec
         # Design catalogs stay self-consistent and the source tree does not drift from the selected design.
         run: |

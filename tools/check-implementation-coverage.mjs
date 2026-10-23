@@ -230,6 +230,12 @@ for (const process of reactorCatalog.processes) {
     processStatus.set(process.process, allDone && registered ? 'implemented' : anyDone || registered ? 'partial' : 'pending');
     processDetail.set(process.process, statuses.filter(([, s]) => s !== 'implemented').map(([r, s]) => `${r}:${s}`).join(',') + (registered ? '' : ' [definition literal absent]'));
     if (registered && !allDone) fail(`Process ${process.process} is registered but these receivers are incomplete: ${statuses.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ')}`);
+    // A public route ships in the same PR as every receiver of every process rooted at its native facts.
+    const rootCommands = commands.filter(c => c.status !== 'remove' && (c.events ?? []).some(e => process.rootSourceEvents.includes(e)));
+    for (const command of rootCommands) {
+        const exposed = commandStatus.get(command.command) === 'implemented' && ((mappedRoutes.get(command.command) ?? []).length > 0 || mcpTools.has(command.command));
+        if (exposed && !(allDone && registered)) fail(`${command.command} is exposed over HTTP/MCP but ${process.process}, rooted at its facts, is incomplete: ${statuses.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ') || 'definition literal absent'}`);
+    }
 }
 
 // ---------- owners and legacy remnants ----------
