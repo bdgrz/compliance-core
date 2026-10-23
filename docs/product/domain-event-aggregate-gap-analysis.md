@@ -1,5 +1,7 @@
 # Domain event and aggregate gap analysis
 
+Historical analysis dated 2026-10-22. Use the [2026-10-23 aggregate and reactor specification](audits/2026-10-23/README.md) for the current 103-owner, 418-contract inventory and current command/reactor routes.
+
 Analysis date: 2026-10-22. Scope: all backend feature families, accepted product decisions, current C# contracts and aggregate behavior, and the live open GitHub issues. This is an analysis, not implementation acceptance.
 
 The main gaps are missing lifecycle decisions and overly broad owners. Most of the event vocabulary already exists. Adding reducers to every declared event would incorrectly implement superseded workflows, while counting each aggregate class would conceal incomplete commands, migrations, and cross-record decisions.

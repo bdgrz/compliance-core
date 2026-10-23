@@ -1,0 +1,35 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "operation_constraint": {
+      "type": "choice",
+      "choice": "atomic_native_index",
+      "confidence": 0.82,
+      "probabilities": {
+        "atomic_native_index": 0.88,
+        "per_owner_only": 0.12,
+        "receipt_owner": 0.0
+      }
+    },
+    "admission_hole": {
+      "type": "noul",
+      "noul": 0.17
+    },
+    "cancellation_hole": {
+      "type": "noul",
+      "noul": 0.23
+    },
+    "readiness_violation": {
+      "type": "noul",
+      "noul": 0.35
+    },
+    "publication_hole": {
+      "type": "noul",
+      "noul": 0.29
+    }
+  },
+  "usage": {
+    "input_tokens": 966,
+    "output_tokens": 126
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "recovery_acceptance_point": {
+      "type": "choice",
+      "choice": "prepare_protect_accept",
+      "confidence": 0.94,
+      "probabilities": {
+        "prepare_protect_accept": 0.96,
+        "accept_then_protect": 0.03,
+        "revoke_first": 0.01
+      }
+    },
+    "canonical_presence": {
+      "type": "choice",
+      "choice": "canonical_presence_dto",
+      "confidence": 1.0,
+      "probabilities": {
+        "canonical_presence_dto": 1.0,
+        "serialize_public_command": 0.0,
+        "collapse_omit_null": 0.0
+      }
+    },
+    "snapshot_adapter": {
+      "type": "choice",
+      "choice": "global_cut_selector_tokens",
+      "confidence": 1.0,
+      "probabilities": {
+        "global_cut_selector_tokens": 1.0,
+        "realm_cursor_forward": 0.0,
+        "per_row_refresh": 0.0
+      }
+    },
+    "write_response": {
+      "type": "choice",
+      "choice": "fixed_ack_status_query",
+      "confidence": 0.97,
+      "probabilities": {
+        "fixed_ack_status_query": 0.98,
+        "retry_returns_current": 0.02,
+        "retry_new_accepted_time": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 1126,
+    "output_tokens": 197
+  }
+}

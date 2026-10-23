@@ -1,0 +1,29 @@
+{
+  "overrides": [
+    {
+      "currentOwner": "ImportBatch",
+      "targetOwner": "ApplicationImportBatch",
+      "commands": [
+        "StageApplicationImport"
+      ],
+      "facts": [
+        "ApplicationImportStaged",
+        "ApplicationImportCanceled"
+      ],
+      "decision": "Absorb immutable observation into target batch lifecycle; one batch owns staging, correlation, accepted complete plan and execution/publication. Preserve BatchIdFor and original submission attribution. ApplicationImportCanceled has the target batch as its sole writer. No legacy writer or live cross-aggregate batch argument remains.",
+      "readers": "All ImportBatch hydrations in application-import handlers/projections move to target batch or exact immutable observation proof in this owner slice."
+    },
+    {
+      "currentOwner": "EvidenceArtifact",
+      "targetOwner": "ArtifactDownloadGrant",
+      "commands": [
+        "IssueArtifactDownload"
+      ],
+      "facts": [
+        "EvidenceArtifactDownloadIssued"
+      ],
+      "decision": "Keep capture/inspection/availability on EvidenceArtifact; admit and pin current download authority there. Each protected original ticket/result belongs to one immutable ArtifactDownloadGrant keyed by root CommandId. Ticket outcomes/secret bytes stay outside artifact retained state. No new external sending integration.",
+      "readers": "Artifact download history reads native grant facts; current artifact content revision excludes grant/use events."
+    }
+  ]
+}

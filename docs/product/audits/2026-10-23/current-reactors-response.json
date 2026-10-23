@@ -1,0 +1,105 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "00_AcceptedStaffDirectoryReconciliationReactor": {
+      "type": "noul",
+      "noul": 0.42
+    },
+    "01_FirmStaffStatusReevaluationReactor": {
+      "type": "noul",
+      "noul": 0.67
+    },
+    "02_MemberRetirementReactor": {
+      "type": "noul",
+      "noul": 0.36
+    },
+    "03_RetiredMemberGrantReactor": {
+      "type": "noul",
+      "noul": 0.56
+    },
+    "04_RetiredTeamAssignmentReactor": {
+      "type": "noul",
+      "noul": 0.54
+    },
+    "05_RoleCleanupReactor": {
+      "type": "noul",
+      "noul": 0.64
+    },
+    "06_TeamCleanupReactor": {
+      "type": "noul",
+      "noul": 0.53
+    },
+    "07_TenantRbacBootstrapReactor": {
+      "type": "noul",
+      "noul": 0.54
+    },
+    "08_ApplicationImportExecutionReactor": {
+      "type": "noul",
+      "noul": 0.35
+    },
+    "09_LinkImpactReviewWorkReactor": {
+      "type": "noul",
+      "noul": 0.49
+    },
+    "10_SystemDescriptionDecisionReactor": {
+      "type": "noul",
+      "noul": 0.57
+    },
+    "11_ControlEvaluationDeviationFindingReactor": {
+      "type": "noul",
+      "noul": 0.3
+    },
+    "12_EvidenceArtifactInspectionEffectsReactor": {
+      "type": "noul",
+      "noul": 0.49
+    },
+    "13_ControlOccurrenceFindingReactor": {
+      "type": "noul",
+      "noul": 0.32
+    },
+    "14_BoundaryRiskReassessmentReactor": {
+      "type": "noul",
+      "noul": 0.53
+    },
+    "15_RiskMethodReassessmentReactor": {
+      "type": "noul",
+      "noul": 0.41
+    },
+    "16_TenantInvitationDeliveryReactor": {
+      "type": "noul",
+      "noul": 0.67
+    },
+    "17_TenantInvitationReactor": {
+      "type": "noul",
+      "noul": 0.63
+    },
+    "18_TenantRegistrationReactor": {
+      "type": "noul",
+      "noul": 0.6
+    },
+    "19_TenantSelfServiceActivationReactor": {
+      "type": "noul",
+      "noul": 0.68
+    },
+    "20_TenantSlugReactor": {
+      "type": "noul",
+      "noul": 0.42
+    },
+    "21_EmailChallengeDeliveryReactor": {
+      "type": "noul",
+      "noul": 0.62
+    },
+    "22_EmailReservationReactor": {
+      "type": "noul",
+      "noul": 0.52
+    },
+    "23_IdentityRecoveryNoticeReactor": {
+      "type": "noul",
+      "noul": 0.58
+    }
+  },
+  "usage": {
+    "input_tokens": 20113,
+    "output_tokens": 641
+  }
+}

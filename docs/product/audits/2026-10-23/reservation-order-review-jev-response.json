@@ -1,0 +1,19 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "acquisition_source": {
+      "type": "choice",
+      "choice": "root_admission_for_all_temporary_grants",
+      "confidence": 1.0,
+      "probabilities": {
+        "root_admission_for_all_temporary_grants": 1.0,
+        "force_stream_layout": 0.0,
+        "ignore_sort_for_epoch": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 671,
+    "output_tokens": 67
+  }
+}

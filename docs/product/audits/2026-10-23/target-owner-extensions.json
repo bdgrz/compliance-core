@@ -1,0 +1,55 @@
+{
+  "owners": [
+    {
+      "owner": "IdentityRecovery",
+      "identity": "platform / challengeId",
+      "kind": "business",
+      "state": "Immutable both-proof-verified candidate and preparation; complete protection proofs precede accepted exact swap. Preparation can reject/fence; accepted swap completes forward. Exact account, old/replacement identities and actor/proof provenance retained without bearer tokens.",
+      "sourceCommand": "CompleteIdentityRecovery",
+      "events": [
+        "IdentityRecoveryPrepared",
+        "IdentityRecoveryPreparationRejected",
+        "IdentityRecoveryAccepted",
+        "IdentityRecoveryCompleted"
+      ]
+    },
+    {
+      "owner": "AuditPopulationExportProcess",
+      "identity": "tenant / (populationId, version, ExportKey)",
+      "kind": "technical_process",
+      "state": "Immutable approved population manifest, format, exact source proofs, output content ref and attempt state; retention is proof-only input.",
+      "events": []
+    },
+    {
+      "owner": "IdentityRecoveryNoticeProcess",
+      "identity": "platform / challengeId",
+      "kind": "technical_process",
+      "state": "Independent completion notice payload hash/recipient and delivery attempts; does not control completed recovery.",
+      "events": []
+    },
+    {
+      "owner": "WorkforceRosterSnapshotProcess",
+      "identity": "tenant / snapshotId",
+      "kind": "technical_process",
+      "state": "Complete authoritative workforce source cut and immutable roster content; amendments create a new snapshot identity, never rewrite an accepted snapshot.",
+      "events": []
+    },
+    {
+      "owner": "ProgramScopeSnapshotProcess",
+      "identity": "tenant / snapshotId",
+      "kind": "technical_process",
+      "state": "Complete program/boundary source proofs and immutable snapshot/manifest content; regeneration reproduces that exact content and changes no domain decision.",
+      "events": []
+    },
+    {
+      "owner": "ArtifactDownloadGrant",
+      "identity": "tenant / GrantId (= root CommandId)",
+      "kind": "business",
+      "state": "One immutable personally authorized artifact ticket grant and protected original result; no raw ticket in events. Artifact admission pins availability until native grant or canceled receiving fence.",
+      "events": [
+        "EvidenceArtifactDownloadIssued",
+        "ArtifactDownloadGrantCanceled"
+      ]
+    }
+  ]
+}

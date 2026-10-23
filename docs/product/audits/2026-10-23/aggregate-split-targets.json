@@ -1,0 +1,3072 @@
+{
+  "schemaVersion": 1,
+  "generatedAtHead": "b7a2bd02cc90c6734c94391399a55c0da1621521",
+  "targetStatus": "proposed architecture; target roots do not all exist in current source",
+  "splitOwners": [
+    {
+      "currentAggregate": "FirmProfessionalDutyCatalog",
+      "decision": "split",
+      "findingIds": [
+        "ACCESS-04"
+      ],
+      "currentInvariant": "One active signed designation per user+duty+tenant; refresh/revoke must supersede exact assertion with increasing authority revision and stable subject.",
+      "currentEventsEmitted": [
+        "FirmProfessionalDutyDesignationRecorded",
+        "FirmProfessionalDutyDesignationRevoked"
+      ],
+      "currentCommands": [
+        "RecordFirmProfessionalDutyDesignation",
+        "RevokeFirmProfessionalDutyDesignation"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "FirmProfessionalDutyDesignation",
+          "identity": "platform / (canonicalUserId, duty, nullable tenantScope)",
+          "owns": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "FirmProfessionalDutyDesignationRecorded",
+            "FirmProfessionalDutyDesignationRevoked"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "RecordFirmProfessionalDutyDesignation",
+            "RevokeFirmProfessionalDutyDesignation"
+          ]
+        },
+        {
+          "proposedAggregate": "ProfessionalAssertionIdentityClaim",
+          "identity": "platform / assertionId",
+          "owns": "Permanent binding of signed assertion identity to digest, designation, canonical user and duty scope; claim identity cannot be recycled.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [
+            "ProfessionalAssertionIdentityClaimed",
+            "ProfessionalAssertionIdentityClaimReleased"
+          ],
+          "technicalProcessState": [],
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "No firm-wide revision. Keep uniqueness for (tenant,user,duty) authoritative; staff lifecycle is handled by FirmStaffDirectory.",
+      "mustPreserve": "Exact predecessor, monotonically increasing authority revision, stable signed subject, valid staff source proof.",
+      "boundaryTests": [
+        "Concurrent unrelated designations do not conflict.",
+        "Duplicate tuple conflicts.",
+        "Refresh/revoke exact retry and changed predecessor/actor reject."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "RecordFirmProfessionalDutyDesignation",
+          "target": "FirmProfessionalDutyDesignation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RevokeFirmProfessionalDutyDesignation",
+          "target": "FirmProfessionalDutyDesignation",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Signed assertion claims and duty-scope designation"
+    },
+    {
+      "currentAggregate": "FirmStaffDirectory",
+      "decision": "split",
+      "findingIds": [
+        "ACCESS-03"
+      ],
+      "currentInvariant": "Canonical user maps to exactly one immutable staff identity/practice; each staff status changes at its revision.",
+      "currentEventsEmitted": [
+        "FirmStaffChangeRecorded"
+      ],
+      "currentCommands": [
+        "RegisterFirmStaff",
+        "SetFirmStaffStatus"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "FirmStaffRecord",
+          "identity": "platform / staffMemberId",
+          "owns": "Immutable canonical user, practice and registration source, plus one staff record active/status revision.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "FirmStaffChangeRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "RegisterFirmStaff",
+            "SetFirmStaffStatus"
+          ]
+        },
+        {
+          "proposedAggregate": "FirmStaffIdentityClaim",
+          "identity": "platform / canonicalUserId",
+          "owns": "Permanent canonical user to staffMemberId/practice mapping; disable/status changes never release this mapping.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [
+            "FirmStaffIdentityClaimed"
+          ],
+          "technicalProcessState": [],
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "A narrow canonical-user uniqueness claim; no global 1,000-user sequence.",
+      "mustPreserve": "Canonical user maps to exactly one immutable staff/practice identity; status proofs remain versioned and authoritative.",
+      "boundaryTests": [
+        "Concurrent same-user creates: one wins.",
+        "Different users update without sequence contention.",
+        "Status/acceptance ordering tests preserve full source coverage."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "RegisterFirmStaff",
+          "target": "FirmStaffRecord",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "SetFirmStaffStatus",
+          "target": "FirmStaffRecord",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Permanent staff identity mapping"
+    },
+    {
+      "currentAggregate": "IndependenceLedger",
+      "decision": "split",
+      "findingIds": [
+        "ACCESS-02"
+      ],
+      "currentInvariant": "Permanent tenant+person practice exclusivity and acceptance only against exact client service history, reviewed draft, personal acknowledgement and ratified-rule proofs.",
+      "currentEventsEmitted": [
+        "AssignmentIndependenceReevaluated",
+        "ClientIndependenceEvaluated",
+        "DirectoryIndependenceReevaluated",
+        "EngagementManagementAcknowledged",
+        "NonattestServiceRecorded",
+        "PartnerIndependenceEvaluationRecorded",
+        "ServiceEngagementAcceptanceRecorded",
+        "ServiceEngagementAssignmentRevoked",
+        "ServiceEngagementMutationRecorded",
+        "ServiceEngagementStaffAssigned",
+        "ServiceIndependenceReevaluated"
+      ],
+      "currentCommands": [
+        "AcceptServiceEngagement",
+        "AcknowledgeEngagementManagement",
+        "AmendServiceEngagement",
+        "AssignServiceEngagementStaff",
+        "CloseServiceEngagement",
+        "CreateServiceEngagement",
+        "EvaluateClientIndependence",
+        "ProposeServiceEngagementStaff",
+        "RecordDirectoryIndependenceReevaluation",
+        "RecordNonattestService",
+        "RecordPartnerIndependenceEvaluation",
+        "RevokeServiceEngagementActualStaff",
+        "WithdrawServiceEngagementStaffProposal"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "PracticeIndependenceCommitment",
+          "identity": "tenant / (subjectKind, subjectId)",
+          "owns": "Permanent practice binding for subjectKind=staff or canonical_user; acquire both user and staff subjects in canonical stream-key order. No release/revoke command exists.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [
+            "PracticeIndependenceCommitted"
+          ],
+          "technicalProcessState": [],
+          "commands": []
+        },
+        {
+          "proposedAggregate": "ServiceEngagementIndependence",
+          "identity": "tenant / engagementId",
+          "owns": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AssignmentIndependenceReevaluated",
+            "DirectoryIndependenceReevaluated",
+            "ServiceEngagementAcceptanceRecorded",
+            "ServiceEngagementAssignmentRevoked",
+            "ServiceEngagementMutationRecorded",
+            "ServiceEngagementStaffAssigned",
+            "ServiceIndependenceReevaluated"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AcceptServiceEngagement",
+            "AcknowledgeEngagementManagement",
+            "AmendServiceEngagement",
+            "AssignServiceEngagementStaff",
+            "CloseServiceEngagement",
+            "CreateServiceEngagement",
+            "ProposeServiceEngagementStaff",
+            "RecordDirectoryIndependenceReevaluation",
+            "RecordPartnerIndependenceEvaluation",
+            "RevokeServiceEngagementActualStaff",
+            "WithdrawServiceEngagementStaffProposal"
+          ]
+        },
+        {
+          "proposedAggregate": "ClientServiceIndependence",
+          "existingDomainEvents": [
+            "NonattestServiceRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "identity": "tenant / client-service-epoch",
+          "owns": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+          "commands": [
+            "EvaluateClientIndependence",
+            "RecordNonattestService"
+          ]
+        },
+        {
+          "proposedAggregate": "ClientIndependenceDecision",
+          "existingDomainEvents": [
+            "ClientIndependenceEvaluated"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "identity": "tenant / evaluationId",
+          "owns": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance.",
+          "commands": []
+        },
+        {
+          "proposedAggregate": "PartnerIndependenceDecision",
+          "existingDomainEvents": [
+            "PartnerIndependenceEvaluationRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "identity": "tenant / evaluationId",
+          "owns": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
+          "commands": []
+        },
+        {
+          "proposedAggregate": "EngagementManagementAcknowledgement",
+          "existingDomainEvents": [
+            "EngagementManagementAcknowledged"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "identity": "tenant / acknowledgementId",
+          "owns": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Keep the permanent exclusion wall atomic by canonical user and preserve complete service epochs. Split only unrelated draft/evaluation/history.",
+      "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+      "boundaryTests": [
+        "Permanent wall survives all source removals.",
+        "New service epoch invalidates stale acceptance.",
+        "No cross-client global revision contention.",
+        "Status/acceptance event order and replay tests."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "AcceptServiceEngagement",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "AcknowledgeEngagementManagement",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "AmendServiceEngagement",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "AssignServiceEngagementStaff",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CloseServiceEngagement",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CreateServiceEngagement",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "EvaluateClientIndependence",
+          "target": "ClientServiceIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ProposeServiceEngagementStaff",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordDirectoryIndependenceReevaluation",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordNonattestService",
+          "target": "ClientServiceIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordPartnerIndependenceEvaluation",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RevokeServiceEngagementActualStaff",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "WithdrawServiceEngagementStaffProposal",
+          "target": "ServiceEngagementIndependence",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Service epoch and permanent practice commitments"
+    },
+    {
+      "currentAggregate": "AccessPopulation",
+      "decision": "split",
+      "findingIds": [
+        "OPS-07",
+        "OPS-15"
+      ],
+      "currentInvariant": "An accepted population is an immutable, internally valid snapshot; each accepted principal classification has a contiguous decision count and valid identity shape.",
+      "currentEventsEmitted": [
+        "AccessPopulationAccepted",
+        "AccessPopulationFactsRecorded",
+        "AccessPopulationOpened",
+        "AccessPrincipalClassified"
+      ],
+      "currentCommands": [
+        "AcceptAccessPopulation",
+        "ClassifyAccessPrincipal",
+        "OpenAccessPopulation",
+        "RecordAccessPopulationFacts"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "AccessPopulation",
+          "identity": "populationId",
+          "owns": "Immutable accepted population definition, exact system instance and source revision.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AccessPopulationOpened",
+            "AccessPopulationFactsRecorded",
+            "AccessPopulationAccepted"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AcceptAccessPopulation",
+            "OpenAccessPopulation",
+            "RecordAccessPopulationFacts"
+          ]
+        },
+        {
+          "proposedAggregate": "AccessPrincipalClassification",
+          "identity": "tenant / (populationId, providerSubjectId)",
+          "owns": "Independent classification decision history for one accepted principal.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AccessPrincipalClassified"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ClassifyAccessPrincipal"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Population acceptance must seal a complete immutable source snapshot before classifications are admitted.",
+      "mustPreserve": "Classification requires exact accepted population proof and contiguous per-principal decision sequence.",
+      "boundaryTests": [
+        "Classification for two principals has independent OCC.",
+        "Cannot classify before acceptance.",
+        "Changed snapshot or duplicate identity conflicts."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "AcceptAccessPopulation",
+          "target": "AccessPopulation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ClassifyAccessPrincipal",
+          "target": "AccessPrincipalClassification",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "OpenAccessPopulation",
+          "target": "AccessPopulation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAccessPopulationFacts",
+          "target": "AccessPopulation",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Population acceptance and principal classification"
+    },
+    {
+      "currentAggregate": "AccessReviewCampaign",
+      "decision": "split",
+      "findingIds": [
+        "OPS-07",
+        "OPS-11",
+        "OPS-16"
+      ],
+      "currentInvariant": "Completion is admitted only after every frozen review item is decided and each required remediation is verified or covered by a live exception; reviewer and remediation owner stay distinct per item.",
+      "currentEventsEmitted": [
+        "AccessDecisionsRecorded",
+        "AccessRemediationChangeRecorded",
+        "AccessRemediationExceptionRecorded",
+        "AccessRemediationVerified",
+        "AccessReviewCampaignCompleted",
+        "AccessReviewCampaignLaunched",
+        "AccessReviewResponsibilityReassigned"
+      ],
+      "currentCommands": [
+        "CompleteAccessReviewCampaign",
+        "ExemptAccessRemediation",
+        "LaunchAccessReviewCampaign",
+        "ReassignAccessReviewResponsibility",
+        "RecordAccessDecision",
+        "RecordAccessRemediationChange",
+        "RecordBulkAccessDecision",
+        "VerifyAccessRemediation"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "AccessReviewCampaign",
+          "identity": "campaignId",
+          "owns": "Frozen campaign snapshot, generation, and compact completion gate.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AccessReviewCampaignLaunched",
+            "AccessReviewCampaignCompleted"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "CompleteAccessReviewCampaign",
+            "LaunchAccessReviewCampaign",
+            "RecordBulkAccessDecision"
+          ]
+        },
+        {
+          "proposedAggregate": "AccessReviewItem",
+          "identity": "(campaignId, itemId)",
+          "owns": "One reviewer decision, reassignment, remediation verification, exception and history for one frozen item.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AccessDecisionsRecorded",
+            "AccessRemediationChangeRecorded",
+            "AccessRemediationExceptionRecorded",
+            "AccessRemediationVerified",
+            "AccessReviewResponsibilityReassigned"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ExemptAccessRemediation",
+            "ReassignAccessReviewResponsibility",
+            "RecordAccessDecision",
+            "RecordAccessRemediationChange",
+            "VerifyAccessRemediation"
+          ]
+        },
+        {
+          "proposedAggregate": "AccessReviewDecisionBatch",
+          "existingDomainEvents": [],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "identity": "tenant / (campaignId, decisionBatchId)",
+          "owns": "One immutable exact preview/item selection and shared-rationale bulk decision, item reservations and one all-item publication decision. Partial item application stays unpublished.",
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Completion coordinator seals the item generation and accepts exact proofs that every frozen item is decided and required remediation is verified or excepted.",
+      "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.",
+      "boundaryTests": [
+        "Item updates do not contend across unrelated items.",
+        "New item generation blocks stale completion proof.",
+        "Completion rejects missing/changed item proofs.",
+        "Exact retry after later item change."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "CompleteAccessReviewCampaign",
+          "target": "AccessReviewCampaign",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ExemptAccessRemediation",
+          "target": "AccessReviewItem",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "LaunchAccessReviewCampaign",
+          "target": "AccessReviewCampaign",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReassignAccessReviewResponsibility",
+          "target": "AccessReviewItem",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAccessDecision",
+          "target": "AccessReviewItem",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAccessRemediationChange",
+          "target": "AccessReviewItem",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordBulkAccessDecision",
+          "target": "AccessReviewCampaign",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "VerifyAccessRemediation",
+          "target": "AccessReviewItem",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Campaign item and atomic bulk decision"
+    },
+    {
+      "currentAggregate": "AccessReviewSystemLedger",
+      "decision": "split",
+      "findingIds": [
+        "OPS-07",
+        "OPS-11",
+        "OPS-16"
+      ],
+      "currentInvariant": "Each expectation can be independently approved by someone other than its proposer unless exactly waived; an approved successor changes the effective expectation line. Exceptions require an approved expectation and future expiry.",
+      "currentEventsEmitted": [
+        "AccessExpectationApproved",
+        "AccessExpectationExceptionRecorded",
+        "AccessExpectationProposed",
+        "AccessPopulationExceptionRecorded"
+      ],
+      "currentCommands": [
+        "ApproveAccessExpectation",
+        "ExemptAccessExpectation",
+        "ExemptMissingAccessPopulation",
+        "ProposeAccessExpectation"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "AccessExpectation",
+          "identity": "(systemInstanceId, expectationId)",
+          "owns": "One expectation proposal/approval/successor line.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AccessExpectationApproved",
+            "AccessExpectationExceptionRecorded",
+            "AccessExpectationProposed"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ApproveAccessExpectation",
+            "ExemptAccessExpectation",
+            "ProposeAccessExpectation"
+          ]
+        },
+        {
+          "proposedAggregate": "AccessPopulationException",
+          "identity": "(systemInstanceId, exceptionId)",
+          "owns": "One expiring exception or missing-population exception decision.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AccessPopulationExceptionRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ExemptMissingAccessPopulation"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "System-level coverage is a read model; each expectation serializes only its own successor.",
+      "mustPreserve": "Independent proposer/reviewer or exact waiver; exception references approved expectation and future expiry.",
+      "boundaryTests": [
+        "Different expectations accept concurrently.",
+        "Same expectation successor OCC.",
+        "Expired/missing expectation exception rejected."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "ApproveAccessExpectation",
+          "target": "AccessExpectation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ExemptAccessExpectation",
+          "target": "AccessExpectation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ExemptMissingAccessPopulation",
+          "target": "AccessPopulationException",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ProposeAccessExpectation",
+          "target": "AccessExpectation",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Expectation succession and population exceptions"
+    },
+    {
+      "currentAggregate": "AdvisorHandoff",
+      "decision": "split",
+      "findingIds": [
+        "ROOTASSURE-01",
+        "ROOTASSURE-04"
+      ],
+      "currentInvariant": "Feedback admission must occur while this handoff is ready and unrevoked/closed, against an exactly selected source version. Feedback corrections/responses preserve original contribution; selection change makes feedback historical.",
+      "currentEventsEmitted": [
+        "AdvisorFeedbackCorrected",
+        "AdvisorFeedbackRecorded",
+        "AdvisorFeedbackResolved",
+        "AdvisorFeedbackResponded",
+        "AdvisorHandoffClosed",
+        "AdvisorHandoffCreated",
+        "AdvisorHandoffReadiedForReview",
+        "AdvisorHandoffRevoked",
+        "AdvisorHandoffSelectionRevised"
+      ],
+      "currentCommands": [
+        "CloseAdvisorHandoff",
+        "CorrectAdvisorFeedback",
+        "CreateAdvisorHandoff",
+        "MarkAdvisorHandoffReadyForReview",
+        "RecordAdvisorFeedback",
+        "ResolveAdvisorFeedback",
+        "RespondToAdvisorFeedback",
+        "ReviseAdvisorHandoffSelection",
+        "RevokeAdvisorHandoff"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "AdvisorHandoff",
+          "identity": "handoffId",
+          "owns": "Small selection, readiness, revocation/closure and admission-generation authority.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AdvisorHandoffClosed",
+            "AdvisorHandoffCreated",
+            "AdvisorHandoffReadiedForReview",
+            "AdvisorHandoffRevoked",
+            "AdvisorHandoffSelectionRevised"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "CloseAdvisorHandoff",
+            "CreateAdvisorHandoff",
+            "MarkAdvisorHandoffReadyForReview",
+            "RecordAdvisorFeedback",
+            "ReviseAdvisorHandoffSelection",
+            "RevokeAdvisorHandoff"
+          ]
+        },
+        {
+          "proposedAggregate": "AdvisorFeedbackThread",
+          "identity": "(handoffId, feedbackId)",
+          "owns": "Immutable contribution with its correction/response lifecycle.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AdvisorFeedbackCorrected",
+            "AdvisorFeedbackRecorded",
+            "AdvisorFeedbackResolved",
+            "AdvisorFeedbackResponded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "CorrectAdvisorFeedback",
+            "ResolveAdvisorFeedback",
+            "RespondToAdvisorFeedback"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Feedback admission must be fenced against revocation/closure by a durable exact admission proof.",
+      "mustPreserve": "Feedback records exact selected source version and admitted generation; later selection makes it historical.",
+      "boundaryTests": [
+        "Admission-vs-revocation race.",
+        "Correction/response exact retries.",
+        "Revoked old feedback cannot mutate new selection."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "CloseAdvisorHandoff",
+          "target": "AdvisorHandoff",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CorrectAdvisorFeedback",
+          "target": "AdvisorFeedbackThread",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CreateAdvisorHandoff",
+          "target": "AdvisorHandoff",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "MarkAdvisorHandoffReadyForReview",
+          "target": "AdvisorHandoff",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAdvisorFeedback",
+          "target": "AdvisorHandoff",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ResolveAdvisorFeedback",
+          "target": "AdvisorFeedbackThread",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RespondToAdvisorFeedback",
+          "target": "AdvisorFeedbackThread",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseAdvisorHandoffSelection",
+          "target": "AdvisorHandoff",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RevokeAdvisorHandoff",
+          "target": "AdvisorHandoff",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Feedback admission versus handoff revocation"
+    },
+    {
+      "currentAggregate": "ApplicationImportLedger",
+      "decision": "split",
+      "findingIds": [
+        "ROOT-02"
+      ],
+      "currentInvariant": "One source has at most one acceptance in progress; source record identities cannot be rebound, and source acceptance becomes visible only when every sealed target effect is durable at its exact expected revision.",
+      "currentEventsEmitted": [
+        "ApplicationImportCanceled",
+        "ApplicationImportCommitted",
+        "ApplicationImportFailed",
+        "ApplicationImportPlanRowFrozen",
+        "ApplicationImportPlanSealed",
+        "ApplicationImportPlanStarted",
+        "ApplicationImportRetirementProposalSealed",
+        "ApplicationImportRetirementProposalStarted",
+        "ApplicationImportRetirementRowFrozen",
+        "ApplicationImportRowCorrelated"
+      ],
+      "currentCommands": [
+        "AcceptApplicationImport",
+        "CancelApplicationImport",
+        "CorrelateApplicationImportRow",
+        "ExecuteApplicationImport",
+        "FreezeApplicationImportOmissionProposal"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "ApplicationImportSource",
+          "identity": "tenant / (normalizedSourceKey, namespace)",
+          "owns": "One current source admission generation and accepted batch claim. Each batch retains its own immutable publication fact after this source accepts later batches.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [
+            "ApplicationImportSourceAdmissionRecorded"
+          ],
+          "technicalProcessState": [],
+          "commands": []
+        },
+        {
+          "proposedAggregate": "ApplicationImportBatch",
+          "identity": "(tenantId, sourceKey, namespace, batchId)",
+          "owns": "Frozen source rows, row outcomes, per-batch execution and terminal disposition.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ApplicationImportCanceled",
+            "ApplicationImportFailed",
+            "ApplicationImportPlanSealed",
+            "ApplicationImportRetirementProposalSealed",
+            "ApplicationImportRowCorrelated",
+            "ApplicationImportCommitted"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AcceptApplicationImport",
+            "CancelApplicationImport",
+            "CorrelateApplicationImportRow",
+            "ExecuteApplicationImport",
+            "FreezeApplicationImportOmissionProposal"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Canonical-order holds for all target applications. Keep commit as one batch publication gate over every durable target proof; composed reads enforce it.",
+      "mustPreserve": "Freeze complete rows and expected revisions. No partial batch visibility. Target owner replay uses accepted native facts without live coordinator lookup. Staged observation and execution share one ApplicationImportBatch revision; old ImportBatch is a cutover predecessor only.",
+      "boundaryTests": [
+        "Opposite-source target locks cannot deadlock.",
+        "Unknown target append resumes exact batch row.",
+        "Partial target application remains invisible.",
+        "Commit only after every target proof."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [
+        "ApplicationImportPlanRowFrozen",
+        "ApplicationImportPlanStarted",
+        "ApplicationImportRetirementProposalStarted",
+        "ApplicationImportRetirementRowFrozen"
+      ],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "AcceptApplicationImport",
+          "target": "ApplicationImportBatch",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CancelApplicationImport",
+          "target": "ApplicationImportBatch",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CorrelateApplicationImportRow",
+          "target": "ApplicationImportBatch",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ExecuteApplicationImport",
+          "target": "ApplicationImportBatch",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "FreezeApplicationImportOmissionProposal",
+          "target": "ApplicationImportBatch",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Complete batch application and publication",
+      "sourceOwnersAlsoAbsorbed": [
+        "ImportBatch"
+      ]
+    },
+    {
+      "currentAggregate": "DeclaredApplication",
+      "decision": "split",
+      "findingIds": [
+        "ROOT-01",
+        "ROOT-02",
+        "ROOT-04",
+        "ROOT-05"
+      ],
+      "currentInvariant": "An application has immutable creation intent, versioned metadata and retirement eligibility; retirement requires an approved successor for the exact source revision. Import reservation must prevent conflicting local changes until durable settlement.",
+      "currentEventsEmitted": [
+        "ApplicationDeclared",
+        "ApplicationImportEffectPending",
+        "ApplicationRelationshipAdded",
+        "ApplicationRelationshipApproved",
+        "ApplicationRelationshipGovernedRemoved",
+        "ApplicationRelationshipRecorded",
+        "ApplicationRelationshipRemoved",
+        "ApplicationRetired",
+        "ApplicationRevised"
+      ],
+      "currentCommands": [
+        "AddApplicationRelationship",
+        "ApplyApplicationImportEffect",
+        "ApproveApplicationSuccessor",
+        "DeclareApplication",
+        "RecordApplicationRelationship",
+        "RemoveApplicationRelationship",
+        "RemoveGovernedApplicationRelationship",
+        "RetireApplication",
+        "ReviseApplication"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "DeclaredApplication",
+          "identity": "applicationId",
+          "owns": "Application creation, metadata revision, retirement and import admission generation.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ApplicationDeclared",
+            "ApplicationImportEffectPending",
+            "ApplicationRetired",
+            "ApplicationRevised"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ApplyApplicationImportEffect",
+            "DeclareApplication",
+            "RetireApplication",
+            "ReviseApplication"
+          ]
+        },
+        {
+          "proposedAggregate": "ApplicationRelationship",
+          "identity": "relationshipId",
+          "owns": "Independent directed relationship lifecycle and exact tuple claim.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ApplicationRelationshipAdded",
+            "ApplicationRelationshipApproved",
+            "ApplicationRelationshipRemoved"
+          ],
+          "newDomainEvents": [
+            "ApplicationRelationshipIdentityClaimed",
+            "ApplicationRelationshipIdentityReleased"
+          ],
+          "technicalProcessState": [],
+          "commands": [
+            "AddApplicationRelationship",
+            "ApproveApplicationSuccessor",
+            "RemoveApplicationRelationship"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Application retirement/source admission holds fence relationship and import changes; active tuple uniqueness uses authoritative claim.",
+      "mustPreserve": "Retirement requires an approved successor for exact app revision; import holds block incompatible local change.",
+      "boundaryTests": [
+        "Distinct edges update independently.",
+        "Duplicate active tuple rejected atomically.",
+        "Retirement races with relationship/import writes."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [
+        "ApplicationRelationshipRecorded",
+        "ApplicationRelationshipGovernedRemoved"
+      ],
+      "commandMigrationMap": [
+        {
+          "command": "AddApplicationRelationship",
+          "target": "ApplicationRelationship",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ApplyApplicationImportEffect",
+          "target": "DeclaredApplication",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ApproveApplicationSuccessor",
+          "target": "ApplicationRelationship",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "DeclareApplication",
+          "target": "DeclaredApplication",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordApplicationRelationship",
+          "target": "REMOVE",
+          "role": "remove_overlapping_compatibility_path_after_canonical_add_cutover"
+        },
+        {
+          "command": "RemoveApplicationRelationship",
+          "target": "ApplicationRelationship",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RemoveGovernedApplicationRelationship",
+          "target": "REMOVE",
+          "role": "remove_overlapping_compatibility_path_after_canonical_removal_cutover"
+        },
+        {
+          "command": "RetireApplication",
+          "target": "DeclaredApplication",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseApplication",
+          "target": "DeclaredApplication",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Application identity, relationships and import holds"
+    },
+    {
+      "currentAggregate": "AuditPackage",
+      "decision": "split",
+      "findingIds": [
+        "ASSURE-02",
+        "ASSURE-10",
+        "CORE-01"
+      ],
+      "currentInvariant": "A delivery must use exact selected manifest and successful archive, passed/current validation or independent complete overrides, and approval for recipient; delivered version content cannot change.",
+      "currentEventsEmitted": [
+        "AuditPackageAmended",
+        "AuditPackageBuildFailed",
+        "AuditPackageBuildProgressRecorded",
+        "AuditPackageBuildRequested",
+        "AuditPackageBuilt",
+        "AuditPackageCreated",
+        "AuditPackageDelivered",
+        "AuditPackageDisclosureApproved",
+        "AuditPackageValidated",
+        "AuditPackageValidationOverrideApproved"
+      ],
+      "currentCommands": [
+        "AmendAuditPackage",
+        "ApproveAuditPackageDisclosure",
+        "ApproveAuditPackageValidationOverride",
+        "CreateAuditPackage",
+        "RecordAuditPackageBuildResult",
+        "RecordAuditPackageDelivery",
+        "RequestAuditPackageBuild",
+        "ValidateAuditPackage"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "AuditPackageManifest",
+          "identity": "packageId",
+          "owns": "Manifest identity, selected immutable content version and delivery gate.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AuditPackageAmended",
+            "AuditPackageBuildRequested",
+            "AuditPackageBuilt",
+            "AuditPackageCreated",
+            "AuditPackageDisclosureApproved",
+            "AuditPackageValidated",
+            "AuditPackageValidationOverrideApproved"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AmendAuditPackage",
+            "ApproveAuditPackageDisclosure",
+            "ApproveAuditPackageValidationOverride",
+            "CreateAuditPackage",
+            "RecordAuditPackageBuildResult",
+            "RecordAuditPackageDelivery",
+            "RequestAuditPackageBuild",
+            "ValidateAuditPackage"
+          ]
+        },
+        {
+          "proposedAggregate": "AuditPackageBuildProcess",
+          "identity": "(packageId, manifestVersion, buildId)",
+          "owns": "Technical build attempts, validation and archive evidence.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [],
+          "technicalProcessState": [
+            "build attempts, worker leases, cursors, external archive attempt metadata"
+          ],
+          "commands": []
+        },
+        {
+          "proposedAggregate": "AuditPackageDelivery",
+          "identity": "tenant / (packageId, manifestVersion, deliveryId)",
+          "owns": "One delivery authorization and terminal delivery for exact recipient/version.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AuditPackageDelivered"
+          ],
+          "newDomainEvents": [
+            "AuditPackageDeliveryAuthorized"
+          ],
+          "technicalProcessState": [],
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Delivery requires exact manifest/archive/validation/recipient approval proof; manifest content stays immutable after delivery.",
+      "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state.",
+      "boundaryTests": [
+        "Only approved exact archive delivers.",
+        "Different recipients have independent lifecycles.",
+        "Unknown external result reconciles before retry."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [
+        "AuditPackageBuildProgressRecorded",
+        "AuditPackageBuildFailed"
+      ],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "AmendAuditPackage",
+          "target": "AuditPackageManifest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ApproveAuditPackageDisclosure",
+          "target": "AuditPackageManifest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ApproveAuditPackageValidationOverride",
+          "target": "AuditPackageManifest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CreateAuditPackage",
+          "target": "AuditPackageManifest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAuditPackageBuildResult",
+          "target": "AuditPackageManifest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAuditPackageDelivery",
+          "target": "AuditPackageManifest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RequestAuditPackageBuild",
+          "target": "AuditPackageManifest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ValidateAuditPackage",
+          "target": "AuditPackageManifest",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Manifest validation, immutable build and recipient delivery"
+    },
+    {
+      "currentAggregate": "AuditorRequest",
+      "decision": "split",
+      "findingIds": [
+        "ASSURE-03",
+        "ASSURE-09",
+        "ASSURE-10",
+        "ASSURE-11"
+      ],
+      "currentInvariant": "A response must be independently reviewed if required before exact delivery; request resolution requires at least one response and accepted external disposition for every admitted response.",
+      "currentEventsEmitted": [
+        "AuditResponseDraftCreated",
+        "AuditResponseDraftRevised",
+        "AuditorRequestAssigned",
+        "AuditorRequestCommentRecorded",
+        "AuditorRequestRecorded",
+        "AuditorRequestReopened",
+        "AuditorRequestResolved",
+        "AuditorRequestRevised",
+        "AuditorResponseDelivered",
+        "AuditorResponseDisclosureReviewed",
+        "AuditorResponseDispositionRecorded",
+        "AuditorResponseSubmitted",
+        "SampleSelectionRecorded"
+      ],
+      "currentCommands": [
+        "AmendSampleSelection",
+        "AssignAuditorRequest",
+        "CreateAuditResponseDraft",
+        "DeliverAuditResponse",
+        "RecordAuditorRequest",
+        "RecordAuditorRequestComment",
+        "RecordAuditorResponseDisposition",
+        "RecordSampleSelection",
+        "ReopenAuditorRequest",
+        "ResolveAuditorRequest",
+        "ReviewAuditResponse",
+        "ReviseAuditResponseDraft",
+        "ReviseAuditorRequest",
+        "SubmitAuditResponse"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "AuditorRequest",
+          "identity": "requestId",
+          "owns": "Admission seal, response-completeness and final resolution decision.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AuditorRequestAssigned",
+            "AuditorRequestRecorded",
+            "AuditorRequestReopened",
+            "AuditorRequestResolved",
+            "AuditorRequestRevised"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AmendSampleSelection",
+            "AssignAuditorRequest",
+            "CreateAuditResponseDraft",
+            "RecordAuditorRequest",
+            "RecordAuditorRequestComment",
+            "RecordSampleSelection",
+            "ReopenAuditorRequest",
+            "ResolveAuditorRequest",
+            "ReviseAuditorRequest"
+          ]
+        },
+        {
+          "proposedAggregate": "AuditorFeedbackThread",
+          "identity": "(requestId, threadId)",
+          "owns": "Independent comments and responses with stable command identity.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AuditorRequestCommentRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": []
+        },
+        {
+          "proposedAggregate": "AuditorSampleSelection",
+          "identity": "(requestId, selectionId)",
+          "owns": "Independent exact sample selection lifecycle.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "SampleSelectionRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": []
+        },
+        {
+          "proposedAggregate": "AuditorResponse",
+          "identity": "(requestId, responseId)",
+          "owns": "One response draft, independent disclosure review, delivery and exact disposition lifecycle. Response admission and disposition remain linked to the parent request through immutable proofs.",
+          "existingDomainEvents": [
+            "AuditResponseDraftCreated",
+            "AuditResponseDraftRevised",
+            "AuditorResponseDelivered",
+            "AuditorResponseDisclosureReviewed",
+            "AuditorResponseDispositionRecorded",
+            "AuditorResponseSubmitted"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "DeliverAuditResponse",
+            "RecordAuditorResponseDisposition",
+            "ReviewAuditResponse",
+            "ReviseAuditResponseDraft",
+            "SubmitAuditResponse"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Resolution requires a sealed nonempty response selection and accepted disposition for every admitted response.",
+      "mustPreserve": "Admission cannot race resolution; exact response selections and dispositions are immutable proofs.",
+      "boundaryTests": [
+        "Empty selection rejected.",
+        "Admission-vs-seal race.",
+        "Every accepted response disposition required before resolve.",
+        "Response draft edits do not revise the request.",
+        "Request cannot resolve until each admitted response has an accepted external disposition."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "AmendSampleSelection",
+          "target": "AuditorRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "AssignAuditorRequest",
+          "target": "AuditorRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CreateAuditResponseDraft",
+          "target": "AuditorRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "DeliverAuditResponse",
+          "target": "AuditorResponse",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAuditorRequest",
+          "target": "AuditorRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAuditorRequestComment",
+          "target": "AuditorRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAuditorResponseDisposition",
+          "target": "AuditorResponse",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordSampleSelection",
+          "target": "AuditorRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReopenAuditorRequest",
+          "target": "AuditorRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ResolveAuditorRequest",
+          "target": "AuditorRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviewAuditResponse",
+          "target": "AuditorResponse",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseAuditResponseDraft",
+          "target": "AuditorResponse",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseAuditorRequest",
+          "target": "AuditorRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "SubmitAuditResponse",
+          "target": "AuditorResponse",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Response/comment admission and request resolution"
+    },
+    {
+      "currentAggregate": "ControlCriterionMappingLedger",
+      "decision": "split",
+      "findingIds": [
+        "OPS-01",
+        "OPS-11",
+        "OPS-15"
+      ],
+      "currentInvariant": "For a mapping tuple (control, edition, criterion), only one pending proposal and one accepted version exist; acceptance independently reviews and supersedes the previous accepted version.",
+      "currentEventsEmitted": [
+        "ControlCriterionMappingProposed",
+        "ControlCriterionMappingRetired",
+        "ControlCriterionMappingReviewed"
+      ],
+      "currentCommands": [
+        "ProposeControlCriterionMapping",
+        "RetireControlCriterionMapping",
+        "ReviewControlCriterionMapping"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "ControlCriterionMapping",
+          "identity": "(programId, controlId, editionId, criterionId)",
+          "owns": "One mapping tuple proposal and immutable approved successor line.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ControlCriterionMappingProposed",
+            "ControlCriterionMappingRetired",
+            "ControlCriterionMappingReviewed"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ProposeControlCriterionMapping",
+            "RetireControlCriterionMapping",
+            "ReviewControlCriterionMapping"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Program mapping list and coverage are projections, not a shared write lock.",
+      "mustPreserve": "Independent review approves exact pending proposal and supersedes only its predecessor.",
+      "boundaryTests": [
+        "Different tuples do not conflict.",
+        "Same tuple concurrent proposals conflict.",
+        "Review retry compares exact decision."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "ProposeControlCriterionMapping",
+          "target": "ControlCriterionMapping",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RetireControlCriterionMapping",
+          "target": "ControlCriterionMapping",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviewControlCriterionMapping",
+          "target": "ControlCriterionMapping",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Per-tuple mapping succession"
+    },
+    {
+      "currentAggregate": "CriterionApplicabilityLedger",
+      "decision": "split",
+      "findingIds": [
+        "OPS-01",
+        "OPS-11",
+        "OPS-15"
+      ],
+      "currentInvariant": "One edition+criterion applicability line has at most one pending proposal; only independent accepted review makes it not applicable, and withdrawal restores coverage while preserving prior fact.",
+      "currentEventsEmitted": [
+        "CriterionApplicabilityReviewed",
+        "CriterionNotApplicableProposed",
+        "CriterionNotApplicableWithdrawn"
+      ],
+      "currentCommands": [
+        "ProposeCriterionNotApplicable",
+        "ReviewCriterionApplicability",
+        "WithdrawCriterionNotApplicable"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "CriterionApplicability",
+          "identity": "(programId, editionId, criterionId)",
+          "owns": "One applicability decision lineage.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "CriterionApplicabilityReviewed",
+            "CriterionNotApplicableProposed",
+            "CriterionNotApplicableWithdrawn"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ProposeCriterionNotApplicable",
+            "ReviewCriterionApplicability",
+            "WithdrawCriterionNotApplicable"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Program coverage is projection; no cross-criterion reservation.",
+      "mustPreserve": "Only independent accepted review can make a criterion not applicable; withdrawal restores coverage.",
+      "boundaryTests": [
+        "Different criteria update independently.",
+        "Proposal/review/withdraw exact retries.",
+        "Rejected proposals append nothing."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "ProposeCriterionNotApplicable",
+          "target": "CriterionApplicability",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviewCriterionApplicability",
+          "target": "CriterionApplicability",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "WithdrawCriterionNotApplicable",
+          "target": "CriterionApplicability",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Per-criterion applicability line"
+    },
+    {
+      "currentAggregate": "CriteriaTextOverlayLedger",
+      "decision": "split",
+      "findingIds": [
+        "OPS-05"
+      ],
+      "currentInvariant": "One supplied text/license entry can change only from its exact previous revision; one request identity cannot establish two different overlay intents.",
+      "currentEventsEmitted": [
+        "CriteriaTextOverlayEntryRevised"
+      ],
+      "currentCommands": [
+        "SetCriteriaTextOverlay"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "CriteriaTextOverlay",
+          "identity": "(editionId, normalizedCriterionId)",
+          "owns": "One licensed text overlay and sequential revision line.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "CriteriaTextOverlayEntryRevised"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "SetCriteriaTextOverlay"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Catalog enumeration is read-side projection; key ownership remains authoritative per identifier.",
+      "mustPreserve": "Exact prior revision and one request identity/intent; license/source proof validated per overlay.",
+      "boundaryTests": [
+        "Different identifiers update independently.",
+        "Changed intent on same command key conflicts.",
+        "License and size bounds at max text."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "SetCriteriaTextOverlay",
+          "target": "CriteriaTextOverlay",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Per-criterion overlay revision"
+    },
+    {
+      "currentAggregate": "ControlEvaluationLedger",
+      "decision": "split",
+      "findingIds": [
+        "OPS-02",
+        "OPS-11",
+        "OPS-15",
+        "OPS-16"
+      ],
+      "currentInvariant": "Within one evaluation round: freeze exact procedure/control version, accept only coherent assertion conclusions, require minor deviation disposition, and independently review submitted work; material deviations require a retest lineage.",
+      "currentEventsEmitted": [
+        "ControlEvaluationDeviationDisposed",
+        "ControlEvaluationReviewed",
+        "ControlEvaluationStarted",
+        "ControlEvaluationStepRecorded",
+        "ControlEvaluationSubmitted"
+      ],
+      "currentCommands": [
+        "DisposeControlEvaluationDeviation",
+        "RecordControlEvaluationStep",
+        "ReviewControlEvaluation",
+        "StartControlEvaluation",
+        "SubmitControlEvaluation"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "ControlEvaluation",
+          "identity": "tenant / evaluationId",
+          "owns": "One evaluation including steps, conclusions, review and deviation dispositions. A retest is a new evaluationId using this same type and an immutable predecessor evaluation/version proof.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ControlEvaluationDeviationDisposed",
+            "ControlEvaluationReviewed",
+            "ControlEvaluationStarted",
+            "ControlEvaluationStepRecorded",
+            "ControlEvaluationSubmitted"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "DisposeControlEvaluationDeviation",
+            "RecordControlEvaluationStep",
+            "ReviewControlEvaluation",
+            "StartControlEvaluation",
+            "SubmitControlEvaluation"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Keep all assertions needed for one round\u2019s conclusion atomic; a separate evaluation cannot share a program revision.",
+      "mustPreserve": "Material deviation source proof, immutable procedure version, reviewer independence, and explicit minor-deviation disposition.",
+      "boundaryTests": [
+        "Different evaluations update concurrently.",
+        "Incomplete assertion set cannot submit.",
+        "Retest binds exact prior result and cannot duplicate."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "DisposeControlEvaluationDeviation",
+          "target": "ControlEvaluation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordControlEvaluationStep",
+          "target": "ControlEvaluation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviewControlEvaluation",
+          "target": "ControlEvaluation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "StartControlEvaluation",
+          "target": "ControlEvaluation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "SubmitControlEvaluation",
+          "target": "ControlEvaluation",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Independent evaluation and retest"
+    },
+    {
+      "currentAggregate": "EvidenceRequestLedger",
+      "decision": "split",
+      "findingIds": [
+        "ASSURE-01",
+        "ASSURE-11"
+      ],
+      "currentInvariant": "Each evidence request has exactly one final transition from open to fulfilled or cancelled; no named rule spans requests.",
+      "currentEventsEmitted": [
+        "EvidenceRequestCancelled",
+        "EvidenceRequestFulfilled",
+        "EvidenceRequestOpened"
+      ],
+      "currentCommands": [
+        "CancelEvidenceRequest",
+        "FulfilEvidenceRequest",
+        "OpenEvidenceRequest"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "EvidenceRequest",
+          "identity": "requestId",
+          "owns": "One open-to-fulfilled/cancelled lifecycle.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "EvidenceRequestCancelled",
+            "EvidenceRequestFulfilled",
+            "EvidenceRequestOpened"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "CancelEvidenceRequest",
+            "FulfilEvidenceRequest",
+            "OpenEvidenceRequest"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Program request listing is projection.",
+      "mustPreserve": "Exactly one terminal transition; require exact source/delivery proof as appropriate.",
+      "boundaryTests": [
+        "Two requests update independently.",
+        "Terminal state cannot reverse.",
+        "Exact terminal retry no append."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "CancelEvidenceRequest",
+          "target": "EvidenceRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "FulfilEvidenceRequest",
+          "target": "EvidenceRequest",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "OpenEvidenceRequest",
+          "target": "EvidenceRequest",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Independent evidence fulfilment"
+    },
+    {
+      "currentAggregate": "ControlOperationsLedger",
+      "decision": "split",
+      "findingIds": [
+        "OPS-03",
+        "OPS-11",
+        "OPS-15",
+        "OPS-16"
+      ],
+      "currentInvariant": "One control operating-plan line has independently approved non-overlapping effective versions; one occurrence can be attested/corrected and independently reviewed against its exact frozen plan and evidence requirements. Plan approval reassigns every open/returned occurrence to the approved owner.",
+      "currentEventsEmitted": [
+        "ControlOccurrenceAttested",
+        "ControlOccurrenceOpened",
+        "ControlOccurrenceReviewed",
+        "ControlOperatingPlanApproved",
+        "ControlOperatingPlanProposed"
+      ],
+      "currentCommands": [
+        "ApproveControlOperatingPlan",
+        "AttestControlOccurrence",
+        "CorrectControlAttestation",
+        "OpenControlOccurrence",
+        "ProposeControlOperatingPlan",
+        "ReviewControlOccurrence"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "ControlOperatingPlan",
+          "identity": "(tenantId, programId, controlId)",
+          "owns": "One independently approved, non-overlapping plan version line for a control.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ControlOperatingPlanApproved",
+            "ControlOperatingPlanProposed"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ApproveControlOperatingPlan",
+            "ProposeControlOperatingPlan"
+          ]
+        },
+        {
+          "proposedAggregate": "ControlOccurrence",
+          "identity": "(controlId, businessWindow)",
+          "owns": "One planned/attested/corrected/reviewed occurrence for a control performance window.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ControlOccurrenceAttested",
+            "ControlOccurrenceOpened",
+            "ControlOccurrenceReviewed"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AttestControlOccurrence",
+            "CorrectControlAttestation",
+            "OpenControlOccurrence",
+            "ReviewControlOccurrence"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Plan approval must fence and recoverably reassign every open/returned occurrence to the approved owner. Occurrence materialization has deterministic identity and complete coverage proof.",
+      "mustPreserve": "Occurrence facts bind exact frozen plan and evidence requirements; one business window has one identity across all generators.",
+      "boundaryTests": [
+        "Non-overlap plan ranges.",
+        "Materialize same occurrence from two generators once.",
+        "Reassignment unknown outcome recovery.",
+        "Close requires full occurrence coverage."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "ApproveControlOperatingPlan",
+          "target": "ControlOperatingPlan",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "AttestControlOccurrence",
+          "target": "ControlOccurrence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CorrectControlAttestation",
+          "target": "ControlOccurrence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "OpenControlOccurrence",
+          "target": "ControlOccurrence",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ProposeControlOperatingPlan",
+          "target": "ControlOperatingPlan",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviewControlOccurrence",
+          "target": "ControlOccurrence",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Operating plan and business-window occurrence"
+    },
+    {
+      "currentAggregate": "PolicyDistributionCampaign",
+      "decision": "split",
+      "findingIds": [
+        "OPS-07",
+        "OPS-16"
+      ],
+      "currentInvariant": "One campaign freezes exact material and launch audience; results must name that version/hash/text and a currently included person, and closure freezes totals and rejects later results.",
+      "currentEventsEmitted": [
+        "CampaignWaiverApproved",
+        "PolicyAcknowledgementRecorded",
+        "PolicyCampaignAudienceAmended",
+        "PolicyCampaignAudienceFrozen",
+        "PolicyCampaignClosed",
+        "PolicyCampaignLaunched",
+        "TrainingCompletionRecorded"
+      ],
+      "currentCommands": [
+        "AcknowledgePolicy",
+        "ApproveCampaignWaiver",
+        "CloseCampaign",
+        "LaunchPolicyCampaign",
+        "LaunchTrainingCampaign",
+        "ReconcileCampaignAudience",
+        "RecordTrainingCompletion"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "PolicyDistributionCampaign",
+          "identity": "campaignId",
+          "owns": "Immutable policy/material version and frozen audience plus closure generation.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "PolicyCampaignAudienceAmended",
+            "PolicyCampaignAudienceFrozen",
+            "PolicyCampaignClosed",
+            "PolicyCampaignLaunched"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AcknowledgePolicy",
+            "ApproveCampaignWaiver",
+            "CloseCampaign",
+            "LaunchPolicyCampaign",
+            "LaunchTrainingCampaign",
+            "ReconcileCampaignAudience",
+            "RecordTrainingCompletion"
+          ]
+        },
+        {
+          "proposedAggregate": "PolicyCampaignParticipant",
+          "identity": "(campaignId, participantId)",
+          "owns": "Independent acknowledgement, completion, exception and delivery status.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "CampaignWaiverApproved",
+            "PolicyAcknowledgementRecorded",
+            "TrainingCompletionRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Campaign owns audience seal/closure barrier; participant outcomes can be separate per person.",
+      "mustPreserve": "Every result binds the accepted campaign version/hash and included participant; after close, no result accepted.",
+      "boundaryTests": [
+        "Different participants update concurrently.",
+        "Audience edit races launch seal.",
+        "Late result after closure rejected."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "AcknowledgePolicy",
+          "target": "PolicyDistributionCampaign",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ApproveCampaignWaiver",
+          "target": "PolicyDistributionCampaign",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CloseCampaign",
+          "target": "PolicyDistributionCampaign",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "LaunchPolicyCampaign",
+          "target": "PolicyDistributionCampaign",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "LaunchTrainingCampaign",
+          "target": "PolicyDistributionCampaign",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReconcileCampaignAudience",
+          "target": "PolicyDistributionCampaign",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordTrainingCompletion",
+          "target": "PolicyDistributionCampaign",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Participant admission and campaign closure"
+    },
+    {
+      "currentAggregate": "TrainingCatalog",
+      "decision": "split",
+      "findingIds": [
+        "OPS-05",
+        "OPS-15"
+      ],
+      "currentInvariant": "A normalized training identifier owns one creation intent and a sequential immutable version line with valid audience and delivery source.",
+      "currentEventsEmitted": [
+        "TrainingRequirementDefined"
+      ],
+      "currentCommands": [
+        "DefineTrainingRequirement",
+        "ReviseTrainingRequirement"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "TrainingRequirement",
+          "identity": "(tenantId, programId, normalizedRequirementId)",
+          "owns": "One normalized training requirement creation and version line.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "TrainingRequirementDefined"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "DefineTrainingRequirement",
+            "ReviseTrainingRequirement"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Program catalog is a projection.",
+      "mustPreserve": "Original creation identity remains recognizable after revisions; each revision uses expected version and valid audience/source.",
+      "boundaryTests": [
+        "Different requirements do not conflict.",
+        "Changed create retry after later revision returns original result.",
+        "Invalid audience/source does not append."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "DefineTrainingRequirement",
+          "target": "TrainingRequirement",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseTrainingRequirement",
+          "target": "TrainingRequirement",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Independent training requirement"
+    },
+    {
+      "currentAggregate": "ProviderAssuranceRegister",
+      "decision": "split",
+      "findingIds": [
+        "ROOTTECH-03",
+        "ROOTTECH-04"
+      ],
+      "currentInvariant": "Each report preserves provider identity/revision; personal review binds exact same-provider evidence kind/current report revision and valid period/currency/cadence; each gap closes once only on newer/different source, and accepted-risk adoption cannot close gap or occur after closure.",
+      "currentEventsEmitted": [
+        "AssuranceReportRecorded",
+        "AssuranceReportRevised",
+        "ProviderCoverageGapClosed",
+        "ProviderCoverageGapRecorded",
+        "ProviderCoverageGapRiskAcceptanceLinked",
+        "ProviderReviewRecorded"
+      ],
+      "currentCommands": [
+        "CloseProviderCoverageGap",
+        "LinkProviderCoverageGapRiskAcceptance",
+        "RecordAssuranceReport",
+        "RecordProviderCoverageGap",
+        "RecordProviderReview",
+        "ReviseAssuranceReport"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "ProviderAssuranceReport",
+          "identity": "(tenantId, providerId, reportId)",
+          "owns": "Evidence report for one provider and exact provider revision.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "AssuranceReportRecorded",
+            "AssuranceReportRevised"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "RecordAssuranceReport",
+            "ReviseAssuranceReport"
+          ]
+        },
+        {
+          "proposedAggregate": "ProviderAssuranceReview",
+          "identity": "tenant / reviewId",
+          "owns": "One immutable personal same-provider due-diligence review bound to exact report revision, evidence kind, validity window and cadence.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ProviderReviewRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "RecordProviderReview"
+          ]
+        },
+        {
+          "proposedAggregate": "ProviderAssuranceGap",
+          "identity": "(tenantId, providerId, gapId)",
+          "owns": "One current assurance gap with exact source-version and closure lineage.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ProviderCoverageGapClosed",
+            "ProviderCoverageGapRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "CloseProviderCoverageGap",
+            "LinkProviderCoverageGapRiskAcceptance",
+            "RecordProviderCoverageGap"
+          ]
+        },
+        {
+          "proposedAggregate": "ProviderRiskAcceptance",
+          "identity": "tenant / linkId (equal to the admitting CommandId)",
+          "owns": "One immutable accepted-risk linkage admitted on an open provider gap; source gap serializes duplicate tuple and closure. Never owns gap closure.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ProviderCoverageGapRiskAcceptanceLinked"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "No tenant-wide provider history stream; source report currentness and open-gap admission are exact owner proofs.",
+      "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
+      "boundaryTests": [
+        "Independent provider/report updates.",
+        "Stale report review rejected.",
+        "Gap only closes on newer/different source."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "CloseProviderCoverageGap",
+          "target": "ProviderAssuranceGap",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "LinkProviderCoverageGapRiskAcceptance",
+          "target": "ProviderAssuranceGap",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordAssuranceReport",
+          "target": "ProviderAssuranceReport",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordProviderCoverageGap",
+          "target": "ProviderAssuranceGap",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordProviderReview",
+          "target": "ProviderAssuranceReview",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseAssuranceReport",
+          "target": "ProviderAssuranceReport",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Independent assurance facts and exact source proofs"
+    },
+    {
+      "currentAggregate": "ProviderRegister",
+      "decision": "split",
+      "findingIds": [
+        "ROOTTECH-01"
+      ],
+      "currentInvariant": "A governed provider name is unique within tenant; each stable provider identity has coherent attributed content and immutable logical request intent with revision concurrency.",
+      "currentEventsEmitted": [
+        "ProviderRecorded",
+        "ProviderRevised"
+      ],
+      "currentCommands": [
+        "RecordProvider",
+        "ReviseProvider"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "Provider",
+          "identity": "providerId",
+          "owns": "One provider content, version and retirement lifecycle.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ProviderRecorded",
+            "ProviderRevised"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "RecordProvider",
+            "ReviseProvider"
+          ]
+        },
+        {
+          "proposedAggregate": "ProviderNameClaim",
+          "identity": "(tenantId, normalizedGovernedName)",
+          "owns": "Authoritative unique active name reservation.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [
+            "ProviderNameClaimed",
+            "ProviderNameReleased"
+          ],
+          "technicalProcessState": [],
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Name claim and provider change are coordinated in canonical order; tenant listing is projection.",
+      "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant.",
+      "boundaryTests": [
+        "Two providers race same name.",
+        "Unrelated provider edits do not contend.",
+        "Rename/retire/reuse name exact replay."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "RecordProvider",
+          "target": "Provider",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseProvider",
+          "target": "Provider",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Name claims and record lifecycle"
+    },
+    {
+      "currentAggregate": "ReadinessLedger",
+      "decision": "split",
+      "findingIds": [
+        "OPS-08",
+        "OPS-11",
+        "OPS-16"
+      ],
+      "currentInvariant": "Management decides only latest immutable assessment, proceed requires every gap planned; Type I entry can be approved once per program, on latest current-rule assessment after proceed with every exception acknowledged/planned.",
+      "currentEventsEmitted": [
+        "ReadinessAssessmentRecorded",
+        "ReadinessDecisionRecorded",
+        "ReadinessGapAnnotated",
+        "ReadinessGapPlanned",
+        "TypeIEntryDecisionRecorded"
+      ],
+      "currentCommands": [
+        "AnnotateReadinessGap",
+        "DecideReadiness",
+        "DecideTypeIEntry",
+        "PlanReadinessGap",
+        "RunReadinessAssessment"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "ReadinessAssessment",
+          "identity": "assessmentId",
+          "owns": "One immutable assessment source/rule revision and findings.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ReadinessAssessmentRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": []
+        },
+        {
+          "proposedAggregate": "ReadinessGapPlan",
+          "identity": "tenant / (programId, gapId)",
+          "owns": "One stable gap action/owner/date plan and independent annotations; admission/seal generation fences changes during a readiness decision.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ReadinessGapAnnotated",
+            "ReadinessGapPlanned"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AnnotateReadinessGap",
+            "PlanReadinessGap"
+          ]
+        },
+        {
+          "proposedAggregate": "ProgramReadiness",
+          "existingDomainEvents": [
+            "ReadinessDecisionRecorded",
+            "TypeIEntryDecisionRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "identity": "tenant / programId",
+          "owns": "Compact latest-assessment pointer, decision admission/seal generation, latest management decision and permanent approved Type I entry pointer. Serialize latest-assessment adoption with decision append; keep full assessment/decision content in immutable manifests. Run admission precedes child computation and reserves exactly one pending latest-adoption generation.",
+          "commands": [
+            "DecideReadiness",
+            "DecideTypeIEntry",
+            "RunReadinessAssessment"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Small program coordinator seals exact latest assessment and all gap-plan proofs before proceed/entry.",
+      "mustPreserve": "No projected latest assessment or gap list can authorize entry; all exceptions/required plans acknowledged.",
+      "boundaryTests": [
+        "Gap plans update independently.",
+        "Stale assessment generation cannot enter.",
+        "Concurrent gap update races sealing."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "AnnotateReadinessGap",
+          "target": "ReadinessGapPlan",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "DecideReadiness",
+          "target": "ProgramReadiness",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "DecideTypeIEntry",
+          "target": "ProgramReadiness",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "PlanReadinessGap",
+          "target": "ReadinessGapPlan",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RunReadinessAssessment",
+          "target": "ProgramReadiness",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Latest readiness and gap-plan decision seal"
+    },
+    {
+      "currentAggregate": "FindingAggregate",
+      "decision": "split",
+      "findingIds": [
+        "OPS-06",
+        "OPS-11",
+        "OPS-12"
+      ],
+      "currentInvariant": "A finding closes only when at least one corrective action exists, every action is completed, evidence and rationales exist, and the closer is independent of finding/action owners and completers unless exactly waived; closed finding is immutable until reopened.",
+      "currentEventsEmitted": [
+        "CorrectiveActionAddedV2",
+        "CorrectiveActionCompletedV2",
+        "FindingAcceptanceLinkedV2",
+        "FindingClosedV2",
+        "FindingHistoryEventImported",
+        "FindingRaisedV2",
+        "FindingReopenedV2",
+        "FindingRevisedV2"
+      ],
+      "currentCommands": [
+        "AddCorrectiveAction",
+        "CloseFinding",
+        "CompleteCorrectiveAction",
+        "LinkFindingAcceptance",
+        "MigrateFindingHistory",
+        "RaiseFinding",
+        "RaiseOccurrenceFinding",
+        "ReopenFinding",
+        "ReviseFinding"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "FindingAggregate",
+          "identity": "(tenantId, programId, findingId)",
+          "owns": "Finding description, status and closure admission generation.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "FindingAcceptanceLinkedV2",
+            "FindingClosedV2",
+            "FindingRaisedV2",
+            "FindingReopenedV2",
+            "FindingRevisedV2"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AddCorrectiveAction",
+            "CloseFinding",
+            "LinkFindingAcceptance",
+            "RaiseFinding",
+            "RaiseOccurrenceFinding",
+            "ReopenFinding",
+            "ReviseFinding"
+          ]
+        },
+        {
+          "proposedAggregate": "CorrectiveAction",
+          "identity": "(findingId, actionId)",
+          "owns": "Independent corrective-action lifecycle, evidence and completion proof.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "CorrectiveActionAddedV2",
+            "CorrectiveActionCompletedV2"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "CompleteCorrectiveAction"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Closure owner seals the action generation and verifies every exact completion/evidence proof before closing.",
+      "mustPreserve": "Close only with at least one action, all complete, evidence/rationale present and independent closer unless exact waiver. Closed finding is immutable until reopen.",
+      "boundaryTests": [
+        "Many actions without arbitrary cap.",
+        "Concurrent action add vs close.",
+        "Closure waits for all proofs.",
+        "Reopen then exact old close retry cannot close new generation."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [
+        "FindingHistoryEventImported"
+      ],
+      "commandMigrationMap": [
+        {
+          "command": "AddCorrectiveAction",
+          "target": "FindingAggregate",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CloseFinding",
+          "target": "FindingAggregate",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CompleteCorrectiveAction",
+          "target": "CorrectiveAction",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "LinkFindingAcceptance",
+          "target": "FindingAggregate",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "MigrateFindingHistory",
+          "target": "REMOVE",
+          "role": "remove_after_disposable_history_cutover"
+        },
+        {
+          "command": "RaiseFinding",
+          "target": "FindingAggregate",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RaiseOccurrenceFinding",
+          "target": "FindingAggregate",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReopenFinding",
+          "target": "FindingAggregate",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseFinding",
+          "target": "FindingAggregate",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Action admission and finding closure"
+    },
+    {
+      "currentAggregate": "ArtifactRetention",
+      "decision": "split",
+      "findingIds": [
+        "ASSURE-12"
+      ],
+      "currentInvariant": "One exact content identity has one supported seven-year retention basis; each legal hold may release once after placement. No disposal is authorized here.",
+      "currentEventsEmitted": [
+        "ArtifactLegalHoldPlaced",
+        "ArtifactLegalHoldReleased",
+        "ArtifactRetentionBasisRecorded",
+        "ArtifactRetentionBound"
+      ],
+      "currentCommands": [
+        "GenerateAuditPopulationExport",
+        "PlaceArtifactLegalHold",
+        "RecordArtifactRetentionBasis",
+        "ReleaseArtifactLegalHold"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "ArtifactRetentionBasis",
+          "identity": "artifactContentId",
+          "owns": "One supported retention basis for exact content identity.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ArtifactRetentionBasisRecorded",
+            "ArtifactRetentionBound"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "RecordArtifactRetentionBasis"
+          ]
+        },
+        {
+          "proposedAggregate": "ArtifactLegalHold",
+          "identity": "holdId",
+          "owns": "One legal hold lifecycle and one exact release after placement.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "ArtifactLegalHoldPlaced",
+            "ArtifactLegalHoldReleased"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "PlaceArtifactLegalHold",
+            "ReleaseArtifactLegalHold"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Disposal gate composes authoritative active holds/reliance; keep fail-closed and exact source proofs.",
+      "mustPreserve": "Retention is not itself disposal authority; no release by timeout or missing read.",
+      "boundaryTests": [
+        "Distinct holds independent.",
+        "Unknown hold append recovery.",
+        "Cannot dispose with active hold/reliance."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "GenerateAuditPopulationExport",
+          "target": "AuditPopulationExportProcess",
+          "role": "technical_export; retention is proof-only dependency"
+        },
+        {
+          "command": "PlaceArtifactLegalHold",
+          "target": "ArtifactLegalHold",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordArtifactRetentionBasis",
+          "target": "ArtifactRetentionBasis",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReleaseArtifactLegalHold",
+          "target": "ArtifactLegalHold",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Retention basis and authoritative legal-hold barrier"
+    },
+    {
+      "currentAggregate": "RiskGovernanceLedger",
+      "decision": "split",
+      "findingIds": [
+        "OPS-04",
+        "OPS-11",
+        "OPS-15",
+        "OPS-16"
+      ],
+      "currentInvariant": "Within each risk/control tuple, one pending treatment assertion and one accepted version per control; independent review controls acceptance. Within one treatment action, only unfinished work can edit/cancel and completion needs current fulfilled evidence plus independent review.",
+      "currentEventsEmitted": [
+        "RiskControlTreatmentProposed",
+        "RiskControlTreatmentRetired",
+        "RiskControlTreatmentReviewed",
+        "RiskOwnerAssigned",
+        "RiskReassessmentTriggered",
+        "RiskTreatmentActionAdded",
+        "RiskTreatmentActionCancelled",
+        "RiskTreatmentActionCompletionReviewed",
+        "RiskTreatmentActionCompletionSubmitted",
+        "RiskTreatmentActionRevised"
+      ],
+      "currentCommands": [
+        "AddRiskTreatmentAction",
+        "AssignRiskOwner",
+        "CancelRiskTreatmentAction",
+        "ProposeRiskControlTreatment",
+        "RaiseRiskReassessmentTriggers",
+        "RetireRiskControlTreatment",
+        "ReviewRiskControlTreatment",
+        "ReviewRiskTreatmentActionCompletion",
+        "ReviseRiskTreatmentAction",
+        "SubmitRiskTreatmentActionCompletion"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "RiskGovernance",
+          "identity": "riskId",
+          "owns": "One risk\u2019s governance and reassessment obligations.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "RiskOwnerAssigned",
+            "RiskReassessmentTriggered"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AssignRiskOwner",
+            "RaiseRiskReassessmentTriggers"
+          ]
+        },
+        {
+          "proposedAggregate": "RiskTreatmentAssertion",
+          "identity": "(riskId, controlId)",
+          "owns": "One pending/accepted assertion line per risk/control.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "RiskControlTreatmentProposed",
+            "RiskControlTreatmentRetired",
+            "RiskControlTreatmentReviewed"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ProposeRiskControlTreatment",
+            "RetireRiskControlTreatment",
+            "ReviewRiskControlTreatment"
+          ]
+        },
+        {
+          "proposedAggregate": "RiskTreatmentAction",
+          "identity": "actionId",
+          "owns": "One accountable action, completion and independent review lifecycle.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "RiskTreatmentActionAdded",
+            "RiskTreatmentActionCancelled",
+            "RiskTreatmentActionCompletionReviewed",
+            "RiskTreatmentActionCompletionSubmitted",
+            "RiskTreatmentActionRevised"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AddRiskTreatmentAction",
+            "CancelRiskTreatmentAction",
+            "ReviewRiskTreatmentActionCompletion",
+            "ReviseRiskTreatmentAction",
+            "SubmitRiskTreatmentActionCompletion"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "No cross-risk shared revision; preserve exact accepted-per-control supersession and current proof before action completion.",
+      "mustPreserve": "Assessment belongs to RiskEvaluation; risk governance consumes exact risk/source proofs, no live aggregate authority.",
+      "boundaryTests": [
+        "Different risks update independently.",
+        "Same risk/control concurrency.",
+        "Action completion needs current fulfilled evidence and independent review."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "AddRiskTreatmentAction",
+          "target": "RiskTreatmentAction",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "AssignRiskOwner",
+          "target": "RiskGovernance",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CancelRiskTreatmentAction",
+          "target": "RiskTreatmentAction",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ProposeRiskControlTreatment",
+          "target": "RiskTreatmentAssertion",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RaiseRiskReassessmentTriggers",
+          "target": "RiskGovernance",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RetireRiskControlTreatment",
+          "target": "RiskTreatmentAssertion",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviewRiskControlTreatment",
+          "target": "RiskTreatmentAssertion",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviewRiskTreatmentActionCompletion",
+          "target": "RiskTreatmentAction",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseRiskTreatmentAction",
+          "target": "RiskTreatmentAction",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "SubmitRiskTreatmentActionCompletion",
+          "target": "RiskTreatmentAction",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Risk ownership, treatment lines and actions"
+    },
+    {
+      "currentAggregate": "SystemDescription",
+      "decision": "split",
+      "findingIds": [
+        "ROOTACCESS-03",
+        "ROOTACCESS-04",
+        "ROOTACCESS-05"
+      ],
+      "currentInvariant": "Exact immutable narrative version may be approved only after independent review, all required sections complete/justified, exact current sources, all TypeII change dispositions and frozen close snapshot; approved content/snapshot binding cannot be changed.",
+      "currentEventsEmitted": [
+        "SystemDescriptionApproved",
+        "SystemDescriptionBound",
+        "SystemDescriptionDraftCreated",
+        "SystemDescriptionDraftRevised",
+        "SystemDescriptionExportGenerated",
+        "SystemDescriptionNoChangeRecorded",
+        "SystemDescriptionReviewed",
+        "SystemDescriptionSourcesBound",
+        "SystemDescriptionSuccessorProposed"
+      ],
+      "currentCommands": [
+        "ApproveSystemDescription",
+        "BindSystemDescriptionSources",
+        "BindSystemDescriptionToExamination",
+        "CreateSystemDescriptionDraft",
+        "GenerateSystemDescriptionExport",
+        "ProposeSystemDescriptionSuccessor",
+        "RecordSystemDescriptionNoChangeDecision",
+        "ReviewSystemDescription",
+        "ReviseSystemDescriptionDraft"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "SystemDescription",
+          "identity": "(tenantId, programId, descriptionId)",
+          "owns": "Immutable narrative versions, completeness and approval against exact source snapshot.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "SystemDescriptionApproved",
+            "SystemDescriptionBound",
+            "SystemDescriptionDraftCreated",
+            "SystemDescriptionDraftRevised",
+            "SystemDescriptionNoChangeRecorded",
+            "SystemDescriptionReviewed",
+            "SystemDescriptionSourcesBound",
+            "SystemDescriptionSuccessorProposed"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "ApproveSystemDescription",
+            "BindSystemDescriptionSources",
+            "BindSystemDescriptionToExamination",
+            "CreateSystemDescriptionDraft",
+            "ProposeSystemDescriptionSuccessor",
+            "RecordSystemDescriptionNoChangeDecision",
+            "ReviewSystemDescription",
+            "ReviseSystemDescriptionDraft"
+          ]
+        },
+        {
+          "proposedAggregate": "SystemDescriptionExportProcess",
+          "identity": "(descriptionId, versionId, exportId)",
+          "owns": "Technical export generation and binding attempt state.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [],
+          "technicalProcessState": [
+            "export attempts, cursor and generated temporary files"
+          ],
+          "commands": [
+            "GenerateSystemDescriptionExport"
+          ]
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Keep completeness/approval bindings against exact sources; exports and attempt history are separate process state.",
+      "mustPreserve": "No approved content or source snapshot mutates; exact changes and period decisions are admitted before approval.",
+      "boundaryTests": [
+        "Export retries do not change draft revision.",
+        "Stale sources block approval.",
+        "Approval and export idempotency separate."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [
+        "SystemDescriptionExportGenerated"
+      ],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "ApproveSystemDescription",
+          "target": "SystemDescription",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "BindSystemDescriptionSources",
+          "target": "SystemDescription",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "BindSystemDescriptionToExamination",
+          "target": "SystemDescription",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "CreateSystemDescriptionDraft",
+          "target": "SystemDescription",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "GenerateSystemDescriptionExport",
+          "target": "SystemDescriptionExportProcess",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ProposeSystemDescriptionSuccessor",
+          "target": "SystemDescription",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "RecordSystemDescriptionNoChangeDecision",
+          "target": "SystemDescription",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviewSystemDescription",
+          "target": "SystemDescription",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseSystemDescriptionDraft",
+          "target": "SystemDescription",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Versioned description and independent export"
+    },
+    {
+      "currentAggregate": "LocationRegister",
+      "decision": "split",
+      "findingIds": [
+        "ROOTTECH-01",
+        "ROOTTECH-02"
+      ],
+      "currentInvariant": "Among active locations of the same tenant and immutable kind, normalized governed names are unique; each location changes at exact record revision.",
+      "currentEventsEmitted": [
+        "LocationRevisionRecorded"
+      ],
+      "currentCommands": [
+        "RecordLocation",
+        "ReviseLocation"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "Location",
+          "identity": "locationId",
+          "owns": "Independent location record lifecycle.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "LocationRevisionRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "RecordLocation",
+            "ReviseLocation"
+          ]
+        },
+        {
+          "proposedAggregate": "LocationNameClaim",
+          "identity": "(tenantId, locationKind, normalizedName)",
+          "owns": "Authoritative active-name uniqueness claim.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [
+            "LocationNameClaimed",
+            "LocationNameReleased"
+          ],
+          "technicalProcessState": [],
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Canonical name claims precede record create/rename/reactivation.",
+      "mustPreserve": "Kind is immutable; only active same-kind names are unique.",
+      "boundaryTests": [
+        "Two create races same name.",
+        "Different locations do not contend.",
+        "Retire/rename/reactivate replay."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "RecordLocation",
+          "target": "Location",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseLocation",
+          "target": "Location",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Name claims and record lifecycle"
+    },
+    {
+      "currentAggregate": "OperationalProcessRegister",
+      "decision": "split",
+      "findingIds": [
+        "ROOTTECH-01",
+        "ROOTTECH-02"
+      ],
+      "currentInvariant": "Within tenant, active normalized process names unique and each governed process content/lifecycle changes at its exact revision.",
+      "currentEventsEmitted": [
+        "OperationalProcessRevisionRecorded"
+      ],
+      "currentCommands": [
+        "RecordOperationalProcess",
+        "ReviseOperationalProcess"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "OperationalProcess",
+          "identity": "processId",
+          "owns": "Independent governed operational process lifecycle.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "OperationalProcessRevisionRecorded"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [
+            "name-claim execution retry/cursor metadata"
+          ],
+          "commands": [
+            "RecordOperationalProcess",
+            "ReviseOperationalProcess"
+          ]
+        },
+        {
+          "proposedAggregate": "OperationalProcessNameClaim",
+          "identity": "(tenantId, normalizedName)",
+          "owns": "Authoritative active normalized-name uniqueness.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [
+            "OperationalProcessNameClaimed",
+            "OperationalProcessNameReleased"
+          ],
+          "technicalProcessState": [
+            "name-claim execution retry/cursor metadata"
+          ],
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Canonical name claim serializes only same name.",
+      "mustPreserve": "Process content/version is checked against exact prior revision; inactive names may be reused only when policy permits.",
+      "boundaryTests": [
+        "Same-name races.",
+        "Unrelated process revisions independent.",
+        "Name reuse after retirement and delayed retries."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "RecordOperationalProcess",
+          "target": "OperationalProcess",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "ReviseOperationalProcess",
+          "target": "OperationalProcess",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Name claims and record lifecycle"
+    },
+    {
+      "currentAggregate": "TenantInvitation",
+      "decision": "split",
+      "findingIds": [
+        "ACCESS-11",
+        "ACCESS-13"
+      ],
+      "currentInvariant": "One invitation offers immutable affiliation/admin purpose and exact scopes/expiry, with one current token and at most one accepted user.",
+      "currentEventsEmitted": [
+        "TenantInvitationAccepted",
+        "TenantInvitationDeliveryFailed",
+        "TenantInvitationDeliverySent",
+        "TenantMemberInvited"
+      ],
+      "currentCommands": [
+        "AcceptTenantInvitation",
+        "InviteGuestConsultant",
+        "InviteOrganizationMember",
+        "InviteTenantMember"
+      ],
+      "targetOwners": [
+        {
+          "proposedAggregate": "TenantInvitation",
+          "identity": "invitationId",
+          "owns": "One immutable offer, token acceptance and terminal lifecycle; each invitation has exact recipient, purpose, scopes and expiry.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [
+            "TenantInvitationAccepted",
+            "TenantMemberInvited"
+          ],
+          "newDomainEvents": [],
+          "technicalProcessState": [],
+          "commands": [
+            "AcceptTenantInvitation",
+            "InviteGuestConsultant",
+            "InviteOrganizationMember",
+            "InviteTenantMember"
+          ]
+        },
+        {
+          "proposedAggregate": "TenantInvitationMailboxClaim",
+          "identity": "tenant / normalizedEmail",
+          "owns": "At most one pending invitation per mailbox. InvitationId and generation live in state and every release compares both; generation is never part of the stream key.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [
+            "TenantInvitationMailboxClaimed",
+            "TenantInvitationMailboxReleased"
+          ],
+          "technicalProcessState": [],
+          "commands": []
+        },
+        {
+          "proposedAggregate": "TenantInvitationDeliveryProcess",
+          "identity": "tenant / invitationId",
+          "owns": "Technical delivery process with one immutable effect payload and multiple attempt records. Attempt identity is state, never a new unconstrained process owner.",
+          "events": "Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.",
+          "existingDomainEvents": [],
+          "newDomainEvents": [],
+          "technicalProcessState": [
+            "SMTP attempts, provider responses and delivery retries"
+          ],
+          "commands": []
+        }
+      ],
+      "retainedCoordinatorOrGuard": "Mailbox coordination prevents conflicting concurrent pending invitations; acceptance is bound to one invitation ID and delivery runs independently. An accepted invitation must not permanently block future invitations.",
+      "mustPreserve": "Retry same invitation ID with exact terms returns original acceptance; changed terms conflict. New invitation generation is independent. Delivery retries preserve exact token and accepted at-least-once policy.",
+      "boundaryTests": [
+        "Two invitation IDs for one mailbox serialize on current pending claim.",
+        "Accepted prior invitation does not block later generation.",
+        "Unknown SMTP result follows accepted at-least-once rule.",
+        "Old delivery callback cannot alter newer invitation."
+      ],
+      "eventAllocationRule": "Existing business facts are rehomed with the command that enforces their rule. Technical delivery/build/export outcomes move to process state; migration markers are pruned under the accepted disposable-history cutover. New events are listed only for durable business authority.",
+      "technicalFactsToExternalize": [
+        "TenantInvitationDeliveryFailed",
+        "TenantInvitationDeliverySent"
+      ],
+      "migrationFactsToPrune": [],
+      "commandMigrationMap": [
+        {
+          "command": "AcceptTenantInvitation",
+          "target": "TenantInvitation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "InviteGuestConsultant",
+          "target": "TenantInvitation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "InviteOrganizationMember",
+          "target": "TenantInvitation",
+          "role": "accepted_intent_owner"
+        },
+        {
+          "command": "InviteTenantMember",
+          "target": "TenantInvitation",
+          "role": "accepted_intent_owner"
+        }
+      ],
+      "protocol": "Mailbox generation, invitation and delivery"
+    }
+  ],
+  "eventAllocationComplete": true,
+  "eventAllocationCount": 146,
+  "externalizeCount": 9,
+  "pruneCount": 3,
+  "notes": [
+    "Target identities and command destinations are selected design decisions. Contracts are specified but not implemented. Source command names are retained; aliases from the initial target sketch are removed.",
+    "Owner-local ExpectedRevision replaces shared ExpectedSequence/ExpectedLedgerRevision where explicitly listed in the command catalog. Foreign source revisions remain proof inputs.",
+    "The 146 retained native business facts are partitioned once. New admission/finalization facts make cross-owner continuation explicit; nine technical facts move to process state and three obsolete facts are pruned."
+  ]
+}

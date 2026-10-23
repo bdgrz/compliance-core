@@ -1,0 +1,23 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "fixed": [
+      "All multi-owner reservations must be acquired in canonical stream-key order; no upgrades and no timer release.",
+      "Engagement acceptance and positive staff assignment freeze full source/service/staff/user/practice intent on ServiceEngagementIndependence before any grants.",
+      "Only EngagementPracticeCommitmentsAuthorized can commit permanent walls. It requires complete current epoch/source-use/practice-reservation proof set. All prior acquisitions are reversible temporary reservations.",
+      "Definite rejection before irreversible authorization fences all targets, including targets not acquired yet, before settlement."
+    ],
+    "counterexample": "ReservePracticeIndependence currently takes EngagementServiceEpochAuthorized as Source, forcing epoch permit before practice reservation regardless of actual stream-key sort. This contradicts universal canonical-order acquisition and would constrain unrelated stream layouts."
+  },
+  "questions": {
+    "acquisition_source": {
+      "type": "choice",
+      "instructions": "Which source/event contract removes the ordering contradiction while preserving actual independence authority and recovery?",
+      "criteria": {
+        "root_admission_for_all_temporary_grants": "Use immutable ServiceEngagementAcceptanceRequested/ServiceEngagementStaffAssignmentRequested for every temporary epoch/source/practice acquire. Freeze every key/intended practice/identity and acquire in canonical order. Validate complete exact grants, current epoch and temporal proofs at EngagementPracticeCommitmentsAuthorized. ReservePractice only enforces local conflict against frozen root intent; it cannot commit a permanent wall.",
+        "force_stream_layout": "Retain epoch-permit prerequisite for practice acquisition and rename/reorder all participating streams until epoch is first forever.",
+        "ignore_sort_for_epoch": "Acquire epoch first then others in whatever order; call it canonical anyway."
+      }
+    }
+  }
+}

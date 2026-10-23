@@ -1,5 +1,7 @@
 # Aggregate and command-handler coverage audit
 
+Historical snapshot captured 2026-10-21. Current command, handler, guard, event and reactor coverage is in the [2026-10-23 specification](audits/2026-10-23/README.md). The counts below describe the older source snapshot.
+
 Captured 2026-10-21 at source commit `f054498a56b8e86f3d6019b5e09eb8784be05e8e`, with the current uncommitted finding-migration slice included in the row map.
 The row-level source map is [`aggregate-command-coverage.json`](aggregate-command-coverage.json).
 

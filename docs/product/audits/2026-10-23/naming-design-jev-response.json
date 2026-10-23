@@ -1,0 +1,109 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "import_source_owner": {
+      "type": "choice",
+      "choice": "ApplicationImportSource",
+      "confidence": 1.0,
+      "probabilities": {
+        "ApplicationImportSource": 1.0,
+        "ApplicationImportCoordinator": 0.0,
+        "ImportBatch": 0.0
+      }
+    },
+    "access_campaign_item": {
+      "type": "choice",
+      "choice": "AccessReviewItem",
+      "confidence": 1.0,
+      "probabilities": {
+        "AccessReviewItem": 1.0,
+        "AccessReviewDecision": 0.0,
+        "AccessCampaignParticipant": 0.0
+      }
+    },
+    "occurrence": {
+      "type": "choice",
+      "choice": "ControlOccurrence",
+      "confidence": 1.0,
+      "probabilities": {
+        "ControlOccurrence": 1.0,
+        "ControlPerformanceOccurrence": 0.0,
+        "ControlDueWorkItem": 0.0
+      }
+    },
+    "import_batch": {
+      "type": "choice",
+      "choice": "ApplicationImportBatch",
+      "confidence": 1.0,
+      "probabilities": {
+        "ApplicationImportBatch": 1.0,
+        "ImportExecution": 0.0,
+        "ApplicationImportPlan": 0.0
+      }
+    },
+    "package_delivery": {
+      "type": "choice",
+      "choice": "AuditPackageDelivery",
+      "confidence": 1.0,
+      "probabilities": {
+        "AuditPackageDelivery": 1.0,
+        "PackageDeliveryAuthorization": 0.0,
+        "AuditPackageRecipient": 0.0
+      }
+    },
+    "package_build_process": {
+      "type": "choice",
+      "choice": "AuditPackageBuildProcess",
+      "confidence": 1.0,
+      "probabilities": {
+        "AuditPackageBuildProcess": 1.0,
+        "AuditPackageBuild": 0.0,
+        "PackageBuildAttempt": 0.0
+      }
+    },
+    "feedback_owner": {
+      "type": "choice",
+      "choice": "AdvisorFeedbackThread",
+      "confidence": 0.88,
+      "probabilities": {
+        "AdvisorFeedbackThread": 0.92,
+        "HandoffFeedback": 0.06,
+        "AdvisorFeedback": 0.02
+      }
+    },
+    "provider_name_claim": {
+      "type": "choice",
+      "choice": "ProviderNameClaim",
+      "confidence": 1.0,
+      "probabilities": {
+        "ProviderNameClaim": 1.0,
+        "ProviderNameReservation": 0.0,
+        "ProviderNameRegistry": 0.0
+      }
+    },
+    "independence_wall": {
+      "type": "choice",
+      "choice": "PracticeIndependenceCommitment",
+      "confidence": 0.98,
+      "probabilities": {
+        "PracticeIndependenceCommitment": 0.99,
+        "IndependenceCommitment": 0.0,
+        "StaffIndependenceWall": 0.01
+      }
+    },
+    "readiness_gap_owner": {
+      "type": "choice",
+      "choice": "ReadinessGapPlan",
+      "confidence": 1.0,
+      "probabilities": {
+        "ReadinessGapPlan": 1.0,
+        "ReadinessResponsePlan": 0.0,
+        "ReadinessGap": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 3152,
+    "output_tokens": 592
+  }
+}

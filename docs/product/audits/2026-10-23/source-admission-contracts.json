@@ -1,0 +1,1772 @@
+{
+  "contracts": [
+    {
+      "command": "CompleteIdentityRecovery",
+      "handler": "CompleteIdentityRecoveryHandler",
+      "owner": "EmailAddress",
+      "logicalIdentity": "ChallengeId",
+      "fields": [
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Token",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OldIdentityId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "events": [
+        "IdentityRecoveryChallengeClaimed"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/identity-recovery/challenges/{challenge_id}/completion"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Authenticate both proofs and freeze exact candidate in IdentityRecoveryChallengeClaimed. Materialize preparation, protect both identity slots, then accept swap and automatically complete it. Native issued/claimed authorization provenance verifies exact consumed challenge on retry without bearer persistence; unconsumed expired proof rejects. Original canonical actor is the account proven by email, with original replacement identity provenance retained.",
+      "sourceContract": "src/Compliance.Common/Features/UserIdentities/CompleteIdentityRecovery.cs",
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "Unit"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "EmailAddress",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "StartIdentityRecovery",
+      "handler": "StartIdentityRecoveryHandler",
+      "owner": "EmailAddress",
+      "logicalIdentity": "ChallengeId",
+      "fields": [
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "events": [
+        "IdentityRecoveryChallengeIssued"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/identity-recovery/challenges/{challenge_id}"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Preserve current non-enumeration, rate-limit, delivery and expiry rules. Required client ChallengeId selects exact email challenge creation. Do not substitute a generated challenge ID.",
+      "sourceContract": "src/Compliance.Common/Features/UserIdentities/StartIdentityRecovery.cs",
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "EmailAddress",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "StartTypeIIObservationPeriod",
+      "handler": "StartTypeIIObservationPeriodHandler",
+      "owner": "TypeIIPeriod",
+      "logicalIdentity": "PeriodId",
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PlanId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodStart",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "PeriodEnd",
+          "type": "DateOnly",
+          "required": true
+        }
+      ],
+      "events": [
+        "TypeIIPeriodOpeningAccepted"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Persist full approved plan/opening/population/range/actor intent before calendar acquisition; no calendar write before accepted fact.",
+      "sourceContract": "src/Compliance.Common/Features/Operations/StartTypeIIObservationPeriod.cs",
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "Unit"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "TypeIIPeriod",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "AmendTypeIIObservationPeriod",
+      "handler": "AmendTypeIIObservationPeriodHandler",
+      "owner": "TypeIIPeriod",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "PeriodStart",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "PeriodEnd",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "AmendmentReason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "events": [
+        "TypeIIPeriodAmendmentAccepted"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{command_id}"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Require owner expected revision and exact amendment policy. Freeze old/new range and intent; calendar retains both until applied; no releasing old range on unknown apply.",
+      "sourceContract": "src/Compliance.Common/Features/Operations/AmendTypeIIObservationPeriod.cs",
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "Unit"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "TypeIIPeriod",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "CancelTypeIIPeriodAmendment",
+      "handler": "CancelTypeIIPeriodAmendmentHandler",
+      "owner": "TypeIIPeriod",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AmendmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "events": [
+        "TypeIIPeriodAmendmentCanceled"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{amendment_id}/cancellations/{command_id}"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Only a pending revocable amendment; atomically persist source cancellation and local receiver fence in period owner before calendar release. Applied/irreversible amendment returns Conflict and recovers forward. Delayed ApplyTypeIIPeriodRange checks this same fence.",
+      "sourceContract": null,
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "TypeIIPeriod",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "SuspendMember",
+      "handler": "SuspendMemberHandler",
+      "owner": "TenantManagerGuard",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "MemberEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedMemberRevision",
+          "type": "ulong",
+          "required": true
+        }
+      ],
+      "events": [
+        "TenantManagerWithdrawalAccepted"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions/{command_id}"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedMemberRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "sourceContract": "src/Compliance.Common/Features/AccessControl/SuspendMember.cs",
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "expectedRevisionScope": {
+        "field": "ExpectedMemberRevision",
+        "owner": "Member",
+        "meaning": "authored source mutation precondition; not guard singleton sequence"
+      },
+      "responseContract": {
+        "mode": "conditional_async_guarded",
+        "responseType": "AdministratorTransitionResponse",
+        "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
+        "terminalResultType": "Unit"
+      }
+    },
+    {
+      "command": "DeprovisionMember",
+      "handler": "DeprovisionMemberHandler",
+      "owner": "TenantManagerGuard",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "MemberEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedMemberRevision",
+          "type": "ulong",
+          "required": true
+        }
+      ],
+      "events": [
+        "TenantManagerWithdrawalAccepted"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/members/{user_id}/deprovisioning/{command_id}"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedMemberRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "sourceContract": "src/Compliance.Common/Features/AccessControl/DeprovisionMember.cs",
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "expectedRevisionScope": {
+        "field": "ExpectedMemberRevision",
+        "owner": "Member",
+        "meaning": "authored source mutation precondition; not guard singleton sequence"
+      },
+      "responseContract": {
+        "mode": "conditional_async_guarded",
+        "responseType": "AdministratorTransitionResponse",
+        "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
+        "terminalResultType": "Unit"
+      }
+    },
+    {
+      "command": "RemoveTeamMember",
+      "handler": "RemoveTeamMemberHandler",
+      "owner": "TenantManagerGuard",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TeamId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedAssignmentRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ExpectedAssignmentGeneration",
+          "type": "ulong",
+          "required": true
+        }
+      ],
+      "events": [
+        "TenantManagerWithdrawalAccepted"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/members/{member_id}/RemoveTeamMember/{command_id}"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedAssignmentRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "sourceContract": "src/Compliance.Common/Features/AccessControl/RemoveTeamMember.cs",
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "expectedRevisionScope": {
+        "field": "ExpectedAssignmentRevision",
+        "owner": "TeamMember",
+        "meaning": "authored source mutation precondition; not guard singleton sequence"
+      },
+      "responseContract": {
+        "mode": "conditional_async_guarded",
+        "responseType": "AdministratorTransitionResponse",
+        "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
+        "terminalResultType": "Unit"
+      }
+    },
+    {
+      "command": "ReinstateMember",
+      "handler": "ReinstateMemberHandler",
+      "owner": "TenantManagerGuard",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedMemberRevision",
+          "type": "ulong",
+          "required": true
+        }
+      ],
+      "events": [
+        "TenantManagerRestorationAccepted"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/members/by-user/{user_id}/reinstatements/{command_id}"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedMemberRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "sourceContract": "src/Compliance.Common/Features/AccessControl/ReinstateMember.cs",
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "expectedRevisionScope": {
+        "field": "ExpectedMemberRevision",
+        "owner": "Member",
+        "meaning": "authored source mutation precondition; not guard singleton sequence"
+      },
+      "responseContract": {
+        "mode": "conditional_async_guarded",
+        "responseType": "AdministratorTransitionResponse",
+        "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
+        "terminalResultType": "Unit"
+      }
+    },
+    {
+      "command": "AssignTeamMember",
+      "handler": "AssignTeamMemberHandler",
+      "owner": "TenantManagerGuard",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TeamId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedAssignmentRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ExpectedAssignmentGeneration",
+          "type": "ulong",
+          "required": true
+        }
+      ],
+      "events": [
+        "TenantManagerRestorationAccepted"
+      ],
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}/{command_id}"
+      },
+      "mcp": false,
+      "entry": "authorized_existing_scope_http",
+      "guards": "Exact member episode and affected assignment generation required from authoritative source proof. Guard keeps compact eligible administrator contributions; every removal withdraws availability before source mutation. Restoration source writes wait behind unfinished withdrawal and only exact current eligibility can restore guard availability. Bootstrap/reconcile eligible contribution set through authoritative source cut while admission fenced; no directory boolean proves another administrator. ExpectedAssignmentRevision belongs to the source mutation; guard Sequence is read internally and rechecked with physical guard OCC. Preserve source preflight validation before recording withdrawal. AssignTeamMember restores only administrators_team_removed for this assignment; ReinstateMember restores only suspended. Built-in required role/perms cannot be removed. A completed source restoration with other ineligibility records TenantManagerRestorationCompleted without making the member available.",
+      "sourceContract": "src/Compliance.Common/Features/AccessControl/AssignTeamMember.cs",
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "nonAdministratorBranch": "Original Member/TeamMember owner; append original native fact only when authoritative contribution proof establishes no administrator availability change.",
+      "expectedRevisionScope": {
+        "field": "ExpectedAssignmentRevision",
+        "owner": "TeamMember",
+        "meaning": "authored source mutation precondition; not guard singleton sequence"
+      },
+      "responseContract": {
+        "mode": "conditional_async_guarded",
+        "responseType": "AdministratorTransitionResponse",
+        "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
+        "terminalResultType": "Unit"
+      }
+    },
+    {
+      "command": "CancelAccessReviewDecisionBatch",
+      "handler": "CancelAccessReviewDecisionBatchHandler",
+      "owner": "AccessReviewDecisionBatch",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DecisionBatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "AccessReviewDecisionBatchCancellationAccepted"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Trusted process only; exact permanent preview/eligibility failure or explicit authorized cancellation, no published/executable irreversible batch. Every item receives fence before settlement.",
+      "sourceContract": null,
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessReviewDecisionBatch",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "CancelProviderChange",
+      "handler": "CancelProviderChangeHandler",
+      "owner": "Provider",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ChangeOperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "DefiniteFailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "ProviderChangeCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Trusted process only; atomically cancel exact pending change and fence its local delayed apply. Already applied change recovers forward. Name release uses only this durable fence.",
+      "sourceContract": null,
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "Provider",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "CancelLocationChange",
+      "handler": "CancelLocationChangeHandler",
+      "owner": "Location",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ChangeOperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "DefiniteFailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "LocationChangeCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Trusted process only; atomically cancel exact pending change and fence its local delayed apply. Already applied change recovers forward. Name release uses only this durable fence.",
+      "sourceContract": null,
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "Location",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "CancelOperationalProcessChange",
+      "handler": "CancelOperationalProcessChangeHandler",
+      "owner": "OperationalProcess",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ChangeOperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "DefiniteFailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "OperationalProcessChangeCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Trusted process only; atomically cancel exact pending change and fence its local delayed apply. Already applied change recovers forward. Name release uses only this durable fence.",
+      "sourceContract": null,
+      "tests": [
+        "exact retry after later lifecycle",
+        "changed actor/intent/original revision conflicts",
+        "receiver fence versus delayed apply",
+        "unknown append and source authorization recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "OperationalProcess",
+        "counter": "named process record revision",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "AbortAccessReviewCampaignCompletion",
+      "handler": "AbortAccessReviewCampaignCompletionHandler",
+      "owner": "AccessReviewCampaign",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "AccessReviewCampaignCompletionCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+      "sourceContract": null,
+      "tests": [
+        "source changes before use grant",
+        "abort races finalization",
+        "source settlement before delayed acquisition",
+        "held sources released only after parent fence"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessReviewCampaign",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "AbortAuditorRequestResolution",
+      "handler": "AbortAuditorRequestResolutionHandler",
+      "owner": "AuditorRequest",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "AuditorRequestResolutionCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+      "sourceContract": null,
+      "tests": [
+        "source changes before use grant",
+        "abort races finalization",
+        "source settlement before delayed acquisition",
+        "held sources released only after parent fence"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AuditorRequest",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "AbortFindingClosure",
+      "handler": "AbortFindingClosureHandler",
+      "owner": "FindingAggregate",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "FindingClosureCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+      "sourceContract": null,
+      "tests": [
+        "source changes before use grant",
+        "abort races finalization",
+        "source settlement before delayed acquisition",
+        "held sources released only after parent fence"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "FindingAggregate",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "AbortReadinessDecision",
+      "handler": "AbortReadinessDecisionHandler",
+      "owner": "ProgramReadiness",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "ReadinessDecisionCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+      "sourceContract": null,
+      "tests": [
+        "source changes before use grant",
+        "abort races finalization",
+        "source settlement before delayed acquisition",
+        "held sources released only after parent fence"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ProgramReadiness",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "AbortPolicyCampaignClosure",
+      "handler": "AbortPolicyCampaignClosureHandler",
+      "owner": "PolicyDistributionCampaign",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "PolicyCampaignClosureCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+      "sourceContract": null,
+      "tests": [
+        "source changes before use grant",
+        "abort races finalization",
+        "source settlement before delayed acquisition",
+        "held sources released only after parent fence"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "PolicyDistributionCampaign",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "AbortProviderReview",
+      "handler": "AbortProviderReviewHandler",
+      "owner": "ProviderAssuranceReview",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "ProviderReviewCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+      "sourceContract": null,
+      "tests": [
+        "source changes before use grant",
+        "abort races finalization",
+        "source settlement before delayed acquisition",
+        "held sources released only after parent fence"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ProviderAssuranceReview",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "AbortRiskTreatmentActionReview",
+      "handler": "AbortRiskTreatmentActionReviewHandler",
+      "owner": "RiskTreatmentAction",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "RiskTreatmentActionCompletionReviewCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending parent authorization with an authoritative permanent proof mismatch before irreversible final decision. Atomically cancel and fence every delayed local finalization for this generation. A completed/executable irreversible decision recovers forward. Settle all acquired and not-yet-acquired source uses only with this fence proof. No public actor or intent replacement.",
+      "sourceContract": null,
+      "tests": [
+        "source changes before use grant",
+        "abort races finalization",
+        "source settlement before delayed acquisition",
+        "held sources released only after parent fence"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "RiskTreatmentAction",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RejectTypeIIPeriodOpening",
+      "handler": "RejectTypeIIPeriodOpeningHandler",
+      "owner": "TypeIIPeriod",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "TypeIIPeriodOpeningRejected"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending opening before application, proven authoritative calendar conflict. Atomically fence delayed application, then settle prospective calendar authorization. Same PeriodId retry returns original rejection; changed new intent needs a new period identity.",
+      "sourceContract": null,
+      "tests": [
+        "exact failure and original result replay",
+        "reject races delayed apply",
+        "no unrelated prior authority removed",
+        "unknown append recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "TypeIIPeriod",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RejectTypeIIPeriodAmendment",
+      "handler": "RejectTypeIIPeriodAmendmentHandler",
+      "owner": "TypeIIPeriod",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "TypeIIPeriodAmendmentCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending amendment before application, proven authoritative calendar conflict. Atomically fence delayed apply, then settle exact pending range; preserve current applied range.",
+      "sourceContract": null,
+      "tests": [
+        "exact failure and original result replay",
+        "reject races delayed apply",
+        "no unrelated prior authority removed",
+        "unknown append recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "TypeIIPeriod",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RejectFirmStaffRegistration",
+      "handler": "RejectFirmStaffRegistrationHandler",
+      "owner": "FirmStaffRecord",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "FirmStaffRegistrationRejected"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only exact pending registration with permanent canonical-user claim owned by a different staff/practice. No valid acquired permanent claim is released; if own claim exists recover registration forward.",
+      "sourceContract": null,
+      "tests": [
+        "exact failure and original result replay",
+        "reject races delayed apply",
+        "no unrelated prior authority removed",
+        "unknown append recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "FirmStaffRecord",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RejectProfessionalDutyChange",
+      "handler": "RejectProfessionalDutyChangeHandler",
+      "owner": "FirmProfessionalDutyDesignation",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "ProfessionalDutyChangeRejected"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Exact pending assertion intent with authoritative conflicting assertion or invalid predecessor proof; leave previous current duty authority unchanged and never recycle a used signed assertion identity.",
+      "sourceContract": null,
+      "tests": [
+        "exact failure and original result replay",
+        "reject races delayed apply",
+        "no unrelated prior authority removed",
+        "unknown append recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "FirmProfessionalDutyDesignation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RejectServiceEngagementAcceptance",
+      "handler": "RejectServiceEngagementAcceptanceHandler",
+      "owner": "ServiceEngagementIndependence",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "ServiceEngagementAcceptanceRejected"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only before EngagementPracticeCommitmentsAuthorized. Atomically fence pending acceptance/positive assignment on this source generation, then settle all temporary service/practice/source-use authorizations, including not-yet-acquired keys. No permanent practice commitment may have been made before this irreversible authorization.",
+      "sourceContract": null,
+      "tests": [
+        "exact failure and original result replay",
+        "reject races delayed apply",
+        "no unrelated prior authority removed",
+        "unknown append recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ServiceEngagementIndependence",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RejectServiceEngagementStaffAssignment",
+      "handler": "RejectServiceEngagementStaffAssignmentHandler",
+      "owner": "ServiceEngagementIndependence",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "ServiceEngagementStaffAssignmentRejected"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only before EngagementPracticeCommitmentsAuthorized for this assignment. Fence pending positive assignment and settle exact temporary reservations; retain existing engagement and prior permanent walls. After irreversible authorization recover forward.",
+      "sourceContract": null,
+      "tests": [
+        "exact failure and original result replay",
+        "reject races delayed apply",
+        "no unrelated prior authority removed",
+        "unknown append recovery"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ServiceEngagementIndependence",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RejectIdentityRecoveryPreparation",
+      "handler": "RejectIdentityRecoveryPreparationHandler",
+      "owner": "IdentityRecovery",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ConflictProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "IdentityRecoveryPreparationRejected"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only before IdentityRecoveryAccepted. Prove conflicting source association/revocation, atomically fence acceptance/finalization and settle every prepared receiving key. No old identity is revoked. Accepted swap rejects this command and recovers forward.",
+      "sourceContract": null,
+      "tests": [
+        "competing registration between verified preparation and protection",
+        "no accepted swap before both protections",
+        "rejection after acceptance refused",
+        "late protection after source rejection cannot reactivate"
+      ],
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "IdentityRecovery",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "CancelProtectedArtifactDownloadGrant",
+      "handler": "CancelProtectedArtifactDownloadGrantHandler",
+      "owner": "ArtifactDownloadGrant",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "GrantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RootOperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "ArtifactDownloadGrantCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only before EvidenceArtifactDownloadIssued; prove expired/revoked/conflicting required source or invalid/unavailable ticket outcome. Atomically fence grant issuance before source use settlement, including not-yet-acquired uses. Already issued grant cannot renew or change result; release uses from its exact issued fact.",
+      "sourceContract": null,
+      "tests": [
+        "failure before source use grant",
+        "ticket encrypted before native append crash",
+        "cancellation races native issue",
+        "late issue after cancellation rejected"
+      ],
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "ArtifactDownloadGrant",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "CancelEngagementPersonalDecision",
+      "handler": "CancelEngagementPersonalDecisionHandler",
+      "owner": "ServiceEngagementIndependence",
+      "logicalIdentity": "CommandId",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RootOperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "events": [
+        "EngagementPersonalDecisionCanceled"
+      ],
+      "http": null,
+      "mcp": false,
+      "entry": "trusted_internal",
+      "guards": "Only before EngagementPersonalDecisionAuthorized. Atomically fence authorization and clear exact local content pin before source use settlement. Authorized decisions finish historical child materialization forward; no child can materialize from mere admission.",
+      "sourceContract": null,
+      "tests": [
+        "service epoch changes before use grant",
+        "cancellation races personal authorization",
+        "late child command lacks authorization proof",
+        "older materialization cannot replace newer personal decision pointer"
+      ],
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "ServiceEngagementIndependence",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    }
+  ]
+}

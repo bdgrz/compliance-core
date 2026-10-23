@@ -1,0 +1,80 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "access_campaign": {
+      "type": "choice",
+      "choice": "campaign_item_coordinator",
+      "confidence": 1.0,
+      "probabilities": {
+        "campaign_item_coordinator": 1.0,
+        "item_streams_projection_gate": 0.0,
+        "keep_campaign_root": 0.0
+      }
+    },
+    "import_publication": {
+      "type": "choice",
+      "choice": "batch_and_publication_gate",
+      "confidence": 1.0,
+      "probabilities": {
+        "batch_and_publication_gate": 1.0,
+        "per_row_imports": 0.0,
+        "source_ledger_history": 0.0
+      }
+    },
+    "package_delivery": {
+      "type": "choice",
+      "choice": "manifest_build_delivery",
+      "confidence": 1.0,
+      "probabilities": {
+        "manifest_build_delivery": 1.0,
+        "package_per_recipient": 0.0,
+        "one_package_root": 0.0
+      }
+    },
+    "type2_occurrence_name": {
+      "type": "choice",
+      "choice": "control_occurrence",
+      "confidence": 0.55,
+      "probabilities": {
+        "control_occurrence": 0.66,
+        "control_performance_occurrence": 0.32,
+        "due_control_work_item": 0.01,
+        "keep_operations_occurrence": 0.01
+      }
+    },
+    "independence_boundary": {
+      "type": "choice",
+      "choice": "per_user_wall_and_service_epoch",
+      "confidence": 1.0,
+      "probabilities": {
+        "per_user_wall_and_service_epoch": 1.0,
+        "one_client_independence_root": 0.0,
+        "single_tenant_ledger": 0.0
+      }
+    },
+    "guard_placement": {
+      "type": "choice",
+      "choice": "three_layer_guards",
+      "confidence": 1.0,
+      "probabilities": {
+        "three_layer_guards": 1.0,
+        "handler_all_guards": 0.0,
+        "cross_reading_aggregate": 0.0
+      }
+    },
+    "event_vocabulary": {
+      "type": "choice",
+      "choice": "business_facts_only",
+      "confidence": 1.0,
+      "probabilities": {
+        "business_facts_only": 1.0,
+        "domain_receipts": 0.0,
+        "one_workflow_event_stream": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 2903,
+    "output_tokens": 388
+  }
+}

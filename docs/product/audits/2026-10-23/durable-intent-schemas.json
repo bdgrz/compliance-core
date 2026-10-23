@@ -1,0 +1,2116 @@
+{
+  "schemaVersion": 1,
+  "status": "selected immutable schema definitions; implementation pending",
+  "schemas": [
+    {
+      "name": "DurableIntentHeader",
+      "schema": "durable-intent-header.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "RootOperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FirstOwner",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "AffectedOwner",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevisionOwner",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OriginalActor",
+          "type": "ActorReference",
+          "required": true
+        },
+        {
+          "name": "Episode",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OriginalExpectedRevision",
+          "type": "ulong?",
+          "required": true
+        },
+        {
+          "name": "AuthoredIntentSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AcceptedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "rules": "All values are frozen at first native admission. Generated values are not authored hash inputs. Child effects copy this exact header; they do not reauthor it from current state."
+    },
+    {
+      "name": "AuthoritativeReadCut",
+      "schema": "authoritative-read-cut.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "AnchorSelector",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "GlobalWatermarkExclusive",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "CapturedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "rules": "Capture an unfiltered global stream://** exclusive frontier W. Each derived global selector uses its own W2 >= W and latest fingerprint; retain only exact-scope GlobalPosition < W. Never pass snapshot tokens to realm selectors or reuse fingerprints across selectors. A complete empty cut is W=0. Persist continuation state in technical process records, not domain events."
+    },
+    {
+      "name": "SourceFactLocator",
+      "schema": "source-fact-locator.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Source",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "EventId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ResourcePosition",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "RealmPosition",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "GlobalPosition",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "AggregateVersion",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "PayloadSha256",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "ResourcePosition, RealmPosition and GlobalPosition are distinct broker offsets. AggregateVersion is metadata replay/OCC version, not public logical content revision. GlobalPosition selects membership in a captured exclusive global frontier; verify realm, exact native event and concrete payload digest. Preserve all positions through the internal Fitz adapter."
+    },
+    {
+      "name": "ImmutableSelectionManifest",
+      "schema": "immutable-selection-manifest.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Content",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "ItemSchema",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Count",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Order",
+          "type": "SelectionOrder",
+          "required": true
+        },
+        {
+          "name": "ItemsSha256",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "Count and digest cover the complete selection. Order=authored preserves meaningful input order; canonical_key means ordinal UTF8 by declared key. Root/chunk content verifies every item; no lifetime truncation. Technical chunk size follows actual frame overhead, not a business count cap."
+    },
+    {
+      "name": "SourceUseRequirement",
+      "schema": "source-use-requirement.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "SourceOwner",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "ContentEvent",
+          "type": "SourceFactLocator",
+          "required": true
+        },
+        {
+          "name": "ResourceRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "Purpose",
+          "type": "SourceUsePurpose",
+          "required": true
+        },
+        {
+          "name": "RequiredFacts",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "rules": "A grant pins this exact business fact/revision, even when later use-grant events advance physical aggregate version. Every conflicting source mutation checks active grants. Facts are server extracted from the native event/content, never caller-provided policy claims."
+    },
+    {
+      "name": "ReservationKey",
+      "schema": "reservation-key.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "RootOperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FirstOwner",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "SourceGeneration",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Purpose",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "Generation is the frozen source authorization generation. Key is stable for every effect and terminal settlement for this operation/target/purpose."
+    },
+    {
+      "name": "ReservationGrant",
+      "schema": "reservation-grant.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Key",
+          "type": "ReservationKey",
+          "required": true
+        },
+        {
+          "name": "ReservationGeneration",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "GrantEvent",
+          "type": "SourceFactLocator",
+          "required": true
+        }
+      ],
+      "rules": "Receiver allocates ReservationGeneration = previous local generation + 1 on first grant; exact retry returns same token. Do not confuse this with source generation or content revision. Release validates this token when a grant exists. A cancellation can fence Key before any grant exists."
+    },
+    {
+      "name": "BulkAccessDecisionItemIntent",
+      "schema": "bulk-access-decision-item-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemOwner",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "ExpectedItemRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ReviewerMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ReviewerEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EligibilityProofs",
+          "type": "ImmutableSelectionManifest",
+          "required": true
+        }
+      ],
+      "rules": "Each item comes from the exact server-generated preview. Eligibility proof manifest records exact source facts for the existing queue/visibility/independence rules. A changed selected item head conflicts before any batch decision can publish."
+    },
+    {
+      "name": "BulkAccessDecisionIntent",
+      "schema": "bulk-access-decision-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignGeneration",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "DecisionBatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedCampaignRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "PreviewToken",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Items",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "BulkAccessDecisionItemIntent"
+        },
+        {
+          "name": "Decision",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "Admit on campaign first. Item list is duplicate-free and complete; preserve exact shared rationale. Campaign closure drains this admitted batch before acquiring item completion uses. Provisional decisions are hidden until one batch publication."
+    },
+    {
+      "name": "ReadinessInputSnapshot",
+      "schema": "readiness-input-snapshot.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AsOf",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "EditionId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "CatalogEdition",
+          "type": "ImmutableContentRef?",
+          "required": true,
+          "contentSchema": "CriteriaCatalogEdition"
+        },
+        {
+          "name": "Criteria",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "IReadOnlyList<Criterion>"
+        },
+        {
+          "name": "Mappings",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "IReadOnlyList<ControlCriterionMappingView>"
+        },
+        {
+          "name": "EffectiveControls",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "IReadOnlyDictionary<Uuid,ControlVersionView?>"
+        },
+        {
+          "name": "Sources",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ReadinessSourceSet"
+        },
+        {
+          "name": "SourceCuts",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "AuthoritativeReadCut"
+        }
+      ],
+      "rules": "These are the exact typed ReadinessRules.Evaluate inputs. As-of selection uses source temporal rules and captured committed cuts. No TruncatedFamilies entry may mean silently omitted data: complete sources or retry. A proven missing business input remains an explicit readiness gap; unassessed families stay not assessed."
+    },
+    {
+      "name": "ReadinessRunIntent",
+      "schema": "readiness-run-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AssessmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedProgramRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "AdoptionGeneration",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "RuleVersion",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AsOf",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Inputs",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ReadinessInputSnapshot"
+        },
+        {
+          "name": "RunnerMemberId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "rules": "ProgramReadiness admits one pending latest adoption before computation. Freeze omitted AsOf once. Compute using only Inputs and matching RuleVersion. Successful computation is pending until exact program adoption; old latest cannot be decided while this admission is pending."
+    },
+    {
+      "name": "ReadinessDecisionIntent",
+      "schema": "readiness-decision-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AssessmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AssessmentProof",
+          "type": "SourceFactLocator",
+          "required": true
+        },
+        {
+          "name": "DecisionKind",
+          "type": "ReadinessDecisionKind",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RuleVersion",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "GapSelection",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "ReadinessGapView"
+        },
+        {
+          "name": "AcknowledgedGapIds",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "Uuid"
+        },
+        {
+          "name": "RequiredPlanUses",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "SourceUseRequirement"
+        },
+        {
+          "name": "WaiverProof",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "rules": "Seal latest adoption and gap-edit admission. Drain older admitted gap edits before grants; if any frozen expected plan changed, fence/abort this decision rather than pick newer input. Require all current rules/plan/independence checks at the decision instant. One approved entry slot per program."
+    },
+    {
+      "name": "ProviderRiskLinkIntent",
+      "schema": "provider-risk-link-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "LinkId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "GapId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "GapAdmissionRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AcceptanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AcceptanceProof",
+          "type": "SourceFactProof<RiskAccepted>",
+          "required": true
+        },
+        {
+          "name": "AcceptanceExpiresAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "ProviderRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ServiceId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "LinkedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "rules": "LinkId equals root CommandId. Gap serializes open check, exact revision and uniqueness of RiskId/AcceptanceId pair. LinkedAt is server admission instant; source acceptance active then. Later closure/expiry cannot erase this accepted historical linkage and never makes the gap closed."
+    },
+    {
+      "name": "PackageBuildIntent",
+      "schema": "package-build-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "PackageId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PackageVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "BuildId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "BuildKey",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ManifestId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ManifestSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Manifest",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "AuditPackageManifestView"
+        },
+        {
+          "name": "Selection",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "AuditPackageSelectionEntry"
+        }
+      ],
+      "rules": "BuildId uses existing BuildNamespace UUIDv5 over package/version/trimmed BuildKey. This is logical build identity, not worker attempt. Freeze complete manifest/selection before queueing; worker replay reads only this content. No build may alter a delivered version."
+    },
+    {
+      "name": "PackageDeliveryRecordingIntent",
+      "schema": "package-delivery-recording-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "DeliveryId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ManifestId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ManifestSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ArchiveArtifactId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ArchiveSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Recipient",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "DeliveryReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "DeliveredAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "RecordedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "RecorderMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DisclosureApproval",
+          "type": "SourceFactLocator",
+          "required": true
+        },
+        {
+          "name": "ValidationProofs",
+          "type": "ImmutableSelectionManifest",
+          "required": true
+        }
+      ],
+      "rules": "Personal HTTP attestation of an external handoff. DeliveryId uses existing DeliveryNamespace algorithm. Check current exact manifest/archive/validation/recipient approval atomically at manifest admission; freeze version then. Authored DeliveredAt is distinct from RecordedAt. Child fact records the admitted attestation; no send adapter is invoked."
+    },
+    {
+      "name": "ImportFrozenPlanIntent",
+      "schema": "import-frozen-plan-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "BatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceKey",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceNamespace",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Coverage",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ContentSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SubmitterMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApproverMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Rows",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "ApplicationImportPlannedRow"
+        },
+        {
+          "name": "TargetGroups",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "ImportTargetGroupIntent"
+        },
+        {
+          "name": "SourceClaims",
+          "type": "ImmutableSelectionManifest",
+          "required": true
+        },
+        {
+          "name": "OmissionProposal",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "SourceCut",
+          "type": "AuthoritativeReadCut",
+          "required": true
+        },
+        {
+          "name": "SubmitterDisplay",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ApproverDisplay",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "Sealed plan contains every business value previously distributed across PlanStarted/PlanRowFrozen. PlanSha256 is the digest of this full concrete intent, not only a row count/hash. Incoming rows retain source order and retirement rows retain the existing deterministic proposal ordering. No omitted claim may be inferred from projection absence."
+    },
+    {
+      "name": "ImportTargetGroupIntent",
+      "schema": "import-target-group-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "BatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "InitialApplicationRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "Rows",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "ApplicationImportPlannedRow"
+        },
+        {
+          "name": "CandidateContent",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "CandidateContentRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "RequiredRetirementProofs",
+          "type": "ImmutableSelectionManifest",
+          "required": true
+        }
+      ],
+      "rules": "One exclusive hold and one native append batch per target group. Preserve existing create_new/link_existing/retire semantics: one create; links do not overwrite authored application metadata; retirement changes active state once. Validate every row against the frozen group baseline and full existing source-claim rules. Apply original row order; no per-row lock upgrade or repeated baseline compare after earlier append."
+    },
+    {
+      "name": "EngagementIndependenceIntent",
+      "schema": "engagement-independence-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EngagementRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "OperationKind",
+          "type": "EngagementIndependenceOperationKind",
+          "required": true
+        },
+        {
+          "name": "ServiceEpoch",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "CompleteServiceHistory",
+          "type": "ImmutableSelectionManifest",
+          "required": true
+        },
+        {
+          "name": "RuleProof",
+          "type": "SourceFactLocator",
+          "required": true
+        },
+        {
+          "name": "RatificationProof",
+          "type": "SourceFactLocator",
+          "required": true
+        },
+        {
+          "name": "PartnerDecision",
+          "type": "SourceFactLocator",
+          "required": true
+        },
+        {
+          "name": "ManagementAcknowledgement",
+          "type": "SourceFactLocator",
+          "required": true
+        },
+        {
+          "name": "Subjects",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "PracticeSubjectIntent"
+        },
+        {
+          "name": "SourceUses",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "SourceUseRequirement"
+        },
+        {
+          "name": "EffectiveFrom",
+          "type": "DateOnly?",
+          "required": true
+        }
+      ],
+      "rules": "Capture exact accepted engagement epoch plus complete staff/canonical user set. Freeze directory, partner duty, rule and ratification requirements. All source uses and temporary subject reservations precede irreversible EngagementPracticeCommitmentsAuthorized. No new permanent wall before all reservations/proofs exist. All temporary grants derive from original immutable engagement admission and are acquired by the complete canonical key manifest, with no epoch-before-practice dependency. Only irreversible authorization validates the complete current exact grant set and permits permanent commitment."
+    },
+    {
+      "name": "PracticeSubjectIntent",
+      "schema": "practice-subject-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "SubjectKind",
+          "type": "PracticeSubjectKind",
+          "required": true
+        },
+        {
+          "name": "SubjectId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "StaffMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CanonicalUserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Practice",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "DirectoryContentEvent",
+          "type": "SourceFactLocator",
+          "required": true
+        }
+      ],
+      "rules": "Two keys per affected staff/user pair, sorted canonical stream-key order. Canonical user and practice cannot be reinterpreted after admission. A compatible existing permanent commitment is proof; an incompatible one rejects before irreversible authorization."
+    },
+    {
+      "name": "ClosureIntent",
+      "schema": "closure-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ParentKind",
+          "type": "ClosureParentKind",
+          "required": true
+        },
+        {
+          "name": "ParentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ParentGeneration",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "AdmittedChildren",
+          "type": "ImmutableSelectionManifest",
+          "required": true
+        },
+        {
+          "name": "AuthoredDecision",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "SourceUses",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "SourceUseRequirement"
+        },
+        {
+          "name": "WaiverProof",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "rules": "Seal parent admission, drain all previously admitted materializations, then grant complete exact child/source uses. Nonempty action/response requirements and accepted dispositions remain policy-specific. An abort atomically fences parent finalization before any source settlement."
+    },
+    {
+      "name": "ControlOccurrenceCreationIntent",
+      "schema": "control-occurrence-creation-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Window",
+          "type": "ControlBusinessWindow",
+          "required": true
+        },
+        {
+          "name": "PlanVersionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PlanProof",
+          "type": "SourceFactLocator",
+          "required": true
+        },
+        {
+          "name": "Owner",
+          "type": "OperatingHolder",
+          "required": true
+        },
+        {
+          "name": "BackupOwner",
+          "type": "OperatingHolder?",
+          "required": true
+        },
+        {
+          "name": "ReviewerMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Trigger",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SelectedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "rules": "OccurrenceId derives solely from tenant/program/control/canonical window using the selected common namespace. Trigger/generator/period/plan version does not create another identity. All generators freeze these exact values; two differing full intents for the same canonical window conflict."
+    },
+    {
+      "name": "RecordNameChangeIntent",
+      "schema": "record-name-change-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "RecordKind",
+          "type": "NamedRecordKind",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRecordRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "OldClaimKey",
+          "type": "EventStreamAddress?",
+          "required": true
+        },
+        {
+          "name": "NewClaimKey",
+          "type": "EventStreamAddress?",
+          "required": true
+        },
+        {
+          "name": "DesiredLifecycle",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "AuthoredContent",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "CanonicalNormalizationVersion",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "Freeze complete normalized provider/location/process content with exact existing kind/name equality rules. Every required claim key known before acquisition. Keep old claim through successful apply. Cancellation carries this original intent and fences local apply before releasing new claim. Provider has no lifecycle field: null means unsupported, and its name stays claimed until rename. Location uses LocationContent and same-kind active-name rules; process uses OperationalProcessContent; provider uses ProviderContent."
+    },
+    {
+      "name": "ChildAdmissionIntent",
+      "schema": "child-admission-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ParentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ParentGeneration",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ChildKind",
+          "type": "AdmittedChildKind",
+          "required": true
+        },
+        {
+          "name": "ChildId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CanonicalAuthoredContent",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "SelectedSourceProofs",
+          "type": "ImmutableSelectionManifest",
+          "required": true
+        },
+        {
+          "name": "ParentAdmissionRevision",
+          "type": "ulong",
+          "required": true
+        }
+      ],
+      "rules": "Concrete child payload schemas are the corresponding normalized Common requests: advisor feedback, auditor response/comment, corrective action, policy acknowledgement/training/waiver. Preserve all authored fields and original actor; child reducer never loads live parent. No later close/revoke discards admitted work."
+    },
+    {
+      "name": "IdentityRecoveryIntent",
+      "schema": "identity-recovery-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AccountId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OldIdentityId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ReplacementIdentityId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OldProvider",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OldSubject",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ReplacementProvider",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ReplacementSubject",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "EmailProofProvenance",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "ReplacementProofProvenance",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "rules": "Both proofs verified before email claim/preparation, with only non-bearer provenance. Immutable candidate keyed by challenge. Protect old and replacement associations before IdentityRecoveryAccepted. Before acceptance, definite conflict rejects and fences; afterward register/verify replacement, revoke old, complete forward without caller confirmation. Later challenges cannot rewrite this intent."
+    },
+    {
+      "name": "SourceUseAuthorizationIntent",
+      "schema": "source-use-authorization-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ParentIntent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+        },
+        {
+          "name": "Reservation",
+          "type": "ReservationKey",
+          "required": true
+        },
+        {
+          "name": "Requirement",
+          "type": "SourceUseRequirement",
+          "required": true
+        },
+        {
+          "name": "Grant",
+          "type": "ReservationGrant?",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "type": "SourceUseSettlementDisposition?",
+          "required": true
+        }
+      ],
+      "rules": "A use fact points to the immutable original workflow intent plus this exact source-specific requirement/token. No arbitrary command snapshot serves as policy proof. Terminal settlement before grant fences the same key; neither lease expiry nor missing read releases it."
+    },
+    {
+      "name": "MutationResultContent",
+      "schema": "mutation-result-content.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Schema",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Value",
+          "type": "ResponseBodyReference",
+          "required": true
+        }
+      ],
+      "rules": "Value is the exact original normalized typed Common result (Unit uses empty-object result). Each root contract names its terminal fact/result scope. Never reconstruct an old result from current aggregate view."
+    },
+    {
+      "name": "OperationAcceptedResponse",
+      "schema": "operation-accepted-response.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "StatusUrl",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AcceptedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "rules": "Immutable first PUT response for asynchronous work: HTTP 202 with this exact content on every exact write retry. GET status alone reports evolving state and terminal result."
+    },
+    {
+      "name": "OperationStatusResponse",
+      "schema": "operation-status-response.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "State",
+          "type": "OperationStatus",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "OperationResultDescriptor?",
+          "required": true
+        },
+        {
+          "name": "Failure",
+          "type": "RequestError?",
+          "required": true
+        }
+      ],
+      "rules": "GET only. State=pending/completed/conflict/failed/unknown. Unknown technical external effects stay unknown pending reconciliation; cannot authorize a business gate. Existing personal package recording performs no external send."
+    },
+    {
+      "name": "FirstResponseDescriptor",
+      "schema": "first-response-descriptor.v1",
+      "location": "Core server-created content; public result descriptors/types in Common",
+      "fields": [
+        {
+          "name": "HttpStatus",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "ContentType",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ResultSchema",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Body",
+          "type": "ResponseBodyReference",
+          "required": true
+        }
+      ],
+      "rules": "Immutable original write response on root native admission; never refreshed from current state."
+    },
+    {
+      "name": "OperationResultDescriptor",
+      "schema": "operation-result-descriptor.v1",
+      "location": "Core server-created content; public result descriptors/types in Common",
+      "fields": [
+        {
+          "name": "Schema",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ResultUrl",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "Status GET returns this authorized result resource, not an unrestricted immutable blob reference. GET result uses static typed serializer registry."
+    },
+    {
+      "name": "ProtectedResponseContentRef",
+      "schema": "protected-response-content-ref.v1",
+      "location": "Core server-created content; public result descriptors/types in Common",
+      "fields": [
+        {
+          "name": "ContentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CiphertextSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Bytes",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Schema",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "KeyVersionId",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "AES-256-GCM protected ticket response; no raw URI in native facts. Digest covers versioned encrypted object header, nonce, ciphertext and tag."
+    },
+    {
+      "name": "AdministratorTransitionResponse",
+      "schema": "administrator-transition-response.v1",
+      "location": "Core server-created content; public result descriptors/types in Common",
+      "fields": [
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "State",
+          "type": "AdministratorTransitionResponseState",
+          "required": true
+        },
+        {
+          "name": "StatusUrl",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "AcceptedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "rules": "State accepted gives 202, completed gives 200. Branch is frozen at native acceptance and exact retries repeat it; terminal domain result is Unit."
+    },
+    {
+      "name": "EvidenceDownloadIntent",
+      "schema": "evidence-download-intent.v1",
+      "location": "Core server-created content; public result descriptors/types in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "GrantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ArtifactId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ContentSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ContentLength",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ArtifactRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "Purpose",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "AdvisorHandoffId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "SelectedSource",
+          "type": "AdvisorRecordVersion?",
+          "required": true
+        },
+        {
+          "name": "RequiredSourceUses",
+          "type": "ImmutableSelectionManifest",
+          "required": true
+        },
+        {
+          "name": "MaxDeliveryLifetime",
+          "type": "TimeSpan",
+          "required": true
+        }
+      ],
+      "rules": "GrantId equals root CommandId. Admit/pin available inspected artifact, then acquire complete optional handoff and explicit handling-policy uses. No fabricated use for an absent optional source; default immutable policy version is frozen. Original ticket lives only in protected result content."
+    },
+    {
+      "name": "TypeIIRangeIntent",
+      "schema": "type-i-i-range-intent.v1",
+      "location": "Core server-created content; public result descriptors/types in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationKind",
+          "type": "TypeIIRangeOperationKind",
+          "required": true
+        },
+        {
+          "name": "PriorGrant",
+          "type": "ReservationGrant?",
+          "required": true
+        },
+        {
+          "name": "OldRange",
+          "type": "ObservationRange?",
+          "required": true
+        },
+        {
+          "name": "NewRange",
+          "type": "ObservationRange",
+          "required": true
+        },
+        {
+          "name": "OpeningOrAmendmentContent",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "NewReservationKey",
+          "type": "ReservationKey",
+          "required": true
+        }
+      ],
+      "rules": "Persist before calendar write; opening has no prior grant. Amendments reserve old+new with exact prior grant; canceled amendment releases only pending new grant, never old active range. Source close freezes exact current grant/event/token."
+    },
+    {
+      "name": "EngagementPersonalDecisionIntent",
+      "schema": "engagement-personal-decision-intent.v1",
+      "location": "Core server-created immutable content; native wire references in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "DecisionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Kind",
+          "type": "EngagementPersonalDecisionKind",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedEngagementRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ServiceEpoch",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "CompleteServiceManifest",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "NonattestServiceRecord"
+        },
+        {
+          "name": "AuthoredContent",
+          "type": "EngagementPersonalDecisionContent",
+          "required": true
+        },
+        {
+          "name": "RequiredSourceUses",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "SourceUseRequirement"
+        }
+      ],
+      "rules": "DecisionId is AcknowledgementId or EvaluationId. Admission pins exact engagement content and epoch. Management content contains complete service record IDs and statement; partner content contains exact rule/digest/history/rationale and authoritative personal duty requirements. Authorize only after all required uses; cancel only before authorization. Child materialization consumes authorization, records frozen original actor and decision instant, and cannot overwrite a later personal decision pointer."
+    },
+    {
+      "name": "ClientIndependencePreviewIntent",
+      "schema": "client-independence-preview-intent.v1",
+      "location": "Core server-created immutable content; native wire references in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ClientTenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ServiceEpoch",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "RuleSetVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExaminationPeriodStart",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "CompleteServices",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "NonattestServiceRecord"
+        },
+        {
+          "name": "RuleContent",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "HistoricalPracticeFacts",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "SourceFactLocator"
+        },
+        {
+          "name": "SourceCuts",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "AuthoritativeReadCut"
+        },
+        {
+          "name": "RuleVersionDigest",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "Freeze complete exact current service epoch and historical evaluation inputs at client admission. Child calculation reads only this snapshot with the selected evaluator version. Result is a historical preview; ProductionAcceptanceBlocked is always true. Infrastructure/missing coverage is transient; proven missing business facts become explicit findings."
+    },
+    {
+      "name": "AuditorSampleSelectionIntent",
+      "schema": "auditor-sample-selection-intent.v1",
+      "location": "Core server-created immutable content; native wire references in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "RequestId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RequestGeneration",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ParentAdmissionRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "SelectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SupersedesSelectionId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationVersion",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "PopulationContent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "AuditPopulationVersionView"
+        },
+        {
+          "name": "PopulationRowIds",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "Uuid"
+        },
+        {
+          "name": "SelectionMethod",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExternalReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AmendmentReason",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "RecordedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "rules": "Open request admits exact nonempty duplicate-free row selection and frozen population content. Amendment identifies a prior admitted selection of the same population with strictly later population version. Freeze request revision separately from new selection zero. Resolution drains every admitted selection; later closure cannot discard it. Child materializes the exact admitted selection without a live parent read."
+    },
+    {
+      "name": "AdministratorTransitionIntent",
+      "schema": "administrator-transition-intent.v1",
+      "location": "Core server-created immutable content; native references in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "MemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "AssignmentId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "AssignmentGeneration",
+          "type": "ulong?",
+          "required": true
+        },
+        {
+          "name": "ExpectedAssignmentRevision",
+          "type": "ulong?",
+          "required": true
+        },
+        {
+          "name": "TransitionKind",
+          "type": "AdministratorTransitionKind",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "GuardGeneration",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "EligibilityRequirements",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "SourceUseRequirement"
+        }
+      ],
+      "rules": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass."
+    },
+    {
+      "name": "FirmStaffRegistrationIntent",
+      "schema": "firm-staff-registration-intent.v1",
+      "location": "Core server-created immutable content; native references in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "StaffMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CanonicalUserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Practice",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "InitialStatus",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "Freeze normalized source registration values and authoritative authenticated operator. Claim canonical user permanently before completing staff native registration. Conflicting claim rejects pending registration and fences late completion; status changes cannot replace user/practice/source."
+    },
+    {
+      "name": "ProfessionalDutyChangeIntent",
+      "schema": "professional-duty-change-intent.v1",
+      "location": "Core server-created immutable content; native references in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "DesignationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ChangeKind",
+          "type": "ProfessionalDutyChangeKind",
+          "required": true
+        },
+        {
+          "name": "AuthoredChange",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "RecordFirmProfessionalDutyDesignation | RevokeFirmProfessionalDutyDesignation"
+        },
+        {
+          "name": "SignedAssertion",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "VerifiedAssertionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AuthorityRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "VerifiedScope",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "VerifiedFirmProfessionalDutyAssertion"
+        },
+        {
+          "name": "PreviousAssertion",
+          "type": "SourceFactLocator?",
+          "required": true
+        },
+        {
+          "name": "StaffEligibility",
+          "type": "SourceUseRequirement?",
+          "required": true
+        }
+      ],
+      "rules": "AuthoredChange is the exact normalized RecordFirmProfessionalDutyDesignation or RevokeFirmProfessionalDutyDesignation field schema. Verified scope contains authority, tenant/staff/duty/source/valid interval and signed payload digest. Global assertion identity claim binds the complete verified tuple; independent proof never comes from a caller boolean. Recording additionally requires exact currently active canonical staff use, held through native designation; revocation does not require active staff. Acquire before irreversible assertion claim. Reject/fence before source settlement on definite pre-apply failure. Freeze and validate signed validity at the declared original decision instant."
+    },
+    {
+      "name": "AccessReviewItemCreationIntent",
+      "schema": "access-review-item-creation-intent.v1",
+      "location": "Core server-created immutable content; native references in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignGeneration",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationEntry",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "AccessReviewItemView"
+        },
+        {
+          "name": "ReviewerMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ReviewerEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SnapshotProof",
+          "type": "SourceFactLocator",
+          "required": true
+        }
+      ],
+      "rules": "Exact item intent comes from the complete launch manifest. Stable item identity and original reviewer/personal eligibility facts are frozen. Late materialization after parent seal must complete before closure; no item can be omitted from coverage."
+    },
+    {
+      "name": "ProviderReviewIntent",
+      "schema": "provider-review-intent.v1",
+      "location": "Core server-created immutable content; native references in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ReviewId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AuthoredReview",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "RecordProviderReview"
+        },
+        {
+          "name": "ReviewedReport",
+          "type": "SourceFactLocator",
+          "required": true
+        },
+        {
+          "name": "RequiredSourceUses",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "SourceUseRequirement"
+        },
+        {
+          "name": "ReviewedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "rules": "AuthoredReview is normalized RecordProviderReview with exact evidence/report/period/currency/cadence/rationale/actor. Source-current rules are held until irreversible native review or local cancellation fence."
+    },
+    {
+      "name": "RiskActionCompletionReviewIntent",
+      "schema": "risk-action-completion-review-intent.v1",
+      "location": "Core server-created immutable content; native references in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ActionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SubmissionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AuthoredReview",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ReviewRiskTreatmentActionCompletion"
+        },
+        {
+          "name": "CompletionEvidence",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "SourceFactLocator"
+        },
+        {
+          "name": "RequiredSourceUses",
+          "type": "ImmutableSelectionManifest",
+          "required": true,
+          "contentSchema": "SourceUseRequirement"
+        }
+      ],
+      "rules": "Freeze exact submitted completion and independent reviewer/waiver/decision. All current fulfilled evidence uses remain held through accepted native review or local cancellation. New submission needs a new operation identity."
+    }
+  ]
+}

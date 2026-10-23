@@ -1,0 +1,113 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "000_AccessGrant": {
+      "type": "noul",
+      "noul": 0.16
+    },
+    "001_FirmProfessionalDutyCatalog": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "002_FirmStaffDirectory": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "003_IndependenceLedger": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "004_IndependenceRuleCatalog": {
+      "type": "noul",
+      "noul": 0.67
+    },
+    "005_IndependenceRuleRatificationCatalog": {
+      "type": "noul",
+      "noul": 0.76
+    },
+    "006_Member": {
+      "type": "noul",
+      "noul": 0.74
+    },
+    "007_Role": {
+      "type": "noul",
+      "noul": 0.23
+    },
+    "008_RolePermission": {
+      "type": "noul",
+      "noul": 0.45
+    },
+    "009_SeparationOfDutiesWaiver": {
+      "type": "noul",
+      "noul": 0.17
+    },
+    "010_Team": {
+      "type": "noul",
+      "noul": 0.15
+    },
+    "011_TeamMember": {
+      "type": "noul",
+      "noul": 0.62
+    },
+    "012_TeamRole": {
+      "type": "noul",
+      "noul": 0.41
+    },
+    "013_TenantManagerGuard": {
+      "type": "noul",
+      "noul": 0.68
+    },
+    "014_AccessPopulation": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "015_AccessReviewCampaign": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "016_AccessReviewSystemLedger": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "017_AdvisorHandoff": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "018_ApplicationImportLedger": {
+      "type": "noul",
+      "noul": 0.86
+    },
+    "019_DeclaredApplication": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "020_DeclaredSystemInstance": {
+      "type": "noul",
+      "noul": 0.57
+    },
+    "021_ImportBatch": {
+      "type": "noul",
+      "noul": 0.45
+    },
+    "022_SystemInstanceAccessReviewScope": {
+      "type": "noul",
+      "noul": 0.84
+    },
+    "023_AuditPackage": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "024_AuditPopulation": {
+      "type": "noul",
+      "noul": 0.83
+    },
+    "025_AuditorRequest": {
+      "type": "noul",
+      "noul": 0.89
+    }
+  },
+  "usage": {
+    "input_tokens": 20525,
+    "output_tokens": 635
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "purpose": "Improve names for proposed owners so each name reflects its stable identity and owned lifecycle, while reusing established product vocabulary. These are candidate names, not existing code.",
+    "namingRules": [
+      "Aggregate names are business nouns keyed by a stable identity.",
+      "Avoid naming a business owner Coordinator/Process unless its state is genuinely technical continuation.",
+      "Use a broader noun when the owner holds more than a single decision event.",
+      "Reuse established source/event vocabulary where it already names the same lifecycle."
+    ],
+    "choices": [
+      {
+        "id": "import_source_owner",
+        "evidence": "Owns tenant+normalized source key+namespace uniqueness, one accepted batch in progress and one complete publication gate. It is a business admission owner; batch execution belongs to ImportBatch.",
+        "options": {
+          "ApplicationImportSource": "Names the stable external source identity and business admission/publication authority.",
+          "ApplicationImportCoordinator": "Emphasizes orchestration, but can sound like technical process state.",
+          "ImportBatch": "Names the individual batch lifecycle and is too narrow for source-wide uniqueness."
+        }
+      },
+      {
+        "id": "access_campaign_item",
+        "evidence": "One frozen campaign item owns its reviewer decision, reassignment, remediation verification, exception and history, keyed by campaign+item.",
+        "options": {
+          "AccessReviewItem": "Names the frozen campaign item and its complete lifecycle.",
+          "AccessReviewDecision": "Names only the review decision, omitting remediation/reassignment/exception state.",
+          "AccessCampaignParticipant": "Suggests person identity, but an item may be entitlement-specific and not one person."
+        }
+      },
+      {
+        "id": "occurrence",
+        "evidence": "One control performance window has one deterministic identity across all generators and carries plan-bound attestation/review facts. Existing domain vocabulary includes ControlOccurrenceAttested and ControlOccurrenceReviewed.",
+        "options": {
+          "ControlOccurrence": "Uses established product vocabulary and one control+window identity.",
+          "ControlPerformanceOccurrence": "More explicit about the performance window, but longer and not aligned with current event names.",
+          "ControlDueWorkItem": "Suggests only due selection, not attestation and review lifecycle."
+        }
+      },
+      {
+        "id": "import_batch",
+        "evidence": "One frozen source batch owns rows, revisions, execution/recovery and terminal outcome; a separate ApplicationImportSource owner enforces uniqueness/publication.",
+        "options": {
+          "ApplicationImportBatch": "Names domain and independent batch identity.",
+          "ImportExecution": "Names the technical worker phase rather than the accepted batch lifecycle.",
+          "ApplicationImportPlan": "Names selection/sealing but not later target application and settlement."
+        }
+      },
+      {
+        "id": "package_delivery",
+        "evidence": "One business delivery is keyed by package, manifest version and recipient; its authorization binds exact archive, validation and recipient approval.",
+        "options": {
+          "AuditPackageDelivery": "Explicit package business delivery lifecycle.",
+          "PackageDeliveryAuthorization": "Names only the authorization gate, omitting actual delivery outcome.",
+          "AuditPackageRecipient": "Names a recipient relationship rather than one delivery episode."
+        }
+      },
+      {
+        "id": "package_build_process",
+        "evidence": "Technical build attempts, validation results and archive evidence are independent from business manifest approval and recipient delivery.",
+        "options": {
+          "AuditPackageBuildProcess": "Names technical continuation for one package/version, distinct from domain approval.",
+          "AuditPackageBuild": "Could be read as a business aggregate rather than technical attempts.",
+          "PackageBuildAttempt": "Names a single attempt, but each process may coordinate multiple attempts."
+        }
+      },
+      {
+        "id": "feedback_owner",
+        "evidence": "A handoff keeps selection/readiness/revocation admission authority; each feedback contribution plus corrections/responses is independently owned.",
+        "options": {
+          "AdvisorFeedbackThread": "Names contribution and response/correction history.",
+          "HandoffFeedback": "Shorter but does not clearly name its response/correction lifecycle.",
+          "AdvisorFeedback": "Broad and ambiguous between one contribution and feedback as a program."
+        }
+      },
+      {
+        "id": "provider_name_claim",
+        "evidence": "Authoritative normalized tenant-scoped active name uniqueness; the claim is reserved and released as provider identity changes.",
+        "options": {
+          "ProviderNameClaim": "Names authoritative uniqueness ownership as a business claim.",
+          "ProviderNameReservation": "Highlights temporary hold semantics; may imply automatically expiring reservations.",
+          "ProviderNameRegistry": "Suggests a broad tenant-wide roster rather than per-name authority."
+        }
+      },
+      {
+        "id": "independence_wall",
+        "evidence": "Permanent staff/user practice authority survives assignment removal and engagement closure. It cannot be reactivated by reevaluation.",
+        "options": {
+          "PracticeIndependenceCommitment": "Names the permanent user/practice-level business commitment.",
+          "IndependenceCommitment": "Short, but may be confused with service-specific acceptance.",
+          "StaffIndependenceWall": "Makes permanence clear but uses an informal security metaphor."
+        }
+      },
+      {
+        "id": "readiness_gap_owner",
+        "evidence": "A stable gap gets an independently revised response plan; program entry remains a narrow coordinator that requires all current plans.",
+        "options": {
+          "ReadinessGapPlan": "Names the owned planning lifecycle for one stable gap.",
+          "ReadinessResponsePlan": "More business-facing but omits the stable gap identity.",
+          "ReadinessGap": "Names the finding, not the mutable response plan."
+        }
+      }
+    ]
+  },
+  "questions": {
+    "import_source_owner": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: Owns tenant+normalized source key+namespace uniqueness, one accepted batch in progress and one complete publication gate. It is a business admission owner; batch execution belongs to ImportBatch.",
+      "criteria": {
+        "ApplicationImportSource": "Names the stable external source identity and business admission/publication authority.",
+        "ApplicationImportCoordinator": "Emphasizes orchestration, but can sound like technical process state.",
+        "ImportBatch": "Names the individual batch lifecycle and is too narrow for source-wide uniqueness."
+      }
+    },
+    "access_campaign_item": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: One frozen campaign item owns its reviewer decision, reassignment, remediation verification, exception and history, keyed by campaign+item.",
+      "criteria": {
+        "AccessReviewItem": "Names the frozen campaign item and its complete lifecycle.",
+        "AccessReviewDecision": "Names only the review decision, omitting remediation/reassignment/exception state.",
+        "AccessCampaignParticipant": "Suggests person identity, but an item may be entitlement-specific and not one person."
+      }
+    },
+    "occurrence": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: One control performance window has one deterministic identity across all generators and carries plan-bound attestation/review facts. Existing domain vocabulary includes ControlOccurrenceAttested and ControlOccurrenceReviewed.",
+      "criteria": {
+        "ControlOccurrence": "Uses established product vocabulary and one control+window identity.",
+        "ControlPerformanceOccurrence": "More explicit about the performance window, but longer and not aligned with current event names.",
+        "ControlDueWorkItem": "Suggests only due selection, not attestation and review lifecycle."
+      }
+    },
+    "import_batch": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: One frozen source batch owns rows, revisions, execution/recovery and terminal outcome; a separate ApplicationImportSource owner enforces uniqueness/publication.",
+      "criteria": {
+        "ApplicationImportBatch": "Names domain and independent batch identity.",
+        "ImportExecution": "Names the technical worker phase rather than the accepted batch lifecycle.",
+        "ApplicationImportPlan": "Names selection/sealing but not later target application and settlement."
+      }
+    },
+    "package_delivery": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: One business delivery is keyed by package, manifest version and recipient; its authorization binds exact archive, validation and recipient approval.",
+      "criteria": {
+        "AuditPackageDelivery": "Explicit package business delivery lifecycle.",
+        "PackageDeliveryAuthorization": "Names only the authorization gate, omitting actual delivery outcome.",
+        "AuditPackageRecipient": "Names a recipient relationship rather than one delivery episode."
+      }
+    },
+    "package_build_process": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: Technical build attempts, validation results and archive evidence are independent from business manifest approval and recipient delivery.",
+      "criteria": {
+        "AuditPackageBuildProcess": "Names technical continuation for one package/version, distinct from domain approval.",
+        "AuditPackageBuild": "Could be read as a business aggregate rather than technical attempts.",
+        "PackageBuildAttempt": "Names a single attempt, but each process may coordinate multiple attempts."
+      }
+    },
+    "feedback_owner": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: A handoff keeps selection/readiness/revocation admission authority; each feedback contribution plus corrections/responses is independently owned.",
+      "criteria": {
+        "AdvisorFeedbackThread": "Names contribution and response/correction history.",
+        "HandoffFeedback": "Shorter but does not clearly name its response/correction lifecycle.",
+        "AdvisorFeedback": "Broad and ambiguous between one contribution and feedback as a program."
+      }
+    },
+    "provider_name_claim": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: Authoritative normalized tenant-scoped active name uniqueness; the claim is reserved and released as provider identity changes.",
+      "criteria": {
+        "ProviderNameClaim": "Names authoritative uniqueness ownership as a business claim.",
+        "ProviderNameReservation": "Highlights temporary hold semantics; may imply automatically expiring reservations.",
+        "ProviderNameRegistry": "Suggests a broad tenant-wide roster rather than per-name authority."
+      }
+    },
+    "independence_wall": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: Permanent staff/user practice authority survives assignment removal and engagement closure. It cannot be reactivated by reevaluation.",
+      "criteria": {
+        "PracticeIndependenceCommitment": "Names the permanent user/practice-level business commitment.",
+        "IndependenceCommitment": "Short, but may be confused with service-specific acceptance.",
+        "StaffIndependenceWall": "Makes permanence clear but uses an informal security metaphor."
+      }
+    },
+    "readiness_gap_owner": {
+      "type": "choice",
+      "instructions": "Choose the clearest aggregate or process name for this exact identity and lifecycle: A stable gap gets an independently revised response plan; program entry remains a narrow coordinator that requires all current plans.",
+      "criteria": {
+        "ReadinessGapPlan": "Names the owned planning lifecycle for one stable gap.",
+        "ReadinessResponsePlan": "More business-facing but omits the stable gap identity.",
+        "ReadinessGap": "Names the finding, not the mutable response plan."
+      }
+    }
+  }
+}

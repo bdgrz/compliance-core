@@ -1,6 +1,8 @@
 # Aggregate and reactor remediation
 
 Delivery is tracked by [#1022](https://github.com/bdgrz/compliance-core/issues/1022).
+
+The current 103-owner command/handler/guard/test specification, 29 split-target definitions, 24-reactor catalog and Mermaid choreography diagrams are indexed in [the 2026-10-23 boundary audit](audits/2026-10-23/README.md).
 [The delivery ledger](aggregate-remediation.json) assigns all 81 active observations
 (seven P1, 74 P2) to ordered delivery families. Each family is a sequence of focused
 PRs, not permission to combine all its owners in one change. Shared observations

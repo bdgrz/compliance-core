@@ -1,0 +1,117 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "fixedRules": [
+      "Pre-release layouts disposable. Client retry identities required typed route/command values.",
+      "Native business facts authoritative; technical process state is not policy authority.",
+      "Preserve current personal-HTTP policy and accepted business rules; do not silently add an external sending integration.",
+      "A projection or second read cannot make cross-owner writes atomic."
+    ],
+    "decisions": {
+      "bulk_admission": {
+        "evidence": "Current RecordBulkAccessDecision uses one campaign revision/preview for an all-item decision. Target public command writes a newly created AccessReviewDecisionBatch but still has ExpectedRevision; that field formerly meant campaign revision. Completion must account for an admitted but unpublished batch.",
+        "alternatives": {
+          "campaign_admit_then_batch": "Public command first appends complete bulk admission to AccessReviewCampaign under ExpectedCampaignRevision; child batch keyed DecisionBatchId owns reservations/provisional effects/publication. Campaign close drains pre-seal batch admissions before item proof holds.",
+          "batch_first_with_owner_revision": "Keep writing a new batch, compare ExpectedRevision to new batch zero, let the original campaign preview be advisory.",
+          "campaign_all_item_state": "Keep all bulk/per-item histories in the parent campaign forever."
+        }
+      },
+      "readiness_admission": {
+        "evidence": " = await reader.HydrateAsync(new ComplianceProgram(request.TenantId,\n            request.ProgramId), ct).ConfigureAwait(false);\n        if (!program.IsCreated)\n            return Result<ReadinessAssessmentRegistration>.Failure(new RequestError(\n                RequestErrorKind.NotFound, \"The program was not found.\"));\n        var selectedEditionId = program.CriteriaEditionAt(asOf);\n        var catalogEdition = selectedEditionId is { } selected ? catalog.GetEdition(selected) : null;\n        var editionId = catalogEdition is not null ? selectedEditionId : null;\n        var criteria = editionId is { } edition\n            ? catalog.ListEntries(edition, null, \"criterion\", null)\n            : [];\n        var ledger = await reader.HydrateAsync(new ControlCriterionMappingLedger(\n            request.TenantId, request.ProgramId), ct).ConfigureAwait(false);\n        var mappings = ledger.ReadAll().Where(mapping => mapping.EditionId == editionId)\n            .ToArray();\n        var controls = new Dictionary<Uuid, ControlVersionView?>();\n        foreach (var controlId in mappings\n                     .Where(mapping => ReadinessRules.ActiveAt(mapping, asOf) is not null)\n                     .Select(static mapping => mapping.ControlId).Distinct())\n        {\n            var control = await reader.HydrateAsync(new ControlDraft(request.TenantId,\n                controlId), ct).ConfigureAwait(false);\n            controls[controlId] = control.IsVisible && control.ProgramId == request.ProgramId\n                ? ReadinessControlSelection.EffectiveVersionAt(control, asOf)\n                : null;\n        }\n        var sourceResult = await sources.ReadAsync(request.TenantId, request.ProgramId, asOf, ct)\n            .ConfigureAwait(false);\n        if (!sourceResult.IsSuccess)\n            return Result<ReadinessAssessmentRegistration>.Failure(sourceResult.Error);\n        var evaluation = ReadinessRules.Evaluate(request.ProgramId, asOf, editionId, criteria,\n            mappings, controls, sourceResult.Value, catalogEdition);\n        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)\n            ? subject\n            : throw new InvalidOperationException(\"ProgramManagementAuthorizer must reject this actor.\");\n        return await executor.ExecuteAsync(new ReadinessLedger(request.TenantId,\n                request.ProgramId),\n            readiness =>\n            {\n                var failure = readiness.Record(request.ExpectedRevision, context.RequestId, asOf,\n                    editionId, evaluation, RbacIds.Member(request.TenantId, userId),\n                    UserIdentityClaims.BdgrzDisplay(context.Actor, userId), now);\n                return CommandFailureRequestAdapter.ToOutcome(failure,\n                    new ReadinessAssessmentRegistration(context.RequestId, readiness.Revision));\n            }, context, ct).ConfigureAwait(false);\n    }\n}\n",
+        "alternatives": {
+          "program_admit_then_compute": "RunReadinessAssessment writes ProgramReadiness with ExpectedProgramRevision, required AssessmentId, fixed asOf/input cut and rules. One pending latest adoption at a time; compute child assessment from frozen inputs, then adopt with exact admitted generation. Decision cannot sign old latest while newer admitted run is pending.",
+          "assessment_first_success": "Write a new assessment and report success, then independently attempt latest adoption using an expected program revision absent from the public request.",
+          "retain_all_history": "Keep all complete assessments/plans/decisions in the old ReadinessLedger."
+        }
+      },
+      "gap_link_admission": {
+        "evidence": " content = new ProviderCoverageGapRiskAcceptanceContent(request.ProgramId,\n            request.RiskId, request.AcceptanceId);\n        if (source.CheckCoverageGapRiskAcceptanceRetry(request.GapId, context.RequestId,\n                request.ExpectedRevision, content) is { } retry)\n            return retry;\n        if (ProviderCoverageGapRules.RiskAcceptanceInputError(content) is { } inputError)\n            return Result<ProviderCoverageGapRegistration>.Failure(new RequestError(\n                RequestErrorKind.Validation, inputError));\n        if (source.CoverageGap(request.GapId) is not { } gap ||\n            gap.TenantId != request.TenantId || gap.ProviderId != request.ProviderId)\n            return Result<ProviderCoverageGapRegistration>.Failure(new RequestError(\n                RequestErrorKind.NotFound, \"The provider coverage gap was not found.\"));\n\n        var provider = await providerConsistency.GetRevisionAsync(request.TenantId,\n            request.ProviderId, gap.ProviderRevision, ct).ConfigureAwait(false);\n        if (!provider.IsSuccess)\n            return Result<ProviderCoverageGapRegistration>.Failure(provider.Error);\n        if (AssuranceReferences.ServiceError(provider.Value, gap.Content.ServiceId,\n                request.ProgramId) is { } serviceError)\n            return Result<ProviderCoverageGapRegistration>.Failure(serviceError);\n\n        var draft = await reader.HydrateAsync(new RiskDraft(request.TenantId, request.RiskId), ct)\n            .ConfigureAwait(false);\n        if (!draft.IsCreated || draft.ProgramId != request.ProgramId)\n            return Result<ProviderCoverageGapRegistration>.Failure(new RequestError(\n                RequestErrorKind.NotFound, \"The risk was not found in this program.\"));\n        var risk = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId), ct)\n            .ConfigureAwait(false);\n        var acceptance = risk.ProgramId == request.ProgramId\n            ? risk.FindAcceptance(request.AcceptanceId)\n            : null;\n        var now = clock.GetUtcNow();\n        if (acceptance is null || acceptance.AcceptedAt > now || acceptance.ExpiresAt <= now)\n            return Result<ProviderCoverageGapRegistration>.Failure(new RequestError(\n                RequestErrorKind.Conflict,\n                \"The risk acceptance is missing, expired, or not active.\"));\n\n        var actor = ProviderActor.From(context);\n        return await executor.ExecuteAsync(new ProviderAssuranceRegister(request.TenantId), register =>\n            AggregateOutcome.CommitOnSuccess(register.LinkCoverageGapRiskAcceptance(\n                request.GapId, request.ProviderId, context.RequestId, request.ExpectedRevision,\n                content, acceptance.ExpiresAt, actor, now)), context, ct).ConfigureAwait(false);\n    }\n}\n",
+        "alternatives": {
+          "gap_admit_then_link": "Link command first appends immutable link admission to ProviderAssuranceGap under ExpectedGapRevision and open/current rule; child link materializes even if gap later closes because admission already serialized. Bind acceptance validity at admission and never close gap by risk link.",
+          "child_live_check": "New link owner reads gap open and appends independently using former gap revision as new-link revision.",
+          "merge_report_all": "Keep all provider reports/reviews/gaps/links in one tenant register."
+        }
+      },
+      "delivery_scope": {
+        "evidence": "using Bdgrz.Compliance.Features.Versioning;\nusing Cntryl.Portia;\n\nnamespace Bdgrz.Compliance.Features.AuditPackages;\n\npublic sealed class RecordAuditPackageDeliveryHandler(IAggregateExecutor executor)\n    : IRequestHandler<RecordAuditPackageDelivery>\n{\n    public ValueTask<Result> HandleAsync(IRequestContext<RecordAuditPackageDelivery> context,\n        CancellationToken ct)\n    {\n        var request = context.Request;\n        if (!AuditPackageCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,\n                out var actorMemberId, out var actorDisplay))\n            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,\n                \"Audit package delivery requires a personal HTTP actor.\")));\n        if (request.PackageVersion is < 1 or > int.MaxValue)\n            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,\n                \"Delivery requires a valid package version.\")));\n\n        return executor.ExecuteAsync(new AuditPackage(request.TenantId, request.ProgramId,\n                request.PackageId), aggregate => CommandFailureRequestAdapter.ToOutcome(\n                aggregate.RecordDelivery(aggregate.Revision, (int)request.PackageVersion,\n                    request.Recipient, request.DeliveryReference, actorMemberId, actorDisplay,\n                    request.DeliveredAt)), context, ct);\n    }\n}\n",
+        "alternatives": {
+          "personal_recording_only": "Preserve personal HTTP command recording exact external handoff, recipient, authored DeliveredAt and reference; serialize manifest/archive/current-validation/recipient-approval gate before independently materializing delivery fact. Remove automatic-send worker and unused new authorization API until an explicit transport/product contract is supplied.",
+          "invent_auto_send": "Replace personal actor with system callback and introduce an automated send without channel, transport or provider receipt contract.",
+          "remove_delivery_guards": "Keep personal recording but discard manifest validation to simplify splitting."
+        }
+      },
+      "fact_payload_contract": {
+        "evidence": "ApplicationImportPlanSealed currently has BatchId, Revision and PlanSha256 only after the row-freeze events were classified as technical. BuildRequested now has ChangeRef whose declared schema only names the request (no captured BuildId/manifest version/archive selection).",
+        "alternatives": {
+          "typed_durable_intents": "Define exact named immutable intent/result records with server-resolved source values, manifests, IDs, source cuts and deadlines. Native seal/reference events point to those schemas; do not reconstruct from mutable aggregates or removed row-freeze facts.",
+          "command_only_refs": "Treat serialized request fields plus hash as enough to reconstruct all accepted server-resolved work later.",
+          "keep_all_row_stage_events": "Retain staging/cursor events forever as business authority."
+        }
+      },
+      "decision_source_use": {
+        "evidence": "Service acceptance reserves service epoch and permanent staff/user practice keys but current partner designation, directory active status and ratified-rule source can change between proof read and irreversible authorization.",
+        "alternatives": {
+          "explicit_source_use": "Acquire exact source-version use permits for directory, partner duty and rule/ratification authority before the irreversible engagement authorization, held to the specified commit point. Revocation/version publication checks the same source guard; after release authoritative current-eligibility reads immediately invalidate stale acceptance.",
+          "read_twice": "Read those mutable sources twice before appending to a separate engagement owner.",
+          "freeze_forever": "Prevent directory/status/rule changes permanently after any engagement acceptance."
+        }
+      }
+    }
+  },
+  "questions": {
+    "bulk_admission": {
+      "type": "choice",
+      "instructions": "For bulk_admission, choose the design that preserves the supplied source policy and atomic invariant with the fewest unsupported contracts. Judge design correctness; none is implemented yet.",
+      "criteria": {
+        "campaign_admit_then_batch": "Public command first appends complete bulk admission to AccessReviewCampaign under ExpectedCampaignRevision; child batch keyed DecisionBatchId owns reservations/provisional effects/publication. Campaign close drains pre-seal batch admissions before item proof holds.",
+        "batch_first_with_owner_revision": "Keep writing a new batch, compare ExpectedRevision to new batch zero, let the original campaign preview be advisory.",
+        "campaign_all_item_state": "Keep all bulk/per-item histories in the parent campaign forever."
+      }
+    },
+    "readiness_admission": {
+      "type": "choice",
+      "instructions": "For readiness_admission, choose the design that preserves the supplied source policy and atomic invariant with the fewest unsupported contracts. Judge design correctness; none is implemented yet.",
+      "criteria": {
+        "program_admit_then_compute": "RunReadinessAssessment writes ProgramReadiness with ExpectedProgramRevision, required AssessmentId, fixed asOf/input cut and rules. One pending latest adoption at a time; compute child assessment from frozen inputs, then adopt with exact admitted generation. Decision cannot sign old latest while newer admitted run is pending.",
+        "assessment_first_success": "Write a new assessment and report success, then independently attempt latest adoption using an expected program revision absent from the public request.",
+        "retain_all_history": "Keep all complete assessments/plans/decisions in the old ReadinessLedger."
+      }
+    },
+    "gap_link_admission": {
+      "type": "choice",
+      "instructions": "For gap_link_admission, choose the design that preserves the supplied source policy and atomic invariant with the fewest unsupported contracts. Judge design correctness; none is implemented yet.",
+      "criteria": {
+        "gap_admit_then_link": "Link command first appends immutable link admission to ProviderAssuranceGap under ExpectedGapRevision and open/current rule; child link materializes even if gap later closes because admission already serialized. Bind acceptance validity at admission and never close gap by risk link.",
+        "child_live_check": "New link owner reads gap open and appends independently using former gap revision as new-link revision.",
+        "merge_report_all": "Keep all provider reports/reviews/gaps/links in one tenant register."
+      }
+    },
+    "delivery_scope": {
+      "type": "choice",
+      "instructions": "For delivery_scope, choose the design that preserves the supplied source policy and atomic invariant with the fewest unsupported contracts. Judge design correctness; none is implemented yet.",
+      "criteria": {
+        "personal_recording_only": "Preserve personal HTTP command recording exact external handoff, recipient, authored DeliveredAt and reference; serialize manifest/archive/current-validation/recipient-approval gate before independently materializing delivery fact. Remove automatic-send worker and unused new authorization API until an explicit transport/product contract is supplied.",
+        "invent_auto_send": "Replace personal actor with system callback and introduce an automated send without channel, transport or provider receipt contract.",
+        "remove_delivery_guards": "Keep personal recording but discard manifest validation to simplify splitting."
+      }
+    },
+    "fact_payload_contract": {
+      "type": "choice",
+      "instructions": "For fact_payload_contract, choose the design that preserves the supplied source policy and atomic invariant with the fewest unsupported contracts. Judge design correctness; none is implemented yet.",
+      "criteria": {
+        "typed_durable_intents": "Define exact named immutable intent/result records with server-resolved source values, manifests, IDs, source cuts and deadlines. Native seal/reference events point to those schemas; do not reconstruct from mutable aggregates or removed row-freeze facts.",
+        "command_only_refs": "Treat serialized request fields plus hash as enough to reconstruct all accepted server-resolved work later.",
+        "keep_all_row_stage_events": "Retain staging/cursor events forever as business authority."
+      }
+    },
+    "decision_source_use": {
+      "type": "choice",
+      "instructions": "For decision_source_use, choose the design that preserves the supplied source policy and atomic invariant with the fewest unsupported contracts. Judge design correctness; none is implemented yet.",
+      "criteria": {
+        "explicit_source_use": "Acquire exact source-version use permits for directory, partner duty and rule/ratification authority before the irreversible engagement authorization, held to the specified commit point. Revocation/version publication checks the same source guard; after release authoritative current-eligibility reads immediately invalidate stale acceptance.",
+        "read_twice": "Read those mutable sources twice before appending to a separate engagement owner.",
+        "freeze_forever": "Prevent directory/status/rule changes permanently after any engagement acceptance."
+      }
+    }
+  }
+}
