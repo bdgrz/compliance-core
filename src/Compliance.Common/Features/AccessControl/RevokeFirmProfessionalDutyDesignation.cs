@@ -1,7 +1,16 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
+/// <summary>
+///     Relays one signed revocation assertion. <paramref name="AssertionId" /> is the logical operation identity and
+///     must equal the verified assertion. Revocation does not require the staff member to be active.
+/// </summary>
 [Discriminator("bdgrz.firm.professional-duty.revoke", 1)]
-public sealed record RevokeFirmProfessionalDutyDesignation(Uuid DesignationId, string SignedAssertion,
-    long ExpectedSequence) : IRequest<FirmProfessionalDutyDesignationView>, IProfessionalDutyAdministrationRequest, ICallable;
+public sealed record RevokeFirmProfessionalDutyDesignation(Uuid DesignationId, Uuid AssertionId,
+    string SignedAssertion, long ExpectedRevision)
+    : IRequest<OperationAcceptedResponse>, IProfessionalDutyAdministrationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => AssertionId;
+}

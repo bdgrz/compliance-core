@@ -1341,11 +1341,8 @@ public sealed class ServiceEngagementAcceptanceTests
         var partnerAssertion = ProfessionalDutyAssertionTestIssuer.Issue(partnerDesignationId,
             proof.PartnerUserId, FirmProfessionalDuty.EngagementPartner, Tenant, 1, "active", null,
             authorityIssuedAt, authorityExpiresAt);
-        var partnerDesignation = await executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Designate(Uuid.CreateVersion4(), partnerAssertion.Evidence,
-                partnerAssertion.Token, partnerStaff, catalog.Sequence, operatorActor, Now)),
-            new RequestDispatchContext(RequestActor.System),
-            CancellationToken.None);
+        var partnerDesignation = await ProfessionalDutyFacts.RecordAsync(scope.ServiceProvider, partnerAssertion,
+            partnerStaff, operatorActor, Now);
         Assert.True(partnerDesignation.IsSuccess, partnerDesignation.Error?.Message);
 
         var ratifierUser = Uuid.CreateVersion4();
@@ -1357,11 +1354,8 @@ public sealed class ServiceEngagementAcceptanceTests
         var ratifierAssertion = ProfessionalDutyAssertionTestIssuer.Issue(ratifierDesignationId,
             ratifierUser, FirmProfessionalDuty.RuleRatifier, null, 1, "active", null,
             authorityIssuedAt, authorityExpiresAt);
-        var ratifierDesignation = await executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Designate(Uuid.CreateVersion4(), ratifierAssertion.Evidence,
-                ratifierAssertion.Token, ratifier, catalog.Sequence, operatorActor, Now.AddMinutes(-2))),
-            new RequestDispatchContext(RequestActor.System),
-            CancellationToken.None);
+        var ratifierDesignation = await ProfessionalDutyFacts.RecordAsync(scope.ServiceProvider, ratifierAssertion,
+            ratifier, operatorActor, Now.AddMinutes(-2));
         Assert.True(ratifierDesignation.IsSuccess, ratifierDesignation.Error?.Message);
 
         var ruleRecorded = await executor.ExecuteAsync(new IndependenceRuleCatalog(), catalog =>

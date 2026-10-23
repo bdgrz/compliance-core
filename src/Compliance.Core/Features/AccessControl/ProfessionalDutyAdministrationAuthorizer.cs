@@ -25,10 +25,12 @@ sealed class ProfessionalDutyAdministrationAuthorizer(IPlatformOperatorAccess op
             GetFirmProfessionalDutyCatalog => Result.Success,
             RecordFirmProfessionalDutyDesignation request when assertions.TryVerify(request.SignedAssertion,
                 clock.GetUtcNow(), out var assertion) && assertion.Status == "active" &&
-                assertion.DesignationId == request.DesignationId => Result.Success,
+                assertion.DesignationId == request.DesignationId &&
+                assertion.AssertionId == request.AssertionId => Result.Success,
             RevokeFirmProfessionalDutyDesignation request when assertions.TryVerify(request.SignedAssertion,
                 clock.GetUtcNow(), out var assertion) && assertion.Status == "revoked" &&
-                assertion.DesignationId == request.DesignationId => Result.Success,
+                assertion.DesignationId == request.DesignationId &&
+                assertion.AssertionId == request.AssertionId => Result.Success,
             _ => Deny(RequestErrorKind.Forbidden,
                 "Duty changes require a valid, current assertion from the configured firm-authority issuer.")
         };

@@ -18,6 +18,10 @@ public static class ResultSchemaRegistry
         ["mutation-result-content.v1"] = ComplianceCoreJsonContext.Default.MutationResultContent,
         [AdministratorTransitionResponse.Schema] = ComplianceCoreJsonContext.Default.AdministratorTransitionResponse,
         ["FirmStaffChangeRecorded.StaffContent.v1"] = ComplianceCoreJsonContext.Default.FirmStaffMemberView,
+        ["FirmProfessionalDutyDesignationRecorded.DesignationContent.v1"] =
+            ComplianceCoreJsonContext.Default.FirmProfessionalDutyDesignationView,
+        ["FirmProfessionalDutyDesignationRevoked.DesignationContent.v1"] =
+            ComplianceCoreJsonContext.Default.FirmProfessionalDutyDesignationView,
     };
 
     /// <summary>Registered schema names.</summary>

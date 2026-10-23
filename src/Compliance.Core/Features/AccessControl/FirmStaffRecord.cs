@@ -1,15 +1,18 @@
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>
 ///     One firm staff member: the frozen registration, its completion or rejection, and the status changes of this
-///     record only. The logical revision counts completed changes; it is independent of every other record.
+///     record only. The logical revision counts completed changes; it is independent of every other record. The
+///     record embeds <see cref="SourceUseReservations" />: a held professional-duty use does not advance the revision
+///     but refuses status changes until it is settled.
 /// </summary>
-public sealed class FirmStaffRecord : Aggregate
+public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
 {
     /// <summary>Stream area of every staff record.</summary>
     public const string Area = "firm-staff-records";
@@ -27,6 +30,7 @@ public sealed class FirmStaffRecord : Aggregate
     {
         StaffMemberId = staffMemberId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        Uses = new SourceUseReservations(Stream);
         On<FirmStaffRegistrationAccepted>(accepted =>
         {
             Acceptance.Observe(accepted);
@@ -57,7 +61,22 @@ public sealed class FirmStaffRecord : Aggregate
             _latest = change;
             _revision = change.Revision;
         });
+        On<FirmStaffProfessionalDutyUseAuthorized>(granted =>
+        {
+            Acceptance.Observe(granted);
+            if (_latest is null || granted.Revision != (long)_revision)
+                throw new InvalidOperationException("A staff use is granted on a registered record at its held revision.");
+            Uses.ApplyGranted(SourceUsePurpose.ProfessionalDutyRecording, granted);
+        });
+        On<FirmStaffProfessionalDutyUseSettled>(settled =>
+        {
+            Acceptance.Observe(settled);
+            Uses.ApplySettled(SourceUsePurpose.ProfessionalDutyRecording, settled);
+        });
     }
+
+    /// <summary>The active grants, receiver generation and fences of this record's source uses.</summary>
+    public SourceUseReservations Uses { get; }
 
     /// <summary>The staff member this record owns.</summary>
     public Uuid StaffMemberId { get; }
@@ -154,6 +173,9 @@ public sealed class FirmStaffRecord : Aggregate
                 "The staff registration is not complete yet.", true));
         if (!IsRegistered)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The staff member was not found."));
+        if (Uses.HasActiveUse)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A professional-duty change holds this staff record; retry after it settles.", true));
         return expectedRevision == _revision
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -173,6 +195,33 @@ public sealed class FirmStaffRecord : Aggregate
             return prepared;
         RaiseEvent(new FirmStaffChangeRecorded(operation.LogicalId, "status", reason, staffContent, operation,
             _revision + 1, _accepted!.Intent, firstResponse, operationResult));
+        return Result.Success;
+    }
+
+    /// <summary>Holds this exact registered record for a professional-duty recording; the revision does not advance.</summary>
+    public Result AuthorizeProfessionalDutyUse(OperationProvenance operation, ImmutableContentRef intent,
+        long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (!IsRegistered || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only a registered staff record can be held, on its own stream.", true));
+        RaiseEvent(new FirmStaffProfessionalDutyUseAuthorized(Stream, (long)_revision, generation, intent, null,
+            operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Settles a professional-duty use, or fences its key when no grant exists yet.</summary>
+    public Result SettleProfessionalDutyUse(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A settlement is recorded on the held staff stream."));
+        RaiseEvent(new FirmStaffProfessionalDutyUseSettled(Stream, (long)_revision, generation, intent, null,
+            operation, null, null));
         return Result.Success;
     }
 }

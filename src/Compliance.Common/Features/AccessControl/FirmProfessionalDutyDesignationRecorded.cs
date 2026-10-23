@@ -1,7 +1,14 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
+/// <summary>
+///     A signed active assertion recorded or refreshed the designation. The complete
+///     <see cref="FirmProfessionalDutyDesignationView" /> is immutable content; no cumulative catalog is carried.
+/// </summary>
 [Discriminator("bdgrz.firm.professional-duty.designation-recorded", 1)]
-public sealed record FirmProfessionalDutyDesignationRecorded(Uuid RequestId, long ExpectedSequence,
-    FirmProfessionalDutyDesignationView Designation, string SignedAssertion) : DomainEvent;
+public sealed record FirmProfessionalDutyDesignationRecorded(Uuid OperationId, ImmutableContentRef DesignationContent,
+    string SignedAssertion, OperationProvenance Operation, ulong Revision, ImmutableContentRef Intent,
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

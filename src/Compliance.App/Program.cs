@@ -649,12 +649,32 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/platform/firm-staff/{staff_member_id}/set-firm-staff-status/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
-    app.MapPortiaPut<RecordFirmProfessionalDutyDesignation, FirmProfessionalDutyDesignationView>(
-            "/api/v1/platform/firm-professional-duties/{designation_id}")
+    app.MapPortiaPut<RecordFirmProfessionalDutyDesignation, OperationAcceptedResponse>(
+            "/api/v1/platform/firm-professional-duties/{designation_id}/assertions/{assertion_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
-    app.MapPortiaPost<RevokeFirmProfessionalDutyDesignation, FirmProfessionalDutyDesignationView>(
-            "/api/v1/platform/firm-professional-duties/{designation_id}/revocation")
+    app.MapPortiaPut<RevokeFirmProfessionalDutyDesignation, OperationAcceptedResponse>(
+            "/api/v1/platform/firm-professional-duties/{designation_id}/assertion-revocations/{assertion_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
     app.MapPortiaGet<GetFirmProfessionalDutyCatalog, FirmProfessionalDutyCatalogView>(
