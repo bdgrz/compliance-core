@@ -17,6 +17,41 @@ public sealed class DeprovisionMemberHandlerTests
     static readonly DateTimeOffset ActionAt = new(2026, 10, 3, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public async Task ShouldPreserveNewMembershipAuthorityGivenDelayedRetirementCleanup()
+    {
+        // Arrange
+        await using var provider = CreateProvider();
+        var reader = provider.GetRequiredService<IAggregateReader>();
+        var executor = provider.GetRequiredService<IAggregateExecutor>();
+        var memberId = RbacIds.Member(TenantId, UserId);
+        var actorMemberId = RbacIds.Member(TenantId, ActorUserId);
+        await SeedAsync(provider, new Member(TenantId, UserId), member => member.Register());
+        await SeedAsync(provider, new Member(TenantId, UserId), member =>
+            member.Deprovision(actorMemberId, "Original administrator", ActionAt, "Prior episode ended."));
+        await SeedAsync(provider, new Member(TenantId, UserId), member =>
+            member.CompleteDeprovisionCleanup(ActionAt.AddMinutes(1)));
+        await SeedAsync(provider, new Member(TenantId, UserId), member => member.Register());
+        var current = await reader.HydrateAsync(new Member(TenantId, UserId));
+        await SeedAsync(provider, new TeamMember(TenantId, TeamId, memberId),
+            assignment => assignment.Assign(current.MembershipEpisodeId));
+        var cleanup = new MemberAuthorityCleanup(reader, executor,
+            new TestTeamMemberDirectory([new TeamMemberView(TeamId, memberId)]),
+            new TestAccessGrantDirectory(new AccessGrantSetView(TenantId, 0, [])), TimeProvider.System);
+
+        // Act
+        await cleanup.CompleteAsync(new RequestDispatchContext(RequestActor.System), TenantId, UserId,
+            memberId, actorMemberId, "Original administrator", CancellationToken.None);
+        var assignment = await reader.HydrateAsync(new TeamMember(TenantId, TeamId, memberId));
+        var membership = await reader.HydrateAsync(new Member(TenantId, UserId));
+
+        // Assert
+        Assert.True(assignment.IsAssigned);
+        Assert.Equal(current.MembershipEpisodeId, assignment.MembershipEpisodeId);
+        Assert.True(membership.IsRegistered);
+        Assert.Equal(current.MembershipEpisodeId, membership.MembershipEpisodeId);
+    }
+
+    [Fact]
     public async Task ShouldRemoveAuthorityAndRetainHistoryGivenFreshInvitationAfterDeprovisioning()
     {
         // Arrange
