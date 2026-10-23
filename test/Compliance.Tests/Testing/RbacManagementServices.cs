@@ -16,7 +16,10 @@ static class RbacManagementServices
     public static ServiceProvider Build(bool allowed, Action<PortiaBuilder> handlers)
     {
         var services = new ServiceCollection();
-        services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        var events = new InMemoryEventStore();
+        services.AddSingleton<IEventStore>(events);
+        services.AddSingleton<IDomainEventReader>(events);
+        services.AddSingleton<IProjectionCheckpointStore, InMemoryProjectionCheckpointStore>();
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(allowed));
         services.AddSingleton<ITenantActivity, ActiveTenant>();
         services.AddSingleton<ITenantMembershipDirectoryReader, AlwaysMemberDirectory>();

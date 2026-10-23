@@ -11,6 +11,25 @@ public sealed class TeamMemberTests
     static readonly Uuid MemberId = Uuid.Parse("0862062f-97e9-45de-a312-0f884c48180d", CultureInfo.InvariantCulture);
 
     [Fact]
+    public void ShouldRejectReplacingActiveAuthorityGivenAnotherMembershipEpisode()
+    {
+        // Arrange
+        var originalEpisode = Uuid.CreateVersion4();
+        var owner = new TeamMember(TenantId, TeamId, MemberId);
+        var scenario = new AggregateScenario<TeamMember>(owner).Given(DomainEventSeed.Attach(
+            new TeamMemberAssigned(TenantId, TeamId, MemberId, originalEpisode), owner.Id, 1));
+
+        // Act
+        var result = owner.Assign(Uuid.CreateVersion4());
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.Equal(originalEpisode, owner.MembershipEpisodeId);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
     public void ShouldAssignOnceGivenRepeatedAssignment()
     {
         // Arrange
@@ -65,10 +84,11 @@ public sealed class TeamMemberTests
     {
         // Arrange
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
+        var assignment = DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId), teamMember.Id, 1);
         var scenario = new AggregateScenario<TeamMember>(teamMember)
-            .Given(
-                DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId), teamMember.Id, 1),
-                DomainEventSeed.Attach(new TeamMemberRemoved(TenantId, TeamId, MemberId), teamMember.Id, 2));
+            .Given(assignment,
+                DomainEventSeed.Attach(new TeamMemberRemoved(TenantId, TeamId, MemberId,
+                    assignment.MembershipEpisodeId, assignment.Metadata.EventId), teamMember.Id, 2));
 
         // Act
         var result = scenario.Aggregate.Remove();
@@ -83,10 +103,11 @@ public sealed class TeamMemberTests
     {
         // Arrange
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
+        var assignment = DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId), teamMember.Id, 1);
         var scenario = new AggregateScenario<TeamMember>(teamMember)
-            .Given(
-                DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId), teamMember.Id, 1),
-                DomainEventSeed.Attach(new TeamMemberRemoved(TenantId, TeamId, MemberId), teamMember.Id, 2));
+            .Given(assignment,
+                DomainEventSeed.Attach(new TeamMemberRemoved(TenantId, TeamId, MemberId,
+                    assignment.MembershipEpisodeId, assignment.Metadata.EventId), teamMember.Id, 2));
 
         // Act
         var result = scenario.Aggregate.Assign();
@@ -104,9 +125,11 @@ public sealed class TeamMemberTests
         var firstEpisodeId = Uuid.CreateVersion4();
         var nextEpisodeId = Uuid.CreateVersion4();
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
-        var scenario = new AggregateScenario<TeamMember>(teamMember)
-            .Given(DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId,
-                firstEpisodeId), teamMember.Id, 1));
+        var assigned = DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId,
+            firstEpisodeId), teamMember.Id, 1);
+        var scenario = new AggregateScenario<TeamMember>(teamMember).Given(assigned,
+            DomainEventSeed.Attach(new TeamMemberRemoved(TenantId, TeamId, MemberId, firstEpisodeId,
+                assigned.Metadata.EventId), teamMember.Id, 2));
 
         // Act
         var result = scenario.Aggregate.Assign(nextEpisodeId);

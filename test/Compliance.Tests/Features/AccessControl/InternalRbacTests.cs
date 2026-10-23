@@ -134,7 +134,7 @@ public sealed class InternalRbacTests
         Assert.Contains(new PermissionGrant(memberId, "controls.read"), state.Materialize());
 
         // Act
-        state.Apply(new TeamMemberRemoved(TenantId, TeamId, memberId));
+        state.Apply(new TeamMemberRemoved(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
 
         // Assert
 

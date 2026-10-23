@@ -12,8 +12,8 @@ public sealed class RegisterMemberHandler(IAggregateExecutor executor, IAggregat
             .ConfigureAwait(false);
         if (current.IsDeprovisioned && !current.IsDeprovisionCleanupComplete)
         {
-            var cleanupResult = await cleanup.CompleteAsync(context, request.TenantId, request.UserId,
-                current.Id, current.DeprovisionedByMemberId, current.DeprovisionedByDisplay!, ct)
+            var cleanupResult = await cleanup.CompleteAsync(context, current.TerminationProof ??
+                throw new InvalidOperationException("Retirement requires its source proof."), ct)
                 .ConfigureAwait(false);
             if (!cleanupResult.IsSuccess)
                 return cleanupResult;

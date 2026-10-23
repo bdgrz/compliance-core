@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     member in the tenant manager guard first (#432).
 /// </summary>
 public sealed class AssignTeamMemberHandler(IAggregateExecutor executor,
-    TenantManagerInvariant managers, IAggregateReader reader) : IRequestHandler<AssignTeamMember>
+    TenantManagerInvariant managers, IAggregateReader reader, MemberAuthorityCleanup cleanup) : IRequestHandler<AssignTeamMember>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<AssignTeamMember> context, CancellationToken ct)
     {
@@ -17,6 +17,16 @@ public sealed class AssignTeamMemberHandler(IAggregateExecutor executor,
         if (!member.IsRegistered)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The tenant member was not found."));
+
+        var prior = await reader.HydrateAsync(new TeamMember(request.TenantId, request.TeamId,
+            request.MemberId), ct).ConfigureAwait(false);
+        if (prior.IsAssigned && prior.MembershipEpisodeId != member.MembershipEpisodeId)
+        {
+            var settled = await cleanup.ReconcileTeamAssignmentAsync(context, request, prior.MembershipEpisodeId,
+                prior.AssignmentEventId, prior.AssignmentPosition, ct).ConfigureAwait(false);
+            if (!settled.IsSuccess)
+                return settled;
+        }
 
         if (request.TeamId == BuiltInRbac.AdministratorsTeamId(request.TenantId))
         {
@@ -34,9 +44,17 @@ public sealed class AssignTeamMemberHandler(IAggregateExecutor executor,
             }
         }
         var membershipEpisodeId = member.MembershipEpisodeId;
+        var assignmentEventId = Uuid.Empty;
+        ulong assignmentPosition = 0;
         var result = await executor.ExecuteAsync(
             new TeamMember(request.TenantId, request.TeamId, request.MemberId),
-            assignment => AggregateOutcome.CommitOnSuccess(assignment.Assign(membershipEpisodeId)),
+            assignment =>
+            {
+                var assigned = assignment.Assign(membershipEpisodeId);
+                assignmentEventId = assignment.AssignmentEventId;
+                assignmentPosition = assignment.AssignmentPosition;
+                return AggregateOutcome.CommitOnSuccess(assigned);
+            },
             context, ct).ConfigureAwait(false);
         if (!result.IsSuccess)
             return result;
@@ -46,14 +64,12 @@ public sealed class AssignTeamMemberHandler(IAggregateExecutor executor,
         if (currentMember.IsRegistered && currentMember.MembershipEpisodeId == membershipEpisodeId)
             return Result.Success;
 
-        var currentAssignment = await reader.HydrateAsync(new TeamMember(request.TenantId,
-            request.TeamId, request.MemberId), ct).ConfigureAwait(false);
-        if (currentAssignment.IsAssigned && currentAssignment.MembershipEpisodeId == membershipEpisodeId)
-            await executor.ExecuteAsync(new TeamMember(request.TenantId, request.TeamId,
-                    request.MemberId),
-                assignment => AggregateOutcome.CommitOnSuccess(assignment.Remove()), context, ct)
-                .ConfigureAwait(false);
+        var compensated = await cleanup.ReconcileTeamAssignmentAsync(context, request, membershipEpisodeId,
+            assignmentEventId, assignmentPosition, ct).ConfigureAwait(false);
+        if (!compensated.IsSuccess)
+            return compensated;
         return Result.Failure(new RequestError(RequestErrorKind.Conflict,
             "The tenant member changed before the team assignment completed."));
     }
+
 }

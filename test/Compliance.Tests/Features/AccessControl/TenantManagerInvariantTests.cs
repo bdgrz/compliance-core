@@ -195,7 +195,9 @@ public sealed class TenantManagerInvariantTests
                 RemoveTeamMember remove => await new RemoveTeamMemberHandler(executor, managers)
                     .HandleAsync(new RequestContext<RemoveTeamMember>(remove, Actor(actor)),
                         CancellationToken.None),
-                AssignTeamMember assign => await new AssignTeamMemberHandler(executor, managers, _reader)
+                AssignTeamMember assign => await new AssignTeamMemberHandler(executor, managers, _reader,
+                    new MemberAuthorityCleanup(_reader, executor, _provider.GetRequiredService<IDomainEventReader>(),
+                        new InMemoryProjectionCheckpointStore(), TimeProvider.System))
                     .HandleAsync(new RequestContext<AssignTeamMember>(assign, Actor(actor)),
                         CancellationToken.None),
                 RemoveTeamRole role => await new RemoveTeamRoleHandler(executor).HandleAsync(

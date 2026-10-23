@@ -17,6 +17,43 @@ public sealed class DeprovisionMemberHandlerTests
     static readonly DateTimeOffset ActionAt = new(2026, 10, 3, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public async Task ShouldPreserveNewMembershipAuthorityGivenDelayedRetirementCleanup()
+    {
+        // Arrange
+        await using var provider = CreateProvider();
+        var reader = provider.GetRequiredService<IAggregateReader>();
+        var executor = provider.GetRequiredService<IAggregateExecutor>();
+        var memberId = RbacIds.Member(TenantId, UserId);
+        var actorMemberId = RbacIds.Member(TenantId, ActorUserId);
+        await SeedAsync(provider, new Member(TenantId, UserId), member => member.Register());
+        await SeedAsync(provider, new Member(TenantId, UserId), member =>
+            member.Deprovision(actorMemberId, "Original administrator", ActionAt, "Prior episode ended."));
+        var retired = await reader.HydrateAsync(new Member(TenantId, UserId));
+        var termination = Assert.IsType<MembershipTerminationProof>(retired.TerminationProof);
+        await SeedAsync(provider, new Member(TenantId, UserId, termination.MembershipEpisodeId), member =>
+            member.CompleteDeprovisionCleanup(termination,
+                MemberRetirementEffects.Complete(termination).CommandId, ActionAt.AddMinutes(1)));
+        await SeedAsync(provider, new Member(TenantId, UserId), member => member.Register());
+        var current = await reader.HydrateAsync(new Member(TenantId, UserId));
+        await SeedAsync(provider, new TeamMember(TenantId, TeamId, memberId),
+            assignment => assignment.Assign(current.MembershipEpisodeId));
+        var cleanup = Cleanup(provider);
+
+        // Act
+        var completed = await cleanup.CompleteAsync(new RequestDispatchContext(RequestActor.System),
+            termination, CancellationToken.None);
+        var assignment = await reader.HydrateAsync(new TeamMember(TenantId, TeamId, memberId));
+        var membership = await reader.HydrateAsync(new Member(TenantId, UserId));
+
+        // Assert
+        Assert.True(completed.IsSuccess);
+        Assert.True(assignment.IsAssigned);
+        Assert.Equal(current.MembershipEpisodeId, assignment.MembershipEpisodeId);
+        Assert.True(membership.IsRegistered);
+        Assert.Equal(current.MembershipEpisodeId, membership.MembershipEpisodeId);
+    }
+
+    [Fact]
     public async Task ShouldRemoveAuthorityAndRetainHistoryGivenFreshInvitationAfterDeprovisioning()
     {
         // Arrange
@@ -34,12 +71,9 @@ public sealed class DeprovisionMemberHandlerTests
             new AccessGrantScope(AccessGrantScopeKind.Program, Uuid.CreateVersion4()),
             new AccessGrantSource("manual", "access-review"),
             ActorReference.ForMember(RbacIds.Member(TenantId, ActorUserId), "Alex Admin"), ActionAt, null);
-        await SeedAsync(provider, new AccessGrant(TenantId, GrantId), grant => grant.Issue(terms));
+        await SeedAsync(provider, new AccessGrant(TenantId, GrantId), grant => grant.Issue(terms, membershipEpisodeId));
         var teamMembers = new TestTeamMemberDirectory([new TeamMemberView(TeamId, memberId)]);
-        var grants = new TestAccessGrantDirectory(new AccessGrantSetView(TenantId, 1,
-            [new AccessGrantView(TenantId, GrantId, terms, null, null)]));
-        var cleanup = new MemberAuthorityCleanup(reader, executor, teamMembers, grants,
-            TimeProvider.System);
+        var cleanup = Cleanup(provider);
         var managerInvariant = new TenantManagerInvariant(reader, executor, teamMembers);
         var handler = new DeprovisionMemberHandler(executor, reader, TimeProvider.System,
             managerInvariant, cleanup);
@@ -80,9 +114,7 @@ public sealed class DeprovisionMemberHandlerTests
         var executor = provider.GetRequiredService<IAggregateExecutor>();
         await SeedAsync(provider, new Member(OtherTenantId, UserId), member => member.Register());
         var teamMembers = new TestTeamMemberDirectory([]);
-        var cleanup = new MemberAuthorityCleanup(reader, executor, teamMembers,
-            new TestAccessGrantDirectory(new AccessGrantSetView(TenantId, 0, [])),
-            TimeProvider.System);
+        var cleanup = Cleanup(provider);
         var handler = new DeprovisionMemberHandler(executor, reader, TimeProvider.System,
             new TenantManagerInvariant(reader, executor, teamMembers), cleanup);
 
@@ -112,8 +144,7 @@ public sealed class DeprovisionMemberHandlerTests
         await SeedAsync(provider, new TeamMember(TenantId, administrators, memberId),
             member => member.Assign(membershipEpisodeId));
         var teamMembers = new TestTeamMemberDirectory([new TeamMemberView(administrators, memberId)]);
-        var cleanup = new MemberAuthorityCleanup(reader, executor, teamMembers,
-            new TestAccessGrantDirectory(new AccessGrantSetView(TenantId, 0, [])), TimeProvider.System);
+        var cleanup = Cleanup(provider);
         var handler = new DeprovisionMemberHandler(executor, reader, TimeProvider.System,
             new TenantManagerInvariant(reader, executor, teamMembers), cleanup);
 
@@ -127,6 +158,11 @@ public sealed class DeprovisionMemberHandlerTests
         Assert.True((await reader.HydrateAsync(new Member(TenantId, UserId))).IsRegistered);
     }
 
+    static MemberAuthorityCleanup Cleanup(IServiceProvider provider) => new(
+        provider.GetRequiredService<IAggregateReader>(), provider.GetRequiredService<IAggregateExecutor>(),
+        provider.GetRequiredService<IDomainEventReader>(), provider.GetRequiredService<IProjectionCheckpointStore>(),
+        TimeProvider.System);
+
     static ServiceProvider CreateProvider()
     {
         var services = new ServiceCollection();
@@ -134,6 +170,7 @@ public sealed class DeprovisionMemberHandlerTests
         services.AddSingleton<IEventStore>(events);
         services.AddSingleton<IDomainEventReader>(events);
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IProjectionCheckpointStore, InMemoryProjectionCheckpointStore>();
         services.AddPortia();
         return services.BuildServiceProvider();
     }
@@ -163,16 +200,4 @@ public sealed class DeprovisionMemberHandlerTests
             items.Where(item => item.MemberId == memberId).ToArray());
     }
 
-    sealed class TestAccessGrantDirectory(AccessGrantSetView grants) : IAccessGrantDirectory
-    {
-        public ValueTask<AccessGrantSetView> ListAsync(Uuid tenantId, CancellationToken ct = default) =>
-            ValueTask.FromResult(grants);
-
-        public ValueTask<AccessGrantView?> GetAsync(Uuid tenantId, Uuid grantId, CancellationToken ct = default) =>
-            ValueTask.FromResult(grants.Grants.SingleOrDefault(item => item.GrantId == grantId));
-
-        public ValueTask<IReadOnlySet<Uuid>> FindPendingRevocationsAsync(Uuid tenantId,
-            IReadOnlySet<Uuid> grantIds, CancellationToken ct = default) =>
-            ValueTask.FromResult<IReadOnlySet<Uuid>>(new HashSet<Uuid>());
-    }
 }

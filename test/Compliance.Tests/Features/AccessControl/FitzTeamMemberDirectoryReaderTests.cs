@@ -47,7 +47,7 @@ public sealed class FitzTeamMemberDirectoryReaderTests
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var assignmentId = RbacIds.TeamMember(TenantId, TeamId, memberId);
-        DomainEvent removed = new TeamMemberRemoved(TenantId, TeamId, memberId);
+        DomainEvent removed = new TeamMemberRemoved(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
         removed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), assignmentId, 1,
             DateTimeOffset.UtcNow));
         await events.AppendAsync(new EventStreamAddress(TenantId.ToString(), "rbac-team-members",
@@ -77,7 +77,7 @@ public sealed class FitzTeamMemberDirectoryReaderTests
             await reader.ApplyAsync(new TeamMemberAssigned(TenantId, TeamId, memberId));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
-        var removed = new TeamMemberRemoved(TenantId, TeamId, memberId);
+        var removed = new TeamMemberRemoved(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
         removed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
             RbacIds.TeamMember(TenantId, TeamId, memberId), 1, DateTimeOffset.UtcNow));
         var assigned = new TeamMemberAssigned(TenantId, nextTeamId, memberId);
@@ -115,7 +115,7 @@ public sealed class FitzTeamMemberDirectoryReaderTests
         var assignmentId = RbacIds.TeamMember(TenantId, TeamId, memberId);
         var address = new EventStreamAddress(TenantId.ToString(), "rbac-team-members",
             assignmentId.ToString());
-        DomainEvent removed = new TeamMemberRemoved(TenantId, TeamId, memberId);
+        DomainEvent removed = new TeamMemberRemoved(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
         removed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), assignmentId, 1,
             DateTimeOffset.UtcNow));
         DomainEvent reassigned = new TeamMemberAssigned(TenantId, TeamId, memberId);

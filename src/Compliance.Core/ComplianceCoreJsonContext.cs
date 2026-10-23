@@ -649,6 +649,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(GetClientIndependenceRules))]
 [JsonSerializable(typeof(FirmStaffMemberView))]
 [JsonSerializable(typeof(FirmStaffDirectoryView))]
+[JsonSerializable(typeof(CompleteMemberRetirement))]
+[JsonSerializable(typeof(CleanupRetiredMembershipRelationship))]
 [JsonSerializable(typeof(FirmProfessionalDutyDesignationView))]
 [JsonSerializable(typeof(FirmProfessionalDutyCatalogView))]
 [JsonSerializable(typeof(RecordFirmProfessionalDutyDesignation))]
