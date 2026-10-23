@@ -45,7 +45,8 @@
       "state": "in_progress",
       "completedPullRequests": [
         1033,
-        1035
+        1035,
+        1037
       ],
       "issue": 1036
     },
@@ -88,8 +89,9 @@
     {
       "order": 9,
       "name": "Identity and catalogs",
-      "state": "pending",
-      "completedPullRequests": []
+      "state": "in_progress",
+      "completedPullRequests": [],
+      "issue": 1038
     },
     {
       "order": 10,
@@ -183,7 +185,10 @@
           "issue": 1036,
           "implementation": "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs",
           "proof": "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
-          "scope": "PlatformOperatorRoster: required typed operation identity, original revision, exact active assignment slots, native fact retries and stable seed creation. Last-operator authority remains atomic. Member and TeamMember remain open."
+          "scope": "PlatformOperatorRoster: required typed operation identity, original revision, exact active assignment slots, native fact retries and stable seed creation. Last-operator authority remains atomic. Member and TeamMember remain open.",
+          "pullRequest": 1037,
+          "mergedCommit": "25ec3117e723626fed98a7b9d4d279f5658a10ae",
+          "ownerState": "complete"
         }
       ]
     },
@@ -437,8 +442,15 @@
       "deliveryFamilies": [
         9
       ],
-      "state": "pending",
-      "evidence": []
+      "state": "in_progress",
+      "evidence": [
+        {
+          "issue": 1038,
+          "implementation": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+          "proof": "test/Compliance.Tests/Features/UserIdentities/UserIdentityObservationTests.cs",
+          "scope": "Presentation uses independent audit sessions with immutable source registration proof. Association/revocation physical replay stays bounded; authoritative admission, audit races, unknown outcomes and projection rebuilding are covered."
+        }
+      ]
     },
     {
       "id": "ASSURE-01",

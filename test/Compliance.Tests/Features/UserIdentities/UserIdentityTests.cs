@@ -42,10 +42,16 @@ public sealed class UserIdentityTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        var observed = Assert.IsType<UserIdentityProfileObserved>(Assert.Single(scenario.PendingEvents));
+        var observed = Assert.IsType<UserIdentityProfileObserved>(Assert.Single(scenario.PendingAudits));
         Assert.Equal(expected, observed.DisplayName);
         Assert.Equal(userId, observed.UserId);
         Assert.Equal(identity.Id, observed.Metadata.AggregateId);
+        Assert.True(observed.Metadata.IsAudit);
+        Assert.Empty(scenario.PendingEvents);
+        Assert.Equal(1UL, identity.Version);
+        Assert.Equal(identity.Id, observed.Source.IdentityId);
+        Assert.Equal(1UL, observed.Source.Revision);
+        Assert.Equal(0UL, observed.Source.Position);
     }
 
     [Fact]

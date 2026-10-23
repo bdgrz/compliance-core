@@ -16430,27 +16430,18 @@
     {
       "fact": "UserIdentityProfileObserved",
       "source": "src/Compliance.Common/Features/UserIdentities/UserIdentityProfileObserved.cs",
-      "currentDisposition": "aggregate_fact",
-      "action": "retain_semantic_fact_and_fix_owner_state_or_payload_as_mapped",
-      "currentReducers": [
-        {
-          "aggregate": "UserIdentity",
-          "source": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
-        }
-      ],
+      "currentDisposition": "audit_only",
+      "action": "retain_audit_in_independent_physical_sessions",
+      "currentReducers": [],
       "currentEmitters": [
         "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
       ],
-      "targetOwnerRule": [
-        "UserIdentity"
-      ],
+      "targetOwnerRule": [],
       "decisionStatus": "locked",
-      "compatibility": "Preserve discriminator/version and stored bytes. Payload-incompatible changes require explicit versioned decoder/upcaster; no direct event-store edits.",
+      "compatibility": "Direct pre-release v2 audit/source-proof cutover under #1022/#1038; superseded state-fact histories are disposable. No environment reset is authorized.",
       "embedsWholeViewState": false,
-      "implementationStatus": "pending_behavioral_and_migration_proof",
-      "owningRootDecisions": [
-        "UserIdentity"
-      ]
+      "implementationStatus": "behavioral_proof_in_1038",
+      "owningRootDecisions": []
     },
     {
       "fact": "UserIdentityRegistered",

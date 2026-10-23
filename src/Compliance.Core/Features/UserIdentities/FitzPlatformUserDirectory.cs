@@ -26,8 +26,19 @@ sealed class FitzPlatformUserDirectory(IKvClient client)
             observed.UserId, ct).ConfigureAwait(false);
         if (current is null)
             throw new InvalidOperationException("An identity profile cannot project before registration.");
+        // Audit sessions can commit out of admission order. A delayed older observation must
+        // not overwrite a newer provider update or name removal, including during rebuild.
+        if (current.ProfileObservedAt is { } prior && (observed.ObservedAt < prior ||
+            observed.ObservedAt == prior && current.ProfileObservationId is { } priorId &&
+            StringComparer.Ordinal.Compare(observed.Metadata.EventId.ToString(), priorId.ToString()) <= 0))
+            return;
         await PlatformUserDirectorySchema.Directory.ReplaceAsync(Transaction, current,
-            current with { DisplayName = observed.DisplayName }, ct).ConfigureAwait(false);
+            current with
+            {
+                DisplayName = observed.DisplayName,
+                ProfileObservedAt = observed.ObservedAt,
+                ProfileObservationId = observed.Metadata.EventId,
+            }, ct).ConfigureAwait(false);
     }
 
     public async ValueTask ApplyAsync(UserIdentityRegistered registered,

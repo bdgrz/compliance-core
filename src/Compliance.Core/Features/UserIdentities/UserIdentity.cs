@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text.Json;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
@@ -16,6 +18,7 @@ public sealed class UserIdentity : Aggregate
     Uuid _userId;
     Uuid _replacementIdentityId;
     string? _emailAddress;
+    IdentityRegistrationProof? _registrationProof;
 
     public UserIdentity(string provider, string identifier)
         : this(CreateIdentityId(provider, identifier), provider, identifier)
@@ -35,7 +38,6 @@ public sealed class UserIdentity : Aggregate
         _identifier = identifier;
         On<UserIdentityRegistered>(Apply);
         On<UserIdentityRevoked>(Apply);
-        On<UserIdentityProfileObserved>(Apply);
     }
 
     static Uuid CreateIdentityId(string provider, string identifier) =>
@@ -149,22 +151,22 @@ public sealed class UserIdentity : Aggregate
         if (!_isRegistered)
             return Result<AuthenticatedUserIdentity>.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The user identity is not registered."));
+        if (observedAt == default)
+            return Result<AuthenticatedUserIdentity>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A profile observation time is required."));
         var normalized = displayName?.Trim();
         if (string.IsNullOrEmpty(normalized) || normalized.Length > 200 || normalized.Any(char.IsControl))
             normalized = null;
-        RaiseEvent(new UserIdentityProfileObserved(_userId, normalized, observedAt));
+        // Admission linearizes at this authoritative read. A later revocation does not invalidate
+        // this historical observation, and this audit can never restore identity authority.
+        AuditEvent(new UserIdentityProfileObserved(_userId, normalized, observedAt,
+            _registrationProof ?? throw new InvalidOperationException("Registration provenance is required.")));
         return Registered();
-    }
-
-    void Apply(UserIdentityProfileObserved observed)
-    {
-        if (!_isRegistered || _isRevoked || observed.UserId != _userId)
-            throw new InvalidOperationException("The profile observation does not match the active identity.");
     }
 
     void Apply(UserIdentityRegistered registered)
     {
-        if (_isRegistered ||
+        if (_isRegistered || registered.UserId == Uuid.Empty || registered.Metadata.AggregateVersion != 1 ||
             (_provider is not null && !string.Equals(registered.Provider, _provider, StringComparison.Ordinal)) ||
             (_identifier is not null && !string.Equals(registered.Identifier, _identifier, StringComparison.Ordinal)) ||
             CreateIdentityId(registered.Provider, registered.Identifier) != Id)
@@ -177,6 +179,10 @@ public sealed class UserIdentity : Aggregate
         _identifier = registered.Identifier;
         _userId = registered.UserId;
         _emailAddress = registered.EmailAddress;
+        _registrationProof = new IdentityRegistrationProof(Id, registered.Metadata.EventId,
+            registered.Metadata.AggregateVersion, registered.Metadata.AggregateVersion - 1,
+            Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(registered,
+                ComplianceCoreJsonContext.Default.UserIdentityRegistered))));
     }
 
     void Apply(UserIdentityRevoked revoked)
