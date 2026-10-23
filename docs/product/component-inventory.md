@@ -1725,7 +1725,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [IdentityRecoveryChallengeCompleted](../../src/Compliance.Common/Features/UserIdentities/IdentityRecoveryChallengeCompleted.cs#L7) — `bdgrz.identity-recovery.challenge-completed` v1
 - [IdentityRecoveryChallengeIssued](../../src/Compliance.Common/Features/UserIdentities/IdentityRecoveryChallengeIssued.cs#L7) — `bdgrz.identity-recovery.challenge-issued` v1
 - [UserIdentityAuthenticated](../../src/Compliance.Common/Features/UserIdentities/UserIdentityAuthenticated.cs#L7) — `bdgrz.user-identity.authenticated` v1
-- [UserIdentityProfileObserved](../../src/Compliance.Common/Features/UserIdentities/UserIdentityProfileObserved.cs#L7) — `bdgrz.user-identity.profile-observed` v1
+- [UserIdentityProfileObserved](../../src/Compliance.Common/Features/UserIdentities/UserIdentityProfileObserved.cs#L7) — `bdgrz.user-identity.profile-observed` v2
 - [UserIdentityRegistered](../../src/Compliance.Common/Features/UserIdentities/UserIdentityRegistered.cs#L7) — `bdgrz.user-identity.registered` v1
 - [UserIdentityRevoked](../../src/Compliance.Common/Features/UserIdentities/UserIdentityRevoked.cs#L7) — `bdgrz.user-identity.revoked` v1
 

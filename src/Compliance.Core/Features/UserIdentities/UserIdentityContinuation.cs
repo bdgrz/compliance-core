@@ -23,8 +23,8 @@ public sealed class UserIdentityContinuation(IAggregateExecutor executor, TimePr
         if (!authenticated.IsSuccess || !observeProfile)
             return authenticated;
 
-        // Portia deliberately separates authentication audits from state-changing events.
-        // Rehydrate before recording presentation so an intervening revocation fails closed.
+        // Registration and audits use separate append sessions. Rehydrate current authority for
+        // presentation admission; audit persistence never advances its physical OCC position.
         return await executor.ExecuteAsync(new UserIdentity(provider, identifier),
             identity => AggregateOutcome.CommitOnSuccess(identity.ObserveAuthenticatedProfile(
                 displayName, (clock ?? TimeProvider.System).GetUtcNow())),

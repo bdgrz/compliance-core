@@ -20,7 +20,7 @@ public sealed class FitzPlatformUserDirectoryTests
                          ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(new UserIdentityRegistered(userId, "issuer", "subject", null));
-            await directory.ApplyAsync(new UserIdentityProfileObserved(userId, "Ada", DateTimeOffset.UtcNow));
+            await directory.ApplyAsync(Observation(userId, "Ada"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -30,14 +30,14 @@ public sealed class FitzPlatformUserDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new UserIdentityProfileObserved(userId, "Ada King", DateTimeOffset.UtcNow));
+            await directory.ApplyAsync(Observation(userId, "Ada King"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         Assert.Equal("Ada King", await directory.ReadAsync(userId));
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new UserIdentityProfileObserved(userId, null, DateTimeOffset.UtcNow));
+            await directory.ApplyAsync(Observation(userId, null));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         Assert.Null(await directory.ReadAsync(userId));
@@ -68,4 +68,18 @@ public sealed class FitzPlatformUserDirectoryTests
         Assert.True(await directory.ExistsAsync(userId));
         Assert.False(await directory.ExistsAsync(Uuid.CreateVersion4()));
     }
+
+    static UserIdentityProfileObserved Observation(Uuid userId, string? displayName)
+    {
+        var identity = new UserIdentity("issuer", "subject");
+        Assert.True(identity.Register(userId, null).IsSuccess);
+        var scenario = new Cntryl.Portia.Testing.AggregateScenario<UserIdentity>(identity);
+        // Profile admission follows the committed registration, as in production.
+        var registered = Assert.Single(scenario.PendingEvents);
+        var source = new UserIdentity("issuer", "subject");
+        var admitted = new Cntryl.Portia.Testing.AggregateScenario<UserIdentity>(source).Given(registered);
+        Assert.True(source.ObserveAuthenticatedProfile(displayName, DateTimeOffset.UtcNow).IsSuccess);
+        return Assert.IsType<UserIdentityProfileObserved>(Assert.Single(admitted.PendingAudits));
+    }
+
 }

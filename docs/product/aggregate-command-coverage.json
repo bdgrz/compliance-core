@@ -42,9 +42,9 @@
   ],
   "counts": {
     "domainEventContracts": 418,
-    "factsWithReducer": 399,
-    "factsWithAggregateEmitter": 392,
-    "auditFactsWithoutReducer": 1,
+    "factsWithReducer": 398,
+    "factsWithAggregateEmitter": 391,
+    "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 18,
     "legacyReducerOnlyFacts": 2,
     "aggregateTypes": 103,
@@ -7392,22 +7392,18 @@
     {
       "fact": "UserIdentityProfileObserved",
       "contract": "src/Compliance.Common/Features/UserIdentities/UserIdentityProfileObserved.cs",
-      "reducers": [
-        {
-          "aggregate": "UserIdentity",
-          "source": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
-        }
-      ],
+      "reducers": [],
       "emitters": [
         "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzPlatformUserDirectoryTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/UserIdentityTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/UserIdentityTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/UserIdentityObservationTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "audit_only",
+      "note": "Emitted via AuditEvent in independent physical sessions, with authoritative registration proof. ACCESS-17 / #1038."
     },
     {
       "fact": "UserIdentityRegistered",
@@ -10792,7 +10788,6 @@
       "aggregate": "UserIdentity",
       "source": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
       "appliedFacts": [
-        "UserIdentityProfileObserved",
         "UserIdentityRegistered",
         "UserIdentityRevoked"
       ],

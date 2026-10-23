@@ -8,6 +8,36 @@ namespace Bdgrz.Compliance.Tests.Features.UserIdentities;
 public sealed class UserIdentityContinuationTests
 {
     [Fact]
+    public async Task ShouldKeepAuthorityReplayConstantGivenRepeatedProfileObservations()
+    {
+        // Arrange
+        await using var fixture = new StoreFixture();
+        var identity = new UserIdentity("issuer", "busy-profile");
+        Assert.True(identity.Register(Uuid.CreateVersion4(), null).IsSuccess);
+        var context = Context(new ContinueWithOidcProvider(), AuthenticatedActor(
+            new Claim("iss", "issuer"), new Claim("sub", "busy-profile")));
+        await fixture.Repository.SaveAsync(identity, context);
+
+        // Act
+        for (var index = 0; index < 128; index++)
+        {
+            identity = await fixture.Repository.HydrateAsync(new UserIdentity(identity.Id));
+            Assert.True(identity.ObserveAuthenticatedProfile("Observed name", DateTimeOffset.UtcNow).IsSuccess);
+            await fixture.Repository.SaveAsync(identity, context);
+        }
+        var authority = new List<DomainEventRecord>();
+        await foreach (var record in fixture.Store.ReadAsync(identity.Stream, 0))
+            authority.Add(record);
+        identity = await fixture.Repository.HydrateAsync(new UserIdentity(identity.Id));
+
+        // Assert
+        Assert.Single(authority);
+        Assert.IsType<UserIdentityRegistered>(authority[0].Event);
+        Assert.Equal(1UL, identity.Version);
+        Assert.Equal(1UL, identity.CommittedStreamPosition);
+    }
+
+    [Fact]
     public async Task ShouldRetainProfileChangesGivenAuthenticatedOidcNameChangesOrDisappears()
     {
         // Arrange
@@ -185,7 +215,7 @@ public sealed class UserIdentityContinuationTests
                 "UserIdentityProfileObserved"],
             records.Select(record => record.Event.GetType().Name));
         Assert.False(records[0].Event.Metadata.IsAudit);
-        Assert.True(records[2].Event.Metadata.IsAudit);
+        Assert.All(records.Skip(1), record => Assert.True(record.Event.Metadata.IsAudit));
     }
 
     [Fact]
