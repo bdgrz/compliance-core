@@ -87,7 +87,7 @@ public sealed class MemberLifecycleTests
         var scenario = new AggregateScenario<Member>(member).Given(
             DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
                 membershipEpisodeId: Uuid.CreateVersion4()), member.Id, 1),
-            DomainEventSeed.Attach(new MemberSuspended(TenantId, member.Id, UserId, ActorMemberId,
+            DomainEventSeed.Attach(MemberFacts.Suspended(TenantId, member.Id, UserId, ActorMemberId,
                 "Alex Admin", ActionAt, "Employment ended."), member.Id, 2));
 
         // Act
@@ -138,7 +138,7 @@ public sealed class MemberLifecycleTests
         // Arrange
         var member = new Member(TenantId, UserId);
         var priorEpisodeId = Uuid.CreateVersion4();
-        var termination = DomainEventSeed.Attach(new MemberDeprovisioned(TenantId, member.Id, UserId,
+        var termination = DomainEventSeed.Attach(MemberFacts.Deprovisioned(TenantId, member.Id, UserId,
             ActorMemberId, "Alex Admin", ActionAt, "Access is no longer required.", priorEpisodeId), member.Id, 2);
         var scenario = new AggregateScenario<Member>(member).Given(
             DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
@@ -171,7 +171,7 @@ public sealed class MemberLifecycleTests
         var scenario = new AggregateScenario<Member>(member).Given(
             DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
                 membershipEpisodeId: episodeId), member.Id, 1),
-            DomainEventSeed.Attach(new MemberDeprovisioned(TenantId, member.Id, UserId,
+            DomainEventSeed.Attach(MemberFacts.Deprovisioned(TenantId, member.Id, UserId,
                 ActorMemberId, "Alex Admin", ActionAt, "Access is no longer required.", episodeId), member.Id, 2));
 
         // Act

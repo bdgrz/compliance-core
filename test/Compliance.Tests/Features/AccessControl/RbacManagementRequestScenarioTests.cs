@@ -74,7 +74,8 @@ public sealed class RbacManagementRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new DeprovisionMember(TenantId, Uuid.CreateVersion4(), "Access review complete."))
+            .When(new DeprovisionMember(Uuid.CreateVersion4(), TenantId, Uuid.CreateVersion4(), "Access review complete.",
+                Uuid.CreateVersion4(), 0))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();

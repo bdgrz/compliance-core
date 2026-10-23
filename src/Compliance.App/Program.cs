@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Retention;
 using Bdgrz.Compliance.Hosting;
 using System.Globalization;
@@ -411,6 +412,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     {
         portia.AddWorkers();
         builder.Services.AddHostedService<WorkDigestDispatchBackgroundService>();
+        builder.Services.AddHostedService<ProcessSweep>();
     }
 
     builder.Services.AddHostedService<ReservedTenantRouteCollisionCheck>();
@@ -560,16 +562,19 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/members/{user_id}/access")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Access control");
-    app.MapPortiaPost<SuspendMember>(
-            "/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions")
+    app.MapPortiaPut<SuspendMember, AdministratorTransitionResponse>(
+            "/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions/{command_id}",
+            config => config.OnResult((_, result) => AdministratorTransitionHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Access control");
-    app.MapPortiaDelete<ReinstateMember>(
-            "/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions")
+    app.MapPortiaPut<ReinstateMember, AdministratorTransitionResponse>(
+            "/api/v1/tenants/{tenant_id}/members/by-user/{user_id}/reinstatements/{command_id}",
+            config => config.OnResult((_, result) => AdministratorTransitionHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Access control");
-    app.MapPortiaPost<DeprovisionMember>(
-            "/api/v1/tenants/{tenant_id}/members/{user_id}/deprovisioning")
+    app.MapPortiaPut<DeprovisionMember, AdministratorTransitionResponse>(
+            "/api/v1/tenants/{tenant_id}/members/{user_id}/deprovisioning/{command_id}",
+            config => config.OnResult((_, result) => AdministratorTransitionHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Access control");
     app.MapPortiaGet<GetTenantMember, TenantMembershipView>(
@@ -2250,11 +2255,13 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
     app.MapPortiaPut<AssignTeamMember, AdministratorTransitionResponse>(
-            "/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}/{command_id}")
+            "/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}/{command_id}",
+            config => config.OnResult((_, result) => AdministratorTransitionHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
     app.MapPortiaPut<RemoveTeamMember, AdministratorTransitionResponse>(
-            "/api/v1/tenants/{tenant_id}/members/{member_id}/team-removals/{command_id}")
+            "/api/v1/tenants/{tenant_id}/members/{member_id}/team-removals/{command_id}",
+            config => config.OnResult((_, result) => AdministratorTransitionHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
     app.MapPortiaGet<ListTeamMembers, Page<TeamMemberView>>("/api/v1/tenants/{tenant_id}/teams/{team_id}/members")
@@ -2516,6 +2523,7 @@ static async Task RunWorkerAsync(string[] args)
             requireRealEmailDelivery: !builder.Environment.IsDevelopment())
         .AddWorkers();
     builder.Services.AddHostedService<WorkDigestDispatchBackgroundService>();
+    builder.Services.AddHostedService<ProcessSweep>();
     builder.Services.AddComplianceHealthChecks();
     builder.Services.AddTenantPathLogRedaction();
 

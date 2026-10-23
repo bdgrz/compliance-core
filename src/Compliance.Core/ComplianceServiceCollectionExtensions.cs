@@ -493,7 +493,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<PopulationSnapshotDirectoryReadConsistency>();
         services.AddScoped<PopulationSnapshotFreezer>();
         services.TryAddSingleton(TenantActivationPolicy.Default);
-        services.AddScoped<TenantManagerInvariant>();
+        services.AddScoped<TenantManagerGuardBootstrap>();
+        services.AddScoped<TenantManagerGuardLoader>();
+        services.AddScoped<AdministratorTransitionAdmission>();
+        services.AddScoped<AdministratorReceiverSupport>();
         services.AddScoped<WorkforceRosterSnapshotter>();
         services.AddScoped<BoundaryHistoryReadConsistency>();
         services.AddScoped<WorkQueueReadConsistency>();
@@ -660,11 +663,13 @@ public static class ComplianceServiceCollectionExtensions
             new ProcessCatalog(provider.GetServices<ProcessDefinition>()));
         services.AddScoped<ProcessDriver>();
         services.AddScoped<ProcessRootReaction>();
-        // ProcessSweep is hosted by the first slice that registers a ProcessDefinition.
-        // ISourceFactResolver stays unregistered until Portia publishes the shared connection's IStreamClient
-        // (AddStreamClient); the first consuming slice registers FitzSourceFactResolver.
-        // SeparationOfDutiesWaiverProofResolver depends on it, so the first consumer slice (S20) registers it too.
-        // IAuthoritativeSnapshotReader is likewise registered by its first consumer (S12).
+        // ProcessSweep is a hosted service of the worker roles (AddWorkers); it resumes overdue process records.
+        services.AddSingleton(AdministratorTransitionProcess.Definition);
+        // ISourceFactResolver cannot be resolved by the production container until Portia publishes the shared
+        // connection's IStreamClient (AddStreamClient, Portia 0.9.1); the registration is lazy, so nothing resolves
+        // it before then and the pin bump makes the receivers and the process factory work without further changes.
+        services.TryAddScoped<ISourceFactResolver>(provider => new FitzSourceFactResolver(
+            provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>()));
         services.AddScoped<FitzActualStaffEngagementLocator>();
         services.AddScoped<IActualStaffEngagementLocatorProjection>(provider =>
             provider.GetRequiredService<FitzActualStaffEngagementLocator>());
@@ -752,6 +757,15 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<SuspendMemberHandler>()
             .AddRequestHandler<ReinstateMemberHandler>()
             .AddRequestHandler<DeprovisionMemberHandler>()
+            .AddRequestHandler<ApplyMemberWithdrawalHandler>()
+            .AddRequestHandler<ApplyAdministratorAssignmentWithdrawalHandler>()
+            .AddRequestHandler<ApplyMemberRestorationHandler>()
+            .AddRequestHandler<ApplyAdministratorAssignmentRestorationHandler>()
+            .AddRequestHandler<ApplyNeutralMemberSourceMutationHandler>()
+            .AddRequestHandler<ApplyNeutralAdministratorAssignmentMutationHandler>()
+            .AddRequestHandler<CompleteAdministratorWithdrawalHandler>()
+            .AddRequestHandler<CompleteAdministratorRestorationHandler>()
+            .AddRequestAuthorizer<AdministratorTransitionReceiverAuthorizer>()
             .AddRequestHandler<GetTenantMemberHandler>()
             .AddRequestHandler<DefineTeamHandler>()
             .AddRequestHandler<DeleteTeamHandler>()
@@ -1377,6 +1391,18 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<BoundaryRiskReassessmentReactor>("BoundaryRiskReassessmentV1",
                 WorkloadScope.PerTenant)
             .AddReactor<TeamCleanupReactor>("TeamCleanup", WorkloadScope.PerTenant)
+            .AddReactor<AdministratorWithdrawalReactor>("AdministratorWithdrawalV1", WorkloadScope.PerTenant,
+                options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<AdministratorAssignmentWithdrawalReactor>("AdministratorAssignmentWithdrawalV1",
+                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<AdministratorRestorationReactor>("AdministratorRestorationV1", WorkloadScope.PerTenant,
+                options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<AdministratorAssignmentRestorationReactor>("AdministratorAssignmentRestorationV1",
+                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<AdministratorNeutralMemberMutationReactor>("AdministratorNeutralMemberMutationV1",
+                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<AdministratorNeutralAssignmentMutationReactor>("AdministratorNeutralAssignmentMutationV1",
+                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<MemberRetirementReactor>("MemberRetirementV1", WorkloadScope.PerTenant,
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<RetiredTeamAssignmentReactor>("RetiredTeamAssignmentV1", WorkloadScope.PerTenant,

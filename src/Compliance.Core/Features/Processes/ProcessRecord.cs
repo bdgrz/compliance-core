@@ -13,6 +13,13 @@ public sealed record ProcessRecord(ProcessKey Key, NativeFactReference Source, s
     int AbortIndex, ProcessState State, int Attempts, DateTimeOffset NextDueAt, ProcessLease? Lease, string? Note,
     long Version)
 {
+    /// <summary>
+    ///     The native fact each receiver of this record committed or replayed, by receiver name. A later receiver
+    ///     builds its source proof from them, so a crash between receivers never loses what an earlier one produced.
+    /// </summary>
+    public IReadOnlyDictionary<string, NativeFactReference> Facts { get; init; } =
+        new Dictionary<string, NativeFactReference>(StringComparer.Ordinal);
+
     /// <summary>A new pending record at the first stage, due immediately.</summary>
     public static ProcessRecord Start(ProcessKey key, NativeFactReference source, string episode,
         ImmutableContentRef intent, IEnumerable<string> targets, DateTimeOffset now)
@@ -36,7 +43,9 @@ public sealed record ProcessRecord(ProcessKey Key, NativeFactReference Source, s
         Intent == other.Intent && Targets.SequenceEqual(other.Targets, StringComparer.Ordinal) &&
         StageIndex == other.StageIndex && ReceiverIndex == other.ReceiverIndex && TargetIndex == other.TargetIndex &&
         AbortIndex == other.AbortIndex && State == other.State && Attempts == other.Attempts &&
-        NextDueAt == other.NextDueAt && Lease == other.Lease && Note == other.Note && Version == other.Version;
+        NextDueAt == other.NextDueAt && Lease == other.Lease && Note == other.Note && Version == other.Version &&
+        Facts.Count == other.Facts.Count && Facts.All(pair => other.Facts.TryGetValue(pair.Key, out var fact) &&
+                                                              fact == pair.Value);
 
     /// <inheritdoc />
     public override int GetHashCode() => HashCode.Combine(Key, Source, State, Version);

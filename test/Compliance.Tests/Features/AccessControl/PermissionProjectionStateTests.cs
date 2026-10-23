@@ -162,10 +162,10 @@ public sealed class PermissionProjectionStateTests
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
 
         // Act
-        state.Apply(new MemberSuspended(tenantId, memberId, userId, actorMemberId,
+        state.Apply(MemberFacts.Suspended(tenantId, memberId, userId, actorMemberId,
             "Alex Admin", at, "Employment ended."));
         var grantsWhileSuspended = state.Materialize();
-        state.Apply(new MemberReinstated(tenantId, memberId, userId, "client_personnel",
+        state.Apply(MemberFacts.Reinstated(tenantId, memberId, userId, "client_personnel",
             actorMemberId, "Alex Admin", at.AddHours(1)));
         var grantsAfterReinstatement = state.Materialize();
 
@@ -201,7 +201,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "program:read"));
 
         // Act
-        state.Apply(new MemberDeprovisioned(tenantId, memberId, userId, actorMemberId,
+        state.Apply(MemberFacts.Deprovisioned(tenantId, memberId, userId, actorMemberId,
             "Alex Admin", at, "Access is no longer required.", oldEpisodeId));
         state.Apply(MemberFacts.Registered(tenantId, memberId, userId,
             membershipEpisodeId: newEpisodeId));

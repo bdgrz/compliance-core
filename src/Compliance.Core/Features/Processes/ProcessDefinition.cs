@@ -9,4 +9,4 @@ namespace Bdgrz.Compliance.Features.Processes;
 /// </summary>
 public sealed record ProcessDefinition(string Name, IReadOnlyList<string> RootSourceEvents, bool Ordered,
     IReadOnlyList<ProcessStageDefinition> Stages, IReadOnlyList<string> Abort,
-    Func<ProcessStep, IRequest<Features.Processes.ReceiverOutcome>?> CreateReceiver);
+    ProcessReceiverFactory CreateReceiver);

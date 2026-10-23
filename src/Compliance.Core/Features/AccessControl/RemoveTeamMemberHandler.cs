@@ -8,11 +8,13 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>
 ///     Removes a team member. A non-administrator team is a direct native operation on the team-member owner and
-///     never reads the tenant manager guard; removal from the built-in Administrators team first needs the guard to
-///     confirm another active administrator remains (#432) until the guard-first owner replaces that branch.
+///     never reads the tenant manager guard; removal from the built-in Administrators team is route-determined and
+///     appends a guard fact first, withdrawing the member's availability before the administrator transition
+///     process removes the assignment.
 /// </summary>
-public sealed class RemoveTeamMemberHandler(IAggregateExecutor executor, NativeOperationExecutor operations,
-    TenantManagerInvariant managers, IImmutableContentStore content, TimeProvider clock)
+public sealed class RemoveTeamMemberHandler(NativeOperationExecutor operations,
+    AdministratorTransitionAdmission admissions, IAggregateReader reader, IImmutableContentStore content,
+    TimeProvider clock)
     : IRequestHandler<RemoveTeamMember, AdministratorTransitionResponse>
 {
     const string CommandKind = "RemoveTeamMember";
@@ -34,7 +36,7 @@ public sealed class RemoveTeamMemberHandler(IAggregateExecutor executor, NativeO
 
         var provenance = Provenance(request, actor, clock.GetUtcNow());
         if (request.TeamId == BuiltInRbac.AdministratorsTeamId(request.TenantId))
-            return await RemoveAdministratorAsync(context, request, provenance, ct).ConfigureAwait(false);
+            return await RemoveAdministratorAsync(context, request, actor, ct).ConfigureAwait(false);
 
         var binding = AcceptedOperationBinding.Of(provenance);
         var accepted = await operations.ExecuteAsync(new NativeOperation<TeamMember>(binding,
@@ -48,23 +50,27 @@ public sealed class RemoveTeamMemberHandler(IAggregateExecutor executor, NativeO
     }
 
     async ValueTask<Result<AdministratorTransitionResponse>> RemoveAdministratorAsync(
-        IRequestContext<RemoveTeamMember> context, RemoveTeamMember request, OperationProvenance provenance,
-        CancellationToken ct)
+        IRequestContext<RemoveTeamMember> context, RemoveTeamMember request, ActorReference actor, CancellationToken ct)
     {
-        Uuid? actorMemberId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var actorUserId)
-            ? RbacIds.Member(request.TenantId, actorUserId)
-            : null;
-        var guarded = await managers.WithdrawAsync(context, request.TenantId, request.MemberId,
-            actorMemberId, TenantManagerInvariant.RemovedFromAdministrators, ct).ConfigureAwait(false);
-        if (!guarded.IsSuccess)
-            return Result<AdministratorTransitionResponse>.Failure(guarded.Error!);
-        var result = await executor.ExecuteAsync(Owner(request, Uuid.Empty),
-            teamMember => AggregateOutcome.CommitOnSuccess(teamMember.RemoveForAdministrators(provenance)),
-            context, ct).ConfigureAwait(false);
-        return result.IsSuccess
-            ? Result<AdministratorTransitionResponse>.Success(new AdministratorTransitionResponse(request.CommandId,
-                AdministratorTransitionResponseState.Completed, null, provenance.AcceptedAt))
-            : Result<AdministratorTransitionResponse>.Failure(result.Error!);
+        var assignment = await reader.HydrateAsync(Owner(request, Uuid.Empty), ct).ConfigureAwait(false);
+        var episodeId = request.MemberEpisodeId == Uuid.Empty ? assignment.MembershipEpisodeId : request.MemberEpisodeId;
+        if (episodeId == Uuid.Empty)
+            return Fail(RequestErrorKind.NotFound, "The member is not on this team.");
+        var admission = new AdministratorAdmission(request.CommandId, request.TenantId, AdministratorCommandKinds.Remove,
+            actor, AuthoredIntentDigest.Compute(request), clock.GetUtcNow(), request.MemberId, episodeId,
+            assignment.Stream, assignment.Id, request.ExpectedAssignmentRevision, guard =>
+            {
+                var unfinished = AdministratorAdmissions.Unfinished(guard, episodeId, false, static _ => false);
+                if (!unfinished.IsSuccess)
+                    return Result<AdministratorSourceBinding>.Failure(unfinished.Error!);
+                var prepared = assignment.PrepareRemove(episodeId, request.ExpectedAssignmentRevision,
+                    request.ExpectedAssignmentGeneration);
+                return prepared.IsSuccess
+                    ? Result<AdministratorSourceBinding>.Success(new AdministratorSourceBinding(0,
+                        assignment.AssignmentGeneration, assignment.AssignmentRevision, null))
+                    : Result<AdministratorSourceBinding>.Failure(prepared.Error!);
+            });
+        return await admissions.AdmitAsync(context, admission, ct).ConfigureAwait(false);
     }
 
     async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(TeamMember owner, RemoveTeamMember request,

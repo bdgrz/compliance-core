@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Processes;
@@ -11,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Processes;
 /// receiver succeeded and before the CAS replays the identical command on resume.
 /// </summary>
 public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, ProcessCatalog catalog,
-    TimeProvider clock)
+    TimeProvider clock, IServiceProvider services)
 {
     /// <summary>How long one worker holds a record before another may resume it.</summary>
     public static TimeSpan LeaseDuration { get; } = TimeSpan.FromSeconds(30);
@@ -48,10 +50,26 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 break;
             }
 
-            var command = definition.CreateReceiver(step);
+            IRequest<Features.Processes.ReceiverOutcome>? command;
+            try
+            {
+                command = await definition.CreateReceiver(step, services, ct).ConfigureAwait(false);
+            }
+            catch (SourceFactVerificationException exception)
+            {
+                // The facts a receiver is built from are not readable or not provable yet; broker reads can lag.
+                return await store.ReplaceAsync(record with
+                {
+                    Attempts = record.Attempts + 1,
+                    Lease = null,
+                    NextDueAt = now + RetryDelay,
+                    Note = $"{step.Receiver}: source not provable yet: {exception.Message}",
+                }, record.Version, ct).ConfigureAwait(false);
+            }
+
             if (command is null)
             {
-                record = await Advance(record, step, definition, ct).ConfigureAwait(false);
+                record = await Advance(record, step, definition, null, ct).ConfigureAwait(false);
                 continue;
             }
 
@@ -84,7 +102,12 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 break;
             }
 
-            record = await Advance(record, step, definition, ct).ConfigureAwait(false);
+            record = await Advance(record, step, definition, result.Value switch
+            {
+                Features.Processes.ReceiverOutcome.Applied applied => applied.Fact,
+                Features.Processes.ReceiverOutcome.Replayed replayed => replayed.Fact,
+                _ => null,
+            }, ct).ConfigureAwait(false);
         }
 
         return record;
@@ -136,7 +159,7 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 record.Episode));
 
     async Task<ProcessRecord> Advance(ProcessRecord record, ProcessStep step, ProcessDefinition definition,
-        CancellationToken ct)
+        NativeFactReference? produced, CancellationToken ct)
     {
         ProcessRecord next;
         if (step.Stage == "abort")
@@ -156,6 +179,14 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                     : record with { StageIndex = stageIndex + 1, ReceiverIndex = 0, TargetIndex = 0 };
         }
 
+        if (produced is not null)
+            next = next with
+            {
+                Facts = new Dictionary<string, NativeFactReference>(next.Facts, StringComparer.Ordinal)
+                {
+                    [step.Receiver] = produced,
+                },
+            };
         return await store.ReplaceAsync(next with { Attempts = 0, Note = null }, record.Version, ct).ConfigureAwait(false);
     }
 }

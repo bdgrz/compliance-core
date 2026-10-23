@@ -8,7 +8,7 @@ namespace Bdgrz.Compliance.Tests.Features.Content;
 public sealed class ContentSourceFactRegistrationTests
 {
     [Fact]
-    public void ShouldRegisterStoreAsSingletonAndLeaveResolverUnregisteredGivenApplicationComposition()
+    public void ShouldRegisterStoreAsSingletonAndResolverBehindStreamClientGivenApplicationComposition()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -24,7 +24,9 @@ public sealed class ContentSourceFactRegistrationTests
         // Assert
         Assert.Equal(ServiceLifetime.Singleton,
             services.Last(descriptor => descriptor.ServiceType == typeof(IImmutableContentStore)).Lifetime);
-        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(ISourceFactResolver));
+        var resolver = Assert.Single(services, descriptor => descriptor.ServiceType == typeof(ISourceFactResolver));
+        Assert.Equal(ServiceLifetime.Scoped, resolver.Lifetime);
+        Assert.NotNull(resolver.ImplementationFactory);
     }
 
 }

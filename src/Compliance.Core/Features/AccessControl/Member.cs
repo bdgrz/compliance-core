@@ -101,10 +101,22 @@ public sealed class Member : Aggregate
                 _selectedCleanupCompleted = false;
             }
         });
-        On<MemberSuspended>(_ => _isSuspended = true);
-        On<MemberReinstated>(_ => _isSuspended = false);
+        On<MemberSuspended>(suspended =>
+        {
+            Acceptance.Observe(suspended);
+            RequireOwnOperation(suspended.Operation);
+            _isSuspended = true;
+        });
+        On<MemberReinstated>(reinstated =>
+        {
+            Acceptance.Observe(reinstated);
+            RequireOwnOperation(reinstated.Operation);
+            _isSuspended = false;
+        });
         On<MemberDeprovisioned>(deprovisioned =>
         {
+            Acceptance.Observe(deprovisioned);
+            RequireOwnOperation(deprovisioned.Operation);
             if (deprovisioned.TenantId != _tenantId || deprovisioned.MemberId != Id ||
                 RbacIds.Member(_tenantId, deprovisioned.UserId) != Id ||
                 deprovisioned.DeprovisionedByMemberId == Uuid.Empty ||
@@ -191,70 +203,128 @@ public sealed class Member : Aggregate
         return Result.Success;
     }
 
-    public Result Suspend(Uuid actorMemberId, string actorDisplay, DateTimeOffset suspendedAt,
-        string reason)
+    /// <summary>
+    ///     Checks a suspension against hydrated state without raising anything. A negative revision and an empty
+    ///     episode are unconstrained and reserved for system callers. <paramref name="suspensionPending" /> is true when
+    ///     the guard already admitted a suspension of this episode that is not applied yet.
+    /// </summary>
+    public Result PrepareSuspend(Uuid episodeId, long expectedRevision, string reason, bool suspensionPending = false)
     {
         EnsureUserIdentity();
-        if (!_isRegistered)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The tenant member was not found."));
-        if (_isSuspended)
-            return Result.Success;
-        if (actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay))
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A member identity is required for the suspension history."));
-        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 1000)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Enter a suspension reason of at most 1000 characters."));
+        var current = CheckEpisode(episodeId, expectedRevision);
+        if (!current.IsSuccess)
+            return current;
+        if (_isSuspended || suspensionPending)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The member is already suspended."));
+        return string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 1000
+            ? Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Enter a suspension reason of at most 1000 characters."))
+            : Result.Success;
+    }
 
-        RaiseEvent(new MemberSuspended(_tenantId, Id, _userId, actorMemberId,
-            actorDisplay.Trim(), suspendedAt, reason.Trim()));
+    /// <summary>Accepts the suspension as the native fact of <paramref name="operation" />.</summary>
+    public Result Suspend(OperationProvenance operation, ImmutableContentRef intent, ImmutableContentRef? operationResult,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset suspendedAt, string reason, Uuid episodeId,
+        long expectedRevision)
+    {
+        var accepted = CheckOperation(operation, intent, actorMemberId, actorDisplay);
+        if (!accepted.IsSuccess)
+            return accepted;
+        var prepared = PrepareSuspend(episodeId, expectedRevision, reason);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new MemberSuspended(_tenantId, Id, _userId, actorMemberId, actorDisplay.Trim(), suspendedAt,
+            reason.Trim(), operation, intent, null, operationResult));
         return Result.Success;
     }
 
-    public Result Reinstate(Uuid actorMemberId, string actorDisplay, DateTimeOffset reinstatedAt)
+    /// <summary>
+    ///     Checks a reinstatement against hydrated state without raising anything.
+    ///     <paramref name="suspensionPending" /> is true when the guard admitted a suspension of this episode that is
+    ///     not applied yet, which the reinstatement then waits behind.
+    /// </summary>
+    public Result PrepareReinstate(Uuid episodeId, long expectedRevision, bool suspensionPending = false)
     {
         EnsureUserIdentity();
-        if (!_isRegistered)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The tenant member was not found."));
-        if (!_isSuspended)
-            return Result.Success;
-        if (actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay))
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A member identity is required for the reinstatement history."));
+        var current = CheckEpisode(episodeId, expectedRevision);
+        if (!current.IsSuccess)
+            return current;
+        return _isSuspended || suspensionPending
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Conflict, "The member is not suspended."));
+    }
 
-        RaiseEvent(new MemberReinstated(_tenantId, Id, _userId, _affiliation!, actorMemberId,
-            actorDisplay.Trim(), reinstatedAt));
+    /// <summary>Accepts the reinstatement as the native fact of <paramref name="operation" />.</summary>
+    public Result Reinstate(OperationProvenance operation, ImmutableContentRef intent, ImmutableContentRef? operationResult,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset reinstatedAt, Uuid episodeId, long expectedRevision)
+    {
+        var accepted = CheckOperation(operation, intent, actorMemberId, actorDisplay);
+        if (!accepted.IsSuccess)
+            return accepted;
+        var prepared = PrepareReinstate(episodeId, expectedRevision);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new MemberReinstated(_tenantId, Id, _userId, _affiliation!, actorMemberId, actorDisplay.Trim(),
+            reinstatedAt, operation, intent, null, operationResult));
         return Result.Success;
     }
 
-    public Result Deprovision(Uuid actorMemberId, string actorDisplay, DateTimeOffset deprovisionedAt,
-        string reason)
+    /// <summary>
+    ///     Checks a deprovisioning against hydrated state without raising anything.
+    ///     <paramref name="deprovisionPending" /> is true when the guard already admitted a deprovisioning of this
+    ///     episode that is not applied yet.
+    /// </summary>
+    public Result PrepareDeprovision(Uuid episodeId, long expectedRevision, string reason, bool deprovisionPending = false)
     {
         EnsureUserIdentity();
-        if (_isDeprovisioned)
-            return Result.Success;
-        if (!_isRegistered)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The tenant member was not found."));
-        if (actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay))
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A member identity is required for the deprovision history."));
-        if (deprovisionedAt == default)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A deprovision timestamp is required."));
-        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 1000)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Enter a deprovision reason of at most 1000 characters."));
-
+        var current = CheckEpisode(episodeId, expectedRevision);
+        if (!current.IsSuccess)
+            return current;
         if (_membershipEpisodeId == Uuid.Empty)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Membership retirement requires its registered episode."));
-        RaiseEvent(new MemberDeprovisioned(_tenantId, Id, _userId, actorMemberId,
-            actorDisplay.Trim(), deprovisionedAt, reason.Trim(), _membershipEpisodeId));
+        if (deprovisionPending)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The member is already deprovisioned."));
+        return string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 1000
+            ? Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Enter a deprovision reason of at most 1000 characters."))
+            : Result.Success;
+    }
+
+    /// <summary>Accepts the deprovisioning as the native fact of <paramref name="operation" />.</summary>
+    public Result Deprovision(OperationProvenance operation, ImmutableContentRef intent,
+        ImmutableContentRef? operationResult, Uuid actorMemberId, string actorDisplay, DateTimeOffset deprovisionedAt,
+        string reason, Uuid episodeId, long expectedRevision)
+    {
+        var accepted = CheckOperation(operation, intent, actorMemberId, actorDisplay);
+        if (!accepted.IsSuccess)
+            return accepted;
+        if (deprovisionedAt == default)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A deprovision timestamp is required."));
+        var prepared = PrepareDeprovision(episodeId, expectedRevision, reason);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new MemberDeprovisioned(_tenantId, Id, _userId, actorMemberId, actorDisplay.Trim(), deprovisionedAt,
+            reason.Trim(), _membershipEpisodeId, operation, intent, null, operationResult));
         return Result.Success;
     }
+
+    /// <summary>The provenance of an operation on this owner; the owner is its own first, affected and revision scope.</summary>
+    public OperationProvenance Provenance(Uuid logicalId, Uuid rootOperationId, Uuid? causationEventId,
+        string commandKind, ActorReference actor, string episode, ulong? originalExpectedRevision,
+        string authoredIntentSha256, DateTimeOffset acceptedAt) =>
+        new(logicalId, rootOperationId, causationEventId, commandKind, actor, Stream, episode,
+            originalExpectedRevision, authoredIntentSha256, acceptedAt, Stream, Stream);
+
+    /// <summary>Logical revision of this member: the number of facts accepted on the owner so far.</summary>
+    public ulong MemberRevision => Version;
+
+    /// <summary>
+    ///     Opens a member stream by member identity to accept a process receiver's logical operation. The user is
+    ///     learned from the member's own history.
+    /// </summary>
+    public static Member ForOperation(Uuid tenantId, Uuid memberId, Uuid selectedCommandId) =>
+        new(tenantId, memberId, Uuid.Empty, Uuid.Empty, selectedCommandId);
 
     public Result CompleteDeprovisionCleanup(MembershipTerminationProof proof, Uuid commandId,
         DateTimeOffset completedAt)
@@ -279,6 +349,38 @@ public sealed class Member : Aggregate
         RaiseEvent(new MemberDeprovisionCleanupCompleted(_tenantId, Id, proof.MembershipEpisodeId,
             proof.EventId, commandId, completedAt));
         return Result.Success;
+    }
+
+    Result CheckEpisode(Uuid episodeId, long expectedRevision)
+    {
+        if (!_isRegistered)
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The tenant member was not found."));
+        if (episodeId != Uuid.Empty && episodeId != _membershipEpisodeId)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The member is on a different membership episode."));
+        return expectedRevision >= 0 && (ulong)expectedRevision != Version
+            ? Result.Failure(new RequestError(RequestErrorKind.Conflict, "The member changed since it was read."))
+            : Result.Success;
+    }
+
+    Result CheckOperation(OperationProvenance operation, ImmutableContentRef intent, Uuid actorMemberId,
+        string actorDisplay)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A member lifecycle change requires its own logical operation."));
+        return actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay)
+            ? Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A member identity is required for the lifecycle history."))
+            : Result.Success;
+    }
+
+    void RequireOwnOperation(OperationProvenance operation)
+    {
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+            throw new InvalidOperationException("A member lifecycle fact must accept its own logical operation on this owner.");
     }
 
     void EnsureUserIdentity()
