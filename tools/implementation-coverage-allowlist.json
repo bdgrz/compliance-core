@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "notes": [
+    "Entries name catalog items whose replacement path stays unregistered by a recorded decision. The coverage tool reports them as blocked instead of pending and fails if a name is not in the catalogs.",
+    "ulongExpectedRevision lists the six typed-identity commands shipped under #1033, #1035 and #1037 that keep ulong ExpectedRevision; every other public expected value is a signed long (revision-and-response-contracts.md)."
+  ],
+  "ulongExpectedRevision": [
+    "AssignRolePermission",
+    "RemoveRolePermission",
+    "AssignTeamRole",
+    "RemoveTeamRole",
+    "GrantPlatformOperator",
+    "RevokePlatformOperator"
+  ],
+  "deferred": [
+    { "scope": "command", "name": "ApproveArtifactDisposition", "issue": 285, "reason": "artifact disposal routes stay unregistered until #285" },
+    { "scope": "command", "name": "ExecuteArtifactDisposition", "issue": 285, "reason": "artifact disposal routes stay unregistered until #285" },
+    { "scope": "command", "name": "RecordArtifactDispositionResult", "issue": 285, "reason": "artifact disposal routes stay unregistered until #285" },
+    { "scope": "command", "name": "RequestClientExport", "issue": 545, "reason": "client export routes stay unregistered until #545" },
+    { "scope": "command", "name": "RecordClientExportBuildResult", "issue": 545, "reason": "client export routes stay unregistered until #545" },
+    { "scope": "command", "name": "RecordClientExportDelivery", "issue": 545, "reason": "client export routes stay unregistered until #545" },
+    { "scope": "command", "name": "OffboardTenant", "issue": 546, "reason": "tenant offboarding routes stay unregistered until #546" },
+    { "scope": "command", "name": "CompleteTenantOffboarding", "issue": 546, "reason": "tenant offboarding routes stay unregistered until #546" }
+  ],
+  "reservedRoutes": [
+    { "pathContains": "/operations/{operation_id}", "issue": 1042, "reason": "operation status/result routes keyed by bare operation id wait for the realm-wide binding primitive" }
+  ]
+}

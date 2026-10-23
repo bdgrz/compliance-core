@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 
 const root = path.resolve(import.meta.dirname, '..');
 const base = path.join(root, 'docs/product/audits/2026-10-23');
@@ -14,6 +15,17 @@ for (const name of files.filter(name => name.endsWith('.json'))) read(name);
 const split = read('aggregate-split-targets.json');
 const source = read('command-event-contracts.json');
 const current = read('aggregate-contract-catalog.json');
+// Source existence checks are pinned to the catalog head so later legacy deletions do not break the design validator.
+const treeAt = head => {
+    const list = () => new Set(execFileSync('git', ['ls-tree', '-r', '--name-only', head], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').filter(Boolean));
+    try { return list(); } catch { /* commit absent, e.g. shallow checkout */ }
+    try { execFileSync('git', ['fetch', '--quiet', '--depth=1', 'origin', head], { cwd: root, stdio: 'ignore' }); return list(); } catch { /* fall through */ }
+    console.error(`warning: commit ${head} unavailable; checking source paths against the working tree`);
+    return null;
+};
+const trees = new Map();
+const existsAt = (head, file) => { const tree = trees.get(head) ?? (trees.set(head, treeAt(head)), trees.get(head)); return tree ? tree.has(file) : fs.existsSync(path.join(root, file)); };
+const commandsHead = read('target-command-contracts.json').sourceHead;
 const commands = read('target-command-contracts.json').commands;
 const admissions = read('source-admission-contracts.json').contracts;
 const remaining = read('remaining-command-identities.json').contracts;
@@ -27,7 +39,7 @@ const expectedNames = source.requests.filter(request => ['command', 'internal_re
 assert(current.aggregates.length === 103, 'Current aggregate count must remain 103.');
 assert(split.splitOwners.length === 29, 'Split root count must remain 29.');
 for (const request of expectedNames) assert(selectedNames.has(request.request), `No selected identity/entry contract: ${request.request}`);
-for (const owner of current.aggregates) assert(fs.existsSync(path.join(root, owner.source)), `Missing owner source: ${owner.source}`);
+for (const owner of current.aggregates) assert(existsAt(current.generatedAtHead, owner.source), `Missing owner source at ${current.generatedAtHead.slice(0, 8)}: ${owner.source}`);
 let allocated = 0;
 let externalized = 0;
 let pruned = 0;
@@ -64,7 +76,7 @@ for (const command of allSelected) {
         routes.set(shape, command.command);
     }
     for (const event of command.events ?? []) assert(eventByName.has(event), `Undefined target event: ${command.command} -> ${event}`);
-    if (command.sourceContract) assert(fs.existsSync(path.join(root, command.sourceContract)), `Missing command source: ${command.sourceContract}`);
+    if (command.sourceContract) assert(existsAt(commandsHead, command.sourceContract), `Missing command source at ${commandsHead.slice(0, 8)}: ${command.sourceContract}`);
 }
 const receiverNames = new Set();
 for (const reactor of reactors) {
