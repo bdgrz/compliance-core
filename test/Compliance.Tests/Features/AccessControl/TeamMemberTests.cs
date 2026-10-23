@@ -1,6 +1,13 @@
 using System.Globalization;
+using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 
@@ -9,6 +16,8 @@ public sealed class TeamMemberTests
     static readonly Uuid TenantId = Uuid.Parse("11f455d2-fb10-4f28-a157-23e18e706e70", CultureInfo.InvariantCulture);
     static readonly Uuid TeamId = Uuid.Parse("2cc8e854-a49a-42a1-9581-d0622de3d5c3", CultureInfo.InvariantCulture);
     static readonly Uuid MemberId = Uuid.Parse("0862062f-97e9-45de-a312-0f884c48180d", CultureInfo.InvariantCulture);
+    static readonly Uuid UserId = Uuid.Parse("a1f455d2-fb10-4f28-a157-23e18e706e71", CultureInfo.InvariantCulture);
+    static readonly DateTimeOffset ActionAt = new(2026, 9, 29, 14, 0, 0, TimeSpan.Zero);
 
     [Fact]
     public void ShouldRejectReplacingActiveAuthorityGivenAnotherMembershipEpisode()
@@ -17,7 +26,7 @@ public sealed class TeamMemberTests
         var originalEpisode = Uuid.CreateVersion4();
         var owner = new TeamMember(TenantId, TeamId, MemberId);
         var scenario = new AggregateScenario<TeamMember>(owner).Given(DomainEventSeed.Attach(
-            new TeamMemberAssigned(TenantId, TeamId, MemberId, originalEpisode), owner.Id, 1));
+            TeamMemberFacts.Assigned(TenantId, TeamId, MemberId, originalEpisode), owner.Id, 1));
 
         // Act
         var result = owner.Assign(Uuid.CreateVersion4());
@@ -30,20 +39,24 @@ public sealed class TeamMemberTests
     }
 
     [Fact]
-    public void ShouldAssignOnceGivenRepeatedAssignment()
+    public void ShouldReportAlreadyAssignedGivenSecondAssignmentForTheSameEpisode()
     {
         // Arrange
+        var episode = Uuid.CreateVersion4();
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
         var scenario = new AggregateScenario<TeamMember>(teamMember);
-
-        var first = scenario.Aggregate.Assign();
+        var first = scenario.Aggregate.Assign(
+            TeamMemberFacts.Provenance(teamMember, Uuid.CreateVersion4(), "AssignTeamMember"),
+            TeamMemberFacts.FirstResponse(), episode, 0, 0);
 
         // Act
-        var second = scenario.Aggregate.Assign();
+        var second = scenario.Aggregate.Assign(
+            TeamMemberFacts.Provenance(teamMember, Uuid.CreateVersion4(), "AssignTeamMember"),
+            TeamMemberFacts.FirstResponse(), episode, -1, -1);
 
         // Assert
         Assert.True(first.IsSuccess);
-        Assert.True(second.IsSuccess);
+        Assert.Equal(TeamMember.AlreadyAssignedConflict, second.Error);
         var assigned = Assert.Single(scenario.PendingEvents);
         Assert.Equal("TeamMemberAssigned", assigned.GetType().Name);
     }
@@ -54,7 +67,7 @@ public sealed class TeamMemberTests
         // Arrange
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
         var scenario = new AggregateScenario<TeamMember>(teamMember)
-            .Given(DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId), teamMember.Id, 1));
+            .Given(DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId), teamMember.Id, 1));
 
         // Act
         var result = scenario.Aggregate.Remove();
@@ -84,10 +97,10 @@ public sealed class TeamMemberTests
     {
         // Arrange
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
-        var assignment = DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId), teamMember.Id, 1);
+        var assignment = DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId), teamMember.Id, 1);
         var scenario = new AggregateScenario<TeamMember>(teamMember)
             .Given(assignment,
-                DomainEventSeed.Attach(new TeamMemberRemoved(TenantId, TeamId, MemberId,
+                DomainEventSeed.Attach(TeamMemberFacts.Removed(TenantId, TeamId, MemberId,
                     assignment.MembershipEpisodeId, assignment.Metadata.EventId), teamMember.Id, 2));
 
         // Act
@@ -103,10 +116,10 @@ public sealed class TeamMemberTests
     {
         // Arrange
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
-        var assignment = DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId), teamMember.Id, 1);
+        var assignment = DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId), teamMember.Id, 1);
         var scenario = new AggregateScenario<TeamMember>(teamMember)
             .Given(assignment,
-                DomainEventSeed.Attach(new TeamMemberRemoved(TenantId, TeamId, MemberId,
+                DomainEventSeed.Attach(TeamMemberFacts.Removed(TenantId, TeamId, MemberId,
                     assignment.MembershipEpisodeId, assignment.Metadata.EventId), teamMember.Id, 2));
 
         // Act
@@ -125,10 +138,10 @@ public sealed class TeamMemberTests
         var firstEpisodeId = Uuid.CreateVersion4();
         var nextEpisodeId = Uuid.CreateVersion4();
         var teamMember = new TeamMember(TenantId, TeamId, MemberId);
-        var assigned = DomainEventSeed.Attach(new TeamMemberAssigned(TenantId, TeamId, MemberId,
+        var assigned = DomainEventSeed.Attach(TeamMemberFacts.Assigned(TenantId, TeamId, MemberId,
             firstEpisodeId), teamMember.Id, 1);
         var scenario = new AggregateScenario<TeamMember>(teamMember).Given(assigned,
-            DomainEventSeed.Attach(new TeamMemberRemoved(TenantId, TeamId, MemberId, firstEpisodeId,
+            DomainEventSeed.Attach(TeamMemberFacts.Removed(TenantId, TeamId, MemberId, firstEpisodeId,
                 assigned.Metadata.EventId), teamMember.Id, 2));
 
         // Act
@@ -140,4 +153,396 @@ public sealed class TeamMemberTests
         Assert.Equal(nextEpisodeId, reassigned.MembershipEpisodeId);
         Assert.Equal(nextEpisodeId, scenario.Aggregate.MembershipEpisodeId);
     }
+
+    [Fact]
+    public async Task ShouldAssignDirectlyAndRespondCompletedGivenNonAdministratorTeam()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        var request = Assignment(Uuid.CreateVersion4(), episode);
+
+        // Act
+        var result = await AssignAsync(provider, request);
+        var owner = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(Owner(request.CommandId));
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(request.CommandId, result.Value!.OperationId);
+        Assert.Equal(AdministratorTransitionResponseState.Completed, result.Value.State);
+        Assert.Null(result.Value.StatusUrl);
+        Assert.True(owner.IsAssigned);
+        Assert.Equal(episode, owner.MembershipEpisodeId);
+        Assert.Equal(1UL, owner.AssignmentGeneration);
+        Assert.Equal(1UL, owner.AssignmentRevision);
+    }
+
+    [Fact]
+    public async Task ShouldAppendNothingAndRepeatResponseGivenExactAssignmentRetry()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        var request = Assignment(Uuid.CreateVersion4(), episode);
+        var first = await AssignAsync(provider, request);
+
+        // Act
+        var retry = await AssignAsync(provider, request);
+        var history = await HistoryAsync(provider);
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(first.Value, retry.Value);
+        Assert.IsType<TeamMemberAssigned>(Assert.Single(history));
+    }
+
+    [Theory]
+    [InlineData("revision")]
+    [InlineData("generation")]
+    [InlineData("episode")]
+    [InlineData("actor")]
+    public async Task ShouldConflictGivenSameAssignmentIdWithChangedIntent(string change)
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        var original = Assignment(Uuid.CreateVersion4(), episode);
+        Assert.True((await AssignAsync(provider, original)).IsSuccess);
+        var changed = change switch
+        {
+            "revision" => original with { ExpectedAssignmentRevision = 5 },
+            "generation" => original with { ExpectedAssignmentGeneration = 5 },
+            "episode" => original with { MemberEpisodeId = Uuid.CreateVersion4() },
+            _ => original,
+        };
+        var actor = change == "actor" ? Caller(Uuid.CreateVersion4()) : null;
+
+        // Act
+        var result = await AssignAsync(provider, changed, actor);
+        var history = await HistoryAsync(provider);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Single(history);
+    }
+
+    [Fact]
+    public async Task ShouldNotAssignNewEpisodeGivenExactOldAssignmentRetryAfterReRegistration()
+    {
+        // Arrange
+        await using var provider = Services();
+        var oldEpisode = await RegisterAsync(provider);
+        var request = Assignment(Uuid.CreateVersion4(), oldEpisode);
+        var first = await AssignAsync(provider, request);
+        var newEpisode = await ReRegisterAsync(provider, oldEpisode);
+
+        // Act
+        var retry = await AssignAsync(provider, request);
+        var owner = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(Owner());
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(first.Value, retry.Value);
+        Assert.NotEqual(newEpisode, oldEpisode);
+        Assert.False(owner.IsAssigned);
+        Assert.DoesNotContain(await HistoryAsync(provider), fact => fact is TeamMemberAssigned assigned &&
+            assigned.MembershipEpisodeId == newEpisode);
+    }
+
+    [Fact]
+    public async Task ShouldConflictGivenUnacceptedOldEpisodeAssignmentAfterReRegistration()
+    {
+        // Arrange
+        await using var provider = Services();
+        var oldEpisode = await RegisterAsync(provider);
+        var newEpisode = await ReRegisterAsync(provider, oldEpisode);
+        var oldRetry = Assignment(Uuid.CreateVersion4(), oldEpisode);
+
+        // Act
+        var result = await AssignAsync(provider, oldRetry);
+        var history = await HistoryAsync(provider);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Empty(history);
+        Assert.NotEqual(newEpisode, oldEpisode);
+    }
+
+    [Fact]
+    public async Task ShouldConflictGivenStaleExpectedAssignmentGeneration()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        Assert.True((await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode))).IsSuccess);
+        Assert.True((await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), episode, 1, 1))).IsSuccess);
+
+        // Act
+        var stale = await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode));
+        var current = await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode, 2, 1));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(stale.Error).Kind);
+        Assert.True(current.IsSuccess);
+    }
+
+    [Fact]
+    public async Task ShouldAppendDirectlyWithoutGuardReadGivenNonAdministratorTeamRemoval()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        Assert.True((await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode))).IsSuccess);
+        var request = Removal(Uuid.CreateVersion4(), episode, 1, 1);
+
+        // Act
+        var result = await RemoveAsync(provider, request);
+        var owner = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(Owner(request.CommandId));
+        var history = await HistoryAsync(provider);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(AdministratorTransitionResponseState.Completed, result.Value!.State);
+        Assert.False(owner.IsAssigned);
+        Assert.IsType<TeamMemberRemoved>(history[^1]);
+        Assert.Equal(request.CommandId, owner.Acceptance.SelectedOperation!.Operation.LogicalId);
+    }
+
+    [Fact]
+    public async Task ShouldAppendNothingGivenExactRemovalRetry()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        Assert.True((await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode))).IsSuccess);
+        var request = Removal(Uuid.CreateVersion4(), episode, 1, 1);
+        var first = await RemoveAsync(provider, request);
+
+        // Act
+        var retry = await RemoveAsync(provider, request);
+        var changed = await RemoveAsync(provider, request with { ExpectedAssignmentRevision = 9 });
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(first.Value, retry.Value);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changed.Error).Kind);
+        Assert.Equal(2, (await HistoryAsync(provider)).Count);
+    }
+
+    [Fact]
+    public async Task ShouldRejectRemovalGivenAnotherEpisodeOrStaleExpectation()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        Assert.True((await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode))).IsSuccess);
+
+        // Act
+        var otherEpisode = await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, 1));
+        var staleRevision = await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), episode, 0, 1));
+        var staleGeneration = await RemoveAsync(provider, Removal(Uuid.CreateVersion4(), episode, 1, 0));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(otherEpisode.Error).Kind);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(staleRevision.Error).Kind);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(staleGeneration.Error).Kind);
+        Assert.Single(await HistoryAsync(provider));
+    }
+
+    [Theory]
+    [InlineData("command")]
+    [InlineData("tenant")]
+    [InlineData("team")]
+    [InlineData("member")]
+    [InlineData("episode")]
+    public async Task ShouldRejectBeforeAnythingGivenEmptyIdentifier(string empty)
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        var assign = Assignment(Uuid.CreateVersion4(), episode);
+        var remove = Removal(Uuid.CreateVersion4(), episode, 0, 0);
+        var user = Caller(Uuid.CreateVersion4());
+        (assign, remove) = empty switch
+        {
+            "command" => (assign with { CommandId = Uuid.Empty }, remove with { CommandId = Uuid.Empty }),
+            "tenant" => (assign with { TenantId = Uuid.Empty }, remove with { TenantId = Uuid.Empty }),
+            "team" => (assign with { TeamId = Uuid.Empty }, remove with { TeamId = Uuid.Empty }),
+            "member" => (assign with { MemberId = Uuid.Empty }, remove with { MemberId = Uuid.Empty }),
+            _ => (assign with { MemberEpisodeId = Uuid.Empty }, remove with { MemberEpisodeId = Uuid.Empty }),
+        };
+
+        // Act
+        var assigned = await AssignAsync(provider, assign, user);
+        var removed = await RemoveAsync(provider, remove, user);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(assigned.Error).Kind);
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(removed.Error).Kind);
+        Assert.Empty(await HistoryAsync(provider));
+    }
+
+    [Fact]
+    public async Task ShouldRejectNegativeExpectationsGivenUserCaller()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+
+        // Act
+        var result = await AssignAsync(provider, Assignment(Uuid.CreateVersion4(), episode, -1, -1),
+            Caller(Uuid.CreateVersion4()));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(result.Error).Kind);
+    }
+
+    [Fact]
+    public async Task ShouldBindToCurrentEpisodeGivenSystemAssignmentWithoutEpisode()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        var effect = TeamMemberEffects.Assign(Uuid.CreateVersion4(), TenantId, TeamId, Member());
+
+        // Act
+        var result = await AssignAsync(provider, effect);
+        var retry = await AssignAsync(provider, effect);
+        var owner = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(Owner());
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(result.Value, retry.Value);
+        Assert.Equal(episode, owner.MembershipEpisodeId);
+        Assert.Single(await HistoryAsync(provider));
+    }
+
+    [Fact]
+    public async Task ShouldRecognizeAcceptedIntentGivenDurableRoundTrip()
+    {
+        // Arrange
+        await using var provider = Services();
+        var episode = await RegisterAsync(provider);
+        var request = Assignment(Uuid.CreateVersion4(), episode);
+        Assert.True((await AssignAsync(provider, request)).IsSuccess);
+        var original = Assert.IsType<TeamMemberAssigned>(Assert.Single(await HistoryAsync(provider)));
+        await using var persistence = EventPersistenceFrameTests.Compose();
+        var serializer = persistence.GetRequiredService<IDomainEventSerializer>();
+        var owner = Owner(request.CommandId);
+        var restored = serializer.Deserialize(serializer.Serialize(original));
+        var scenario = new AggregateScenario<TeamMember>(owner).Given(restored);
+
+        // Act
+        var decision = owner.Acceptance.Decide(AcceptedOperationBinding.Of(AssignTeamMemberHandler.Provenance(
+            request, ActorReference.ForSystemProcess("system", "system"), ActionAt)));
+
+        // Assert
+        Assert.Equal(NativeAcceptanceDecision.Replayed, decision);
+        Assert.Empty(scenario.PendingEvents);
+        Assert.Equal(episode, owner.MembershipEpisodeId);
+    }
+
+    static Uuid Member() => RbacIds.Member(TenantId, UserId);
+
+    static TeamMember Owner(Uuid selected = default) => new(TenantId, TeamId, Member(), selected);
+
+    static AssignTeamMember Assignment(Uuid commandId, Uuid episode, long revision = 0, long generation = 0) =>
+        new(commandId, TenantId, TeamId, Member(), episode, revision, generation);
+
+    static RemoveTeamMember Removal(Uuid commandId, Uuid episode, long revision, long generation) =>
+        new(commandId, TenantId, TeamId, Member(), episode, revision, generation);
+
+    static ServiceProvider Services()
+    {
+        var services = new ServiceCollection();
+        var events = new InMemoryEventStore();
+        services.AddSingleton<IEventStore>(events);
+        services.AddSingleton<IDomainEventReader>(events);
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IProjectionCheckpointStore, InMemoryProjectionCheckpointStore>();
+        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+            new PersistenceKvClient(new InMemoryKvClient())));
+        services.AddPortia();
+        return services.BuildServiceProvider();
+    }
+
+    static async Task<Uuid> RegisterAsync(IServiceProvider provider, Uuid commandId = default)
+    {
+        var id = commandId == Uuid.Empty ? Uuid.CreateVersion4() : commandId;
+        Assert.True((await provider.GetRequiredService<IAggregateExecutor>().ExecuteAsync(new Member(TenantId, UserId),
+            member => AggregateOutcome.CommitOnSuccess(member.Register(commandId: id)),
+            new RequestDispatchContext(RequestActor.System), CancellationToken.None)).IsSuccess);
+        return id;
+    }
+
+    /// <summary>Retires the episode, closes its team assignment as retirement does, and registers a new episode.</summary>
+    static async Task<Uuid> ReRegisterAsync(IServiceProvider provider, Uuid episode)
+    {
+        var reader = provider.GetRequiredService<IAggregateReader>();
+        var executor = provider.GetRequiredService<IAggregateExecutor>();
+        var system = new RequestDispatchContext(RequestActor.System);
+        Assert.True((await executor.ExecuteAsync(new Member(TenantId, UserId), member =>
+            AggregateOutcome.CommitOnSuccess(member.Deprovision(MemberId, "Alex Admin", ActionAt, "Access ended.")),
+            system, CancellationToken.None)).IsSuccess);
+        var proof = Assert.IsType<MembershipTerminationProof>(
+            (await reader.HydrateAsync(new Member(TenantId, UserId))).TerminationProof);
+        var assignment = await reader.HydrateAsync(Owner());
+        if (assignment.IsAssigned)
+            Assert.True((await executor.ExecuteAsync(Owner(), owner => AggregateOutcome.CommitOnSuccess(
+                owner.RemoveForRetirement(proof, assignment.AssignmentEventId, Uuid.CreateVersion4(), ActionAt)),
+                system, CancellationToken.None)).IsSuccess);
+        Assert.True((await executor.ExecuteAsync(new Member(TenantId, UserId, proof.MembershipEpisodeId), member =>
+            AggregateOutcome.CommitOnSuccess(member.CompleteDeprovisionCleanup(proof,
+                MemberRetirementEffects.Complete(proof).CommandId, ActionAt.AddMinutes(1))),
+            system, CancellationToken.None)).IsSuccess);
+        return await RegisterAsync(provider);
+    }
+
+    static async Task<Result<AdministratorTransitionResponse>> AssignAsync(IServiceProvider provider,
+        AssignTeamMember request, ClaimsPrincipal? actor = null)
+    {
+        var reader = provider.GetRequiredService<IAggregateReader>();
+        var executor = provider.GetRequiredService<IAggregateExecutor>();
+        var content = provider.GetRequiredService<IImmutableContentStore>();
+        var cleanup = new MemberAuthorityCleanup(reader, executor, provider.GetRequiredService<IDomainEventReader>(),
+            provider.GetRequiredService<IProjectionCheckpointStore>(), TimeProvider.System);
+        // The guard is deliberately absent: a non-administrator team must never reach it.
+        var handler = new AssignTeamMemberHandler(executor, new NativeOperationExecutor(reader, executor, content),
+            null!, reader, cleanup, content, TimeProvider.System);
+        return await handler.HandleAsync(new RequestContext<AssignTeamMember>(request, actor ?? RequestActor.System),
+            CancellationToken.None);
+    }
+
+    static async Task<Result<AdministratorTransitionResponse>> RemoveAsync(IServiceProvider provider,
+        RemoveTeamMember request, ClaimsPrincipal? actor = null)
+    {
+        var reader = provider.GetRequiredService<IAggregateReader>();
+        var executor = provider.GetRequiredService<IAggregateExecutor>();
+        var content = provider.GetRequiredService<IImmutableContentStore>();
+        // The guard is deliberately absent: a non-administrator team must never reach it.
+        var handler = new RemoveTeamMemberHandler(executor, new NativeOperationExecutor(reader, executor, content),
+            null!, content, TimeProvider.System);
+        return await handler.HandleAsync(new RequestContext<RemoveTeamMember>(request, actor ?? RequestActor.System),
+            CancellationToken.None);
+    }
+
+    static async Task<List<DomainEvent>> HistoryAsync(IServiceProvider provider)
+    {
+        var history = new List<DomainEvent>();
+        try
+        {
+            await foreach (var record in provider.GetRequiredService<IDomainEventReader>()
+                               .ReadAsync(Owner().Stream, 0))
+                history.Add(record.Event);
+        }
+        catch (InvalidOperationException)
+        {
+            // An unknown stream reads as empty.
+        }
+
+        return history;
+    }
+
+    static ClaimsPrincipal Caller(Uuid userId) => new(new ClaimsIdentity(
+        [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
 }

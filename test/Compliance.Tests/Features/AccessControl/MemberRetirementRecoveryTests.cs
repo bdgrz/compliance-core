@@ -341,7 +341,7 @@ public sealed class MemberRetirementRecoveryTests
         var scenario = new AggregateScenario<TeamMember>(owner);
 
         // Act
-        var result = owner.RemoveForRetirement(proof, Uuid.CreateVersion4());
+        var result = owner.RemoveForRetirement(proof, Uuid.CreateVersion4(), Uuid.CreateVersion4(), DateTimeOffset.UnixEpoch);
 
         // Assert
         Assert.False(result.IsSuccess);

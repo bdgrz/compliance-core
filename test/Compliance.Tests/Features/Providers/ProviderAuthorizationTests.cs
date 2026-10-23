@@ -108,10 +108,10 @@ public sealed class ProviderAuthorizationTests
         var scenario = new ReactorScenario().Given(ev);
 
         // Act
-        await scenario.RunAsync(new TenantRbacBootstrapReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests));
+        await scenario.RunAsync(new TenantRbacBootstrapReactor(new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
 
         // Assert
-        var grants = scenario.SentRequests.OfType<AssignRolePermission>()
+        var grants = TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>()
             .Where(grant => grant.Permission == RbacPermissions.ProviderInventoryManage).ToArray();
         Assert.Equal(2, grants.Length);
         Assert.Equal(new[] { BuiltInRbac.TenantAdministrationRoleId(tenantId), BuiltInRbac.ComplianceManagementRoleId(tenantId) }.Order(),

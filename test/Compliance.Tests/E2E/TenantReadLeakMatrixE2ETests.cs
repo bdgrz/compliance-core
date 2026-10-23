@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Bdgrz.Compliance;
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Tenants;
 using Bdgrz.Compliance.Features.UserIdentities;
@@ -661,6 +662,21 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
         owner_reference = (string?)null,
     };
 
+    static async Task PutUntilOkAsync(HttpClient client, string path, object body)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            using var response = await client.PutAsJsonAsync(path, body);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return;
+            Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,
+                await response.Content.ReadAsStringAsync());
+            await Task.Delay(250);
+        }
+        throw new TimeoutException("RBAC management remained unauthorized after tenant bootstrap.");
+    }
+
     static async Task PostUntilNoContentAsync(HttpClient client, string path, object body)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
@@ -713,8 +729,26 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
             Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
 
         var memberId = RbacIds.Member(tenantId, userId).ToString();
-        await PostUntilNoContentAsync(owner, TenantPath(tenantId) + "/teams/" + teamId +
-            "/members/" + memberId, new { });
+        var episodeId = Uuid.Empty;
+        deadline = DateTimeOffset.UtcNow.AddSeconds(120);
+        while (episodeId == Uuid.Empty && DateTimeOffset.UtcNow < deadline)
+        {
+            await using var scope = services.CreateAsyncScope();
+            var registered = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+                .HydrateAsync(Member.ForVerification(tenantId, Uuid.Parse(memberId, CultureInfo.InvariantCulture)));
+            if (registered.IsRegistered)
+                episodeId = registered.MembershipEpisodeId;
+            else
+                await Task.Delay(250);
+        }
+        Assert.NotEqual(Uuid.Empty, episodeId);
+        await PutUntilOkAsync(owner, TenantPath(tenantId) + "/teams/" + teamId +
+            "/members/" + memberId + "/" + Uuid.CreateVersion4(), new
+            {
+                member_episode_id = episodeId,
+                expected_assignment_revision = 0,
+                expected_assignment_generation = 0,
+            });
         return (memberId, userId.ToString());
     }
 

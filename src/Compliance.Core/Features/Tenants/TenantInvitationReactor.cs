@@ -56,16 +56,26 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
         {
             var teamId = BuiltInRbac.TeamIdForRole(context.Trigger.TenantId, role) ??
                 throw new InvalidOperationException("The accepted invitation has an unknown built-in role.");
-            await bus.SendReactionAsync(new AssignTeamMember(context.Trigger.TenantId,
-                teamId, memberId), context, ct);
+            await AssignAsync(context, teamId, memberId, ct).ConfigureAwait(false);
         }
         if (context.Trigger.Administrator)
         {
-            await bus.SendReactionAsync(new AssignTeamMember(context.Trigger.TenantId,
-                BuiltInRbac.AdministratorsTeamId(context.Trigger.TenantId), memberId), context, ct);
+            await AssignAsync(context, BuiltInRbac.AdministratorsTeamId(context.Trigger.TenantId), memberId, ct)
+                .ConfigureAwait(false);
             await _policy.SendActivationAsync(bus,
                 new ActivateTenant(context.Trigger.TenantId, context.Trigger.UserId,
                     context.Trigger.EmailAddress), context, logger, ct);
         }
+    }
+
+    // A user re-invited while already on the team keeps that assignment; the owner reports the exact
+    // already-assigned conflict and the rest of the acceptance still applies.
+    async ValueTask AssignAsync(IReactorContext<TenantInvitationAccepted> context, Uuid teamId, Uuid memberId,
+        CancellationToken ct)
+    {
+        var assignment = await bus.SendAsync(TeamMemberEffects.Assign(context.Trigger.Metadata.EventId,
+            context.Trigger.TenantId, teamId, memberId), context, ct).ConfigureAwait(false);
+        if (!assignment.IsSuccess && assignment.Error != TeamMember.AlreadyAssignedConflict)
+            throw new ReactionCommandFailedException(assignment.Error);
     }
 }

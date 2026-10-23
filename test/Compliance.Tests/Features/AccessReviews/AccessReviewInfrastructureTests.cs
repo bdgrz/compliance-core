@@ -101,10 +101,10 @@ public sealed class AccessReviewInfrastructureTests
 
         // Act
         await scenario.RunAsync(new TenantRbacBootstrapReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+            new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
 
         // Assert
-        var grants = scenario.SentRequests.OfType<AssignRolePermission>()
+        var grants = TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>()
             .Where(grant => grant.Permission == RbacPermissions.AccessReviewManage).ToArray();
         Assert.Equal(2, grants.Length);
         Assert.Equal(new[] { BuiltInRbac.TenantAdministrationRoleId(tenantId),

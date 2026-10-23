@@ -1,4 +1,9 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -146,6 +151,8 @@ public sealed class TenantManagerInvariantTests
             services.AddSingleton<IEventStore>(store);
             services.AddSingleton<IDomainEventReader>(store);
             services.AddSingleton(TimeProvider.System);
+            services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+                new PersistenceKvClient(new InMemoryKvClient())));
             services.AddPortia();
             var provider = services.BuildServiceProvider();
             var users = Enumerable.Range(0, administrators).Select(_ => Uuid.CreateVersion4()).ToArray();
@@ -172,16 +179,22 @@ public sealed class TenantManagerInvariantTests
             SendAsync(actor, new ReinstateMember(TenantId, target));
 
         public ValueTask<Result> RemoveFromAdministratorsAsync(Uuid actor, Uuid target) =>
-            SendAsync(actor, new RemoveTeamMember(TenantId, BuiltInRbac.AdministratorsTeamId(TenantId),
-                RbacIds.Member(TenantId, target)));
+            SendAsync(actor, new RemoveTeamMember(Uuid.CreateVersion4(), TenantId,
+                BuiltInRbac.AdministratorsTeamId(TenantId), RbacIds.Member(TenantId, target), Uuid.CreateVersion4(),
+                0, 0));
 
         public ValueTask<Result> AssignToAdministratorsAsync(Uuid actor, Uuid target) =>
-            SendAsync(actor, new AssignTeamMember(TenantId, BuiltInRbac.AdministratorsTeamId(TenantId),
-                RbacIds.Member(TenantId, target)));
+            SendAsync(actor, new AssignTeamMember(Uuid.CreateVersion4(), TenantId,
+                BuiltInRbac.AdministratorsTeamId(TenantId), RbacIds.Member(TenantId, target), Uuid.CreateVersion4(),
+                0, 0));
+
+        static Result Unit<T>(Result<T> result) where T : notnull =>
+            result.IsSuccess ? Result.Success : Result.Failure(result.Error!);
 
         public async ValueTask<Result> SendAsync<TRequest>(Uuid actor, TRequest request)
-            where TRequest : IRequest
+            where TRequest : IRequestBase
         {
+            var content = _provider.GetRequiredService<IImmutableContentStore>();
             var executor = new AggregateExecutor(_reader, _provider.GetRequiredService<IAggregateWriter>());
             var managers = new TenantManagerInvariant(_reader, executor, new AdministratorsDirectory(this));
             return request switch
@@ -192,14 +205,16 @@ public sealed class TenantManagerInvariantTests
                 ReinstateMember reinstate => await new ReinstateMemberHandler(executor,
                     TimeProvider.System, managers).HandleAsync(
                     new RequestContext<ReinstateMember>(reinstate, Actor(actor)), CancellationToken.None),
-                RemoveTeamMember remove => await new RemoveTeamMemberHandler(executor, managers)
+                RemoveTeamMember remove => Unit(await new RemoveTeamMemberHandler(executor,
+                        new NativeOperationExecutor(_reader, executor, content), managers, content, TimeProvider.System)
                     .HandleAsync(new RequestContext<RemoveTeamMember>(remove, Actor(actor)),
-                        CancellationToken.None),
-                AssignTeamMember assign => await new AssignTeamMemberHandler(executor, managers, _reader,
+                        CancellationToken.None)),
+                AssignTeamMember assign => Unit(await new AssignTeamMemberHandler(executor,
+                    new NativeOperationExecutor(_reader, executor, content), managers, _reader,
                     new MemberAuthorityCleanup(_reader, executor, _provider.GetRequiredService<IDomainEventReader>(),
-                        new InMemoryProjectionCheckpointStore(), TimeProvider.System))
+                        new InMemoryProjectionCheckpointStore(), TimeProvider.System), content, TimeProvider.System)
                     .HandleAsync(new RequestContext<AssignTeamMember>(assign, Actor(actor)),
-                        CancellationToken.None),
+                        CancellationToken.None)),
                 RemoveTeamRole role => await new RemoveTeamRoleHandler(executor).HandleAsync(
                     new RequestContext<RemoveTeamRole>(role, Actor(actor)), CancellationToken.None),
                 RemoveRolePermission permission => await new RemoveRolePermissionHandler(executor)

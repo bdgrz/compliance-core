@@ -104,7 +104,7 @@ public sealed class InternalRbacTests
         state.Apply(MemberFacts.Registered(TenantId, memberId, UserId));
         state.Apply(new TeamDefined(TenantId, TeamId, "Reviewers"));
         state.Apply(new RoleDefined(TenantId, RoleId, "Control reviewer"));
-        state.Apply(new TeamMemberAssigned(TenantId, TeamId, memberId));
+        state.Apply(TeamMemberFacts.Assigned(TenantId, TeamId, memberId));
         state.Apply(RbacTeamRoleFacts.Assigned(TenantId, TeamId, RoleId));
 
         state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "controls.read"));
@@ -127,14 +127,14 @@ public sealed class InternalRbacTests
         state.Apply(MemberFacts.Registered(TenantId, memberId, UserId));
         state.Apply(new TeamDefined(TenantId, TeamId, "Reviewers"));
         state.Apply(new RoleDefined(TenantId, RoleId, "Control reviewer"));
-        state.Apply(new TeamMemberAssigned(TenantId, TeamId, memberId));
+        state.Apply(TeamMemberFacts.Assigned(TenantId, TeamId, memberId));
         state.Apply(RbacTeamRoleFacts.Assigned(TenantId, TeamId, RoleId));
 
         state.Apply(RbacPermissionFacts.Assigned(TenantId, RoleId, "controls.read"));
         Assert.Contains(new PermissionGrant(memberId, "controls.read"), state.Materialize());
 
         // Act
-        state.Apply(new TeamMemberRemoved(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
+        state.Apply(TeamMemberFacts.Removed(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
 
         // Assert
 

@@ -52,7 +52,7 @@ public sealed class PermissionProjectionStateTests
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
-        state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
+        state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant:access"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
@@ -80,7 +80,7 @@ public sealed class PermissionProjectionStateTests
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
-        state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
+        state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant:access"));
 
@@ -110,7 +110,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
 
         // Act
-        state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
+        state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
 
         // Assert
         Assert.Empty(state.Materialize());
@@ -128,7 +128,7 @@ public sealed class PermissionProjectionStateTests
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
-        state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
+        state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, legacyRoleId, "Legacy custom administrator"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, legacyRoleId, RbacPermissions.TenantRbacManage));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, legacyRoleId));
@@ -156,7 +156,7 @@ public sealed class PermissionProjectionStateTests
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, userId));
         state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
-        state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
+        state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Tenant Administration"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
@@ -195,7 +195,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(MemberFacts.Registered(tenantId, memberId, userId,
             membershipEpisodeId: oldEpisodeId));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
-        state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId, oldEpisodeId));
+        state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId, oldEpisodeId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "program:read"));
@@ -206,7 +206,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(MemberFacts.Registered(tenantId, memberId, userId,
             membershipEpisodeId: newEpisodeId));
         // A team assignment that was already in flight can project after the fresh invitation.
-        state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId, oldEpisodeId));
+        state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId, oldEpisodeId));
 
         // Assert
         Assert.Empty(state.Materialize());
@@ -224,13 +224,13 @@ public sealed class PermissionProjectionStateTests
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
-        state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
+        state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant:access"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
 
         // Act
-        state.Apply(new TeamMemberRemoved(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
+        state.Apply(TeamMemberFacts.Removed(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
 
         // Assert
         Assert.Empty(state.Materialize());
@@ -248,7 +248,7 @@ public sealed class PermissionProjectionStateTests
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
-        state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
+        state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant.access"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "program.manage"));
@@ -257,7 +257,7 @@ public sealed class PermissionProjectionStateTests
         var before = Assert.Single(state.Explain(memberId));
         state.Apply(RbacPermissionFacts.Removed(tenantId, roleId, "program.manage"));
         var after = Assert.Single(state.Explain(memberId));
-        state.Apply(new TeamMemberRemoved(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
+        state.Apply(TeamMemberFacts.Removed(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
 
         // Assert
         Assert.Equal(teamId, before.TeamId);

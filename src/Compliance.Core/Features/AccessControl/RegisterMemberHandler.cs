@@ -74,7 +74,7 @@ public sealed class RegisterMemberHandler(NativeOperationExecutor operations, IA
     static Member Hydrate(RegisterMember request) =>
         new(request.TenantId, request.UserId, Uuid.Empty, request.CommandId);
 
-    static ActorReference? ActorOf(System.Security.Claims.ClaimsPrincipal actor)
+    internal static ActorReference? ActorOf(System.Security.Claims.ClaimsPrincipal actor)
     {
         if (RequestActor.IsSystem(actor))
             return ActorReference.ForSystemProcess("system", "system");

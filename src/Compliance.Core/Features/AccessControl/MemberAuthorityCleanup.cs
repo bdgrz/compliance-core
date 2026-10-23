@@ -143,7 +143,8 @@ public sealed class MemberAuthorityCleanup(IAggregateReader reader, IAggregateEx
         return request.Kind == RetiredMembershipRelationshipKind.TeamAssignment
             ? await RetryAsync(() => executor.ExecuteAsync(new TeamMember(request.TenantId, request.TargetId,
                     request.MemberId), current => AggregateOutcome.CommitOnSuccess(
-                    current.RemoveForRetirement(proof, request.SourceEventId)), context, ct), ct).ConfigureAwait(false)
+                    current.RemoveForRetirement(proof, request.SourceEventId,
+                        request.CommandId, clock.GetUtcNow())), context, ct), ct).ConfigureAwait(false)
             : await RetryAsync(() => executor.ExecuteAsync(new AccessGrant(request.TenantId, request.TargetId),
                     current => AggregateOutcome.CommitOnSuccess(current.RevokeForRetirement(proof,
                         request.SourceEventId, clock.GetUtcNow())), context, ct), ct).ConfigureAwait(false);

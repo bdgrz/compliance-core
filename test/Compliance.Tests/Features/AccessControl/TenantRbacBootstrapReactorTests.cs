@@ -19,16 +19,16 @@ public sealed class TenantRbacBootstrapReactorTests
 
         // Act
         await scenario.RunAsync(new TenantRbacBootstrapReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+            new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
 
         // Assert
-        var grants = scenario.SentRequests.OfType<AssignRolePermission>().ToArray();
+        var grants = TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().ToArray();
         Assert.Equal(36, grants.Length);
         Assert.Equal(36, grants.Select(grant => (grant.RoleId, grant.Permission)).Distinct().Count());
-        Assert.Equal(4, scenario.SentRequests.OfType<DefineRole>().Count());
-        Assert.Equal(4, scenario.SentRequests.OfType<DefineTeam>().Count());
-        Assert.Equal(4, scenario.SentRequests.OfType<AssignTeamRole>().Count());
-        Assert.DoesNotContain(scenario.SentRequests, request => request is RenameRole);
+        Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<DefineRole>().Count());
+        Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<DefineTeam>().Count());
+        Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<AssignTeamRole>().Count());
+        Assert.DoesNotContain(TypedReactionBus.Sent(scenario), request => request is RenameRole);
         Assert.All(grants, grant =>
         {
             Assert.Equal(tenantId, grant.TenantId);
@@ -69,15 +69,37 @@ public sealed class TenantRbacBootstrapReactorTests
 
         // Act
         await scenario.RunAsync(new TenantRbacBootstrapReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+            new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
         await scenario.RunAsync(new TenantRbacBootstrapReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+            new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
 
         // Assert
-        var registrations = scenario.SentRequests.OfType<RegisterMember>().ToArray();
+        var registrations = TypedReactionBus.Sent(scenario).OfType<RegisterMember>().ToArray();
         Assert.Equal(2, registrations.Length);
         Assert.Equal(registrations[0], registrations[1]);
         Assert.NotEqual(Uuid.Empty, registrations[0].CommandId);
+    }
+
+    [Fact]
+    public async Task ShouldReuseAssignmentCommandIdGivenReplayedTenantRegistration()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var scenario = new ReactorScenario().Given(
+            new TenantRegistered(tenantId, Uuid.CreateVersion4(), "Acme", "acme", "Acme LLC",
+                CreatorIsAdministrator: true, ActivationRequired: true));
+
+        // Act
+        await scenario.RunAsync(new TenantRbacBootstrapReactor(
+            new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
+        await scenario.RunAsync(new TenantRbacBootstrapReactor(
+            new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
+
+        // Assert
+        var assignments = TypedReactionBus.Sent(scenario).OfType<AssignTeamMember>().ToArray();
+        Assert.Equal(2, assignments.Length);
+        Assert.Equal(assignments[0], assignments[1]);
+        Assert.NotEqual(Uuid.Empty, assignments[0].CommandId);
     }
 
     [Fact]
@@ -95,10 +117,10 @@ public sealed class TenantRbacBootstrapReactorTests
 
         // Act
         await scenario.RunAsync(new TenantRbacBootstrapReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+            new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
 
         // Assert
-        var commands = scenario.SentRequests.ToList();
+        var commands = TypedReactionBus.Sent(scenario).ToList();
         var activationTrigger = commands.FindIndex(request => request is AssignTeamMember assignment &&
             assignment.TeamId == adminTeamId && assignment.MemberId == memberId);
         Assert.True(activationTrigger > 0);
@@ -127,11 +149,11 @@ public sealed class TenantRbacBootstrapReactorTests
 
         // Act
         await scenario.RunAsync(new TenantRbacBootstrapReactor(
-            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+            new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario)));
 
         // Assert
-        Assert.Equal(36, scenario.SentRequests.OfType<AssignRolePermission>().Count());
-        Assert.DoesNotContain(scenario.SentRequests, request => request is RegisterMember or AssignTeamMember or ActivateTenant);
+        Assert.Equal(36, TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().Count());
+        Assert.DoesNotContain(TypedReactionBus.Sent(scenario), request => request is RegisterMember or AssignTeamMember or ActivateTenant);
     }
 
     [Fact]
@@ -141,15 +163,15 @@ public sealed class TenantRbacBootstrapReactorTests
         var tenantId = Uuid.CreateVersion4();
         var scenario = new ReactorScenario().Given(
             new TenantRegistered(tenantId, Uuid.CreateVersion4(), "Acme", "acme"));
-        var reactor = new TenantRbacBootstrapReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests);
+        var reactor = new TenantRbacBootstrapReactor(new InMemoryProjectionCheckpointStore(), TypedReactionBus.For(scenario));
         await scenario.RunAsync(reactor);
-        var first = scenario.SentRequests.OfType<AssignRolePermission>().ToArray();
+        var first = TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().ToArray();
 
         // Act
         await scenario.RunAsync(reactor);
 
         // Assert
-        Assert.Equal(first, scenario.SentRequests.OfType<AssignRolePermission>().Skip(36));
+        Assert.Equal(first, TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().Skip(36));
     }
 
     [Theory]
@@ -163,7 +185,7 @@ public sealed class TenantRbacBootstrapReactorTests
             new TenantRegistered(tenantId, Uuid.CreateVersion4(), "Acme", "acme"))
             .RespondTo<AssignRolePermission>(Result.Failure(new RequestError(kind, "Not accepted.")));
         var checkpoints = new InMemoryProjectionCheckpointStore();
-        var reactor = new TenantRbacBootstrapReactor(checkpoints, scenario.Requests);
+        var reactor = new TenantRbacBootstrapReactor(checkpoints, TypedReactionBus.For(scenario));
 
         // Act
         var error = await Assert.ThrowsAsync<ReactionCommandFailedException>(() => scenario.RunAsync(reactor));
@@ -172,7 +194,7 @@ public sealed class TenantRbacBootstrapReactorTests
         Assert.Equal(kind, error.Error.Kind);
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
-        Assert.DoesNotContain(scenario.SentRequests, request => request is AssignTeamMember);
+        Assert.DoesNotContain(TypedReactionBus.Sent(scenario), request => request is AssignTeamMember);
     }
 
     public static TheoryData<int> GrantCommitBoundaries()

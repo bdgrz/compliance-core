@@ -1,7 +1,15 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
+/// <summary>
+///     A member's team assignment ended. The fact is the native acceptance of the logical
+///     <paramref name="CommandId" /> on the team-member stream; a retirement removal carries the termination event
+///     that proves the closed membership episode.
+/// </summary>
 [Discriminator("bdgrz.rbac.team-member.removed", 2)]
-public sealed record TeamMemberRemoved(Uuid TenantId, Uuid TeamId, Uuid MemberId,
-    Uuid MembershipEpisodeId, Uuid AssignmentEventId, Uuid? TerminationEventId = null) : DomainEvent;
+public sealed record TeamMemberRemoved(Uuid TenantId, Uuid TeamId, Uuid MemberId, Uuid MembershipEpisodeId,
+    Uuid AssignmentEventId, Uuid? TerminationEventId, Uuid CommandId, OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse) : DomainEvent, INativeOperationFact;

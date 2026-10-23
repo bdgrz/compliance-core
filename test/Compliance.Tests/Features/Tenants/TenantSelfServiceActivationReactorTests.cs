@@ -18,7 +18,7 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, creatorId,
             creatorIsAdministrator: true);
         var scenario = new ReactorScenario()
-            .Given(new TeamMemberAssigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
+            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
                 RbacIds.Member(tenantId, creatorId)))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The first administrator is still being provisioned.", isTransient: true)));
@@ -59,7 +59,7 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, creatorId,
             creatorIsAdministrator: true);
         var scenario = new ReactorScenario()
-            .Given(new TeamMemberAssigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
+            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
                 RbacIds.Member(tenantId, creatorId)))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The first administrator is still being provisioned.", isTransient: true)));
@@ -100,7 +100,7 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, creatorId,
             creatorIsAdministrator: true);
         var scenario = new ReactorScenario()
-            .Given(new TeamMemberAssigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
+            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
                 RbacIds.Member(tenantId, otherUserId)));
         var checkpoints = new InMemoryProjectionCheckpointStore();
         var reactor = new TenantSelfServiceActivationReactor(checkpoints,
@@ -127,7 +127,7 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, operatorId,
             creatorIsAdministrator: false);
         var scenario = new ReactorScenario()
-            .Given(new TeamMemberAssigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
+            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
                 RbacIds.Member(tenantId, operatorId)));
         var checkpoints = new InMemoryProjectionCheckpointStore();
         var reactor = new TenantSelfServiceActivationReactor(checkpoints,
@@ -154,7 +154,7 @@ public sealed class TenantSelfServiceActivationReactorTests
         await SeedTenantAsync(scope.ServiceProvider, tenantId, creatorId,
             creatorIsAdministrator: true, alreadyActivated: true);
         var scenario = new ReactorScenario()
-            .Given(new TeamMemberAssigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
+            .Given(TeamMemberFacts.Assigned(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId),
                 RbacIds.Member(tenantId, creatorId)))
             .RespondTo<ActivateTenant>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The historical creator is no longer authorized.")));
