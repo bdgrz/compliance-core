@@ -1,0 +1,79 @@
+# Selected implementation decisions
+
+This is the selected target design for the direct pre-release cutover. The [design review](design-lock-review.md) records corrected contradictions and ordered regression traces. Current source catalogs remain migration evidence; they do not override these target contracts. Backend implementation remains gated by the concrete prerequisites and owner-slice acceptance below.
+
+## Contract reading order
+
+1. [Revision and response contracts](revision-and-response-contracts.md): logical counters, metadata versions, generations, publication cuts and exact write responses.
+2. [Durable intent/result schemas](durable-intent-schemas.md), [canonical authored input](canonical-intent-contracts.json), [native acceptance](native-acceptance-contract.md), and [protected responses](protected-response-contract.md).
+3. [Selected owners](aggregate-split-targets.md), [owner protocols/tests](owner-protocols.md), and [owner predecessor overrides](owner-migration-overrides.json).
+4. [Public/source commands](target-command-contracts.md), [remaining signatures](remaining-command-identities.md), [additional admission/abort commands](source-admission-contracts.md), and [result contracts](operation-outcome-contracts.json).
+5. [Receivers](target-reactor-contracts.md), [events](target-event-contracts.md), [shared types](target-contract-types.json), [status/result queries](operation-query-contracts.json), and [flows](choreography-flows.md).
+
+Each event's concrete durable record takes precedence over a raw serialized request. Current source command fields remain the authored-input schema; generated timestamps, exact source cuts, resolved target versions, claim keys and complete selections are separate frozen server values.
+
+## Identity and owner scope
+
+A stream key identifies the invariant's smallest conflict set. Keep existing published IdFor algorithms. For genuinely new composite identities use `AggregateIdentityNamespace = 9a7caa76-7d3a-5a9c-9370-7f2d9cc2ecf8`, owner type as first tuple component, length-prefixed UTF8 strings and canonical 16-byte UUIDs. String normalization follows the existing source rule; do not add NFC/case folding to authored identifiers that currently use ordinal identity. `target-contract-types.json` fixes the namespace and vectors. Program/tenant scope participates in every applicable identity.
+
+Generation and attempt identity never partition a guard that must arbitrate conflicts. Mailbox/name/source claims have stable stream keys; claimant, root operation and generation are state. FirmStaffRecord is platform/staffMemberId; FirmStaffIdentityClaim permanently maps platform/canonicalUserId to immutable staff identity/practice. Duty authority is platform/(canonicalUserId, duty, typed nullable tenant scope), with signed assertion identity and monotonic authority revision. Staff status cannot change practice or canonical user.
+
+PracticeIndependenceCommitment has separate staff and canonical_user keys under the client tenant. ServiceEngagementIndependence uses stable engagementId; ClientServiceIndependence owns complete service history/epoch. Independent partner decisions and acknowledgements stay independent children but are admitted/pinned on the engagement before source-use authorization and materialization. Client previews remain historical and ProductionAcceptanceBlocked.
+
+ControlEvaluation retests use a new evaluationId of the same type and an exact predecessor proof. ControlOccurrence uses tenant/program/control/canonical business window across generators. Calendar windows use [From, UntilExclusive); Type II date reservations preserve their existing inclusive endpoints. Event-triggered windows use exact SourceKind/SourceId. Plan/generator/period does not create a second identity for the same window.
+
+## Typed retry identity and canonical input
+
+Compliance pins Portia 0.9.0. Reuse IIdentifiedRequest: its explicit RequestId returns the required typed UUID or the preserved deterministic UUID derived from an existing required key/tuple. RequestMetadata.FromRequest binds logical identity and validates carried metadata; ExecutionId remains attempt identity. HTTP route values, MCP arguments, queues and reactor dispatch carry the same required value. Missing/empty/malformed/mismatched IDs reject; no server-generated replacement is allowed.
+
+Canonical input is a dedicated concrete DTO, not blindly the public request serializer. [Canonical rules](canonical-intent-contracts.json) include meaningful field presence, full selected-source variants and all authored expected values. ReviseApplication's JsonIgnore helpers distinguish keep/clear; HTTP/MCP adapters and queues must preserve them explicitly. Provider-owned source revision enrichments are excluded from authored equality exactly as current SameIntent; they remain verified frozen source facts. Raw bearer proofs, server-enriched display labels, generated times and attempt IDs never enter authored hashes.
+
+Authenticate and authorize before prior intent/result disclosure. The [native acceptance contract](native-acceptance-contract.md) compares realm/logical ID, kind, first/affected/expected-revision owners, episode, original actor, authored digest and original expected revision. Root and child effect IDs differ; RootOperationId/CausationEventId preserve the verified chain. Exact retry returns the original response, with the original actor/time/result. It never reads current mutable state to reauthor that result.
+
+Realm-wide unique native acceptance is a storage prerequisite tracked by [#1042](https://github.com/bdgrz/compliance-core/issues/1042), under #1022. Current per-stream OCC cannot enforce a concurrent same-ID acceptance at different owners. The native batch and unique first-fact binding must commit atomically; separate KV before/after append and a second read do not implement it. Keep affected replacement paths disabled until this primitive passes its conformance cases. No receipt aggregate/event or aggregate lifetime receipt dictionary is added.
+
+## Immutable content and proofs
+
+ImmutableContentRef contains ContentId, Sha256, Bytes, MediaType and Schema. Serialize the concrete typed value, write and read/hash verify it before a native reference can publish. Reusing ContentId with different bytes conflicts. Selections/manifests include full count, declared order and digest; technical chunks use actual SDK byte limits. No truncation or business lifetime cap replaces a structural correction. Retained state and physical replay are separate: removing arrays does not shorten an existing physical stream.
+
+SourceFactProof<TSourceEvent> locates the exact native source/event/resource position/metadata owner version/digest and required-fact content. Handler resolution verifies every value and the concrete immutable content, then constructs server-internal VerifiedSourceProof<TFacts> for aggregate calls. Public requests cannot manufacture trusted proofs. A local aggregate performs no foreign I/O. Waivers become exact-scope immutable proofs with subject, actor, action, target revision, approval fact and validity interval.
+
+An immutable old proof is sufficient only when the business rule permits historical use. A current/revocable rule needs a source-use authorization checked by every conflicting source writer. The granted content event/revision and physical metadata version are distinct. All sources required by a service irreversible decision—including directory status, partner duty, current rule and ratification—participate explicitly.
+
+## Admission, reservations and commit points
+
+The original owner persists complete immutable accepted intent before continuation. Receivers arbitrate their own source/resource invariant. One durable process per root source fact/protocol tracks technical progress and proofs; it cannot grant business authority. All reservation keys are known/frozen before acquisition and acquired in canonical unsigned UTF8 stream-key order, in their final mode. No lock upgrades. All temporary independence acquisitions derive from original immutable engagement admission; ReservePracticeIndependence does not wait for an epoch-grant event. Only complete exact grant proofs at irreversible authorization permit permanent commitments. Parent admission seals are not a license to block pre-seal accepted work: drain that work before source read-use collection; accepted children materialize from their proof after a later close/revoke.
+
+ReservationKey identifies root operation, first owner, source generation, target and purpose. Receiver ReservationGeneration is a separate monotonic token. Exact retries reuse their original grant. Settlement uses the exact grant/key and proven terminal source. A cancellation first fences the receiving operation, including targets not yet acquired, then releases. Never release on elapsed time, worker lease expiry, missing/stale read or unknown append. Irreversible accepted authority finishes forward. Native settled/canceled facts fence late acquisition; no lifetime fence dictionary is needed.
+
+Source-use settlement has three proven dispositions: parent_closed installs its parent-generation closure fence, canceled settles after the parent cancellation fence, irreversible_decision releases after that historical decision. Clearing a completed-parent use must not reopen child writes. A later parent generation never clears older or unrelated authority implicitly.
+
+For independence, reserve every staff/user key and required source use before EngagementPracticeCommitmentsAuthorized. This source fact is the irreversible business commit point. Only then commit permanent walls and complete the exact operation forward. Before it, a proven conflict cancels/fences temporary work without leaving partial permanent walls. Positive staff additions use the same protocol. Current source changes after the decision immediately invalidate eligibility in authoritative composed reads; reevaluation cannot reactivate acceptance.
+
+For recovery, both proofs first produce immutable preparation. Protect both identity association slots before IdentityRecoveryAccepted. A competing registration can reject preparation but cannot strand an accepted swap. After acceptance, register/verify replacement first, then revoke exact old identity, prove completion, settle protections and deliver notice independently. Existing matching native association/revocation proofs resume the process without requiring a new event.
+
+## Parent gates and publication
+
+Bulk decisions first admit on AccessReviewCampaign with ExpectedCampaignRevision and exact per-item preview heads; the independent batch owns item holds, provisional native effects and one publication fact. Campaign close drains every pre-seal batch before item completion uses. No partial success or smaller preview set is accepted.
+
+ApplicationImportBatch owns immutable staging, correlation, sealed complete plan, grouped target intents and publication. It absorbs the old ImportBatch staging writer; ApplicationImportSource only serializes source admission/claim. ApplicationImportPlanSealed points to full ImportFrozenPlanIntent—hash alone is insufficient once technical row-stage facts are removed. One canonical target group has one exclusive hold and one preflighted native append batch. Preserve existing create_new/link_existing/retire behavior; record proof for every row, but compare the initial target baseline once. Target replay uses frozen local facts, never a live batch. Every composed read uses one fixed publication cut.
+
+ProgramReadiness owns latest adoption, personal decision admission/seal and the one approved Type I pointer. RunReadinessAssessment first admits a pending run with ExpectedProgramRevision and frozen input snapshot; child computation cannot make itself latest. New decisions wait behind pending latest adoption. Independent gap plans are held through the exact decision. Missing business data remains a gap; unavailable/truncated authority does not become fabricated absence. Current rules/source completeness and the existing unassessed-family policy remain explicit.
+
+Provider risk linkage admits on the open gap under ExpectedGapRevision, then materializes an immutable child. Later gap closure cannot lose an admitted historical linkage; new post-close admission rejects. Sample selection likewise admits on the open request before independent materialization. Personal engagement decisions use the existing explicit engagement revision and service epoch; obsolete tenant sequence is not compared to child revision zero.
+
+Package builds freeze the existing stable BuildKey/version-derived BuildId and complete manifest. Package delivery remains personal HTTP recording of an external handoff, with authored DeliveredAt/reference, exact recipient/archive/validation/disclosure proof and version freeze at admission. The target does not invent automatic package transmission or a provider callback. Existing true external effects in export, challenge/invitation, notices and digest retain their explicit retry/unknown-outcome policy.
+
+## Persistence, process storage and acceptance
+
+Check every attributed concrete envelope and the whole batch before opening append: `envelope bytes + UTF8(route).Length + 26 <= 65_535`. KV checks use actual route/key/value/operation overhead. Forward notifier subscriptions through persistence decorators. Register every concrete event/proof/content serializer and verify round-trip envelopes.
+
+Technical process store operations are ReadAsync, CreateIfAbsentAsync, TryReplaceAsync(expectedVersion) and ScanPendingAsync. Records keep accepted source, immutable intent, version, effect kind, canonical target cursor, attempt/effect identity, outcome proof, next due time and lease. Leases govern workers only. Source replay/reconciliation creates missing process records; source checkpoints advance only after a recoverable process exists. Domain appends and process CAS are not assumed atomic.
+
+No backend implementation starts from structural counts alone. Each owner slice must use the selected command/event/intent/revision/result contracts and every ordered [regression trace](design-review-traces.json), then follow the requested failing-regression/implementation loop. Unimplemented disposal/offboarding/deferred import paths remain disabled behind their existing prerequisites. Deployment, environment resets and new services remain separate operations.
+
+## Jev decisions and evidence
+
+Initial naming/boundary comparisons remain in the raw request/response files. Readiness's first comparison weakly favored keeping the ledger (0.52) over a compact guard (0.46); the adopted compact ProgramReadiness preserves that atomic conflict set and externalizes histories. This disagreement remains recorded, not hidden by later scores.
+
+The current review favored campaign admission (0.95), program-first readiness (1.00), gap-first risk links (0.95), preserving personal package recording (1.00), concrete durable intents (1.00), and explicit source uses (1.00). The edge comparison favored protect-before-recovery-acceptance (0.96), explicit presence canonicalization (1.00), valid global snapshot selectors (1.00), and fixed write acknowledgments (0.98). These are advisory design signals; source counterexamples and the ordered invariant tests justify the selected decisions. No behavioral test or backend change is claimed by this documentation review.

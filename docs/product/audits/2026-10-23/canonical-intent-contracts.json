@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "rules": [
+    "Normalize the fully bound typed authored input before looking up accepted intent. Route values fill the same typed fields; conflicting duplicates reject.",
+    "Serialize a dedicated canonical authored DTO with fixed declared property order using the concrete generated context. Hash UTF8 bytes with SHA256 lower hex. Runtime reflection, dictionaries with unspecified key order and base DomainEvent sizing are prohibited.",
+    "Default omitted values to their declared DTO default; omission and explicit null are equal only when source policy gives them equal semantics. Meaningful ordered lists retain order; identity-set lists reject duplicates and canonicalize in the explicitly named order.",
+    "Include original authored expected revision, kind, owner identities, selected-source discriminator/value and typed business dates. Exclude server source resolution, clocks, server-enriched display labels, attempt/correlation IDs, secrets and bearer proofs.",
+    "For fields whose presence changes meaning, serialize the presence Boolean plus normalized value even if the transport command marks the presence helper JsonIgnore. Persist that canonical DTO with accepted intent so queues reconstruct the same semantics.",
+    "Canonical UUIDs are lowercase D form; DateTimeOffset authored instants normalize to UTC round-trip O form, DateOnly to yyyy-MM-dd. Decimal values normalize G29 and floating values round-trip finite form (negative zero equals zero where source equality does). No extra Unicode normalization beyond current source rules. Dedicated canonical DTOs preserve JsonIgnore presence flags."
+  ],
+  "specialCases": [
+    {
+      "command": "ReviseApplication",
+      "schema": "ApplicationUpdateAuthoredIntent",
+      "fields": "All target typed authored fields plus ClassificationIsSupplied, SystemOwnerIsSupplied, AccessOwnerIsSupplied Booleans. For an unsupplied field omit its value from business mutation but record null in canonical DTO; supplied null means clear. HTTP and MCP adapter presence detection must match.",
+      "mcpAdapter": "ReviseApplicationMcpInput gains required CommandId and IIdentifiedRequest; wrapper and forwarded ReviseApplication use identical typed identity/RequestMetadata. Its setter-based optional field presence stays intact.",
+      "queue": "Serialize CanonicalApplicationUpdate carrying presence Booleans; reconstruct ignored ApplicationRevisionField values before dispatch; never rely on the public command serializer to retain JsonIgnore flags."
+    },
+    {
+      "command": "IssueArtifactDownload",
+      "fields": "Include optional ProgramId, AdvisorHandoffId and full SelectedSource kind/identity/version. These init-only fields affect access. A missing/present selector cannot share intent under one ID."
+    },
+    {
+      "command": "RecordAdvisorFeedback",
+      "fields": "Include optional SelectedSource full native discriminated identity; RecordId/RecordVersionId alone cannot represent every current source kind."
+    },
+    {
+      "command": "RunReadinessAssessment",
+      "fields": "Hash the authored nullable AsOf (null after omission), not the later server-resolved AsOf. Freeze resolved AsOf once in ReadinessRunIntent."
+    },
+    {
+      "command": "CompleteIdentityRecovery",
+      "fields": "Hash challenge/account/old/replacement identities and non-bearer verification provenance; validate raw email token and replacement proof through current authentication before replay, never persist bearer material as authored input."
+    },
+    {
+      "command": "RequestAuditPackageBuild",
+      "fields": "Use existing trimmed BuildKey token and explicit PackageVersion; reject empty/invalid token. Preserve the existing namespace derivation; server attempt IDs do not enter the hash."
+    },
+    {
+      "command": "RecordProvider / ReviseProvider",
+      "fields": "Use ProviderRules.Normalize; canonical MaterialityBasis is existing ordinal-sorted normalized list; Dependencies retain existing source order. Exclude server-resolved OwnerPersonRevision and dependency SourceRevision/ProgramRevision/ApplicationRevision exactly as ProviderRegister.SameIntent. Store verified resolved revisions in RecordNameChangeIntent source proofs instead."
+    }
+  ]
+}

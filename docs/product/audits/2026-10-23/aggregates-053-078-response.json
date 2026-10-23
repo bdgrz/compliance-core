@@ -1,0 +1,113 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "000_TypeIIObservationCalendar": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "001_TypeIIPeriod": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "002_Policy": {
+      "type": "noul",
+      "noul": 0.78
+    },
+    "003_PolicyDistributionCampaign": {
+      "type": "noul",
+      "noul": 0.91
+    },
+    "004_TrainingCatalog": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "005_ClientService": {
+      "type": "noul",
+      "noul": 0.15
+    },
+    "006_ComplianceProgram": {
+      "type": "noul",
+      "noul": 0.79
+    },
+    "007_ProgramRollover": {
+      "type": "noul",
+      "noul": 0.78
+    },
+    "008_ProviderAssuranceRegister": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "009_ProviderRegister": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "010_ReadinessLedger": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "011_FindingAggregate": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "012_FindingMigrationAggregate": {
+      "type": "noul",
+      "noul": 0.18
+    },
+    "013_RemediationLedger": {
+      "type": "noul",
+      "noul": 0.19
+    },
+    "014_RemediationMigrationFenceAggregate": {
+      "type": "noul",
+      "noul": 0.2
+    },
+    "015_ArtifactDisclosure": {
+      "type": "noul",
+      "noul": 0.17
+    },
+    "016_ArtifactDisposition": {
+      "type": "noul",
+      "noul": 0.81
+    },
+    "017_ArtifactEngagementHold": {
+      "type": "noul",
+      "noul": 0.15
+    },
+    "018_ArtifactRetention": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "019_EvidenceHandlingPolicy": {
+      "type": "noul",
+      "noul": 0.67
+    },
+    "020_RiskDraft": {
+      "type": "noul",
+      "noul": 0.24
+    },
+    "021_RiskEvaluation": {
+      "type": "noul",
+      "noul": 0.78
+    },
+    "022_RiskGovernanceLedger": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "023_RiskMethod": {
+      "type": "noul",
+      "noul": 0.39
+    },
+    "024_ImmutableSnapshot": {
+      "type": "noul",
+      "noul": 0.35
+    },
+    "025_PopulationSnapshot": {
+      "type": "noul",
+      "noul": 0.28
+    }
+  },
+  "usage": {
+    "input_tokens": 21204,
+    "output_tokens": 641
+  }
+}

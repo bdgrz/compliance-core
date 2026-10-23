@@ -1,0 +1,68 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "bulk_atomicity": {
+      "type": "choice",
+      "choice": "batch_admission_publication",
+      "confidence": 0.4,
+      "probabilities": {
+        "batch_admission_publication": 0.6,
+        "partial_independent": 0.01,
+        "retain_whole_campaign": 0.39
+      }
+    },
+    "readiness_latest": {
+      "type": "choice",
+      "choice": "keep_readiness_ledger",
+      "confidence": 0.28,
+      "probabilities": {
+        "program_gate": 0.46,
+        "assessment_only": 0.02,
+        "keep_readiness_ledger": 0.52
+      }
+    },
+    "claim_generation": {
+      "type": "choice",
+      "choice": "stable_key_generation_state",
+      "confidence": 0.94,
+      "probabilities": {
+        "stable_key_generation_state": 0.97,
+        "generation_in_key": 0.03
+      }
+    },
+    "import_publication_owner": {
+      "type": "choice",
+      "choice": "batch_publication_source_admission",
+      "confidence": 1.0,
+      "probabilities": {
+        "batch_publication_source_admission": 1.0,
+        "source_latest_only": 0.0,
+        "projection_gate": 0.0
+      }
+    },
+    "independence_epoch": {
+      "type": "choice",
+      "choice": "stable_service_epoch_barrier",
+      "confidence": 0.89,
+      "probabilities": {
+        "stable_service_epoch_barrier": 0.93,
+        "epoch_in_address": 0.05,
+        "tenant_ledger": 0.02
+      }
+    },
+    "retest_owner": {
+      "type": "choice",
+      "choice": "same_type_new_evaluation",
+      "confidence": 0.82,
+      "probabilities": {
+        "same_type_new_evaluation": 0.88,
+        "distinct_retest_type": 0.03,
+        "reuse_prior_evaluation": 0.09
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 5596,
+    "output_tokens": 312
+  }
+}

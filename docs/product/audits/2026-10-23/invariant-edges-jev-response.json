@@ -1,0 +1,47 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "practice": {
+      "type": "choice",
+      "choice": "all_reservations_then_authorize",
+      "confidence": 1.0,
+      "probabilities": {
+        "all_reservations_then_authorize": 1.0,
+        "commit_as_acquired": 0.0,
+        "release_permanent_on_failure": 0.0
+      }
+    },
+    "classification": {
+      "type": "choice",
+      "choice": "after_acceptance_independent",
+      "confidence": 1.0,
+      "probabilities": {
+        "after_acceptance_independent": 1.0,
+        "classification_before_acceptance": 0.0
+      }
+    },
+    "recovery_no_event": {
+      "type": "choice",
+      "choice": "existing_proof_resumes",
+      "confidence": 1.0,
+      "probabilities": {
+        "existing_proof_resumes": 1.0,
+        "wait_registration_event": 0.0
+      }
+    },
+    "proof_shape": {
+      "type": "choice",
+      "choice": "ref_then_resolve_typed",
+      "confidence": 1.0,
+      "probabilities": {
+        "ref_then_resolve_typed": 1.0,
+        "embed_every_source_view": 0.0,
+        "aggregate_reads_source": 0.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 3210,
+    "output_tokens": 199
+  }
+}

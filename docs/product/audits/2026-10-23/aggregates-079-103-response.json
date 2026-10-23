@@ -1,0 +1,109 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "000_PopulationSnapshotChunk": {
+      "type": "noul",
+      "noul": 0.31
+    },
+    "001_SystemDescription": {
+      "type": "noul",
+      "noul": 0.8
+    },
+    "002_DataFlow": {
+      "type": "noul",
+      "noul": 0.41
+    },
+    "003_InformationAsset": {
+      "type": "noul",
+      "noul": 0.53
+    },
+    "004_LocationRegister": {
+      "type": "noul",
+      "noul": 0.86
+    },
+    "005_OperationalProcessRegister": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "006_TechnologyComponent": {
+      "type": "noul",
+      "noul": 0.52
+    },
+    "007_PlatformOperatorRoster": {
+      "type": "noul",
+      "noul": 0.48
+    },
+    "008_Tenant": {
+      "type": "noul",
+      "noul": 0.73
+    },
+    "009_TenantInvitation": {
+      "type": "noul",
+      "noul": 0.73
+    },
+    "010_TenantOwner": {
+      "type": "noul",
+      "noul": 0.71
+    },
+    "011_TenantSlug": {
+      "type": "noul",
+      "noul": 0.45
+    },
+    "012_EmailAddress": {
+      "type": "noul",
+      "noul": 0.8
+    },
+    "013_TenantIdentityProvider": {
+      "type": "noul",
+      "noul": 0.83
+    },
+    "014_UserIdentity": {
+      "type": "noul",
+      "noul": 0.82
+    },
+    "015_LegacyWorkAssignmentLedger": {
+      "type": "noul",
+      "noul": 0.26
+    },
+    "016_WeeklyWorkDigest": {
+      "type": "noul",
+      "noul": 0.75
+    },
+    "017_WorkDigestDispatch": {
+      "type": "noul",
+      "noul": 0.8
+    },
+    "018_WorkDigestPreference": {
+      "type": "noul",
+      "noul": 0.5
+    },
+    "019_WorkItemAssignment": {
+      "type": "noul",
+      "noul": 0.73
+    },
+    "020_Person": {
+      "type": "noul",
+      "noul": 0.6
+    },
+    "021_ServiceIdentity": {
+      "type": "noul",
+      "noul": 0.57
+    },
+    "022_WorkRelationship": {
+      "type": "noul",
+      "noul": 0.46
+    },
+    "023_WorkforceObservationResolution": {
+      "type": "noul",
+      "noul": 0.25
+    },
+    "024_WorkforceSourceObservation": {
+      "type": "noul",
+      "noul": 0.22
+    }
+  },
+  "usage": {
+    "input_tokens": 19507,
+    "output_tokens": 608
+  }
+}

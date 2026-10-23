@@ -1,0 +1,146 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "reviewGoal": "Choose implementation boundaries and names that preserve the audited business invariant while minimizing shared write contention and recovery ambiguity. Do not optimize for fewer classes alone.",
+    "acceptedRules": [
+      "Each independent stable identity owns its changing lifecycle.",
+      "Keep atomic conflict sets in a small authoritative coordinator when required.",
+      "Cross-owner decisions use immutable exact-scope proofs; projections discover candidates only.",
+      "One stable business identity per retry; exact replay returns original result, changed intent conflicts.",
+      "Do not emit technical retry receipts, saga stages, delivery attempts or cursors as business domain facts.",
+      "Every reservation has canonical acquisition order, receiver-owned release fencing, and recovery after unknown outcomes."
+    ],
+    "decisions": [
+      {
+        "id": "access_campaign",
+        "currentEvidence": "One campaign freezes all items. Completion requires every item decision and every remediation verified or excepted. Unrelated item decisions share a physical stream revision today.",
+        "alternatives": {
+          "campaign_item_coordinator": "Campaign header/snapshot plus one AccessReviewItem per item. Keep a compact generation/completion coordinator that seals item generation and validates exact per-item proofs.",
+          "item_streams_projection_gate": "Move item states to independent streams and let a projector report when all are done; campaign closes based on the read model.",
+          "keep_campaign_root": "Keep all item histories and campaign state in one campaign aggregate."
+        }
+      },
+      {
+        "id": "import_publication",
+        "currentEvidence": "An accepted source batch freezes all rows and expected target revisions. Target applications hold incompatible local edits. Source acceptance is visible only after every target effect is durable. Different batches can touch the same targets in opposite order.",
+        "alternatives": {
+          "batch_and_publication_gate": "One ImportBatch per batch; narrow source admission/publication coordinator holds one in-progress source and commits all target proofs atomically. Acquire target holds in canonical stream key order.",
+          "per_row_imports": "One aggregate per import row, and a projector determines batch completion/publication.",
+          "source_ledger_history": "Keep all batches and row execution history in one source-wide aggregate."
+        }
+      },
+      {
+        "id": "package_delivery",
+        "currentEvidence": "Package content is immutable by version after delivery. Delivery requires exact manifest, archive, current passed validation or complete independent override, and recipient approval. Build attempts and different recipient deliveries do not share a business rule.",
+        "alternatives": {
+          "manifest_build_delivery": "AuditPackage owns current manifest/version gate; technical build attempts live in a process record; delivery authorization and delivery outcome have per package-version-recipient identity.",
+          "package_per_recipient": "One package aggregate per recipient that copies manifest, build and validation state.",
+          "one_package_root": "Keep every version, build attempt and recipient delivery in one package root."
+        }
+      },
+      {
+        "id": "type2_occurrence_name",
+        "currentEvidence": "DueControlOccurrencesGenerated freezes selected work, but no consumer materializes it. Recurring identity must be one per control and business performance window across generators; closure needs complete authoritative coverage.",
+        "alternatives": {
+          "control_occurrence": "ControlOccurrence keyed by (controlId, businessWindow).",
+          "control_performance_occurrence": "ControlPerformanceOccurrence keyed by (controlId, businessWindow).",
+          "due_control_work_item": "DueControlWorkItem keyed by (controlId, periodId, dueDate).",
+          "keep_operations_occurrence": "Keep occurrence state inside ControlOperationsLedger per program/control."
+        }
+      },
+      {
+        "id": "independence_boundary",
+        "currentEvidence": "Permanent staff/user practice independence walls survive assignment removal and engagement closure. Acceptance is tied to exact service epoch, reviewed draft, personal acknowledgement and ratified-rule proofs. Independent engagements should not share unrelated global revision.",
+        "alternatives": {
+          "per_user_wall_and_service_epoch": "Permanent practice commitment authority keyed by canonical user plus per-service engagement epoch decision owners; keep exact proofs and never let reevaluation reactivate commitment.",
+          "one_client_independence_root": "One aggregate per client/service owns all independence decisions, with staff/user wall checked only by projection.",
+          "single_tenant_ledger": "Keep all decisions in one tenant root to make every operation atomic."
+        }
+      },
+      {
+        "id": "guard_placement",
+        "currentEvidence": "HTTP/MCP authorizers are registered by request scope. Handlers read current owner/source proofs. Aggregates enforce stream-local invariants. Cross-owner live aggregate arguments are an audit finding.",
+        "alternatives": {
+          "three_layer_guards": "Authorizer establishes actor/scope; handler validates exact cross-owner proof and operation replay; target aggregate enforces local invariant/OCC.",
+          "handler_all_guards": "Put authorization, foreign owner reads, retries, and all state rules in command handlers; aggregates are passive event emitters.",
+          "cross_reading_aggregate": "Let aggregate load foreign aggregate state to enforce whole-workflow invariants."
+        }
+      },
+      {
+        "id": "event_vocabulary",
+        "currentEvidence": "Accepted policy removes receipt events, saga-stage events and technical cursors from domain streams. Business facts must represent durable authority; replay/recovery derives continuation from those facts plus external technical process state.",
+        "alternatives": {
+          "business_facts_only": "Emit business decisions/authority facts in owning domain streams; keep attempt, cursor, receipt and stage data in technical process records.",
+          "domain_receipts": "Add a receipt event per command/effect to simplify idempotency.",
+          "one_workflow_event_stream": "Emit all participant stage transitions as domain events in a saga/workflow aggregate."
+        }
+      }
+    ]
+  },
+  "questions": {
+    "access_campaign": {
+      "type": "choice",
+      "instructions": "For access_campaign, which design best preserves the stated invariant with a clear owner and recoverable concurrency? Choose the option most consistent with the source evidence and acceptance rules. Do not choose a projection as authority where a write conflict rule is required.",
+      "criteria": {
+        "campaign_item_coordinator": "Campaign header/snapshot plus one AccessReviewItem per item. Keep a compact generation/completion coordinator that seals item generation and validates exact per-item proofs.",
+        "item_streams_projection_gate": "Move item states to independent streams and let a projector report when all are done; campaign closes based on the read model.",
+        "keep_campaign_root": "Keep all item histories and campaign state in one campaign aggregate."
+      }
+    },
+    "import_publication": {
+      "type": "choice",
+      "instructions": "For import_publication, which design best preserves the stated invariant with a clear owner and recoverable concurrency? Choose the option most consistent with the source evidence and acceptance rules. Do not choose a projection as authority where a write conflict rule is required.",
+      "criteria": {
+        "batch_and_publication_gate": "One ImportBatch per batch; narrow source admission/publication coordinator holds one in-progress source and commits all target proofs atomically. Acquire target holds in canonical stream key order.",
+        "per_row_imports": "One aggregate per import row, and a projector determines batch completion/publication.",
+        "source_ledger_history": "Keep all batches and row execution history in one source-wide aggregate."
+      }
+    },
+    "package_delivery": {
+      "type": "choice",
+      "instructions": "For package_delivery, which design best preserves the stated invariant with a clear owner and recoverable concurrency? Choose the option most consistent with the source evidence and acceptance rules. Do not choose a projection as authority where a write conflict rule is required.",
+      "criteria": {
+        "manifest_build_delivery": "AuditPackage owns current manifest/version gate; technical build attempts live in a process record; delivery authorization and delivery outcome have per package-version-recipient identity.",
+        "package_per_recipient": "One package aggregate per recipient that copies manifest, build and validation state.",
+        "one_package_root": "Keep every version, build attempt and recipient delivery in one package root."
+      }
+    },
+    "type2_occurrence_name": {
+      "type": "choice",
+      "instructions": "For type2_occurrence_name, which design best preserves the stated invariant with a clear owner and recoverable concurrency? Choose the option most consistent with the source evidence and acceptance rules. Do not choose a projection as authority where a write conflict rule is required.",
+      "criteria": {
+        "control_occurrence": "ControlOccurrence keyed by (controlId, businessWindow).",
+        "control_performance_occurrence": "ControlPerformanceOccurrence keyed by (controlId, businessWindow).",
+        "due_control_work_item": "DueControlWorkItem keyed by (controlId, periodId, dueDate).",
+        "keep_operations_occurrence": "Keep occurrence state inside ControlOperationsLedger per program/control."
+      }
+    },
+    "independence_boundary": {
+      "type": "choice",
+      "instructions": "For independence_boundary, which design best preserves the stated invariant with a clear owner and recoverable concurrency? Choose the option most consistent with the source evidence and acceptance rules. Do not choose a projection as authority where a write conflict rule is required.",
+      "criteria": {
+        "per_user_wall_and_service_epoch": "Permanent practice commitment authority keyed by canonical user plus per-service engagement epoch decision owners; keep exact proofs and never let reevaluation reactivate commitment.",
+        "one_client_independence_root": "One aggregate per client/service owns all independence decisions, with staff/user wall checked only by projection.",
+        "single_tenant_ledger": "Keep all decisions in one tenant root to make every operation atomic."
+      }
+    },
+    "guard_placement": {
+      "type": "choice",
+      "instructions": "For guard_placement, which design best preserves the stated invariant with a clear owner and recoverable concurrency? Choose the option most consistent with the source evidence and acceptance rules. Do not choose a projection as authority where a write conflict rule is required.",
+      "criteria": {
+        "three_layer_guards": "Authorizer establishes actor/scope; handler validates exact cross-owner proof and operation replay; target aggregate enforces local invariant/OCC.",
+        "handler_all_guards": "Put authorization, foreign owner reads, retries, and all state rules in command handlers; aggregates are passive event emitters.",
+        "cross_reading_aggregate": "Let aggregate load foreign aggregate state to enforce whole-workflow invariants."
+      }
+    },
+    "event_vocabulary": {
+      "type": "choice",
+      "instructions": "For event_vocabulary, which design best preserves the stated invariant with a clear owner and recoverable concurrency? Choose the option most consistent with the source evidence and acceptance rules. Do not choose a projection as authority where a write conflict rule is required.",
+      "criteria": {
+        "business_facts_only": "Emit business decisions/authority facts in owning domain streams; keep attempt, cursor, receipt and stage data in technical process records.",
+        "domain_receipts": "Add a receipt event per command/effect to simplify idempotency.",
+        "one_workflow_event_stream": "Emit all participant stage transitions as domain events in a saga/workflow aggregate."
+      }
+    }
+  }
+}

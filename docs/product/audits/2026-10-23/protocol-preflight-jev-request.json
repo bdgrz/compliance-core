@@ -1,0 +1,45 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rules": [
+      "Required typed IDs, native selected facts, no receipt aggregate/events or lifetime receipt dictionaries.",
+      "Same logical ID changed owner/kind/actor/intent/original revision conflicts, including first-acceptance concurrency.",
+      "Current IEventStore.AppendAsync has per-stream expected position only. RequestMetadata already binds IIdentifiedRequest in Portia 0.9.",
+      "Business reservations must be enforced on the same owner mutation path; elapsed lease or projection absence cannot release them."
+    ],
+    "selectedDesign": {
+      "crossOwnerId": "Add atomic accepted native event index uniqueness in realm+logicalID coupled to native batch append; no KV-before/after workaround. Keep route replacement disabled until primitive exists.",
+      "admission": "Parent accepted immutable business intent is committed before child materialization; complete closure seals admission, acquires source use authorizations in canonical order, proves every admitted child and appends decision before settling exact holds.",
+      "cancellation": "Same-owner cancellation atomically fences that owner. Cross-owner batch cancellation sends a receiving fence to every target, even not-yet-acquired targets, then settles only exact generation. Irreversible work recovers forward.",
+      "readiness": "Compact ProgramReadiness retains latest pointer and decision seal; immutable assessments/plans separate. New assessment adoption and plan edits must participate in the same guard/held permits.",
+      "publication": "Each import batch owns its publication fact and complete manifest; source owner only serializes current source admission. Every composed reader gates exact native target effect on the exact batch publication."
+    }
+  },
+  "questions": {
+    "operation_constraint": {
+      "type": "choice",
+      "instructions": "Which design enforces same logical ID reuse across different owners without inventing a receipt aggregate or assuming cross-store atomicity?",
+      "criteria": {
+        "atomic_native_index": "The selected atomic uniqueness assertion coupled with native batch append; explicitly require framework/broker support.",
+        "per_owner_only": "Use per-owner OCC and perform another global read before appending.",
+        "receipt_owner": "Add one global command receipt aggregate per request."
+      }
+    },
+    "admission_hole": {
+      "type": "noul",
+      "instructions": "Does the selected admission/closure protocol still rely on an unprotected projection or a point-in-time read to prove complete closure? Yes only if the described protocol omits shared authoritative admission seal or exact source use authorizations held through the parent decision. Do not assume an implementation has already passed tests."
+    },
+    "cancellation_hole": {
+      "type": "noul",
+      "instructions": "Does selected cancellation allow delayed target work after reservations are released? Yes if target fence coverage omits not-yet-acquired targets or same-owner cancellation is not atomic with the local receiving fence; otherwise no."
+    },
+    "readiness_violation": {
+      "type": "noul",
+      "instructions": "Does selected compact readiness design abandon the original atomic latest-assessment and complete gap-plan decision conflict set? Judge described design, including participation of every new assessment adoption and plan edit in the same guard/held permits."
+    },
+    "publication_hole": {
+      "type": "noul",
+      "instructions": "Can a later source batch erase visibility authority for an old committed batch in the selected design? Yes if publication is only source latest state or a projection; no if each immutable batch publication remains authoritative and every reader checks that exact batch."
+    }
+  }
+}

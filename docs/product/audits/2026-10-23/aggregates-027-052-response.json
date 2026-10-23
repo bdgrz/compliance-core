@@ -1,0 +1,113 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "000_SystemBoundary": {
+      "type": "noul",
+      "noul": 0.73
+    },
+    "001_SignificantChange": {
+      "type": "noul",
+      "noul": 0.82
+    },
+    "002_CommitmentDraft": {
+      "type": "noul",
+      "noul": 0.69
+    },
+    "003_ControlCriterionMappingLedger": {
+      "type": "noul",
+      "noul": 0.85
+    },
+    "004_CriterionApplicabilityLedger": {
+      "type": "noul",
+      "noul": 0.85
+    },
+    "005_ControlDraft": {
+      "type": "noul",
+      "noul": 0.63
+    },
+    "006_CriteriaTextOverlayLedger": {
+      "type": "noul",
+      "noul": 0.76
+    },
+    "007_ControlEvaluationLedger": {
+      "type": "noul",
+      "noul": 0.84
+    },
+    "008_ControlEvaluationPlan": {
+      "type": "noul",
+      "noul": 0.52
+    },
+    "009_EvidenceArtifact": {
+      "type": "noul",
+      "noul": 0.76
+    },
+    "010_EvidenceRedaction": {
+      "type": "noul",
+      "noul": 0.85
+    },
+    "011_EvidenceRequestLedger": {
+      "type": "noul",
+      "noul": 0.82
+    },
+    "012_EvidenceSupport": {
+      "type": "noul",
+      "noul": 0.11
+    },
+    "013_AuditObservation": {
+      "type": "noul",
+      "noul": 0.26
+    },
+    "014_AuditOutcome": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "015_ExaminationEngagement": {
+      "type": "noul",
+      "noul": 0.81
+    },
+    "016_ExaminationSignOff": {
+      "type": "noul",
+      "noul": 0.16
+    },
+    "017_ManagementAssertion": {
+      "type": "noul",
+      "noul": 0.8
+    },
+    "018_ManagementRepresentationLetter": {
+      "type": "noul",
+      "noul": 0.15
+    },
+    "019_TypeIIPlan": {
+      "type": "noul",
+      "noul": 0.72
+    },
+    "020_ClientExport": {
+      "type": "noul",
+      "noul": 0.71
+    },
+    "021_ComplianceIncident": {
+      "type": "noul",
+      "noul": 0.84
+    },
+    "022_MethodologyTemplate": {
+      "type": "noul",
+      "noul": 0.86
+    },
+    "023_MethodologyTemplateContribution": {
+      "type": "noul",
+      "noul": 0.16
+    },
+    "024_TemplateApplication": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "025_ControlOperationsLedger": {
+      "type": "noul",
+      "noul": 0.88
+    }
+  },
+  "usage": {
+    "input_tokens": 21310,
+    "output_tokens": 645
+  }
+}

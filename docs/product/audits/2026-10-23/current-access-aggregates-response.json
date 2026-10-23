@@ -1,0 +1,37 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "00_AccessGrant": {
+      "type": "noul",
+      "noul": 0.21
+    },
+    "01_Member": {
+      "type": "noul",
+      "noul": 0.29
+    },
+    "02_RolePermission": {
+      "type": "noul",
+      "noul": 0.19
+    },
+    "03_TeamMember": {
+      "type": "noul",
+      "noul": 0.26
+    },
+    "04_TeamRole": {
+      "type": "noul",
+      "noul": 0.16
+    },
+    "05_PlatformOperatorRoster": {
+      "type": "noul",
+      "noul": 0.25
+    },
+    "06_UserIdentity": {
+      "type": "noul",
+      "noul": 0.37
+    }
+  },
+  "usage": {
+    "input_tokens": 18084,
+    "output_tokens": 155
+  }
+}

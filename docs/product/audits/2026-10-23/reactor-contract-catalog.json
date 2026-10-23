@@ -1,0 +1,780 @@
+{
+  "schemaVersion": 1,
+  "generatedAtHead": "b7a2bd02cc90c6734c94391399a55c0da1621521",
+  "reactorCount": 24,
+  "reactors": [
+    {
+      "reactor": "AcceptedStaffDirectoryReconciliationReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/AcceptedStaffDirectoryReconciliationReactor.cs",
+      "workload": "AcceptedStaffDirectoryReconciliationV1",
+      "triggerFacts": [
+        "ServiceEngagementAcceptanceRecorded"
+      ],
+      "commandCalls": [],
+      "targetAggregates": [],
+      "directFlow": "DirectoryReevaluationDiscovery -> RecordDirectoryIndependenceReevaluation -> client IndependenceLedger owner.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Discovery validates retained source acceptance and scans authoritative directory changes; command failure propagates. Per-tenant registration uses effectively unbounded failed-pass retry with short delay. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "No direct test filename reference found; add focused reactor recovery coverage.",
+      "findingIds": []
+    },
+    {
+      "reactor": "FirmStaffStatusReevaluationReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs",
+      "workload": "FirmStaffStatusReevaluationV1",
+      "triggerFacts": [
+        "FirmStaffChangeRecorded"
+      ],
+      "commandCalls": [],
+      "targetAggregates": [],
+      "directFlow": "DirectoryReevaluationDiscovery -> RecordDirectoryIndependenceReevaluation -> client IndependenceLedger owner for each registered tenant.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Discovery checks locator checkpoint/source coverage, deduplicates immutable locator IDs, validates expected set and rereads source history; lag throws transient to keep checkpoint. Opposite acceptance-side trigger covers later acceptances. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "No direct test filename reference found; add focused reactor recovery coverage.",
+      "findingIds": []
+    },
+    {
+      "reactor": "MemberRetirementReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/MemberRetirementReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "MemberDeprovisioned"
+      ],
+      "commandCalls": [
+        {
+          "request": "CompleteMemberRetirement",
+          "handlers": [
+            "CompleteMemberRetirementHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "AccessGrant",
+            "Member",
+            "TeamMember"
+          ],
+          "contract": "src/Compliance.Common/Features/AccessControl/CompleteMemberRetirement.cs"
+        }
+      ],
+      "targetAggregates": [
+        "AccessGrant",
+        "Member",
+        "TeamMember"
+      ],
+      "directFlow": "Validates the exact native MemberDeprovisioned source and sends CompleteMemberRetirement with a deterministic key derived from the termination event, member and episode. The receiver scans authoritative assignment/grant streams and marks completion only after exact effects.",
+      "guardsRequired": "Reject wrong tenant/member stream, audit facts or source position. Bind the command to MembershipEpisodeId and TerminationEventId. Receiver derives child keys from source event, effect kind, canonical owner and lifecycle; no elapsed-time release.",
+      "replayAndFailureContract": "Exact receiver-owned source proof and deterministic IDs; retain checkpoint on transient dependency or unknown outcome.",
+      "requiredTests": "MemberRetirementRecoveryTests: exact source proof, crashes/unknown outcomes before and after receiver append, complete full scan, retry after later episode, late source facts, and >1000 assignments.",
+      "findingIds": [
+        "CHOREO-03"
+      ]
+    },
+    {
+      "reactor": "RetiredMemberGrantReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/RetiredMemberGrantReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "AccessGrantIssued"
+      ],
+      "commandCalls": [],
+      "targetAggregates": [],
+      "directFlow": "On member AccessGrantIssued, reads Member at the exact source membership episode and dispatches cleanup only after an immutable retirement proof; nonmember grants are ignored.",
+      "guardsRequired": "Require nonempty source episode, canonical member principal and exact issuance event/position; receiver binds tenant, grant, principal, episode and termination event. Missing source authority is transient.",
+      "replayAndFailureContract": "Exact receiver-owned source proof and deterministic IDs; retain checkpoint on transient dependency or unknown outcome.",
+      "requiredTests": "MemberRetirementRecoveryTests: active grant dispatches nothing; exact old grant revoked; new episode grant preserved; source mismatch rejected; unknown outcome recovers.",
+      "findingIds": [
+        "CHOREO-03",
+        "CHOREO-06"
+      ]
+    },
+    {
+      "reactor": "RetiredTeamAssignmentReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/RetiredTeamAssignmentReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "TeamMemberAssigned"
+      ],
+      "commandCalls": [],
+      "targetAggregates": [],
+      "directFlow": "On TeamMemberAssigned, reads Member at the assignment episode. Active matching episode means no cleanup; old assignment with accepted termination proof emits CleanupRetiredMembershipRelationship using assignment source position and exact termination event. Missing proof is transient.",
+      "guardsRequired": "The receiving TeamMember command re-reads the exact assignment source, binds episode and termination event, and cannot delete newer assignment authority. Only dispatch after a retirement proof exists.",
+      "replayAndFailureContract": "Exact receiver-owned source proof and deterministic IDs; retain checkpoint on transient dependency or unknown outcome.",
+      "requiredTests": "MemberRetirementRecoveryTests: active assignments dispatch nothing; old exact assignment removed; newer episode preserved; unknown outcome retries; wrong source/position/episode rejected.",
+      "findingIds": [
+        "CHOREO-03",
+        "CHOREO-06"
+      ]
+    },
+    {
+      "reactor": "RoleCleanupReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "RoleDeleted"
+      ],
+      "commandCalls": [],
+      "targetAggregates": [],
+      "directFlow": "RemoveRolePermission / RemoveTeamRole -> relationship owners discovered from permission/team directories.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Both discovery readers may lag deletion cause and no coverage check; false empty enumeration checkpoints permanently. Partial cleanup replay can hit non-idempotent NotFound removal until projection catches up. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/AccessControl/RoleCleanupReactorTests.cs",
+      "findingIds": [
+        "CHOREO-06"
+      ]
+    },
+    {
+      "reactor": "TeamCleanupReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/TeamCleanupReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "TeamDeleted"
+      ],
+      "commandCalls": [
+        {
+          "request": "RemoveTeamMember",
+          "handlers": [
+            "RemoveTeamMemberHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "TeamMember",
+            "TenantManagerGuard"
+          ],
+          "contract": "src/Compliance.Common/Features/AccessControl/RemoveTeamMember.cs"
+        }
+      ],
+      "targetAggregates": [
+        "TeamMember",
+        "TenantManagerGuard"
+      ],
+      "directFlow": "RemoveTeamMember -> deterministic team+member assignment owners discovered from team member directory.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "No directory checkpoint/source completeness check before enumeration. Empty/lagging page returns success and checkpoints; no later source trigger guarantees missed children revisited. Replayed removals return NotFound if stale directory still lists removed rows. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/AccessControl/TeamCleanupReactorTests.cs",
+      "findingIds": [
+        "CHOREO-06"
+      ]
+    },
+    {
+      "reactor": "TenantRbacBootstrapReactor",
+      "source": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "TenantRegistered"
+      ],
+      "commandCalls": [
+        {
+          "request": "AssignTeamMember",
+          "handlers": [
+            "AssignTeamMemberHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "AccessGrant",
+            "TeamMember",
+            "TenantManagerGuard"
+          ],
+          "contract": "src/Compliance.Common/Features/AccessControl/AssignTeamMember.cs"
+        },
+        {
+          "request": "DefineRole",
+          "handlers": [
+            "DefineRoleHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "Role"
+          ],
+          "contract": "src/Compliance.Common/Features/AccessControl/DefineRole.cs"
+        },
+        {
+          "request": "DefineTeam",
+          "handlers": [
+            "DefineTeamHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "Team"
+          ],
+          "contract": "src/Compliance.Common/Features/AccessControl/DefineTeam.cs"
+        },
+        {
+          "request": "RegisterMember",
+          "handlers": [
+            "RegisterMemberHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "AccessGrant",
+            "Member",
+            "TeamMember"
+          ],
+          "contract": "src/Compliance.Common/Features/AccessControl/RegisterMember.cs"
+        }
+      ],
+      "targetAggregates": [
+        "AccessGrant",
+        "Member",
+        "Role",
+        "Team",
+        "TeamMember",
+        "TenantManagerGuard"
+      ],
+      "directFlow": "DefineTeam/RegisterMember/AssignTeamRole/AssignRolePermission/AssignTeamMember -> their distinct RBAC owners.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Awaited whole sequence replay after failure; final admin TeamMemberAssigned fact is separate activation trigger. Independent role catalog/backfill reactors can run concurrently; activation waits required source/projection prerequisites. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs; test/Compliance.Tests/Features/Providers/ProviderAuthorizationTests.cs; test/Compliance.Tests/Features/AccessReviews/AccessReviewInfrastructureTests.cs",
+      "findingIds": []
+    },
+    {
+      "reactor": "ApplicationImportExecutionReactor",
+      "source": "src/Compliance.Core/Features/Applications/ApplicationImportExecutionReactor.cs",
+      "workload": "ApplicationImportExecutionV1",
+      "triggerFacts": [
+        "ApplicationImportPlanSealed"
+      ],
+      "commandCalls": [
+        {
+          "request": "ExecuteApplicationImport",
+          "handlers": [
+            "ExecuteApplicationImportHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "ApplicationImportLedger"
+          ],
+          "contract": "src/Compliance.Common/Features/Applications/ExecuteApplicationImport.cs"
+        }
+      ],
+      "targetAggregates": [
+        "ApplicationImportLedger"
+      ],
+      "directFlow": "ExecuteApplicationImport -> source ApplicationImportLedger coordinator; ApplyApplicationImportEffect -> DeclaredApplication owners.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Durable ApplicationImportPlanSealed triggers replay after partial effect crash. Executor checks tenant active each row, transient lag preserves checkpoint, permanent rejection writes rollback fact that logically releases pending effects. Target acquisition order is plan row order, not canonical target order, so cross-source cycles remain. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
+      "findingIds": [
+        "CHOREO-05"
+      ]
+    },
+    {
+      "reactor": "LinkImpactReviewWorkReactor",
+      "source": "src/Compliance.Core/Features/Changes/LinkImpactReviewWorkReactor.cs",
+      "workload": "SignificantChangeImpactWorkLinksV1",
+      "triggerFacts": [
+        "SignificantChangeImpactAssessed"
+      ],
+      "commandCalls": [
+        {
+          "request": "LinkImpactReviewWork",
+          "handlers": [
+            "LinkImpactReviewWorkHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "SignificantChange"
+          ],
+          "contract": "src/Compliance.Common/Features/Changes/LinkImpactReviewWork.cs"
+        }
+      ],
+      "targetAggregates": [
+        "SignificantChange"
+      ],
+      "directFlow": "LinkImpactReviewWork -> same SignificantChange owner after source assessment fact.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "No-op on no work. If newer content supersedes trigger before processing, receiver returns permanent Conflict instead of terminal superseded no-op; per-tenant queue can stall on obsolete cause. Current owner command otherwise idempotently recognizes already linked set. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "No direct test filename reference found; add focused reactor recovery coverage.",
+      "findingIds": [
+        "CHOREO-09"
+      ]
+    },
+    {
+      "reactor": "SystemDescriptionDecisionReactor",
+      "source": "src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs",
+      "workload": "SystemDescriptionImpactDecisionsV1",
+      "triggerFacts": [
+        "SystemDescriptionApproved",
+        "SystemDescriptionNoChangeRecorded"
+      ],
+      "commandCalls": [
+        {
+          "request": "RecordComplianceIncidentSystemDescriptionDecision",
+          "handlers": [
+            "RecordComplianceIncidentSystemDescriptionDecisionHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "ComplianceIncident"
+          ],
+          "contract": "src/Compliance.Common/Features/Incidents/RecordComplianceIncidentSystemDescriptionDecision.cs"
+        },
+        {
+          "request": "RecordSignificantChangeSystemDescriptionDecision",
+          "handlers": [
+            "RecordSignificantChangeSystemDescriptionDecisionHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "SignificantChange"
+          ],
+          "contract": "src/Compliance.Common/Features/Changes/RecordSignificantChangeSystemDescriptionDecision.cs"
+        }
+      ],
+      "targetAggregates": [
+        "ComplianceIncident",
+        "SignificantChange"
+      ],
+      "directFlow": "RecordSignificantChangeSystemDescriptionDecision / RecordComplianceIncidentSystemDescriptionDecision -> owning change/incident.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Some superseded current assessments are skipped before dispatch; race after reactor read still causes receiver permanent Conflict. Required review-work linking may not yet have caught up: receiver conflict has no transient flag. These paths can stall or fault per-tenant description workload rather than retry as pending/superseded. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "No direct test filename reference found; add focused reactor recovery coverage.",
+      "findingIds": [
+        "CHOREO-09"
+      ]
+    },
+    {
+      "reactor": "ControlEvaluationDeviationFindingReactor",
+      "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluationDeviationFindingReactor.cs",
+      "workload": "ControlEvaluationDeviationFindingsV1",
+      "triggerFacts": [
+        "ControlEvaluationSubmitted"
+      ],
+      "commandCalls": [
+        {
+          "request": "RaiseEvaluationDeviationFinding",
+          "handlers": [
+            "RaiseEvaluationDeviationFindingHandler"
+          ],
+          "registered": true,
+          "operatesOn": [],
+          "contract": "src/Compliance.Common/Features/Evaluations/RaiseEvaluationDeviationFinding.cs"
+        }
+      ],
+      "targetAggregates": [],
+      "directFlow": "RaiseEvaluationDeviationFinding -> FindingAggregate owner through RoutedFinding.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Each material deviation send awaited; repeated submissions use same finding identity. Failure retries existing batch from checkpoint; receiver owns local finding creation rule. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
+      "findingIds": []
+    },
+    {
+      "reactor": "EvidenceArtifactInspectionEffectsReactor",
+      "source": "src/Compliance.Core/Features/Evidence/EvidenceArtifactInspectionEffectsReactor.cs",
+      "workload": "EvidenceArtifactInspectionEffectsV1",
+      "triggerFacts": [
+        "EvidenceArtifactInspected"
+      ],
+      "commandCalls": [],
+      "targetAggregates": [],
+      "directFlow": "EvidenceArtifactStorageReconciler -> artifact content-store quarantine/delete/release effects based on current EvidenceArtifact owner state.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Reconciler uses idempotent storage outcomes (quarantine/open fallback, delete NotFound success, release/open fallback). Failed reconciliation throws keeping checkpoint. Direct storage effect is appropriate recovery; it is not a projector deciding policy. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/Evidence/EvidenceArtifactInspectionEffectsReactorTests.cs",
+      "findingIds": []
+    },
+    {
+      "reactor": "ControlOccurrenceFindingReactor",
+      "source": "src/Compliance.Core/Features/Remediation/ControlOccurrenceFindingReactor.cs",
+      "workload": "ControlOccurrenceFindingsV1",
+      "triggerFacts": [
+        "ControlOccurrenceAttested",
+        "ControlOccurrenceReviewed"
+      ],
+      "commandCalls": [
+        {
+          "request": "RaiseOccurrenceFinding",
+          "handlers": [
+            "RaiseOccurrenceFindingHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "FindingAggregate"
+          ],
+          "contract": "src/Compliance.Common/Features/Remediation/RaiseOccurrenceFinding.cs"
+        }
+      ],
+      "targetAggregates": [
+        "FindingAggregate"
+      ],
+      "directFlow": "RaiseOccurrenceFinding -> FindingAggregate owner through RoutedFinding.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Awaited sends; failure propagates checkpoint; repeated native finding command must compare same routed identity/intent. Receiver reads authoritative occurrence before deriving owner/admission values. Not direct aggregate mutation. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs",
+      "findingIds": []
+    },
+    {
+      "reactor": "BoundaryRiskReassessmentReactor",
+      "source": "src/Compliance.Core/Features/Risks/BoundaryRiskReassessmentReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "BoundaryApproved"
+      ],
+      "commandCalls": [
+        {
+          "request": "RaiseRiskReassessmentTriggers",
+          "handlers": [
+            "RaiseRiskReassessmentTriggersHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "RiskGovernanceLedger"
+          ],
+          "contract": "src/Compliance.Common/Features/Risks/RaiseRiskReassessmentTriggers.cs"
+        }
+      ],
+      "targetAggregates": [
+        "RiskGovernanceLedger"
+      ],
+      "directFlow": "RaiseRiskReassessmentTriggers -> per-program RiskGovernanceLedger owner.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Receiver caught-up discovery and stable trigger IDs make whole cause replay safe. Reads source SystemBoundary to identify owning program; aggregate-to-aggregate live read not inside target owner. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "No direct test filename reference found; add focused reactor recovery coverage.",
+      "findingIds": []
+    },
+    {
+      "reactor": "RiskMethodReassessmentReactor",
+      "source": "src/Compliance.Core/Features/Risks/RiskMethodReassessmentReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "RiskMethodVersionPublished"
+      ],
+      "commandCalls": [
+        {
+          "request": "RaiseRiskReassessmentTriggers",
+          "handlers": [
+            "RaiseRiskReassessmentTriggersHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "RiskGovernanceLedger"
+          ],
+          "contract": "src/Compliance.Common/Features/Risks/RaiseRiskReassessmentTriggers.cs"
+        }
+      ],
+      "targetAggregates": [
+        "RiskGovernanceLedger"
+      ],
+      "directFlow": "RaiseRiskReassessmentTriggers -> per-program RiskGovernanceLedger owner.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Receiver validates risk directory caught up, reads each current evaluation, appends stable triggers once. Whole cause replay is safe through trigger identity; no arbitrary technical receipt event added by reactor. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "No direct test filename reference found; add focused reactor recovery coverage.",
+      "findingIds": []
+    },
+    {
+      "reactor": "TenantInvitationDeliveryReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "TenantMemberInvited"
+      ],
+      "commandCalls": [],
+      "targetAggregates": [],
+      "directFlow": "ITenantInvitationDelivery external SMTP; directly record outcome in same TenantInvitation owner.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Skips expired/superseded/accepted/terminal attempts. Sends before durable in-flight claim and records result after send; exception is terminal failed; crash after SMTP accept before outcome can resend. Stable Message-ID is not provider idempotency evidence. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryReactorTests.cs",
+      "findingIds": [
+        "CHOREO-07"
+      ]
+    },
+    {
+      "reactor": "TenantInvitationReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantInvitationReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "TenantInvitationAccepted"
+      ],
+      "commandCalls": [
+        {
+          "request": "ActivateTenant",
+          "handlers": [
+            "ActivateTenantHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "Tenant"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/ActivateTenant.cs"
+        },
+        {
+          "request": "AssignTeamMember",
+          "handlers": [
+            "AssignTeamMemberHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "AccessGrant",
+            "TeamMember",
+            "TenantManagerGuard"
+          ],
+          "contract": "src/Compliance.Common/Features/AccessControl/AssignTeamMember.cs"
+        },
+        {
+          "request": "ProvisionGuestProgramAccess",
+          "handlers": [
+            "ProvisionGuestProgramAccessHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "AccessGrant"
+          ],
+          "contract": "src/Compliance.Common/Features/AccessControl/ProvisionGuestProgramAccess.cs"
+        },
+        {
+          "request": "RegisterMember",
+          "handlers": [
+            "RegisterMemberHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "AccessGrant",
+            "Member",
+            "TeamMember"
+          ],
+          "contract": "src/Compliance.Common/Features/AccessControl/RegisterMember.cs"
+        }
+      ],
+      "targetAggregates": [
+        "AccessGrant",
+        "Member",
+        "TeamMember",
+        "Tenant",
+        "TenantManagerGuard"
+      ],
+      "directFlow": "RegisterMember; ProvisionGuestProgramAccess per invitation scope; AssignTeamMember to role/admin; ActivateTenant -> distinct owners.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Committed acceptance drives replay of partially completed sequence. TenantActivationPolicy locally retries transient activation then propagates to durable retry. After permanent failure budget it logs and advances checkpoint, leaving partial provisioning for explicit new invitation/operator action. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs; test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs",
+      "findingIds": []
+    },
+    {
+      "reactor": "TenantRegistrationReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "TenantRegistered",
+        "TenantSlugChangeRequested",
+        "TenantSlugChanged",
+        "TenantSlugSurrenderRequested"
+      ],
+      "commandCalls": [
+        {
+          "request": "InviteTenantMember",
+          "handlers": [
+            "InviteTenantMemberHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "TenantInvitation"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/InviteTenantMember.cs"
+        },
+        {
+          "request": "RegisterTenantOwner",
+          "handlers": [
+            "RegisterTenantOwnerHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "TenantOwner"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/RegisterTenantOwner.cs"
+        },
+        {
+          "request": "RegisterTenantSlug",
+          "handlers": [
+            "RegisterTenantSlugHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "TenantSlug"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/RegisterTenantSlug.cs"
+        },
+        {
+          "request": "SurrenderTenantSlug",
+          "handlers": [
+            "SurrenderTenantSlugHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "TenantSlug"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/SurrenderTenantSlug.cs"
+        }
+      ],
+      "targetAggregates": [
+        "TenantInvitation",
+        "TenantOwner",
+        "TenantSlug"
+      ],
+      "directFlow": "RegisterTenantSlug -> TenantSlug, RegisterTenantOwner -> TenantOwner, optional InviteTenantMember -> TenantInvitation; changes/surrenders -> slug owner.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Owner registration idempotent; slug Register can emit repeated registration/rejection facts. New slug is claimed before old slug surrender. Receivers do not all recognize already-processed outcomes after state progresses. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "No direct test filename reference found; add focused reactor recovery coverage.",
+      "findingIds": [
+        "CHOREO-08"
+      ]
+    },
+    {
+      "reactor": "TenantSelfServiceActivationReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantSelfServiceActivationReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "TeamMemberAssigned"
+      ],
+      "commandCalls": [
+        {
+          "request": "ActivateTenant",
+          "handlers": [
+            "ActivateTenantHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "Tenant"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/ActivateTenant.cs"
+        }
+      ],
+      "targetAggregates": [
+        "Tenant"
+      ],
+      "directFlow": "ActivateTenant -> Tenant owner, after exact administrators-team assignment for registered creator.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Per-tenant checkpoint with TenantActivationPolicy; transient projection lag keeps durable checkpoint; permanent budget logs/abandons. Activation itself guards slug confirmation and current admin prerequisite. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/Tenants/TenantSelfServiceActivationReactorTests.cs",
+      "findingIds": []
+    },
+    {
+      "reactor": "TenantSlugReactor",
+      "source": "src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "TenantSlugRegistered",
+        "TenantSlugRegistrationRejected",
+        "TenantSlugSurrenderRejected",
+        "TenantSlugSurrendered"
+      ],
+      "commandCalls": [
+        {
+          "request": "ConfirmTenantSlug",
+          "handlers": [
+            "ConfirmTenantSlugHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "Tenant"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/ConfirmTenantSlug.cs"
+        },
+        {
+          "request": "ConfirmTenantSlugSurrender",
+          "handlers": [
+            "ConfirmTenantSlugSurrenderHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "Tenant"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/ConfirmTenantSlugSurrender.cs"
+        },
+        {
+          "request": "RejectTenantSlug",
+          "handlers": [
+            "RejectTenantSlugHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "Tenant"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/RejectTenantSlug.cs"
+        },
+        {
+          "request": "RejectTenantSlugSurrender",
+          "handlers": [
+            "RejectTenantSlugSurrenderHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "Tenant"
+          ],
+          "contract": "src/Compliance.Common/Features/Tenants/RejectTenantSlugSurrender.cs"
+        }
+      ],
+      "targetAggregates": [
+        "Tenant"
+      ],
+      "directFlow": "ConfirmTenantSlug/RejectTenantSlug/ConfirmTenantSlugSurrender/RejectTenantSlugSurrender -> Tenant owner.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Failure propagates on global checkpoint. Tenant.RejectSlug lacks no-op path after rejected outcome and ConfirmSlug fails after later surrender/change; exact replay can become permanent conflict. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "No direct test filename reference found; add focused reactor recovery coverage.",
+      "findingIds": [
+        "CHOREO-08"
+      ]
+    },
+    {
+      "reactor": "EmailChallengeDeliveryReactor",
+      "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "EmailChallengeIssued",
+        "IdentityRecoveryChallengeIssued"
+      ],
+      "commandCalls": [],
+      "targetAggregates": [],
+      "directFlow": "IEmailChallengeDelivery external verification/recovery SMTP; same EmailAddress owner direct outcome save.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Skips expired/superseded/terminal owner state. External SMTP occurs before durable attempt claim; exception becomes failed, replay after accepted send+save failure can resend. Matching owner outcome idempotency does not make SMTP send idempotent. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryReactorTests.cs",
+      "findingIds": [
+        "CHOREO-07"
+      ]
+    },
+    {
+      "reactor": "EmailReservationReactor",
+      "source": "src/Compliance.Core/Features/UserIdentities/EmailReservationReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "UserIdentityRegistered"
+      ],
+      "commandCalls": [
+        {
+          "request": "ReserveEmail",
+          "handlers": [
+            "ReserveEmailHandler"
+          ],
+          "registered": true,
+          "operatesOn": [
+            "EmailAddress"
+          ],
+          "contract": "src/Compliance.Common/Features/UserIdentities/ReserveEmail.cs"
+        }
+      ],
+      "targetAggregates": [
+        "EmailAddress"
+      ],
+      "directFlow": "ReserveEmail -> normalized EmailAddress owner.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Conflict is explicitly terminal for one contested email so checkpoint advances; other command failures throw. Owner EmailAddress.Reserve decides uniqueness, so no projection authority. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/UserIdentities/EmailReservationReactorTests.cs",
+      "findingIds": []
+    },
+    {
+      "reactor": "IdentityRecoveryNoticeReactor",
+      "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecoveryNoticeReactor.cs",
+      "workload": null,
+      "triggerFacts": [
+        "IdentityRecoveryChallengeCompleted"
+      ],
+      "commandCalls": [],
+      "targetAggregates": [],
+      "directFlow": "IEmailChallengeDelivery.SendRecoveryCompletedAsync external SMTP only.",
+      "guardsRequired": "",
+      "replayAndFailureContract": "Notice exceptions propagate dedicated checkpoint. Crash after SMTP accept before checkpoint repeats send; no unknown/authorization state. Trigger is completion only, so it cannot recover uncompleted identity replacement. Pinned runner invokes reaction before checkpoint write; failure/crash before checkpoint permits replay, so owner/effect-key idempotency is required independently of child RequestId.",
+      "requiredTests": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryNoticeReactorTests.cs",
+      "findingIds": [
+        "CHOREO-01",
+        "CHOREO-07"
+      ]
+    }
+  ]
+}

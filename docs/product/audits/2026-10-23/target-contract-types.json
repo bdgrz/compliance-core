@@ -1,0 +1,700 @@
+{
+  "namespace": "9a7caa76-7d3a-5a9c-9370-7f2d9cc2ecf8",
+  "identityVectors": [
+    {
+      "namespace": "9a7caa76-7d3a-5a9c-9370-7f2d9cc2ecf8",
+      "tuple": [
+        {
+          "type": "string",
+          "value": "ProviderNameClaim"
+        },
+        {
+          "type": "uuid",
+          "value": "00000000-0000-0000-0000-000000000001"
+        },
+        {
+          "type": "string",
+          "value": "EXAMPLE"
+        }
+      ],
+      "encodedHex": "0000001150726f76696465724e616d65436c61696d00000000000000000000000000000001000000074558414d504c45",
+      "uuid": "99758556-85f4-5674-870a-c23c7df99bfd"
+    },
+    {
+      "namespace": "9a7caa76-7d3a-5a9c-9370-7f2d9cc2ecf8",
+      "tuple": [
+        {
+          "type": "string",
+          "value": "PracticeIndependenceCommitment"
+        },
+        {
+          "type": "uuid",
+          "value": "00000000-0000-0000-0000-000000000001"
+        },
+        {
+          "type": "string",
+          "value": "canonical_user"
+        },
+        {
+          "type": "uuid",
+          "value": "00000000-0000-0000-0000-000000000002"
+        }
+      ],
+      "encodedHex": "0000001e5072616374696365496e646570656e64656e6365436f6d6d69746d656e74000000000000000000000000000000010000000e63616e6f6e6963616c5f7573657200000000000000000000000000000002",
+      "uuid": "cb195905-614d-5ad7-af2e-91aa8a512a46"
+    },
+    {
+      "namespace": "9a7caa76-7d3a-5a9c-9370-7f2d9cc2ecf8",
+      "tuple": [
+        {
+          "type": "string",
+          "value": "TenantInvitationMailboxClaim"
+        },
+        {
+          "type": "uuid",
+          "value": "00000000-0000-0000-0000-000000000001"
+        },
+        {
+          "type": "string",
+          "value": "jos\u00e9@example.test"
+        }
+      ],
+      "encodedHex": "0000001c54656e616e74496e7669746174696f6e4d61696c626f78436c61696d00000000000000000000000000000001000000126a6f73c3a9406578616d706c652e74657374",
+      "uuid": "1954d2b3-b016-51a0-b1c2-bc5fe18485a3"
+    }
+  ],
+  "types": {
+    "ImmutableContentRef": {
+      "kind": "record",
+      "fields": {
+        "ContentId": "Uuid",
+        "Sha256": "string",
+        "Bytes": "long",
+        "MediaType": "string",
+        "Schema": "string"
+      }
+    },
+    "OperationProvenance": {
+      "kind": "record",
+      "fields": {
+        "LogicalId": "Uuid",
+        "RootOperationId": "Uuid",
+        "CausationEventId": "Uuid?",
+        "CommandKind": "string",
+        "Actor": "ActorReference",
+        "Owner": "EventStreamAddress",
+        "Episode": "string",
+        "OriginalExpectedRevision": "ulong?",
+        "AuthoredIntentSha256": "string",
+        "AcceptedAt": "DateTimeOffset",
+        "AffectedOwner": "EventStreamAddress",
+        "ExpectedRevisionOwner": "EventStreamAddress"
+      },
+      "rule": "Owner is this native emitting owner; AffectedOwner and ExpectedRevisionOwner preserve the command subject and primary logical revision scope. For derived commands RootOperationId and CausationEventId link their own LogicalId to root acceptance. Additional authored epoch/version tokens remain in canonical intent."
+    },
+    "SourceFactProof<TSourceEvent>": {
+      "kind": "trusted_immutable_record",
+      "fields": {
+        "Source": "EventStreamAddress",
+        "EventId": "Uuid",
+        "PhysicalPosition": "ulong",
+        "OwnerRevision": "ulong",
+        "EventKind": "string",
+        "PayloadSha256": "string",
+        "RequiredFacts": "ImmutableContentRef",
+        "GlobalPosition": "ulong",
+        "RealmPosition": "ulong"
+      },
+      "rule": "Trusted resolver verifies the concrete native event, exact immutable required facts and scope before creating this proof. PhysicalPosition is resource offset; OwnerRevision is metadata replay/OCC version, distinct from public logical revision. GlobalPosition selects the exclusive captured frontier; offsets never substitute for each other. Expanded arbitrary caller facts are not trusted."
+    },
+    "VerifiedSourceProof<TFacts>": {
+      "kind": "server_internal_immutable_record",
+      "fields": {
+        "Source": "EventStreamAddress",
+        "EventId": "Uuid",
+        "PhysicalPosition": "ulong",
+        "OwnerRevision": "ulong",
+        "PayloadSha256": "string",
+        "Facts": "TFacts",
+        "GlobalPosition": "ulong",
+        "RealmPosition": "ulong"
+      },
+      "rule": "Trusted resolver verifies the concrete native event, exact immutable required facts and scope before creating this proof. PhysicalPosition is resource offset; OwnerRevision is metadata replay/OCC version, distinct from public logical revision. GlobalPosition selects the exclusive captured frontier; offsets never substitute for each other. Expanded arbitrary caller facts are not trusted."
+    },
+    "ObservationRange": {
+      "kind": "record",
+      "fields": {
+        "From": "DateOnly",
+        "UntilInclusive": "DateOnly"
+      },
+      "rule": "Preserve existing Type II inclusive calendar endpoints, non-overlap rule and normalization. This type is distinct from the exclusive ControlBusinessWindow endpoints."
+    },
+    "RecoveryIdentityRole": {
+      "kind": "enum",
+      "values": [
+        "old",
+        "replacement"
+      ]
+    },
+    "CampaignParticipantResultKind": {
+      "kind": "enum",
+      "values": [
+        "policy_acknowledgement",
+        "training_completion",
+        "waiver"
+      ]
+    },
+    "SourceUseSettlementDisposition": {
+      "kind": "enum",
+      "values": [
+        "parent_closed",
+        "canceled",
+        "irreversible_decision"
+      ],
+      "rule": "Must match verified source event kind; no caller-controlled weakening of a parent closure fence."
+    },
+    "ReadCutScope": {
+      "kind": "enum",
+      "values": [
+        "resource",
+        "area",
+        "realm"
+      ]
+    },
+    "SelectionOrder": {
+      "kind": "enum",
+      "values": [
+        "authored",
+        "canonical_key"
+      ]
+    },
+    "PracticeSubjectKind": {
+      "kind": "enum",
+      "values": [
+        "staff",
+        "canonical_user"
+      ]
+    },
+    "EngagementIndependenceOperationKind": {
+      "kind": "enum",
+      "values": [
+        "acceptance",
+        "actual_staff_assignment"
+      ]
+    },
+    "ReadinessDecisionKind": {
+      "kind": "enum",
+      "values": [
+        "readiness",
+        "type_i_entry"
+      ]
+    },
+    "ClosureParentKind": {
+      "kind": "enum",
+      "values": [
+        "finding",
+        "auditor_request",
+        "access_review_campaign",
+        "policy_campaign"
+      ]
+    },
+    "NamedRecordKind": {
+      "kind": "enum",
+      "values": [
+        "provider",
+        "location",
+        "operational_process"
+      ]
+    },
+    "AdmittedChildKind": {
+      "kind": "enum",
+      "values": [
+        "advisor_feedback",
+        "auditor_response",
+        "auditor_comment",
+        "corrective_action",
+        "policy_acknowledgement",
+        "training_completion",
+        "campaign_waiver"
+      ]
+    },
+    "OperationStatus": {
+      "kind": "enum",
+      "values": [
+        "pending",
+        "completed",
+        "conflict",
+        "failed",
+        "unknown"
+      ]
+    },
+    "SourceUsePurpose": {
+      "kind": "enum",
+      "values": [
+        "campaign_completion",
+        "request_resolution",
+        "finding_closure",
+        "readiness_decision",
+        "campaign_closure",
+        "provider_review",
+        "action_completion_review",
+        "engagement_acceptance",
+        "actual_staff_assignment",
+        "engagement_personal_decision",
+        "artifact_download",
+        "professional_duty_recording"
+      ]
+    },
+    "EntityConcurrency": {
+      "kind": "record",
+      "fields": {
+        "ResourceType": "string",
+        "ResourceId": "Uuid",
+        "Revision": "ulong",
+        "Episode": "string"
+      },
+      "rule": "Revision is public logical resource revision, not metadata aggregate version or append position. GET returns exact relevant parent/child tokens separately."
+    },
+    "AdministratorTransitionResponseState": {
+      "kind": "enum",
+      "values": [
+        "accepted",
+        "completed"
+      ]
+    },
+    "TypeIIRangeOperationKind": {
+      "kind": "enum",
+      "values": [
+        "opening",
+        "amendment"
+      ]
+    },
+    "FirstResponseDescriptor": {
+      "kind": "record",
+      "fields": {
+        "HttpStatus": "int",
+        "ContentType": "string",
+        "ResultSchema": "string",
+        "Body": "ResponseBodyReference"
+      }
+    },
+    "ProtectedResponseContentRef": {
+      "kind": "record",
+      "fields": {
+        "ContentId": "Uuid",
+        "CiphertextSha256": "string",
+        "Bytes": "long",
+        "Schema": "string",
+        "KeyVersionId": "string"
+      }
+    },
+    "OperationResultDescriptor": {
+      "kind": "record",
+      "fields": {
+        "Schema": "string",
+        "ResultUrl": "string"
+      }
+    },
+    "OperationSubject": {
+      "kind": "record",
+      "fields": {
+        "AffectedOwner": "EventStreamAddress",
+        "ExpectedRevisionOwner": "EventStreamAddress"
+      }
+    },
+    "OperationAccessScope": {
+      "kind": "server_created_closed_scope",
+      "fields": {
+        "Realm": "string",
+        "PolicyKey": "string",
+        "OriginalActor": "ActorReference",
+        "TenantId": "Uuid?",
+        "ProgramId": "Uuid?",
+        "AffectedOwner": "EventStreamAddress",
+        "TypedVisibilitySelector": "ImmutableContentRef?"
+      },
+      "rule": "Static registry keyed by canonical command kind; recovery includes frozen replacement identity, creation includes creator, protected response requires original actor. No arbitrary scope type from a caller."
+    },
+    "AcquireEngagementServiceEpochSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ServiceEngagementAcceptanceRequested>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRequested>"
+      ]
+    },
+    "ReleaseEngagementServiceEpochSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ServiceEngagementAcceptanceRecorded>",
+        "SourceFactProof<ServiceEngagementStaffAssigned>",
+        "SourceFactProof<ServiceEngagementAcceptanceRejected>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRejected>"
+      ]
+    },
+    "ReleaseApplicationImportSourceSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ApplicationImportCommitted>",
+        "SourceFactProof<ApplicationImportCanceled>",
+        "SourceFactProof<ApplicationImportFailed>"
+      ]
+    },
+    "ReleaseApplicationImportTargetSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ApplicationImportCommitted>",
+        "SourceFactProof<ApplicationImportCanceled>",
+        "SourceFactProof<ApplicationImportFailed>"
+      ]
+    },
+    "ReleaseProviderNameSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ProviderRecorded>",
+        "SourceFactProof<ProviderRevised>",
+        "SourceFactProof<ProviderChangeCanceled>"
+      ]
+    },
+    "ReleaseLocationNameSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<LocationRevisionRecorded>",
+        "SourceFactProof<LocationChangeCanceled>"
+      ]
+    },
+    "ReleaseOperationalProcessNameSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<OperationalProcessRevisionRecorded>",
+        "SourceFactProof<OperationalProcessChangeCanceled>"
+      ]
+    },
+    "CompleteAdministratorWithdrawalSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<MemberSuspended>",
+        "SourceFactProof<MemberDeprovisioned>",
+        "SourceFactProof<TeamMemberRemoved>"
+      ]
+    },
+    "CompleteAdministratorRestorationSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<MemberReinstated>",
+        "SourceFactProof<TeamMemberAssigned>"
+      ]
+    },
+    "AcquireTypeIIPeriodRangeSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<TypeIIPeriodOpeningAccepted>",
+        "SourceFactProof<TypeIIPeriodAmendmentAccepted>"
+      ]
+    },
+    "SettleTypeIIPeriodRangeSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ObservationPeriodStarted>",
+        "SourceFactProof<ObservationPeriodAmended>",
+        "SourceFactProof<ObservationPeriodCloseFrozen>",
+        "SourceFactProof<TypeIIPeriodAmendmentCanceled>",
+        "SourceFactProof<TypeIIPeriodOpeningRejected>"
+      ]
+    },
+    "SettleRecoveryIdentityProtectionSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<IdentityRecoveryCompleted>",
+        "SourceFactProof<IdentityRecoveryPreparationRejected>"
+      ]
+    },
+    "SettleAccessReviewItemCampaignCompletionUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<AccessReviewCampaignCompleted>",
+        "SourceFactProof<AccessReviewCampaignCompletionCanceled>"
+      ]
+    },
+    "SettleAuditorResponseRequestResolutionUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<AuditorRequestResolved>",
+        "SourceFactProof<AuditorRequestResolutionCanceled>"
+      ]
+    },
+    "SettleCorrectiveActionFindingClosureUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<FindingClosedV2>",
+        "SourceFactProof<FindingClosureCanceled>"
+      ]
+    },
+    "AuthorizeReadinessGapPlanReadinessDecisionUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ReadinessDecisionAccepted>",
+        "SourceFactProof<TypeIEntryDecisionAccepted>"
+      ]
+    },
+    "SettleReadinessGapPlanReadinessDecisionUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ReadinessDecisionRecorded>",
+        "SourceFactProof<TypeIEntryDecisionRecorded>",
+        "SourceFactProof<ReadinessDecisionCanceled>"
+      ]
+    },
+    "SettlePolicyCampaignParticipantCampaignClosureUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<PolicyCampaignClosed>",
+        "SourceFactProof<PolicyCampaignClosureCanceled>"
+      ]
+    },
+    "SettleProviderAssuranceReportProviderReviewUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ProviderReviewRecorded>",
+        "SourceFactProof<ProviderReviewCanceled>"
+      ]
+    },
+    "SettleEvidenceRequestActionCompletionUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<RiskTreatmentActionCompletionReviewed>",
+        "SourceFactProof<RiskTreatmentActionCompletionReviewCanceled>"
+      ]
+    },
+    "SettleAccessReviewItemDecisionSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<AccessReviewDecisionBatchPublished>",
+        "SourceFactProof<AccessReviewDecisionBatchCanceled>"
+      ]
+    },
+    "AuthorizeEngagementPracticeCommitmentsSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ServiceEngagementAcceptanceRequested>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRequested>"
+      ]
+    },
+    "SettlePracticeIndependenceReservationSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ServiceEngagementAcceptanceRecorded>",
+        "SourceFactProof<ServiceEngagementStaffAssigned>",
+        "SourceFactProof<ServiceEngagementAcceptanceRejected>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRejected>"
+      ]
+    },
+    "AuthorizeFirmStaffRecordEngagementUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ServiceEngagementAcceptanceRequested>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRequested>",
+        "SourceFactProof<EngagementPersonalDecisionAdmitted>"
+      ]
+    },
+    "SettleFirmStaffRecordEngagementUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<EngagementPracticeCommitmentsAuthorized>",
+        "SourceFactProof<ServiceEngagementAcceptanceRejected>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRejected>",
+        "SourceFactProof<EngagementPersonalDecisionAuthorized>",
+        "SourceFactProof<EngagementPersonalDecisionCanceled>"
+      ]
+    },
+    "AuthorizeFirmProfessionalDutyDesignationEngagementUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ServiceEngagementAcceptanceRequested>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRequested>",
+        "SourceFactProof<EngagementPersonalDecisionAdmitted>"
+      ]
+    },
+    "SettleFirmProfessionalDutyDesignationEngagementUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<EngagementPracticeCommitmentsAuthorized>",
+        "SourceFactProof<ServiceEngagementAcceptanceRejected>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRejected>",
+        "SourceFactProof<EngagementPersonalDecisionAuthorized>",
+        "SourceFactProof<EngagementPersonalDecisionCanceled>"
+      ]
+    },
+    "AuthorizeIndependenceRuleCatalogEngagementUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ServiceEngagementAcceptanceRequested>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRequested>",
+        "SourceFactProof<EngagementPersonalDecisionAdmitted>"
+      ]
+    },
+    "SettleIndependenceRuleCatalogEngagementUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<EngagementPracticeCommitmentsAuthorized>",
+        "SourceFactProof<ServiceEngagementAcceptanceRejected>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRejected>",
+        "SourceFactProof<EngagementPersonalDecisionAuthorized>",
+        "SourceFactProof<EngagementPersonalDecisionCanceled>"
+      ]
+    },
+    "AuthorizeIndependenceRuleRatificationCatalogEngagementUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ServiceEngagementAcceptanceRequested>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRequested>",
+        "SourceFactProof<EngagementPersonalDecisionAdmitted>"
+      ]
+    },
+    "SettleIndependenceRuleRatificationCatalogEngagementUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<EngagementPracticeCommitmentsAuthorized>",
+        "SourceFactProof<ServiceEngagementAcceptanceRejected>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRejected>",
+        "SourceFactProof<EngagementPersonalDecisionAuthorized>",
+        "SourceFactProof<EngagementPersonalDecisionCanceled>"
+      ]
+    },
+    "SettleAdvisorArtifactDownloadUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<EvidenceArtifactDownloadIssued>",
+        "SourceFactProof<ArtifactDownloadGrantCanceled>"
+      ]
+    },
+    "SettleArtifactHandlingDownloadUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<EvidenceArtifactDownloadIssued>",
+        "SourceFactProof<ArtifactDownloadGrantCanceled>"
+      ]
+    },
+    "SettleArtifactDownloadAvailabilityUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<EvidenceArtifactDownloadIssued>",
+        "SourceFactProof<ArtifactDownloadGrantCanceled>"
+      ]
+    },
+    "SettleEngagementPersonalDecisionSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<EngagementManagementAcknowledged>",
+        "SourceFactProof<PartnerIndependenceEvaluationRecorded>"
+      ]
+    },
+    "SettleClientServicePersonalDecisionUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<EngagementPersonalDecisionAuthorized>",
+        "SourceFactProof<EngagementPersonalDecisionCanceled>"
+      ]
+    },
+    "ControlBusinessWindow": {
+      "kind": "closed_discriminated_union",
+      "variants": {
+        "calendar": {
+          "From": "DateOnly",
+          "UntilExclusive": "DateOnly"
+        },
+        "event": {
+          "SourceKind": "string",
+          "SourceId": "string"
+        }
+      },
+      "rule": "Calendar From < UntilExclusive; existing business date/time interpretation retained. Event source identity is nonempty and bounded by source rules. Trigger/generator/plan/period is not a separate window identity."
+    },
+    "ResponseBodyReference": {
+      "kind": "closed_discriminated_union",
+      "variants": {
+        "standard": {
+          "Content": "ImmutableContentRef"
+        },
+        "protected": {
+          "Content": "ProtectedResponseContentRef"
+        }
+      }
+    },
+    "EngagementPersonalDecisionKind": {
+      "kind": "enum",
+      "values": [
+        "management_acknowledgement",
+        "partner_evaluation"
+      ]
+    },
+    "EngagementPersonalDecisionContent": {
+      "kind": "closed_discriminated_union",
+      "variants": {
+        "management_acknowledgement": {
+          "CompleteServiceRecordIds": "ImmutableSelectionManifest",
+          "Statement": "string"
+        },
+        "partner_evaluation": {
+          "RuleVersion": "long",
+          "ExpectedRuleContentDigest": "string",
+          "ExpectedServiceHistoryDigest": "string",
+          "Rationale": "string"
+        }
+      },
+      "rule": "management_acknowledgement CompleteServiceRecordIds uses exact ItemSchema=Uuid and complete authored identity selection; no generic runtime-selected manifest type."
+    },
+    "AdministratorTransitionKind": {
+      "kind": "enum",
+      "values": [
+        "suspend_member",
+        "deprovision_member",
+        "remove_administrators_assignment",
+        "reinstate_member",
+        "restore_administrators_assignment"
+      ]
+    },
+    "ProfessionalDutyChangeKind": {
+      "kind": "enum",
+      "values": [
+        "record",
+        "revoke"
+      ]
+    },
+    "SourceFactLocator": {
+      "kind": "record",
+      "fields": {
+        "Source": "EventStreamAddress",
+        "EventId": "Uuid",
+        "ResourcePosition": "ulong",
+        "RealmPosition": "ulong",
+        "GlobalPosition": "ulong",
+        "AggregateVersion": "ulong",
+        "PayloadSha256": "string"
+      },
+      "rule": "ResourcePosition, RealmPosition and GlobalPosition are distinct broker offsets. AggregateVersion is metadata replay/OCC version, not public logical content revision. GlobalPosition selects membership in a captured exclusive global frontier; verify realm, exact native event and concrete payload digest. Preserve all positions through the internal Fitz adapter."
+    },
+    "AuthoritativeReadCut": {
+      "kind": "record",
+      "fields": {
+        "AnchorSelector": "string",
+        "GlobalWatermarkExclusive": "ulong",
+        "CapturedAt": "DateTimeOffset"
+      },
+      "rule": "Capture an unfiltered global stream://** exclusive frontier W. Each derived global selector uses its own W2 >= W and latest fingerprint; retain only exact-scope GlobalPosition < W. Never pass snapshot tokens to realm selectors or reuse fingerprints across selectors. A complete empty cut is W=0. Persist continuation state in technical process records, not domain events."
+    },
+    "SettleFirmStaffProfessionalDutyUseSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<FirmProfessionalDutyDesignationRecorded>",
+        "SourceFactProof<ProfessionalDutyChangeRejected>"
+      ]
+    },
+    "ReservePracticeIndependenceSourceProof": {
+      "kind": "closed_discriminated_union",
+      "variants": [
+        "SourceFactProof<ServiceEngagementAcceptanceRequested>",
+        "SourceFactProof<ServiceEngagementStaffAssignmentRequested>"
+      ]
+    }
+  }
+}

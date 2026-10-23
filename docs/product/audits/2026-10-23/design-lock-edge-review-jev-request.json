@@ -1,0 +1,56 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "fixedRules": [
+      "Once a recovery swap is accepted it must finish automatically exactly as accepted; register or verify replacement before old revocation.",
+      "Root exact write retry returns original response, while status GET may show progress.",
+      "Fitz broker snapshot fingerprint/watermark continuation is restricted to global selectors. StreamReadCursor fingerprint is bound to request position/selector.",
+      "ReviseApplication has JsonIgnore presence helpers; omitted and supplied-null have distinct semantics.",
+      "Tenant manager availability requires registered unsuspended member plus same-episode built-in Administrator team assignment; required role/perms are undeletable. Restoration must not clear other reasons."
+    ],
+    "counterexamples": {
+      "recovery": "Both proofs verified; root emits IdentityRecoveryAccepted; before identity protection, a competing registration binds replacement to another account. Accepted swap cannot finish.",
+      "canonical": "Classification=null with IsSupplied=false means keep, but Classification=null with IsSupplied=true means clear. Serializing raw public command omits JsonIgnore flags so the hashes collide.",
+      "snapshot": "Passing capturedWatermark/fingerprint on a realm selector hits ERR_CURSOR_UNSUPPORTED in sink/reads.rs; source SDK exposes parameters without this selector restriction in method signature.",
+      "reply": "First PUT gives 202 Accepted, a later retry returns completed 200. That is progress, but it is not the original response."
+    }
+  },
+  "questions": {
+    "recovery_acceptance_point": {
+      "type": "choice",
+      "instructions": "Which recovery acceptance point satisfies automatic exact-swap completion without silently accepting a conflicting account association?",
+      "criteria": {
+        "prepare_protect_accept": "Freeze both-proof-verified preparation keyed by challenge; protect old/replacement association slots; then append accepted swap; any conflict before acceptance rejects preparation safely. Accepted swap always recovers forward.",
+        "accept_then_protect": "Append accepted swap first, then attempt replacement association protection; report conflict if another account won.",
+        "revoke_first": "Revoke old identity before replacement registration."
+      }
+    },
+    "canonical_presence": {
+      "type": "choice",
+      "instructions": "Which retry intent representation preserves current keep/clear semantics across HTTP/MCP/queue?",
+      "criteria": {
+        "canonical_presence_dto": "Dedicated immutable canonical input includes explicit presence Boolean plus normalized values; adapters and queues reconstruct identical flags.",
+        "serialize_public_command": "Hash only the public DTO serializer output, letting JsonIgnore omit flags.",
+        "collapse_omit_null": "Treat omission and null as equal even though current code distinguishes them."
+      }
+    },
+    "snapshot_adapter": {
+      "type": "choice",
+      "instructions": "Which design uses the supplied broker capability honestly for coherent publication reads?",
+      "criteria": {
+        "global_cut_selector_tokens": "Capture exclusive global watermark; use global area/resource selectors with their own cursor fingerprints/snapshots and filter to original global cut plus exact realm. Never pass global continuation to realm selector.",
+        "realm_cursor_forward": "Pass capturedWatermark/fingerprint to realm selector because SDK method parameters accept it.",
+        "per_row_refresh": "Refresh publication status independently for every returned row."
+      }
+    },
+    "write_response": {
+      "type": "choice",
+      "instructions": "Which public contract preserves an exact original asynchronous write response?",
+      "criteria": {
+        "fixed_ack_status_query": "All async writes return immutable 202 acknowledgment on first call and exact retries; GET status/result reports progress and final result.",
+        "retry_returns_current": "Return whatever the resource currently looks like on each write retry.",
+        "retry_new_accepted_time": "Return same operation ID but create a new accepted timestamp each retry."
+      }
+    }
+  }
+}

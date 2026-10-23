@@ -1,0 +1,817 @@
+{
+  "status": "selected regression specifications; tests not implemented or executed by this documentation review",
+  "sourceHead": "b7a2bd02cc90c6734c94391399a55c0da1621521",
+  "commonAssertions": [
+    "Every accepted native fact has one sole owner and verified attributed concrete serialization.",
+    "No source/receiver state change on invalid proof, changed intent or denied authority.",
+    "Exact retries append nothing; expected original first response and typed terminal result compared byte-for-byte.",
+    "Repeat with unrelated owner operations interleaved and newer lifecycle generations present.",
+    "No test relies on a projection miss or elapsed time to release authority."
+  ],
+  "traces": [
+    {
+      "id": "LOCK-01",
+      "test": "ShouldDrainAdmittedBulkDecisionGivenCampaignClosureRacesMaterialization",
+      "owners": [
+        "AccessReviewCampaign",
+        "AccessReviewDecisionBatch",
+        "AccessReviewItem"
+      ],
+      "given": "Campaign revision 7, items I1=3/I2=5; no child batch exists.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "RecordBulkAccessDecision B with ExpectedCampaignRevision=7 and complete preview I1/I2.",
+          "expected": "Campaign appends AccessReviewDecisionBatchAdmitted at revision 8, returns original 202; never compares 7 with batch zero."
+        },
+        {
+          "step": 2,
+          "action": "Pause child creation and request campaign completion at revision 8.",
+          "expected": "Seal future admission; completion remains pending until this admitted batch settles."
+        },
+        {
+          "step": 3,
+          "action": "Materialize B, reserve I1/I2 canonically, append I1 provisional decision then crash.",
+          "expected": "Neither item exposes new decision before one complete publication; source replay restores B."
+        },
+        {
+          "step": 4,
+          "action": "Apply I2 and publish exact full proof set.",
+          "expected": "AccessReviewDecisionBatchPublished makes both visible at a fixed publication cut. Completion may then acquire exact current item uses."
+        },
+        {
+          "step": 5,
+          "action": "Retry B after completion.",
+          "expected": "Same original acknowledgment; no additional campaign/batch/item facts."
+        }
+      ],
+      "invariant": "Parent admission owns parent revision and closure coverage; child publication owns all-item visibility.",
+      "nativeFacts": [
+        "AccessReviewDecisionBatchAdmitted",
+        "AccessReviewDecisionBatchPublished",
+        "AccessReviewCampaignCompletionAccepted"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-02",
+      "test": "ShouldBlockOldLatestDecisionGivenReadinessRunAdmittedBeforeCompute",
+      "owners": [
+        "ProgramReadiness",
+        "ReadinessAssessment"
+      ],
+      "given": "ProgramReadiness revision 4, old assessment A0 current.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Run assessment A1 with ExpectedProgramRevision=4 and omitted AsOf.",
+          "expected": "Freeze server AsOf and complete inputs once; ReadinessAssessmentRequested records generation G and returns original 202."
+        },
+        {
+          "step": 2,
+          "action": "Pause child computation; request decision on A0 or a second run against revision 4.",
+          "expected": "A0 decision cannot pass pending-adoption seal; second new run conflicts. No false completed assessment."
+        },
+        {
+          "step": 3,
+          "action": "Compute A1, crash after ReadinessAssessmentRecorded before adoption.",
+          "expected": "Replay computes/reuses same snapshot; no newer live input substituted."
+        },
+        {
+          "step": 4,
+          "action": "Adopt exact A1 proof/G.",
+          "expected": "ReadinessAssessmentAdopted completes root result with original assessment ID and program revision; child revision separately returned."
+        },
+        {
+          "step": 5,
+          "action": "Retry original run after A2 later adopted.",
+          "expected": "Original 202; GET result returns original A1 registration, not A2."
+        }
+      ],
+      "invariant": "Latest selection and decision gate remain one program authority; child computation is historical and pure.",
+      "nativeFacts": [
+        "ReadinessAssessmentRequested",
+        "ReadinessAssessmentRecorded",
+        "ReadinessAssessmentAdopted"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-03",
+      "test": "ShouldMaterializeAcceptedRiskLinkGivenGapClosesAfterAdmission",
+      "owners": [
+        "ProviderAssuranceGap",
+        "ProviderRiskAcceptance"
+      ],
+      "given": "Open gap revision 6; exact risk acceptance active at admission.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Link under CommandId L and ExpectedGapRevision=6.",
+          "expected": "Gap validates active exact acceptance and duplicate pair, appends ProviderCoverageGapRiskAcceptanceAdmitted; freezes gap admission result revision."
+        },
+        {
+          "step": 2,
+          "action": "Close gap using permitted newer source before child materialization.",
+          "expected": "Closure does not erase already admitted historical link; new link commands after close reject."
+        },
+        {
+          "step": 3,
+          "action": "Materialize L and retry original command.",
+          "expected": "ProviderCoverageGapRiskAcceptanceLinked belongs only to L; root replay stays original 202 and result preserves original admission revision; link does not close gap."
+        }
+      ],
+      "invariant": "Temporal validity is proved at admission; linking does not decide closure.",
+      "nativeFacts": [
+        "ProviderCoverageGapRiskAcceptanceAdmitted",
+        "ProviderCoverageGapRiskAcceptanceLinked"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-04",
+      "test": "ShouldPreserveCompleteSelectionGivenSampleAdmissionRacesRequestSeal",
+      "owners": [
+        "AuditorRequest",
+        "AuditorSampleSelection"
+      ],
+      "given": "Open request revision 9; prior selection S1 uses population P version 1.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Amend S2 under ExpectedRequestRevision=9 to P version 2 and nonempty unique rows.",
+          "expected": "AuditorSampleSelectionAdmitted freezes exact population content/rows; request revision advances, new child zero is irrelevant."
+        },
+        {
+          "step": 2,
+          "action": "Request resolution seals admission before S2 materializes.",
+          "expected": "Resolution drains S2 and all admitted child materializations before final response use collection."
+        },
+        {
+          "step": 3,
+          "action": "Materialize S2 after seal.",
+          "expected": "SampleSelectionRecorded uses accepted proof without reopening request or reading latest population."
+        },
+        {
+          "step": 4,
+          "action": "Try empty/duplicate rows, another population, or version <=1 under new IDs.",
+          "expected": "Validation/conflict without admission; exact retry S2 never rereads current request."
+        }
+      ],
+      "invariant": "Open-request admission, complete population selection and later child ownership are explicit.",
+      "nativeFacts": [
+        "AuditorSampleSelectionAdmitted",
+        "SampleSelectionRecorded",
+        "AuditorRequestResolutionAccepted"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-05",
+      "test": "ShouldFencePersonalDecisionGivenSourceChangesBeforeAuthorization",
+      "owners": [
+        "ServiceEngagementIndependence",
+        "ClientServiceIndependence",
+        "PartnerIndependenceDecision"
+      ],
+      "given": "Engagement content revision 3, service epoch 8; current partner directory/duty/rule proofs.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Admit partner evaluation D with expected engagement 3 and epoch 8.",
+          "expected": "EngagementPersonalDecisionAdmitted pins engagement; complete exact source-use requirements frozen."
+        },
+        {
+          "step": 2,
+          "action": "Service epoch advances before its grant.",
+          "expected": "Use rejects stale epoch; no EngagementPersonalDecisionAuthorized or child evaluation."
+        },
+        {
+          "step": 3,
+          "action": "Cancel D on source owner before any settlement.",
+          "expected": "EngagementPersonalDecisionCanceled fences authorization. Delayed grant/authorize commands cannot resurrect D."
+        },
+        {
+          "step": 4,
+          "action": "Use new D2 with current inputs, acquire all uses and authorize.",
+          "expected": "EngagementPersonalDecisionAuthorized fixes decision instant; child materializes from this fact only, then settles materialization."
+        },
+        {
+          "step": 5,
+          "action": "Deliver an older authorized child after a newer personal result.",
+          "expected": "Historical child persists; current decision pointer cannot regress. Production acceptance drains all earlier admitted personal work before reservations."
+        }
+      ],
+      "invariant": "Source-current personal judgment becomes irreversible only after all required uses.",
+      "nativeFacts": [
+        "EngagementPersonalDecisionAdmitted",
+        "EngagementPersonalDecisionCanceled",
+        "EngagementPersonalDecisionAuthorized",
+        "PartnerIndependenceEvaluationRecorded"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-06",
+      "test": "ShouldRejectPreparationGivenCompetingReplacementAssociationBeforeProtection",
+      "owners": [
+        "EmailAddress",
+        "IdentityRecovery",
+        "UserIdentity"
+      ],
+      "given": "Both proofs verified for challenge C, account A, old O, replacement N.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Claim challenge, materialize preparation.",
+          "expected": "IdentityRecoveryPrepared freezes exact immutable candidate; no swap acceptance yet."
+        },
+        {
+          "step": 2,
+          "action": "Another account registers N before protection.",
+          "expected": "ProtectRecoveryIdentity detects conflicting authoritative association; no old revocation."
+        },
+        {
+          "step": 3,
+          "action": "Reject preparation and settle both targeted keys.",
+          "expected": "IdentityRecoveryPreparationRejected fences acceptance and delayed acquisition, including key not yet acquired."
+        },
+        {
+          "step": 4,
+          "action": "Deliver stale ProtectRecoveryIdentity/AcceptProtectedIdentityRecovery.",
+          "expected": "Terminal fence/no accepted swap. Later challenge does not overwrite C."
+        }
+      ],
+      "invariant": "A recover-forward acceptance cannot precede executable ownership protection.",
+      "nativeFacts": [
+        "IdentityRecoveryPrepared",
+        "IdentityRecoveryPreparationRejected",
+        "RecoveryIdentityProtectionSettled"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-07",
+      "test": "ShouldCompleteAcceptedSwapGivenReplacementAlreadyRegisteredAndNoNewEvent",
+      "owners": [
+        "IdentityRecovery",
+        "UserIdentity",
+        "EmailAddress"
+      ],
+      "given": "Exact C is accepted with both slot protections; N already associated with A.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "RegisterRecoveredIdentity observes same-account native registration.",
+          "expected": "Return verified existing UserIdentityRegistered proof without append and advance process immediately."
+        },
+        {
+          "step": 2,
+          "action": "Revoke old O with exact accepted recovery and replacement proof; crash after append.",
+          "expected": "Old revocation to N is durable; source replay reuses proof, never revokes a different identity."
+        },
+        {
+          "step": 3,
+          "action": "Complete accepted recovery, settle protections and original email challenge.",
+          "expected": "IdentityRecoveryCompleted proves both facts; new challenge cannot be cleared by old completion."
+        },
+        {
+          "step": 4,
+          "action": "Notice delivery repeatedly fails.",
+          "expected": "Recovery stays completed; notice retries independently under accepted at-least-once policy."
+        }
+      ],
+      "invariant": "No prerequisite event must be newly emitted for a continuation to progress.",
+      "nativeFacts": [
+        "IdentityRecoveryAccepted",
+        "UserIdentityRegistered",
+        "UserIdentityRevoked",
+        "IdentityRecoveryCompleted",
+        "IdentityRecoveryChallengeCompleted"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-08",
+      "test": "ShouldWaitForWithdrawalGivenAdministratorRestorationArrivesBeforeSourceApply",
+      "owners": [
+        "TenantManagerGuard",
+        "Member",
+        "TeamMember"
+      ],
+      "given": "Two available managers M1/M2; M1 episode E and administrator assignment generation 4.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Admit M1 suspension withdrawal W; pause ApplyMemberWithdrawal.",
+          "expected": "TenantManagerWithdrawalAccepted removes availability before MemberSuspended."
+        },
+        {
+          "step": 2,
+          "action": "Submit M1 restoration R while W unfinished.",
+          "expected": "R waits; cannot clear W or make M1 available before source W applies/is fenced."
+        },
+        {
+          "step": 3,
+          "action": "Apply W then reinstate Member; separately remove and restore administrator assignment.",
+          "expected": "Source-first restoration uses exact E/assignment generation. AssignTeamMember clears only administrators_team_removed; Reinstate clears only suspended."
+        },
+        {
+          "step": 4,
+          "action": "Complete restoration while another reason remains.",
+          "expected": "TenantManagerRestorationCompleted resolves workflow but M1 stays unavailable; TenantManagerRestored only when authoritative complete eligibility holds."
+        },
+        {
+          "step": 5,
+          "action": "Deliver old E callback after new episode E2.",
+          "expected": "Cannot mutate E2 or release its guard generation. Deprovisioned E requires new registration, not reinstatement."
+        }
+      ],
+      "invariant": "Guard generation, member revision and assignment revision are different scopes; one restoration cannot erase other reasons.",
+      "nativeFacts": [
+        "TenantManagerWithdrawalAccepted",
+        "MemberSuspended",
+        "TenantManagerRestorationAccepted",
+        "TenantManagerRestorationCompleted",
+        "TenantManagerRestored"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-09",
+      "test": "ShouldPublishEveryTargetTogetherGivenImportGroupPartiallyApplied",
+      "owners": [
+        "ApplicationImportBatch",
+        "ApplicationImportSource",
+        "DeclaredApplication"
+      ],
+      "given": "Complete staged rows contain create_new A, link_existing A and retire B; frozen initial revisions A=0/B=5.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Seal full ImportFrozenPlanIntent and source claim.",
+          "expected": "ApplicationImportPlanSealed references every row/group/claim, actors, counts/digest and cut; technical staging events are unnecessary."
+        },
+        {
+          "step": 2,
+          "action": "Acquire canonical A/B holds then apply A group in one preflighted native append.",
+          "expected": "Baseline A=0 checked once; create gives content revision 1, link does not overwrite metadata or increment it; each row has native proof."
+        },
+        {
+          "step": 3,
+          "action": "Pause B application and read composed application list.",
+          "expected": "No new candidate visible without whole-batch publication."
+        },
+        {
+          "step": 4,
+          "action": "Apply B retirement once and commit batch from full durable proofs.",
+          "expected": "ApplicationImportCommitted gates every candidate. Fixed-cut response before commit exposes old versions; after commit exposes all exact new versions."
+        },
+        {
+          "step": 5,
+          "action": "Settle A/B late.",
+          "expected": "Promotion does not increment content revision again. Replay cannot consult a live batch to change local candidate state."
+        }
+      ],
+      "invariant": "One batch publication, one exclusive hold/append per target group, complete row semantics.",
+      "nativeFacts": [
+        "ApplicationImportPlanSealed",
+        "ApplicationImportTargetAuthorized",
+        "ApplicationImportCommitted",
+        "ApplicationImportTargetSettled"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-10",
+      "test": "ShouldKeepPublicationCutGivenLaterCommitBetweenListPages",
+      "owners": [
+        "DeclaredApplication",
+        "ApplicationImportBatch"
+      ],
+      "given": "Capture global exclusive watermark W; realm R has provisional target effects.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Capture stream://** then read a derived global selector with its own W2/fingerprint.",
+          "expected": "Require W2>=W, exact realm, GlobalOffset<W. Realm-selector snapshot tokens are never passed."
+        },
+        {
+          "step": 2,
+          "action": "Publish another batch after W between pages.",
+          "expected": "Continue same logical W; no page observes later publication."
+        },
+        {
+          "step": 3,
+          "action": "Advance cursor within selector, then change selector.",
+          "expected": "Use latest selector fingerprint; start another selector snapshot instead of reusing token."
+        },
+        {
+          "step": 4,
+          "action": "Repeat with empty captured W=0, append first event at global offset 0.",
+          "expected": "Original response remains empty; next captured cut includes first event. No checkpoint initialized to 1."
+        },
+        {
+          "step": 5,
+          "action": "Drop a relevant page or retain away a required fact.",
+          "expected": "Fail closed/transient; projection absence is not coverage."
+        }
+      ],
+      "invariant": "One response uses one global frontier; cursor, realm/resource offset and logical revision never substitute.",
+      "nativeFacts": [],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-11",
+      "test": "ShouldReplayOriginalAcknowledgmentGivenOperationCompletedAndResourceLaterEdited",
+      "owners": [
+        "ProgramReadiness",
+        "ReadinessAssessment"
+      ],
+      "given": "Root admitted with original 202 body R and terminal result schema pinned.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Complete root then perform later edit under another ID.",
+          "expected": "Original first response and terminal result remain immutable native references."
+        },
+        {
+          "step": 2,
+          "action": "Repeat exact original PUT through HTTP/MCP/queue.",
+          "expected": "Same logical UUID, same 202/body R; no 202-to-200 switch and no new append."
+        },
+        {
+          "step": 3,
+          "action": "GET status/result as currently authorized original caller.",
+          "expected": "Status completed with typed ResultUrl; result loads exact original typed value and revision."
+        },
+        {
+          "step": 4,
+          "action": "Change actor, kind, owner, meaningful intent or original expected revision under same ID.",
+          "expected": "Conflict after current authorization; no original private result disclosed."
+        },
+        {
+          "step": 5,
+          "action": "Retry without current authorization.",
+          "expected": "Deny before result/intent content load."
+        }
+      ],
+      "invariant": "Write replay and progress queries have separate exact wire contracts.",
+      "nativeFacts": [
+        "ReadinessAssessmentRequested",
+        "ReadinessAssessmentAdopted"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-12",
+      "test": "ShouldPreserveKeepVersusClearGivenApplicationUpdateCrossesMcpAndQueue",
+      "owners": [
+        "DeclaredApplication"
+      ],
+      "given": "Application has existing owner/classification; same client CommandId K.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Build HTTP/MCP update omitting owner field; serialize canonical queue DTO.",
+          "expected": "Presence=false survives even though public helper is JsonIgnore; target keeps owner."
+        },
+        {
+          "step": 2,
+          "action": "Repeat same K explicitly supplying null.",
+          "expected": "Presence=true/clear changes authored intent, so Conflict before mutation."
+        },
+        {
+          "step": 3,
+          "action": "Use new K2 explicitly clearing owner through HTTP and MCP adapter.",
+          "expected": "Canonical presence/value tuples match; forwarded command metadata keeps typed identity."
+        },
+        {
+          "step": 4,
+          "action": "Compare advisor/download commands changing SelectedSource variant only.",
+          "expected": "Variant/identity/version participate in canonical intent; cannot alias another disclosure scope."
+        }
+      ],
+      "invariant": "Dedicated authored DTOs preserve source meaning across every transport.",
+      "nativeFacts": [],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-13",
+      "test": "ShouldDenyProtectedResultDisclosureGivenHandoffRevokedAfterGrant",
+      "owners": [
+        "EvidenceArtifact",
+        "AdvisorHandoff",
+        "EvidenceHandlingPolicy",
+        "ArtifactDownloadGrant"
+      ],
+      "given": "Personal actor has current allowed inspected artifact and scoped handoff.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Admit grant K with ExpectedArtifactRevision, acquire exact uses.",
+          "expected": "EvidenceArtifactDownloadRequested pins content; original write is fixed 202."
+        },
+        {
+          "step": 2,
+          "action": "Issue ticket, encrypt/verify result, crash before native grant append.",
+          "expected": "No ticket published; retries resolve unknown binding, undisclosed candidates cannot count as accepted grants."
+        },
+        {
+          "step": 3,
+          "action": "Commit EvidenceArtifactDownloadIssued then settle source uses.",
+          "expected": "Only protected result reference in native facts; event/queue/intent/log contains no raw URL."
+        },
+        {
+          "step": 4,
+          "action": "GET result before revocation, including after original expiry.",
+          "expected": "Original URL/expiry returned; replay does not renew capability."
+        },
+        {
+          "step": 5,
+          "action": "Revoke handoff, GET same result.",
+          "expected": "Current disclosure denies before decrypt/store read. Cross-scope encrypted reference and wrong key version fail closed."
+        },
+        {
+          "step": 6,
+          "action": "Cancel a different pending grant before delayed issue.",
+          "expected": "Receiving ArtifactDownloadGrantCanceled fences issue before source settlement; terminal committed grant cannot cancel."
+        }
+      ],
+      "invariant": "Durable ticket confidentiality, original result replay and current disclosure policy all hold.",
+      "nativeFacts": [
+        "EvidenceArtifactDownloadRequested",
+        "EvidenceArtifactDownloadIssued",
+        "ArtifactDownloadGrantCanceled"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-14",
+      "test": "ShouldKeepClosedParentFenceGivenChildSourceUseSettled",
+      "owners": [
+        "FindingAggregate",
+        "CorrectiveAction"
+      ],
+      "given": "Finding F generation G sealed; completed action A public content revision 2.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Authorize closure use on exact A content event.",
+          "expected": "Physical version advances but public content revision remains 2; incompatible action edits are blocked."
+        },
+        {
+          "step": 2,
+          "action": "Append FindingClosedV2 then settle exact use as parent_closed.",
+          "expected": "Action installs F/G closed-generation fence before releasing temporary use."
+        },
+        {
+          "step": 3,
+          "action": "Attempt A edit with same public revision 2.",
+          "expected": "Reject under parent fence; release never restores unrestricted writable state."
+        },
+        {
+          "step": 4,
+          "action": "Reopen F to G+1, then deliver old G settlement/acquire.",
+          "expected": "Cannot close or clear new-generation authority. Only explicit current source policy controls edits after reopen."
+        }
+      ],
+      "invariant": "Temporary source-use release cannot erase permanent parent closure authority.",
+      "nativeFacts": [
+        "CorrectiveActionFindingClosureUseAuthorized",
+        "FindingClosedV2",
+        "CorrectiveActionFindingClosureUseSettled"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-15",
+      "test": "ShouldRecordPersonalHandoffGivenPackageDeliveryAdmittedBeforeAmendment",
+      "owners": [
+        "AuditPackageManifest",
+        "AuditPackageDelivery"
+      ],
+      "given": "Built exact package version V, valid archive/validation/disclosure approval for recipient.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Personal RecordAuditPackageDelivery with matching existing DeliveryId algorithm and ExpectedManifestRevision.",
+          "expected": "AuditPackageDeliveryAdmitted freezes exact archive, recipient, authored DeliveredAt and server RecordedAt; version becomes immutable."
+        },
+        {
+          "step": 2,
+          "action": "Race revalidation, approval change or amendment.",
+          "expected": "Manifest serializes winner; a stale admission rejects, an accepted delivery cannot be reinterpreted by later changes."
+        },
+        {
+          "step": 3,
+          "action": "Materialize after crash.",
+          "expected": "AuditPackageDelivered records attestation from accepted proof; no send/provider adapter call."
+        },
+        {
+          "step": 4,
+          "action": "Retry through later package changes.",
+          "expected": "Same original 202; result query returns original delivery registration. BuildKey/version-derived BuildId and DeliveryId algorithms unchanged."
+        }
+      ],
+      "invariant": "Aggregate splitting preserves existing personal attestation policy instead of inventing transmission.",
+      "nativeFacts": [
+        "AuditPackageDeliveryAdmitted",
+        "AuditPackageDelivered"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-16",
+      "test": "ShouldCommitOneNativeBindingGivenSameLogicalIdentityRacesDifferentOwners",
+      "owners": [
+        "AtomicNativeOperationConstraint"
+      ],
+      "given": "Same realm/logical UUID K; two independently hydrated first owners O1/O2.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Race same K with different kind/owner/actor/episode/intent.",
+          "expected": "Exactly one native batch+binding commits; other Conflict. No KV-before/after gap."
+        },
+        {
+          "step": 2,
+          "action": "Race equal authored intent with different candidate EventId/clock/content ref.",
+          "expected": "One winning native first response; loser Replayed loads winner. Generated candidate differences are not authored conflict."
+        },
+        {
+          "step": 3,
+          "action": "Crash at every internal persistence boundary, then rebuild constraint from facts.",
+          "expected": "No native acceptance without binding, no binding without native batch, no partial batch; rebuild detects conflicting duplicate corruption."
+        },
+        {
+          "step": 4,
+          "action": "Return unknown append and miss in lagging search index.",
+          "expected": "Linearizable binding lookup/atomic constraint resolves; search miss cannot authorize duplicate."
+        }
+      ],
+      "invariant": "Storage prerequisite #1042 must prove realm/logical uniqueness atomically with native facts.",
+      "nativeFacts": [],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-17",
+      "test": "ShouldHoldOldRangeGivenTypeIIAmendmentCanceledBeforeDelayedApply",
+      "owners": [
+        "TypeIIPeriod",
+        "TypeIIObservationCalendar"
+      ],
+      "given": "Active inclusive range R1 with grant G1; amendment accepts complete R2 intent.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Persist TypeIIPeriodAmendmentAccepted then acquire canonical old/new range authorization.",
+          "expected": "Old R1 remains held while pending R2; exact operation/generation intent recoverable."
+        },
+        {
+          "step": 2,
+          "action": "Cancel before delayed period apply.",
+          "expected": "TypeIIPeriodAmendmentCanceled atomically fences apply before calendar settlement."
+        },
+        {
+          "step": 3,
+          "action": "Deliver old ApplyTypeIIPeriodRange after cancellation.",
+          "expected": "No ObservationPeriodAmended; release pending new grant only, preserve old active R1."
+        },
+        {
+          "step": 4,
+          "action": "Apply another amendment then close-frozen, deliver old cancellation/close.",
+          "expected": "Only exact CalendarAuthorizationId/CalendarGeneration releases; no newer grant lost."
+        }
+      ],
+      "invariant": "Date holds are exact executable authority, not time-based leases.",
+      "nativeFacts": [
+        "TypeIIPeriodAmendmentAccepted",
+        "TypeIIPeriodRangeAuthorized",
+        "TypeIIPeriodAmendmentCanceled",
+        "ObservationPeriodCloseFrozen"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-18",
+      "test": "ShouldBlockCloseGivenSelectedRecurringOccurrenceNotMaterialized",
+      "owners": [
+        "TypeIIPeriod",
+        "ControlOccurrence"
+      ],
+      "given": "Two generators select same control and business performance window; complete manifest larger than old cap.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Freeze complete occurrence creation intent per canonical control/window identity.",
+          "expected": "Generator/plan/period does not create a second business occurrence identity; differing frozen intent conflicts."
+        },
+        {
+          "step": 2,
+          "action": "Materialize all but one occurrence then request period close.",
+          "expected": "Selected-versus-materialized authoritative coverage is incomplete; no close."
+        },
+        {
+          "step": 3,
+          "action": "Crash receiver after native append before checkpoint; replay then fill missing occurrence.",
+          "expected": "Same derived identity returns original native result; complete manifest retained without truncation."
+        },
+        {
+          "step": 4,
+          "action": "Close using all exact proofs.",
+          "expected": "Closure only after complete coverage and current close gates; technical cursor volume stays outside domain facts."
+        }
+      ],
+      "invariant": "Removing lifetime arrays/caps preserves all required work; physical historical replay is a separate concern.",
+      "nativeFacts": [
+        "DueControlOccurrencesGenerated",
+        "ControlOccurrenceOpened",
+        "ObservationPeriodCloseFrozen"
+      ],
+      "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
+    },
+    {
+      "id": "LOCK-19",
+      "test": "ShouldRejectDesignationGivenStaffDeactivatedBeforeUseGrant",
+      "owners": [
+        "FirmProfessionalDutyDesignation",
+        "FirmStaffRecord",
+        "ProfessionalAssertionIdentityClaim"
+      ],
+      "given": "Valid signed record assertion names canonical user U; matching staff is initially active. Revocation intentionally has no active-staff prerequisite.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Accept complete record intent; deactivate staff before its use grant.",
+          "expected": "AuthorizeFirmStaffProfessionalDutyUse rejects stale/inactive staff; no assertion claim or recorded designation."
+        },
+        {
+          "step": 2,
+          "action": "Reject/fence pending change then deliver delayed claim/apply/use.",
+          "expected": "No native designation; exact source settlement fences even not-yet-acquired use."
+        },
+        {
+          "step": 3,
+          "action": "With a new valid record, acquire active staff use then race deactivation.",
+          "expected": "Staff mutation cannot pass while held. Claim assertion and record exact designation, then settle use; expiry still checked at frozen declared decision instant."
+        },
+        {
+          "step": 4,
+          "action": "Revoke designation while staff inactive.",
+          "expected": "Existing revocation authority succeeds with exact signed predecessor; no fabricated active-staff grant."
+        }
+      ],
+      "invariant": "Splitting staff from designation preserves current active matching staff recording guard without blocking revocation.",
+      "nativeFacts": [
+        "ProfessionalDutyChangeAccepted",
+        "FirmStaffProfessionalDutyUseAuthorized",
+        "FirmProfessionalDutyDesignationRecorded",
+        "FirmStaffProfessionalDutyUseSettled",
+        "ProfessionalDutyChangeRejected"
+      ],
+      "faultInjection": "Crash after use/claim/native append and each process checkpoint; exact retry, stale proof, delayed command after rejection."
+    },
+    {
+      "id": "LOCK-20",
+      "test": "ShouldAcquireCanonicalOrderGivenEpochKeySortsAfterPracticeKeys",
+      "owners": [
+        "ServiceEngagementIndependence",
+        "ClientServiceIndependence",
+        "PracticeIndependenceCommitment"
+      ],
+      "given": "Complete root admission freezes all source/practice keys. At least one practice key sorts before the service-epoch key; another operation overlaps them with reversed authored subject order.",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Dispatch every temporary acquisition from original accepted root fact using sorted full key manifest.",
+          "expected": "Both workflows acquire by the same canonical order, independent of authored order. ReservePracticeIndependence does not wait for EngagementServiceEpochAuthorized."
+        },
+        {
+          "step": 2,
+          "action": "Pause with only some practice keys reserved, then advance service epoch before that grant.",
+          "expected": "No permanent wall exists. Epoch grant rejects frozen stale expectation; no irreversible authorization."
+        },
+        {
+          "step": 3,
+          "action": "Reject operation and fence complete target key set before settlement.",
+          "expected": "Late epoch/practice acquisitions cannot reactivate operation, including unacquired keys; each exact receiving reservation settles safely."
+        },
+        {
+          "step": 4,
+          "action": "Retry a fresh complete valid operation and authorize only after every exact grant proof.",
+          "expected": "EngagementPracticeCommitmentsAuthorized permits all permanent commitments; acceptance recovers forward and walls survive closure/removal."
+        }
+      ],
+      "invariant": "Acquisition prerequisites cannot contradict canonical key ordering; temporary reservation does not grant irreversible business authority.",
+      "nativeFacts": [
+        "ServiceEngagementAcceptanceRequested",
+        "EngagementServiceEpochAuthorized",
+        "PracticeIndependenceReserved",
+        "EngagementPracticeCommitmentsAuthorized",
+        "ServiceEngagementAcceptanceRejected"
+      ],
+      "faultInjection": "Crash after every sorted acquisition and unknown append; competing reverse authored order; cancellation before delayed unacquired target."
+    }
+  ]
+}
