@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "selected target protocol; implementation pending",
-  "reactorCount": 113,
+  "reactorCount": 115,
   "reactors": [
     {
       "reactor": "ProfessionalAssertionClaimReactor",
@@ -90,7 +90,10 @@
       "sourceProofVariants": [
         "ProfessionalDutyChangeAccepted"
       ],
-      "intentSchema": "ProfessionalDutyChangeIntent"
+      "intentSchema": "ProfessionalDutyChangeIntent",
+      "processes": [
+        "ProfessionalDutyChangeProcess"
+      ]
     },
     {
       "reactor": "ProfessionalDesignationApplicationReactor",
@@ -175,7 +178,10 @@
       "sourceProofVariants": [
         "ProfessionalAssertionIdentityClaimed"
       ],
-      "intentSchema": "ProfessionalDutyChangeIntent"
+      "intentSchema": "ProfessionalDutyChangeIntent",
+      "processes": [
+        "ProfessionalDutyChangeProcess"
+      ]
     },
     {
       "reactor": "FirmStaffIdentityClaimReactor",
@@ -259,7 +265,10 @@
       "sourceProofVariants": [
         "FirmStaffRegistrationAccepted"
       ],
-      "intentSchema": "FirmStaffRegistrationIntent"
+      "intentSchema": "FirmStaffRegistrationIntent",
+      "processes": [
+        "FirmStaffRegistrationProcess"
+      ]
     },
     {
       "reactor": "FirmStaffRegistrationReactor",
@@ -338,7 +347,10 @@
       "sourceProofVariants": [
         "FirmStaffIdentityClaimed"
       ],
-      "intentSchema": "FirmStaffRegistrationIntent"
+      "intentSchema": "FirmStaffRegistrationIntent",
+      "processes": [
+        "FirmStaffRegistrationProcess"
+      ]
     },
     {
       "reactor": "EngagementAcceptanceReactor",
@@ -419,7 +431,10 @@
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested"
       ],
-      "intentSchema": "EngagementIndependenceIntent"
+      "intentSchema": "EngagementIndependenceIntent",
+      "processes": [
+        "EngagementAcceptanceProcess"
+      ]
     },
     {
       "reactor": "EngagementPracticeCommitmentReactor",
@@ -503,7 +518,10 @@
       "sourceProofVariants": [
         "EngagementPracticeCommitmentsAuthorized"
       ],
-      "intentSchema": "EngagementIndependenceIntent"
+      "intentSchema": "EngagementIndependenceIntent",
+      "processes": [
+        "EngagementAcceptanceProcess"
+      ]
     },
     {
       "reactor": "EngagementAcceptanceCompletionReactor",
@@ -587,7 +605,10 @@
       "sourceProofVariants": [
         "EngagementPracticeCommitmentsAuthorized"
       ],
-      "intentSchema": "EngagementIndependenceIntent"
+      "intentSchema": "EngagementIndependenceIntent",
+      "processes": [
+        "EngagementAcceptanceProcess"
+      ]
     },
     {
       "reactor": "EngagementServiceEpochReleaseReactor",
@@ -672,7 +693,10 @@
         "ServiceEngagementAcceptanceRejected",
         "ServiceEngagementStaffAssignmentRejected"
       ],
-      "intentSchema": "EngagementIndependenceIntent"
+      "intentSchema": "EngagementIndependenceIntent",
+      "processes": [
+        "EngagementAcceptanceProcess"
+      ]
     },
     {
       "reactor": "AccessReviewItemMaterializationReactor",
@@ -751,7 +775,10 @@
       "sourceProofVariants": [
         "AccessReviewCampaignLaunched"
       ],
-      "intentSchema": "AccessReviewItemCreationIntent"
+      "intentSchema": "AccessReviewItemCreationIntent",
+      "processes": [
+        "AccessReviewLaunchFanOut"
+      ]
     },
     {
       "reactor": "AccessReviewBulkReservationReactor",
@@ -835,7 +862,10 @@
       "sourceProofVariants": [
         "AccessReviewDecisionBatchAccepted"
       ],
-      "intentSchema": "BulkAccessDecisionIntent"
+      "intentSchema": "BulkAccessDecisionIntent",
+      "processes": [
+        "BulkAccessDecisionProcess"
+      ]
     },
     {
       "reactor": "AccessReviewBulkApplicationReactor",
@@ -919,7 +949,10 @@
       "sourceProofVariants": [
         "AccessReviewDecisionBatchAccepted"
       ],
-      "intentSchema": "BulkAccessDecisionIntent"
+      "intentSchema": "BulkAccessDecisionIntent",
+      "processes": [
+        "BulkAccessDecisionProcess"
+      ]
     },
     {
       "reactor": "AccessReviewBulkPublicationReactor",
@@ -998,7 +1031,10 @@
       "sourceProofVariants": [
         "AccessReviewDecisionBatchAccepted"
       ],
-      "intentSchema": "BulkAccessDecisionIntent"
+      "intentSchema": "BulkAccessDecisionIntent",
+      "processes": [
+        "BulkAccessDecisionProcess"
+      ]
     },
     {
       "reactor": "AccessReviewBulkCancellationReactor",
@@ -1077,7 +1113,10 @@
       "sourceProofVariants": [
         "AccessReviewDecisionBatchCancellationAccepted"
       ],
-      "intentSchema": "BulkAccessDecisionIntent"
+      "intentSchema": "BulkAccessDecisionIntent",
+      "processes": [
+        "BulkAccessDecisionProcess"
+      ]
     },
     {
       "reactor": "AdvisorFeedbackMaterializationReactor",
@@ -1156,7 +1195,10 @@
       "sourceProofVariants": [
         "AdvisorFeedbackAdmitted"
       ],
-      "intentSchema": "ChildAdmissionIntent"
+      "intentSchema": "ChildAdmissionIntent",
+      "processes": [
+        "IndependentChildMaterialization"
+      ]
     },
     {
       "reactor": "ImportSourceAdmissionReactor",
@@ -1240,7 +1282,10 @@
       "sourceProofVariants": [
         "ApplicationImportPlanSealed"
       ],
-      "intentSchema": "ImportFrozenPlanIntent"
+      "intentSchema": "ImportFrozenPlanIntent",
+      "processes": [
+        "ApplicationImportExecutionProcess"
+      ]
     },
     {
       "reactor": "ImportTargetReservationReactor",
@@ -1324,7 +1369,10 @@
       "sourceProofVariants": [
         "ApplicationImportExecutionAuthorized"
       ],
-      "intentSchema": "ImportTargetGroupIntent"
+      "intentSchema": "ImportTargetGroupIntent",
+      "processes": [
+        "ApplicationImportExecutionProcess"
+      ]
     },
     {
       "reactor": "ImportTargetApplicationReactor",
@@ -1409,7 +1457,10 @@
       "sourceProofVariants": [
         "ApplicationImportExecutionAuthorized"
       ],
-      "intentSchema": "ImportTargetGroupIntent"
+      "intentSchema": "ImportTargetGroupIntent",
+      "processes": [
+        "ApplicationImportExecutionProcess"
+      ]
     },
     {
       "reactor": "ImportPublicationReactor",
@@ -1488,7 +1539,10 @@
       "sourceProofVariants": [
         "ApplicationImportExecutionAuthorized"
       ],
-      "intentSchema": "ImportFrozenPlanIntent"
+      "intentSchema": "ImportFrozenPlanIntent",
+      "processes": [
+        "ApplicationImportExecutionProcess"
+      ]
     },
     {
       "reactor": "ImportCancellationFenceReactor",
@@ -1567,7 +1621,10 @@
       "sourceProofVariants": [
         "ApplicationImportCancellationAccepted"
       ],
-      "intentSchema": "ImportTargetGroupIntent"
+      "intentSchema": "ImportTargetGroupIntent",
+      "processes": [
+        "ApplicationImportExecutionProcess"
+      ]
     },
     {
       "reactor": "ImportCancellationCompletionReactor",
@@ -1646,7 +1703,10 @@
       "sourceProofVariants": [
         "ApplicationImportCancellationAccepted"
       ],
-      "intentSchema": "ImportFrozenPlanIntent"
+      "intentSchema": "ImportFrozenPlanIntent",
+      "processes": [
+        "ApplicationImportExecutionProcess"
+      ]
     },
     {
       "reactor": "ImportSourceReleaseReactor",
@@ -1724,7 +1784,10 @@
         "ApplicationImportCanceled",
         "ApplicationImportFailed"
       ],
-      "intentSchema": "ImportFrozenPlanIntent"
+      "intentSchema": "ImportFrozenPlanIntent",
+      "processes": [
+        "ApplicationImportExecutionProcess"
+      ]
     },
     {
       "reactor": "ImportTargetReleaseReactor",
@@ -1807,7 +1870,10 @@
         "ApplicationImportCanceled",
         "ApplicationImportFailed"
       ],
-      "intentSchema": "ImportTargetGroupIntent"
+      "intentSchema": "ImportTargetGroupIntent",
+      "processes": [
+        "ApplicationImportExecutionProcess"
+      ]
     },
     {
       "reactor": "ProviderNameClaimReactor",
@@ -1891,7 +1957,10 @@
       "sourceProofVariants": [
         "ProviderChangeAccepted"
       ],
-      "intentSchema": "RecordNameChangeIntent"
+      "intentSchema": "RecordNameChangeIntent",
+      "processes": [
+        "ProviderNameChangeProcess"
+      ]
     },
     {
       "reactor": "ProviderChangeApplicationReactor",
@@ -1966,7 +2035,10 @@
       "sourceProofVariants": [
         "ProviderNameClaimed"
       ],
-      "intentSchema": "RecordNameChangeIntent"
+      "intentSchema": "RecordNameChangeIntent",
+      "processes": [
+        "ProviderNameChangeProcess"
+      ]
     },
     {
       "reactor": "ProviderOldNameReleaseReactor",
@@ -2049,7 +2121,10 @@
         "ProviderRevised",
         "ProviderChangeCanceled"
       ],
-      "intentSchema": "RecordNameChangeIntent"
+      "intentSchema": "RecordNameChangeIntent",
+      "processes": [
+        "ProviderNameChangeProcess"
+      ]
     },
     {
       "reactor": "LocationNameClaimReactor",
@@ -2133,7 +2208,10 @@
       "sourceProofVariants": [
         "LocationChangeAccepted"
       ],
-      "intentSchema": "RecordNameChangeIntent"
+      "intentSchema": "RecordNameChangeIntent",
+      "processes": [
+        "LocationNameChangeProcess"
+      ]
     },
     {
       "reactor": "LocationChangeApplicationReactor",
@@ -2207,7 +2285,10 @@
       "sourceProofVariants": [
         "LocationNameClaimed"
       ],
-      "intentSchema": "RecordNameChangeIntent"
+      "intentSchema": "RecordNameChangeIntent",
+      "processes": [
+        "LocationNameChangeProcess"
+      ]
     },
     {
       "reactor": "LocationOldNameReleaseReactor",
@@ -2288,7 +2369,10 @@
         "LocationRevisionRecorded",
         "LocationChangeCanceled"
       ],
-      "intentSchema": "RecordNameChangeIntent"
+      "intentSchema": "RecordNameChangeIntent",
+      "processes": [
+        "LocationNameChangeProcess"
+      ]
     },
     {
       "reactor": "OperationalProcessNameClaimReactor",
@@ -2372,7 +2456,10 @@
       "sourceProofVariants": [
         "OperationalProcessChangeAccepted"
       ],
-      "intentSchema": "RecordNameChangeIntent"
+      "intentSchema": "RecordNameChangeIntent",
+      "processes": [
+        "OperationalProcessNameChangeProcess"
+      ]
     },
     {
       "reactor": "OperationalProcessChangeApplicationReactor",
@@ -2446,7 +2533,10 @@
       "sourceProofVariants": [
         "OperationalProcessNameClaimed"
       ],
-      "intentSchema": "RecordNameChangeIntent"
+      "intentSchema": "RecordNameChangeIntent",
+      "processes": [
+        "OperationalProcessNameChangeProcess"
+      ]
     },
     {
       "reactor": "OperationalProcessOldNameReleaseReactor",
@@ -2527,7 +2617,10 @@
         "OperationalProcessRevisionRecorded",
         "OperationalProcessChangeCanceled"
       ],
-      "intentSchema": "RecordNameChangeIntent"
+      "intentSchema": "RecordNameChangeIntent",
+      "processes": [
+        "OperationalProcessNameChangeProcess"
+      ]
     },
     {
       "reactor": "AuditPackageBuildProcessReactor",
@@ -2609,7 +2702,10 @@
       "sourceProofVariants": [
         "AuditPackageBuildRequested"
       ],
-      "intentSchema": "PackageBuildIntent"
+      "intentSchema": "PackageBuildIntent",
+      "processes": [
+        "AuditPackageBuildProcess"
+      ]
     },
     {
       "reactor": "AuditPackageBuildResultReactor",
@@ -2693,7 +2789,10 @@
       "sourceProofVariants": [
         "AuditPackageBuildRequested"
       ],
-      "intentSchema": "PackageBuildIntent"
+      "intentSchema": "PackageBuildIntent",
+      "processes": [
+        "AuditPackageBuildProcess"
+      ]
     },
     {
       "reactor": "AuditorResponseMaterializationReactor",
@@ -2772,7 +2871,10 @@
       "sourceProofVariants": [
         "AuditorResponseAdmitted"
       ],
-      "intentSchema": "ChildAdmissionIntent"
+      "intentSchema": "ChildAdmissionIntent",
+      "processes": [
+        "IndependentChildMaterialization"
+      ]
     },
     {
       "reactor": "AuditorCommentMaterializationReactor",
@@ -2851,7 +2953,10 @@
       "sourceProofVariants": [
         "AuditorCommentAdmitted"
       ],
-      "intentSchema": "ChildAdmissionIntent"
+      "intentSchema": "ChildAdmissionIntent",
+      "processes": [
+        "IndependentChildMaterialization"
+      ]
     },
     {
       "reactor": "AuditorRequestResolutionReactor",
@@ -2930,7 +3035,10 @@
       "sourceProofVariants": [
         "AuditorRequestResolutionAccepted"
       ],
-      "intentSchema": "ClosureIntent"
+      "intentSchema": "ClosureIntent",
+      "processes": [
+        "AuditorRequestResolutionProcess"
+      ]
     },
     {
       "reactor": "CorrectiveActionMaterializationReactor",
@@ -3009,7 +3117,10 @@
       "sourceProofVariants": [
         "CorrectiveActionAdmitted"
       ],
-      "intentSchema": "ChildAdmissionIntent"
+      "intentSchema": "ChildAdmissionIntent",
+      "processes": [
+        "IndependentChildMaterialization"
+      ]
     },
     {
       "reactor": "FindingClosureReactor",
@@ -3088,7 +3199,10 @@
       "sourceProofVariants": [
         "FindingClosureAccepted"
       ],
-      "intentSchema": "ClosureIntent"
+      "intentSchema": "ClosureIntent",
+      "processes": [
+        "FindingClosureProcess"
+      ]
     },
     {
       "reactor": "CampaignClosureReactor",
@@ -3167,7 +3281,10 @@
       "sourceProofVariants": [
         "PolicyCampaignClosureAccepted"
       ],
-      "intentSchema": "ClosureIntent"
+      "intentSchema": "ClosureIntent",
+      "processes": [
+        "PolicyCampaignClosureProcess"
+      ]
     },
     {
       "reactor": "ReadinessAssessmentAdoptionReactor",
@@ -3256,7 +3373,10 @@
       "sourceProofVariants": [
         "ReadinessAssessmentRecorded"
       ],
-      "intentSchema": "ReadinessRunIntent"
+      "intentSchema": "ReadinessRunIntent",
+      "processes": [
+        "ReadinessRunProcess"
+      ]
     },
     {
       "reactor": "ControlOccurrenceMaterializationReactor",
@@ -3345,7 +3465,10 @@
       "sourceProofVariants": [
         "DueControlOccurrencesGenerated"
       ],
-      "intentSchema": "ControlOccurrenceCreationIntent"
+      "intentSchema": "ControlOccurrenceCreationIntent",
+      "processes": [
+        "ControlOccurrenceFanOut"
+      ]
     },
     {
       "reactor": "IdentityRecoveryContinuationReactor",
@@ -3444,7 +3567,10 @@
       "sourceProofVariants": [
         "IdentityRecoveryPrepared"
       ],
-      "intentSchema": "IdentityRecoveryIntent"
+      "intentSchema": "IdentityRecoveryIntent",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
     },
     {
       "reactor": "IdentityRecoveryReplacementReactor",
@@ -3533,7 +3659,10 @@
       "sourceProofVariants": [
         "IdentityRecoveryAccepted"
       ],
-      "intentSchema": "IdentityRecoveryIntent"
+      "intentSchema": "IdentityRecoveryIntent",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
     },
     {
       "reactor": "IdentityRecoveryOldRevocationReactor",
@@ -3622,7 +3751,10 @@
       "sourceProofVariants": [
         "IdentityRecoveryAccepted"
       ],
-      "intentSchema": "IdentityRecoveryIntent"
+      "intentSchema": "IdentityRecoveryIntent",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
     },
     {
       "reactor": "IdentityRecoveryCompletionReactor",
@@ -3711,7 +3843,10 @@
       "sourceProofVariants": [
         "IdentityRecoveryAccepted"
       ],
-      "intentSchema": "IdentityRecoveryIntent"
+      "intentSchema": "IdentityRecoveryIntent",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
     },
     {
       "reactor": "IdentityRecoveryCompletionNoticeReactor",
@@ -3788,7 +3923,10 @@
       "sourceProofVariants": [
         "IdentityRecoveryCompleted"
       ],
-      "intentSchema": "IdentityRecoveryIntent"
+      "intentSchema": "IdentityRecoveryIntent",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
     },
     {
       "reactor": "AdministratorWithdrawalReactor",
@@ -3873,7 +4011,10 @@
       "sourceProofVariants": [
         "TenantManagerWithdrawalAccepted"
       ],
-      "intentSchema": "AdministratorTransitionIntent"
+      "intentSchema": "AdministratorTransitionIntent",
+      "processes": [
+        "AdministratorTransitionProcess"
+      ]
     },
     {
       "reactor": "AdministratorAssignmentWithdrawalReactor",
@@ -3957,7 +4098,186 @@
       "sourceProofVariants": [
         "TenantManagerWithdrawalAccepted"
       ],
-      "intentSchema": "AdministratorTransitionIntent"
+      "intentSchema": "AdministratorTransitionIntent",
+      "processes": [
+        "AdministratorTransitionProcess"
+      ]
+    },
+    {
+      "reactor": "AdministratorNeutralMemberMutationReactor",
+      "sourceOwner": "TenantManagerGuard",
+      "sourceEvents": [
+        "TenantManagerSourceMutationAdmitted"
+      ],
+      "command": "ApplyNeutralMemberSourceMutation",
+      "targetOwner": "Member",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TenantManagerSourceMutationAdmitted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "AdministratorTransitionIntent"
+        },
+        {
+          "name": "MemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisode",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MutationKind",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "guard": "Exact operation/generation and guard admission proving this member episode has no contribution and no pending registration/withdrawal. Applies the original Member source fact unchanged (suspend, deprovision or reinstate) with the authored ExpectedMemberRevision; the guard fact exists only so a concurrent administrator registration for the same episode is serialized. Never registers or releases availability.",
+      "eventsEmitted": [
+        "MemberSuspended",
+        "MemberDeprovisioned",
+        "MemberReinstated"
+      ],
+      "processOnly": false,
+      "effectKind": "apply_neutral_member_source_mutation",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "tests": [
+        "ShouldNotDuplicateGivenReceiverAppendBeforeCheckpointCrash",
+        "ShouldResumeGivenTransientDependencyAndProjectionLag",
+        "ShouldIgnoreOnlyProvenSupersededGenerationGivenLateDelivery",
+        "ShouldConflictGivenChangedIntentForSameEffectKey"
+      ],
+      "handler": "ApplyNeutralMemberSourceMutationHandler",
+      "http": false,
+      "mcp": false,
+      "principal": "trusted reactor/process principal scoped to verified source tenant and concrete command kind",
+      "commandIdRule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId.",
+      "sourceProofVariants": [
+        "TenantManagerSourceMutationAdmitted"
+      ],
+      "intentSchema": "AdministratorTransitionIntent",
+      "processes": [
+        "AdministratorTransitionProcess"
+      ]
+    },
+    {
+      "reactor": "AdministratorNeutralAssignmentMutationReactor",
+      "sourceOwner": "TenantManagerGuard",
+      "sourceEvents": [
+        "TenantManagerSourceMutationAdmitted"
+      ],
+      "command": "ApplyNeutralAdministratorAssignmentMutation",
+      "targetOwner": "TeamMember",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TenantManagerSourceMutationAdmitted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "AdministratorTransitionIntent"
+        },
+        {
+          "name": "MemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisode",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AssignmentId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "guard": "Only RemoveTeamMember on BuiltInRbac.AdministratorsTeamId for an assignment whose member episode never completed registration or has no current contribution. Applies the original TeamMemberRemoved with the authored ExpectedAssignmentRevision/Generation; immutable built-in role/required permission protections remain enforced. Removal from any other team never reaches the guard.",
+      "eventsEmitted": [
+        "TeamMemberRemoved"
+      ],
+      "processOnly": false,
+      "effectKind": "apply_neutral_administrator_assignment_mutation",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "tests": [
+        "ShouldNotDuplicateGivenReceiverAppendBeforeCheckpointCrash",
+        "ShouldResumeGivenTransientDependencyAndProjectionLag",
+        "ShouldIgnoreOnlyProvenSupersededGenerationGivenLateDelivery",
+        "ShouldConflictGivenChangedIntentForSameEffectKey"
+      ],
+      "handler": "ApplyNeutralAdministratorAssignmentMutationHandler",
+      "http": false,
+      "mcp": false,
+      "principal": "trusted reactor/process principal scoped to verified source tenant and concrete command kind",
+      "commandIdRule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId.",
+      "sourceProofVariants": [
+        "TenantManagerSourceMutationAdmitted"
+      ],
+      "intentSchema": "AdministratorTransitionIntent",
+      "processes": [
+        "AdministratorTransitionProcess"
+      ]
     },
     {
       "reactor": "AdministratorWithdrawalCompletionReactor",
@@ -4040,7 +4360,10 @@
         "MemberDeprovisioned",
         "TeamMemberRemoved"
       ],
-      "intentSchema": "AdministratorTransitionIntent"
+      "intentSchema": "AdministratorTransitionIntent",
+      "processes": [
+        "AdministratorTransitionProcess"
+      ]
     },
     {
       "reactor": "AdministratorRestorationReactor",
@@ -4119,7 +4442,10 @@
       "sourceProofVariants": [
         "TenantManagerRestorationAccepted"
       ],
-      "intentSchema": "AdministratorTransitionIntent"
+      "intentSchema": "AdministratorTransitionIntent",
+      "processes": [
+        "AdministratorTransitionProcess"
+      ]
     },
     {
       "reactor": "AdministratorRestorationCompletionReactor",
@@ -4206,7 +4532,10 @@
         "MemberReinstated",
         "TeamMemberAssigned"
       ],
-      "intentSchema": "AdministratorTransitionIntent"
+      "intentSchema": "AdministratorTransitionIntent",
+      "processes": [
+        "AdministratorTransitionProcess"
+      ]
     },
     {
       "reactor": "TypeIIPeriodRangeReactor",
@@ -4292,7 +4621,10 @@
         "TypeIIPeriodOpeningAccepted",
         "TypeIIPeriodAmendmentAccepted"
       ],
-      "intentSchema": "TypeIIRangeIntent"
+      "intentSchema": "TypeIIRangeIntent",
+      "processes": [
+        "TypeIIRangeProcess"
+      ]
     },
     {
       "reactor": "TypeIIPeriodRangeApplicationReactor",
@@ -4367,7 +4699,10 @@
       "sourceProofVariants": [
         "TypeIIPeriodRangeAuthorized"
       ],
-      "intentSchema": "TypeIIRangeIntent"
+      "intentSchema": "TypeIIRangeIntent",
+      "processes": [
+        "TypeIIRangeProcess"
+      ]
     },
     {
       "reactor": "TypeIIPeriodRangeReleaseReactor",
@@ -4449,7 +4784,10 @@
         "TypeIIPeriodAmendmentCanceled",
         "TypeIIPeriodOpeningRejected"
       ],
-      "intentSchema": "TypeIIRangeIntent"
+      "intentSchema": "TypeIIRangeIntent",
+      "processes": [
+        "TypeIIRangeProcess"
+      ]
     },
     {
       "reactor": "IdentityRecoveryAcceptanceReactor",
@@ -4543,7 +4881,10 @@
       "sourceProofVariants": [
         "IdentityRecoveryChallengeClaimed"
       ],
-      "intentSchema": "IdentityRecoveryIntent"
+      "intentSchema": "IdentityRecoveryIntent",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
     },
     {
       "reactor": "IdentityRecoveryProtectionReleaseReactor",
@@ -4624,7 +4965,10 @@
         "IdentityRecoveryCompleted",
         "IdentityRecoveryPreparationRejected"
       ],
-      "intentSchema": "IdentityRecoveryIntent"
+      "intentSchema": "IdentityRecoveryIntent",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
     },
     {
       "reactor": "IdentityRecoveryEmailCompletionReactor",
@@ -4698,7 +5042,10 @@
       "sourceProofVariants": [
         "IdentityRecoveryCompleted"
       ],
-      "intentSchema": "IdentityRecoveryIntent"
+      "intentSchema": "IdentityRecoveryIntent",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
     },
     {
       "reactor": "CampaignCompletionAccessReviewItemAuthorizationReactor",
@@ -4782,7 +5129,10 @@
       "sourceProofVariants": [
         "AccessReviewCampaignCompletionAccepted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "AccessReviewCampaignCompletionProcess"
+      ]
     },
     {
       "reactor": "CampaignCompletionAccessReviewItemSettlementReactor",
@@ -4868,7 +5218,10 @@
         "AccessReviewCampaignCompleted",
         "AccessReviewCampaignCompletionCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "AccessReviewCampaignCompletionProcess"
+      ]
     },
     {
       "reactor": "RequestResolutionAuditorResponseAuthorizationReactor",
@@ -4952,7 +5305,10 @@
       "sourceProofVariants": [
         "AuditorRequestResolutionAccepted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "AuditorRequestResolutionProcess"
+      ]
     },
     {
       "reactor": "RequestResolutionAuditorResponseSettlementReactor",
@@ -5038,7 +5394,10 @@
         "AuditorRequestResolved",
         "AuditorRequestResolutionCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "AuditorRequestResolutionProcess"
+      ]
     },
     {
       "reactor": "FindingClosureCorrectiveActionAuthorizationReactor",
@@ -5122,7 +5481,10 @@
       "sourceProofVariants": [
         "FindingClosureAccepted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "FindingClosureProcess"
+      ]
     },
     {
       "reactor": "FindingClosureCorrectiveActionSettlementReactor",
@@ -5208,7 +5570,10 @@
         "FindingClosedV2",
         "FindingClosureCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "FindingClosureProcess"
+      ]
     },
     {
       "reactor": "ReadinessDecisionReadinessGapPlanAuthorizationReactor",
@@ -5294,7 +5659,10 @@
         "ReadinessDecisionAccepted",
         "TypeIEntryDecisionAccepted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ReadinessDecisionProcess"
+      ]
     },
     {
       "reactor": "ReadinessDecisionReadinessGapPlanSettlementReactor",
@@ -5382,7 +5750,10 @@
         "TypeIEntryDecisionRecorded",
         "ReadinessDecisionCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ReadinessDecisionProcess"
+      ]
     },
     {
       "reactor": "CampaignClosurePolicyCampaignParticipantAuthorizationReactor",
@@ -5466,7 +5837,10 @@
       "sourceProofVariants": [
         "PolicyCampaignClosureAccepted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "PolicyCampaignClosureProcess"
+      ]
     },
     {
       "reactor": "CampaignClosurePolicyCampaignParticipantSettlementReactor",
@@ -5552,7 +5926,10 @@
         "PolicyCampaignClosed",
         "PolicyCampaignClosureCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "PolicyCampaignClosureProcess"
+      ]
     },
     {
       "reactor": "ProviderReviewProviderAssuranceReportAuthorizationReactor",
@@ -5636,7 +6013,10 @@
       "sourceProofVariants": [
         "ProviderReviewRequested"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ProviderReviewProcess"
+      ]
     },
     {
       "reactor": "ProviderReviewProviderAssuranceReportSettlementReactor",
@@ -5722,7 +6102,10 @@
         "ProviderReviewRecorded",
         "ProviderReviewCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ProviderReviewProcess"
+      ]
     },
     {
       "reactor": "ActionCompletionEvidenceRequestAuthorizationReactor",
@@ -5806,7 +6189,10 @@
       "sourceProofVariants": [
         "RiskTreatmentActionCompletionReviewAccepted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "RiskActionCompletionReviewProcess"
+      ]
     },
     {
       "reactor": "ActionCompletionEvidenceRequestSettlementReactor",
@@ -5892,7 +6278,10 @@
         "RiskTreatmentActionCompletionReviewed",
         "RiskTreatmentActionCompletionReviewCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "RiskActionCompletionReviewProcess"
+      ]
     },
     {
       "reactor": "AccessReviewCampaignCompletionReactor",
@@ -5971,7 +6360,10 @@
       "sourceProofVariants": [
         "AccessReviewCampaignCompletionAccepted"
       ],
-      "intentSchema": "ClosureIntent"
+      "intentSchema": "ClosureIntent",
+      "processes": [
+        "AccessReviewCampaignCompletionProcess"
+      ]
     },
     {
       "reactor": "ReadinessDecisionCompletionReactor",
@@ -6050,7 +6442,10 @@
       "sourceProofVariants": [
         "ReadinessDecisionAccepted"
       ],
-      "intentSchema": "ReadinessDecisionIntent"
+      "intentSchema": "ReadinessDecisionIntent",
+      "processes": [
+        "ReadinessDecisionProcess"
+      ]
     },
     {
       "reactor": "TypeIEntryDecisionCompletionReactor",
@@ -6129,7 +6524,10 @@
       "sourceProofVariants": [
         "TypeIEntryDecisionAccepted"
       ],
-      "intentSchema": "ReadinessDecisionIntent"
+      "intentSchema": "ReadinessDecisionIntent",
+      "processes": [
+        "ReadinessDecisionProcess"
+      ]
     },
     {
       "reactor": "PolicyParticipantResultReactor",
@@ -6215,7 +6613,10 @@
       "sourceProofVariants": [
         "PolicyParticipantResultAdmitted"
       ],
-      "intentSchema": "ChildAdmissionIntent"
+      "intentSchema": "ChildAdmissionIntent",
+      "processes": [
+        "IndependentChildMaterialization"
+      ]
     },
     {
       "reactor": "ProviderReviewCompletionReactor",
@@ -6294,7 +6695,10 @@
       "sourceProofVariants": [
         "ProviderReviewRequested"
       ],
-      "intentSchema": "ProviderReviewIntent"
+      "intentSchema": "ProviderReviewIntent",
+      "processes": [
+        "ProviderReviewProcess"
+      ]
     },
     {
       "reactor": "RiskActionCompletionReviewReactor",
@@ -6373,7 +6777,10 @@
       "sourceProofVariants": [
         "RiskTreatmentActionCompletionReviewAccepted"
       ],
-      "intentSchema": "RiskActionCompletionReviewIntent"
+      "intentSchema": "RiskActionCompletionReviewIntent",
+      "processes": [
+        "RiskActionCompletionReviewProcess"
+      ]
     },
     {
       "reactor": "AccessReviewBulkCancellationCompletionReactor",
@@ -6452,7 +6859,10 @@
       "sourceProofVariants": [
         "AccessReviewDecisionBatchCancellationAccepted"
       ],
-      "intentSchema": "BulkAccessDecisionIntent"
+      "intentSchema": "BulkAccessDecisionIntent",
+      "processes": [
+        "BulkAccessDecisionProcess"
+      ]
     },
     {
       "reactor": "AccessReviewBulkSettlementReactor",
@@ -6533,7 +6943,10 @@
         "AccessReviewDecisionBatchPublished",
         "AccessReviewDecisionBatchCanceled"
       ],
-      "intentSchema": "BulkAccessDecisionIntent"
+      "intentSchema": "BulkAccessDecisionIntent",
+      "processes": [
+        "BulkAccessDecisionProcess"
+      ]
     },
     {
       "reactor": "AuditPackageDeliveryAdmissionReactor",
@@ -6617,7 +7030,10 @@
       "sourceProofVariants": [
         "AuditPackageDeliveryAdmitted"
       ],
-      "intentSchema": "PackageDeliveryRecordingIntent"
+      "intentSchema": "PackageDeliveryRecordingIntent",
+      "processes": [
+        "AuditPackageDeliveryRecordingProcess"
+      ]
     },
     {
       "reactor": "EngagementStaffAssignmentCompletionReactor",
@@ -6706,7 +7122,10 @@
       "sourceProofVariants": [
         "EngagementPracticeCommitmentsAuthorized"
       ],
-      "intentSchema": "EngagementIndependenceIntent"
+      "intentSchema": "EngagementIndependenceIntent",
+      "processes": [
+        "EngagementAcceptanceProcess"
+      ]
     },
     {
       "reactor": "EngagementPracticeReservationReactor",
@@ -6793,7 +7212,10 @@
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested"
       ],
-      "intentSchema": "EngagementIndependenceIntent"
+      "intentSchema": "EngagementIndependenceIntent",
+      "processes": [
+        "EngagementAcceptanceProcess"
+      ]
     },
     {
       "reactor": "EngagementPracticeAuthorizationReactor",
@@ -6874,7 +7296,10 @@
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested"
       ],
-      "intentSchema": "EngagementIndependenceIntent"
+      "intentSchema": "EngagementIndependenceIntent",
+      "processes": [
+        "EngagementAcceptanceProcess"
+      ]
     },
     {
       "reactor": "EngagementPracticeReservationSettlementReactor",
@@ -6959,7 +7384,10 @@
         "ServiceEngagementAcceptanceRejected",
         "ServiceEngagementStaffAssignmentRejected"
       ],
-      "intentSchema": "EngagementIndependenceIntent"
+      "intentSchema": "EngagementIndependenceIntent",
+      "processes": [
+        "EngagementAcceptanceProcess"
+      ]
     },
     {
       "reactor": "AccessReviewDecisionBatchAdmissionReactor",
@@ -7038,7 +7466,10 @@
       "sourceProofVariants": [
         "AccessReviewDecisionBatchAdmitted"
       ],
-      "intentSchema": "BulkAccessDecisionIntent"
+      "intentSchema": "BulkAccessDecisionIntent",
+      "processes": [
+        "BulkAccessDecisionProcess"
+      ]
     },
     {
       "reactor": "ReadinessAssessmentComputationReactor",
@@ -7117,7 +7548,10 @@
       "sourceProofVariants": [
         "ReadinessAssessmentRequested"
       ],
-      "intentSchema": "ReadinessRunIntent"
+      "intentSchema": "ReadinessRunIntent",
+      "processes": [
+        "ReadinessRunProcess"
+      ]
     },
     {
       "reactor": "ProviderRiskAcceptanceLinkReactor",
@@ -7196,7 +7630,10 @@
       "sourceProofVariants": [
         "ProviderCoverageGapRiskAcceptanceAdmitted"
       ],
-      "intentSchema": "ProviderRiskLinkIntent"
+      "intentSchema": "ProviderRiskLinkIntent",
+      "processes": [
+        "IndependentChildMaterialization"
+      ]
     },
     {
       "reactor": "EngagementFirmStaffRecordUseReactor",
@@ -7289,7 +7726,11 @@
         "ServiceEngagementStaffAssignmentRequested",
         "EngagementPersonalDecisionAdmitted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementAcceptanceProcess",
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "EngagementFirmStaffRecordUseSettlementReactor",
@@ -7381,7 +7822,11 @@
         "EngagementPersonalDecisionAuthorized",
         "EngagementPersonalDecisionCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementAcceptanceProcess",
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "EngagementFirmProfessionalDutyDesignationUseReactor",
@@ -7474,7 +7919,11 @@
         "ServiceEngagementStaffAssignmentRequested",
         "EngagementPersonalDecisionAdmitted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementAcceptanceProcess",
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "EngagementFirmProfessionalDutyDesignationUseSettlementReactor",
@@ -7566,7 +8015,11 @@
         "EngagementPersonalDecisionAuthorized",
         "EngagementPersonalDecisionCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementAcceptanceProcess",
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "EngagementIndependenceRuleCatalogUseReactor",
@@ -7659,7 +8112,11 @@
         "ServiceEngagementStaffAssignmentRequested",
         "EngagementPersonalDecisionAdmitted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementAcceptanceProcess",
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "EngagementIndependenceRuleCatalogUseSettlementReactor",
@@ -7751,7 +8208,11 @@
         "EngagementPersonalDecisionAuthorized",
         "EngagementPersonalDecisionCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementAcceptanceProcess",
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "EngagementIndependenceRuleRatificationCatalogUseReactor",
@@ -7844,7 +8305,11 @@
         "ServiceEngagementStaffAssignmentRequested",
         "EngagementPersonalDecisionAdmitted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementAcceptanceProcess",
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "EngagementIndependenceRuleRatificationCatalogUseSettlementReactor",
@@ -7936,7 +8401,11 @@
         "EngagementPersonalDecisionAuthorized",
         "EngagementPersonalDecisionCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementAcceptanceProcess",
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "ProtectedIdentityRecoveryAcceptanceReactor",
@@ -8015,7 +8484,10 @@
       "sourceProofVariants": [
         "IdentityRecoveryPrepared"
       ],
-      "intentSchema": "IdentityRecoveryIntent"
+      "intentSchema": "IdentityRecoveryIntent",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
     },
     {
       "reactor": "AdministratorAssignmentRestorationReactor",
@@ -8104,7 +8576,10 @@
       "sourceProofVariants": [
         "TenantManagerRestorationAccepted"
       ],
-      "intentSchema": "AdministratorTransitionIntent"
+      "intentSchema": "AdministratorTransitionIntent",
+      "processes": [
+        "AdministratorTransitionProcess"
+      ]
     },
     {
       "reactor": "AdvisorArtifactDownloadUseReactor",
@@ -8188,7 +8663,10 @@
       "sourceProofVariants": [
         "EvidenceArtifactDownloadRequested"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ArtifactDownloadProcess"
+      ]
     },
     {
       "reactor": "ArtifactHandlingDownloadUseReactor",
@@ -8267,7 +8745,10 @@
       "sourceProofVariants": [
         "EvidenceArtifactDownloadRequested"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ArtifactDownloadProcess"
+      ]
     },
     {
       "reactor": "ProtectedArtifactDownloadGrantReactor",
@@ -8351,7 +8832,10 @@
       "sourceProofVariants": [
         "EvidenceArtifactDownloadRequested"
       ],
-      "intentSchema": "EvidenceDownloadIntent"
+      "intentSchema": "EvidenceDownloadIntent",
+      "processes": [
+        "ArtifactDownloadProcess"
+      ]
     },
     {
       "reactor": "SettleAdvisorArtifactDownloadUseReactor",
@@ -8427,7 +8911,10 @@
         "EvidenceArtifactDownloadIssued",
         "ArtifactDownloadGrantCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ArtifactDownloadProcess"
+      ]
     },
     {
       "reactor": "SettleArtifactHandlingDownloadUseReactor",
@@ -8503,7 +8990,10 @@
         "EvidenceArtifactDownloadIssued",
         "ArtifactDownloadGrantCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ArtifactDownloadProcess"
+      ]
     },
     {
       "reactor": "SettleArtifactDownloadAvailabilityUseReactor",
@@ -8579,7 +9069,10 @@
         "EvidenceArtifactDownloadIssued",
         "ArtifactDownloadGrantCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ArtifactDownloadProcess"
+      ]
     },
     {
       "reactor": "AuditorSampleSelectionMaterializationReactor",
@@ -8658,7 +9151,10 @@
       "sourceProofVariants": [
         "AuditorSampleSelectionAdmitted"
       ],
-      "intentSchema": "AuditorSampleSelectionIntent"
+      "intentSchema": "AuditorSampleSelectionIntent",
+      "processes": [
+        "IndependentChildMaterialization"
+      ]
     },
     {
       "reactor": "ClientIndependencePreviewReactor",
@@ -8732,7 +9228,10 @@
       "sourceProofVariants": [
         "ClientIndependenceEvaluationAdmitted"
       ],
-      "intentSchema": "ClientIndependencePreviewIntent"
+      "intentSchema": "ClientIndependencePreviewIntent",
+      "processes": [
+        "ClientIndependencePreviewProcess"
+      ]
     },
     {
       "reactor": "EngagementPersonalDecisionSourceUseReactor",
@@ -8811,7 +9310,10 @@
       "sourceProofVariants": [
         "EngagementPersonalDecisionAdmitted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "ManagementAcknowledgementMaterializationReactor",
@@ -8890,7 +9392,10 @@
       "sourceProofVariants": [
         "EngagementPersonalDecisionAuthorized"
       ],
-      "intentSchema": "EngagementPersonalDecisionIntent"
+      "intentSchema": "EngagementPersonalDecisionIntent",
+      "processes": [
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "PartnerIndependenceDecisionMaterializationReactor",
@@ -8969,7 +9474,10 @@
       "sourceProofVariants": [
         "EngagementPersonalDecisionAuthorized"
       ],
-      "intentSchema": "EngagementPersonalDecisionIntent"
+      "intentSchema": "EngagementPersonalDecisionIntent",
+      "processes": [
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "EngagementPersonalDecisionSettlementReactor",
@@ -9045,7 +9553,10 @@
         "EngagementManagementAcknowledged",
         "PartnerIndependenceEvaluationRecorded"
       ],
-      "intentSchema": "EngagementPersonalDecisionIntent"
+      "intentSchema": "EngagementPersonalDecisionIntent",
+      "processes": [
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "ClientServicePersonalDecisionSettlementReactor",
@@ -9121,7 +9632,10 @@
         "EngagementPersonalDecisionAuthorized",
         "EngagementPersonalDecisionCanceled"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "EngagementPersonalDecisionAuthorizationReactor",
@@ -9200,7 +9714,10 @@
       "sourceProofVariants": [
         "EngagementPersonalDecisionAdmitted"
       ],
-      "intentSchema": "EngagementPersonalDecisionIntent"
+      "intentSchema": "EngagementPersonalDecisionIntent",
+      "processes": [
+        "EngagementPersonalDecisionProcess"
+      ]
     },
     {
       "reactor": "ProfessionalDutyStaffEligibilityReactor",
@@ -9289,7 +9806,10 @@
       "sourceProofVariants": [
         "ProfessionalDutyChangeAccepted"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ProfessionalDutyChangeProcess"
+      ]
     },
     {
       "reactor": "ProfessionalDutyStaffEligibilitySettlementReactor",
@@ -9375,7 +9895,975 @@
         "FirmProfessionalDutyDesignationRecorded",
         "ProfessionalDutyChangeRejected"
       ],
-      "intentSchema": "SourceUseAuthorizationIntent"
+      "intentSchema": "SourceUseAuthorizationIntent",
+      "processes": [
+        "ProfessionalDutyChangeProcess"
+      ]
     }
-  ]
+  ],
+  "processes": [
+    {
+      "process": "ProfessionalDutyChangeProcess",
+      "rootSourceEvents": [
+        "ProfessionalDutyChangeAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeFirmStaffProfessionalDutyUse"
+          ],
+          "rule": "Recording only; revocation skips this stage."
+        },
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimProfessionalAssertionIdentity"
+          ],
+          "rule": "Permanent; never released."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyProfessionalDutyChange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleFirmStaffProfessionalDutyUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "RejectProfessionalDutyChange"
+      ]
+    },
+    {
+      "process": "FirmStaffRegistrationProcess",
+      "rootSourceEvents": [
+        "FirmStaffRegistrationAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimFirmStaffIdentity"
+          ],
+          "rule": "Permanent canonical-user claim."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteFirmStaffRegistration"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "RejectFirmStaffRegistration"
+      ]
+    },
+    {
+      "process": "EngagementAcceptanceProcess",
+      "rootSourceEvents": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AcquireEngagementServiceEpoch",
+            "AuthorizeFirmStaffRecordEngagementUse",
+            "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+            "AuthorizeIndependenceRuleCatalogEngagementUse",
+            "AuthorizeIndependenceRuleRatificationCatalogEngagementUse",
+            "ReservePracticeIndependence"
+          ],
+          "rule": "One process acquires every key from the frozen manifest in canonical unsigned UTF8 stream-key order, in final mode, with no upgrades. The receiver list is not an acquisition order; the manifest is."
+        },
+        {
+          "stage": "authorize",
+          "receivers": [
+            "AuthorizeEngagementPracticeCommitments"
+          ],
+          "rule": "Irreversible commit point; requires the complete exact grant set."
+        },
+        {
+          "stage": "commit",
+          "receivers": [
+            "CommitPracticeIndependence"
+          ],
+          "rule": "Permanent walls; survive every later outcome."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteServiceEngagementAcceptance",
+            "CompleteServiceEngagementStaffAssignment"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "ReleaseEngagementServiceEpoch",
+            "SettleFirmStaffRecordEngagementUse",
+            "SettleFirmProfessionalDutyDesignationEngagementUse",
+            "SettleIndependenceRuleCatalogEngagementUse",
+            "SettleIndependenceRuleRatificationCatalogEngagementUse",
+            "SettlePracticeIndependenceReservation"
+          ],
+          "rule": "Temporary grants only; permanent commitments remain."
+        }
+      ],
+      "abort": [
+        "RejectServiceEngagementAcceptance",
+        "RejectServiceEngagementStaffAssignment"
+      ]
+    },
+    {
+      "process": "EngagementPersonalDecisionProcess",
+      "rootSourceEvents": [
+        "EngagementPersonalDecisionAdmitted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeClientServicePersonalDecisionUse",
+            "AuthorizeFirmStaffRecordEngagementUse",
+            "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+            "AuthorizeIndependenceRuleCatalogEngagementUse",
+            "AuthorizeIndependenceRuleRatificationCatalogEngagementUse"
+          ],
+          "rule": "Canonical key order from the frozen RequiredSourceUses manifest; management acknowledgement acquires only the uses its kind requires."
+        },
+        {
+          "stage": "authorize",
+          "receivers": [
+            "AuthorizeEngagementPersonalDecision"
+          ],
+          "rule": "Irreversible; cancellation is only possible before this fact."
+        },
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeEngagementManagementAcknowledgement",
+            "MaterializePartnerIndependenceDecision"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleClientServicePersonalDecisionUse",
+            "SettleFirmStaffRecordEngagementUse",
+            "SettleFirmProfessionalDutyDesignationEngagementUse",
+            "SettleIndependenceRuleCatalogEngagementUse",
+            "SettleIndependenceRuleRatificationCatalogEngagementUse",
+            "SettleEngagementPersonalDecision"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelEngagementPersonalDecision"
+      ]
+    },
+    {
+      "process": "ClientIndependencePreviewProcess",
+      "rootSourceEvents": [
+        "ClientIndependenceEvaluationAdmitted"
+      ],
+      "ordered": false,
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeClientIndependencePreview"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "AccessReviewLaunchFanOut",
+      "rootSourceEvents": [
+        "AccessReviewCampaignLaunched"
+      ],
+      "ordered": false,
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeAccessReviewItem"
+          ],
+          "rule": "One receiver command per item in the launch manifest; items are independent."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "BulkAccessDecisionProcess",
+      "rootSourceEvents": [
+        "AccessReviewDecisionBatchAdmitted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeAccessReviewDecisionBatch"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "reserve",
+          "receivers": [
+            "ReserveAccessReviewItemDecision"
+          ],
+          "rule": "All selected items in canonical order before any apply."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyAccessReviewItemDecision"
+          ],
+          "rule": "All items; provisional and hidden."
+        },
+        {
+          "stage": "publish",
+          "receivers": [
+            "PublishAccessReviewDecisionBatch"
+          ],
+          "rule": "One publication fact."
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleAccessReviewItemDecision"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelAccessReviewDecisionBatch"
+      ],
+      "abortStages": [
+        {
+          "stage": "fence",
+          "receivers": [
+            "FenceAccessReviewItemDecision"
+          ],
+          "rule": "Every item, including not-yet-acquired holds."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteAccessReviewDecisionBatchCancellation"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleAccessReviewItemDecision"
+          ],
+          "rule": null
+        }
+      ]
+    },
+    {
+      "process": "AccessReviewCampaignCompletionProcess",
+      "rootSourceEvents": [
+        "AccessReviewCampaignCompletionAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeAccessReviewItemCampaignCompletionUse"
+          ],
+          "rule": "Canonical order over the drained item set."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteAccessReviewCampaignClosure"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleAccessReviewItemCampaignCompletionUse"
+          ],
+          "rule": "Installs the parent-generation closure fence."
+        }
+      ],
+      "abort": [
+        "AbortAccessReviewCampaignCompletion"
+      ]
+    },
+    {
+      "process": "AuditorRequestResolutionProcess",
+      "rootSourceEvents": [
+        "AuditorRequestResolutionAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeAuditorResponseRequestResolutionUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteAuditorRequestResolution"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleAuditorResponseRequestResolutionUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortAuditorRequestResolution"
+      ]
+    },
+    {
+      "process": "FindingClosureProcess",
+      "rootSourceEvents": [
+        "FindingClosureAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeCorrectiveActionFindingClosureUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteFindingClosure"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleCorrectiveActionFindingClosureUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortFindingClosure"
+      ]
+    },
+    {
+      "process": "ReadinessDecisionProcess",
+      "rootSourceEvents": [
+        "ReadinessDecisionAccepted",
+        "TypeIEntryDecisionAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeReadinessGapPlanReadinessDecisionUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteReadinessDecision",
+            "CompleteTypeIEntryDecision"
+          ],
+          "rule": "One of the two, by decision kind."
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleReadinessGapPlanReadinessDecisionUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortReadinessDecision"
+      ]
+    },
+    {
+      "process": "PolicyCampaignClosureProcess",
+      "rootSourceEvents": [
+        "PolicyCampaignClosureAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizePolicyCampaignParticipantCampaignClosureUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompletePolicyCampaignClosure"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettlePolicyCampaignParticipantCampaignClosureUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortPolicyCampaignClosure"
+      ]
+    },
+    {
+      "process": "ProviderReviewProcess",
+      "rootSourceEvents": [
+        "ProviderReviewRequested"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeProviderAssuranceReportProviderReviewUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteProviderAssuranceReview"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleProviderAssuranceReportProviderReviewUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortProviderReview"
+      ]
+    },
+    {
+      "process": "RiskActionCompletionReviewProcess",
+      "rootSourceEvents": [
+        "RiskTreatmentActionCompletionReviewAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeEvidenceRequestActionCompletionUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteRiskTreatmentActionReview"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleEvidenceRequestActionCompletionUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortRiskTreatmentActionReview"
+      ]
+    },
+    {
+      "process": "ApplicationImportExecutionProcess",
+      "rootSourceEvents": [
+        "ApplicationImportPlanSealed"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimApplicationImportSource"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "reserve",
+          "receivers": [
+            "ReserveApplicationImportTarget"
+          ],
+          "rule": "Every target group in canonical order before any apply; driven by ApplicationImportExecutionAuthorized."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyApplicationImportEffect"
+          ],
+          "rule": "One preflighted native batch per target group."
+        },
+        {
+          "stage": "publish",
+          "receivers": [
+            "CommitApplicationImportBatch"
+          ],
+          "rule": "One publication gate."
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "ReleaseApplicationImportTarget",
+            "ReleaseApplicationImportSource"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelApplicationImport"
+      ],
+      "abortStages": [
+        {
+          "stage": "fence",
+          "receivers": [
+            "FenceApplicationImportTarget"
+          ],
+          "rule": "Every target, including not-yet-acquired holds."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteApplicationImportCancellation"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "ReleaseApplicationImportTarget",
+            "ReleaseApplicationImportSource"
+          ],
+          "rule": null
+        }
+      ]
+    },
+    {
+      "process": "ProviderNameChangeProcess",
+      "rootSourceEvents": [
+        "ProviderChangeAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimProviderName"
+          ],
+          "rule": "New then old key in canonical order; hold both through apply."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyProviderChange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "release",
+          "receivers": [
+            "ReleaseProviderName"
+          ],
+          "rule": "Old matching generation only."
+        }
+      ],
+      "abort": [
+        "CancelProviderChange"
+      ]
+    },
+    {
+      "process": "LocationNameChangeProcess",
+      "rootSourceEvents": [
+        "LocationChangeAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimLocationName"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyLocationChange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "release",
+          "receivers": [
+            "ReleaseLocationName"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelLocationChange"
+      ]
+    },
+    {
+      "process": "OperationalProcessNameChangeProcess",
+      "rootSourceEvents": [
+        "OperationalProcessChangeAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimOperationalProcessName"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyOperationalProcessChange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "release",
+          "receivers": [
+            "ReleaseOperationalProcessName"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelOperationalProcessChange"
+      ]
+    },
+    {
+      "process": "AuditPackageBuildProcess",
+      "rootSourceEvents": [
+        "AuditPackageBuildRequested"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "start",
+          "receivers": [
+            "StartAuditPackageBuild"
+          ],
+          "rule": "Technical process; attempts are process state."
+        },
+        {
+          "stage": "record",
+          "receivers": [
+            "RecordAuditPackageBuildResult"
+          ],
+          "rule": "Only a verified archive."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "AuditPackageDeliveryRecordingProcess",
+      "rootSourceEvents": [
+        "AuditPackageDeliveryAdmitted"
+      ],
+      "ordered": false,
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeRecordedAuditPackageDelivery"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "ReadinessRunProcess",
+      "rootSourceEvents": [
+        "ReadinessAssessmentRequested"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "compute",
+          "receivers": [
+            "ComputeReadinessAssessment"
+          ],
+          "rule": "Pure child computation from the frozen snapshot."
+        },
+        {
+          "stage": "adopt",
+          "receivers": [
+            "AdoptReadinessAssessment"
+          ],
+          "rule": "Exact pending adoption generation."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "IdentityRecoveryProcess",
+      "rootSourceEvents": [
+        "IdentityRecoveryChallengeClaimed"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "prepare",
+          "receivers": [
+            "MaterializeIdentityRecoveryPreparation"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "protect",
+          "receivers": [
+            "ProtectRecoveryIdentity"
+          ],
+          "rule": "Old and replacement slots in canonical key order."
+        },
+        {
+          "stage": "accept",
+          "receivers": [
+            "AcceptProtectedIdentityRecovery"
+          ],
+          "rule": "Irreversible; no cancellation afterwards."
+        },
+        {
+          "stage": "register",
+          "receivers": [
+            "RegisterRecoveredIdentity"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "revoke",
+          "receivers": [
+            "RevokeRecoveredOldIdentity"
+          ],
+          "rule": "Only with authoritative replacement proof."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteAcceptedIdentityRecovery"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleRecoveryIdentityProtection",
+            "CompleteEmailRecoveryChallenge",
+            "SendIdentityRecoveryNotice"
+          ],
+          "rule": "Independent; the notice cannot hold completion hostage."
+        }
+      ],
+      "abort": [
+        "RejectIdentityRecoveryPreparation"
+      ]
+    },
+    {
+      "process": "AdministratorTransitionProcess",
+      "rootSourceEvents": [
+        "TenantManagerWithdrawalAccepted",
+        "TenantManagerRestorationAccepted",
+        "TenantManagerSourceMutationAdmitted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyMemberWithdrawal",
+            "ApplyAdministratorAssignmentWithdrawal",
+            "ApplyMemberRestoration",
+            "ApplyAdministratorAssignmentRestoration",
+            "ApplyNeutralMemberSourceMutation",
+            "ApplyNeutralAdministratorAssignmentMutation"
+          ],
+          "rule": "Exactly one receiver per guard fact, selected by TransitionKind; the guard fact is always first."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteAdministratorWithdrawal",
+            "CompleteAdministratorRestoration"
+          ],
+          "rule": "Neutral mutations have no completion fact."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "TypeIIRangeProcess",
+      "rootSourceEvents": [
+        "TypeIIPeriodOpeningAccepted",
+        "TypeIIPeriodAmendmentAccepted"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AcquireTypeIIPeriodRange"
+          ],
+          "rule": "Old and new range held until applied."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyTypeIIPeriodRange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleTypeIIPeriodRange"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "RejectTypeIIPeriodOpening",
+        "RejectTypeIIPeriodAmendment",
+        "CancelTypeIIPeriodAmendment"
+      ]
+    },
+    {
+      "process": "ArtifactDownloadProcess",
+      "rootSourceEvents": [
+        "EvidenceArtifactDownloadRequested"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeAdvisorArtifactDownloadUse",
+            "AuthorizeArtifactHandlingDownloadUse"
+          ],
+          "rule": "Canonical order; the handoff use exists only when a handoff is selected."
+        },
+        {
+          "stage": "issue",
+          "receivers": [
+            "IssueProtectedArtifactDownloadGrant"
+          ],
+          "rule": "Encrypted result verified before the native fact."
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleAdvisorArtifactDownloadUse",
+            "SettleArtifactHandlingDownloadUse",
+            "SettleArtifactDownloadAvailabilityUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelProtectedArtifactDownloadGrant"
+      ]
+    },
+    {
+      "process": "ControlOccurrenceFanOut",
+      "rootSourceEvents": [
+        "DueControlOccurrencesGenerated"
+      ],
+      "ordered": false,
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeControlOccurrence"
+          ],
+          "rule": "One receiver per selected window; canonical OccurrenceId dedupes generators."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "IndependentChildMaterialization",
+      "rootSourceEvents": [
+        "AdvisorFeedbackAdmitted",
+        "AuditorResponseAdmitted",
+        "AuditorCommentAdmitted",
+        "CorrectiveActionAdmitted",
+        "AuditorSampleSelectionAdmitted",
+        "ProviderCoverageGapRiskAcceptanceAdmitted",
+        "PolicyParticipantResultAdmitted"
+      ],
+      "ordered": false,
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeAdvisorFeedback",
+            "MaterializeAuditorResponse",
+            "MaterializeAuditorComment",
+            "MaterializeCorrectiveAction",
+            "MaterializeAuditorSampleSelection",
+            "MaterializeProviderRiskAcceptanceLink",
+            "ApplyPolicyParticipantResult"
+          ],
+          "rule": "Single receiver per admitted child; no cross-receiver ordering. Parent closure drains these before its own acquisition stage."
+        }
+      ],
+      "abort": []
+    }
+  ],
+  "processRule": "Each process is one durable CAS record per root source fact. A shared source-use receiver (staff record, duty designation, rule catalog, ratification uses) is listed in every process that dispatches it; the dispatching process record, not the receiver, owns the order. Receivers in an ordered process are dispatched by that record in stage order; within an acquire/reserve/claim stage the record acquires keys in canonical unsigned UTF8 stream-key order from the frozen manifest, never from receiver listing order. Abort commands fence the receiving operation before any settlement. Unordered processes dispatch each receiver independently."
 }

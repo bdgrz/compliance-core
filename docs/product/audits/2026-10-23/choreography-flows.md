@@ -37,7 +37,7 @@ flowchart LR
   E --> Z[Release matching restoration/withdrawal generation]
 ```
 
-The guard must not clear every reason for a member. Restore cannot release a pending withdrawal before its source command is fenced. Test the restore-between-hold-and-source race, multiple independent reasons, old episode callbacks, and crash recovery at each arrow.
+The guard must not clear every reason for a member. Restore cannot release a pending withdrawal before its source command is fenced. Suspend, deprovision and reinstate always enter through the guard; when the episode has no contribution and no pending transition the guard records `TenantManagerSourceMutationAdmitted` and the source applies unchanged, so a concurrent administrator registration for that episode observes the mutation. Team assignment and removal enter through the guard only for the administrators team. Test the restore-between-hold-and-source race, multiple independent reasons, old episode callbacks, and crash recovery at each arrow.
 
 ## 3. Membership retirement and relationship cleanup — CHOREO-03/06, ACCESS-08
 

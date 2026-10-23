@@ -117,6 +117,25 @@ for (const name of files.filter(name => name.endsWith('.md'))) {
 const diagrams = (fs.readFileSync(path.join(base, 'choreography-flows.md'), 'utf8').match(/```mermaid/g) ?? []).length;
 assert(diagrams === 20, `Expected 20 choreography diagrams, got ${diagrams}.`);
 assert(split.eventAllocationCount === allocated && split.externalizeCount === externalized && split.pruneCount === pruned, 'Split allocation totals differ from contents.');
+// Cross-document consistency: the Markdown tables must agree with the normative JSON.
+const splitMd = fs.readFileSync(path.join(base, "aggregate-split-targets.md"), "utf8");
+for (const row of split.splitOwners) for (const owner of row.targetOwners) assert(splitMd.includes(`**${owner.proposedAggregate}** \`${owner.identity}\``), `Split owner identity differs from Markdown: ${owner.proposedAggregate}`);
+const admissionMd = fs.readFileSync(path.join(base, "source-admission-contracts.md"), "utf8");
+for (const contract of admissions) for (const field of contract.fields) assert(admissionMd.includes(`\`${field.name}: ${field.type}\``), `Admission field differs from Markdown: ${contract.command}.${field.name}`);
+// Shipped typed-identity contracts (#1033, #1035, #1037) already carry ulong ExpectedRevision; they are the only permitted exception until a deliberate contract change.
+const shippedUnsignedRevision = new Set(['AssignRolePermission', 'RemoveRolePermission', 'AssignTeamRole', 'RemoveTeamRole', 'GrantPlatformOperator', 'RevokePlatformOperator']);
+for (const command of allSelected) for (const field of command.fields ?? []) if (/^Expected.*(Revision|Generation|Epoch|Version)$/.test(field.name) || field.name === "Generation") assert(field.type === "long" || field.type === "long?" || (shippedUnsignedRevision.has(command.command) && field.type === 'ulong'), `Authored expected value must be signed long: ${command.command}.${field.name}`);
+const removedTypes = new Set(split.splitOwners.flatMap(row => [...row.technicalFactsToExternalize, ...row.migrationFactsToPrune]));
+for (const event of events) for (const field of event.fields) assert(!removedTypes.has(field.type.replace(/\?$/, "")), `Event payload nests a removed fact type: ${event.event}.${field.name}`);
+const processes = read("target-reactor-contracts.json").processes ?? [];
+const processNames = new Set(processes.map(process => process.process));
+const inProcess = new Map();
+for (const process of processes) {
+    for (const stage of [...process.stages, ...(process.abortStages ?? [])]) for (const command of stage.receivers) { assert(receiverNames.has(command), `Process names unknown receiver: ${process.process} -> ${command}`); const list = inProcess.get(command) ?? []; if (!list.includes(process.process)) list.push(process.process); inProcess.set(command, list); }
+    for (const command of process.abort) assert(admissions.some(contract => contract.command === command) || commandByName.has(command), `Process abort command undefined: ${process.process} -> ${command}`);
+    for (const event of process.rootSourceEvents) assert(eventByName.has(event), `Process root event undefined: ${process.process} -> ${event}`);
+}
+for (const reactor of reactors) { assert(Array.isArray(reactor.processes) && reactor.processes.length > 0 && reactor.processes.every(name => processNames.has(name)), `Receiver without ordered process: ${reactor.command}`); assert(JSON.stringify(inProcess.get(reactor.command) ?? []) === JSON.stringify(reactor.processes), `Receiver process field disagrees with process stages: ${reactor.command}`); }
 if (failures.length) {
     for (const failure of failures.slice(0, 40)) console.error(failure);
     if (failures.length > 40) console.error(`${failures.length - 40} further errors omitted.`);

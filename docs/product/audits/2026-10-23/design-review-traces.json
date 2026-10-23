@@ -299,7 +299,7 @@
         "Member",
         "TeamMember"
       ],
-      "given": "Two available managers M1/M2; M1 episode E and administrator assignment generation 4.",
+      "given": "Two available managers M1/M2; M1 episode E and administrator assignment generation 4; M3 is a member with no administrator contribution.",
       "steps": [
         {
           "step": 1,
@@ -325,15 +325,26 @@
           "step": 5,
           "action": "Deliver old E callback after new episode E2.",
           "expected": "Cannot mutate E2 or release its guard generation. Deprovisioned E requires new registration, not reinstatement."
+        },
+        {
+          "step": 6,
+          "action": "Admit AssignTeamMember(administrators, M3 episode E3) as TenantManagerRestorationAccepted(register_administrators_assignment); pause before TeamMemberAssigned. Concurrently submit SuspendMember(M3, E3).",
+          "expected": "The suspension admits on TenantManagerGuard, observes the pending registration and records TenantManagerWithdrawalAccepted (not the neutral fact) that fences it before MemberSuspended. The paused registration completes its TeamMemberAssigned but CompleteAdministratorRestoration cannot register availability for E3. Reverse order: the neutral suspension fact is admitted first and the later registration admission observes it and never registers availability."
+        },
+        {
+          "step": 7,
+          "action": "Remove M3 from a non-administrator team while step 6 is in flight; suspend an unrelated non-administrator M4.",
+          "expected": "RemoveTeamMember on another team appends to TeamMember directly; no guard fact or guard read exists. SuspendMember(M4) appends TenantManagerSourceMutationAdmitted then MemberSuspended; the guard contribution set is unchanged and the first owner was known from the route alone."
         }
       ],
-      "invariant": "Guard generation, member revision and assignment revision are different scopes; one restoration cannot erase other reasons.",
+      "invariant": "Guard generation, member revision and assignment revision are different scopes; one restoration cannot erase other reasons. A member with a pending or completed administrator registration is never counted available after a source suspension, deprovision or administrators-team removal admitted on the same guard.",
       "nativeFacts": [
         "TenantManagerWithdrawalAccepted",
         "MemberSuspended",
         "TenantManagerRestorationAccepted",
         "TenantManagerRestorationCompleted",
-        "TenantManagerRestored"
+        "TenantManagerRestored",
+        "TenantManagerSourceMutationAdmitted"
       ],
       "faultInjection": "Pause or crash after each content write, reservation/owner append, process CAS and checkpoint. Retry identical logical identity; force unknown append and lagging projections independently. No new client ID or fabricated release."
     },

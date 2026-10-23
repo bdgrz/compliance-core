@@ -56,7 +56,7 @@
         },
         {
           "type": "string",
-          "value": "jos\u00e9@example.test"
+          "value": "josé@example.test"
         }
       ],
       "encodedHex": "0000001c54656e616e74496e7669746174696f6e4d61696c626f78436c61696d00000000000000000000000000000001000000126a6f73c3a9406578616d706c652e74657374",
@@ -650,8 +650,12 @@
         "deprovision_member",
         "remove_administrators_assignment",
         "reinstate_member",
-        "restore_administrators_assignment"
-      ]
+        "restore_administrators_assignment",
+        "register_administrators_assignment",
+        "neutral_member_mutation",
+        "neutral_assignment_mutation"
+      ],
+      "rule": "register_administrators_assignment is a first contribution through AssignTeamMember on the administrators team; the neutral kinds record Suspend/Deprovision/Reinstate or administrators-team removal for a member episode that has no contribution and no pending transition, so later registrations observe them."
     },
     "ProfessionalDutyChangeKind": {
       "kind": "enum",

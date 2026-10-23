@@ -360,11 +360,6 @@
           "name": "Token",
           "type": "string",
           "required": true
-        },
-        {
-          "name": "ExpectedRevision",
-          "type": "long",
-          "required": true
         }
       ],
       "http": [
@@ -398,7 +393,7 @@
       "contractChanges": [
         "InvitationId is route-bound and token verification must resolve the same immutable invitation; token is a secret verification input and is excluded from persisted authored intent. Persist verified token/challenge provenance without bearer material.",
         "Add required InvitationId.",
-        "Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC."
+        "No ExpectedRevision: acceptance consumes a one-time token, the invitee holds only the token link, and the invitation lifecycle (pending, accepted, expired, canceled) already serializes acceptance. This matches CompleteIdentityRecovery; both are token-consumption commands."
       ],
       "existingTests": [
         "test/Compliance.Tests/Features/Tenants/TenantInvitationConcurrencyTests.cs"
@@ -417,9 +412,9 @@
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": "ExpectedRevision",
+        "field": null,
         "owner": "TenantInvitation",
-        "counter": "logical ResourceRevision of this owner",
+        "counter": "none; token consumption serializes on the invitation lifecycle",
         "nullableInternalRule": null
       }
     },

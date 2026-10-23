@@ -51,13 +51,13 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Handler → first owner:** `AcceptTenantInvitationHandler` → `TenantInvitation`.
 - **Logical identity:** `{"field":"InvitationId","type":"Uuid","required":true,"origin":"client","rule":"one immutable authored operation"}`.
 - **Entry / HTTP / MCP:** authorized_http; `PUT /api/v1/tenants/{tenant_id}/invitations/{invitation_id}/acceptance`; MCP disabled.
-- **Exact fields:** `InvitationId: Uuid`, `TenantId: Uuid`, `EmailAddress: string`, `Token: string`, `ExpectedRevision: long`.
-- **Revision scope:** `{"field":"ExpectedRevision","owner":"TenantInvitation","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}`.
+- **Exact fields:** `InvitationId: Uuid`, `TenantId: Uuid`, `EmailAddress: string`, `Token: string`.
+- **Revision scope:** `{"field":null,"owner":"TenantInvitation","counter":"none; token consumption serializes on the invitation lifecycle","nullableInternalRule":null}`.
 - **Native facts:** `TenantInvitationAccepted`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Mailbox generation, invitation and delivery.
 - **Preserved source validation:** [src/Compliance.Common/Features/Tenants/AcceptTenantInvitation.cs](../../../../src/Compliance.Common/Features/Tenants/AcceptTenantInvitation.cs).
-- **Selected changes:** InvitationId is route-bound and token verification must resolve the same immutable invitation; token is a secret verification input and is excluded from persisted authored intent. Persist verified token/challenge provenance without bearer material. Add required InvitationId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
+- **Selected changes:** InvitationId is route-bound and token verification must resolve the same immutable invitation; token is a secret verification input and is excluded from persisted authored intent. Persist verified token/challenge provenance without bearer material. Add required InvitationId. No ExpectedRevision: acceptance consumes a one-time token, the invitee holds only the token link, and the invitation lifecycle already serializes acceptance (as CompleteIdentityRecovery does).
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Tenants/TenantInvitationConcurrencyTests.cs`.
 
 ## AcknowledgeEngagementManagement
