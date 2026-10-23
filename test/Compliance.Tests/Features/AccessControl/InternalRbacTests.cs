@@ -101,7 +101,7 @@ public sealed class InternalRbacTests
         // Arrange
         var memberId = RbacIds.Member(TenantId, UserId);
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(TenantId, memberId, UserId));
+        state.Apply(MemberFacts.Registered(TenantId, memberId, UserId));
         state.Apply(new TeamDefined(TenantId, TeamId, "Reviewers"));
         state.Apply(new RoleDefined(TenantId, RoleId, "Control reviewer"));
         state.Apply(new TeamMemberAssigned(TenantId, TeamId, memberId));
@@ -124,7 +124,7 @@ public sealed class InternalRbacTests
         // Arrange
         var memberId = RbacIds.Member(TenantId, UserId);
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(TenantId, memberId, UserId));
+        state.Apply(MemberFacts.Registered(TenantId, memberId, UserId));
         state.Apply(new TeamDefined(TenantId, TeamId, "Reviewers"));
         state.Apply(new RoleDefined(TenantId, RoleId, "Control reviewer"));
         state.Apply(new TeamMemberAssigned(TenantId, TeamId, memberId));

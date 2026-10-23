@@ -182,7 +182,7 @@ public sealed class TypeIIPlanCommandHandlerTests
         public async Task RegisterMemberAsync(Uuid userId)
         {
             var member = new Member(TenantId, userId);
-            Assert.True(member.Register().IsSuccess);
+            Assert.True(MemberFacts.Register(member).IsSuccess);
             await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
         }
 

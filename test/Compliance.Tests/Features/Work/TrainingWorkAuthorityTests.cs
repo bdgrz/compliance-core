@@ -368,7 +368,7 @@ public sealed class TrainingWorkAuthorityTests
             {
                 if (user == fixture.OwnerUserId && ownerAffiliation == "guest")
                 {
-                    DomainEvent registered = new MemberRegistered(fixture.TenantId,
+                    DomainEvent registered = MemberFacts.Registered(fixture.TenantId,
                         fixture.OwnerMemberId, user, ownerAffiliation, Uuid.CreateVersion4(),
                         DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30));
                     registered.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),

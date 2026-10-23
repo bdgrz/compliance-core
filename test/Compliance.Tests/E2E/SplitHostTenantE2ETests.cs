@@ -335,7 +335,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             await using (var scope = worker.Services.CreateAsyncScope())
             {
                 var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
-                var result = await bus.DispatchAsync(new RegisterMember(tenantId,
+                var result = await bus.DispatchAsync(new RegisterMember(Uuid.CreateVersion4(), tenantId,
                         Uuid.Parse(staffId, CultureInfo.InvariantCulture), "firm_staff"),
                     new RequestDispatchContext(RequestActor.System));
                 Assert.True(result.IsSuccess);

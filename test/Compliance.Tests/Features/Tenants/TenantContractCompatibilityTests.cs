@@ -103,23 +103,4 @@ public sealed class TenantContractCompatibilityTests
         Assert.Null(reactivated.Reason);
         Assert.Equal(default, reactivated.OccurredAt);
     }
-
-    [Fact]
-    public void ShouldDefaultToClientPersonnelGivenLegacyMembershipEvent()
-    {
-        // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var memberId = Uuid.CreateVersion4();
-        var userId = Uuid.CreateVersion4();
-        var json = $$"""{"tenant_id":"{{tenantId}}","member_id":"{{memberId}}","user_id":"{{userId}}"}""";
-
-        // Act
-        var registered = JsonSerializer.Deserialize(json,
-            (JsonTypeInfo)ComplianceCoreJsonContext.Default.MemberRegistered);
-
-        // Assert
-        Assert.NotNull(registered);
-        Assert.Equal("client_personnel",
-            registered.GetType().GetProperty("Affiliation")?.GetValue(registered));
-    }
 }

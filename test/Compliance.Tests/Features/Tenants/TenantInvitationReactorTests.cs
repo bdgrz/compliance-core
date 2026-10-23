@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using System.Diagnostics;
 using Bdgrz.Compliance.Tests.E2E;
 using Cntryl.Portia;
@@ -167,6 +168,49 @@ public sealed class TenantInvitationReactorTests
     }
 
     [Fact]
+    public async Task ShouldContinueWithTeamAssignmentGivenAcceptedInvitationForAlreadyLiveMember()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var scenario = new ReactorScenario()
+            .Given(new TenantInvitationAccepted(tenantId, userId, "admin@example.com",
+                "client_personnel", Administrator: true))
+            .RespondTo<RegisterMember>(Result.Failure(Member.LiveEpisodeConflict));
+        var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests,
+            NullLogger<TenantInvitationReactor>.Instance);
+
+        // Act
+        await scenario.RunAsync(reactor);
+
+        // Assert
+        Assert.Single(scenario.SentRequests.OfType<RegisterMember>());
+        var assignment = Assert.Single(scenario.SentRequests.OfType<AssignTeamMember>());
+        Assert.Equal(BuiltInRbac.AdministratorsTeamId(tenantId), assignment.TeamId);
+    }
+
+    [Fact]
+    public async Task ShouldFailReactionGivenRegistrationConflictOtherThanLiveEpisode()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var scenario = new ReactorScenario()
+            .Given(new TenantInvitationAccepted(tenantId, Uuid.CreateVersion4(), "admin@example.com",
+                "client_personnel", Administrator: true))
+            .RespondTo<RegisterMember>(Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Membership authority cleanup must finish before a new invitation can take effect.", false)));
+        var reactor = new TenantInvitationReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests,
+            NullLogger<TenantInvitationReactor>.Instance);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await scenario.RunAsync(reactor));
+
+        // Assert
+        Assert.IsType<ReactionCommandFailedException>(failure);
+        Assert.Empty(scenario.SentRequests.OfType<AssignTeamMember>());
+    }
+
+    [Fact]
     public async Task ShouldStopRetryingActivationGivenPermanentFailure()
     {
         // Arrange
@@ -195,6 +239,7 @@ public sealed class TenantInvitationReactorTests
         Assert.Equal(ProjectionCheckpoint.Start, checkpointAfterFailure);
         Assert.NotEqual(ProjectionCheckpoint.Start, checkpointAfterReplay);
         Assert.Equal(2, scenario.SentRequests.Count(request => request is RegisterMember));
+        Assert.Single(scenario.SentRequests.OfType<RegisterMember>().Select(request => request.CommandId).Distinct());
         Assert.Equal(2, scenario.SentRequests.Count(request => request is AssignTeamMember));
         Assert.Equal(2, scenario.SentRequests.Count(request => request is ActivateTenant));
     }

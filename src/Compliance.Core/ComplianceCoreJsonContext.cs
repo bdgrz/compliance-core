@@ -1917,6 +1917,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.EntityConcurrency))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.FirstResponseDescriptor))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.MutationResultContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.UnitResult))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.OperationAcceptedResponse))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.OperationAccessScope))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.OperationProvenance))]

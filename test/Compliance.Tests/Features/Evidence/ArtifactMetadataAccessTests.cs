@@ -188,7 +188,7 @@ public sealed class ArtifactMetadataAccessTests
         await using var fixture = await Fixture.CreateAsync();
         await fixture.AllowAsync();
         var member = await ProgramManagementServices.HydrateAsync(fixture.Provider, new Member(fixture.TenantId, fixture.UserId));
-        var malformed = new MemberRegistered(fixture.TenantId, member.Id, Uuid.CreateVersion4(),
+        var malformed = MemberFacts.Registered(fixture.TenantId, member.Id, Uuid.CreateVersion4(),
             "client_personnel", member.MembershipEpisodeId);
         malformed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), member.Id,
             member.CommittedStreamPosition + 1, Fixture.Now, null, null, false));

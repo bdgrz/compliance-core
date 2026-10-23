@@ -24,7 +24,7 @@ public sealed class RbacManagementRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RequestActor.System)
             // Act
-            .When(new RegisterMember(TenantId, Uuid.CreateVersion4()))
+            .When(new RegisterMember(Uuid.CreateVersion4(), TenantId, Uuid.CreateVersion4()))
             // Assert
             .ExpectAuthorized()
             .ExpectHandled()
@@ -41,7 +41,7 @@ public sealed class RbacManagementRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new RegisterMember(TenantId, Uuid.CreateVersion4()))
+            .When(new RegisterMember(Uuid.CreateVersion4(), TenantId, Uuid.CreateVersion4()))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();
@@ -57,7 +57,7 @@ public sealed class RbacManagementRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new RegisterMember(TenantId, Uuid.CreateVersion4()))
+            .When(new RegisterMember(Uuid.CreateVersion4(), TenantId, Uuid.CreateVersion4()))
             // Assert
             .ExpectAuthorized()
             .ExpectHandled()

@@ -59,6 +59,28 @@ public sealed class TenantRbacBootstrapReactorTests
     }
 
     [Fact]
+    public async Task ShouldReuseRegistrationCommandIdGivenReplayedTenantRegistration()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var scenario = new ReactorScenario().Given(
+            new TenantRegistered(tenantId, Uuid.CreateVersion4(), "Acme", "acme", "Acme LLC",
+                CreatorIsAdministrator: true, ActivationRequired: true));
+
+        // Act
+        await scenario.RunAsync(new TenantRbacBootstrapReactor(
+            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+        await scenario.RunAsync(new TenantRbacBootstrapReactor(
+            new InMemoryProjectionCheckpointStore(), scenario.Requests));
+
+        // Assert
+        var registrations = scenario.SentRequests.OfType<RegisterMember>().ToArray();
+        Assert.Equal(2, registrations.Length);
+        Assert.Equal(registrations[0], registrations[1]);
+        Assert.NotEqual(Uuid.Empty, registrations[0].CommandId);
+    }
+
+    [Fact]
     public async Task ShouldProvisionCreatorAuthorityBeforeActivationGivenTenantRegistration()
     {
         // Arrange
@@ -83,7 +105,9 @@ public sealed class TenantRbacBootstrapReactorTests
         var prior = commands.Take(activationTrigger).ToArray();
         Assert.Contains(new DefineRole(tenantId, adminRoleId, BuiltInRbac.TenantAdministrationRoleName), prior);
         Assert.Contains(new DefineTeam(tenantId, adminTeamId, BuiltInRbac.AdministratorsTeamName), prior);
-        Assert.Contains(new RegisterMember(tenantId, creatorId), prior);
+        Assert.Contains(prior, request => request is RegisterMember registration &&
+            registration.TenantId == tenantId && registration.UserId == creatorId &&
+            registration.CommandId != Uuid.Empty);
         Assert.Contains(prior, request => request is AssignTeamRole assignment &&
             assignment.TenantId == tenantId && assignment.TeamId == adminTeamId && assignment.RoleId == adminRoleId &&
             assignment.CommandId != Uuid.Empty && assignment.ExpectedRevision == 0);

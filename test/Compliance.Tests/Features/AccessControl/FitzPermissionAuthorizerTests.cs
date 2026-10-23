@@ -323,7 +323,7 @@ public sealed class FitzPermissionAuthorizerTests
         await using (var batch = await permissions.BeginAsync(new ProjectionBatchContext(
                          permissionIdentity, ProjectionCheckpoint.Start)))
         {
-            await permissions.ApplyAsync(new MemberRegistered(tenantId, memberId, userId));
+            await permissions.ApplyAsync(MemberFacts.Registered(tenantId, memberId, userId));
             await permissions.ApplyAsync(new TeamDefined(tenantId, teamId, "Administrators"));
             await permissions.ApplyAsync(new RoleDefined(tenantId, roleId, "Tenant Administration"));
             await permissions.ApplyAsync(new TeamMemberAssigned(tenantId, teamId, memberId));
@@ -336,7 +336,7 @@ public sealed class FitzPermissionAuthorizerTests
         await using (var batch = await memberships.BeginAsync(new ProjectionBatchContext(
                          membershipIdentity, ProjectionCheckpoint.Start)))
         {
-            await memberships.ApplyAsync(new MemberRegistered(tenantId, memberId, userId,
+            await memberships.ApplyAsync(MemberFacts.Registered(tenantId, memberId, userId,
                 "firm_staff"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -365,7 +365,7 @@ public sealed class FitzPermissionAuthorizerTests
         var identity = new CheckpointIdentity("PermissionProjection", pattern);
         await using var batch = await permissions.BeginAsync(new ProjectionBatchContext(
             identity, ProjectionCheckpoint.Start));
-        await permissions.ApplyAsync(new MemberRegistered(tenantId,
+        await permissions.ApplyAsync(MemberFacts.Registered(tenantId,
             RbacIds.Member(tenantId, userId), userId));
         await permissions.ApplyAsync(new TeamDefined(tenantId, teamId, "Administrators"));
         await permissions.ApplyAsync(new RoleDefined(tenantId, roleId, "Org Admin"));

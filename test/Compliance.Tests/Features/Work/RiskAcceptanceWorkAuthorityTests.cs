@@ -228,7 +228,7 @@ public sealed class RiskAcceptanceWorkAuthorityTests
             var guestUserId = Uuid.CreateVersion4();
             var guestMemberId = operations.Member(guestUserId);
             var events = operations.Provider.GetRequiredService<IEventStore>();
-            DomainEvent registered = new MemberRegistered(operations.TenantId, guestMemberId,
+            DomainEvent registered = MemberFacts.Registered(operations.TenantId, guestMemberId,
                 guestUserId, "guest", Uuid.CreateVersion4(),
                 DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30));
             registered.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), guestMemberId,
