@@ -1,6 +1,6 @@
 # Native operation acceptance and result lookup
 
-This is the exact prerequisite for [#1042](https://github.com/bdgrz/compliance-core/issues/1042). Current Portia/Fitz per-stream append does not provide it. The selected implementation must supply this contract before enabling the affected replacement paths.
+This is the exact prerequisite for [#1042](https://github.com/bdgrz/compliance-core/issues/1042). Current Portia/Fitz per-stream append does not provide it. The selected implementation must supply this contract before enabling the operation status/result routes keyed by bare operation id and cross-route duplicate detection; write paths use per-first-owner acceptance and do not wait on it (see "Scope of the realm-wide prerequisite").
 
 ## Binding and append
 
