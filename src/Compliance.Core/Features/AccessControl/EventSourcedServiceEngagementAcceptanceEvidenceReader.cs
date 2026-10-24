@@ -1,13 +1,19 @@
 using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-/// <summary>Builds acceptance evidence only from current client, firm-duty, ratification and boundary sources.</summary>
+/// <summary>
+///     Builds acceptance evidence only from current client, firm-duty, ratification and boundary sources. The engagement
+///     draft is read from its own owner, the complete service history from the client service owner and the paired
+///     personal decisions from their own owners.
+/// </summary>
 sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateReader reader,
     FirmStaffViews staffViews, ProfessionalDutyAuthorityReader duties, CurrentRatifiedIndependenceRulesReader rulesReader,
     IBoundaryDirectoryReader boundaries, BoundaryHistoryReadConsistency boundaryConsistency,
-    EngagementPersonalDecisionViews personalDecisions, TimeProvider clock) : IServiceEngagementAcceptanceEvidenceReader
+    EngagementPersonalDecisionViews personalDecisions, ServiceEngagementViews engagements,
+    IImmutableContentStore content, TimeProvider clock) : IServiceEngagementAcceptanceEvidenceReader
 {
     public async ValueTask<Result<ServiceEngagementAcceptanceEvidence>> ReadCurrentAsync(Uuid tenantId,
         Uuid engagementId, Uuid actorUserId, CancellationToken ct)
@@ -23,11 +29,28 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
         if (rules is null)
             return Refuse(RequestErrorKind.Conflict, "Current ratified independence rules are unavailable.", true);
 
-        var ledger = await reader.HydrateAsync(new IndependenceLedger(tenantId), ct).ConfigureAwait(false);
-        if (ledger.Engagement(engagementId) is not { Status: "draft" } engagement)
+        var owner = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId), ct)
+            .ConfigureAwait(false);
+        var client = await reader.HydrateAsync(new ClientServiceIndependence(tenantId), ct).ConfigureAwait(false);
+        if (owner.Status != "draft" || owner.LatestResult is not { } latestDraft)
             return Refuse(RequestErrorKind.Conflict, "The exact service engagement draft is unavailable.", true);
-        if (ledger.EngagementHistory(engagementId).Any(item => item.RecordedAt > clock.GetUtcNow()) ||
-            ledger.History().Services.Any(item => item.RecordedAt > clock.GetUtcNow()))
+        ServiceEngagementView engagement;
+        IReadOnlyList<ServiceEngagementView> history;
+        IReadOnlyList<NonattestServiceView> serviceHistory;
+        try
+        {
+            engagement = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content,
+                IndependenceContent.Realm(tenantId), latestDraft, ct).ConfigureAwait(false);
+            history = await engagements.HistoryAsync(tenantId, engagementId, ct).ConfigureAwait(false) ?? [];
+            serviceHistory = await ClientServiceHistory.ReadAsync(content, client, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException)
+        {
+            return Refuse(RequestErrorKind.Conflict, "The engagement or service history cannot be verified.", true);
+        }
+
+        if (history.Any(item => item.RecordedAt > clock.GetUtcNow()) ||
+            serviceHistory.Any(item => item.RecordedAt > clock.GetUtcNow()))
             return Refuse(RequestErrorKind.Conflict, "A current source has an invalid future timestamp.", true);
 
         var partner = duty.Staff;
@@ -51,7 +74,7 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
             currentStaff.Add(match);
         }
 
-        var serviceIds = ledger.History().Services.Select(item => item.ServiceRecordId).ToArray();
+        var serviceIds = serviceHistory.Select(item => item.ServiceRecordId).ToArray();
         var acknowledgement = (await personalDecisions.ManagementAcknowledgementsAsync(tenantId, engagementId, ct)
             .ConfigureAwait(false))
             .Where(item => item.EngagementRevision == engagement.Revision && item.UserId != partner.UserId &&
@@ -62,7 +85,6 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
             return Refuse(RequestErrorKind.Conflict,
                 "A separate current client management acknowledgement for the complete service history is required.", true);
 
-        var serviceHistory = ledger.History().Services;
         PartnerIndependenceEvaluationView? evaluation = null;
         if (engagement.Content.Practice == "attest")
         {
@@ -105,16 +127,17 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
             boundaryResult.Value?.Version, boundaryResult.Value?.Approval,
             Array.AsReadOnly(currentStaff.ToArray()), partner, duty.Designation.Revision, now, evaluation);
 
-        // Source streams are independent of the client ledger. Re-read the authority, rules, and client
-        // ledger after assembly; acceptance then uses the ledger's expected-sequence OCC before appending.
+        // Source streams are independent of each other. Re-read the authority, rules, engagement and service
+        // epoch after assembly; admission then freezes them and holds the epoch before authorizing.
         var currentDuty = await duties.ReadCurrentAsync(actorUserId, FirmProfessionalDuty.EngagementPartner,
             tenantId, ct).ConfigureAwait(false);
         var currentRules = await rulesReader.ReadActiveAsync(ct).ConfigureAwait(false);
-        var currentLedger = await reader.HydrateAsync(new IndependenceLedger(tenantId), ct).ConfigureAwait(false);
+        var currentOwner = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId), ct)
+            .ConfigureAwait(false);
+        var currentClient = await reader.HydrateAsync(new ClientServiceIndependence(tenantId), ct).ConfigureAwait(false);
         var currentBoundary = await ReadSelectedBoundaryAsync(tenantId, engagement, ct).ConfigureAwait(false);
         if (currentDuty != duty || currentRules is null || !SameRules(currentRules, rules) ||
-            currentLedger.Sequence != ledger.Sequence ||
-            currentLedger.Engagement(engagementId)?.Revision != engagement.Revision ||
+            currentClient.Epoch != client.Epoch || currentOwner.Revision != owner.Revision ||
             !currentBoundary.IsSuccess || !SameBoundary(boundaryResult.Value, currentBoundary.Value))
             return Refuse(RequestErrorKind.Conflict,
                 "Partner authority, rules, client facts or selected boundary changed during evidence assembly; reload and retry.", true);

@@ -11,7 +11,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     engagement owner; a settlement before any grant fences the key so a delayed acquisition is refused.
 /// </summary>
 sealed class SettleClientServicePersonalDecisionUseHandler(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, TimeProvider clock, EngagementPersonalDecisionVerifier verifier)
+    IImmutableContentStore content, TimeProvider clock, EngagementUseVerifier verifier)
     : EngagementUseSettleHandler<ClientServiceIndependence, SettleClientServicePersonalDecisionUse>(reader, executor, content, clock, verifier)
 {
     protected override string CommandKind => nameof(SettleClientServicePersonalDecisionUse);

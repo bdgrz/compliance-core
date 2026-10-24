@@ -40,6 +40,8 @@ draft, and accepted-engagement operations:
 | Amend draft | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/amend-service-engagement/{command_id}` | `bdgrz.service-engagement.amend` |
 | Propose staff | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/propose-service-engagement-staff/{command_id}` | `bdgrz.service-engagement.staff.propose` |
 | Withdraw proposal | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals/{command_id}` | `bdgrz.service-engagement.staff.withdraw` |
+| Accept an engagement (202, partner only) | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance/{command_id}` | none (personal HTTP only) |
+| Assign actual staff to an accepted engagement (202, partner only) | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/{command_id}` | none (personal HTTP only) |
 | Revoke actual staff of an accepted engagement | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations/{command_id}` | `bdgrz.service-engagement.actual-staff.revoke` |
 | Close draft | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure/{command_id}` | `bdgrz.service-engagement.close` |
 | Read current draft | `GET /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `bdgrz.service-engagement.get` |
@@ -60,9 +62,10 @@ Engagement count, staff per draft and revisions per draft are not capped; every
 revision is retained and history is never truncated. Reusing a command identity
 for another mutation conflicts. Closed drafts cannot be reopened or edited. A
 draft amendment cannot rewrite its practice identity, and the proposed lead must
-remain selected until another lead is recorded. Acceptance, actual-staff
-assignment and the partner review context are unregistered until the acceptance
-work lands; revoking actual staff applies only to an accepted engagement. The
+remain selected until another lead is recorded. Acceptance and actual-staff
+assignment are 202 root admissions on the engagement owner (below); the partner
+review context stays unregistered; revoking actual staff applies only to an
+accepted engagement. The
 personal management acknowledgement and the partner evaluation are admitted on
 the engagement owner against `expected_engagement_revision` and
 `expected_service_epoch`; while one is pending it pins the engagement content,
@@ -124,8 +127,17 @@ facts and this exact acknowledgement.
 
 ## Accepted-state domain boundary
 
-The HTTP-only `POST /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance`
-operation accepts only the tenant, engagement and expected client sequence. It does not accept
+The HTTP-only `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance/{command_id}`
+operation is a fixed 202 admission that accepts only the command identity, the tenant, the engagement and
+`expected_revision`, the engagement's own revision. Admission freezes the exact engagement revision, the complete
+service epoch, the paired management acknowledgement and (for a conditional history) partner evaluation, the ratified
+rules, the partner authority and every staff and canonical-user practice subject; an exact retry replays the original
+202 whatever changed since. The engagement is accepted only by `EngagementAcceptanceProcess`: every temporary
+reservation and source use is acquired in one canonical unsigned UTF-8 stream-key order from the frozen manifests, the
+irreversible `EngagementPracticeCommitmentsAuthorized` requires the complete exact grant set, and only then are the
+permanent walls committed on `PracticeIndependenceCommitment` and the acceptance recorded; settlement ends the
+temporary grants only. A source that cannot hold rejects the whole operation before the authorization, with no
+permanent wall. It does not accept
 caller-supplied partner, authority, directory, boundary or rule evidence, and it is not registered
 as an MCP tool. A dedicated firm-professional authorizer requires an authenticated personal HTTP
 request, an active tenant, a current canonical platform user and one active firm-staff identity.
@@ -149,6 +161,10 @@ when it does, acceptance requires the matching approved version and approval dec
 drafts accept with no boundary proof; unselected, half-present or mismatched proofs are refused.
 Later boundary successors cannot rewrite the historical binding.
 
+Positive staff assignment (`PUT .../actual-assignments/{staff_member_id}/{command_id}`) is the same process
+with the same service epoch, partner authority and staff and canonical-user commitments, and records
+`ServiceEngagementStaffAssigned` only after the authorization.
+
 The approving partner remains separately attributed. Approval alone does not create an actual
 team assignment or grant client business access. The approver is checked against opposite
 actual assignment history; explicitly proposed team members become actual history only at
@@ -156,7 +172,8 @@ acceptance. A broader rule about professional involvement outside assignments re
 ratification detail for issue #343.
 
 Actual assignments create permanent client-specific person history by canonical user and staff
-identity. Client closure and assignment revocation preserve it through aliases and later
+identity: one `PracticeIndependenceCommitment` per client and subject (`staff` or `canonical_user`) whose
+commitment no command releases, revokes or reactivates. Client closure and assignment revocation preserve it through aliases and later
 engagements. The client-administration endpoint and MCP tool
 `bdgrz.service-engagement.actual-staff.revoke` remove one current accepted assignment with an
 expected client sequence and attributed reason. Both use the existing active-tenant, current
@@ -169,12 +186,11 @@ retains original approvals and separately attributed revocation reason and time.
 
 After acceptance, the currently designated partner can add one exact active firm-directory
 identity with `AssignServiceEngagementStaff`. This is personal HTTP only and requires the
-current client-ledger sequence plus an effective date no earlier than the UTC request date and
+engagement's own revision plus an effective date no earlier than the UTC request date and
 inside the engagement period. The request cannot supply the user's canonical identity, practice,
 partner designation, or directory revision; the handler resolves and rechecks those sources. The
 aggregate records the exact partner designation and staff-directory revision, rejects a staff
-identity already present in that engagement, and applies the permanent M0-D26 wall across the
-client's complete actual assignment history. The accepted snapshot and engagement revision each
+identity already present in that engagement, and applies the permanent M0-D26 wall read from the practice commitment owners of the staff member and the canonical user. The accepted snapshot and engagement revision each
 advance once; professional access begins on the retained effective date. Later directory-status
 changes to assignments added this way still require the actual-assignment locator's reactor and
 projector coverage.

@@ -1760,7 +1760,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [ClientServiceIndependence](../../src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs#L11)
 - [ClientIndependenceDecision](../../src/Compliance.Core/Features/AccessControl/ClientIndependenceDecision.cs#L10)
 - [ServiceEngagementIndependence](../../src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs#L11)
-- [IndependenceLedger](../../src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs#L12)
+- [PracticeIndependenceCommitment](../../src/Compliance.Core/Features/AccessControl/PracticeIndependenceCommitment.cs#L19)
 - [IndependenceRuleRatificationCatalog](../../src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs#L8)
 - [IndependenceRuleCatalog](../../src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs#L8)
 - [Member](../../src/Compliance.Core/Features/AccessControl/Member.cs#L5)

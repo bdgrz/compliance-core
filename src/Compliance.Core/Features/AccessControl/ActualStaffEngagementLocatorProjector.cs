@@ -3,7 +3,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 sealed class ActualStaffEngagementLocatorProjector(IActualStaffEngagementLocatorProjection projection)
-    : Projector(projection, EventStreamPattern.ForTenant("client-independence"), WorkloadName)
+    : Projector(projection, EventStreamPattern.ForTenant(ServiceEngagementIndependence.Area), WorkloadName)
 {
     public const string WorkloadName = "ActualStaffEngagementLocatorV1";
 

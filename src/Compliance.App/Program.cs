@@ -749,6 +749,34 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
                 }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
+    app.MapPortiaPut<AcceptServiceEngagement, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Service engagements");
+    app.MapPortiaPut<AssignServiceEngagementStaff, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Service engagements");
     app.MapPortiaPut<CloseServiceEngagement, ServiceEngagementView>(
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

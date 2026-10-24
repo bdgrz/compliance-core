@@ -1,30 +1,39 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
+/// <summary>
+///     Finds the accepted assignments a directory status change affects and fans out one internal reevaluation command
+///     per affected acceptance pair. Discovery reads the authoritative acceptance and staff assignment facts of the
+///     client's engagement owners and the immutable accepted snapshot each retains; the actual staff locator only
+///     narrows the search and its rows are verified against those facts. A receipt never reactivates an acceptance.
+/// </summary>
 sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregateReader reader,
-    FirmStaffViews staffViews, IActualStaffEngagementLocatorReader locators, IRequestBus bus)
+    FirmStaffViews staffViews, IActualStaffEngagementLocatorReader locators, IImmutableContentStore content,
+    IRequestBus bus)
 {
     public async ValueTask ReconcileStatusAsync(Uuid tenantId, IReactorContext<FirmStaffChangeRecorded> context,
         FirmStaffMemberView changed, CancellationToken ct)
     {
-        var sources = await AcceptanceSourcesAsync(tenantId, ct).ConfigureAwait(false);
+        var sources = await SourcesAsync(tenantId, ct).ConfigureAwait(false);
         var checkpoint = await locators.LoadCheckpointAsync(tenantId, ct).ConfigureAwait(false);
         var coveredPosition = checkpoint.Cursor == EventCursor.Start ? -1 :
             sources.FindIndex(record => record.NextCursor == checkpoint.Cursor);
-        var lastAcceptance = sources.FindLastIndex(record => record.Event is ServiceEngagementAcceptanceRecorded);
+        var lastAcceptance = sources.FindLastIndex(IsAcceptanceSource);
         if (lastAcceptance > coveredPosition)
             throw Pending("The actual assignment locator has not covered authoritative acceptance sources.");
-        var accepted = sources.Where(record => record.Event is ServiceEngagementAcceptanceRecorded).ToArray();
-        var ledger = await reader.HydrateAsync(new IndependenceLedger(tenantId), ct).ConfigureAwait(false);
+        var accepted = new List<AcceptedSource>();
+        foreach (var record in sources.Where(IsAcceptanceSource))
+            accepted.Add(await ReadAcceptedAsync(tenantId, record, ct).ConfigureAwait(false));
         foreach (var original in accepted)
-            if (!ledger.MatchesAcceptanceSource((ServiceEngagementAcceptanceRecorded)original.Event))
+            if (!await RetainsAsync(tenantId, original, ct).ConfigureAwait(false))
                 throw new InvalidOperationException("Assignment discovery requires exact retained acceptance source.");
-        var expected = accepted.Where(record => ((ServiceEngagementAcceptanceRecorded)record.Event).Acceptance.Assignments
-            .Any(staff => staff.StaffMemberId == changed.StaffMemberId && staff.UserId == changed.UserId &&
+        var expected = accepted.Where(source => source.Assignees.Any(staff =>
+                staff.StaffMemberId == changed.StaffMemberId && staff.UserId == changed.UserId &&
                 staff.Practice == changed.Practice))
-            .Select(record => LocatorId((ServiceEngagementAcceptanceRecorded)record.Event, changed.StaffMemberId,
-                changed.UserId)).ToHashSet();
+            .Select(source => LocatorId(source, changed.StaffMemberId, changed.UserId)).ToHashSet();
         var seen = new HashSet<Uuid>();
         string? cursor = null;
         do
@@ -33,93 +42,138 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
                 changed.UserId, 200, cursor, ct).ConfigureAwait(false);
             foreach (var row in page.Items)
             {
-                var source = accepted.SingleOrDefault(record => record.ResourceOffset == row.SourceResourceOffset &&
-                    record.Stream.Realm == row.SourceRealm && record.Stream.Area == row.SourceArea && record.Stream.Resource == row.SourceResource);
-                if (source?.Event is not ServiceEngagementAcceptanceRecorded acceptance || row.TenantId != tenantId ||
-                    row.AcceptanceRequestId != acceptance.RequestId || row.EngagementId != acceptance.Acceptance.EngagementId ||
-                    row.AcceptanceSourceSequence != acceptance.ExpectedSequence + 1 || row.AcceptanceRevision != acceptance.Acceptance.Revision ||
-                    row.AcceptanceSha256 != IndependenceSourceDigest.Acceptance(acceptance.Acceptance) ||
-                    row.SourcePayloadSha256 != IndependenceSourceDigest.AcceptanceEvent(acceptance) ||
-                    !acceptance.Acceptance.Assignments.Any(staff => staff.StaffMemberId == row.StaffMemberId &&
-                        staff.UserId == row.UserId && staff.Practice == row.Practice && staff.DirectoryStaffRevision == row.DirectoryStaffRevision &&
+                var source = accepted.SingleOrDefault(item => item.Record.ResourceOffset == row.SourceResourceOffset &&
+                    item.Record.Stream.Realm == row.SourceRealm && item.Record.Stream.Area == row.SourceArea &&
+                    item.Record.Stream.Resource == row.SourceResource);
+                if (source is null || row.TenantId != tenantId || row.AcceptanceRequestId != source.OperationId ||
+                    row.EngagementId != source.View.EngagementId ||
+                    row.AcceptanceSourceSequence != (long)source.Revision ||
+                    row.AcceptanceRevision != source.View.Revision ||
+                    row.AcceptanceSha256 != IndependenceSourceDigest.Acceptance(source.View) ||
+                    row.SourcePayloadSha256 != IndependenceSourceDigest.AcceptanceSource(source.Record.Event) ||
+                    !source.Assignees.Any(staff => staff.StaffMemberId == row.StaffMemberId &&
+                        staff.UserId == row.UserId && staff.Practice == row.Practice &&
+                        staff.DirectoryStaffRevision == row.DirectoryStaffRevision &&
                         staff.AssignedAt == row.AssignedAt) || row.StaffMemberId != changed.StaffMemberId ||
                     row.UserId != changed.UserId || row.Practice != changed.Practice)
                     throw new InvalidOperationException("An assignment locator must match its exact authoritative acceptance.");
-                if (row.LocatorId != LocatorId(acceptance, row.StaffMemberId, row.UserId) || !expected.Contains(row.LocatorId))
+                if (row.LocatorId != LocatorId(source, row.StaffMemberId, row.UserId) || !expected.Contains(row.LocatorId))
                     throw new InvalidOperationException("An assignment locator must preserve its exact immutable source identity.");
                 if (!seen.Add(row.LocatorId))
                     throw Pending("Assignment discovery returned a duplicate immutable source row.");
                 if (row.DirectoryStaffRevision < changed.Revision)
-                    await bus.SendReactionAsync(Command(tenantId, context.Source, source, row.StaffMemberId, row.UserId), context, ct)
-                        .ConfigureAwait(false);
+                    await bus.SendReactionAsync(Command(tenantId, context.Source, source, row.StaffMemberId, row.UserId),
+                        context, ct).ConfigureAwait(false);
             }
             cursor = page.NextCursor;
         } while (cursor is not null);
         if (!expected.SetEquals(seen))
             throw Pending("Assignment discovery has not returned every authoritative selected staff source.");
-        var after = (await AcceptanceSourcesAsync(tenantId, ct).ConfigureAwait(false))
-            .Where(record => record.Event is ServiceEngagementAcceptanceRecorded).ToArray();
-        if (!accepted.Select(SourceIdentity).SequenceEqual(after.Select(SourceIdentity)))
+        var after = (await SourcesAsync(tenantId, ct).ConfigureAwait(false)).Where(IsAcceptanceSource).ToArray();
+        if (!accepted.Select(item => SourceIdentity(item.Record)).SequenceEqual(after.Select(SourceIdentity)))
             throw Pending("Authoritative acceptance sources changed while assignment discovery was paged.");
     }
 
-    public async ValueTask ReconcileAcceptanceAsync(IReactorContext<ServiceEngagementAcceptanceRecorded> context, CancellationToken ct)
+    public async ValueTask ReconcileAcceptanceAsync(IReactorContext context, DomainEvent trigger, CancellationToken ct)
     {
-        var acceptance = context.Trigger;
-        var ledger = await reader.HydrateAsync(new IndependenceLedger(acceptance.TenantId), ct).ConfigureAwait(false);
-        if (!ledger.MatchesAcceptanceSource(acceptance))
+        if (trigger is not (ServiceEngagementAcceptanceRecorded or ServiceEngagementStaffAssigned) ||
+            !Uuid.TryParse(context.Source.Stream.Realm, null, out var tenantId))
+            throw new InvalidOperationException("Reconciliation requires an acceptance source of its owning client.");
+        var source = await ReadAcceptedAsync(tenantId, context.Source, ct).ConfigureAwait(false);
+        if (!await RetainsAsync(tenantId, source, ct).ConfigureAwait(false))
             throw new InvalidOperationException("Reconciliation requires the exact retained original acceptance.");
-        foreach (var staffMemberId in acceptance.Acceptance.Assignments.Select(staff => staff.StaffMemberId).Distinct())
+        foreach (var staffMemberId in source.Assignees.Select(staff => staff.StaffMemberId).Distinct())
         {
             var record = await reader.HydrateAsync(new FirmStaffRecord(staffMemberId), ct).ConfigureAwait(false);
-            await foreach (var source in events.ReadAsync(record.Stream, 0, ct).WithCancellation(ct).ConfigureAwait(false))
+            await foreach (var directory in events.ReadAsync(record.Stream, 0, ct).WithCancellation(ct).ConfigureAwait(false))
             {
-                if (source.Stream != record.Stream)
+                if (directory.Stream != record.Stream)
                     throw new InvalidOperationException("A staff cause must originate on its authoritative record stream.");
-                if (source.Event is not FirmStaffChangeRecorded { ChangeKind: "status" } change)
+                if (directory.Event is not FirmStaffChangeRecorded { ChangeKind: "status" } change)
                     continue;
                 if (!record.MatchesRetainedChange(change))
                     throw Pending("Staff source history changed while accepted assignments were reconciled.");
                 var changed = await staffViews.ReadAsync(change, ct).ConfigureAwait(false);
-                foreach (var staff in acceptance.Acceptance.Assignments.Where(staff =>
+                foreach (var staff in source.Assignees.Where(staff =>
                              staff.StaffMemberId == changed.StaffMemberId && staff.UserId == changed.UserId &&
                              staff.Practice == changed.Practice && staff.DirectoryStaffRevision < changed.Revision))
-                    await bus.SendReactionAsync(Command(acceptance.TenantId, source, context.Source,
-                        staff.StaffMemberId, staff.UserId), context, ct).ConfigureAwait(false);
+                    await bus.SendReactionAsync(Command(tenantId, directory, source, staff.StaffMemberId, staff.UserId),
+                        context, ct).ConfigureAwait(false);
             }
         }
     }
 
-    async ValueTask<List<DomainEventRecord>> AcceptanceSourcesAsync(Uuid tenantId, CancellationToken ct)
+    async ValueTask<List<DomainEventRecord>> SourcesAsync(Uuid tenantId, CancellationToken ct)
     {
         var records = new List<DomainEventRecord>();
-        var stream = new IndependenceLedger(tenantId).Stream;
-        await foreach (var source in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(), "client-independence"),
-                           EventCursor.Start, ct).WithCancellation(ct).ConfigureAwait(false))
+        await foreach (var source in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(),
+                           ServiceEngagementIndependence.Area), EventCursor.Start, ct).WithCancellation(ct)
+                           .ConfigureAwait(false))
         {
-            if (source.Stream != stream)
-                throw new InvalidOperationException("Accepted source coverage requires its exact owning client ledger.");
+            if (source.Stream.Realm != tenantId.ToString() || source.Stream.Area != ServiceEngagementIndependence.Area)
+                throw new InvalidOperationException("Accepted source coverage requires its exact owning engagement streams.");
             records.Add(source);
         }
+
         return records;
     }
 
-    static Uuid LocatorId(ServiceEngagementAcceptanceRecorded source, Uuid staffMemberId, Uuid userId) =>
-        Uuid.CreateVersion5(source.RequestId,
-            $"actual_staff_locator_v1:{source.TenantId}:{source.Acceptance.EngagementId}:{source.Acceptance.Revision}:{staffMemberId}:{userId}");
+    async ValueTask<AcceptedSource> ReadAcceptedAsync(Uuid tenantId, DomainEventRecord record, CancellationToken ct)
+    {
+        var realm = IndependenceContent.Realm(tenantId);
+        var (operationId, result, revision, assignedStaff) = record.Event switch
+        {
+            ServiceEngagementAcceptanceRecorded recorded => (recorded.OperationId, recorded.OperationResult,
+                recorded.Revision, (Uuid?)null),
+            ServiceEngagementStaffAssigned assigned => (assigned.OperationId, assigned.OperationResult,
+                assigned.Revision, (Uuid?)(await FirmStaffContent.ReadStaffAsync(content, assigned.AssignedStaffContent,
+                    ct).ConfigureAwait(false)).StaffMemberId),
+            _ => throw new InvalidOperationException("The fact is not an acceptance source."),
+        };
+        if (result is null)
+            throw new InvalidOperationException("Assignment discovery requires an acceptance result.");
+        var view = await IndependenceContent.ReadResultAsync<ServiceEngagementAcceptanceView>(content, realm, result, ct)
+            .ConfigureAwait(false);
+        var assignees = assignedStaff is { } only
+            ? view.Assignments.Where(staff => staff.StaffMemberId == only).ToArray()
+            : view.Assignments.ToArray();
+        return new AcceptedSource(record, view, operationId, revision, assignees);
+    }
+
+    async ValueTask<bool> RetainsAsync(Uuid tenantId, AcceptedSource source, CancellationToken ct)
+    {
+        if (!Uuid.TryParse(source.Record.Stream.Resource, null, out var engagementId))
+            return false;
+        var owner = await reader.HydrateAsync(new ServiceEngagementIndependence(tenantId, engagementId), ct)
+            .ConfigureAwait(false);
+        return owner.Stream == source.Record.Stream &&
+            owner.OperationOf(source.OperationId) is { Completed: { } completed } &&
+            completed.Metadata.EventId == source.Record.Event.Metadata.EventId;
+    }
+
+    static bool IsAcceptanceSource(DomainEventRecord record) =>
+        !record.Event.Metadata.IsAudit && record.Event is ServiceEngagementAcceptanceRecorded or ServiceEngagementStaffAssigned;
+
+    static Uuid LocatorId(AcceptedSource source, Uuid staffMemberId, Uuid userId) =>
+        Uuid.CreateVersion5(source.OperationId,
+            $"actual_staff_locator_v1:{source.View.TenantId}:{source.View.EngagementId}:{source.View.Revision}:{staffMemberId}:{userId}");
 
     static (Uuid EventId, ulong Offset, string Digest) SourceIdentity(DomainEventRecord source) =>
-        (source.Event.Metadata.EventId, source.ResourceOffset,
-            IndependenceSourceDigest.AcceptanceEvent((ServiceEngagementAcceptanceRecorded)source.Event));
+        (source.Event.Metadata.EventId, source.ResourceOffset, IndependenceSourceDigest.AcceptanceSource(source.Event));
 
     static RecordDirectoryIndependenceReevaluation Command(Uuid tenantId, DomainEventRecord directory,
-        DomainEventRecord acceptance, Uuid staffMemberId, Uuid userId) => new(tenantId,
+        AcceptedSource acceptance, Uuid staffMemberId, Uuid userId) => new(
+            RecordDirectoryIndependenceReevaluation.CommandIdOf(directory.Event.Metadata.EventId,
+                acceptance.Record.Event.Metadata.EventId, staffMemberId, userId), tenantId,
             directory.ResourceOffset, directory.Event.Metadata.EventId,
             IndependenceSourceDigest.DirectoryEvent((FirmStaffChangeRecorded)directory.Event),
-            acceptance.ResourceOffset, acceptance.Event.Metadata.EventId,
-            ((ServiceEngagementAcceptanceRecorded)acceptance.Event).RequestId,
-            IndependenceSourceDigest.AcceptanceEvent((ServiceEngagementAcceptanceRecorded)acceptance.Event), staffMemberId, userId);
+            acceptance.Record.ResourceOffset, acceptance.Record.Event.Metadata.EventId, acceptance.OperationId,
+            IndependenceSourceDigest.AcceptanceSource(acceptance.Record.Event), staffMemberId, userId,
+            acceptance.View.EngagementId, acceptance.View.CompleteServiceHistory.Count);
 
     static ReactionCommandFailedException Pending(string reason) => new(new RequestError(RequestErrorKind.Conflict,
         reason, isTransient: true));
+
+    sealed record AcceptedSource(DomainEventRecord Record, ServiceEngagementAcceptanceView View, Uuid OperationId,
+        ulong Revision, IReadOnlyList<EngagementActualAssignmentView> Assignees);
 }

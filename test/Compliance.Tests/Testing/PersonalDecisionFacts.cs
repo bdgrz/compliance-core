@@ -24,10 +24,17 @@ static class PersonalDecisionFacts
         new DateOnly(2025, 12, 1));
 
     /// <summary>Seeds ratified rules and a current engagement partner for the host's client.</summary>
-    public static async Task<PartnerSetup> SeedPartnerAsync(IndependenceHost host,
-        IndependenceRuleContent? rules = null)
+    public static Task<PartnerSetup> SeedPartnerAsync(IndependenceHost host,
+        IndependenceRuleContent? rules = null, string partnerPractice = "attest") =>
+        SeedPartnerAsync(host.Provider, host.Tenant, rules, partnerPractice);
+
+    /// <summary>
+    ///     Seeds ratified rules and a current engagement partner of <paramref name="tenant" /> in any composition;
+    ///     <paramref name="partnerUserId" /> names the canonical user who is the partner, for a signed-in caller.
+    /// </summary>
+    public static async Task<PartnerSetup> SeedPartnerAsync(IServiceProvider provider, Uuid tenant,
+        IndependenceRuleContent? rules = null, string partnerPractice = "attest", Uuid? partnerUserId = null)
     {
-        var provider = host.Provider;
         var at = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds()).AddMinutes(-1);
         var operatorActor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator");
         var content = rules ?? ConditionalRules;
@@ -40,8 +47,10 @@ static class PersonalDecisionFacts
         var ratifierDuty = await ProfessionalDutyFacts.RecordAsync(provider, ratifierAssertion, ratifier,
             operatorActor, at);
         Assert.True(ratifierDuty.IsSuccess, ratifierDuty.Error?.Message);
-        await host.SeedDraftRulesAsync(content);
-        var executor = host.Scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+        await ProgramManagementServices.SeedAsync(provider, new IndependenceRuleCatalog(), catalog => catalog.ReviseRules(
+            Uuid.CreateVersion4(), catalog.Sequence, content, operatorActor, IndependenceHost.At));
+        await using var scope = provider.CreateAsyncScope();
+        var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         var ratified = await executor.ExecuteAsync(new IndependenceRuleRatificationCatalog(), catalog =>
             AggregateOutcome.CommitOnSuccess(catalog.Ratify(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, 1,
                 catalog.Sequence, IndependenceSourceDigest.RuleContent(content), "Synthetic ratification evidence",
@@ -49,11 +58,11 @@ static class PersonalDecisionFacts
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         Assert.True(ratified.IsSuccess, ratified.Error?.Message);
 
-        var partnerUser = Uuid.CreateVersion4();
-        var staff = await FirmStaffFacts.RegisterAsync(provider, Uuid.CreateVersion4(), partnerUser, "attest",
+        var partnerUser = partnerUserId ?? Uuid.CreateVersion4();
+        var staff = await FirmStaffFacts.RegisterAsync(provider, Uuid.CreateVersion4(), partnerUser, partnerPractice,
             "Synthetic partner source", operatorActor, IndependenceHost.At);
         var assertion = ProfessionalDutyAssertionTestIssuer.Issue(Uuid.CreateVersion4(), partnerUser,
-            FirmProfessionalDuty.EngagementPartner, host.Tenant, 1, "active", null, at.AddMinutes(-1),
+            FirmProfessionalDuty.EngagementPartner, tenant, 1, "active", null, at.AddMinutes(-1),
             at.AddMinutes(57));
         var duty = await ProfessionalDutyFacts.RecordAsync(provider, assertion, staff, operatorActor, at);
         Assert.True(duty.IsSuccess, duty.Error?.Message);
