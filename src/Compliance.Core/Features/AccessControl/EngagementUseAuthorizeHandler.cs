@@ -8,14 +8,14 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>
-///     The shared half of every acquire pair of the engagement personal decision process: the source is verified from
-///     the engagement owner, and a pinned source that is no longer eligible rejects the whole process so the abort
-///     receiver fences authorization and every use, held or not, is settled as canceled.
+///     The shared half of every acquire pair of the engagement personal decision and acceptance processes: the source
+///     is verified from the engagement owner, and a pinned source that is no longer eligible rejects the whole process
+///     so the abort receiver fences authorization and every use, held or not, is settled as canceled.
 /// </summary>
 /// <typeparam name="TOwner">The source owner that embeds <see cref="SourceUseReservations" />.</typeparam>
 /// <typeparam name="TRequest">The pair's authorize command.</typeparam>
 abstract class EngagementUseAuthorizeHandler<TOwner, TRequest>(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, TimeProvider clock, EngagementPersonalDecisionVerifier verifier)
+    IImmutableContentStore content, TimeProvider clock, EngagementUseVerifier verifier)
     : AuthorizeSourceUseHandler<TOwner, TRequest>(reader, executor, content, clock)
     where TOwner : Aggregate, ISourceUseOwner
     where TRequest : ISourceUseAuthorization, IEngagementPersonalDecisionUse

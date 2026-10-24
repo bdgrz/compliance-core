@@ -13,7 +13,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     The directory staff snapshot a command relied on is retained in the change, never re-read for a retry.
 /// </summary>
 sealed class ServiceEngagementCommands(NativeOperationExecutor operations, IAggregateReader reader,
-    IImmutableContentStore content, FirmStaffViews staffViews, TimeProvider clock)
+    IImmutableContentStore content, FirmStaffViews staffViews, PracticeIndependenceWall wall, TimeProvider clock)
 {
     const string InitialEpisode = "initial";
     const string StaffNotFound = "The current active firm-staff identity was not found.";
@@ -160,11 +160,11 @@ sealed class ServiceEngagementCommands(NativeOperationExecutor operations, IAggr
             var prepared = snapshot.PrepareRevocation(request.ExpectedRevision);
             if (!prepared.IsSuccess)
                 return Result<ServiceEngagementAcceptanceView>.Failure(prepared.Error!);
-            if (snapshot.AcceptanceContent is not { } acceptanceContent || snapshot.LatestResult is not { } draft)
+            if (snapshot.AcceptanceResult is not { } acceptanceResult || snapshot.LatestResult is not { } draft)
                 return IndependenceContent.Failure<ServiceEngagementAcceptanceView>(RequestErrorKind.Conflict,
                     "The accepted engagement cannot be read yet; retry after it is available.", true);
-            var acceptance = await content.ReadJsonAsync<ServiceEngagementAcceptanceView>(realm, acceptanceContent, ct)
-                .ConfigureAwait(false);
+            var acceptance = await IndependenceContent.ReadResultAsync<ServiceEngagementAcceptanceView>(content, realm,
+                acceptanceResult, ct).ConfigureAwait(false);
             var engagement = await IndependenceContent.ReadResultAsync<ServiceEngagementView>(content, realm, draft, ct)
                 .ConfigureAwait(false);
             if (!acceptance.Assignments.Any(staff => staff.StaffMemberId == request.StaffMemberId && staff.IsCurrent))
@@ -255,16 +255,16 @@ sealed class ServiceEngagementCommands(NativeOperationExecutor operations, IAggr
     }
 
     /// <summary>
-    ///     The permanent person-practice wall: a person who was ever actually assigned to the opposite practice for this
-    ///     client cannot even be proposed. Until the practice commitment owner exists the wall is read from the
-    ///     retained client ledger, the same source the management and compartment guards read.
+    ///     The permanent person-practice wall: a person who ever permanently served the opposite practice for this
+    ///     client cannot even be proposed. The wall is read from the practice commitment owners, the same source the
+    ///     management and compartment guards read.
     /// </summary>
     async ValueTask<Result<Built>?> RefuseOnWallAsync(Uuid tenantId, Uuid engagementId, FirmStaffMemberView staff,
         CancellationToken ct)
     {
-        var ledger = await reader.HydrateAsync(new IndependenceLedger(tenantId), ct).ConfigureAwait(false);
-        var decision = IndependenceCompartments.CanAssign(ledger.ActualAssignmentHistory, new EngagementAssignment(
-            tenantId, engagementId, staff.StaffMemberId, staff.UserId, ServiceEngagementRules.PracticeOf(staff.Practice)));
+        var decision = await wall.CanAssignAsync(tenantId, new EngagementAssignment(tenantId, engagementId,
+            staff.StaffMemberId, staff.UserId, ServiceEngagementRules.PracticeOf(staff.Practice)), ct)
+            .ConfigureAwait(false);
         return decision.Code switch
         {
             IndependenceDecisionCode.Allowed => null,

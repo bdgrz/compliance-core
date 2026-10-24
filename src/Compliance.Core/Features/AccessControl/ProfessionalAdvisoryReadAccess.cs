@@ -26,17 +26,17 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffVi
             staff.StaffMemberId == Uuid.Empty || staff.Revision <= 0)
             return false;
 
-        var ledger = await reader.HydrateAsync(new IndependenceLedger(tenantId), ct).ConfigureAwait(false);
         var effectiveAt = clock.GetUtcNow();
-        foreach (var acceptance in ledger.Acceptances)
+        var services = await reader.HydrateAsync(new ClientServiceIndependence(tenantId), ct).ConfigureAwait(false);
+        var currentServices = services.Services.Select(service => service.OperationId).ToArray();
+        foreach (var accepted in await engagements.AcceptedAsync(tenantId, ct).ConfigureAwait(false))
         {
-            if (await engagements.GetAsync(tenantId, acceptance.EngagementId, ct).ConfigureAwait(false)
-                    is not { } engagement || engagement.TenantId != tenantId ||
-                engagement.Content.Practice != "advisory" || acceptance.Status != "active" ||
-                acceptance.TenantId != tenantId || !acceptance.Rules.IsRatified ||
-                !ledger.IsEligibleForProfessionalAccess(engagement, staff.StaffMemberId,
-                userId, currentRuleVersion: acceptance.Rules.Version,
-                currentDirectoryStaffRevision: staff.Revision, effectiveAt: effectiveAt))
+            var (engagement, acceptance) = (accepted.Engagement, accepted.Acceptance);
+            if (engagement.TenantId != tenantId || engagement.Content.Practice != "advisory" ||
+                acceptance.Status != "active" || acceptance.TenantId != tenantId || !acceptance.Rules.IsRatified ||
+                !EngagementProfessionalAccess.IsEligible(accepted, currentServices, staff.StaffMemberId, userId,
+                    currentRuleVersion: acceptance.Rules.Version, currentDirectoryStaffRevision: staff.Revision,
+                    effectiveAt: effectiveAt))
                 continue;
 
             if (await MatchesProgramScopeAsync(tenantId, programId, acceptance, ct).ConfigureAwait(false))

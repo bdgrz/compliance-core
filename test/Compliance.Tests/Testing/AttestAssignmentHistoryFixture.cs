@@ -8,10 +8,10 @@ namespace Bdgrz.Compliance.Tests.Testing;
 
 /// <summary>
 ///     Synthetic internal authority fixtures only; never evidence of real professional designation or ratification.
-///     The permanent actual-assignment wall is still read from the retained client ledger, so the fixture appends one
-///     well-formed acceptance fact straight onto that ledger, exactly as an accepted engagement would leave it, next to
-///     the engagement draft on its own owner. The assignments stay in the wall whether or not the engagement is later
-///     closed; closure only closes the draft.
+///     The permanent actual-assignment wall is read from the practice commitment owners, so the fixture seeds the
+///     accepted engagement on its own owner and commits the staff member and the canonical user to the engagement's
+///     practice, exactly as the acceptance process leaves them. The walls stay whether or not the engagement is later
+///     closed; closure only closes the engagement.
 /// </summary>
 static class AttestAssignmentHistoryFixture
 {
@@ -55,15 +55,12 @@ static class AttestAssignmentHistoryFixture
                 staff.RecordedAt, true, partnerActor, Now, DateOnly.FromDateTime(Now.UtcDateTime))], "active",
             partnerActor, Now);
 
-        await using var scope = provider.CreateAsyncScope();
-        var ledger = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new IndependenceLedger(tenant));
-        var accepted = DomainEventSeed.Attach(new ServiceEngagementAcceptanceRecorded(tenant, Uuid.CreateVersion4(),
-            ledger.Sequence, "Synthetic accepted engagement", acceptance), ledger.Id, (ulong)ledger.Sequence + 1);
-        await scope.ServiceProvider.GetRequiredService<IEventStore>()
-            .AppendAsync(ledger.Stream, ledger.CommittedStreamPosition, [accepted]);
+        var operationId = await ServiceEngagementFacts.AcceptAsync(provider, tenant, engagementId, acceptance,
+            partnerActor, Now);
+        await PracticeCommitmentFacts.CommitAsync(provider, tenant, engagementId, operationId, staff, partnerActor, Now);
         if (revoked)
-            await ServiceEngagementFacts.CloseAsync(provider, tenant, engagementId, draft, client, Now.AddMinutes(1));
+            await ServiceEngagementFacts.CloseAcceptedAsync(provider, tenant, engagementId, acceptance, client,
+                Now.AddMinutes(1));
         return (staff, engagementId);
     }
 }

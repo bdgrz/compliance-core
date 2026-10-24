@@ -11,7 +11,10 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     service history. Acceptance and actual assignments are attached by their own facts. Personal decisions
 ///     (management acknowledgement, partner evaluation) are admitted here against the exact content revision, which
 ///     they pin without advancing it until they are materialized or canceled; the owner keeps one pointer per decision
-///     kind that a late older decision can never regress.
+///     kind that a late older decision can never regress. An acceptance or a positive actual staff assignment is
+///     admitted here as a root fact against the exact content revision, pins that content until the ordered process
+///     records or rejects it, and advances the revision only when it is recorded. The permanent practice walls it
+///     commits live on <see cref="PracticeIndependenceCommitment" />, never here.
 /// </summary>
 public sealed class ServiceEngagementIndependence : Aggregate
 {
@@ -29,13 +32,24 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public const string ManagementKind = "AcknowledgeEngagementManagement";
     public const string PartnerKind = "RecordPartnerIndependenceEvaluation";
 
+    /// <summary>Stable command kinds that tag acceptance and staff assignment admissions.</summary>
+    public const string AcceptKind = "AcceptServiceEngagement";
+    public const string AssignKind = "AssignServiceEngagementStaff";
+
     /// <summary>The only generation of a personal decision.</summary>
     public const long DecisionGeneration = 1;
+
+    /// <summary>The only generation of an acceptance or staff assignment.</summary>
+    public const long AcceptanceGeneration = 1;
 
     readonly Uuid _tenantId;
     readonly List<ServiceEngagementMutationRecorded> _changes = [];
     readonly Dictionary<Uuid, EngagementPersonalDecisionRecord> _decisions = [];
     readonly Dictionary<string, EngagementPersonalDecisionRecord> _pointers = [];
+    readonly Dictionary<Uuid, EngagementAcceptanceRecord> _operations = [];
+    readonly List<ImmutableContentRef> _acceptanceHistory = [];
+    readonly List<DirectoryIndependenceReevaluated> _receipts = [];
+    ImmutableContentRef? _acceptanceResult;
     ulong _revision;
     string _status = "none";
 
@@ -76,6 +90,8 @@ public sealed class ServiceEngagementIndependence : Aggregate
                     "An actual assignment is revoked on an accepted engagement of its own tenant, in order.");
             _status = revoked.StaffMemberId is null ? "closed" : _status;
             _revision = revoked.Revision;
+            _acceptanceResult = revoked.OperationResult;
+            _acceptanceHistory.Add(revoked.OperationResult);
         });
         On<EngagementPersonalDecisionAdmitted>(admitted =>
         {
@@ -120,6 +136,63 @@ public sealed class ServiceEngagementIndependence : Aggregate
             if (!_pointers.TryGetValue(kind, out var current) || current.Ordinal < decision.Ordinal)
                 _pointers[kind] = decision;
         });
+        On<ServiceEngagementAcceptanceRequested>(requested => ApplyAdmitted(requested, requested.Owner,
+            requested.Revision, requested.Generation, requested.Intent, requested.FirstResponse, AcceptKind,
+            "draft", EngagementIndependenceOperationKind.Acceptance));
+        On<ServiceEngagementStaffAssignmentRequested>(requested => ApplyAdmitted(requested, requested.Owner,
+            requested.Revision, requested.Generation, requested.Intent, requested.FirstResponse, AssignKind,
+            "accepted", EngagementIndependenceOperationKind.StaffAssignment));
+        On<EngagementPracticeCommitmentsAuthorized>(authorized =>
+        {
+            Acceptance.Observe(authorized);
+            if (!_operations.TryGetValue(authorized.Operation.RootOperationId, out var operation) ||
+                authorized.Owner != Stream || authorized.Intent != operation.Intent ||
+                authorized.Generation != AcceptanceGeneration || !operation.IsPending ||
+                operation.Authorized is not null)
+                throw new InvalidOperationException(
+                    "Only an admitted, pending acceptance or staff assignment is authorized once.");
+            operation.Authorized = authorized;
+        });
+        On<ServiceEngagementAcceptanceRejected>(rejected => ApplyRejected(rejected, rejected.Owner,
+            rejected.Intent, EngagementIndependenceOperationKind.Acceptance));
+        On<ServiceEngagementStaffAssignmentRejected>(rejected => ApplyRejected(rejected, rejected.Owner,
+            rejected.Intent, EngagementIndependenceOperationKind.StaffAssignment));
+        On<ServiceEngagementAcceptanceRecorded>(recorded =>
+        {
+            Acceptance.Observe(recorded);
+            var operation = CompleteOperation(recorded.Operation, recorded.TenantId, recorded.OperationId,
+                recorded.Revision, recorded.OperationResult, EngagementIndependenceOperationKind.Acceptance, "draft");
+            operation.Completed = recorded;
+            _status = "accepted";
+            _revision = recorded.Revision;
+            _acceptanceResult = recorded.OperationResult;
+            _acceptanceHistory.Add(recorded.OperationResult!);
+        });
+        On<ServiceEngagementStaffAssigned>(assigned =>
+        {
+            Acceptance.Observe(assigned);
+            if (assigned.EngagementId != EngagementId)
+                throw new InvalidOperationException("A staff assignment is recorded on its own engagement.");
+            var operation = CompleteOperation(assigned.Operation, assigned.TenantId, assigned.OperationId,
+                assigned.Revision, assigned.OperationResult, EngagementIndependenceOperationKind.StaffAssignment,
+                "accepted");
+            operation.Completed = assigned;
+            _revision = assigned.Revision;
+            _acceptanceResult = assigned.OperationResult;
+            _acceptanceHistory.Add(assigned.OperationResult!);
+        });
+        On<DirectoryIndependenceReevaluated>(reevaluated =>
+        {
+            Acceptance.Observe(reevaluated);
+            if (reevaluated.TenantId != _tenantId || reevaluated.Operation.Owner != Stream ||
+                reevaluated.Operation.LogicalId != reevaluated.Operation.RootOperationId ||
+                reevaluated.Revision != _revision + 1 || _status != "accepted" || reevaluated.FirstResponse is null ||
+                reevaluated.OperationResult is null)
+                throw new InvalidOperationException(
+                    "A directory receipt is recorded once, on an accepted engagement of its own tenant, in order.");
+            _receipts.Add(reevaluated);
+            _revision = reevaluated.Revision;
+        });
     }
 
     /// <summary>The engagement this owner serves.</summary>
@@ -146,8 +219,26 @@ public sealed class ServiceEngagementIndependence : Aggregate
     /// <summary>The operation result of the latest lifecycle change, which holds the current draft view.</summary>
     public ImmutableContentRef? LatestResult => _changes.LastOrDefault()?.OperationResult;
 
-    /// <summary>The latest revised acceptance content, once an acceptance exists.</summary>
-    public ImmutableContentRef? AcceptanceContent { get; private set; }
+    /// <summary>
+    ///     The retained result of the latest acceptance, staff assignment or revocation, whose view is the current
+    ///     accepted snapshot; null until the engagement is accepted.
+    /// </summary>
+    public ImmutableContentRef? AcceptanceResult => _acceptanceResult;
+
+    /// <summary>The retained result of every acceptance, staff assignment and revocation, in order.</summary>
+    public IReadOnlyList<ImmutableContentRef> AcceptanceHistory => _acceptanceHistory;
+
+    /// <summary>Every directory receipt of this engagement, in order.</summary>
+    public IReadOnlyList<DirectoryIndependenceReevaluated> DirectoryReceipts => _receipts;
+
+    /// <summary>Every acceptance and staff assignment ever admitted on this engagement, by operation identity.</summary>
+    public IReadOnlyDictionary<Uuid, EngagementAcceptanceRecord> Operations => _operations;
+
+    /// <summary>The acceptance or staff assignment of one identity, once admitted.</summary>
+    public EngagementAcceptanceRecord? OperationOf(Uuid operationId) => _operations.GetValueOrDefault(operationId);
+
+    /// <summary>True while an admitted acceptance or staff assignment is neither recorded nor rejected.</summary>
+    public bool HasPendingOperation => _operations.Values.Any(operation => operation.IsPending);
 
     /// <summary>Every personal decision ever admitted on this engagement, by decision identity.</summary>
     public IReadOnlyDictionary<Uuid, EngagementPersonalDecisionRecord> Decisions => _decisions;
@@ -189,6 +280,8 @@ public sealed class ServiceEngagementIndependence : Aggregate
                 "Reload the engagement revision before changing it."));
         if (HasPendingPersonalDecision)
             return PendingDecisionFailure();
+        if (HasPendingOperation)
+            return PendingOperationFailure();
         return _status == "draft"
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -226,6 +319,8 @@ public sealed class ServiceEngagementIndependence : Aggregate
                 "Reload the engagement revision before revoking an actual assignment."));
         if (HasPendingPersonalDecision)
             return PendingDecisionFailure();
+        if (HasPendingOperation)
+            return PendingOperationFailure();
         return _status == "accepted"
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -349,6 +444,230 @@ public sealed class ServiceEngagementIndependence : Aggregate
             decision.Admitted.Intent, null, operation, null, null));
         return Result.Success;
     }
+
+    /// <summary>Checks the acceptance or staff assignment admission guards without raising anything.</summary>
+    public Result PrepareOperation(Uuid operationId, EngagementIndependenceOperationKind kind, long expectedRevision)
+    {
+        if (!Exists)
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                "The client service engagement was not found."));
+        if (_operations.ContainsKey(operationId))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Acceptance identities are immutable and cannot be reused."));
+        if (expectedRevision != (long)_revision)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Reload the engagement revision before accepting it or assigning its staff."));
+        if (HasPendingPersonalDecision)
+            return PendingDecisionFailure();
+        if (HasPendingOperation)
+            return PendingOperationFailure();
+        return kind == EngagementIndependenceOperationKind.Acceptance
+            ? _status == "draft"
+                ? Result.Success
+                : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "Only an open draft engagement can be accepted."))
+            : _status == "accepted"
+                ? Result.Success
+                : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "Only an accepted engagement takes actual staff assignments."));
+    }
+
+    /// <summary>
+    ///     Admits the acceptance or staff assignment as the root native fact of its operation. The frozen intent must
+    ///     have captured exactly the content revision this owner holds, otherwise the engagement changed while the
+    ///     intent was prepared.
+    /// </summary>
+    public Result AdmitOperation(OperationProvenance operation, ImmutableContentRef intent, ulong intentRevision,
+        ImmutableContentRef firstResponse, EngagementIndependenceOperationKind kind)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        var commandKind = kind == EngagementIndependenceOperationKind.Acceptance ? AcceptKind : AssignKind;
+        if (operation.Owner != Stream || operation.LogicalId != operation.RootOperationId ||
+            operation.CommandKind != commandKind || operation.OriginalExpectedRevision is not { } expected)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "An acceptance or staff assignment is the logical operation of its own command on its own engagement."));
+        var prepared = PrepareOperation(operation.LogicalId, kind, (long)expected);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (intentRevision != _revision)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The engagement changed while the operation was prepared; reload and retry.", true));
+        if (kind == EngagementIndependenceOperationKind.Acceptance)
+            RaiseEvent(new ServiceEngagementAcceptanceRequested(Stream, (long)_revision, AcceptanceGeneration, intent,
+                null, operation, firstResponse, null));
+        else
+            RaiseEvent(new ServiceEngagementStaffAssignmentRequested(Stream, (long)_revision, AcceptanceGeneration,
+                intent, null, operation, firstResponse, null));
+        return Result.Success;
+    }
+
+    /// <summary>Authorizes the admitted operation irreversibly; the caller proved every reservation and source use.</summary>
+    public Result AuthorizeOperation(OperationProvenance operation, DateTimeOffset decisionAt,
+        ImmutableContentRef authorizationProofs)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(authorizationProofs);
+        if (!_operations.TryGetValue(operation.RootOperationId, out var record) || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only an admitted acceptance or staff assignment of this engagement can be authorized.", true));
+        if (record.Rejected is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The operation was rejected; authorization is fenced.", false));
+        if (record.Authorized is not null || record.Completed is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The operation is already authorized with other terms.", false));
+        RaiseEvent(new EngagementPracticeCommitmentsAuthorized(Stream, (long)_revision, AcceptanceGeneration,
+            record.Intent, null, operation, decisionAt, authorizationProofs, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Rejects the admitted operation before authorization; an authorized operation recovers forward.</summary>
+    public Result RejectOperation(OperationProvenance operation, EngagementIndependenceOperationKind kind)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (!_operations.TryGetValue(operation.RootOperationId, out var record) || operation.Owner != Stream ||
+            record.Kind != kind)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only an admitted operation of this engagement can be rejected.", true));
+        if (record.Authorized is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The operation is authorized and irreversible; it recovers forward.", false));
+        if (record.Rejected is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The operation is already rejected with other terms.", false));
+        if (kind == EngagementIndependenceOperationKind.Acceptance)
+            RaiseEvent(new ServiceEngagementAcceptanceRejected(Stream, (long)_revision, AcceptanceGeneration,
+                record.Intent, null, operation, null, null));
+        else
+            RaiseEvent(new ServiceEngagementStaffAssignmentRejected(Stream, (long)_revision, AcceptanceGeneration,
+                record.Intent, null, operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Records the accepted engagement after the irreversible authorization and advances the revision.</summary>
+    public Result RecordAcceptance(OperationProvenance operation, ImmutableContentRef acceptanceContent,
+        ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(acceptanceContent);
+        ArgumentNullException.ThrowIfNull(operationResult);
+        var ready = ReadyToComplete(operation, EngagementIndependenceOperationKind.Acceptance);
+        if (!ready.IsSuccess)
+            return ready;
+        RaiseEvent(new ServiceEngagementAcceptanceRecorded(_tenantId, operation.RootOperationId, AcceptKind,
+            acceptanceContent, operation, _revision + 1, null, operationResult));
+        return Result.Success;
+    }
+
+    /// <summary>Records the actual staff assignment after the irreversible authorization and advances the revision.</summary>
+    public Result RecordStaffAssignment(OperationProvenance operation, ImmutableContentRef assignedStaffContent,
+        DateOnly effectiveFrom, ImmutableContentRef partnerStaffContent, ImmutableContentRef partnerDesignationContent,
+        long partnerDutyContinuityStartRevision, ActorReference actor, DateTimeOffset recordedAt,
+        ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(assignedStaffContent);
+        ArgumentNullException.ThrowIfNull(partnerStaffContent);
+        ArgumentNullException.ThrowIfNull(partnerDesignationContent);
+        ArgumentNullException.ThrowIfNull(actor);
+        ArgumentNullException.ThrowIfNull(operationResult);
+        var ready = ReadyToComplete(operation, EngagementIndependenceOperationKind.StaffAssignment);
+        if (!ready.IsSuccess)
+            return ready;
+        RaiseEvent(new ServiceEngagementStaffAssigned(_tenantId, operation.RootOperationId, EngagementId,
+            assignedStaffContent, effectiveFrom, partnerStaffContent, partnerDesignationContent,
+            partnerDutyContinuityStartRevision, AssignKind, actor, recordedAt, operation, _revision + 1, null,
+            operationResult));
+        return Result.Success;
+    }
+
+    /// <summary>Checks the directory receipt guards without raising anything.</summary>
+    public Result PrepareDirectoryReevaluation() => !Exists
+        ? Result.Failure(new RequestError(RequestErrorKind.NotFound, "The client service engagement was not found."))
+        : _status == "accepted"
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A directory receipt is recorded only against an accepted engagement.", false));
+
+    /// <summary>Records one denial-only directory receipt as the root native fact of its operation.</summary>
+    public Result RecordDirectoryReevaluation(OperationProvenance operation, ImmutableContentRef content,
+        ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        ArgumentNullException.ThrowIfNull(operationResult);
+        if (operation.Owner != Stream || operation.LogicalId != operation.RootOperationId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A directory receipt is the logical operation of its own command on its own engagement."));
+        var prepared = PrepareDirectoryReevaluation();
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new DirectoryIndependenceReevaluated(_tenantId, content, operation, _revision + 1, firstResponse,
+            operationResult));
+        return Result.Success;
+    }
+
+    Result ReadyToComplete(OperationProvenance operation, EngagementIndependenceOperationKind kind)
+    {
+        if (!_operations.TryGetValue(operation.RootOperationId, out var record) || operation.Owner != Stream ||
+            record.Kind != kind)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only an admitted operation of this engagement can be recorded.", true));
+        if (record.Authorized is null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The operation is not authorized yet; it can never be recorded without the authorization.", true));
+        if (record.Completed is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The operation is already recorded with other terms.", false));
+        return _status == (kind == EngagementIndependenceOperationKind.Acceptance ? "draft" : "accepted")
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The engagement status no longer admits this operation.", false));
+    }
+
+    void ApplyAdmitted(DomainEvent fact, EventStreamAddress owner, long revision, long generation,
+        ImmutableContentRef intent, ImmutableContentRef? firstResponse, string commandKind, string requiredStatus,
+        EngagementIndependenceOperationKind kind)
+    {
+        Acceptance.Observe(fact);
+        var operation = ((INativeOperationFact)fact).Operation;
+        if (owner != Stream || operation.Owner != Stream || operation.LogicalId != operation.RootOperationId ||
+            operation.CommandKind != commandKind || revision != (long)_revision || generation != AcceptanceGeneration ||
+            _status != requiredStatus || firstResponse is null || HasPendingOperation ||
+            !_operations.TryAdd(operation.RootOperationId, new EngagementAcceptanceRecord(fact, kind) { Intent = intent }))
+            throw new InvalidOperationException(
+                "An acceptance or staff assignment is admitted once, alone, at the current content revision.");
+    }
+
+    void ApplyRejected(DomainEvent fact, EventStreamAddress owner, ImmutableContentRef intent,
+        EngagementIndependenceOperationKind kind)
+    {
+        Acceptance.Observe(fact);
+        var operation = ((INativeOperationFact)fact).Operation;
+        if (!_operations.TryGetValue(operation.RootOperationId, out var record) || owner != Stream ||
+            record.Kind != kind || intent != record.Intent || record.Authorized is not null || !record.IsPending)
+            throw new InvalidOperationException("Only an unauthorized, pending operation is rejected once.");
+        record.Rejected = fact;
+    }
+
+    EngagementAcceptanceRecord CompleteOperation(OperationProvenance operation, Uuid tenantId, Uuid operationId,
+        ulong revision, ImmutableContentRef? result, EngagementIndependenceOperationKind kind, string requiredStatus)
+    {
+        if (tenantId != _tenantId || operation.Owner != Stream || operationId != operation.RootOperationId ||
+            !_operations.TryGetValue(operation.RootOperationId, out var record) || record.Kind != kind ||
+            record.Authorized is null || !record.IsPending || revision != _revision + 1 || _status != requiredStatus ||
+            result is null)
+            throw new InvalidOperationException(
+                "Only an authorized, pending operation of its own engagement is recorded once, in order.");
+        return record;
+    }
+
+    static Result PendingOperationFailure() => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+        "An acceptance or staff assignment holds the engagement content; retry after it is recorded or rejected.",
+        true));
 
     static Result PendingDecisionFailure() => Result.Failure(new RequestError(RequestErrorKind.Conflict,
         "A personal decision holds the engagement content; retry after it is materialized or canceled.", true));

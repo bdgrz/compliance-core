@@ -671,6 +671,14 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(EngagementPersonalDecisionProcess.Definition());
         services.AddScoped<EngagementPersonalDecisionAdmission>();
         services.AddScoped<EngagementPersonalDecisionVerifier>();
+        services.AddSingleton(EngagementAcceptanceProcess.Definition());
+        services.AddScoped<EngagementAcceptanceAdmission>();
+        services.AddScoped<EngagementAcceptanceVerifier>();
+        services.AddScoped<EngagementUseVerifier>();
+        services.AddScoped<EngagementSourcePins>();
+        services.AddScoped<EngagementCompletion>();
+        services.AddScoped<EngagementRejection>();
+        services.AddScoped<PracticeIndependenceWall>();
         services.AddScoped<EngagementPersonalDecisionViews>();
         services.AddScoped<ServiceEngagementCommands>();
         services.AddScoped<ServiceEngagementViews>();
@@ -774,6 +782,18 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<MaterializePartnerIndependenceDecisionHandler>()
             .AddRequestHandler<SettleEngagementPersonalDecisionHandler>()
             .AddRequestHandler<CancelEngagementPersonalDecisionHandler>()
+            .AddRequestHandler<AcceptServiceEngagementHandler>()
+            .AddRequestHandler<AssignServiceEngagementStaffHandler>()
+            .AddRequestHandler<AcquireEngagementServiceEpochHandler>()
+            .AddRequestHandler<ReleaseEngagementServiceEpochHandler>()
+            .AddRequestHandler<ReservePracticeIndependenceHandler>()
+            .AddRequestHandler<SettlePracticeIndependenceReservationHandler>()
+            .AddRequestHandler<AuthorizeEngagementPracticeCommitmentsHandler>()
+            .AddRequestHandler<CommitPracticeIndependenceHandler>()
+            .AddRequestHandler<CompleteServiceEngagementAcceptanceHandler>()
+            .AddRequestHandler<CompleteServiceEngagementStaffAssignmentHandler>()
+            .AddRequestHandler<RejectServiceEngagementAcceptanceHandler>()
+            .AddRequestHandler<RejectServiceEngagementStaffAssignmentHandler>()
             .AddRequestHandler<RejectProfessionalDutyChangeHandler>()
             .AddRequestHandler<ListAssignableFirmStaffHandler>()
             .AddRequestHandler<CreateServiceEngagementHandler>()
@@ -796,6 +816,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<ProfessionalDutyChangeReceiverAuthorizer>()
             .AddRequestAuthorizer<ClientIndependencePreviewReceiverAuthorizer>()
             .AddRequestAuthorizer<EngagementPersonalDecisionReceiverAuthorizer>()
+            .AddRequestAuthorizer<EngagementAcceptanceReceiverAuthorizer>()
             .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
             .AddRequestAuthorizer<ServiceEngagementAcceptanceAuthorizer>()
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
@@ -1438,6 +1459,9 @@ public static class ComplianceServiceCollectionExtensions
                 WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<EngagementPersonalDecisionReactor>(EngagementPersonalDecisionReactor.WorkloadName,
+                WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<EngagementAcceptanceReactor>(EngagementAcceptanceReactor.WorkloadName,
                 WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,

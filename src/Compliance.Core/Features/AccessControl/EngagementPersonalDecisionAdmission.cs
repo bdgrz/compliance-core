@@ -17,7 +17,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 /// </summary>
 sealed class EngagementPersonalDecisionAdmission(NativeOperationExecutor operations, IAggregateReader reader,
     IImmutableContentStore content, ProfessionalDutyAuthorityReader duties,
-    CurrentRatifiedIndependenceRulesReader ratifiedRules, TimeProvider clock)
+    CurrentRatifiedIndependenceRulesReader ratifiedRules, EngagementSourcePins pins, TimeProvider clock)
 {
     const string InitialEpisode = "initial";
 
@@ -219,37 +219,10 @@ sealed class EngagementPersonalDecisionAdmission(NativeOperationExecutor operati
                 "Partner evaluation is available only for a fully classified conditionally compatible service history; impairment and unclassified services remain blocked.");
 
         // Pin the exact sources the evaluation relies on; each is held by its own use receiver before authorization.
-        var staff = await reader.HydrateAsync(new FirmStaffRecord(duty.Staff.StaffMemberId), ct).ConfigureAwait(false);
-        var designation = await reader.HydrateAsync(new FirmProfessionalDutyDesignation(userId,
-            FirmProfessionalDuty.EngagementPartner, tenantId), ct).ConfigureAwait(false);
-        var catalog = await reader.HydrateAsync(new IndependenceRuleCatalog(), ct).ConfigureAwait(false);
-        var ratifications = await reader.HydrateAsync(new IndependenceRuleRatificationCatalog(), ct)
-            .ConfigureAwait(false);
-        if (staff.Latest is not { } latestStaff || (long)latestStaff.Revision != duty.Staff.Revision ||
-            designation.Latest is not DomainEvent latestDuty || designation.LatestContent is not { } dutyContent ||
-            (long)designation.Revision != duty.Designation.Revision || catalog.LatestRevision is not { } latestRules ||
-            ratifications.LatestRatification is not { } latestRatification ||
-            ratifications.ForVersion(rules.Version) is not { } ratification ||
-            rules.Ratification != ratification)
+        if (await pins.PartnerAsync(tenantId, userId, duty, ct).ConfigureAwait(false) is not { } partnerPins ||
+            await pins.RulesAsync(rules, ct).ConfigureAwait(false) is not { } rulePins)
             return Conflict("A partner source changed while the evaluation was prepared; reload and retry.", true);
-
-        var rulesContent = await content.WriteJsonAsync(EngagementPersonalDecisionEffects.PlatformRealm,
-            Uuid.CreateVersion4(), EngagementPersonalDecisionEffects.RatifiedRulesSchema,
-            IndependenceRecordValidation.Freeze(rules), ct).ConfigureAwait(false);
-        var ratificationContent = await content.WriteJsonAsync(EngagementPersonalDecisionEffects.PlatformRealm,
-            Uuid.CreateVersion4(), EngagementPersonalDecisionEffects.RatificationSchema, ratification, ct)
-            .ConfigureAwait(false);
-        SourceUseRequirement[] uses =
-        [
-            new(staff.Stream, NativeFactReference.Of(staff.Stream, latestStaff), latestStaff.Revision,
-                SourceUsePurpose.EngagementPersonalDecision, latestStaff.StaffContent),
-            new(designation.Stream, NativeFactReference.Of(designation.Stream, latestDuty), designation.Revision,
-                SourceUsePurpose.EngagementPersonalDecision, dutyContent),
-            new(catalog.Stream, NativeFactReference.Of(catalog.Stream, latestRules), (ulong)catalog.Sequence,
-                SourceUsePurpose.EngagementPersonalDecision, rulesContent),
-            new(ratifications.Stream, NativeFactReference.Of(ratifications.Stream, latestRatification),
-                (ulong)ratifications.Sequence, SourceUsePurpose.EngagementPersonalDecision, ratificationContent),
-        ];
+        SourceUseRequirement[] uses = [.. partnerPins, .. rulePins];
         return Result<(EngagementPersonalDecisionContent, IReadOnlyList<SourceUseRequirement>)>.Success((
             new PartnerEvaluationContent(request.RuleVersion, request.ExpectedRuleContentDigest,
                 request.ExpectedServiceHistoryDigest, request.Rationale), uses));

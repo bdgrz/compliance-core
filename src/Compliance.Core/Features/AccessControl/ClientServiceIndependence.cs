@@ -72,6 +72,18 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
             Acceptance.Observe(settled);
             Uses.ApplySettled(SourceUsePurpose.EngagementPersonalDecision, settled);
         });
+        On<EngagementServiceEpochAuthorized>(granted =>
+        {
+            Acceptance.Observe(granted);
+            if (granted.Revision != _services.Count)
+                throw new InvalidOperationException("A service epoch is held exactly at its current epoch.");
+            Uses.ApplyGranted(SourceUsePurpose.EngagementAcceptance, granted);
+        });
+        On<EngagementServiceEpochSettled>(settled =>
+        {
+            Acceptance.Observe(settled);
+            Uses.ApplySettled(SourceUsePurpose.EngagementAcceptance, settled);
+        });
     }
 
     /// <summary>The active grants, receiver generation and fences of this owner's source uses.</summary>
@@ -195,6 +207,32 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
                 "A settlement is recorded on the held client stream."));
         RaiseEvent(new ClientServicePersonalDecisionUseSettled(Stream, (long)Epoch, generation, intent, null,
             operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Holds the exact complete service history for an acceptance or staff assignment; the epoch does not advance.</summary>
+    public Result AuthorizeEngagementEpoch(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A service history is held on its own client stream."));
+        RaiseEvent(new EngagementServiceEpochAuthorized(Stream, (long)Epoch, generation, intent, null, operation,
+            null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Settles an engagement epoch hold, or fences its key when no grant exists yet.</summary>
+    public Result SettleEngagementEpoch(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A settlement is recorded on the held client stream."));
+        RaiseEvent(new EngagementServiceEpochSettled(Stream, (long)Epoch, generation, intent, null, operation, null,
+            null));
         return Result.Success;
     }
 }

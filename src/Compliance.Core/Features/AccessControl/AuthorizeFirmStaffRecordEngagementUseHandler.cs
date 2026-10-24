@@ -11,7 +11,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     or ineligible source rejects the personal decision and fences the key through the abort path.
 /// </summary>
 sealed class AuthorizeFirmStaffRecordEngagementUseHandler(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content, TimeProvider clock, EngagementPersonalDecisionVerifier verifier)
+    IImmutableContentStore content, TimeProvider clock, EngagementUseVerifier verifier)
     : EngagementUseAuthorizeHandler<FirmStaffRecord, AuthorizeFirmStaffRecordEngagementUse>(reader, executor, content, clock, verifier)
 {
     protected override string CommandKind => nameof(AuthorizeFirmStaffRecordEngagementUse);

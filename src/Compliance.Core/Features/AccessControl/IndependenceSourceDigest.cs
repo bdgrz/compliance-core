@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
@@ -11,6 +12,17 @@ static class IndependenceSourceDigest
 
     public static string AcceptanceEvent(ServiceEngagementAcceptanceRecorded accepted) =>
         Digest(accepted, ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceRecorded);
+
+    public static string AssignmentEvent(ServiceEngagementStaffAssigned assigned) =>
+        Digest(assigned, ComplianceCoreJsonContext.Default.ServiceEngagementStaffAssigned);
+
+    /// <summary>The digest of an acceptance source fact: the recorded acceptance or a recorded staff assignment.</summary>
+    public static string AcceptanceSource(DomainEvent source) => source switch
+    {
+        ServiceEngagementAcceptanceRecorded accepted => AcceptanceEvent(accepted),
+        ServiceEngagementStaffAssigned assigned => AssignmentEvent(assigned),
+        _ => throw new ArgumentException("The fact is not an acceptance source.", nameof(source)),
+    };
 
     public static string DirectorySource(DirectoryStatusSourceView source) =>
         Digest(source, ComplianceCoreJsonContext.Default.DirectoryStatusSourceView);

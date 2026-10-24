@@ -241,6 +241,64 @@ public sealed class ProcessDriverTests
         Assert.Equal(ProcessState.Completed, resumed.State);
     }
 
+    [Fact]
+    public async Task ShouldWalkOneGlobalKeyOrderGivenInterleavedStageOwnedByDifferentReceivers()
+    {
+        // Arrange: AcquireX owns the even keys and AcquireY the odd ones; an interleaved stage offers each key to
+        // every receiver, in canonical key order, and a receiver that does not own the key builds no command.
+        var owners = new Dictionary<string, string> { ["k1"] = "AcquireX", ["k2"] = "AcquireY", ["k3"] = "AcquireX", ["k4"] = "AcquireY" };
+        var definition = new ProcessDefinition(ProcessTestHost.Process, ["ProbeAdmitted"], true,
+        [
+            new ProcessStageDefinition("acquire", ["AcquireX", "AcquireY"]) { Targeting = StageTargeting.Interleaved },
+            new ProcessStageDefinition("apply", ["ApplyA"]) { Targeting = StageTargeting.Once },
+            new ProcessStageDefinition("settle", ["SettleX"]) { Targeting = StageTargeting.EachReceiver },
+        ], ["RejectX"], (step, _, _) => ValueTask.FromResult<IRequest<ReceiverOutcome>?>(
+            step.Stage == "acquire" && owners[step.Target!] != step.Receiver
+                ? null
+                : new ProbeReceive(step.CommandId, step.Receiver, step.Target)));
+        await using var host = new ProcessTestHost(definition: definition);
+        await host.StartAsync("k4", "k2", "k3", "k1");
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Completed, record.State);
+        var calls = host.Recorder.Calls.Select(call => (call.Receiver, call.Target)).ToArray();
+        Assert.Equal([("AcquireX", "k1"), ("AcquireY", "k2"), ("AcquireX", "k3"), ("AcquireY", "k4"),
+            ("ApplyA", (string?)null), ("SettleX", "k1"), ("SettleX", "k2"), ("SettleX", "k3"), ("SettleX", "k4")],
+            calls);
+    }
+
+    [Fact]
+    public async Task ShouldAbortAndSettleEveryKeyGivenRejectionInInterleavedStageBeforeLaterKeys()
+    {
+        // Arrange
+        var definition = new ProcessDefinition(ProcessTestHost.Process, ["ProbeAdmitted"], true,
+        [
+            new ProcessStageDefinition("acquire", ["AcquireX", "AcquireY"]) { Targeting = StageTargeting.Interleaved },
+            new ProcessStageDefinition("apply", ["ApplyA"]) { Targeting = StageTargeting.Once },
+            new ProcessStageDefinition("settle", ["SettleX"]) { Targeting = StageTargeting.EachReceiver },
+        ], ["RejectX"], (step, _, _) => ValueTask.FromResult<IRequest<ReceiverOutcome>?>(
+            step.Stage == "acquire" && step.Receiver == "AcquireY"
+                ? null
+                : new ProbeReceive(step.CommandId, step.Receiver, step.Target)));
+        await using var host = new ProcessTestHost(definition: definition);
+        host.Recorder.Script("AcquireX", call => call.Target == "k2"
+            ? Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("k2 can never be held", null))
+            : Result<ReceiverOutcome>.Success(new ReceiverOutcome.Applied(new(
+                new EventStreamAddress("tenant-a", "targets", call.Target!), call.CommandId, 1))));
+        await host.StartAsync("k3", "k1", "k2");
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Aborted, record.State);
+        Assert.Equal([("AcquireX", "k1"), ("AcquireX", "k2"), ("RejectX", (string?)null), ("SettleX", "k1"),
+            ("SettleX", "k2"), ("SettleX", "k3")], host.Recorder.Calls.Select(call => (call.Receiver, call.Target)));
+    }
+
     /// <summary>Decorates the store so one ReplaceAsync, chosen by count, fails after the receiver already ran.</summary>
     sealed class CrashOnceStore
     {

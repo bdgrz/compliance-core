@@ -26,6 +26,12 @@ public static class ResultSchemaRegistry
         [IndependenceContent.EvaluationSchema] = ComplianceCoreJsonContext.Default.IndependenceEvaluationView,
         [IndependenceContent.EngagementSchema] = ComplianceCoreJsonContext.Default.ServiceEngagementView,
         [IndependenceContent.RevocationSchema] = ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceView,
+        [EngagementAcceptanceEffects.ResultSchema] = ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceView,
+        [EngagementAcceptanceEffects.AcceptanceSchema] = ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceView,
+        [EngagementAcceptanceEffects.AssignedStaffSchema] = ComplianceCoreJsonContext.Default.FirmStaffMemberView,
+        [EngagementAcceptanceEffects.PartnerStaffSchema] = ComplianceCoreJsonContext.Default.FirmStaffMemberView,
+        [EngagementAcceptanceEffects.PartnerDesignationSchema] =
+            ComplianceCoreJsonContext.Default.FirmProfessionalDutyDesignationView,
         [EngagementPersonalDecisionEffects.AcknowledgementSchema] =
             ComplianceCoreJsonContext.Default.EngagementManagementAcknowledgementView,
         [EngagementPersonalDecisionEffects.EvaluationSchema] =

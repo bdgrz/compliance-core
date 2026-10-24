@@ -103,6 +103,10 @@ sealed class IndependenceHost : IAsyncDisposable
     public static ServiceEngagementDraftContent Draft(FirmStaffMemberView lead, string scope = "Synthetic scope") =>
         new(lead.Practice, scope, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), lead.StaffMemberId);
 
+    /// <summary>A draft with no end of period, so the effective date of a later assignment never expires.</summary>
+    public static ServiceEngagementDraftContent OpenDraft(FirmStaffMemberView lead, string scope = "Synthetic scope") =>
+        new(lead.Practice, scope, new DateOnly(2026, 1, 1), null, lead.StaffMemberId);
+
     public async Task<List<TEvent>> EventsAsync<TEvent>(EventStreamAddress stream) where TEvent : DomainEvent
     {
         var found = new List<TEvent>();

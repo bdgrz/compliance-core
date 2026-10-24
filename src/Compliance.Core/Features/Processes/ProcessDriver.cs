@@ -185,12 +185,7 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
             var stageIndex = definition.Stages.ToList().FindIndex(s => s.Stage == step.Stage);
             var stage = definition.Stages[stageIndex];
             var receiverIndex = stage.Receivers.ToList().IndexOf(step.Receiver);
-            var targetIndex = step.Target is null ? record.Targets.Count : record.Targets.ToList().IndexOf(step.Target) + 1;
-            next = stage.IsPerTarget && targetIndex < record.Targets.Count
-                ? record with { StageIndex = stageIndex, ReceiverIndex = receiverIndex, TargetIndex = targetIndex }
-                : receiverIndex + 1 < stage.Receivers.Count
-                    ? record with { StageIndex = stageIndex, ReceiverIndex = receiverIndex + 1, TargetIndex = 0 }
-                    : record with { StageIndex = stageIndex + 1, ReceiverIndex = 0, TargetIndex = 0 };
+            next = NextCursor(record, stage, stageIndex, receiverIndex, step.Target);
         }
 
         if (produced is not null)
@@ -202,5 +197,27 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 },
             };
         return await store.ReplaceAsync(next with { Attempts = 0, Note = null }, record.Version, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Moves the cursor past the step just completed, receiver by receiver or target by target.</summary>
+    static ProcessRecord NextCursor(ProcessRecord record, ProcessStageDefinition stage, int stageIndex,
+        int receiverIndex, string? target)
+    {
+        var targetIndex = target is null ? record.Targets.Count : record.Targets.ToList().IndexOf(target) + 1;
+        if (stage.IsInterleaved && target is not null)
+        {
+            // Targets are the outer loop: every receiver sees a target before the next target is offered.
+            if (receiverIndex + 1 < stage.Receivers.Count)
+                return record with { StageIndex = stageIndex, ReceiverIndex = receiverIndex + 1, TargetIndex = targetIndex - 1 };
+            return targetIndex < record.Targets.Count
+                ? record with { StageIndex = stageIndex, ReceiverIndex = 0, TargetIndex = targetIndex }
+                : record with { StageIndex = stageIndex + 1, ReceiverIndex = 0, TargetIndex = 0 };
+        }
+
+        return stage.IsPerTarget && targetIndex < record.Targets.Count
+            ? record with { StageIndex = stageIndex, ReceiverIndex = receiverIndex, TargetIndex = targetIndex }
+            : receiverIndex + 1 < stage.Receivers.Count
+                ? record with { StageIndex = stageIndex, ReceiverIndex = receiverIndex + 1, TargetIndex = 0 }
+                : record with { StageIndex = stageIndex + 1, ReceiverIndex = 0, TargetIndex = 0 };
     }
 }
