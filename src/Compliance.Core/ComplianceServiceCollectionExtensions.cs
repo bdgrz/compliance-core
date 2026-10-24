@@ -664,6 +664,7 @@ public static class ComplianceServiceCollectionExtensions
         // ISourceFactResolver stays unregistered until Portia publishes the shared connection's IStreamClient
         // (AddStreamClient); the first consuming slice registers FitzSourceFactResolver.
         // SeparationOfDutiesWaiverProofResolver depends on it, so the first consumer slice (S20) registers it too.
+        // IAuthoritativeSnapshotReader is likewise registered by its first consumer (S12).
         services.AddScoped<FitzActualStaffEngagementLocator>();
         services.AddScoped<IActualStaffEngagementLocatorProjection>(provider =>
             provider.GetRequiredService<FitzActualStaffEngagementLocator>());
