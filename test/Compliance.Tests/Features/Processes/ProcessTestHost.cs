@@ -53,7 +53,7 @@ sealed class ProcessTestHost : IAsyncDisposable
 
     public IProcessRecordStore Store { get; }
 
-    public static ProcessKey Key => new(Process, Realm, Root);
+    public static ProcessKey Key => ProcessKey.ForRoot(Process, Root, Source);
 
     /// <summary>acquire[AcquireX] per target, apply[ApplyA, ApplyB], settle[SettleX] per target; abort[RejectX].</summary>
     public static ProcessDefinition Definition() => new(Process, ["ProbeAdmitted"], true,

@@ -30,12 +30,13 @@ public sealed class ProcessRootReaction(IProcessRecordStore store, ProcessDriver
             && !definition.RootSourceEvents.Contains(source.GetType().Name, StringComparer.Ordinal))
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Validation,
                 $"{source.GetType().Name} does not start {processName}.", false));
-        var key = new ProcessKey(processName, context.Source.Stream.Realm, native.Operation.RootOperationId);
+        var first = NativeFactReference.Of(context.Source.Stream, source);
+        var key = ProcessKey.ForRoot(processName, native.Operation.RootOperationId, first);
         ProcessRecord record;
         try
         {
             record = await store.CreateIfAbsentAsync(ProcessRecord.Start(key,
-                NativeFactReference.Of(context.Source.Stream, source), native.Operation.Episode, intent, targets,
+                first, native.Operation.Episode, intent, targets,
                 clock.GetUtcNow()), ct).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)

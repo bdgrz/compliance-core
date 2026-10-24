@@ -53,6 +53,29 @@ public sealed class ProcessRootReactionTests
     }
 
     [Fact]
+    public async Task ShouldKeepSeparateProcessesGivenSameLogicalIdOnDifferentNativeOwners()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await using var scope = host.Provider.CreateAsyncScope();
+        var reaction = scope.ServiceProvider.GetRequiredService<ProcessRootReaction>();
+        var first = await reaction.StartAsync(ProcessTestHost.Process, Context(Admitted()), ProcessTestHost.Intent,
+            ["t1"], "w1");
+        var calls = host.Recorder.Calls.Count;
+        var other = new EventStreamAddress(Stream.Realm, Stream.Area, "p2");
+
+        // Act
+        var second = await reaction.StartAsync(ProcessTestHost.Process,
+            Context(Admitted(other, Uuid.CreateVersion4()), other), ProcessTestHost.Intent, ["t2"], "w2");
+
+        // Assert
+        Assert.Equal(first.Key.RootOperationId, second.Key.RootOperationId);
+        Assert.NotEqual(first.Key, second.Key);
+        Assert.Equal(other, second.Source.Stream);
+        Assert.Equal(calls * 2, host.Recorder.Calls.Count);
+    }
+
+    [Fact]
     public async Task ShouldFailNonTransientlyGivenSourceThatIsNotANativeFact()
     {
         // Arrange
@@ -90,16 +113,17 @@ public sealed class ProcessRootReactionTests
         Assert.Empty(host.Recorder.Calls);
     }
 
-    static ProbeAdmitted Admitted()
+    static ProbeAdmitted Admitted(EventStreamAddress? source = null, Uuid? eventId = null)
     {
+        var owner = source ?? Stream;
         var provenance = new OperationProvenance(ProcessTestHost.Root, ProcessTestHost.Root, null, "Admit",
-            new ActorReference("member", "m1", "Member One"), Stream, "initial", 0, new string('d', 64), At, Stream, Stream);
+            new ActorReference("member", "m1", "Member One"), owner, "initial", 0, new string('d', 64), At, owner, owner);
         var fact = new ProbeAdmitted(Uuid.CreateVersion4(), "p", provenance, ProcessTestHost.Intent);
-        fact.AttachMetadata(new DomainEventMetadata(ProcessTestHost.SourceEvent, Uuid.CreateVersion4(), 1, At));
+        fact.AttachMetadata(new DomainEventMetadata(eventId ?? ProcessTestHost.SourceEvent, Uuid.CreateVersion4(), 1, At));
         return fact;
     }
 
-    static FakeReactorContext Context(DomainEvent source) => new(new DomainEventRecord(Stream, source, 0,
+    static FakeReactorContext Context(DomainEvent source, EventStreamAddress? stream = null) => new(new DomainEventRecord(stream ?? Stream, source, 0,
         new EventCursor("1")));
 
     sealed class FakeReactorContext(DomainEventRecord source) : IReactorContext

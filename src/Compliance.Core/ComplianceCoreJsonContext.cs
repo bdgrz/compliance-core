@@ -1907,6 +1907,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ReceiverOutcome.Replayed))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ReceiverOutcome.Superseded))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessRecord))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessRecordManifest))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessKey))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessLease))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Processes.ProcessState))]

@@ -70,7 +70,10 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 return record;
             }
 
-            if (result.Value is Features.Processes.ReceiverOutcome.Superseded superseded)
+            // An already fenced or settled receiver completes only its cleanup step; every remaining cleanup
+            // target still needs its exact fence/settlement before the process can become terminal.
+            if (result.Value is Features.Processes.ReceiverOutcome.Superseded superseded &&
+                record.State != ProcessState.Aborting && step.Stage is not ("settle" or "release"))
             {
                 record = await store.ReplaceAsync(record with
                 {

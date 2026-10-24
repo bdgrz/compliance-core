@@ -14,6 +14,44 @@ public sealed class FitzKvProcessRecordStoreTests
         ProcessTestHost.Intent, ["t1"], Now);
 
     [Fact]
+    public async Task ShouldRoundTripGivenProcessRecordExceedsSingleFrame()
+    {
+        // Arrange
+        var (store, _) = Create();
+        var targets = Enumerable.Range(0, 2000).Select(index => $"target-{index:D4}-{new string('x', 64)}").ToArray();
+        var fresh = ProcessRecord.Start(ProcessTestHost.Key, ProcessTestHost.Source, "initial",
+            ProcessTestHost.Intent, targets, Now);
+
+        // Act
+        var stored = await store.CreateIfAbsentAsync(fresh);
+        var read = await store.ReadAsync(fresh.Key);
+
+        // Assert
+        Assert.Equal(stored, read);
+        Assert.Equal(2000, read!.Targets.Count);
+    }
+
+    [Fact]
+    public async Task ShouldFailClosedGivenCorruptedProcessPayloadChunk()
+    {
+        // Arrange
+        var (store, kv) = Create();
+        var stored = await store.CreateIfAbsentAsync(Fresh());
+        var route = FitzKvProcessRecordStore.Route(stored.Key);
+        var chunk = kv.Snapshot(route).First(pair => System.Text.Encoding.UTF8.GetString(pair.Key.Span)
+            .Contains("/chunk/", StringComparison.Ordinal));
+        var bytes = chunk.Value.ToArray();
+        bytes[0] ^= 0xFF;
+        kv.Seed(route, chunk.Key, bytes);
+
+        // Act
+        var failure = await Record.ExceptionAsync(() => store.ReadAsync(stored.Key));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(failure);
+    }
+
+    [Fact]
     public async Task ShouldReturnExistingRecordGivenSecondCreate()
     {
         // Arrange
@@ -67,6 +105,30 @@ public sealed class FitzKvProcessRecordStoreTests
         Assert.Equal([ProcessTestHost.Key], dueNow);
         Assert.Equal(2, dueLater.Count);
         Assert.Equal([later.Key], afterCompletion);
+    }
+
+    [Fact]
+    public async Task ShouldReachOtherShardGivenEarlierShardRemainsDue()
+    {
+        // Arrange
+        var (store, _) = Create();
+        var first = await store.CreateIfAbsentAsync(Fresh());
+        var second = await store.CreateIfAbsentAsync(Fresh() with
+        {
+            Key = ProcessTestHost.Key with
+            {
+                RootOperationId = Uuid.Parse("01000000-0000-4000-8000-0000000000d1",
+                    System.Globalization.CultureInfo.InvariantCulture),
+            },
+        });
+
+        // Act
+        var firstScan = await store.ScanPendingAsync(ProcessTestHost.Process, Now, 1);
+        var nextScan = await store.ScanPendingAsync(ProcessTestHost.Process, Now, 1);
+
+        // Assert
+        Assert.Equal([first.Key], firstScan);
+        Assert.Equal([second.Key], nextScan);
     }
 
     [Fact]

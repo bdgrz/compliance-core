@@ -133,6 +133,48 @@ public sealed class ProcessDriverTests
     }
 
     [Fact]
+    public async Task ShouldSettleRemainingTargetsGivenSupersededSettlement()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1", "t2");
+        host.Recorder.Script("SettleX", command => Result<ReceiverOutcome>.Success(command.Target == "t1"
+            ? new ReceiverOutcome.Superseded("already settled", ProcessTestHost.Source)
+            : new ReceiverOutcome.Applied(ProcessTestHost.Source)));
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Completed, record.State);
+        Assert.Equal(["t1", "t2"], host.Recorder.Calls.Where(call => call.Receiver == "SettleX")
+            .Select(call => call.Target!).ToArray());
+    }
+
+    [Fact]
+    public async Task ShouldFinishCleanupGivenAbortReceiverAlreadySuperseded()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1", "t2");
+        host.Recorder.Script("ApplyA", _ =>
+            Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict, "wait", true)));
+        await host.RunAsync();
+        await using var scope = host.Provider.CreateAsyncScope();
+        await scope.ServiceProvider.GetRequiredService<ProcessDriver>().AbortAsync(ProcessTestHost.Key);
+        host.Recorder.Script("RejectX", _ => Result<ReceiverOutcome>.Success(
+            new ReceiverOutcome.Superseded("already fenced", ProcessTestHost.Source)));
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Aborted, record.State);
+        Assert.Equal(["RejectX", "SettleX", "SettleX"], host.Recorder.Calls.Skip(3)
+            .Select(call => call.Receiver).ToArray());
+    }
+
+    [Fact]
     public async Task ShouldFenceThroughAbortReceiversBeforeSettlementGivenAbortRequest()
     {
         // Arrange
