@@ -312,8 +312,18 @@ for (const row of split.splitOwners) {
     const targetNames = new Set(row.targetOwners.map(o => o.proposedAggregate));
     for (const owner of row.targetOwners) {
         const name = owner.proposedAggregate;
-        const classExists = aggregates.has(name);
-        const ownerEvents = [...owner.existingDomainEvents, ...(owner.newDomainEvents ?? [])];
+        const technicalProcess = (owner.technicalProcessState ?? []).length > 0 &&
+            owner.existingDomainEvents.length === 0 && (owner.newDomainEvents ?? []).length === 0 &&
+            processStatus.has(name);
+        const classExists = technicalProcess
+            ? typeNames.has(name) && processStatus.get(name) === 'implemented'
+            : aggregates.has(name);
+        // The final event catalog and owner protocols supersede preliminary split proposals. For
+        // example, personal package delivery admits on the manifest, then materializes Delivered;
+        // it does not introduce the earlier proposed DeliveryAuthorized fact.
+        const selectedEvents = events.filter(event => event.owner === name).map(event => event.event);
+        const ownerEvents = selectedEvents.length > 0 ? selectedEvents
+            : [...owner.existingDomainEvents, ...(owner.newDomainEvents ?? [])];
         const eventsDone = ownerEvents.every(e => eventStatus.get(e) === 'implemented');
         const ownerCommands = (owner.commands ?? []).filter(c => commandStatus.has(c));
         const commandsDone = ownerCommands.every(c => ['implemented', 'removed-ok', 'blocked'].includes(commandStatus.get(c)));

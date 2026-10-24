@@ -1,36 +1,36 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "0b7e316d7772ef4a7532e5cbbef34ab7f78ff1a9",
+  "sourceCommit": "02bcee69f501244a332168965fc3b21eb9e54a60",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 508,
-    "factsWithReducer": 485,
-    "factsWithAggregateEmitter": 483,
+    "domainEventContracts": 507,
+    "factsWithReducer": 484,
+    "factsWithAggregateEmitter": 482,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 21,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 130,
+    "aggregateTypes": 131,
     "aggregateTypesWithCommandPath": 126,
-    "requestContracts": 781,
-    "commonRequestContracts": 779,
+    "requestContracts": 783,
+    "commonRequestContracts": 781,
     "requestClassificationCounts": {
       "command": 346,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 147,
+      "internal_reaction": 149,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 722,
+    "registeredCoreHandlerRegistrations": 724,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 33,
+    "unwiredAggregateProducerOperations": 34,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 20
+      "no_registered_request_route": 21
     },
     "factReplayGuardRows": 0
   },
@@ -1592,44 +1592,12 @@
       "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageAmended.cs",
       "reducers": [
         {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+          "aggregate": "AuditPackageManifest",
+          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditPackageBuildFailed",
-      "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageBuildFailed.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "AuditPackageBuildProgressRecorded",
-      "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageBuildProgressRecorded.cs",
-      "reducers": [
-        {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+        "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -1640,15 +1608,17 @@
       "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageBuildRequested.cs",
       "reducers": [
         {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+          "aggregate": "AuditPackageManifest",
+          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+        "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -1658,14 +1628,17 @@
       "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageBuilt.cs",
       "reducers": [
         {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+          "aggregate": "AuditPackageManifest",
+          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+        "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -1674,14 +1647,16 @@
       "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageCreated.cs",
       "reducers": [
         {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+          "aggregate": "AuditPackageManifest",
+          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+        "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -1690,14 +1665,34 @@
       "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageDelivered.cs",
       "reducers": [
         {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+          "aggregate": "AuditPackageDelivery",
+          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageDelivery.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+        "src/Compliance.Core/Features/AuditPackages/AuditPackageDelivery.cs"
       ],
       "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AuditPackageDeliveryAdmitted",
+      "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageDeliveryAdmitted.cs",
+      "reducers": [
+        {
+          "aggregate": "AuditPackageManifest",
+          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -1706,14 +1701,16 @@
       "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageDisclosureApproved.cs",
       "reducers": [
         {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+          "aggregate": "AuditPackageManifest",
+          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+        "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -1722,14 +1719,16 @@
       "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageValidated.cs",
       "reducers": [
         {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+          "aggregate": "AuditPackageManifest",
+          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+        "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -1738,14 +1737,16 @@
       "contract": "src/Compliance.Common/Features/AuditPackages/AuditPackageValidationOverrideApproved.cs",
       "reducers": [
         {
-          "aggregate": "AuditPackage",
-          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+          "aggregate": "AuditPackageManifest",
+          "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs"
+        "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -9613,16 +9614,31 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "AuditPackage",
-      "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
+      "aggregate": "AuditPackageDelivery",
+      "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageDelivery.cs",
+      "appliedFacts": [
+        "AuditPackageDelivered"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
+      ],
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1052,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
+    },
+    {
+      "aggregate": "AuditPackageManifest",
+      "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs",
       "appliedFacts": [
         "AuditPackageAmended",
-        "AuditPackageBuildFailed",
-        "AuditPackageBuildProgressRecorded",
         "AuditPackageBuildRequested",
         "AuditPackageBuilt",
         "AuditPackageCreated",
-        "AuditPackageDelivered",
+        "AuditPackageDeliveryAdmitted",
         "AuditPackageDisclosureApproved",
         "AuditPackageValidated",
         "AuditPackageValidationOverrideApproved"
@@ -9632,21 +9648,16 @@
         "ApproveAuditPackageDisclosure",
         "ApproveAuditPackageValidationOverride",
         "CreateAuditPackage",
-        "RecordAuditPackageBuildResult",
         "RecordAuditPackageDelivery",
         "RequestAuditPackageBuild",
         "ValidateAuditPackage"
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/AmendAuditPackageHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditPackages/AuditPackageTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditPackages/ValidateAuditPackageHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/RecordExaminationOutcomeHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/RecordManagementAssertionHandlerTests.cs"
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -13058,7 +13069,7 @@
     {
       "request": "AmendAuditPackage",
       "contract": "src/Compliance.Common/Features/AuditPackages/AmendAuditPackage.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -13068,15 +13079,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditPackage"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "AuditPackage"
+        "AuditPackageManifest"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AuditPackageRootOperation"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/AmendAuditPackageHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/AmendAuditPackageHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
     },
@@ -13770,7 +13782,7 @@
     {
       "request": "ApproveAuditPackageDisclosure",
       "contract": "src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageDisclosure.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -13780,22 +13792,24 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditPackage"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "AuditPackage"
+        "AuditPackageManifest"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AuditPackageRootOperation"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
     },
     {
       "request": "ApproveAuditPackageValidationOverride",
       "contract": "src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageValidationOverride.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -13805,15 +13819,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditPackage"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "AuditPackage"
+        "AuditPackageManifest"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AuditPackageRootOperation"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
     },
@@ -16688,7 +16703,7 @@
     {
       "request": "CreateAuditPackage",
       "contract": "src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -16698,16 +16713,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditPackage"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "AuditPackage"
+        "AuditPackageManifest"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AuditPackageRootOperation"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageContractTests.cs",
-        "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
     },
@@ -24124,6 +24140,34 @@
       "note": "System-only provider assurance process receiver. No HTTP/MCP route. Materializes the immutable link from its admission and never changes the gap."
     },
     {
+      "request": "MaterializeRecordedAuditPackageDelivery",
+      "contract": "src/Compliance.Common/Features/AuditPackages/MaterializeRecordedAuditPackageDelivery.cs",
+      "classification": "internal_reaction",
+      "interfaces": "IRequest<ReceiverOutcome>, IAuditPackageReceiver, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "MaterializeRecordedAuditPackageDeliveryHandler",
+          "source": "src/Compliance.Core/Features/AuditPackages/MaterializeRecordedAuditPackageDeliveryHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [
+        "AuditPackageSourceVerifier"
+      ],
+      "directAggregateReferences": [
+        "AuditPackageDelivery",
+        "AuditPackageManifest"
+      ],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "OffboardTenant",
       "contract": "src/Compliance.Common/Features/Tenants/OffboardTenant.cs",
       "interfaces": "IRequest, ICallable, IPlatformOperatorRequest",
@@ -25822,7 +25866,7 @@
     {
       "request": "RecordAuditPackageBuildResult",
       "contract": "src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs",
-      "interfaces": "IRequest",
+      "interfaces": "IRequest<ReceiverOutcome>, IAuditPackageReceiver, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25833,21 +25877,22 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AuditPackage"
+        "AuditPackageManifest"
       ],
-      "aggregateTargets": [
-        "AuditPackage"
+      "aggregateTargets": [],
+      "helperServices": [
+        "AuditPackageSourceVerifier"
       ],
-      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
     },
     {
       "request": "RecordAuditPackageDelivery",
       "contract": "src/Compliance.Common/Features/AuditPackages/RecordAuditPackageDelivery.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25857,15 +25902,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditPackage"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "AuditPackage"
+        "AuditPackageManifest"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AuditPackageRootOperation"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
     },
@@ -26307,7 +26354,6 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "AuditOutcome",
-        "AuditPackage",
         "EvidenceArtifact"
       ],
       "aggregateTargets": [
@@ -26409,7 +26455,6 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AuditPackage",
         "EvidenceArtifact",
         "ExaminationEngagement",
         "ManagementAssertion",
@@ -26463,7 +26508,6 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AuditPackage",
         "EvidenceArtifact",
         "ManagementAssertion",
         "ManagementRepresentationLetter"
@@ -27972,7 +28016,7 @@
     {
       "request": "RequestAuditPackageBuild",
       "contract": "src/Compliance.Common/Features/AuditPackages/RequestAuditPackageBuild.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27982,15 +28026,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditPackage"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "AuditPackage"
+        "AuditPackageManifest"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AuditPackageRootOperation"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
     },
@@ -30698,6 +30744,31 @@
       "note": "M0-D04: readiness imports remain deferred pending accepted prerequisites and a durable import boundary."
     },
     {
+      "request": "StartAuditPackageBuild",
+      "contract": "src/Compliance.Common/Features/AuditPackages/StartAuditPackageBuild.cs",
+      "classification": "internal_reaction",
+      "interfaces": "IRequest<ReceiverOutcome>, IAuditPackageReceiver, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "StartAuditPackageBuildHandler",
+          "source": "src/Compliance.Core/Features/AuditPackages/StartAuditPackageBuildHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [
+        "AuditPackageSourceVerifier"
+      ],
+      "directAggregateReferences": [
+        "AuditPackageManifest"
+      ],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "StartControlEvaluation",
       "contract": "src/Compliance.Common/Features/Evaluations/StartControlEvaluation.cs",
       "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest,\n        ICallable",
@@ -30971,7 +31042,7 @@
     {
       "request": "ValidateAuditPackage",
       "contract": "src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -30981,15 +31052,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AuditPackage"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "AuditPackage"
+        "AuditPackageManifest"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "AuditPackageRootOperation"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/ValidateAuditPackageHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/ValidateAuditPackageHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
     },
@@ -31264,14 +31336,25 @@
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {
-      "fact": "AuditPackageBuildProgressRecorded",
-      "aggregate": "AuditPackage",
-      "method": "RecordBuildProgress",
-      "source": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 302,
+      "fact": "AuditPackageDelivered",
+      "aggregate": "AuditPackageDelivery",
+      "method": "Materialize",
+      "methodArgumentCount": 6,
+      "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageDelivery.cs",
       "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1052,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "AuditPackageBuilt",
+      "aggregate": "AuditPackageManifest",
+      "method": "RecordBuilt",
       "methodArgumentCount": 7,
+      "source": "src/Compliance.Core/Features/AuditPackages/AuditPackageManifest.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1052,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

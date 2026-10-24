@@ -1,10 +1,18 @@
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPackages;
+using Bdgrz.Compliance.Features.Artifacts;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackage;
+using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackageRules;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPackages;
 
@@ -19,19 +27,17 @@ public sealed class AuditPackageCommandHandlerTests
         await using var fixture = new Fixture();
         var packageId = await fixture.SeedBuiltAndValidatedPackageAsync();
         const string recipient = "auditor@example.test";
-        var approval = new ApproveAuditPackageDisclosure(fixture.TenantId, fixture.ProgramId,
-            packageId, 1, recipient, "Type I examination", "Approved exact validated archive.");
+        var approval = new ApproveAuditPackageDisclosure(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 1, await fixture.ManifestRevisionAsync(packageId), recipient, "Type I examination", "Approved exact validated archive.");
         var approve = fixture.ApproveDisclosureHandler().HandleAsync(Fixture.Context(
             fixture.ApproverUserId, approval), CancellationToken.None);
 
         // Act
         var approved = await approve;
         var delivery = await fixture.RecordDeliveryHandler().HandleAsync(Fixture.Context(
-            fixture.ApproverUserId, new RecordAuditPackageDelivery(fixture.TenantId,
-                fixture.ProgramId, packageId, 1, recipient, Now.AddMinutes(4), "mail-receipt-1")),
+            fixture.ApproverUserId, new RecordAuditPackageDelivery(fixture.TenantId, fixture.ProgramId, packageId, 1, recipient, Now.AddMinutes(4), "mail-receipt-1", AuditPackageCommandIdentity.Delivery(packageId, 1, recipient, "mail-receipt-1"), await fixture.ManifestRevisionAsync(packageId))),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        await fixture.MaterializeDeliveriesAsync(packageId);
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.True(approved.IsSuccess, approved.Error?.Message);
@@ -53,11 +59,8 @@ public sealed class AuditPackageCommandHandlerTests
 
         // Act
         var result = await fixture.RecordDeliveryHandler().HandleAsync(Fixture.Context(
-            fixture.ApproverUserId, new RecordAuditPackageDelivery(fixture.TenantId,
-                fixture.ProgramId, packageId, 1, "unapproved@example.test", Now.AddMinutes(4),
-                "mail-receipt-2")), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+            fixture.ApproverUserId, new RecordAuditPackageDelivery(fixture.TenantId, fixture.ProgramId, packageId, 1, "unapproved@example.test", Now.AddMinutes(4), "mail-receipt-2", AuditPackageCommandIdentity.Delivery(packageId, 1, "unapproved@example.test", "mail-receipt-2"), await fixture.ManifestRevisionAsync(packageId))), CancellationToken.None);
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -70,9 +73,7 @@ public sealed class AuditPackageCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var request = new ApproveAuditPackageDisclosure(fixture.TenantId, fixture.ProgramId,
-            Uuid.CreateVersion4(), 1, "auditor@example.test", "Type I examination",
-            "Approved exact validated archive.");
+        var request = new ApproveAuditPackageDisclosure(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(), 1, await fixture.ManifestRevisionAsync(Uuid.CreateVersion4()), "auditor@example.test", "Type I examination", "Approved exact validated archive.");
 
         // Act
         var result = await fixture.ApproveDisclosureHandler().HandleAsync(
@@ -88,14 +89,12 @@ public sealed class AuditPackageCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         var packageId = await fixture.SeedDraftPackageAsync();
-        var command = new RequestAuditPackageBuild(fixture.TenantId, fixture.ProgramId,
-            fixture.ExaminationId, packageId, "type_i", "build-key-1");
+        var command = new RequestAuditPackageBuild(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId, packageId, "type_i", "build-key-1", await fixture.ManifestRevisionAsync(packageId), 1);
 
         // Act
         var result = await fixture.RequestBuildHandler().HandleAsync(Fixture.Context(
             fixture.LeadUserId, command), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -113,8 +112,7 @@ public sealed class AuditPackageCommandHandlerTests
     {
         // Arrange
         await using var fixture = new Fixture();
-        var command = new RequestAuditPackageBuild(fixture.TenantId, fixture.ProgramId,
-            fixture.ExaminationId, Uuid.CreateVersion4(), "type_i", "build-key-2");
+        var command = new RequestAuditPackageBuild(fixture.TenantId, fixture.ProgramId, fixture.ExaminationId, Uuid.CreateVersion4(), "type_i", "build-key-2", await fixture.ManifestRevisionAsync(Uuid.CreateVersion4()), 1);
 
         // Act
         var result = await fixture.RequestBuildHandler().HandleAsync(
@@ -130,14 +128,12 @@ public sealed class AuditPackageCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         var packageId = await fixture.SeedDraftPackageAsync();
-        var command = new RequestAuditPackageBuild(fixture.TenantId, fixture.ProgramId,
-            Uuid.CreateVersion4(), packageId, "type_i", "build-key-3");
+        var command = new RequestAuditPackageBuild(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(), packageId, "type_i", "build-key-3", await fixture.ManifestRevisionAsync(packageId), 1);
 
         // Act
         var result = await fixture.RequestBuildHandler().HandleAsync(Fixture.Context(
             fixture.LeadUserId, command), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -154,12 +150,9 @@ public sealed class AuditPackageCommandHandlerTests
 
         // Act
         var result = await fixture.ApproveValidationOverrideHandler().HandleAsync(Fixture.Context(
-            fixture.ApproverUserId, new ApproveAuditPackageValidationOverride(fixture.TenantId,
-                fixture.ProgramId, packageId, 1, findingId.ToString(),
-                "The scoped exception is accepted and disclosed to the auditor.")),
+            fixture.ApproverUserId, new ApproveAuditPackageValidationOverride(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, packageId, 1, await fixture.ManifestRevisionAsync(packageId), findingId.ToString(), "The scoped exception is accepted and disclosed to the auditor.")),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -170,12 +163,12 @@ public sealed class AuditPackageCommandHandlerTests
         Assert.Equal(findingId, Assert.Single(validation.Overrides).FindingId);
     }
 
-    sealed class Fixture : IAsyncDisposable
+    internal sealed class Fixture : IAsyncDisposable
     {
         static readonly Uuid ArchiveId = Uuid.CreateVersion4();
         readonly ServiceProvider _provider;
         readonly AsyncServiceScope _scope;
-        readonly TimeProvider _clock = new FixedTimeProvider(Now);
+        readonly TimeProvider _clock = new FixedTimeProvider(Now.AddMinutes(4));
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid ProgramId { get; } = Uuid.CreateVersion4();
         public Uuid ExaminationId { get; } = Uuid.CreateVersion4();
@@ -185,10 +178,24 @@ public sealed class AuditPackageCommandHandlerTests
         public Uuid ApproverUserId { get; } = Uuid.CreateVersion4();
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
+        readonly string _artifactRoot = Path.Combine(Path.GetTempPath(), $"package-command-{Guid.NewGuid():N}");
+        public IArtifactContentStore ArtifactStore { get; }
         public IAggregateExecutor Executor { get; }
+        public IImmutableContentStore ContentStore { get; } =
+            new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+        public AuditPackageReader Packages => new(Reader, ContentStore);
+        public AuditPackageRootOperation RootOperation => new(Reader, Packages,
+            new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, _clock);
+        public async Task<AuditPackageRules> ReadPackageAsync(Uuid id) =>
+            new(TenantId, ProgramId, id, (await Packages.ReadAsync(TenantId, ProgramId, id, CancellationToken.None)).View);
+        public async Task<long> ManifestRevisionAsync(Uuid id) =>
+            (await Packages.ReadAsync(TenantId, ProgramId, id, CancellationToken.None)).Owner.Revision;
+
 
         public Fixture()
         {
+            ArtifactStore = new LocalArtifactContentStore(new ArtifactContentStoreOptions(
+                _artifactRoot, null, ArtifactContentLimits.MaxContentLength), _clock);
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(new InMemoryEventStore());
             services.AddPortia();
@@ -203,16 +210,35 @@ public sealed class AuditPackageCommandHandlerTests
         }
 
         public ApproveAuditPackageDisclosureHandler ApproveDisclosureHandler() =>
-            new(Executor, _clock);
+            new(RootOperation, ContentStore);
 
         public RecordAuditPackageDeliveryHandler RecordDeliveryHandler() =>
-            new(Executor);
+            new(RootOperation, ContentStore, ArtifactStore);
 
         public ApproveAuditPackageValidationOverrideHandler ApproveValidationOverrideHandler() =>
-            new(Executor, _clock);
+            new(RootOperation, ContentStore);
 
         public RequestAuditPackageBuildHandler RequestBuildHandler() =>
-            new(Executor, _clock);
+            new(RootOperation, ContentStore);
+
+        public async Task MaterializeDeliveriesAsync(Uuid packageId)
+        {
+            var owner = (await Packages.ReadAsync(TenantId, ProgramId, packageId, CancellationToken.None)).Owner;
+            foreach (var fact in owner.Facts.OfType<AuditPackageDeliveryAdmitted>())
+            {
+                var command = new MaterializeRecordedAuditPackageDelivery(
+                    EffectIdentity.CommandId(fact.Metadata.EventId, $"{AuditPackageDeliveryRecordingProcess.Name}:{nameof(MaterializeRecordedAuditPackageDelivery)}", new AuditPackageDelivery(TenantId, packageId, fact.PackageVersion, fact.Operation.LogicalId).Stream.ToString(), fact.Operation.Episode),
+                    NativeFactReference.Of(owner.Stream, fact), new AuditPackageDelivery(TenantId, packageId,
+                        fact.PackageVersion, fact.Operation.LogicalId).Stream, fact.Operation.LogicalId,
+                    fact.PackageVersion, null, fact.Intent, packageId, fact.Operation.LogicalId, fact.PackageVersion);
+                var handler = new MaterializeRecordedAuditPackageDeliveryHandler(
+                    new AuditPackageSourceVerifier(Reader, ContentStore), Reader,
+                    new Bdgrz.Compliance.Features.Processes.ReceiverAppend(Executor), ContentStore, _clock);
+                var result = await handler.HandleAsync(new Cntryl.Portia.RequestContext<MaterializeRecordedAuditPackageDelivery>(
+                    command, new RequestDispatchContext(RequestActor.System)), CancellationToken.None);
+                Assert.True(result.IsSuccess, result.Error?.Message);
+            }
+        }
 
         public async Task<Uuid> SeedDraftPackageAsync()
         {
@@ -220,7 +246,7 @@ public sealed class AuditPackageCommandHandlerTests
             var package = new AuditPackageAggregate(TenantId, ProgramId, packageId);
             Assert.Null(package.Create(Content(packageId), RbacIds.Member(TenantId, LeadUserId),
                 "Lead", Now));
-            await Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
             return packageId;
         }
 
@@ -235,13 +261,15 @@ public sealed class AuditPackageCommandHandlerTests
                 "Lead", Now.AddMinutes(1)));
             var manifest = package.Current!.Versions[0].Manifest;
             var attempt = Assert.Single(package.Current.Versions[0].BuildAttempts);
+            await StoreSourceBytesAsync();
+            var built = await new AuditPackageArchiveBuilder(ArtifactStore).BuildAsync(TenantId, manifest,
+                CancellationToken.None);
+            Assert.True(built.IsSuccess, built.Error?.Message);
             Assert.Null(package.RecordBuildResult(package.Revision, attempt.BuildAttemptId,
-                new AuditPackageBuildOutput(manifest.AuditPackageManifestId,
-                    manifest.ManifestSha256, manifest.Entries, ArchiveId,
-                    new string('f', 64), 4096, null), null, "build-worker", Now.AddMinutes(2)));
+                built.Value!, null, "build-worker", Now.AddMinutes(2)));
             Assert.Null(package.RecordValidation(package.Revision, 1, "validation-1", [],
                 reviewerMember, "Independent reviewer", Now.AddMinutes(3)));
-            await Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
             return packageId;
         }
 
@@ -256,24 +284,34 @@ public sealed class AuditPackageCommandHandlerTests
                 "Lead", Now.AddMinutes(1)));
             var manifest = package.Current!.Versions[0].Manifest;
             var attempt = Assert.Single(package.Current.Versions[0].BuildAttempts);
+            await StoreSourceBytesAsync();
+            var built = await new AuditPackageArchiveBuilder(ArtifactStore).BuildAsync(TenantId, manifest,
+                CancellationToken.None);
+            Assert.True(built.IsSuccess, built.Error?.Message);
             Assert.Null(package.RecordBuildResult(package.Revision, attempt.BuildAttemptId,
-                new AuditPackageBuildOutput(manifest.AuditPackageManifestId,
-                    manifest.ManifestSha256, manifest.Entries, ArchiveId,
-                    new string('f', 64), 4096, null), null, "build-worker", Now.AddMinutes(2)));
+                built.Value!, null, "build-worker", Now.AddMinutes(2)));
             var finding = new AuditPackageValidationFinding(Uuid.CreateVersion4(), "stale_source",
                 "error", true, true, "A selected governed source requires an authorized override.");
             Assert.Null(package.RecordValidation(package.Revision, 1, "blocked-validation-1",
                 [finding], reviewerMember, "Independent reviewer", Now.AddMinutes(3)));
-            await Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+            await PackageSeeds.WriteAsync(Writer, ContentStore, package.Current!);
             return (packageId, finding.FindingId);
+        }
+
+        static string Hash(string value) => Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(value)));
+        async Task StoreSourceBytesAsync()
+        {
+            await ArtifactStore.StoreIfAbsentAsync(TenantId, new MemoryStream(System.Text.Encoding.UTF8.GetBytes("control-17")));
+            await ArtifactStore.StoreIfAbsentAsync(TenantId, new MemoryStream(System.Text.Encoding.UTF8.GetBytes("artifact-9")));
         }
 
         AuditPackageContent Content(Uuid packageId) => new(ExaminationId, "type_i",
             "type_i_baseline", BaselineId, new string('a', 64), "Type I package", [
                 new("control_matrix", "control-17", "control", Uuid.CreateVersion5(packageId,
-                    "control-17"), 3, "csv", new string('b', 64), 512, "product_calculated"),
+                    "control-17"), 3, "csv", Hash("control-17"), 10, "product_calculated"),
                 new("evidence_index", "artifact-9", "evidence_artifact", Uuid.CreateVersion5(
-                    packageId, "artifact-9"), 2, "csv", new string('c', 64), 1024, "management"),
+                    packageId, "artifact-9"), 2, "csv", Hash("artifact-9"), 10, "management"),
             ]);
 
         public static Cntryl.Portia.RequestContext<T> Context<T>(Uuid userId, T request)
@@ -294,6 +332,8 @@ public sealed class AuditPackageCommandHandlerTests
         {
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
+            if (Directory.Exists(_artifactRoot))
+                Directory.Delete(_artifactRoot, recursive: true);
         }
     }
 

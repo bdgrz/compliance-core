@@ -2660,16 +2660,52 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Identity federation");
-    app.MapPortiaPost<CreateAuditPackage>(
+    app.MapPortiaPut<CreateAuditPackage>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Audit packages");
-    app.MapPortiaPost<AmendAuditPackage>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments")
+    app.MapPortiaPut<AmendAuditPackage>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Audit packages");
-    app.MapPortiaPost<ValidateAuditPackage>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations")
+    app.MapPortiaPut<ValidateAuditPackage>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/versions/{package_version}/validations/{command_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Audit packages");
+    app.MapPortiaPut<ApproveAuditPackageDisclosure>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/versions/{package_version}/disclosures/{command_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Audit packages");
+    app.MapPortiaPut<ApproveAuditPackageValidationOverride>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/versions/{package_version}/validation-overrides/{command_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Audit packages");
+    app.MapPortiaPut<RequestAuditPackageBuild, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/versions/{package_version}/builds/{build_key}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Audit packages");
+    app.MapPortiaPut<RecordAuditPackageDelivery, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/versions/{package_version}/deliveries/{delivery_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Audit packages");
     app.MapPortiaPut<CreateExaminationEngagement>(

@@ -1,10 +1,9 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Tests.Features.AuditPackages;
 using Cntryl.Portia;
-using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackage;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 
@@ -19,7 +18,7 @@ public sealed class RecordManagementRepresentationLetterHandlerTests
         await using var fixture = new AmendAuditPackageHandlerTests.Fixture();
         var sources = await SeedSourcesAsync(fixture);
         var handler = new RecordManagementRepresentationLetterHandler(fixture.Executor,
-            fixture.Reader, new FixedTimeProvider(Now.AddMinutes(12)));
+            fixture.Reader, fixture.Packages, new FixedTimeProvider(Now.AddMinutes(12)));
         var request = Request(fixture, sources);
 
         // Act
@@ -181,7 +180,7 @@ public sealed class RecordManagementRepresentationLetterHandlerTests
 
         // Act
         var retry = await new RecordManagementRepresentationLetterHandler(fixture.Executor,
-                fixture.Reader, new FixedTimeProvider(Now.AddMinutes(14)))
+                fixture.Reader, fixture.Packages, new FixedTimeProvider(Now.AddMinutes(14)))
             .HandleAsync(context, CancellationToken.None);
         var saved = await fixture.Reader.HydrateAsync(new ManagementRepresentationLetter(
             fixture.TenantId, fixture.ProgramId, request.LetterId));
@@ -194,7 +193,7 @@ public sealed class RecordManagementRepresentationLetterHandlerTests
 
     static RecordManagementRepresentationLetterHandler Handler(
         AmendAuditPackageHandlerTests.Fixture fixture) =>
-        new(fixture.Executor, fixture.Reader, new FixedTimeProvider(Now.AddMinutes(12)));
+        new(fixture.Executor, fixture.Reader, fixture.Packages, new FixedTimeProvider(Now.AddMinutes(12)));
 
     static RecordManagementRepresentationLetter Request(
         AmendAuditPackageHandlerTests.Fixture fixture, LetterSources sources) =>
@@ -210,8 +209,7 @@ public sealed class RecordManagementRepresentationLetterHandlerTests
         var baseline = await fixture.SeedBaselineAsync();
         var packageId = Uuid.CreateVersion4();
         await fixture.SeedBuiltPackageAsync(packageId, baseline);
-        var package = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(
-            fixture.TenantId, fixture.ProgramId, packageId));
+        var package = await fixture.ReadPackageAsync(packageId);
         var packageVersion = package.Current!.Versions[0];
         var actorMemberId = RbacIds.Member(fixture.TenantId, fixture.UserId);
         if (deliverPackage)
@@ -225,7 +223,7 @@ public sealed class RecordManagementRepresentationLetterHandlerTests
                 "letter-delivery-1", actorMemberId, "Management representative",
                 Now.AddMinutes(6)));
         }
-        await fixture.Writer.SaveAsync(package, new RequestDispatchContext(RequestActor.System));
+        await PackageSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.ContentStore, package.Current!);
 
         var ceoMemberId = RbacIds.Member(fixture.TenantId, Uuid.CreateVersion4());
         var assertionId = Uuid.CreateVersion4();

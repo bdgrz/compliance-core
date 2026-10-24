@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Records a management letter against its approved assertion and exact delivered package.</summary>
 public sealed class RecordManagementRepresentationLetterHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock) : IRequestHandler<RecordManagementRepresentationLetter>
+    IAggregateReader reader, AuditPackageReader packages, TimeProvider clock) : IRequestHandler<RecordManagementRepresentationLetter>
 {
     public async ValueTask<Result> HandleAsync(
         IRequestContext<RecordManagementRepresentationLetter> context, CancellationToken ct)
@@ -39,9 +39,12 @@ public sealed class RecordManagementRepresentationLetterHandler(IAggregateExecut
             return Conflict("The representation letter requires the approved assertion for this examination.");
 
         var assertionContent = assertionVersion.Content;
-        var package = await reader.HydrateAsync(new AuditPackage(request.TenantId,
-            request.ProgramId, assertionContent.PackageId), ct).ConfigureAwait(false);
-        if (package.Current is not { } packageView)
+        var package = await ExaminationSignOffSourceValidator.ReadPackageAsync(packages, request.TenantId,
+            request.ProgramId, assertionContent.PackageId, ct)
+            .ConfigureAwait(false);
+        if (!package.IsSuccess)
+            return Result.Failure(package.Error!);
+        if (package.Value.View is not { } packageView)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The assertion's audit package was not found in this program."));
         if (packageView.ExaminationId != request.ExaminationId ||

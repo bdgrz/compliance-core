@@ -159,7 +159,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | DeclaredSystemInstance | Applications | retain | ROOT-05 (pending) | 0.57 | [source](../../../../src/Compliance.Core/Features/Applications/DeclaredSystemInstance.cs) |
 | ImportBatch | Applications | retain | ROOT-02 (pending), ROOT-05 (pending) | 0.45 |  |
 | SystemInstanceAccessReviewScope | Applications | narrow | ROOT-03 (pending) | 0.84 | [source](../../../../src/Compliance.Core/Features/Applications/SystemInstanceAccessReviewScope.cs) |
-| AuditPackage | AuditPackages | split | ASSURE-02 (pending), ASSURE-10 (pending), CORE-01 (complete) | 0.89 | [source](../../../../src/Compliance.Core/Features/AuditPackages/AuditPackage.cs) |
+| AuditPackage | AuditPackages | split | ASSURE-02 (pending), ASSURE-10 (pending), CORE-01 (complete) | 0.89 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/AuditPackages/AuditPackage.cs) |
 | AuditPopulation | AuditPopulations | narrow | ASSURE-04 (pending), ASSURE-10 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.83 | [source](../../../../src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs) |
 | AuditorRequest | AuditorRequests | split | ASSURE-03 (pending), ASSURE-09 (pending), ASSURE-10 (pending), ASSURE-11 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs) |
 | SystemBoundary | Boundaries | narrow | ROOTACCESS-01 (pending), ROOTACCESS-02 (pending), ROOTACCESS-04 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Boundaries/SystemBoundary.cs) |

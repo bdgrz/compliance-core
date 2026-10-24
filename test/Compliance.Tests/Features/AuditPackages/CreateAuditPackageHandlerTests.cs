@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPackages;
@@ -7,10 +12,9 @@ using Bdgrz.Compliance.Tests.Features.Examinations;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackage;
+using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackageRules;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
-using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPackages;
 
@@ -30,8 +34,7 @@ public sealed class CreateAuditPackageHandlerTests
         // Act
         var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
             command), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -67,8 +70,7 @@ public sealed class CreateAuditPackageHandlerTests
         // Act
         var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
             command), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -94,8 +96,7 @@ public sealed class CreateAuditPackageHandlerTests
         // Act
         var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
             command), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
@@ -134,8 +135,7 @@ public sealed class CreateAuditPackageHandlerTests
         // Act
         var result = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId,
             request), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new AuditPackageAggregate(fixture.TenantId,
-            fixture.ProgramId, packageId));
+        var saved = await fixture.ReadPackageAsync(packageId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -144,6 +144,67 @@ public sealed class CreateAuditPackageHandlerTests
         Assert.Equal(close.CloseSnapshotId, version.SourceSnapshotId);
         Assert.Equal(fixture.SourceVersionId,
             Assert.Single(version.SelectedContent).SourceVersionId);
+    }
+
+    [Fact]
+    public async Task ShouldReplayCreationGivenLostResponseAndLaterRetryTime()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var baseline = await fixture.SeedTypeIBaselineAsync();
+        var packageId = Uuid.CreateVersion4();
+        var command = fixture.Command(packageId, baseline);
+        var first = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId, command), CancellationToken.None);
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        var retryOperations = new AuditPackageRootOperation(fixture.Reader, fixture.Packages,
+            new NativeOperationExecutor(fixture.Reader, fixture.Executor, fixture.ContentStore), fixture.ContentStore,
+            new FixedTimeProvider(Now.AddDays(1)));
+        var retryHandler = new CreateAuditPackageHandler(retryOperations,
+            new AuditPackageSourceBuilder(fixture.Reader), fixture.ContentStore);
+
+        // Act
+        var replay = await retryHandler.HandleAsync(Fixture.Context(fixture.UserId, command), CancellationToken.None);
+        var saved = await fixture.ReadPackageAsync(packageId);
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(1, saved.Revision);
+        Assert.Equal(Now, saved.Current!.CreatedAt);
+    }
+
+    [Fact]
+    public async Task ShouldReplayCreationGivenEqualConcurrentCommitBetweenInitialReadAndPreparation()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var baseline = await fixture.SeedTypeIBaselineAsync();
+        var packageId = Uuid.CreateVersion4();
+        var command = fixture.Command(packageId, baseline);
+        var raced = false;
+        var reader = new InterleavedPackageReader(fixture.Reader, async () =>
+        {
+            var winner = await fixture.Handler().HandleAsync(Fixture.Context(fixture.UserId, command),
+                CancellationToken.None);
+            Assert.True(winner.IsSuccess, winner.Error?.Message);
+            raced = true;
+        });
+        var packages = new AuditPackageReader(reader, fixture.ContentStore);
+        var operations = new AuditPackageRootOperation(reader, packages,
+            new NativeOperationExecutor(reader, fixture.Executor, fixture.ContentStore), fixture.ContentStore,
+            new FixedTimeProvider(Now));
+        var handler = new CreateAuditPackageHandler(operations, new AuditPackageSourceBuilder(fixture.Reader),
+            fixture.ContentStore);
+
+        // Act
+        var replay = await handler.HandleAsync(Fixture.Context(fixture.UserId, command), CancellationToken.None);
+        var saved = await fixture.ReadPackageAsync(packageId);
+
+        // Assert
+        Assert.True(raced);
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(1, saved.Revision);
+        Assert.Single((await fixture.Packages.ReadAsync(fixture.TenantId, fixture.ProgramId, packageId,
+            CancellationToken.None)).Owner.Facts.OfType<AuditPackageCreated>());
     }
 
     sealed class Fixture : IAsyncDisposable
@@ -167,6 +228,16 @@ public sealed class CreateAuditPackageHandlerTests
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
+        public IImmutableContentStore ContentStore { get; } =
+            new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+        public AuditPackageReader Packages => new(Reader, ContentStore);
+        public AuditPackageRootOperation RootOperation => new(Reader, Packages,
+            new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, _clock);
+        public async Task<AuditPackageRules> ReadPackageAsync(Uuid id) =>
+            new(TenantId, ProgramId, id, (await Packages.ReadAsync(TenantId, ProgramId, id, CancellationToken.None)).View);
+        public async Task<long> ManifestRevisionAsync(Uuid id) =>
+            (await Packages.ReadAsync(TenantId, ProgramId, id, CancellationToken.None)).Owner.Revision;
+
 
         public Fixture()
         {
@@ -181,8 +252,8 @@ public sealed class CreateAuditPackageHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public CreateAuditPackageHandler Handler() => new(Executor,
-            new AuditPackageSourceBuilder(Reader), _clock);
+        public CreateAuditPackageHandler Handler() => new(RootOperation,
+            new AuditPackageSourceBuilder(Reader), ContentStore);
 
         public CreateAuditPackage Command(Uuid packageId, TypeIBaselineView baseline) =>
             new(TenantId, ProgramId, packageId, Content(baseline));
@@ -301,6 +372,18 @@ public sealed class CreateAuditPackageHandlerTests
         {
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
+        }
+    }
+
+    sealed class InterleavedPackageReader(IAggregateReader inner, Func<Task> beforeSecondRead) : IAggregateReader
+    {
+        int _packageReads;
+        public async ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
+            CancellationToken ct = default) where TAggregate : Aggregate
+        {
+            if (aggregate is AuditPackageManifest && Interlocked.Increment(ref _packageReads) == 2)
+                await beforeSecondRead();
+            return await inner.HydrateAsync(aggregate, ct);
         }
     }
 

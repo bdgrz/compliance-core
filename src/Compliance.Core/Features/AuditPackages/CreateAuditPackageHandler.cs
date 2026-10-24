@@ -1,30 +1,38 @@
+using System.Globalization;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Artifacts;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
-/// <summary>Creates a Type I package only from sources pinned by its frozen baseline.</summary>
-public sealed class CreateAuditPackageHandler(IAggregateExecutor executor,
-    AuditPackageSourceBuilder sources, TimeProvider clock) : IRequestHandler<CreateAuditPackage>
+/// <summary>Creates a native manifest only from its exact frozen examination source.</summary>
+public sealed class CreateAuditPackageHandler(AuditPackageRootOperation operations,
+    AuditPackageSourceBuilder sources, IImmutableContentStore content) : IRequestHandler<CreateAuditPackage>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<CreateAuditPackage> context,
-        CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IRequestContext<CreateAuditPackage> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!AuditPackageCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,
-                out var actorMemberId, out var actorDisplay))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Audit package creation requires a personal HTTP actor."));
-
-        var content = await sources.ResolveAsync(request.TenantId, request.ProgramId,
-            request.Content, ct).ConfigureAwait(false);
-        if (!content.IsSuccess)
-            return Result.Failure(content.Error);
-
-        return await executor.ExecuteAsync(new AuditPackage(request.TenantId, request.ProgramId,
-                request.PackageId), aggregate =>
-            CommandFailureRequestAdapter.ToOutcome(aggregate.Create(content.Value,
-                actorMemberId, actorDisplay, clock.GetUtcNow())), context, ct)
-            .ConfigureAwait(false);
+        var outcome = await operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.PackageId,
+            request.PackageId, nameof(CreateAuditPackage), null, _ => 1,
+            owner => owner.PrepareCreate(request.ProgramId), async (_, operation, token) =>
+            {
+                var resolved = await sources.ResolveAsync(request.TenantId, request.ProgramId, request.Content, token)
+                    .ConfigureAwait(false);
+                if (!resolved.IsSuccess)
+                    return Result<PreparedPackageDelta>.Failure(resolved.Error!);
+                var rules = new AuditPackageRules(request.TenantId, request.ProgramId, request.PackageId);
+                if (rules.Create(resolved.Value!, PackageChanges.Member(operation), operation.Actor.Display,
+                        operation.AcceptedAt) is { } failure)
+                    return PackageChanges.Failure(failure);
+                return Result<PreparedPackageDelta>.Success(await PackageContent.DeltaAsync(content, request.TenantId,
+                    "AuditPackageCreated.change.v1", PackageChanges.Version(rules.Current!, operation), token)
+                    .ConfigureAwait(false));
+            }, (owner, operation, delta, response, result) =>
+                owner.Create(request.ProgramId, operation, delta.Content, response, result), false, ct).ConfigureAwait(false);
+        return AuditPackageRootOperation.Unit(outcome);
     }
 }

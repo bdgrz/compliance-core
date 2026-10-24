@@ -39,7 +39,9 @@
     "finding-content-file-reviews.json",
     "finding-content-readback.md",
     "versioned-replay-file-reviews.json",
-    "versioned-replay-file-triage.json"
+    "versioned-replay-file-triage.json",
+    "audit-package-file-reviews.json",
+    "audit-package-file-triage.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -59,16 +61,22 @@
     },
     {
       "id": "versioned-replay",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "focusedGreen": "520passed/0failed",
       "webGreen": "28passed/0failed",
       "jev": "58/58current source/dependency hashes;6signals triaged",
-      "fullUnitGreen": "5471passed/0failed"
+      "fullUnitGreen": "5471passed/0failed",
+      "pullRequest": 1092,
+      "mergeCommit": "02bcee69f501244a332168965fc3b21eb9e54a60"
     },
     {
       "id": "audit-package-split",
       "slice": "S29",
-      "status": "patch_preparation"
+      "status": "validated_awaiting_merge",
+      "focusedGreen": "283passed/0failed",
+      "webGreen": "28passed/0failed",
+      "fullUnitGreen": "5487passed/0failed",
+      "jev": "64/64current hashes;5signals triaged"
     },
     {
       "id": "finding-content-recovery",
@@ -79,6 +87,20 @@
       "fullUnitGreen": "5459passed/0failed",
       "pullRequest": 1091,
       "mergeCommit": "0b7e316d7772ef4a7532e5cbbef34ab7f78ff1a9"
+    },
+    {
+      "id": "audit-package-scoped-queries",
+      "slice": "S29",
+      "status": "offline_implementation",
+      "externalDependency": false,
+      "evidence": "Get/List DTOs have full program/tenant scope but owning public handlers/index/routes were absent; implementing independently of bare-ID lookup blocker."
+    },
+    {
+      "id": "audit-package-source-byte-publication",
+      "slice": "S29",
+      "status": "offline_implementation",
+      "externalDependency": false,
+      "evidence": "21TypeI families and TypeII chain mapped. Merkle/prefixed logical digests must retain full content and proof through an exact physical blob descriptor; publishing root preimage alone loses rows."
     }
   ],
   "resolved": [

@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackage;
+using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackageRules;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPackages;
 
@@ -191,7 +196,7 @@ public sealed class AuditPackageTests
     }
 
     [Fact]
-    public void ShouldReplayCompletePackageHistoryGivenEvents()
+    public async Task ShouldReplayCompletePackageHistoryGivenEvents()
     {
         // Arrange
         var package = BuiltPackage();
@@ -206,11 +211,19 @@ public sealed class AuditPackageTests
             Now.AddMinutes(7)));
 
         // Act
-        var replay = new AggregateScenario<AuditPackageAggregate>(
-            new AuditPackageAggregate(TenantId, ProgramId, PackageId)).Given(
-                new AggregateScenario<AuditPackageAggregate>(package).PendingEvents.ToArray());
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddPortia();
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+        var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        await PackageSeeds.WriteAsync(writer, content, package.Current!);
+        var replay = await new AuditPackageReader(reader, content).ReadAsync(TenantId, ProgramId, PackageId,
+            CancellationToken.None);
         var packageState = package.Current!;
-        var replayedState = replay.Aggregate.Current!;
+        var replayedState = replay.View!;
 
         // Assert
         Assert.Equal(packageState.Revision, replayedState.Revision);
