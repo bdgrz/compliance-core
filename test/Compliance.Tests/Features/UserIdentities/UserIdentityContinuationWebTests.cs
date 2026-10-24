@@ -212,16 +212,17 @@ public sealed class UserIdentityContinuationWebTests
         using var client = factory.CreateClient();
 
         // Act
-        using var start = await client.PostAsJsonAsync(
-            "/api/v1/identity-recovery/challenges",
+        using var start = await client.PutAsJsonAsync(
+            $"/api/v1/identity-recovery/challenges/{Uuid.CreateVersion4()}",
             new RecoveryStartDocument("unknown@example.com"), CancellationToken.None);
         using var options = await client.PostAsJsonAsync(
             "/api/v1/identity-recovery/options",
             new RecoveryProofDocument("unknown@example.com", Uuid.CreateVersion4(), "proof"),
             CancellationToken.None);
-        using var complete = await client.PostAsJsonAsync(
-            "/api/v1/identity-recovery/completions",
-            new RecoveryCompletionDocument("unknown@example.com", Uuid.CreateVersion4(),
+        var challengeId = Uuid.CreateVersion4();
+        using var complete = await client.PutAsJsonAsync(
+            $"/api/v1/identity-recovery/challenges/{challengeId}/completion",
+            new RecoveryCompletionDocument("unknown@example.com", challengeId,
                 "proof", Uuid.CreateVersion4()), CancellationToken.None);
 
         // Assert

@@ -14,6 +14,7 @@ namespace Bdgrz.Compliance.Features.Processes;
 [JsonDerivedType(typeof(Replayed), "replayed")]
 [JsonDerivedType(typeof(Superseded), "superseded")]
 [JsonDerivedType(typeof(Rejected), "rejected")]
+[JsonDerivedType(typeof(Performed), "performed")]
 public abstract record ReceiverOutcome
 {
     private protected ReceiverOutcome()
@@ -34,5 +35,8 @@ public abstract record ReceiverOutcome
     /// receivers fence first, then only settle and release stages run. Unlike <see cref="Superseded" /> it does not end
     /// the process, so uses already held are still settled.
     /// </summary>
-    public sealed record Rejected(string Reason, NativeFactReference? Evidence) : ReceiverOutcome;
+    public sealed record Rejected(string Reason, NativeFactReference? Evidence = null) : ReceiverOutcome;
+
+    /// <summary>A technical effect without a native fact, such as a delivery, was performed or already recorded.</summary>
+    public sealed record Performed(string Effect) : ReceiverOutcome;
 }

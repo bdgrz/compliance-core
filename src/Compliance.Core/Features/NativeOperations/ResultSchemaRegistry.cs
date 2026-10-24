@@ -14,6 +14,7 @@ public static class ResultSchemaRegistry
     {
         [FirstResponses.Schema] = ComplianceCoreJsonContext.Default.FirstResponseDescriptor,
         ["operation-accepted-response.v1"] = ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+        [UnitResult.Schema] = ComplianceCoreJsonContext.Default.UnitResult,
         ["operation-status-response.v1"] = ComplianceCoreJsonContext.Default.OperationStatusResponse,
         ["mutation-result-content.v1"] = ComplianceCoreJsonContext.Default.MutationResultContent,
         [AdministratorTransitionResponse.Schema] = ComplianceCoreJsonContext.Default.AdministratorTransitionResponse,

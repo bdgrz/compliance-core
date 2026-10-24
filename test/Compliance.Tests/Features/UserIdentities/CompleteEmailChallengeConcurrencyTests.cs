@@ -41,7 +41,7 @@ public sealed class CompleteEmailChallengeConcurrencyTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>()
-            .SendAsync(new CompleteEmailChallenge(ownerId, email, token), RequestActor.System);
+            .SendAsync(new CompleteEmailChallenge(challengeId, ownerId, email, token), RequestActor.System);
 
         // Assert
         Assert.True(result.IsSuccess);

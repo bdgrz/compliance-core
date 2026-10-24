@@ -20,6 +20,13 @@ public sealed record ProcessRecord(ProcessKey Key, NativeFactReference Source, s
     public IReadOnlyDictionary<string, NativeFactReference> Facts { get; init; } =
         new Dictionary<string, NativeFactReference>(StringComparer.Ordinal);
 
+    /// <summary>
+    ///     The key under which <see cref="Facts"/> keeps the fact a step produced: the receiver name, and for a step that
+    ///     dispatched against one canonical target the receiver and that target, so each target keeps its own fact.
+    /// </summary>
+    public static string FactKey(string receiver, string? target) =>
+        target is null ? receiver : $"{receiver}:{target}";
+
     /// <summary>A new pending record at the first stage, due immediately.</summary>
     public static ProcessRecord Start(ProcessKey key, NativeFactReference source, string episode,
         ImmutableContentRef intent, IEnumerable<string> targets, DateTimeOffset now)

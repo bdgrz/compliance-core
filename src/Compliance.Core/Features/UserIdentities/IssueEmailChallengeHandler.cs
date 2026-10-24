@@ -14,7 +14,9 @@ public sealed class IssueEmailChallengeHandler(
         if (!EmailAddresses.TryNormalize(context.Request.EmailAddress, out var normalized))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "Enter a valid email address."));
 
-        var challengeId = Uuid.CreateVersion4();
+        var challengeId = context.Request.ChallengeId;
+        if (challengeId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A challenge id is required."));
         var now = clock.GetUtcNow();
         var expiresAt = now.AddMinutes(15);
         var token = tokenKeys.Derive(tokenKeys.ActiveKeyId, challengeId,

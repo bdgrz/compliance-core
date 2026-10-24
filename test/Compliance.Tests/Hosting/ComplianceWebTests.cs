@@ -33,9 +33,9 @@ public sealed class ComplianceWebTests
             .Where(endpoint => endpoint.RoutePattern.RawText is not
                 "/api/v1/developer-user-sessions" and not "/api/v1/oidc-user-sessions" and not
                 "/api/v1/my/oidc-identity-links" and not
-                "/api/v1/identity-recovery/challenges" and not
+                "/api/v1/identity-recovery/challenges/{challenge_id}" and not
                 "/api/v1/identity-recovery/options" and not
-                "/api/v1/identity-recovery/completions")
+                "/api/v1/identity-recovery/challenges/{challenge_id}/completion")
             .ToArray();
 
         // Assert
@@ -248,19 +248,19 @@ public sealed class ComplianceWebTests
         var endpoints = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
             .OfType<RouteEndpoint>()
             .Where(endpoint => endpoint.RoutePattern.RawText is
-                "/api/v1/identity-recovery/challenges" or
+                "/api/v1/identity-recovery/challenges/{challenge_id}" or
                 "/api/v1/identity-recovery/options" or
-                "/api/v1/identity-recovery/completions")
+                "/api/v1/identity-recovery/challenges/{challenge_id}/completion")
             .ToDictionary(endpoint => endpoint.RoutePattern.RawText!);
 
         // Assert
         Assert.Equal(3, endpoints.Count);
-        Assert.NotNull(endpoints["/api/v1/identity-recovery/challenges"]
+        Assert.NotNull(endpoints["/api/v1/identity-recovery/challenges/{challenge_id}"]
             .Metadata.GetMetadata<IAllowAnonymous>());
         foreach (var route in new[]
                  {
                      "/api/v1/identity-recovery/options",
-                     "/api/v1/identity-recovery/completions",
+                     "/api/v1/identity-recovery/challenges/{challenge_id}/completion",
                  })
         {
             var policy = Assert.Single(endpoints[route].Metadata.GetOrderedMetadata<IAuthorizeData>()).Policy;

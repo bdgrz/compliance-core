@@ -20,6 +20,50 @@ public sealed class NativeAcceptanceTests
         Owner, Owner);
 
     [Fact]
+    public void ShouldKeepTwoCommandKindsApartGivenOneLogicalIdAndASelectedKind()
+    {
+        // Arrange
+        var start = new NativeAcceptance(Logical, "Start");
+        var complete = new NativeAcceptance(Logical, "Complete");
+        var facts = new[]
+        {
+            new ProbeAdmitted(Uuid.CreateVersion4(), "p", Provenance(Logical, "Start"), Response),
+            new ProbeAdmitted(Uuid.CreateVersion4(), "p", Provenance(Logical, "Complete"), Response),
+        };
+
+        // Act
+        foreach (var fact in facts)
+        {
+            start.Observe(fact);
+            complete.Observe(fact);
+        }
+
+        // Assert
+        Assert.Same(facts[0], start.SelectedFact);
+        Assert.Same(facts[1], complete.SelectedFact);
+        Assert.Equal(NativeAcceptanceDecision.Replayed, start.Decide(AcceptedOperationBinding.Of(Provenance(Logical, "Start"))));
+        Assert.Equal(NativeAcceptanceDecision.Replayed, complete.Decide(AcceptedOperationBinding.Of(Provenance(Logical, "Complete"))));
+    }
+
+    [Fact]
+    public void ShouldDecideFromProvenanceGivenAFactThatIsNotNative()
+    {
+        // Arrange
+        var acceptance = new NativeAcceptance(Logical);
+        var fact = new ProbeEdited(Uuid.CreateVersion4(), "edited");
+
+        // Act
+        acceptance.Observe(fact, Provenance(Logical));
+        var same = acceptance.Decide(AcceptedOperationBinding.Of(Provenance(Logical)));
+        var changed = acceptance.Decide(AcceptedOperationBinding.Of(Provenance(Logical, "Other")));
+
+        // Assert
+        Assert.Same(fact, acceptance.SelectedFact);
+        Assert.Equal(NativeAcceptanceDecision.Replayed, same);
+        Assert.Equal(NativeAcceptanceDecision.Conflict, changed);
+    }
+
+    [Fact]
     public void ShouldReplayGivenAcceptedFactWithEqualBinding()
     {
         // Arrange

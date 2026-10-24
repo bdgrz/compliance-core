@@ -199,6 +199,72 @@ public sealed class ProcessDriverTests
     }
 
     [Fact]
+    public async Task ShouldAbortThroughFenceAndSettleGivenRejectedOutcome()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1", "t2");
+        host.Recorder.Script("ApplyA", _ => Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("competing association")));
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Aborted, record.State);
+        Assert.Equal(["AcquireX", "AcquireX", "ApplyA", "RejectX", "SettleX", "SettleX"],
+            host.Recorder.Calls.Select(call => call.Receiver).ToArray());
+        Assert.DoesNotContain(host.Recorder.Calls, call => call.Receiver == "ApplyB");
+    }
+
+    [Fact]
+    public async Task ShouldAdvanceWithoutAFactGivenPerformedOutcome()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1");
+        host.Recorder.Script("ApplyA", _ => Result<ReceiverOutcome>.Success(new ReceiverOutcome.Performed("notice sent")));
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Completed, record.State);
+        Assert.DoesNotContain("ApplyA", record.Facts.Keys);
+        Assert.Contains("ApplyB", record.Facts.Keys);
+    }
+
+    [Fact]
+    public async Task ShouldKeepEachTargetFactGivenPerTargetStage()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1", "t2");
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(["AcquireX:t1", "AcquireX:t2", "ApplyA", "ApplyB", "SettleX:t1", "SettleX:t2"],
+            record.Facts.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal("AcquireX:t2", ProcessRecord.FactKey("AcquireX", "t2"));
+        Assert.Equal("ApplyA", ProcessRecord.FactKey("ApplyA", null));
+    }
+
+    [Fact]
+    public void ShouldDispatchOncePerTargetGivenProtectStage()
+    {
+        // Arrange
+        var stage = new ProcessStageDefinition("protect", ["ProtectRecoveryIdentity"]);
+
+        // Act
+        var perTarget = stage.IsPerTarget;
+
+        // Assert
+        Assert.True(perTarget);
+        Assert.False(stage.RunsAfterAbort);
+    }
+
+    [Fact]
     public async Task ShouldRecordProducedFactByReceiverGivenAppliedOutcome()
     {
         // Arrange
@@ -210,7 +276,7 @@ public sealed class ProcessDriverTests
         var stored = await host.Store.ReadAsync(ProcessTestHost.Key);
 
         // Assert
-        Assert.Equal(["AcquireX", "ApplyA", "ApplyB", "SettleX"], record.Facts.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(["AcquireX:t1", "ApplyA", "ApplyB", "SettleX:t1"], record.Facts.Keys.Order(StringComparer.Ordinal));
         Assert.Equal(record.Facts, stored!.Facts);
     }
 

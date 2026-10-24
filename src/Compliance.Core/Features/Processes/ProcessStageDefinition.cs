@@ -14,7 +14,7 @@ public sealed record ProcessStageDefinition(string Stage, IReadOnlyList<string> 
     {
         StageTargeting.Once => false,
         StageTargeting.EachReceiver or StageTargeting.Interleaved => true,
-        _ => Stage is "acquire" or "reserve" or "claim" or "authorize" or "release" or "settle",
+        _ => Stage is "acquire" or "reserve" or "claim" or "protect" or "authorize" or "release" or "settle",
     };
 
     /// <summary>

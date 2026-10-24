@@ -269,7 +269,7 @@ The 21 surviving baseline reactor rows retain their original source-reviewed fai
 | TenantSlugReactor | CHOREO-08 | 0.42 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs) |
 | EmailChallengeDeliveryReactor | CHOREO-07 | 0.62 | [source](../../../../src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs) |
 | EmailReservationReactor | — | 0.52 | [source](../../../../src/Compliance.Core/Features/UserIdentities/EmailReservationReactor.cs) |
-| IdentityRecoveryNoticeReactor | CHOREO-01, CHOREO-07 | 0.58 | [source](../../../../src/Compliance.Core/Features/UserIdentities/IdentityRecoveryNoticeReactor.cs) |
+| IdentityRecoveryNoticeReactor (replaced by the SendIdentityRecoveryNotice receiver of IdentityRecoveryProcess, #1022 S4) | CHOREO-01, CHOREO-07 | 0.58 | [source](../../../../src/Compliance.Core/Features/UserIdentities/IdentityRecoveryProcess.cs) |
 
 ### Removed baseline reactor classes
 
