@@ -2,6 +2,7 @@ using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
+using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.AccessControl;
@@ -13,6 +14,107 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 /// </summary>
 public sealed class TenantManagerGuardTests
 {
+    [Fact]
+    public async Task ShouldReplayFrozenAcceptanceGivenSystemRemovalRetryAfterAssignmentClosed()
+    {
+        // Arrange
+        await using var host = new AdministratorTransitionHost();
+        _ = await host.AddAdministratorAsync();
+        var target = await host.AddAdministratorAsync();
+        var request = TeamMemberEffects.Remove(Uuid.CreateVersion4(), host.TenantId,
+            host.AdministratorsTeamId, target.MemberId);
+        var first = await host.SubmitSystemRemovalAsync(request);
+        Assert.True(first.IsSuccess);
+        Assert.Equal(ProcessState.Completed, (await host.DriveAsync(request.CommandId)).State);
+
+        // Act
+        var retry = await host.SubmitSystemRemovalAsync(request);
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(first.Value, retry.Value);
+        Assert.False((await host.AssignmentAsync(target)).IsAssigned);
+    }
+
+    [Fact]
+    public async Task ShouldReplayOriginalEpisodeGivenSystemAssignmentRetryAfterReRegistration()
+    {
+        // Arrange
+        await using var host = new AdministratorTransitionHost();
+        var actor = await host.AddAdministratorAsync();
+        var target = await host.AddMemberAsync();
+        var request = TeamMemberEffects.Assign(Uuid.CreateVersion4(), host.TenantId,
+            host.AdministratorsTeamId, target.MemberId);
+        var original = await host.SubmitSystemAssignmentAsync(request);
+        Assert.True(original.IsSuccess);
+        Assert.Equal(ProcessState.Completed, (await host.DriveAsync(request.CommandId)).State);
+        var retired = await host.DeprovisionAsync(actor, target);
+        Assert.True(retired.IsSuccess);
+        Assert.Equal(ProcessState.Completed, (await host.DriveAsync(retired.Value!.OperationId)).State);
+        var proof = (await host.MemberAsync(target)).TerminationProof!;
+        var cleanup = new MemberAuthorityCleanup(host.Reader, host.Provider.GetRequiredService<IAggregateExecutor>(),
+            host.Events, new InMemoryProjectionCheckpointStore(), TimeProvider.System);
+        Assert.True((await cleanup.CompleteAsync(new RequestDispatchContext(RequestActor.System), proof,
+            CancellationToken.None)).IsSuccess);
+        await host.SeedAsync(new Member(host.TenantId, target.UserId), member => member.Register());
+        var before = (await host.GuardFactsAsync()).Count;
+
+        // Act
+        var retry = await host.SubmitSystemAssignmentAsync(request);
+        var changed = await host.SubmitSystemAssignmentAsync(request with { ExpectedAssignmentRevision = 9 });
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(original.Value, retry.Value);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changed.Error).Kind);
+        Assert.NotEqual(target.EpisodeId, (await host.MemberAsync(target)).MembershipEpisodeId);
+        Assert.False((await host.AssignmentAsync(target)).IsAssigned);
+        Assert.Equal(before, (await host.GuardFactsAsync()).Count);
+    }
+
+    [Theory]
+    [InlineData(false, "episode")]
+    [InlineData(false, "revision")]
+    [InlineData(false, "generation")]
+    [InlineData(true, "episode")]
+    [InlineData(true, "revision")]
+    [InlineData(true, "generation")]
+    public async Task ShouldAppendNoGuardFactGivenStaleAdministratorAssignment(bool remove, string change)
+    {
+        // Arrange
+        await using var host = new AdministratorTransitionHost();
+        var actor = await host.AddAdministratorAsync();
+        var target = await host.AddAdministratorAsync();
+        if (!remove)
+        {
+            var accepted = await host.RemoveAsync(actor, target);
+            Assert.True(accepted.IsSuccess);
+            Assert.Equal(ProcessState.Completed, (await host.DriveAsync(accepted.Value!.OperationId)).State);
+        }
+        var assign = await host.AssignRequestAsync(target);
+        var removal = await host.RemoveRequestAsync(target);
+        IRequestBase request = remove ? change switch
+        {
+            "episode" => removal with { MemberEpisodeId = Uuid.CreateVersion4() },
+            "revision" => removal with { ExpectedAssignmentRevision = removal.ExpectedAssignmentRevision + 1 },
+            _ => removal with { ExpectedAssignmentGeneration = removal.ExpectedAssignmentGeneration + 1 },
+        } : change switch
+        {
+            "episode" => assign with { MemberEpisodeId = Uuid.CreateVersion4() },
+            "revision" => assign with { ExpectedAssignmentRevision = assign.ExpectedAssignmentRevision + 1 },
+            _ => assign with { ExpectedAssignmentGeneration = assign.ExpectedAssignmentGeneration + 1 },
+        };
+        var before = (await host.GuardFactsAsync()).Count;
+
+        // Act
+        var result = await host.SubmitAsync(actor, request);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Equal(before, (await host.GuardFactsAsync()).Count);
+        Assert.Equal(remove, (await host.AssignmentAsync(target)).IsAssigned);
+    }
+
     [Fact]
     public async Task ShouldWaitForWithdrawalGivenAdministratorRestorationArrivesBeforeSourceApply()
     {

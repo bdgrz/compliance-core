@@ -8,10 +8,11 @@ namespace Bdgrz.Compliance.Tests.Features.Content;
 public sealed class ContentSourceFactRegistrationTests
 {
     [Fact]
-    public void ShouldRegisterStoreAsSingletonAndResolverBehindStreamClientGivenApplicationComposition()
+    public async Task ShouldRegisterAndResolveStoreAndSourceResolverGivenApplicationComposition()
     {
         // Arrange
         var services = new ServiceCollection();
+        services.AddLogging();
 
         // Act
         _ = services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(
@@ -21,7 +22,12 @@ public sealed class ContentSourceFactRegistrationTests
                 ["Fitz:ApplicationName"] = "compliance",
             }).Build());
 
+        await using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var resolved = scope.ServiceProvider.GetRequiredService<ISourceFactResolver>();
+
         // Assert
+        Assert.NotNull(resolved);
         Assert.Equal(ServiceLifetime.Singleton,
             services.Last(descriptor => descriptor.ServiceType == typeof(IImmutableContentStore)).Lifetime);
         var resolver = Assert.Single(services, descriptor => descriptor.ServiceType == typeof(ISourceFactResolver));

@@ -235,6 +235,14 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
             CancellationToken.None);
     }
 
+    public Task<Result<AdministratorTransitionResponse>> SubmitSystemAssignmentAsync(AssignTeamMember request) =>
+        AssignHandler().HandleAsync(new RequestContext<AssignTeamMember>(request, RequestActor.System),
+            CancellationToken.None).AsTask();
+
+    public Task<Result<AdministratorTransitionResponse>> SubmitSystemRemovalAsync(RemoveTeamMember request) =>
+        RemoveHandler().HandleAsync(new RequestContext<RemoveTeamMember>(request, RequestActor.System),
+            CancellationToken.None).AsTask();
+
     AssignTeamMemberHandler AssignHandler()
     {
         var content = Content;

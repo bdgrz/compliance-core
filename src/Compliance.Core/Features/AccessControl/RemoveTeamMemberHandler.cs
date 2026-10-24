@@ -54,12 +54,13 @@ public sealed class RemoveTeamMemberHandler(NativeOperationExecutor operations,
     {
         var assignment = await reader.HydrateAsync(Owner(request, Uuid.Empty), ct).ConfigureAwait(false);
         var episodeId = request.MemberEpisodeId == Uuid.Empty ? assignment.MembershipEpisodeId : request.MemberEpisodeId;
-        if (episodeId == Uuid.Empty)
-            return Fail(RequestErrorKind.NotFound, "The member is not on this team.");
         var admission = new AdministratorAdmission(request.CommandId, request.TenantId, AdministratorCommandKinds.Remove,
             actor, AuthoredIntentDigest.Compute(request), clock.GetUtcNow(), request.MemberId, episodeId,
             assignment.Stream, assignment.Id, request.ExpectedAssignmentRevision, guard =>
             {
+                if (episodeId == Uuid.Empty)
+                    return Result<AdministratorSourceBinding>.Failure(new RequestError(RequestErrorKind.NotFound,
+                        "The member is not on this team."));
                 var unfinished = AdministratorAdmissions.Unfinished(guard, episodeId, false, static _ => false);
                 if (!unfinished.IsSuccess)
                     return Result<AdministratorSourceBinding>.Failure(unfinished.Error!);
@@ -69,7 +70,7 @@ public sealed class RemoveTeamMemberHandler(NativeOperationExecutor operations,
                     ? Result<AdministratorSourceBinding>.Success(new AdministratorSourceBinding(0,
                         assignment.AssignmentGeneration, assignment.AssignmentRevision, null))
                     : Result<AdministratorSourceBinding>.Failure(prepared.Error!);
-            });
+            }, ResolveCurrentEpisode: request.MemberEpisodeId == Uuid.Empty);
         return await admissions.AdmitAsync(context, admission, ct).ConfigureAwait(false);
     }
 
