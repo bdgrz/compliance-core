@@ -1,0 +1,13 @@
+# Faithful frozen source byte publication
+
+Actual production source reads now capture exact existing digest preimages. Flat prefixed canonical sources retain their original bytes and accurate binary media/extension. Population sources publish complete canonical row envelopes plus logical Merkle proof, with an independent physical digest. The logical source identities remain unchanged.
+
+Before freeze, every selected source is stored and reopened through tenant-scoped verified artifact storage. One immutable scope-bound sidecar seals physical hashes/lengths/media/extensions without inflating each bounded event. Preview identity binds sidecar bytes while excluding random candidate content IDs, so repeated equal publication is stable. Baseline reads enrich compact persisted refs from the verified sidecar. Existing native package selection/manifest/build binds physical descriptors independently from exact logical frozen membership; ZIP verification uses physical bytes/hash/length and rejects substitutions.
+
+TypeII opening/validation/close pointers propagate the same sidecar proof while preserving earlier original-revision and clock replay repairs. This does not manufacture missing close source facts: the production close reconciliation handler and period State compaction remain actively prepared separately.
+
+RED1failed: actual production contributors and DI froze a baseline while exact source bytes were absent. RED2failed: unavailable/corrupt publication manifest writes escaped instead of returning typed failures. The publisher now returns transient/permanent Conflict for the expected immutable-content exception family, with no baseline append. Unknown exceptions and cancellation still propagate. Test fixture corrections explicitly register the concrete local artifact store as its interface, qualify a shadowed System namespace, and expect the published DI decorator.
+
+GREEN: strict Release0warnings/errors;270focused source/baseline/period/native-package/HTTP smoke tests;5,574 unit tests. Tests prove complete workforce rows through a real ZIP, stable repeated publication, exact bytes, failed physical-pointer override and failure classification with unchanged owner tail. Whitespace,24Node tests, design/coverage and diff checks pass.
+
+Jev1.14.0 directly reviewed49 current source/dependency hash sets. Nine high signals were source/test triaged. Direct integration selected merge_scoped_repair .93, introduced_regression .16, scope_misrepresentation .11. Full units subsequently passed; current source hashes match the final review manifest. No deployment or new GitHub issue.

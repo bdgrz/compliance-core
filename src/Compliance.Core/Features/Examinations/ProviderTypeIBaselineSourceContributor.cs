@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -616,7 +617,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         var material = new byte[domain.Length + bytes.Length];
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 
     /// <summary>The applied fact together with the complete content it references, so the baseline is self-contained.</summary>

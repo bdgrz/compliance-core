@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 
@@ -14,4 +16,8 @@ public sealed record TypeIIPeriodCloseValidationView(
     IReadOnlyList<Uuid> UnresolvedMaterialItemIds,
     Uuid ValidatorMemberId,
     string ValidatorDisplay,
-    DateTimeOffset ValidatedAt);
+    DateTimeOffset ValidatedAt)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? SourceContentManifest { get; init; }
+}

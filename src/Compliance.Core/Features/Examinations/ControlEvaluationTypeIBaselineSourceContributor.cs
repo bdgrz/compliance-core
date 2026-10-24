@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -223,7 +224,7 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributor(ControlEvalu
         var material = new byte[domain.Length + bytes.Length];
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 
     static void WriteCanonical(Utf8JsonWriter writer, JsonElement element)

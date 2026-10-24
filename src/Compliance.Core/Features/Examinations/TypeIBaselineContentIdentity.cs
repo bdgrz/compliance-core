@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -37,6 +38,15 @@ static class TypeIBaselineContentIdentity
                 writer.WriteEndObject();
             }
             writer.WriteEndArray();
+            if (preview.SourceContentManifest is { } publication)
+            {
+                writer.WritePropertyName("source_content_manifest");
+                writer.WriteStartObject();
+                writer.WriteString("schema", publication.Schema);
+                writer.WriteString("sha256", publication.Sha256);
+                writer.WriteNumber("bytes", publication.Bytes);
+                writer.WriteEndObject();
+            }
             writer.WritePropertyName("blockers");
             writer.WriteStartArray();
             foreach (var blocker in preview.Blockers.Select(static value =>
@@ -72,7 +82,7 @@ static class TypeIBaselineContentIdentity
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
         return (Encoding.UTF8.GetString(bytes),
-            Convert.ToHexStringLower(SHA256.HashData(material)));
+            Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material)));
     }
 
     public static TypeIBaselineSourceCoverage Coverage(string family,
@@ -107,6 +117,6 @@ static class TypeIBaselineContentIdentity
         prefix.CopyTo(material, 0);
         bytes.CopyTo(material, prefix.Length);
         return new TypeIBaselineSourceCoverage(family, sources.Count,
-            Convert.ToHexStringLower(SHA256.HashData(material)));
+            Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material)));
     }
 }

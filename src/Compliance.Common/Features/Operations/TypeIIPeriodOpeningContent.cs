@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 
@@ -9,4 +11,8 @@ public sealed record TypeIIPeriodOpeningContent(
     Uuid OpeningSnapshotId,
     string OpeningSnapshotSha256,
     IReadOnlyList<ExaminationContentReference> SourceReferences,
-    IReadOnlyList<Uuid> AcknowledgedOpeningGapIds);
+    IReadOnlyList<Uuid> AcknowledgedOpeningGapIds)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? SourceContentManifest { get; init; }
+}

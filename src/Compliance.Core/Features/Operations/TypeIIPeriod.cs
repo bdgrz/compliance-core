@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
@@ -144,7 +145,8 @@ public sealed class TypeIIPeriod : Aggregate
             planContent.PeriodStart, planContent.PeriodEnd, normalizedOpening.OpeningSnapshotId,
             normalizedOpening.OpeningSnapshotSha256, normalizedOpening.SourceReferences,
             normalizedOpening.AcknowledgedOpeningGapIds, occurrences, [], null, [], [],
-            actorMemberId, actorDisplay.Trim(), startedAt);
+            actorMemberId, actorDisplay.Trim(), startedAt)
+        { OpeningSourceContentManifest = normalizedOpening.SourceContentManifest };
         if (ValidateState(state) is { } invalid)
             return invalid;
         if (!ValidOpeningState(state))
@@ -458,7 +460,8 @@ public sealed class TypeIIPeriod : Aggregate
             normalized.SourceReferences, normalized.ExpectedOccurrenceIds,
             normalized.ActualOccurrenceIds, normalized.DuplicateOccurrenceIds,
             normalized.MissingWorkIds, normalized.UnresolvedMaterialItemIds,
-            validatorMemberId, validatorDisplay.Trim(), validatedAt);
+            validatorMemberId, validatorDisplay.Trim(), validatedAt)
+        { SourceContentManifest = normalized.SourceContentManifest };
         var state = current with
         {
             Status = ready ? "close_ready" : "close_blocked",
@@ -544,6 +547,7 @@ public sealed class TypeIIPeriod : Aggregate
         if (actorMemberId != approval.ApprovedByMemberId)
             return CommandFailure.ActorProhibited("Only the approving executive can freeze this exact close decision.");
         if (NormalizeSnapshot(content) is not { } normalized ||
+            normalized.SourceContentManifest != (validation.SourceContentManifest ?? current.OpeningSourceContentManifest) ||
             !SameReferences(normalized.SourceReferences, validation.SourceReferences) ||
             !normalized.ExpectedOccurrenceIds.SequenceEqual(current.ExpectedOccurrences.Select(item => item.OccurrenceId)
                 .OrderBy(IdKey, StringComparer.Ordinal)) ||
@@ -798,6 +802,7 @@ public sealed class TypeIIPeriod : Aggregate
             next.TypeIIPlanContentSha256 != prior.TypeIIPlanContentSha256 ||
             next.OpeningSnapshotId != prior.OpeningSnapshotId ||
             next.OpeningSnapshotSha256 != prior.OpeningSnapshotSha256 ||
+            next.OpeningSourceContentManifest != prior.OpeningSourceContentManifest ||
             !SameReferences(next.OpeningSourceReferences, prior.OpeningSourceReferences) ||
             !next.AcknowledgedOpeningGapIds.SequenceEqual(prior.AcknowledgedOpeningGapIds) ||
             !SameOccurrences(next.ExpectedOccurrences, prior.ExpectedOccurrences) ||
@@ -868,7 +873,7 @@ public sealed class TypeIIPeriod : Aggregate
 
     static TypeIIPeriodOpeningContent? NormalizeOpening(TypeIIPeriodOpeningContent? opening)
     {
-        if (opening is null || opening.ExaminationId == Uuid.Empty ||
+        if (opening is null || !SnapshotSourcePublicationReader.ValidReference(opening.SourceContentManifest) || opening.ExaminationId == Uuid.Empty ||
             opening.OpeningSnapshotId == Uuid.Empty || !Sha256(opening.OpeningSnapshotSha256) ||
             NormalizeReferences(opening.SourceReferences) is not { } refs ||
             NormalizeIds(opening.AcknowledgedOpeningGapIds) is not { } gaps)
@@ -938,7 +943,7 @@ public sealed class TypeIIPeriod : Aggregate
         TypeIIPeriodCloseValidationContent? content,
         IReadOnlyList<TypeIIPeriodOccurrenceView> expectedOccurrences)
     {
-        if (content is null || NormalizeReferences(content.SourceReferences) is not { } refs ||
+        if (content is null || !SnapshotSourcePublicationReader.ValidReference(content.SourceContentManifest) || NormalizeReferences(content.SourceReferences) is not { } refs ||
             NormalizeIds(content.ExpectedOccurrenceIds) is not { } expected ||
             NormalizeIds(content.ActualOccurrenceIds, allowDuplicates: true) is not { } actual ||
             NormalizeIds(content.DuplicateOccurrenceIds) is not { } duplicates ||
@@ -959,7 +964,7 @@ public sealed class TypeIIPeriod : Aggregate
 
     static TypeIIPeriodCloseSnapshotContent? NormalizeSnapshot(TypeIIPeriodCloseSnapshotContent? content)
     {
-        if (content is null || content.CloseSnapshotId == Uuid.Empty ||
+        if (content is null || !SnapshotSourcePublicationReader.ValidReference(content.SourceContentManifest) || content.CloseSnapshotId == Uuid.Empty ||
             NormalizeReferences(content.SourceReferences) is not { } refs ||
             NormalizeIds(content.ExpectedOccurrenceIds) is not { } expected ||
             NormalizeIds(content.AcknowledgedMaterialItemIds) is not { } acknowledged)
@@ -978,7 +983,8 @@ public sealed class TypeIIPeriod : Aggregate
         IReadOnlyList<Uuid> affected) => new(content.CloseSnapshotId, version,
         content.SourceReferences, content.ExpectedOccurrenceIds,
         content.AcknowledgedMaterialItemIds, Digest(content), amendsId, reason,
-        changed, affected, actor, role, display, at);
+        changed, affected, actor, role, display, at)
+        { SourceContentManifest = content.SourceContentManifest };
 
     static bool ValidValidation(TypeIIPeriodCloseValidationView? validation,
         IReadOnlyList<TypeIIPeriodOccurrenceView> expected) => validation is null ||
@@ -1067,6 +1073,7 @@ public sealed class TypeIIPeriod : Aggregate
         state.TypeIIPlanContentSha256 == plan.Current!.ContentSha256 &&
         state.ExaminationId == normalized.ExaminationId && state.OpeningSnapshotId == normalized.OpeningSnapshotId &&
         state.OpeningSnapshotSha256 == normalized.OpeningSnapshotSha256 &&
+        state.OpeningSourceContentManifest == normalized.SourceContentManifest &&
         SameReferences(state.OpeningSourceReferences, normalized.SourceReferences) &&
         state.AcknowledgedOpeningGapIds.SequenceEqual(normalized.AcknowledgedOpeningGapIds) &&
         state.ActorMemberId == actor && state.ActorDisplay == display.Trim();
@@ -1079,6 +1086,7 @@ public sealed class TypeIIPeriod : Aggregate
         NormalizeIds(content.DuplicateOccurrenceIds) is { } duplicates &&
         NormalizeIds(content.MissingWorkIds) is { } missing &&
         NormalizeIds(content.UnresolvedMaterialItemIds) is { } unresolved &&
+        existing.SourceContentManifest == content.SourceContentManifest &&
         SameReferences(existing.SourceReferences, refs) && existing.ExpectedOccurrenceIds.SequenceEqual(expected) &&
         existing.ActualOccurrenceIds.SequenceEqual(actual) && existing.DuplicateOccurrenceIds.SequenceEqual(duplicates) &&
         existing.MissingWorkIds.SequenceEqual(missing) && existing.UnresolvedMaterialItemIds.SequenceEqual(unresolved) &&

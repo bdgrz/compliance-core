@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -599,7 +600,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
     }
 
     static string TrainingContentHash(TrainingRequirementContent content) =>
-        Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(content,
+        Convert.ToHexStringLower(SnapshotSourceCapture.HashData(JsonSerializer.SerializeToUtf8Bytes(content,
             ComplianceCoreJsonContext.Default.TrainingRequirementContent)));
 
     static string CatalogFingerprint(IReadOnlyList<TrainingRequirementView> latest)
@@ -630,7 +631,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         var material = new byte[prefix.Length + bytes.Length];
         prefix.CopyTo(material, 0);
         bytes.CopyTo(material, prefix.Length);
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 
     static void WriteCanonical(Utf8JsonWriter writer, JsonElement element)

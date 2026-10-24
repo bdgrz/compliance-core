@@ -48,7 +48,8 @@ public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
 
         var content = new TypeIIPeriodCloseSnapshotContent(request.CloseSnapshotId,
             validation.SourceReferences, validation.ExpectedOccurrenceIds,
-            approval.AcknowledgedMaterialItemIds);
+            approval.AcknowledgedMaterialItemIds)
+        { SourceContentManifest = validation.SourceContentManifest ?? current.OpeningSourceContentManifest };
         var frozenAt = clock.GetUtcNow();
         var existing = current.CloseSnapshots.FirstOrDefault(item =>
             item.CloseSnapshotId == request.CloseSnapshotId);
@@ -95,7 +96,7 @@ public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
     static bool MatchesFrozenSnapshot(TypeIIPeriodCloseSnapshotView snapshot,
         TypeIIPeriodCloseSnapshotContent content, Uuid memberId, string role, long expectedRevision) =>
         snapshot.CloseSnapshotId == content.CloseSnapshotId && snapshot.OriginalExpectedRevision == expectedRevision &&
-        snapshot.Version == 1 &&
+        snapshot.Version == 1 && snapshot.SourceContentManifest == content.SourceContentManifest &&
         snapshot.AmendsCloseSnapshotId is null && snapshot.ActorMemberId == memberId &&
         StringComparer.OrdinalIgnoreCase.Equals(snapshot.ActorRole, role) &&
         SameReferences(snapshot.SourceReferences, content.SourceReferences) &&

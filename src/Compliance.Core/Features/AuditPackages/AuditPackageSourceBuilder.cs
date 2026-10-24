@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
@@ -5,7 +8,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
 /// <summary>Resolves selected package records against their frozen Type I or Type II snapshot.</summary>
-public sealed class AuditPackageSourceBuilder(IAggregateReader reader)
+public sealed class AuditPackageSourceBuilder(IAggregateReader reader, IImmutableContentStore? content = null)
 {
     public async ValueTask<Result<AuditPackageContent>> ResolveAsync(Uuid tenantId, Uuid programId,
         AuditPackageContent requested, CancellationToken ct)
@@ -18,6 +21,7 @@ public sealed class AuditPackageSourceBuilder(IAggregateReader reader)
             return Invalid("An audit package requires a bounded explicit source selection.");
 
         Func<AuditPackageSelectionEntry, bool> isFrozenSource;
+        ImmutableContentRef? publication = null;
         if (requested.PackageKind == "type_i" && requested.SourceSnapshotKind == "type_i_baseline")
         {
             if (requested.SourcePeriodId != Uuid.Empty)
@@ -31,6 +35,7 @@ public sealed class AuditPackageSourceBuilder(IAggregateReader reader)
                 !StringComparer.OrdinalIgnoreCase.Equals(requested.SourceSnapshotSha256,
                     baseline.ContentSha256))
                 return Conflict("The package must identify the exact frozen Type I baseline.");
+            publication = baseline.SourceContentManifest;
             isFrozenSource = selected => baseline.Sources.Any(source =>
                 source.Kind == selected.SourceType && source.RecordId == selected.SourceRecordId &&
                 source.VersionId == selected.SourceVersionId &&
@@ -56,6 +61,7 @@ public sealed class AuditPackageSourceBuilder(IAggregateReader reader)
                 !StringComparer.OrdinalIgnoreCase.Equals(requested.SourceSnapshotSha256,
                     snapshot.ContentSha256))
                 return Conflict("The package must identify the latest frozen Type II close snapshot.");
+            publication = snapshot.SourceContentManifest ?? closed.OpeningSourceContentManifest;
             isFrozenSource = selected => snapshot.SourceReferences.Any(source =>
                 source.SourceType == selected.SourceType && source.RecordId == selected.SourceRecordId &&
                 source.VersionId == selected.SourceVersionId && source.Version == selected.SourceVersion &&
@@ -65,13 +71,42 @@ public sealed class AuditPackageSourceBuilder(IAggregateReader reader)
         else
             return Conflict("The package source type must match a supported frozen examination snapshot.");
 
+        SnapshotSourcePublicationManifest? published = null;
+        if (publication is not null)
+        {
+            if (content is null || publication.Schema != SnapshotSourcePublicationManifest.Schema)
+                return Conflict("The frozen source publication cannot be verified.");
+            published = await SnapshotSourcePublicationReader.ReadAsync(content, tenantId, programId,
+                requested.ExaminationId, publication, ct).ConfigureAwait(false);
+        }
+        var normalized = new List<AuditPackageSelectionEntry>(requested.SelectedContent.Count);
         foreach (var selected in requested.SelectedContent)
         {
             if (selected is null || selected.SourceVersionId == Uuid.Empty || !isFrozenSource(selected))
                 return Conflict("Every selected package record must match an exact source version in the frozen examination snapshot.");
+            var physical = published?.Sources.SingleOrDefault(source => source.SourceType == selected.SourceType &&
+                source.RecordId == selected.SourceRecordId && source.VersionId == selected.SourceVersionId &&
+                source.Version == selected.SourceVersion && StringComparer.OrdinalIgnoreCase.Equals(
+                    source.LogicalSha256, selected.ContentSha256))?.Content;
+            if (published is not null && physical is null)
+                return Conflict("The frozen logical source has no complete physical publication proof.");
+            if (physical is not null)
+            {
+                if (selected.SourceContent is not null && selected.SourceContent != physical)
+                    return Conflict("The selected physical source differs from its immutable publication proof.");
+                if (selected.ByteLength != physical.Bytes || !StringComparer.OrdinalIgnoreCase.Equals(
+                        selected.Extension, physical.FileExtension))
+                    return Invalid("Use the frozen source's exact byte length and declared file extension.");
+                normalized.Add(selected with { SourceContent = physical });
+            }
+            else
+            {
+                if (selected.SourceContent is not null)
+                    return Conflict("A physical source descriptor requires a frozen publication proof.");
+                normalized.Add(selected);
+            }
         }
-
-        return Result<AuditPackageContent>.Success(requested);
+        return Result<AuditPackageContent>.Success(requested with { SelectedContent = normalized });
     }
 
     static Result<AuditPackageContent> Invalid(string message) =>

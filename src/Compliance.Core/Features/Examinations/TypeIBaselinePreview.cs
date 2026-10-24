@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -11,6 +13,9 @@ public sealed record TypeIBaselinePreview(
     IReadOnlyList<string> Blockers,
     IReadOnlyList<string> ScopeDifferences)
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? SourceContentManifest { get; init; }
+
     public IReadOnlyList<TypeIBaselineSourceCoverage> SourceCoverage { get; init; } = [];
 
     public string CanonicalManifest => TypeIBaselineContentIdentity.Manifest(this).Json;

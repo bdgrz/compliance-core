@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -24,5 +26,8 @@ public sealed record TypeIBaselineView(
     IReadOnlyList<Uuid> AffectedPackageMaterialIds,
     int AmendmentDepth)
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? SourceContentManifest { get; init; }
+
     public IReadOnlyList<TypeIBaselineSourceCoverage> SourceCoverage { get; init; } = [];
 }

@@ -173,6 +173,6 @@ static class SnapshotContentIdentity
         var material = new byte[prefix.Length + bytes.Length];
         prefix.CopyTo(material, 0);
         bytes.CopyTo(material.AsSpan(prefix.Length));
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 }

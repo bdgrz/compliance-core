@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPackages;
@@ -13,4 +15,5 @@ public sealed record AuditPackageSelectionEntry(
     string ContentSha256,
     long ByteLength,
     string Authorship,
-    Uuid SourceVersionId = default);
+    Uuid SourceVersionId = default,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] SnapshotSourceBlob? SourceContent = null);

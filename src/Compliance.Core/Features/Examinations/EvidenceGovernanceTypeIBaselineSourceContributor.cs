@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Snapshots;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -796,7 +797,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         var material = new byte[domain.Length + bytes.Length];
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 
     static string Digest(EvidenceGovernanceHoldSourceContent content)
@@ -812,7 +813,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         var material = new byte[domain.Length + bytes.Length];
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 
     static bool ValidInspection(EvidenceArtifactInspected ev) => ev.State switch

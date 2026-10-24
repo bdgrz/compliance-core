@@ -236,7 +236,7 @@ public sealed class InformationAssetTypeIBaselineSourceContributor(
         var material = new byte[prefix.Length + bytes.Length];
         prefix.CopyTo(material, 0);
         bytes.CopyTo(material, prefix.Length);
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 
     static bool ValidText(string? value, int maximum) =>

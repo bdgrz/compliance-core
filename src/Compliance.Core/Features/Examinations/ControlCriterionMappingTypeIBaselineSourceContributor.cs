@@ -371,7 +371,7 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
         var material = new byte[prefix.Length + bytes.Length];
         prefix.CopyTo(material, 0);
         bytes.CopyTo(material, prefix.Length);
-        return Convert.ToHexStringLower(SHA256.HashData(material));
+        return Convert.ToHexStringLower(SnapshotSourceCapture.HashData(material));
     }
 
     static bool ValidActor(ActorReference? actor) => actor is not null &&

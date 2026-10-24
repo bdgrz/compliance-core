@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "fca824c12c2d36092fa3427f3ac15f285a2dd92e",
+  "sourceCommit": "1e53425882057d9a2e6a6e9e52c15827e6b6632c",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -1618,6 +1618,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
         "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "disposition": "aggregate_fact",
@@ -9685,6 +9686,7 @@
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageReadHttpTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
         "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -10512,12 +10514,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/AmendAuditPackageHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
         "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Examinations/ExaminationEngagementTests.cs",
         "test/Compliance.Tests/Features/Examinations/PreviewTypeIBaselineHandlerTests.cs",
         "test/Compliance.Tests/Features/Examinations/RecordManagementAssertionHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/RecordManagementExaminationReviewHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Examinations/RecordManagementExaminationReviewHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11178,9 +11180,9 @@
         "test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
         "test/Compliance.Tests/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Examinations/WorkforceTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs"
+        "test/Compliance.Tests/Features/Examinations/WorkforceTypeIBaselineSourceContributorTests.cs"
       ],
       "helperOnlyConstruction": "PopulationSnapshotFreezer",
       "commandRouteDisposition": "registered_command_route"
@@ -16763,6 +16765,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageContractTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
         "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
@@ -18072,6 +18075,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
         "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs"
       ],
       "note": ""
@@ -20742,6 +20746,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
         "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -28123,6 +28128,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPackages/AuditPackageNativeDeliveryTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs",
         "test/Compliance.Tests/Testing/PackageSeeds.cs"
       ],
       "note": ""
@@ -30861,7 +30867,8 @@
       ],
       "aggregateTargets": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs"
+        "test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs",
+        "test/Compliance.Tests/Features/AuditPackages/SnapshotSourcePublicationTests.cs"
       ],
       "note": ""
     },

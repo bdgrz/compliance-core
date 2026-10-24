@@ -67,7 +67,10 @@
     "methodology-history-integration-jev.json",
     "foundation-original-binding-file-reviews.json",
     "foundation-original-binding-file-triage.json",
-    "foundation-original-binding-integration-jev.json"
+    "foundation-original-binding-integration-jev.json",
+    "source-publication-file-reviews.json",
+    "source-publication-file-triage.json",
+    "source-publication-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -131,9 +134,12 @@
     {
       "id": "audit-package-source-byte-publication",
       "slice": "S29",
-      "status": "offline_implementation",
+      "status": "validated_awaiting_merge",
       "externalDependency": false,
-      "evidence": "21TypeI families and TypeII chain mapped. Merkle/prefixed logical digests must retain full content and proof through an exact physical blob descriptor; publishing root preimage alone loses rows."
+      "evidence": "21TypeI families and TypeII chain mapped. Merkle/prefixed logical digests must retain full content and proof through an exact physical blob descriptor; publishing root preimage alone loses rows.",
+      "focusedGreen": "270passed/0failed",
+      "fullUnitGreen": "5574passed/0failed",
+      "jev": "49currentfiles;9signalstriaged;directintegrationmerge.93"
     },
     {
       "id": "grant-and-freeze-replay",
@@ -167,17 +173,21 @@
     },
     {
       "id": "application-preview-http-fixture-projection",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "externalDependency": false,
-      "evidence": "Real incoming-relationship projection/checkpoint is seeded. Entire HTTP/MCP field presence fixture passes within1810focused; no production fence changed."
+      "evidence": "Real incoming-relationship projection/checkpoint is seeded. Entire HTTP/MCP field presence fixture passes within1810focused; no production fence changed.",
+      "pullRequest": 1098,
+      "mergeCommit": "1e53425882057d9a2e6a6e9e52c15827e6b6632c"
     },
     {
       "id": "foundation-original-bindings",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "behavioralRed": "7failed/0passed;5additional selected-receipt regressions repaired",
       "focusedGreen": "1810passed/0failed",
       "fullUnitGreen": "5568passed/0failed",
-      "jev": "36currentfiles;7signalstriaged;directintegrationmerge.79"
+      "jev": "36currentfiles;7signalstriaged;directintegrationmerge.79",
+      "pullRequest": 1098,
+      "mergeCommit": "1e53425882057d9a2e6a6e9e52c15827e6b6632c"
     },
     {
       "id": "risk-and-ratification-compact-authority",

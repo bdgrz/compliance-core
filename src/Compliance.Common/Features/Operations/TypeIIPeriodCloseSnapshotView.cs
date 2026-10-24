@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 
@@ -20,6 +22,9 @@ public sealed record TypeIIPeriodCloseSnapshotView(
     string ActorDisplay,
     DateTimeOffset RecordedAt)
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? SourceContentManifest { get; init; }
+
     /// <summary>The authored period revision accepted by an original close freeze; absent on historical unbound snapshots.</summary>
     public long? OriginalExpectedRevision { get; init; }
 }

@@ -76,7 +76,8 @@ public sealed class FreezeTypeIBaselineHandler(IAggregateReader reader,
     internal static TypeIBaselinePreview FromBaseline(TypeIBaselineView baseline) =>
         TypeIBaselinePreview.Create(baseline.TenantId, baseline.ProgramId,
             baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences,
-            baseline.SourceCoverage);
+            baseline.SourceCoverage) with
+        { SourceContentManifest = baseline.SourceContentManifest };
 
     static bool ValidDigest(string? value) => value is { Length: 64 } && value.All(
         static character => character is >= '0' and <= '9' or >= 'a' and <= 'f');
