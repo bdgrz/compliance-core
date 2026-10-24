@@ -49,8 +49,8 @@ public sealed class ProviderTypeIBaselineSourceContributor(
             await HasPendingSourceAsync(assurancePattern, assuranceFence, ct).ConfigureAwait(false))
             return BehindSource();
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
-            DateTimeKind.Utc));
+        var effectiveThrough = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc));
+        var through = context.RecordedThrough ?? effectiveThrough;
         var listed = await ListProvidersAsync(engagement.TenantId, ct).ConfigureAwait(false);
         if (!listed.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(listed.Error);
@@ -65,7 +65,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
 
         IReadOnlySet<Uuid> effectiveCsocProviders = new HashSet<Uuid>();
         if (providerHistories.Value.Values.Any(history => history.AsOf is { } provider &&
-                IsInScope(provider.Content, engagement.ProgramId, through) &&
+                IsInScope(provider.Content, engagement.ProgramId, effectiveThrough) &&
                 provider.Content.Subservice && provider.Content.BoundaryTreatment == "carve_out"))
         {
             var csocRead = await providerCsocs.ReadEffectiveProviderCsocsAsync(engagement,
@@ -85,7 +85,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         {
             if (history.AsOf is not { } provider || history.AsOfRevision == 0)
                 continue;
-            if (!IsInScope(provider.Content, engagement.ProgramId, through))
+            if (!IsInScope(provider.Content, engagement.ProgramId, effectiveThrough))
                 continue;
 
             var assuranceHistory = assuranceHistories.Value.GetValueOrDefault(

@@ -2399,4 +2399,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Snapshots.SnapshotSourceBlob))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Snapshots.SnapshotSourcePublicationEntry))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Snapshots.SnapshotSourcePublicationManifest))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.RecordTypeIIPeriodCloseValidation))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseValidationChange))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseSourceEnvelope))]
 sealed partial class ComplianceCoreJsonContext : JsonSerializerContext;

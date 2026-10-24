@@ -75,7 +75,7 @@ public sealed class InformationAssetTypeIBaselineSourceContributor(
         if (!StringComparer.Ordinal.Equals(boundaryDigest, priorBoundaries[0].ContentSha256))
             return BoundaryChanged();
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
+        var through = context.RecordedThrough ?? new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
         var assetIds = new SortedSet<Uuid>(Comparer<Uuid>.Create(static (left, right) =>
             StringComparer.Ordinal.Compare(left.ToString(), right.ToString())));

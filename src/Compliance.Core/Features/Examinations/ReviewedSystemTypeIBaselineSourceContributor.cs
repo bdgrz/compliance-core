@@ -77,8 +77,8 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
         if (!StringComparer.Ordinal.Equals(boundaryDigest, priorBoundaries[0].ContentSha256))
             return BoundaryChanged();
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
-            DateTimeKind.Utc));
+        var effectiveThrough = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc));
+        var through = context.RecordedThrough ?? effectiveThrough;
         var sources = new List<TypeIBaselineSourceReference>();
         var blockers = new List<string>();
         var scopeDifferences = new List<string>();
@@ -204,7 +204,7 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
             }
 
             var retirement = history.Value.SingleOrDefault(static state => state.ChangeKind == "retired");
-            if (retirement is null || retirement.ChangedAt > through && retirement.EffectiveAt > through)
+            if (retirement is null || retirement.ChangedAt > through && retirement.EffectiveAt > effectiveThrough)
                 continue;
             try
             {
@@ -219,7 +219,7 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributor(
                 blockers.Add("A reviewed system has invalid canonical retirement content.");
                 scopeDifferences.Add($"Reviewed system {instanceId} has invalid canonical retirement content.");
             }
-            if (retirement.EffectiveAt > through)
+            if (retirement.EffectiveAt > effectiveThrough)
                 scopeDifferences.Add($"Reviewed system {instanceId} has a retirement scheduled after the Type I date.");
             else if (retirement.ChangedAt > through)
                 scopeDifferences.Add($"Reviewed system {instanceId} was retired retroactively after the Type I date.");

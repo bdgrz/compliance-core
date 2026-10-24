@@ -45,7 +45,7 @@ public sealed class ControlEvaluationTypeIBaselineSourceContributor(ControlEvalu
                 return SourceConflict();
         }
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
+        var through = context.RecordedThrough ?? new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
         var firstRead = await evaluations.ReadStatesAsync(engagement.TenantId, engagement.ProgramId, through, ct)
             .ConfigureAwait(false);

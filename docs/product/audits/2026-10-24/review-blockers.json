@@ -98,10 +98,13 @@
     "control-file-reviews.json",
     "control-file-triage.json",
     "control-integration-jev.json",
-    "control-source-use-qualification.json"
+    "control-source-use-qualification.json",
+    "typeii-close-file-reviews.json",
+    "typeii-close-file-triage.json",
+    "typeii-close-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
-  "reviewSignalsTriaged": 73,
+  "reviewSignalsTriaged": 83,
   "findingArtifacts": [
     "implementation-file-triage-versioned.json",
     "implementation-file-triage-foundations.json",
@@ -255,11 +258,23 @@
     {
       "id": "native-control-owner-and-consumers",
       "slice": "S32",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "focusedGreen": "230passed/0failed",
       "fullUnitGreen": "5634passed/0failed",
       "webGreen": "44passed/0failed",
-      "jev": "142currentfiles;1obsoletehelperremoved;5signalstriaged;directintegrationmerge.60"
+      "jev": "142currentfiles;1obsoletehelperremoved;5signalstriaged;directintegrationmerge.60",
+      "pullRequest": 1102,
+      "mergeCommit": "69226c9b01a8da26fa7f2744a93d1e38c60c8561"
+    },
+    {
+      "id": "native-typeii-close-reconciliation",
+      "slice": "S35",
+      "status": "validated_awaiting_merge",
+      "behavioralRed": "Premature close1failed; source-version-lineage1failed; physical publication freeze regression fixed",
+      "focusedGreen": "202passed/0failed includingowningHTTP/sourcepublication/archive",
+      "fullUnitGreen": "5651passed/0failed",
+      "jev": "37currentfiles;10signalstriaged;directintegrationmerge.82",
+      "remaining": "Complete compact TypeIIPeriod authority/remaining producers/queries prepared separately; no old-schema migration or deployment qualification."
     }
   ],
   "resolved": [

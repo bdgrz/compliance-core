@@ -33,8 +33,8 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                 RequestErrorKind.Validation,
                 "An access expectation baseline read requires its engagement and source context."));
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
-            DateTimeKind.Utc));
+        var effectiveThrough = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc));
+        var through = context.RecordedThrough ?? effectiveThrough;
         var systemIds = new SortedSet<Uuid>(Comparer<Uuid>.Create(static (left, right) =>
             StringComparer.Ordinal.Compare(left.ToString(), right.ToString())));
         foreach (var source in context.PreviouslyCapturedSources.Where(static source =>
@@ -63,7 +63,7 @@ public sealed class AccessExpectationsTypeIBaselineSourceContributor(
                 continue;
             }
 
-            if (!HasEffectiveExpectation(history.Value.Expectations, through))
+            if (!HasEffectiveExpectation(history.Value.Expectations, effectiveThrough))
                 scopeDifferences.Add(
                     $"Reviewed system {systemId} has no approved access expectation effective on the Type I date.");
 

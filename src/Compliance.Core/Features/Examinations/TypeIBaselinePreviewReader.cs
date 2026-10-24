@@ -28,8 +28,12 @@ public sealed class TypeIBaselinePreviewReader : ITypeIBaselinePreviewReader
         ExaminationEngagementView engagement, CancellationToken ct = default) =>
         await ReadAsync(engagement, Uuid.Empty, ct).ConfigureAwait(false);
 
-    public async ValueTask<Result<TypeIBaselinePreview>> ReadAsync(
-        ExaminationEngagementView engagement, Uuid requesterUserId, CancellationToken ct = default)
+    public ValueTask<Result<TypeIBaselinePreview>> ReadAsync(ExaminationEngagementView engagement,
+        Uuid requesterUserId, CancellationToken ct = default) => ReadAsync(engagement, requesterUserId, null, ct);
+
+    /// <summary>Separates the selected effective date from an explicit server-frozen close receipt cutoff.</summary>
+    public async ValueTask<Result<TypeIBaselinePreview>> ReadAsync(ExaminationEngagementView engagement,
+        Uuid requesterUserId, DateTimeOffset? recordedThrough, CancellationToken ct = default)
     {
         if (engagement is null || engagement.TenantId == Uuid.Empty ||
             engagement.ProgramId == Uuid.Empty || engagement.ExaminationEngagementId == Uuid.Empty ||
@@ -50,7 +54,8 @@ public sealed class TypeIBaselinePreviewReader : ITypeIBaselinePreviewReader
             }
 
             var context = new TypeIBaselineSourceReadContext(requesterUserId,
-                Array.AsReadOnly(sources.ToArray()));
+                Array.AsReadOnly(sources.ToArray()))
+            { RecordedThrough = recordedThrough };
             var result = await contributor.ReadAsync(engagement, context, ct)
                 .ConfigureAwait(false);
             if (!result.IsSuccess)

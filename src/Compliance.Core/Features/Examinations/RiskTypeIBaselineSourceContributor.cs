@@ -62,7 +62,7 @@ public sealed class RiskTypeIBaselineSourceContributor(
             return Result<TypeIBaselineSourceContribution>.Failure(listed.Error);
         var summaries = listed.Value;
         var knownRiskIds = summaries.Select(static summary => summary.RiskId).ToHashSet();
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
+        var through = context.RecordedThrough ?? new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
         var seenEventIds = new HashSet<Uuid>();
 

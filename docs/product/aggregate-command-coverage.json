@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "5ba9fdc9fc57bd0c2078ffac931bf22b852e4c2c",
+  "sourceCommit": "69226c9b01a8da26fa7f2744a93d1e38c60c8561",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -13,10 +13,10 @@
     "legacyReducerOnlyFacts": 12,
     "aggregateTypes": 131,
     "aggregateTypesWithCommandPath": 124,
-    "requestContracts": 783,
-    "commonRequestContracts": 781,
+    "requestContracts": 784,
+    "commonRequestContracts": 782,
     "requestClassificationCounts": {
-      "command": 346,
+      "command": 347,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
@@ -24,7 +24,7 @@
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 728,
+    "registeredCoreHandlerRegistrations": 729,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 45,
     "unwiredAggregateProducerClassifications": {
@@ -5121,7 +5121,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseValidation.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -11808,7 +11810,8 @@
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs",
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactorTests.cs",
         "test/Compliance.Tests/Features/Changes/RestrictedComplianceRecordMutationAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Changes/SignificantChangeTests.cs"
+        "test/Compliance.Tests/Features/Changes/SignificantChangeTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseSources.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12268,11 +12271,11 @@
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPopulations/DefineAuditPopulationHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseArchive.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseSources.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseValidation.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs",
-        "test/Compliance.Tests/Features/Programs/ProposeProgramRolloverHandlerTests.cs",
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14289,6 +14292,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseArchive.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
       ],
       "note": ""
@@ -18111,6 +18115,7 @@
         "TypeIIOccurrenceCoverage"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseArchive.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
       ],
       "note": ""
@@ -27155,6 +27160,34 @@
         "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
       "note": "Command; admits a complete training completion on PolicyDistributionCampaign; PolicyCampaignParticipant applies it afterwards."
+    },
+    {
+      "request": "RecordTypeIIPeriodCloseValidation",
+      "contract": "src/Compliance.Common/Features/Operations/RecordTypeIIPeriodCloseValidation.cs",
+      "classification": "command",
+      "interfaces": "IRequest<UnitResult>, IIdentifiedRequest, IProgramScopedRequest,\n    IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "RecordTypeIIPeriodCloseValidationHandler",
+          "source": "src/Compliance.Core/Features/Operations/RecordTypeIIPeriodCloseValidationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [
+        "ITypeIIPeriodCloseReconciliation"
+      ],
+      "directAggregateReferences": [
+        "TypeIIPeriod"
+      ],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseArchive.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseSources.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseValidation.cs",
+        "test/Compliance.Tests/Testing/TypeIIPeriodTestExtensions.cs"
+      ],
+      "note": ""
     },
     {
       "request": "RecordWorkDigestDelivery",

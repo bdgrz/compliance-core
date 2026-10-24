@@ -78,8 +78,8 @@ public sealed class ApplicationTypeIBaselineSourceContributor(
         if (!StringComparer.Ordinal.Equals(boundaryDigest, priorBoundary[0].ContentSha256))
             return BoundaryChanged();
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
-            DateTimeKind.Utc));
+        var effectiveThrough = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc));
+        var through = context.RecordedThrough ?? effectiveThrough;
         var applicationIds = boundaryVersion.Content.Entries
             .Where(static entry => entry.Kind == "inclusion" && entry.SubjectType == "application" &&
                                    !entry.Unresolved && entry.GovernedRecordId is not null)
@@ -149,7 +149,7 @@ public sealed class ApplicationTypeIBaselineSourceContributor(
             }
 
             var retirement = retirementRows.SingleOrDefault(revision =>
-                revision.LastChangedAt <= through || revision.Retirement!.EffectiveAt <= through);
+                revision.LastChangedAt <= through || revision.Retirement!.EffectiveAt <= effectiveThrough);
             var authorized = true;
             if (applicationVersion.IsRestricted || retirement?.IsRestricted == true)
                 authorized = context.RequesterUserId != Uuid.Empty &&
@@ -190,7 +190,7 @@ public sealed class ApplicationTypeIBaselineSourceContributor(
                     blockers.Add($"Application {applicationId} has invalid canonical retirement content.");
                     scopeDifferences.Add($"Application {applicationId} has invalid canonical retirement content.");
                 }
-                if (retirement.Retirement!.EffectiveAt > through)
+                if (retirement.Retirement!.EffectiveAt > effectiveThrough)
                     scopeDifferences.Add($"Application {applicationId} has a retirement scheduled after the Type I date.");
                 else if (retirement.LastChangedAt > through)
                     scopeDifferences.Add($"Application {applicationId} was retired retroactively after the Type I date.");

@@ -79,7 +79,7 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributor(
 
         var criteria = catalog.ListEntries(editionId, null, null, null)
             .ToDictionary(static entry => entry.Identifier, StringComparer.Ordinal);
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
+        var through = context.RecordedThrough ?? new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
         var sources = new List<TypeIBaselineSourceReference>();
         var blockers = new List<string>();

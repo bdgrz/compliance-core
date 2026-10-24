@@ -12,8 +12,11 @@ public sealed class BoundaryTypeIBaselineSourceContributor(
 {
     public string Family => "approved_boundary";
 
-    public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
-        ExaminationEngagementView engagement, CancellationToken ct)
+    public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(ExaminationEngagementView engagement, CancellationToken ct) =>
+        ReadAsync(engagement, new TypeIBaselineSourceReadContext(Uuid.Empty, []), ct);
+
+    public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(ExaminationEngagementView engagement,
+        TypeIBaselineSourceReadContext context, CancellationToken ct)
     {
         var fence = await consistency.CaptureAsync(engagement.TenantId, ct)
             .ConfigureAwait(false);
@@ -45,6 +48,9 @@ public sealed class BoundaryTypeIBaselineSourceContributor(
             }
             else
             {
+                if (context.RecordedThrough is { } cutoff && version.ChangedAt > cutoff)
+                    return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The effective boundary changed after the frozen close receipt cutoff.", true));
                 try
                 {
                     sources.Add(new TypeIBaselineSourceReference("approved_boundary",

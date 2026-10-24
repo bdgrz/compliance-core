@@ -1,0 +1,1908 @@
+{
+  "version": "implementation-file-review-v1",
+  "total": 37,
+  "reviewed": 37,
+  "blocked": 0,
+  "calls": 1,
+  "cached": 36,
+  "usage": {
+    "input_tokens": 315589,
+    "output_tokens": 2886
+  },
+  "records": [
+    {
+      "path": "src/Compliance.Common/Features/AuditPopulations/ObservationPeriodCloseProposed.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "f0340e9cb4d45d2d763d74a80c576df7dc65fde1a4941160ef25bf9227637eea",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodView.cs",
+          "sha256": "2c2bc9af1e5af0a87ba10b7d8f386246da2536674bf48b0196effce097cbf797"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "47c193d16c042a415f4231c69e14cdfd786c0f5150b99be2cb2f8832311a6e56",
+      "reviewed_at": "2026-10-24T20:00:47.266Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.14
+        }
+      },
+      "usage": {
+        "input_tokens": 2224,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Common/Features/Operations/RecordTypeIIPeriodCloseValidation.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "c36ddeae61e5ff5953bd12847291e52b697ff697568f5eeccca9c80566583123",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/IClientManagementMutationRequest.cs",
+          "sha256": "22d13e1ff986af654a1036f0fd6e2242a00afbd632f3562d31c8d5e7c444c1dd"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/UnitResult.cs",
+          "sha256": "585ea1036e73cf35c4fa60e7f94fd40c3fbe0c6dd61fb37c3afb40823bf6c21a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Programs/IProgramScopedRequest.cs",
+          "sha256": "276ea2585e66429c978820b9378ccb580effc1aec541470452ef09062ff284ec"
+        }
+      ],
+      "review_key": "3ccce6ed1b4bc2b96e24be2c835410dde25a0f6ed6afc420fa1f52ef575da1da",
+      "reviewed_at": "2026-10-24T20:00:47.426Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.24
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.23
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.16
+        }
+      },
+      "usage": {
+        "input_tokens": 1570,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationContent.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "8695d8a06dc4e255cf6bcfe9861f08b35e23c394b70cdca3e707e2cfa361e67d",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationContentReference.cs",
+          "sha256": "ecc879bf55a75e250e03994fb074f2366d77ff640f81edb468fb4211382f2024"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "163c574481050f2254433ecf11d96743be033a2c7636fa0853c578a0b6d4f937",
+      "reviewed_at": "2026-10-24T20:00:47.627Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.17
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 1470,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationView.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "cb73730a48b4e27da243169d80384b63cfc9e719d55dd5792dd36ce95b3a9755",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationContentReference.cs",
+          "sha256": "ecc879bf55a75e250e03994fb074f2366d77ff640f81edb468fb4211382f2024"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "ab39c03eb74dbac8431b03a3844deb20a493beb47b15e8ea90868d2736041a4c",
+      "reviewed_at": "2026-10-24T20:00:47.823Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.13
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.06
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.08
+        }
+      },
+      "usage": {
+        "input_tokens": 1499,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Common/Features/Snapshots/SnapshotSourcePublicationManifest.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "81ce85ede4481fe42df22e039a7677e552720da014338c91a79fb27070f576e2",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceCoverage.cs",
+          "sha256": "e121fe6bba2ab2f7d1a08ee5c931bac907b2ea8bcbc297e2a29700d3b9ed798b"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Snapshots/SnapshotSourcePublicationEntry.cs",
+          "sha256": "d04ce194bbd14cef2dba1e2556ddcf28d2bcc5865a984e68294dd0a39fe97bc9"
+        }
+      ],
+      "review_key": "2441bd5cffe6130889294569931a7a797d8c59a553e1acf677a1c8ac2dc4211b",
+      "reviewed_at": "2026-10-24T20:00:48.070Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.26
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.1
+        }
+      },
+      "usage": {
+        "input_tokens": 1426,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/ComplianceCoreJsonContext.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "68c0b01967817c492bd8493364675a99ca6e6d9977f8b88754f2d06613ac995f",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/EngagementPersonalDecisionContent.cs",
+          "sha256": "90da6b19b138997848bb3971319e116d1d68e67143bd19c6c4fcde2109a3f53b"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/IndependenceRuleContent.cs",
+          "sha256": "349d3c58d59c114c65c8f96f62658e0c7aa6ffc11ba61cc546daf16ca3b114b4"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/IndependenceServiceRuleContent.cs",
+          "sha256": "ef20230b1c391c0c4bc5e377cb8e730e3893b41439724cd37d604d6804a0f891"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/NonattestServiceContent.cs",
+          "sha256": "9013c445633a8e837c6c96d273e930df3f6f521a4ea42aa19ec5485fb31afae1"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ServiceEngagementDraftContent.cs",
+          "sha256": "d88ea90b24a2e948204f814236c76de11475fba831e592089ab965da085eae5c"
+        }
+      ],
+      "review_key": "b259888d7071c97ca85fabb985857af41869b6348fcd2e5a1be287b3e8fe1cf0",
+      "reviewed_at": "2026-10-24T20:00:48.610Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.17
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.2
+        }
+      },
+      "usage": {
+        "input_tokens": 54367,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "082de9b4bda24233baeae37a7d27912df49a3a77bc94e2bc9799d50421627362",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AdministratorReceiverSupport.cs",
+          "sha256": "a0e0b97ca55ea6fd34d10a417e8db53ae1d74e8117713962dfe938634a76148f"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/EngagementUseVerifier.cs",
+          "sha256": "faa888d0165584ff349b879dcb9af94c088df080c5a6c200ceb2603a348c9d4c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IFirmProfessionalDutyAssertionVerifier.cs",
+          "sha256": "420205f08670a2d71fa0a7c7647321da5ef3b921c79e1b1ee4bf84cd2d352761"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ProfessionalDutyChangeVerifier.cs",
+          "sha256": "be6f3c783eaaa5ef1cbfbaa8d1da4d2a057d36c3ccbed4f1b39b65339aea494a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Tenants/TenantRegistered.cs",
+          "sha256": "888d59d0e91e78d2eebdb51c22181b298498b1cb43923d663db6c4d440cc7e26"
+        }
+      ],
+      "review_key": "9213aed4c3bd65ce831bb21a554ad0d60f0874f116dd6dc8d9d5e0560309134b",
+      "reviewed_at": "2026-10-24T20:00:48.878Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.29
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.22
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.28
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.28
+        }
+      },
+      "usage": {
+        "input_tokens": 44860,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "a30f090c350bde77d4eee3519803f65d071f0f616202e12e7d6a908f770e9588",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AccessExpectationLedgerSourceContent.cs",
+          "sha256": "6926fcd17a7e19b1dbe734e0713a41a3bb717c26120223897680811aadefe16a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessReviews/AccessExpectationApproved.cs",
+          "sha256": "a5169b46a8907f71c116dcea25a8c82d5b9532133ab85088792e787afa7623f5"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessReviews/AccessExpectationExceptionRecorded.cs",
+          "sha256": "887bbbd126c10669c4370536bba0b731d14280a2d53c4cf4a79146f4d9a9009a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessReviews/AccessExpectationExceptionView.cs",
+          "sha256": "ffe66249fdcdb47a2b39127f6ed6524b7bbad183db8f4ce372182ce17d1c1b76"
+        }
+      ],
+      "review_key": "baa956a811a92b2c09a517ed137b515c5108badb1553b832f6e1ece79280f042",
+      "reviewed_at": "2026-10-24T20:00:48.842Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.6
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.52
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.65
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.26
+        }
+      },
+      "usage": {
+        "input_tokens": 8451,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "6f094077e27cde565baa9264b014e48347778e91c79bc626474db43ffeaf1a74",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaignContent.cs",
+          "sha256": "f540693cf9f04fbf1ce7beb4a4a1e3418563d44c09649f9169cddabb7e5f1f75"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessReviews/AccessReviewContent.cs",
+          "sha256": "49919134ee7a8e0a8ce168f3bd3939a908728b358f6aebd35e626ef9d4ef3abd"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AccessReviewCampaignSourceContent.cs",
+          "sha256": "b50fb2be0b2cb1fdaaba6ff948202e3d0bc98598423f01b0e4d25d182eb4dda8"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessReviews/AccessDecisionsRecorded.cs",
+          "sha256": "62f271c4099fe0919ca41d2bea4e5db8052173f4dc3d3cd94ef207b740031ce9"
+        }
+      ],
+      "review_key": "745eff6d53eea297d6108b35e4ead4d4cf3e962fd10e51a379289d35262a728c",
+      "reviewed_at": "2026-10-24T20:00:49.159Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.54
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.54
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.65
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.27
+        }
+      },
+      "usage": {
+        "input_tokens": 17866,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ApplicationTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "b61b4532726bbca596fff959938a9d4c133106c3e32e0290be4dbec62a91c5f9",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ApplicationRetirementSourceContent.cs",
+          "sha256": "56bf0e59c18604dcf98368277eb3f546b9a065aea944d2e8068c82a67f89762d"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ApplicationRevisionSourceContent.cs",
+          "sha256": "782c1ea2b18ee2cee515dbd09a903ff9b5e380cc3007704b78c6e5cca9e3df29"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Applications/ApplicationRevisionView.cs",
+          "sha256": "e76d1ae2753e3c5a9269ad526bbfea082f4ee18f39e2fd986c605493b90ba114"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        }
+      ],
+      "review_key": "64a80a0f8d349c8b1d4487cb3b04ae0b1a4168003fd6efe021766b7734d26c6a",
+      "reviewed_at": "2026-10-24T20:00:49.349Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.57
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.43
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.65
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.24
+        }
+      },
+      "usage": {
+        "input_tokens": 7652,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/BoundaryTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "ff4dda4f0a89ea224d2a33feae1cf1bf332b4d3dd422d1e39945a6426c56ebec",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Boundaries/IBoundaryDirectoryReader.cs",
+          "sha256": "8cf813000a8199da6451cc47e8255c93c36e0d9a1204353ac666b4bceadd36a0"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ITypeIBaselineSourceContributor.cs",
+          "sha256": "48ab7e4f4aaa81580f8e7ec950a365177abc7f305c5bdeb21bb5b9525239fb7c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TypeIBaselineSourceContribution.cs",
+          "sha256": "b5d34cbc380bcac8c556e3cf3406640483a1c62bc0d140fb08dddeee9834d0c4"
+        }
+      ],
+      "review_key": "3e750886a1cbeb2c5798fccf42f1380065108b2af361a269222892c5dbffa705",
+      "reviewed_at": "2026-10-24T20:00:49.581Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.46
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.44
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.45
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.18
+        }
+      },
+      "usage": {
+        "input_tokens": 3400,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "ac6c08f4f3eed4cb5d308d5e03a1314a6d075ecc14e2cfd94cdc645b50c25c96",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingVersionView.cs",
+          "sha256": "4d8ae235c715b0abcebd5be64a0e1f2a5a1971c2eb21f6cc1edfa1f8e4ee033e"
+        },
+        {
+          "path": "src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingView.cs",
+          "sha256": "cba162b9df3bf3fc4bf17bb1b288d6220ae6457248bf29dc791e321f49c72658"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        }
+      ],
+      "review_key": "0fa3be3d0b73013445bf2a0fead0a2b701b5eb1c6a6eaa55dc4100641bf41502",
+      "reviewed_at": "2026-10-24T20:00:49.899Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.63
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.55
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.73
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.31
+        }
+      },
+      "usage": {
+        "input_tokens": 7574,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "77dce80235b5c1fefd9dbc9480c92173c5356eff71a3cbdb3bfdac4f3644833c",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Evaluations/ControlEvaluationView.cs",
+          "sha256": "9ad0b4a8bd14a5e8e7c9d8dbfdc5ed37615bbb2a4ebe8fbf92f49818a003d799"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Evaluations/EvaluationSubmissionView.cs",
+          "sha256": "786c4786fec89ee8e7427a0e0d0679280f729ce75486921cceceadf073f27008"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evaluations/ControlEvaluationReader.cs",
+          "sha256": "3bf20bf44242b753e16cf952458d6d24691197f35000ba4b55af8ac55a20b264"
+        }
+      ],
+      "review_key": "09c99e5abf3285184174a05488702dec2f81070ba3a0dbe8c34b908d20542479",
+      "reviewed_at": "2026-10-24T20:00:50.083Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.56
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.35
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.6
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.3
+        }
+      },
+      "usage": {
+        "input_tokens": 7387,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ControlTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "1a28ec4d0e7639bb041fd8ff6d58b56bb63621c4503252d8befa84325534629a",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Controls/ControlDraftContent.cs",
+          "sha256": "9ff5852d0a7fc257eb96ee37a3b00a54bed3f49300c4cc6220cdaac9bda8884f"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Controls/ControlVersionView.cs",
+          "sha256": "431a6d31bf1bd2ebcb87683c88420f006df7a5f0d0878b455938bb2c0517e8b9"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        }
+      ],
+      "review_key": "cb742d82ce4638045f7bb644029446c934ee3b1fb9f3cf32d4cd50288670d329",
+      "reviewed_at": "2026-10-24T20:00:50.346Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.44
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.35
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.46
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.19
+        }
+      },
+      "usage": {
+        "input_tokens": 4935,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/DataFlowTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "025c2b03235e5b8aed1cf2ad35ea2946a6b146e537bc219f7d76037aa6d6acf4",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/TechnologyInventory/DataFlowContent.cs",
+          "sha256": "dbcc339caccd034760328c5b1e1aa1a30411c76460f3e07189fa9e56d7fd99c5"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/DataFlowSourceContent.cs",
+          "sha256": "deb2afdafa8ccacc6777132274e485d8b47b915b8bd0f86c5aac217a115b2ee8"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        },
+        {
+          "path": "src/Compliance.Common/Features/TechnologyInventory/DataFlowRevisionRecorded.cs",
+          "sha256": "74162fa775a2421da19beb4bb57025b4a87a32c489b5609531f85770ec84e14b"
+        }
+      ],
+      "review_key": "2606eb91b9c85f5938fe68d2382788c24610a373ed26e165a31d98feef03931b",
+      "reviewed_at": "2026-10-24T20:00:50.646Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.55
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.47
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.64
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.19
+        }
+      },
+      "usage": {
+        "input_tokens": 6633,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "a16975dd2c00beb44e0f41616bb0cbf8f28cba6fc958d59e64193ecb81eb9bcd",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/EvidenceGovernanceHoldSourceContent.cs",
+          "sha256": "857c4e763aa1098529a6d8def0810395e24d19476aba5a4bedf521787a8d4f46"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContent.cs",
+          "sha256": "078c38c2e0330bdce8756bd8aec35351ff092d73a53a740600387cbfccbd3edc"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Evidence/EvidenceArtifactDownloadIssued.cs",
+          "sha256": "1b15c377687da05467fc592160ccf75167c7994fbb1f560c570a927b1af17151"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Evidence/EvidenceArtifactInspected.cs",
+          "sha256": "eb7591c2c07304ab0512003b4db58d934a2e785c6dc3114481008ff21b7ccb72"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Evidence/EvidenceArtifactQuarantineReleased.cs",
+          "sha256": "8c440f8f3c30fb769a215a4b182f806ffb2b9be73db230a0bf96d37eb3c5fbf3"
+        }
+      ],
+      "review_key": "4edbf1506a1e3de4f275efe165a5df0085432eef0b0f6dfb0b7139f710a509eb",
+      "reviewed_at": "2026-10-24T20:00:50.865Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.62
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.49
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.69
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.29
+        }
+      },
+      "usage": {
+        "input_tokens": 14668,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/FindingTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "95af58c99439eeaad1119663608c6a7251e61373c8bd1be6b95a32404da94ef4",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/FindingTypeIBaselineSourceContent.cs",
+          "sha256": "76f5f1946bbc99a66a73d6f9898572bb80291a29d6838e0561f1f4251e2b7c5d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Remediation/CorrectiveActionAddedV2.cs",
+          "sha256": "1032ca355b7190704c9f1666571d52906838a70cc0f0dcd277f33cfa39acf0a7"
+        }
+      ],
+      "review_key": "604e155f3e7f2a425bab21381ce3be661021c82407a0c35444ad9d8e693bce69",
+      "reviewed_at": "2026-10-24T20:00:51.082Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.6
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.46
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.53
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.41
+        }
+      },
+      "usage": {
+        "input_tokens": 4252,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/InformationAssetTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "2d9f8680d3388fa5490825bf6be36fde80ed41a294aa02079b3f513d438ff594",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/InformationAssetSourceContent.cs",
+          "sha256": "29e65a7e88aa009ad1a216ce9df0f5c889a808da7adf86188ee31ddfb3f10af6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        },
+        {
+          "path": "src/Compliance.Common/Features/TechnologyInventory/InformationAssetRevisionRecorded.cs",
+          "sha256": "e074b985d9da31b3cd51b8f801c7a8180d4df70697a7f8e40ee1067fff694799"
+        },
+        {
+          "path": "src/Compliance.Common/Features/TechnologyInventory/InformationAssetView.cs",
+          "sha256": "7aa7e1dae6c235a68f864e9cc781d47f81a175a761696c0bd8448641dd21320b"
+        }
+      ],
+      "review_key": "c12c95762af396641712300e6e6bf8221c7adf4f232947931ec8ab2b82ee7bf1",
+      "reviewed_at": "2026-10-24T20:00:51.364Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.6
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.54
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.7
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.21
+        }
+      },
+      "usage": {
+        "input_tokens": 5787,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/PolicyCommunicationTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "5fded0ec7ff65ec93786c30d660675b75bbc17fa5e9cecbb9bd1e57de85a7fe6",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/TrainingRequirementContent.cs",
+          "sha256": "f79d9f36eb24b08361760d073495d9901989567983aba44fc2462bbb4111e1c9"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/PolicyCommunicationCampaignSourceContent.cs",
+          "sha256": "d2492ff6c28a53727619d9f849811ca039a359d13af2d7085572f80dccefa0dd"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TrainingRequirementSourceContent.cs",
+          "sha256": "a3dbbc90b1b4e6986d10d1bd6ff0e94fe10be2d9d0e51102b3ba916b9fb87093"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        }
+      ],
+      "review_key": "587de7b50f3c263863fbc42cb1a63e8194af52af2169d920e750020cdeaa55fe",
+      "reviewed_at": "2026-10-24T20:00:51.631Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.52
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.48
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.62
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.23
+        }
+      },
+      "usage": {
+        "input_tokens": 11743,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ProviderTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "23dc0e5e31defb58de607be24a0ac1e5dc4564dcc03040684603b8618fc58994",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Providers/AssuranceReportContent.cs",
+          "sha256": "e5ba500f5f11b0a87869d516f4e4c0727d421b6a314e85fcf096c241830674fa"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Providers/ProviderContent.cs",
+          "sha256": "dac3388530b0832a8480dc44c010f906d0621e1c8fde44afd3cddb3331c58253"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Providers/ProviderCoverageGapContent.cs",
+          "sha256": "918ae36222c8fc7305bfdcc1ba47cda95df735aef944204ea62d7c2d878f622b"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Providers/ProviderReviewContent.cs",
+          "sha256": "312c09f8266034c21288edaabdcfd767dd3d5388ce323b7b6cb47f7fb065de75"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ProviderSourceContent.cs",
+          "sha256": "a21eb4c01db2689f8b2d657ed104a236b6313a20600bd1a379cabe6143da1ced"
+        }
+      ],
+      "review_key": "bc4f611596311a22c7efc4f09e809d8a75a0c26ba871a12f451cbb69a364e520",
+      "reviewed_at": "2026-10-24T20:00:51.869Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.57
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.53
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.63
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.3
+        }
+      },
+      "usage": {
+        "input_tokens": 14953,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/PublishedTypeIBaselinePreviewReader.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "17227a7cdfd5132218af5b6a39df1de087daa6f77be0786fb74cb7d2346e132c",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Snapshots/SnapshotSourcePublicationEntry.cs",
+          "sha256": "d04ce194bbd14cef2dba1e2556ddcf28d2bcc5865a984e68294dd0a39fe97bc9"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Snapshots/SnapshotSourcePublicationManifest.cs",
+          "sha256": "81ce85ede4481fe42df22e039a7677e552720da014338c91a79fb27070f576e2"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Artifacts/ArtifactContentLimits.cs",
+          "sha256": "0930dad778ab3b79875038114082de9baebe934618178929cb4e2867af0457bd"
+        }
+      ],
+      "review_key": "4ce5d911f0b756804a0e92af3f0c70eaf70d6d5ba55a36e33208492319e69631",
+      "reviewed_at": "2026-10-24T20:00:52.073Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.67
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.54
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.64
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.37
+        }
+      },
+      "usage": {
+        "input_tokens": 3451,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "57413e066752888c435915b18dc030c038dbb2e21ba9ecd30a7382042681546a",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ReviewedSystemRevisionSourceContent.cs",
+          "sha256": "2cae331864c565a679ae0b63571377b2d43304327970bb0d0c93492dbf2680a3"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Applications/SystemInstanceDeclared.cs",
+          "sha256": "5c82ac507fad47e3d14909d585d26a062bf550c1405566e4e68afa89c0eb32bb"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Applications/SystemInstanceRegistered.cs",
+          "sha256": "09a903090fcc5c578ee16b0bcad967a8b64700bd863fe2ddae067a3109557bbc"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Applications/SystemInstanceRetired.cs",
+          "sha256": "9a4f48fa76867e7b6f44393813ceff74795abd2055e3f84fa62a55600ca73ef7"
+        }
+      ],
+      "review_key": "63f9de5e22883b8406a43dc3424f4589e77bfda57df3236d18f204a5a41d3819",
+      "reviewed_at": "2026-10-24T20:00:52.349Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.55
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.5
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.63
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.29
+        }
+      },
+      "usage": {
+        "input_tokens": 9742,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/RiskTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "ed085cfc97b803f81eec486c206e9367a374e9742fd92ccea78d4dd9ec1c4de2",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Risks/RiskDraftContent.cs",
+          "sha256": "1b041b9396c13d92894b4ff02ff7dc0f9278790d297895ef924eb68845479165"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/RiskSourceContent.cs",
+          "sha256": "5a483388c6d881804d62bbc147797025914a400a1cad387fb9c26607931c3e34"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/FindingContent.cs",
+          "sha256": "9aa402c2ddff6c28afd72693790c6c8cae753a449c34fc97db5eacd0dbfc241d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        }
+      ],
+      "review_key": "2353866b7630ae5c458e1adf7456f0326212ee0fa7be2c97a68f8b7cf6ffcc82",
+      "reviewed_at": "2026-10-24T20:00:52.644Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.57
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.55
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.62
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.27
+        }
+      },
+      "usage": {
+        "input_tokens": 15789,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/TechnologyComponentTypeIBaselineSourceContributor.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "f88ff0f496095d22a1b16b42aa4b1a4a360888ad645e2bee0cd4b340967e0d19",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TechnologyComponentSourceContent.cs",
+          "sha256": "c9ef73af4c8288143ea2adfbd3681c8fdfa89994cfb2ee6d6a112b49eccf2337"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        },
+        {
+          "path": "src/Compliance.Common/Features/TechnologyInventory/TechnologyComponentRevisionRecorded.cs",
+          "sha256": "7cc709aabf32a94824604fd4f3f3c03517dcdadfca12aeb8c2f733d54f7efe8c"
+        },
+        {
+          "path": "src/Compliance.Common/Features/TechnologyInventory/TechnologyComponentView.cs",
+          "sha256": "cb36e0815f2885801516829ca8f8558d59714a19404fb6b54cf26f0175c59e8d"
+        }
+      ],
+      "review_key": "18b9dbdc135ee2a7b043fc9298d9eaa663d31cc8045c31be5e416c63c0713b42",
+      "reviewed_at": "2026-10-24T20:00:52.849Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.55
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.49
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.65
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.22
+        }
+      },
+      "usage": {
+        "input_tokens": 6081,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/TypeIBaselinePreviewReader.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "8697c46cccba31bb848e4ac0a5391028a4e62f653a988b35433792e686d8bbd8",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs",
+          "sha256": "038bcb8b59195b553129d99da66b743e66c863c44cfe8483ddd454c12f8471e0"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceCoverage.cs",
+          "sha256": "e121fe6bba2ab2f7d1a08ee5c931bac907b2ea8bcbc297e2a29700d3b9ed798b"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ITypeIBaselinePreviewReader.cs",
+          "sha256": "eecb76813d05d0a03a6d512df92ed1a9695e8ec495e9db5f040c714d9d9fdd0e"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ITypeIBaselineSourceContributor.cs",
+          "sha256": "48ab7e4f4aaa81580f8e7ec950a365177abc7f305c5bdeb21bb5b9525239fb7c"
+        }
+      ],
+      "review_key": "4dd675afde76baa60e0f3cf0cd70711334a27c135e8f56db61e80bcf20986d39",
+      "reviewed_at": "2026-10-24T20:00:53.081Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.58
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.28
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.31
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.31
+        }
+      },
+      "usage": {
+        "input_tokens": 3101,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/TypeIBaselineSourceReadContext.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "73f744f17a556c2b888b664f5b70867e5c8b402622aff2129f7d188700a7c6c8",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs",
+          "sha256": "7f1fac009aca0a4b2e02b6ba392c54cb2cf14bf668271a39198529aad782d83e"
+        }
+      ],
+      "review_key": "a9d9182c40f7a4412e4f5ff69fb63f4724dbd0bf02edc7a6dc4c0ce475a1f70b",
+      "reviewed_at": "2026-10-24T20:00:53.332Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.1
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.14
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.06
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 1112,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/CloseSourceAccessException.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "e8bbd176d236462a8305d42d303b4aad7522f49911f18ac3a6826904b65d0c61",
+      "dependency_sha256": [],
+      "review_key": "dffa467c2871e0b045513554600f4538966ebc94531e1dc6063b9cca83c2b8a3",
+      "reviewed_at": "2026-10-24T20:00:53.553Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.04
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.05
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.03
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.12
+        }
+      },
+      "usage": {
+        "input_tokens": 794,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/ITypeIIPeriodCloseReconciliation.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "30490bbb59a8f4b5c39f0e1d7a145cd00ece4a3bcca16feb684e97942b2bf1cc",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationContent.cs",
+          "sha256": "8695d8a06dc4e255cf6bcfe9861f08b35e23c394b70cdca3e707e2cfa361e67d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        }
+      ],
+      "review_key": "6b7ef9af84ab1888bde06f14e526dc4fcdf5c64c4a6f477fa0c2abaebf8d47ae",
+      "reviewed_at": "2026-10-24T20:00:53.839Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 1642,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/RecordTypeIIPeriodCloseValidationHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "6e2cd8cbbd871e46d0dbadaa6e67df3da120ad746e0b7e078203f39c522c8af3",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Operations/RecordTypeIIPeriodCloseValidation.cs",
+          "sha256": "c36ddeae61e5ff5953bd12847291e52b697ff697568f5eeccca9c80566583123"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationContent.cs",
+          "sha256": "8695d8a06dc4e255cf6bcfe9861f08b35e23c394b70cdca3e707e2cfa361e67d"
+        },
+        {
+          "path": "src/Compliance.Core/Features/NativeOperations/NativeContent.cs",
+          "sha256": "e182c905af7c310e7cae562a07caf630fd9f2c2b43880bf29a94fd0e3f010fa6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/AcceptedOperationBinding.cs",
+          "sha256": "6f23964a5b4653b474ae73dde8008fed774abc372803326aa0f57d6fe1ae9083"
+        }
+      ],
+      "review_key": "0b252207d14bb24118ad8a79bf03f24a207b426e138b4c5d9c154955f3dec854",
+      "reviewed_at": "2026-10-24T20:00:54.082Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.47
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.6
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.63
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.29
+        }
+      },
+      "usage": {
+        "input_tokens": 5729,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "kinds": [
+        "aggregate"
+      ],
+      "sha256": "a3ab75cc62e524f3692becdeb41879c0405c91dc7a29c542501ddaab61e667d4",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIIPlanContent.cs",
+          "sha256": "b65fe2541e6d66a3768ab630279c22015f0cf24cb581320d2d7f8a78af5d3988"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodCloseSnapshotContent.cs",
+          "sha256": "134f99ff5518354badd9e2bbe82c9536f0595b4428a0b005b0e6421d7409cac2"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationContent.cs",
+          "sha256": "8695d8a06dc4e255cf6bcfe9861f08b35e23c394b70cdca3e707e2cfa361e67d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodOpeningContent.cs",
+          "sha256": "2f3accddd075c56ffbb6d9b702434cf48899ca136cd787dd5493da84bfbc9667"
+        },
+        {
+          "path": "src/Compliance.Common/Features/AuditPopulations/ObservationPeriodCloseFrozen.cs",
+          "sha256": "759ab730dac5a7737848ad88454d1a5f4ffc1a656bfa978813996581bf8f8264"
+        }
+      ],
+      "review_key": "b0f7b53a8ae99523cf68a728329da045871c58d223adbb434f09e42069d067db",
+      "reviewed_at": "2026-10-24T20:11:19.214Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.58
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.61
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.72
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.46
+        }
+      },
+      "usage": {
+        "input_tokens": 24132,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseHistory.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "e13ed3065bb1494577974f20646f99a3c0a2f1e1ac2deb7a328a699652e556ed",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Changes/ImpactReviewWorkLinked.cs",
+          "sha256": "b04a8de39002ae72c0c9620b2614d596d5129f5dfade355f03296ebd88abfb19"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Changes/SignificantChangeImpactAssessed.cs",
+          "sha256": "a276efb88f4ae816a336925e557bf478d1e84f1c0e4594f4da98baaabe4eba54"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Changes/SignificantChangeRecorded.cs",
+          "sha256": "7724e707be9e3a86e360779d02a64e8f00d72b80aebea614669e64102c0a0ef1"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Changes/SignificantChangeRevised.cs",
+          "sha256": "57e10e53aa10a167e8ae2f3aa16289205598f3a2f133a24036cb8ffa3c106412"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Changes/SignificantChangeSystemDescriptionDecisionRecorded.cs",
+          "sha256": "47c6ef13656a5da7642e192407e8067a9bcf1051ed9ca29c115a661116d8e936"
+        }
+      ],
+      "review_key": "3e695d09f4dfb6aec6606539272a10438f6e5f68365cbcc7a204711e8d86b442",
+      "reviewed_at": "2026-10-24T20:00:54.613Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.6
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.48
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.66
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.33
+        }
+      },
+      "usage": {
+        "input_tokens": 4301,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseNativeSource.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "ecea04ff10b17d58239390a3af1433b430144e25080272edf87756fbad169aa9",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/NativeFactReference.cs",
+          "sha256": "e8339249a228b922a84252879739e68919f6ff2b1767ba54a5e131a5f9989b39"
+        },
+        {
+          "path": "src/Compliance.Core/Features/SourceFacts/EventKind.cs",
+          "sha256": "1043d44519803ef9b9a3f02d49043ea6f41ba36f3e59fedd46d612f3a1c91fcb"
+        }
+      ],
+      "review_key": "282d47a9a23373f961be63ae3aeae3f5bedf9262063b3bf1dc3aff26e1c6210b",
+      "reviewed_at": "2026-10-24T20:00:54.817Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.1
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.11
+        }
+      },
+      "usage": {
+        "input_tokens": 1553,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseOccurrenceMatch.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "be93fe67f554aeea466739356e60f8dd969222f1aa9431f5f06f67e6e35619ce",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/NativeFactReference.cs",
+          "sha256": "e8339249a228b922a84252879739e68919f6ff2b1767ba54a5e131a5f9989b39"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "aae637a0d3d9bc5534b89947f44021645834999b86c490cfd1a95caefc6e7be9",
+      "reviewed_at": "2026-10-24T20:00:55.081Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.05
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.08
+        }
+      },
+      "usage": {
+        "input_tokens": 1348,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseReconciliation.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "c2786eb08325336ce0b627e980d33eb34573cd1adf5c0069a33142a22522e8ca",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationContent.cs",
+          "sha256": "8695d8a06dc4e255cf6bcfe9861f08b35e23c394b70cdca3e707e2cfa361e67d"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/ControlOperatingContent.cs",
+          "sha256": "b95f8e158f092b790e2fcdeb650e8a250c859ac72237919d2d25f914866553eb"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationContentReference.cs",
+          "sha256": "ecc879bf55a75e250e03994fb074f2366d77ff640f81edb468fb4211382f2024"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/INativeOperationFact.cs",
+          "sha256": "19e0a8721953d240b75c2ee890a9e0fd784a05a3d20bf96b1c3ad8e8f4133e4a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/NativeFactReference.cs",
+          "sha256": "e8339249a228b922a84252879739e68919f6ff2b1767ba54a5e131a5f9989b39"
+        }
+      ],
+      "review_key": "708ea09318894d4699780ab4c13ed057d793725d483856c03eaf378278e3798d",
+      "reviewed_at": "2026-10-24T20:00:55.435Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.49
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.57
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.52
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.22
+        }
+      },
+      "usage": {
+        "input_tokens": 7538,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseSourceEnvelope.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "30babb90e96428298ddc117169fe07a87c9a845d661de88070998f33d196ee30",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/DurableIntentHeader.cs",
+          "sha256": "c6015847a642631160c0a77358db213e4a5e08ea467c6bc7a8321187c0f0678c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseNativeSource.cs",
+          "sha256": "ecea04ff10b17d58239390a3af1433b430144e25080272edf87756fbad169aa9"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseOccurrenceMatch.cs",
+          "sha256": "be93fe67f554aeea466739356e60f8dd969222f1aa9431f5f06f67e6e35619ce"
+        }
+      ],
+      "review_key": "1c9d1d09d8dbaaf16088f00e214d4a426a6de495c46f384fa1e112128a64ae05",
+      "reviewed_at": "2026-10-24T20:00:55.593Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.08
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 1574,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseSourcePublication.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "017cbeddb262458f415167aa77b2363a62af5f04a833379d00fd01c8b0009a08",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Examinations/ExaminationContentReference.cs",
+          "sha256": "ecc879bf55a75e250e03994fb074f2366d77ff640f81edb468fb4211382f2024"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Examinations/TypeIBaselineSourceCoverage.cs",
+          "sha256": "e121fe6bba2ab2f7d1a08ee5c931bac907b2ea8bcbc297e2a29700d3b9ed798b"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/DurableIntentHeader.cs",
+          "sha256": "c6015847a642631160c0a77358db213e4a5e08ea467c6bc7a8321187c0f0678c"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+          "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodView.cs",
+          "sha256": "2c2bc9af1e5af0a87ba10b7d8f386246da2536674bf48b0196effce097cbf797"
+        }
+      ],
+      "review_key": "4e9423f3396ff3443944f8641270dfca1494107fc9ab7a9b480b151a39ab25e3",
+      "reviewed_at": "2026-10-24T20:00:55.820Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.53
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.31
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.52
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.26
+        }
+      },
+      "usage": {
+        "input_tokens": 3403,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseValidationChange.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "f95d39ef50af54bfe3fb8fcdea2626d5f4fdb9d3058087408c611299ced9c806",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationContent.cs",
+          "sha256": "8695d8a06dc4e255cf6bcfe9861f08b35e23c394b70cdca3e707e2cfa361e67d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/DurableIntentHeader.cs",
+          "sha256": "c6015847a642631160c0a77358db213e4a5e08ea467c6bc7a8321187c0f0678c"
+        }
+      ],
+      "review_key": "58ab44bbd135e76f19d13606e624280c53056767498c3b52754eeb301a1495d8",
+      "reviewed_at": "2026-10-24T20:00:56.098Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.05
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.06
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 1582,
+        "output_tokens": 78
+      }
+    }
+  ]
+}
