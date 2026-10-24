@@ -41,7 +41,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         Assert.IsType<StandardResponseBody>(original.Value);
         Assert.Equal(200, response.HttpStatus);
         Assert.Equal(UnitResult.Schema, response.ResultSchema);
-        Assert.Equal("close_ready", owner.Current!.Status);
+        Assert.Equal("close_ready", owner.Header!.Status);
     }
 
     [Fact]
@@ -54,20 +54,20 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         var request = await CloseRequestAsync(fixture);
         var handler = CloseHandler(fixture, sources);
         Assert.True((await handler.HandleAsync(fixture.Context(request), CancellationToken.None)).IsSuccess);
-        var before = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var before = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
         fixture.CloseClock.Set(fixture.CloseClock.GetUtcNow().AddDays(3));
         sources.Failure = new ImmutableContentIntegrityException("The live sources changed after acceptance.");
 
         // Act
         var replay = await handler.HandleAsync(fixture.Context(request), CancellationToken.None);
-        var after = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var after = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(replay.IsSuccess, replay.Error?.Message);
         Assert.Equal(1, sources.Calls);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-        Assert.Equal(before.Current!.CloseValidation!.ValidatedAt, after.Current!.CloseValidation!.ValidatedAt);
-        Assert.Equal(before.Current.CloseValidation.RecordedThrough, after.Current.CloseValidation.RecordedThrough);
+        Assert.Equal(before.Owner.CommittedStreamPosition, after.Owner.CommittedStreamPosition);
+        Assert.Equal(before.View!.CloseValidation!.ValidatedAt, after.View!.CloseValidation!.ValidatedAt);
+        Assert.Equal(before.View.CloseValidation.RecordedThrough, after.View.CloseValidation.RecordedThrough);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
         Assert.Equal(1, sources.Calls);
-        var owner = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var owner = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
         Assert.Equal(request.ExpectedRevision + 1, owner.Revision);
     }
 
@@ -144,12 +144,12 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Act
         var result = await CloseHandler(fixture, sources).HandleAsync(fixture.Context(request), CancellationToken.None);
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Equal(unavailable, result.Error?.IsTransient);
-        Assert.Null(period.Current!.CloseValidation);
+        Assert.Null(period.View!.CloseValidation);
         Assert.Equal(request.ExpectedRevision, period.Revision);
     }
 
@@ -164,14 +164,14 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Act
         var result = await CloseHandler(fixture, sources).HandleAsync(fixture.Context(request), CancellationToken.None);
-        var owner = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var owner = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("close_blocked", owner.Current!.Status);
-        Assert.Equal("blocked", owner.Current.CloseValidation!.Status);
-        Assert.Single(owner.Current.CloseValidation.SourceBlockers);
-        Assert.Empty(owner.Current.CloseApprovals);
+        Assert.Equal("close_blocked", owner.View!.Status);
+        Assert.Equal("blocked", owner.View.CloseValidation!.Status);
+        Assert.Single(owner.View.CloseValidation.SourceBlockers);
+        Assert.Empty(owner.View.CloseApprovals);
     }
 
     [Fact]
@@ -185,12 +185,12 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Act
         var result = await CloseHandler(fixture, sources).HandleAsync(fixture.Context(request), CancellationToken.None);
-        var owner = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var owner = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.False(result.Error?.IsTransient);
-        Assert.Null(owner.Current!.CloseValidation);
+        Assert.Null(owner.View!.CloseValidation);
     }
 
     [Fact]
@@ -208,7 +208,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         fixture.CloseClock.Set(fixture.CloseClock.GetUtcNow().AddDays(1));
         sources.Failure = new ImmutableContentUnavailableException("The source is no longer readable.");
         var replay = await CloseHandler(fixture, sources).HandleAsync(fixture.Context(request), CancellationToken.None);
-        var owner = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var owner = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(replay.IsSuccess, replay.Error?.Message);
@@ -236,7 +236,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Act
         var replay = await CloseHandler(fixture, losingSources).HandleAsync(fixture.Context(request), CancellationToken.None);
-        var owner = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var owner = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(replay.IsSuccess, replay.Error?.Message);
@@ -246,12 +246,13 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
     }
 
     static RecordTypeIIPeriodCloseValidationHandler CloseHandler(Fixture fixture, ITypeIIPeriodCloseReconciliation source,
-        IAggregateExecutor? executor = null) => new(new NativeOperationExecutor(fixture.Reader, executor ?? fixture.Executor,
-        fixture.Host.Content), source, fixture.Host.Content, fixture.CloseClock);
+        IAggregateExecutor? executor = null) => new(new TypeIIPeriodOperations(
+        new NativeOperationExecutor(fixture.Reader, executor ?? fixture.Executor, fixture.Host.Content), fixture.Periods,
+        fixture.Host.Content, fixture.CloseClock), source, fixture.Host.Content);
 
     static async Task<RecordTypeIIPeriodCloseValidation> CloseRequestAsync(Fixture fixture)
     {
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
         return new(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.PeriodId, period.Revision);
     }
 
@@ -262,7 +263,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         public Func<Task>? BeforeRead { get; init; }
         public bool WrongOperation { get; init; }
         public IReadOnlyList<string> Blockers { get; init; } = [];
-        public async ValueTask<Result<TypeIIPeriodCloseValidationContent>> ReadAsync(TypeIIPeriod period, ClaimsPrincipal actor,
+        public async ValueTask<Result<TypeIIPeriodCloseValidationContent>> ReadAsync(TypeIIPeriodReadSnapshot period, ClaimsPrincipal actor,
             Uuid requesterUserId, OperationProvenance operation, CancellationToken ct)
         {
             Calls++;
@@ -270,7 +271,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
                 await before();
             if (Failure is { } failure)
                 throw failure;
-            var current = period.Current!;
+            var current = period.View!;
             var source = new ExaminationContentReference("close_test_source", period.Id, Uuid.CreateVersion5(period.Id, "close-source"),
                 period.Revision, ContentDigest.Sha256("{}"u8));
             var publication = await fixture.Host.Content.WriteJsonAsync(fixture.TenantId.ToString(), Uuid.CreateVersion4(),

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Hosting.Persistence;
@@ -31,7 +32,7 @@ public sealed class RecordManagementAssertionHandlerTests
         await using var fixture = new Fixture();
         var sources = await fixture.SeedSourcesAsync();
         var packages = new AuditPackageReader(fixture.Reader, new FailingPackageContentStore(unavailable));
-        var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, packages, fixture.Clock);
+        var handler = new RecordManagementAssertionHandler(fixture.Executor, fixture.Reader, packages, fixture.Periods, fixture.Clock);
 
         // Act
         var result = await handler.HandleAsync(fixture.Context(fixture.Request(sources.Content)), CancellationToken.None);
@@ -212,6 +213,8 @@ public sealed class RecordManagementAssertionHandlerTests
         public Uuid ReviewerMemberId { get; } = Uuid.CreateVersion4();
         public Uuid ApproverMemberId { get; } = Uuid.CreateVersion4();
         public MutableTimeProvider Clock { get; } = new(Now.AddMinutes(8));
+        public InMemoryEventStore PeriodEvents { get; } = new();
+        public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, ContentStore);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -221,7 +224,7 @@ public sealed class RecordManagementAssertionHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(PeriodEvents);
             ContentStore = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
             services.AddSingleton(ContentStore);
             services.AddScoped<AuditPackageReader>();
@@ -236,7 +239,7 @@ public sealed class RecordManagementAssertionHandlerTests
         }
 
         public RecordManagementAssertionHandler Handler() =>
-            new(Executor, Reader, Packages, Clock);
+            new(Executor, Reader, Packages, Periods, Clock);
 
         public async Task<SeededSources> SeedSourcesAsync(bool validatePackage = true,
             string wordingArtifactSource = "auditor")

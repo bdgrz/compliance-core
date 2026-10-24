@@ -1,20 +1,25 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPopulations;
 
-/// <summary>
-///     The period close was frozen. <paramref name="CalendarAuthorizationId" /> and
-///     <paramref name="CalendarGeneration" /> name the exact live calendar reservation the close releases, so a
-///     release never depends on re-reading the period.
-/// </summary>
-[Discriminator("bdgrz.auditpopulations.observation-period-close-frozen", 3)]
+/// <summary>Compact native period authority advance with independently verified immutable current content.</summary>
+[Discriminator("bdgrz.auditpopulations.observation-period-close-frozen", 1)]
 public sealed record ObservationPeriodCloseFrozen(
     Uuid TenantId,
     Uuid SubjectId,
     long Revision,
     Uuid? ActorMemberId,
-    TypeIIPeriodView State,
+    ImmutableContentRef Change,
     DateTimeOffset OccurredAt,
+    OperationProvenance Operation,
     Uuid CalendarAuthorizationId,
-    long CalendarGeneration) : DomainEvent;
+    long CalendarGeneration,
+    ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult,
+    long NativeSequence,
+    TypeIIPeriodAuthorityHeader Header,
+    ImmutableContentRef CurrentContent,
+    ImmutableContentRef CalendarIntent) : DomainEvent, ITypeIIPeriodStateFact;

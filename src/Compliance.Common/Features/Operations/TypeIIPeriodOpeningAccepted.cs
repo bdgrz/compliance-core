@@ -11,4 +11,4 @@ namespace Bdgrz.Compliance.Features.Operations;
 [Discriminator("bdgrz.type-ii-period.type-ii-period-opening-accepted", 1)]
 public sealed record TypeIIPeriodOpeningAccepted(EventStreamAddress Owner, long Revision, long Generation,
     ImmutableContentRef Intent, ImmutableContentRef? SourceProofs, OperationProvenance Operation,
-    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult, Uuid ProgramId) : DomainEvent, INativeOperationFact;

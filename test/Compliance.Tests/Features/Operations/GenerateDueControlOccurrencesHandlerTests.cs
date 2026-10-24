@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
@@ -122,6 +123,6 @@ public sealed class GenerateDueControlOccurrencesHandlerTests
     static GenerateDueControlOccurrences Request(TypeIIRangeFixture fixture, Uuid period, string key) =>
         new(fixture.TenantId, fixture.ProgramId, period, fixture.FirstEnd, key);
 
-    static ValueTask<Result> Generate(TypeIIRangeFixture fixture, GenerateDueControlOccurrences request) =>
+    static ValueTask<Result<UnitResult>> Generate(TypeIIRangeFixture fixture, GenerateDueControlOccurrences request) =>
         fixture.Host.GenerateHandler(fixture.Clock).HandleAsync(fixture.Context(request), CancellationToken.None);
 }

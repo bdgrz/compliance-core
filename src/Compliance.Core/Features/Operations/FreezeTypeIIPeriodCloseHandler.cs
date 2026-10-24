@@ -1,115 +1,44 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
-/// <summary>
-/// Freezes the persisted, approved close reconciliation. The frozen fact names the exact live calendar reservation
-/// of the period; <see cref="TypeIIRangeReleaseReactor" /> releases that reservation from it afterwards. Close fails
-/// closed unless <see cref="TypeIIOccurrenceCoverage" /> proves from occurrence facts that every expected recurring
-/// occurrence of the admitted period revision is selected and materialized.
-/// </summary>
-public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
-    IAggregateReader reader, ManagementExecutiveAuthority executiveAuthority, TypeIIOccurrenceCoverage coverage,
-    TimeProvider clock)
-    : IRequestHandler<FreezeTypeIIPeriodClose>
+/// <summary>Freezes the exact approved close and complete occurrence coverage in one native period admission.</summary>
+public sealed class FreezeTypeIIPeriodCloseHandler(TypeIIPeriodOperations operations,
+    ManagementExecutiveAuthority executiveAuthority, TypeIIOccurrenceCoverage coverage)
+    : IRequestHandler<FreezeTypeIIPeriodClose, UnitResult>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<FreezeTypeIIPeriodClose> context,
-        CancellationToken ct)
+    public async ValueTask<Result<UnitResult>> HandleAsync(IRequestContext<FreezeTypeIIPeriodClose> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (!ExaminationCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,
-                out var memberId, out _) ||
-            !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Freezing a Type II close requires a personal HTTP actor."));
-        if (request.ExpectedRevision <= 0 || request.CloseSnapshotId == Uuid.Empty)
-            return Invalid("A Type II close freeze requires a positive revision and stable snapshot identity.");
-
-        var role = await executiveAuthority.ResolveExecutiveRoleAsync(request.TenantId,
-            request.ProgramId, userId, memberId, ct).ConfigureAwait(false);
+        if (!ExaminationCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId, out var member, out _) ||
+            !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var user))
+            return Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Forbidden, "Freezing a close requires a personal HTTP actor."));
+        if (request.CloseSnapshotId == Uuid.Empty)
+            return Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Validation, "A close freeze requires its exact immutable snapshot identity."));
+        var role = await executiveAuthority.ResolveExecutiveRoleAsync(request.TenantId, request.ProgramId, user, member, ct).ConfigureAwait(false);
         if (role is null)
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Freezing a Type II close requires one current program-scoped CEO or CISO permission."));
-
-        var period = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId,
-            request.ProgramId, request.PeriodId), ct).ConfigureAwait(false);
-        if (period.Current is not { } current)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The Type II observation period was not found."));
-        var approval = current.CloseApprovals.Count == 0 ? null : current.CloseApprovals[^1];
-        if (current.CloseValidation is not { Status: "ready" } validation || approval is null)
-            return Conflict("Freezing the Type II close requires its current reconciliation and executive approval.");
-        if (approval.ApprovedByMemberId != memberId ||
-            !StringComparer.OrdinalIgnoreCase.Equals(approval.ApproverRole, role))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Only the same currently authorized executive who approved the close can freeze it."));
-
-        var content = new TypeIIPeriodCloseSnapshotContent(request.CloseSnapshotId,
-            validation.SourceReferences, validation.ExpectedOccurrenceIds,
-            approval.AcknowledgedMaterialItemIds)
-        { SourceContentManifest = validation.SourceContentManifest ?? current.OpeningSourceContentManifest };
-        var frozenAt = clock.GetUtcNow();
-        var existing = current.CloseSnapshots.FirstOrDefault(item =>
-            item.CloseSnapshotId == request.CloseSnapshotId);
-        if (existing is not null && !MatchesFrozenSnapshot(existing, content, memberId, role, request.ExpectedRevision))
-            return Conflict("The close snapshot identity already contains different frozen facts.");
-
-        if (existing is null)
-        {
-            if (period.FreezeClose(request.ExpectedRevision, content, memberId, role,
-                    frozenAt) is { } freezeFailure)
-                return Result.Failure(freezeFailure.ToRequestError());
-
-            var proof = await coverage.ProveAsync(period, ct).ConfigureAwait(false);
-            if (!proof.IsComplete)
-                return Conflict(string.Create(System.Globalization.CultureInfo.InvariantCulture,
-                    $"Closing the Type II period requires complete occurrence coverage: {proof.NotMaterialized.Count} selected occurrences are not materialized and {proof.NotSelected.Count} expected occurrences are not selected."));
-
-            var freeze = await executor.ExecuteAsync(new TypeIIPeriod(request.TenantId,
-                    request.ProgramId, request.PeriodId), aggregate =>
-                    CommandFailureRequestAdapter.ToOutcome(aggregate.FreezeClose(
-                        request.ExpectedRevision, content, memberId, role, frozenAt)),
-                context, ct).ConfigureAwait(false);
-            if (!freeze.IsSuccess)
+            return Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Forbidden, "Freezing a close requires current program-scoped CEO or CISO authority."));
+        return await operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.PeriodId, request.CommandId,
+            nameof(FreezeTypeIIPeriodClose), request.ExpectedRevision, async (snapshot, operation, token) =>
             {
-                var latest = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId,
-                    request.ProgramId, request.PeriodId), ct).ConfigureAwait(false);
-                existing = latest.Current?.CloseSnapshots.FirstOrDefault(item =>
-                    item.CloseSnapshotId == request.CloseSnapshotId);
-                if (existing is null || !MatchesFrozenSnapshot(existing, content, memberId, role, request.ExpectedRevision))
-                    return freeze;
-            }
-        }
-
-        var saved = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId,
-            request.ProgramId, request.PeriodId), ct).ConfigureAwait(false);
-        var snapshot = saved.Current?.CloseSnapshots.FirstOrDefault(item =>
-            item.CloseSnapshotId == request.CloseSnapshotId);
-        if (snapshot is null || !MatchesFrozenSnapshot(snapshot, content, memberId, role, request.ExpectedRevision))
-            return Conflict("The frozen close snapshot could not be verified after persistence.");
-
-        return Result.Success;
+                var current = snapshot.View!;
+                var approval = current.CloseApprovals.Count == 0 ? null : current.CloseApprovals[^1];
+                if (current.CloseValidation is not { Status: "ready" } validation || approval is null)
+                    return Conflict("The exact ready reconciliation and current executive approval are required.");
+                if (approval.ApprovedByMemberId != member || !StringComparer.OrdinalIgnoreCase.Equals(approval.ApproverRole, role))
+                    return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "Only the same currently authorized executive can freeze this exact approval."));
+                var proof = await coverage.ProveAsync(snapshot, token).ConfigureAwait(false);
+                if (!proof.IsComplete)
+                    return Conflict(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                        $"Closing the Type II period requires complete occurrence coverage: {proof.NotMaterialized.Count} selected occurrences are not materialized and {proof.NotSelected.Count} expected occurrences are not selected."));
+                var body = new TypeIIPeriodCloseSnapshotContent(request.CloseSnapshotId, validation.SourceReferences,
+                    validation.ExpectedOccurrenceIds, approval.AcknowledgedMaterialItemIds)
+                { SourceContentManifest = validation.SourceContentManifest ?? current.OpeningSourceContentManifest };
+                return TypeIIPeriodOperations.Outcome(snapshot.Rules.FreezeClose(request.ExpectedRevision, body, member, role, operation.AcceptedAt));
+            }, ct).ConfigureAwait(false);
     }
-
-    static bool MatchesFrozenSnapshot(TypeIIPeriodCloseSnapshotView snapshot,
-        TypeIIPeriodCloseSnapshotContent content, Uuid memberId, string role, long expectedRevision) =>
-        snapshot.CloseSnapshotId == content.CloseSnapshotId && snapshot.OriginalExpectedRevision == expectedRevision &&
-        snapshot.Version == 1 && snapshot.SourceContentManifest == content.SourceContentManifest &&
-        snapshot.AmendsCloseSnapshotId is null && snapshot.ActorMemberId == memberId &&
-        StringComparer.OrdinalIgnoreCase.Equals(snapshot.ActorRole, role) &&
-        SameReferences(snapshot.SourceReferences, content.SourceReferences) &&
-        snapshot.ExpectedOccurrenceIds.SequenceEqual(content.ExpectedOccurrenceIds) &&
-        snapshot.AcknowledgedMaterialItemIds.SequenceEqual(content.AcknowledgedMaterialItemIds);
-
-    static bool SameReferences(IReadOnlyList<ExaminationContentReference> left,
-        IReadOnlyList<ExaminationContentReference> right) => left.Count == right.Count &&
-        left.SequenceEqual(right);
-
-    static Result Invalid(string message) =>
-        Result.Failure(new RequestError(RequestErrorKind.Validation, message));
-
-    static Result Conflict(string message) =>
-        Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
+    static Result Conflict(string message) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
 }

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AuditPopulations;
@@ -9,7 +10,7 @@ using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.AuditPopulation;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
-using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
+using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriodRules;
 using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPopulations;
@@ -115,6 +116,9 @@ public sealed class DefineAuditPopulationHandlerTests
         public Uuid ReviewerId { get; } = Uuid.CreateVersion4();
         public Uuid ProposerId { get; } = Uuid.CreateVersion4();
         public Uuid GapId { get; } = Uuid.CreateVersion4();
+        public InMemoryEventStore PeriodEvents { get; } = new();
+        public IImmutableContentStore PeriodContent { get; } = TypeIIPeriodSeeds.NewContentStore();
+        public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, PeriodContent);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -125,7 +129,7 @@ public sealed class DefineAuditPopulationHandlerTests
                 [new Claim("iss", "bdgrz"), new Claim("sub", UserId.ToString()),
                     new Claim("email", "compliance-lead@example.test")], "BdgrzSession"));
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             {
@@ -137,7 +141,7 @@ public sealed class DefineAuditPopulationHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public DefineAuditPopulationHandler Handler() => new(Executor, Reader, _clock);
+        public DefineAuditPopulationHandler Handler() => new(Executor, Periods, _clock);
 
         public Cntryl.Portia.RequestContext<DefineAuditPopulation> Context(
             DefineAuditPopulation request, ClaimsPrincipal? actor = null) => new(request,
@@ -166,7 +170,7 @@ public sealed class DefineAuditPopulationHandlerTests
             Assert.Null(period.FreezeClose(period.Revision,
                 new TypeIIPeriodCloseSnapshotContent(closeSnapshotId, SourceReferences(), occurrences, []),
                 ExecutiveId, "CEO", Now.AddMonths(12).AddHours(2)));
-            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+            await TypeIIPeriodSeeds.WriteAsync(Writer, PeriodContent, period);
             return closeSnapshotId;
         }
 

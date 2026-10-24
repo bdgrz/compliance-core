@@ -5,7 +5,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditPopulations;
 
 public sealed class DefineAuditPopulationHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock) : IRequestHandler<DefineAuditPopulation>
+    TypeIIPeriodReader periods, TimeProvider clock) : IRequestHandler<DefineAuditPopulation>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<DefineAuditPopulation> context,
         CancellationToken ct)
@@ -20,9 +20,11 @@ public sealed class DefineAuditPopulationHandler(IAggregateExecutor executor,
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "Population definition requires a Type II period and exact close snapshot identity."));
 
-        var period = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId,
-            request.ProgramId, request.PeriodId), ct).ConfigureAwait(false);
-        if (period.Current is not { } current)
+        var periodRead = await periods.TryReadAsync(request.TenantId, request.ProgramId, request.PeriodId, ct).ConfigureAwait(false);
+        if (!periodRead.IsSuccess)
+            return Result.Failure(periodRead.Error!);
+        var period = periodRead.Value;
+        if (period.View is not { } current)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The Type II observation period was not found."));
         if (current.Status != "closed" || current.CloseSnapshots.Count == 0 ||

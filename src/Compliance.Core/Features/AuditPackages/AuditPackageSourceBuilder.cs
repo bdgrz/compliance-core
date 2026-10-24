@@ -8,7 +8,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AuditPackages;
 
 /// <summary>Resolves selected package records against their frozen Type I or Type II snapshot.</summary>
-public sealed class AuditPackageSourceBuilder(IAggregateReader reader, IImmutableContentStore? content = null)
+public sealed class AuditPackageSourceBuilder(IAggregateReader reader, TypeIIPeriodReader periods, IImmutableContentStore? content = null)
 {
     public async ValueTask<Result<AuditPackageContent>> ResolveAsync(Uuid tenantId, Uuid programId,
         AuditPackageContent requested, CancellationToken ct)
@@ -48,9 +48,11 @@ public sealed class AuditPackageSourceBuilder(IAggregateReader reader, IImmutabl
         {
             if (requested.SourcePeriodId == Uuid.Empty)
                 return Invalid("A Type II package must identify the period that owns its close snapshot.");
-            var period = await reader.HydrateAsync(new TypeIIPeriod(tenantId, programId,
-                requested.SourcePeriodId), ct).ConfigureAwait(false);
-            if (period.Current is not { Status: "closed" } closed ||
+            var periodRead = await periods.TryReadAsync(tenantId, programId, requested.SourcePeriodId, ct).ConfigureAwait(false);
+            if (!periodRead.IsSuccess)
+                return Result<AuditPackageContent>.Failure(periodRead.Error!);
+            var period = periodRead.Value;
+            if (period.View is not { Status: "closed" } closed ||
                 closed.CloseSnapshots.Count == 0)
                 return Result<AuditPackageContent>.Failure(new RequestError(RequestErrorKind.NotFound,
                     "The frozen Type II close snapshot was not found in this program."));

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
@@ -12,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 [Discriminator("bdgrz.operations.cancel-type-ii-period-amendment", 1)]
 public sealed record CancelTypeIIPeriodAmendment(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid PeriodId,
     Uuid AmendmentId, long ExpectedRevision, string Reason)
-    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+    : IRequest<UnitResult>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }

@@ -15,27 +15,27 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     that already applied is irreversible; the cancellation conflicts and the applied range recovers forward.
 /// </summary>
 public sealed class CancelTypeIIPeriodAmendmentHandler(NativeOperationExecutor operations,
-    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<CancelTypeIIPeriodAmendment>
+    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<CancelTypeIIPeriodAmendment, UnitResult>
 {
     const string CommandKind = "CancelTypeIIPeriodAmendment";
     const string InitialEpisode = "initial";
     const int MaximumReasonLength = 2000;
 
-    public async ValueTask<Result> HandleAsync(IRequestContext<CancelTypeIIPeriodAmendment> context,
+    public async ValueTask<Result<UnitResult>> HandleAsync(IRequestContext<CancelTypeIIPeriodAmendment> context,
         CancellationToken ct)
     {
         var request = context.Request;
         if (!ExaminationCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,
                 out var actorMemberId, out var actorDisplay))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+            return Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Canceling a Type II period amendment requires a personal HTTP actor."));
         if (request.CommandId == Uuid.Empty || request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
             request.PeriodId == Uuid.Empty || request.AmendmentId == Uuid.Empty)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+            return Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A command id, tenant, program, period and amendment are required."));
         if (request.ExpectedRevision < 0 || string.IsNullOrWhiteSpace(request.Reason) ||
             request.Reason.Trim().Length > MaximumReasonLength)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+            return Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A cancellation requires a non-negative expected revision and a bounded reason."));
 
         var realm = request.TenantId.ToString();
@@ -45,32 +45,37 @@ public sealed class CancelTypeIIPeriodAmendmentHandler(NativeOperationExecutor o
             ActorReference.ForMember(actorMemberId, actorDisplay), stream, InitialEpisode,
             (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now, stream, stream);
         var binding = AcceptedOperationBinding.Of(provenance);
-        var unitBody = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), UnitResult.Schema,
-            new UnitResult(), ct).ConfigureAwait(false);
-        var response = new FirstResponseDescriptor(200, ImmutableContentStoreExtensions.JsonMediaType,
-            UnitResult.Schema, new StandardResponseBody(unitBody));
-        var accepted = await operations.ExecuteAsync(new NativeOperation<TypeIIPeriod>(binding,
-            () => new TypeIIPeriod(request.TenantId, request.ProgramId, request.PeriodId, request.CommandId),
-            period => period.Acceptance,
-            period => Prepare(period, request, response),
-            (TypeIIPeriod period, ImmutableContentRef frozen) =>
-                period.CancelAmendment(request.AmendmentId, provenance, frozen)), context, ct)
-            .ConfigureAwait(false);
-        if (!accepted.IsSuccess)
-            return Result.Failure(accepted.Error!);
-        return accepted.Value switch
+        ImmutableContentRef? result = null;
+        try
         {
-            AcceptedAppendResult.Committed or AcceptedAppendResult.Replayed => Result.Success,
-            _ => Result.Failure(AcceptedAppendResult.ConflictError),
-        };
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(TypeIIPeriod period, CancelTypeIIPeriodAmendment request,
-        FirstResponseDescriptor response)
-    {
-        var prepared = period.PrepareCancel(request.AmendmentId, request.ExpectedRevision);
-        return prepared.IsSuccess
-            ? Result<FirstResponseDescriptor>.Success(response)
-            : Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+            var accepted = await operations.ExecuteAsync(new NativeOperation<TypeIIPeriod>(binding,
+                () => new TypeIIPeriod(request.TenantId, request.ProgramId, request.PeriodId, request.CommandId, request.AmendmentId),
+                period => period.Acceptance,
+                async (period, token) =>
+                {
+                    if (period.ProgramId != request.ProgramId)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound, "The period was not found in this program."));
+                    var guard = period.PrepareCancel(request.AmendmentId, request.ExpectedRevision);
+                    if (!guard.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(guard.Error!);
+                    try
+                    {
+                        var response = await NativeContent.FreezeUnitAsync(content, request.TenantId, token).ConfigureAwait(false);
+                        result = response.Result;
+                        return Result<FirstResponseDescriptor>.Success(response.Response);
+                    }
+                    catch (ImmutableContentIntegrityException exception)
+                    {
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The exact cancellation response cannot be verified.", exception is ImmutableContentUnavailableException));
+                    }
+                }, (period, first) => period.CancelAmendment(request.AmendmentId, provenance, first, result!)), context, ct).ConfigureAwait(false);
+            return await NativeContent.ResponseAsync<UnitResult>(content, request.TenantId, accepted, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The original period cancellation response cannot be verified.", exception is ImmutableContentUnavailableException));
+        }
     }
 }

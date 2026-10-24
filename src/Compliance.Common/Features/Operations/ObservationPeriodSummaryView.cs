@@ -2,5 +2,6 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
-/// <summary>Program period history and current status.</summary>
-public sealed record ObservationPeriodSummaryView(Uuid TenantId, Uuid ProgramId, Uuid ObservationPeriodId, string Name, string Status, DateTimeOffset UpdatedAt);
+/// <summary>Current scoped period status and dates; discovery ordering is held separately by immutable opening identity.</summary>
+public sealed record ObservationPeriodSummaryView(Uuid TenantId, Uuid ProgramId, Uuid ObservationPeriodId,
+    Uuid ExaminationId, string Status, long Revision, DateOnly PeriodStart, DateOnly PeriodEnd, DateTimeOffset UpdatedAt);

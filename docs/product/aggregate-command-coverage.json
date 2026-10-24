@@ -1,36 +1,36 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "6cf9d3e25bfa85f756bf2b94a2e196e92bc204c4",
+  "sourceCommit": "a65f5f64e33b2d6b08e6c5465462bcec9ad63a88",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 464,
+    "factsWithAggregateEmitter": 457,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 23,
+    "legacyReducerOnlyFacts": 30,
     "aggregateTypes": 131,
     "aggregateTypesWithCommandPath": 122,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
-      "command": 347,
-      "confirmed_command_gap": 8,
+      "command": 348,
+      "confirmed_command_gap": 7,
       "deferred_command": 5,
       "internal_executor_context": 1,
       "internal_reaction": 149,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 730,
+    "registeredCoreHandlerRegistrations": 735,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 44,
+    "unwiredAggregateProducerOperations": 43,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 31
+      "no_registered_request_route": 30
     },
     "factReplayGuardRows": 0
   },
@@ -3440,17 +3440,16 @@
           "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs",
         "test/Compliance.Tests/Features/Operations/GenerateDueControlOccurrencesHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs",
         "test/Compliance.Tests/Testing/TypeIIRangeHost.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "EmailAddressReserved",
@@ -5079,14 +5078,12 @@
           "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ObservationPeriodCloseFrozen",
@@ -5097,17 +5094,17 @@
           "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHttpTests.cs",
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs",
         "test/Compliance.Tests/Testing/TypeIIRangeHost.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ObservationPeriodCloseProposed",
@@ -5118,14 +5115,12 @@
           "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseValidation.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ObservationPeriodEnded",
@@ -5145,14 +5140,14 @@
           "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHttpTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "OpenRemediationCarriedForward",
@@ -8592,7 +8587,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -8625,12 +8622,14 @@
           "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHttpTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TypeIIPeriodCloseApproved",
@@ -8641,12 +8640,12 @@
           "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TypeIIPeriodOpeningAccepted",
@@ -8660,7 +8659,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -12175,6 +12176,7 @@
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIObservationCalendarTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs",
         "test/Compliance.Tests/Testing/TypeIIRangeFixture.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -12197,26 +12199,21 @@
       ],
       "commandRequests": [
         "AmendTypeIIObservationPeriod",
-        "ApproveTypeIIPeriodClose",
-        "CancelTypeIIPeriodAmendment",
-        "FreezeTypeIIPeriodClose",
-        "GenerateDueControlOccurrences",
         "StartTypeIIObservationPeriod"
       ],
       "internalReactionRequests": [
-        "ApplyTypeIIPeriodRange",
         "RejectTypeIIPeriodAmendment",
         "RejectTypeIIPeriodOpening"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
-        "test/Compliance.Tests/Features/AuditPopulations/DefineAuditPopulationHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodClosePreviewHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHttpTests.cs",
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseArchive.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseSources.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseValidation.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodTests.cs"
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12240,10 +12237,10 @@
         "test/Compliance.Tests/Features/AuditPopulations/DefineAuditPopulationHandlerTests.cs",
         "test/Compliance.Tests/Features/Examinations/TypeIIPlanCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Examinations/TypeIIPlanTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHttpTests.cs",
         "test/Compliance.Tests/Features/Operations/ProposeTypeIIOperatingPlanHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodTests.cs"
+        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -13238,9 +13235,12 @@
       "aggregateTargets": [
         "TypeIIPeriod"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "TypeIIPeriodReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs",
         "test/Compliance.Tests/Testing/TypeIIRangeFixture.cs"
       ],
       "note": ""
@@ -13248,14 +13248,24 @@
     {
       "request": "AmendTypeIIPeriodClose",
       "contract": "src/Compliance.Common/Features/Examinations/AmendTypeIIPeriodClose.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
-      "classification": "confirmed_command_gap",
-      "handlers": [],
-      "handlerRegistration": false,
+      "interfaces": "IRequest<UnitResult>, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "classification": "command",
+      "handlers": [
+        {
+          "name": "AmendTypeIIPeriodCloseHandler",
+          "source": "src/Compliance.Core/Features/Operations/AmendTypeIIPeriodCloseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs",
+        "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs"
+      ],
       "note": "#310; depends on #307, #308, #309"
     },
     {
@@ -13669,9 +13679,7 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [
-        "TypeIIPeriod"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "TypeIIRangeReceivers"
       ],
@@ -14209,7 +14217,7 @@
     {
       "request": "ApproveTypeIIPeriodClose",
       "contract": "src/Compliance.Common/Features/Examinations/ApproveTypeIIPeriodClose.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<UnitResult>, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14219,16 +14227,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "TypeIIPeriod"
-      ],
-      "aggregateTargets": [
-        "TypeIIPeriod"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseArchive.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs"
       ],
       "note": ""
     },
@@ -14993,13 +14999,14 @@
       "directAggregateReferences": [
         "ExaminationEngagement",
         "SystemDescription",
-        "TypeIIPeriod",
         "TypeIIPlan"
       ],
       "aggregateTargets": [
         "SystemDescription"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "TypeIIPeriodReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs"
       ],
@@ -15245,7 +15252,7 @@
     {
       "request": "CancelTypeIIPeriodAmendment",
       "contract": "src/Compliance.Common/Features/Operations/CancelTypeIIPeriodAmendment.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
+      "interfaces": "IRequest<UnitResult>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -15258,9 +15265,7 @@
       "directAggregateReferences": [
         "TypeIIPeriod"
       ],
-      "aggregateTargets": [
-        "TypeIIPeriod"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Testing/TypeIIRangeFixture.cs"
@@ -17195,13 +17200,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AuditPopulation",
-        "TypeIIPeriod"
+        "AuditPopulation"
       ],
       "aggregateTargets": [
         "AuditPopulation"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "TypeIIPeriodReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPopulations/DefineAuditPopulationHandlerTests.cs"
       ],
@@ -18027,7 +18033,7 @@
     {
       "request": "FreezeTypeIIPeriodClose",
       "contract": "src/Compliance.Common/Features/Examinations/FreezeTypeIIPeriodClose.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<UnitResult>, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -18037,18 +18043,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "TypeIIPeriod"
-      ],
-      "aggregateTargets": [
-        "TypeIIPeriod"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [
         "TypeIIOccurrenceCoverage"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseArchive.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.NativeOwners.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs"
       ],
       "note": ""
     },
@@ -18162,7 +18166,7 @@
     {
       "request": "GenerateDueControlOccurrences",
       "contract": "src/Compliance.Common/Features/Operations/GenerateDueControlOccurrences.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest",
+      "interfaces": "IRequest<UnitResult>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -18173,16 +18177,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlOperatingPlan",
-        "TypeIIPeriod"
+        "ControlOperatingPlan"
       ],
-      "aggregateTargets": [
-        "TypeIIPeriod"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs",
         "test/Compliance.Tests/Features/Operations/GenerateDueControlOccurrencesHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodClosePreviewHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
       ],
       "note": ""
@@ -19807,12 +19809,20 @@
       "contract": "src/Compliance.Common/Features/Operations/GetObservationPeriod.cs",
       "interfaces": "IRequest<ObservationPeriodView>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "GetObservationPeriodHandler",
+          "source": "src/Compliance.Core/Features/Operations/GetObservationPeriodHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -19820,12 +19830,22 @@
       "contract": "src/Compliance.Common/Features/AuditPopulations/GetObservationPeriodClose.cs",
       "interfaces": "IRequest<ObservationPeriodCloseView>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "GetObservationPeriodCloseHandler",
+          "source": "src/Compliance.Core/Features/Operations/GetObservationPeriodCloseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "TypeIIPeriodReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -22699,12 +22719,20 @@
       "contract": "src/Compliance.Common/Features/Operations/ListObservationPeriods.cs",
       "interfaces": "IRequest<Page<ObservationPeriodSummaryView>>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "ListObservationPeriodsHandler",
+          "source": "src/Compliance.Core/Features/Operations/ListObservationPeriodsHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodReadHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -24743,12 +24771,24 @@
       "contract": "src/Compliance.Common/Features/AuditPopulations/PreviewObservationPeriodClose.cs",
       "interfaces": "IRequest<ObservationPeriodClosePreview>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
-      "directAggregateReferences": [],
+      "handlers": [
+        {
+          "name": "PreviewObservationPeriodCloseHandler",
+          "source": "src/Compliance.Core/Features/Operations/PreviewObservationPeriodCloseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "TypeIIPeriod"
+      ],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "TypeIIPeriodReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ObservationPeriodClosePreviewHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -25156,13 +25196,14 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "AuditOutcome",
-        "ProgramRollover",
-        "TypeIIPeriod"
+        "ProgramRollover"
       ],
       "aggregateTargets": [
         "ProgramRollover"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "TypeIIPeriodReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Programs/ProposeProgramRolloverHandlerTests.cs"
       ],
@@ -26504,13 +26545,14 @@
       "directAggregateReferences": [
         "EvidenceArtifact",
         "ExaminationEngagement",
-        "ManagementAssertion",
-        "TypeIIPeriod"
+        "ManagementAssertion"
       ],
       "aggregateTargets": [
         "ManagementAssertion"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "TypeIIPeriodReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/RecordManagementAssertionHandlerTests.cs"
       ],
@@ -26535,7 +26577,9 @@
       "aggregateTargets": [
         "ExaminationSignOff"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "TypeIIPeriodReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/RecordManagementExaminationReviewHandlerTests.cs"
       ],
@@ -27119,12 +27163,8 @@
         }
       ],
       "handlerRegistration": true,
-      "helperServices": [
-        "ITypeIIPeriodCloseReconciliation"
-      ],
-      "directAggregateReferences": [
-        "TypeIIPeriod"
-      ],
+      "helperServices": [],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseArchive.cs",
@@ -30931,7 +30971,8 @@
         "FindingReader"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs"
+        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs"
       ],
       "note": ""
     },
@@ -31655,25 +31696,14 @@
       "note": "The invitation handlers acquire the claim through TenantInvitationAdmission and TenantInvitationMailboxes (two helper hops), which the one-hop route analysis does not follow; there is no separate reactor or request for it."
     },
     {
-      "fact": "TypeIIPeriodCloseAmended",
+      "fact": "TypeIIPeriodAmendmentCanceled",
       "aggregate": "TypeIIPeriod",
-      "method": "AmendClose",
+      "method": "CancelAmendment",
+      "methodArgumentCount": 4,
       "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 310,
       "callerSources": [],
-      "methodArgumentCount": 9,
-      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
-    },
-    {
-      "fact": "ObservationPeriodCloseProposed",
-      "aggregate": "TypeIIPeriod",
-      "method": "RecordCloseValidation",
-      "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
       "classification": "no_registered_request_route",
-      "ownerIssue": 310,
-      "callerSources": [],
-      "methodArgumentCount": 5,
+      "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

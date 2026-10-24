@@ -17,7 +17,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     intent or invalid proof is a permanent conflict; missing period state is never proof to release anything.
 /// </summary>
 sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor executor, IImmutableContentStore content,
-    IRequestBus bus, TimeProvider clock, TypeIIRangeVerifier verifier)
+    IRequestBus bus, TimeProvider clock, TypeIIRangeVerifier verifier, TypeIIPeriodReader periods)
 {
     const int MaximumAttempts = 4;
 
@@ -28,7 +28,7 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
             command.Generation != TypeIIRangeEffects.Generation)
             return SourceUseReceiverSupport.Permanent("The acquisition names another generation or operation.");
         var change = await verifier.VerifyAsync(command.Target.Realm, command.Intent, command.OperationId,
-            command.PeriodId, command.CommandId, ct).ConfigureAwait(false);
+            command.PeriodId, command.CommandId, ct, command.Source.EventId).ConfigureAwait(false);
         if (change.Error is not null)
             return Result<ReceiverOutcome>.Failure(change.Error);
         var (tenant, period, accepted, intent) = (change.TenantId, change.Period!, change.Accepted!, change.Intent!);
@@ -95,7 +95,7 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
             command.Generation != TypeIIRangeEffects.Generation)
             return SourceUseReceiverSupport.Permanent("The apply names another generation or operation.");
         var change = await verifier.VerifyAsync(command.Target.Realm, command.Intent, command.OperationId,
-            command.PeriodId, command.CommandId, ct).ConfigureAwait(false);
+            command.PeriodId, command.CommandId, ct, command.Source.EventId).ConfigureAwait(false);
         if (change.Error is not null)
             return Result<ReceiverOutcome>.Failure(change.Error);
         var (tenant, period, intent) = (change.TenantId, change.Period!, change.Intent!);
@@ -138,7 +138,8 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return SourceUseReceiverSupport.Permanent($"The frozen change cannot be verified: {exception.Message}");
+            return Result<ReceiverOutcome>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The frozen range change cannot be verified.", exception is ImmutableContentUnavailableException));
         }
 
         var result = await TypeIIRangeContent.UnitResultAsync(content, command.Target.Realm, operation, ct)
@@ -147,14 +148,26 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
         {
             try
             {
+                var preparedOwner = await reader.HydrateAsync(new TypeIIPeriod(tenant, intent.ProgramId, intent.PeriodId,
+                    command.CommandId, operation), ct).ConfigureAwait(false);
+                if (DecidePeriod(preparedOwner, binding, operation, intent) is { } already)
+                    return already;
+                var snapshot = await periods.ReadAsync(preparedOwner, ct).ConfigureAwait(false);
+                var before = snapshot.View;
+                var ready = opening is not null
+                    ? snapshot.Rules.ApplyOpening(provenance, opening.State, permit, result)
+                    : snapshot.Rules.ApplyAmendment(provenance, amendment!, permit, result);
+                if (!ready.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(ready.Error!);
+                var frozen = await TypeIIPeriodContent.FreezeAsync(content, before, snapshot.Rules, provenance, ct).ConfigureAwait(false);
+                var native = TypeIIPeriodContent.Fact(frozen, provenance, null, result, preparedOwner.NativeSequence + 1);
                 var step = await executor.ExecuteAsync(new TypeIIPeriod(tenant, intent.ProgramId, intent.PeriodId,
-                    command.CommandId), fresh =>
+                    command.CommandId, operation), fresh =>
                     {
                         if (DecidePeriod(fresh, binding, operation, intent) is { } decided)
                             return AggregateOutcome.Discard(Result<Step>.Success(new Decided(decided)));
-                        var raised = opening is not null
-                            ? fresh.ApplyOpening(provenance, opening.State, permit, result)
-                            : fresh.ApplyAmendment(provenance, amendment!, permit, result);
+                        var raised = fresh.Append(native, frozen.Before, frozen.After, preparedOwner.NativeSequence,
+                            preparedOwner.CommittedStreamPosition);
                         return raised.IsSuccess
                             ? AggregateOutcome.Commit(Result<Step>.Success(new Decided(SourceUseReceiverSupport.Applied(
                                 Fact(fresh.Stream, fresh.Acceptance.SelectedFact!)))))
@@ -178,7 +191,7 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
             command.Generation != TypeIIRangeEffects.Generation)
             return SourceUseReceiverSupport.Permanent("The settlement names another generation or operation.");
         var change = await verifier.VerifyAsync(command.Target.Realm, command.Intent, command.OperationId,
-            command.PeriodId, command.CommandId, ct).ConfigureAwait(false);
+            command.PeriodId, command.CommandId, ct, command.Source.EventId).ConfigureAwait(false);
         if (change.Error is not null)
             return Result<ReceiverOutcome>.Failure(change.Error);
         var (tenant, period, intent) = (change.TenantId, change.Period!, change.Intent!);
@@ -288,7 +301,7 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
             try
             {
                 var step = await executor.ExecuteAsync(new TypeIIPeriod(tenant, intent.ProgramId, intent.PeriodId,
-                    commandId), pending =>
+                    commandId, operationId), pending =>
                     {
                         switch (pending.Acceptance.Decide(binding))
                         {

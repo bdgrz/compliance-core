@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.AuditPackages;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
@@ -7,7 +8,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Records an immutable management decision after resolving its exact examination sources.</summary>
 public sealed class RecordManagementExaminationReviewHandler(IAggregateExecutor executor,
-    IAggregateReader reader, AuditPackageReader packages, ManagementExecutiveAuthority executiveAuthority, TimeProvider clock)
+    IAggregateReader reader, AuditPackageReader packages, TypeIIPeriodReader periods, ManagementExecutiveAuthority executiveAuthority, TimeProvider clock)
     : IRequestHandler<RecordManagementExaminationReview>
 {
     public async ValueTask<Result> HandleAsync(
@@ -41,7 +42,7 @@ public sealed class RecordManagementExaminationReviewHandler(IAggregateExecutor 
                         memberId, role, display, prior.SignedOffAt)), context, ct)
                 .ConfigureAwait(false);
 
-        var sources = await ExaminationSignOffSourceValidator.ValidateAsync(reader, packages,
+        var sources = await ExaminationSignOffSourceValidator.ValidateAsync(reader, packages, periods,
             request.TenantId, request.ProgramId, request.Content, ct).ConfigureAwait(false);
         if (!sources.IsSuccess)
             return Result.Failure(sources.Error!);

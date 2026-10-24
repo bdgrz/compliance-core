@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
@@ -9,7 +10,7 @@ using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using DescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
-using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
+using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriodRules;
 using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.SystemDescription;
@@ -291,6 +292,9 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         public Uuid ControlId { get; } = Uuid.CreateVersion4();
         public Uuid ControlVersionId { get; } = Uuid.CreateVersion4();
         public Uuid UserMemberId => RbacIds.Member(TenantId, UserId);
+        public InMemoryEventStore PeriodEvents { get; } = new();
+        public IImmutableContentStore PeriodContent { get; } = TypeIIPeriodSeeds.NewContentStore();
+        public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, PeriodContent);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -302,7 +306,7 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
@@ -315,7 +319,7 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
 
         public ReviseSystemDescriptionDraftHandler ReviseHandler() => new(Executor, _clock);
 
-        public BindSystemDescriptionSourcesHandler BindSourcesHandler() => new(Reader, Executor, _clock);
+        public BindSystemDescriptionSourcesHandler BindSourcesHandler() => new(Reader, Executor, Periods, _clock);
 
         public Cntryl.Portia.RequestContext<T> Context<T>(T request) where T : IRequestBase => new(request,
             new RequestDispatchContext(Actor, new HttpInvocation("POST", "/system-descriptions",
@@ -400,7 +404,7 @@ public sealed class SystemDescriptionDraftCommandHandlerTests
             Assert.Null(period.FreezeClose(period.Revision, new TypeIIPeriodCloseSnapshotContent(
                 CloseSnapshotId, references, occurrences, [GapId]),
                 RbacIds.Member(TenantId, ApproverId), "Chief Executive", Now.AddDays(400).AddHours(2)));
-            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+            await TypeIIPeriodSeeds.WriteAsync(Writer, PeriodContent, period);
             return period.Current!;
         }
 

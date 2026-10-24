@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     occurrence id in canonical order and <paramref name="CreationIntentManifest" /> holds the full creation intent
 ///     of each. A selected occurrence is not yet materialized; the occurrence fan-out materializes each one.
 /// </summary>
-[Discriminator("bdgrz.operations.due-control-occurrences-generated", 3)]
+[Discriminator("bdgrz.operations.due-control-occurrences-generated", 1)]
 public sealed record DueControlOccurrencesGenerated(
     Uuid TenantId,
     Uuid SubjectId,
@@ -24,4 +24,9 @@ public sealed record DueControlOccurrencesGenerated(
     OperationProvenance Operation,
     ImmutableContentRef CreationIntentManifest,
     ImmutableContentRef? FirstResponse,
-    ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;
+    ImmutableContentRef? OperationResult) : DomainEvent, ITypeIIPeriodStateFact
+{
+    public long NativeSequence { get; init; }
+    public TypeIIPeriodAuthorityHeader Header { get; init; } = null!;
+    public ImmutableContentRef CurrentContent { get; init; } = null!;
+}

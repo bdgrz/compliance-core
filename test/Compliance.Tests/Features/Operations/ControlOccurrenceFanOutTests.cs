@@ -254,7 +254,7 @@ public sealed class ControlOccurrenceFanOutTests
     static GenerateDueControlOccurrences Request(TypeIIRangeFixture fixture, Uuid period, string key) =>
         new(fixture.TenantId, fixture.ProgramId, period, fixture.FirstEnd, key);
 
-    static ValueTask<Result> Generate(TypeIIRangeFixture fixture, GenerateDueControlOccurrences request) =>
+    static ValueTask<Result<UnitResult>> Generate(TypeIIRangeFixture fixture, GenerateDueControlOccurrences request) =>
         fixture.Host.GenerateHandler(fixture.Clock).HandleAsync(fixture.Context(request), CancellationToken.None);
 
     static async Task<DueControlOccurrencesGenerated> SelectAllAsync(TypeIIRangeFixture fixture, Uuid period)

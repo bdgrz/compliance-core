@@ -14,7 +14,7 @@ using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditPackageAggregate = Bdgrz.Compliance.Features.AuditPackages.AuditPackageRules;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
-using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
+using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriodRules;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPackages;
 
@@ -160,7 +160,7 @@ public sealed class CreateAuditPackageHandlerTests
             new NativeOperationExecutor(fixture.Reader, fixture.Executor, fixture.ContentStore), fixture.ContentStore,
             new FixedTimeProvider(Now.AddDays(1)));
         var retryHandler = new CreateAuditPackageHandler(retryOperations,
-            new AuditPackageSourceBuilder(fixture.Reader), fixture.ContentStore);
+            new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods), fixture.ContentStore);
 
         // Act
         var replay = await retryHandler.HandleAsync(Fixture.Context(fixture.UserId, command), CancellationToken.None);
@@ -192,7 +192,7 @@ public sealed class CreateAuditPackageHandlerTests
         var operations = new AuditPackageRootOperation(reader, packages,
             new NativeOperationExecutor(reader, fixture.Executor, fixture.ContentStore), fixture.ContentStore,
             new FixedTimeProvider(Now));
-        var handler = new CreateAuditPackageHandler(operations, new AuditPackageSourceBuilder(fixture.Reader),
+        var handler = new CreateAuditPackageHandler(operations, new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods),
             fixture.ContentStore);
 
         // Act
@@ -225,6 +225,8 @@ public sealed class CreateAuditPackageHandlerTests
         public string SourceSha256 { get; } = new('b', 64);
         public long SourceRevision { get; } = 3;
         public Uuid UserId { get; } = Uuid.CreateVersion4();
+        public InMemoryEventStore PeriodEvents { get; } = new();
+        public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, ContentStore);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -242,7 +244,7 @@ public sealed class CreateAuditPackageHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
@@ -253,7 +255,7 @@ public sealed class CreateAuditPackageHandlerTests
         }
 
         public CreateAuditPackageHandler Handler() => new(RootOperation,
-            new AuditPackageSourceBuilder(Reader), ContentStore);
+            new AuditPackageSourceBuilder(Reader, Periods), ContentStore);
 
         public CreateAuditPackage Command(Uuid packageId, TypeIBaselineView baseline) =>
             new(TenantId, ProgramId, packageId, Content(baseline));
@@ -321,7 +323,7 @@ public sealed class CreateAuditPackageHandlerTests
             Assert.Null(period.FreezeClose(period.Revision, new TypeIIPeriodCloseSnapshotContent(
                 closeSnapshotId, sourceReferences, occurrences, []), executiveMemberId,
                 "Chief Executive", Now.AddMonths(12).AddHours(2)));
-            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+            await TypeIIPeriodSeeds.WriteAsync(Writer, ContentStore, period);
             return period.Current!.CloseSnapshots[^1];
         }
 

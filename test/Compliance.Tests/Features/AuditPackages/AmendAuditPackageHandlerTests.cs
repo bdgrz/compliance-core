@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Hosting.Persistence;
@@ -155,6 +156,8 @@ public sealed class AmendAuditPackageHandlerTests
         public Uuid SourceVersion1 { get; } = Uuid.CreateVersion4();
         public Uuid SourceVersion2 { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
+        public InMemoryEventStore PeriodEvents { get; } = new();
+        public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, ContentStore);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -173,7 +176,7 @@ public sealed class AmendAuditPackageHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(PeriodEvents);
             ArtifactStore = new LocalArtifactContentStore(new ArtifactContentStoreOptions(
                 _artifactRoot, null, ArtifactContentLimits.MaxContentLength), _clock);
             services.AddSingleton(ArtifactStore);
@@ -186,7 +189,7 @@ public sealed class AmendAuditPackageHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public AmendAuditPackageHandler Handler() => new(RootOperation, new AuditPackageSourceBuilder(Reader), ContentStore);
+        public AmendAuditPackageHandler Handler() => new(RootOperation, new AuditPackageSourceBuilder(Reader, Periods), ContentStore);
 
         public async Task SeedSourceBytesAsync()
         {

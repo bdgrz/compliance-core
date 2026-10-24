@@ -12,4 +12,4 @@ namespace Bdgrz.Compliance.Features.Operations;
 [Discriminator("bdgrz.type-ii-period.type-ii-period-amendment-canceled", 1)]
 public sealed record TypeIIPeriodAmendmentCanceled(EventStreamAddress Owner, long Revision, long Generation,
     ImmutableContentRef Intent, ImmutableContentRef? SourceProofs, OperationProvenance Operation,
-    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult, Uuid ProgramId) : DomainEvent, INativeOperationFact;

@@ -19,10 +19,10 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
     TypeIIPeriodCloseHistory history, TypeIIPeriodCloseSourcePublication publication)
     : ITypeIIPeriodCloseReconciliation
 {
-    public async ValueTask<Result<TypeIIPeriodCloseValidationContent>> ReadAsync(TypeIIPeriod period,
+    public async ValueTask<Result<TypeIIPeriodCloseValidationContent>> ReadAsync(TypeIIPeriodReadSnapshot period,
         ClaimsPrincipal actor, Uuid requesterUserId, OperationProvenance operation, CancellationToken ct)
     {
-        if (period.Current is not { } current || operation.Owner != period.Stream || operation.AcceptedAt == default ||
+        if (period.View is not { } current || operation.Owner != period.Owner.Stream || operation.AcceptedAt == default ||
             operation.RootOperationId == Uuid.Empty || requesterUserId == Uuid.Empty)
             return Failure(RequestErrorKind.Validation, "Close capture requires its exact opened period and server decision.");
         try
@@ -63,7 +63,7 @@ public sealed class TypeIIPeriodCloseReconciliation(IAggregateReader reader, IIm
             var native = new List<TypeIIPeriodCloseNativeSource>();
             foreach (var fact in period.OccurrenceGenerations)
             {
-                native.Add(TypeIIPeriodCloseHistory.Capture(period.Stream, fact));
+                native.Add(TypeIIPeriodCloseHistory.Capture(period.Owner.Stream, fact));
                 var manifest = await ControlOperatingContent.ReadAsync<ControlOccurrenceSelectionManifest>(content,
                     current.TenantId, fact.CreationIntentManifest, ct).ConfigureAwait(false);
                 foreach (var selected in manifest.Selections)

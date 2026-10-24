@@ -15,7 +15,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     reactor replays the same command. An unreadable period or intent is a transient failure, never a release.
 /// </summary>
 sealed partial class TypeIIRangeReleaseReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
-    IAggregateReader reader, IImmutableContentStore content)
+    IImmutableContentStore content)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(TypeIIPeriod.Area), WorkloadName),
         IReactorHandler<TypeIIPeriodAmendmentCanceled>, IReactorHandler<TypeIIPeriodOpeningRejected>,
         IReactorHandler<ObservationPeriodCloseFrozen>
@@ -30,17 +30,8 @@ sealed partial class TypeIIRangeReleaseReactor(IProjectionCheckpointStore checkp
         SettleAsync(context, context.Trigger.Operation.RootOperationId, context.Trigger.Intent,
             context.Trigger.Operation.Episode, ct);
 
-    public async ValueTask HandleAsync(IReactorContext<ObservationPeriodCloseFrozen> context, CancellationToken ct)
-    {
-        var frozen = context.Trigger;
-        var period = await reader.HydrateAsync(new TypeIIPeriod(frozen.TenantId, frozen.State.ProgramId,
-            frozen.SubjectId), ct).ConfigureAwait(false);
-        var intent = TypeIIPeriod.IntentOf(period.AcceptedFor(frozen.CalendarAuthorizationId));
-        if (intent is null)
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                "The operation that holds the closed range is not visible on the period yet.", true));
-        await SettleAsync(context, frozen.CalendarAuthorizationId, intent, "initial", ct).ConfigureAwait(false);
-    }
+    public ValueTask HandleAsync(IReactorContext<ObservationPeriodCloseFrozen> context, CancellationToken ct) =>
+        SettleAsync(context, context.Trigger.CalendarAuthorizationId, context.Trigger.CalendarIntent, "initial", ct);
 
     async ValueTask SettleAsync(IReactorContext context, Uuid operationId, ImmutableContentRef intentReference,
         string episode, CancellationToken ct)
@@ -55,7 +46,7 @@ sealed partial class TypeIIRangeReleaseReactor(IProjectionCheckpointStore checkp
         catch (ImmutableContentIntegrityException exception)
         {
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen range intent cannot be verified: {exception.Message}", true));
+                "The frozen range intent cannot be verified.", exception is ImmutableContentUnavailableException));
         }
 
         var tenant = Uuid.Parse(realm, CultureInfo.InvariantCulture);

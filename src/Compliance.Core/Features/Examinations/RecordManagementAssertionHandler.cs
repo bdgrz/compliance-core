@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Records management wording against its exact validated examination sources.</summary>
 public sealed class RecordManagementAssertionHandler(IAggregateExecutor executor,
-    IAggregateReader reader, AuditPackageReader packages, TimeProvider clock) : IRequestHandler<RecordManagementAssertion>
+    IAggregateReader reader, AuditPackageReader packages, TypeIIPeriodReader periods, TimeProvider clock) : IRequestHandler<RecordManagementAssertion>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<RecordManagementAssertion> context,
         CancellationToken ct)
@@ -161,9 +161,11 @@ public sealed class RecordManagementAssertionHandler(IAggregateExecutor executor
         if (packageVersion.SourceSnapshotKind == "type_ii_close_snapshot" &&
             packageVersion.SourcePeriodId != Uuid.Empty)
         {
-            var period = await reader.HydrateAsync(new TypeIIPeriod(tenantId, programId,
-                packageVersion.SourcePeriodId), ct).ConfigureAwait(false);
-            if (period.Current is not { Status: "closed" } closed ||
+            var periodRead = await periods.TryReadAsync(tenantId, programId, packageVersion.SourcePeriodId, ct).ConfigureAwait(false);
+            if (!periodRead.IsSuccess)
+                return (null, periodRead.Error!);
+            var period = periodRead.Value;
+            if (period.View is not { Status: "closed" } closed ||
                 closed.ExaminationId != examinationId)
                 return (null, new RequestError(RequestErrorKind.Conflict,
                     "The package must use a closed Type II period for this examination."));
