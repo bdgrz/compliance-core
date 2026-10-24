@@ -2806,9 +2806,6 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [ObservationPeriodView](../../src/Compliance.Common/Features/Operations/ObservationPeriodView.cs#L6)
 - [ObservationPeriodSummaryView](../../src/Compliance.Common/Features/Operations/ObservationPeriodSummaryView.cs#L6)
-- [TypeIIObservationCalendarView](../../src/Compliance.Common/Features/Operations/TypeIIObservationCalendarView.cs#L6)
-- [TypeIIObservationCalendarPeriodView](../../src/Compliance.Common/Features/Operations/TypeIIObservationCalendarPeriodView.cs#L6)
-- [TypeIIObservationCalendarAmendmentView](../../src/Compliance.Common/Features/Operations/TypeIIObservationCalendarAmendmentView.cs#L6)
 - [TypeIIPeriodView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodView.cs#L8)
 - [TypeIIPeriodOpeningContent](../../src/Compliance.Common/Features/Operations/TypeIIPeriodOpeningContent.cs#L7)
 - [TypeIIPeriodOccurrenceView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodOccurrenceView.cs#L7)
@@ -3337,8 +3334,9 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}` | `RecordExaminationOutcome` | [registration](../../src/Compliance.App/Program.cs#L2360) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/management-reviews/{sign_off_id}` | `RecordManagementExaminationReview` | [registration](../../src/Compliance.App/Program.cs#L2364) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-ii-plans/{plan_id}/proposals` | `ProposeTypeIIOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L2368) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2372) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/amendments` | `AmendTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2376) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}` | `StartTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2372) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{command_id}` | `AmendTypeIIObservationPeriod` | [registration](../../src/Compliance.App/Program.cs#L2376) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{amendment_id}/cancellations/{command_id}` | `CancelTypeIIPeriodAmendment` | [registration](../../src/Compliance.App/Program.cs#L2376) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-approvals` | `ApproveTypeIIPeriodClose` | [registration](../../src/Compliance.App/Program.cs#L2380) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/freezes` | `FreezeTypeIIPeriodClose` | [registration](../../src/Compliance.App/Program.cs#L2384) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals` | `ProposeProgramRollover` | [registration](../../src/Compliance.App/Program.cs#L2388) |

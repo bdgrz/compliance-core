@@ -1,10 +1,14 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations;
 
@@ -97,28 +101,6 @@ public sealed class TypeIIPeriodTests
         Assert.Equal(originalPlanHash, period.Current.TypeIIPlanContentSha256);
         Assert.Equal(PeriodEnd, Assert.Single(period.Current.Amendments).PriorPeriodEnd);
         Assert.Equal("Extend observation by one week", period.Current.Amendments[0].Reason);
-    }
-
-    [Fact]
-    public void ShouldPreserveFirstTimestampForSameDateAmendmentRetryGivenActivePeriod()
-    {
-        // Arrange
-        var period = StartedPeriod();
-        var expectedRevision = period.Revision;
-        const string reason = "Extend observation by one week";
-        var firstAmendedAt = Now.AddMonths(2);
-        Assert.Null(period.Amend(expectedRevision, PeriodStart, PeriodEnd.AddDays(7), reason,
-            ProposerId, "Compliance lead", firstAmendedAt));
-
-        // Act
-        var retry = period.Amend(expectedRevision, PeriodStart, PeriodEnd.AddDays(7), reason,
-            ProposerId, "Compliance lead", firstAmendedAt.AddHours(4));
-
-        // Assert
-        Assert.Null(retry);
-        Assert.Equal(expectedRevision + 1, period.Revision);
-        var amendment = Assert.Single(period.Current!.Amendments);
-        Assert.Equal(firstAmendedAt, amendment.AmendedAt);
     }
 
     [Fact]
@@ -332,6 +314,87 @@ public sealed class TypeIIPeriodTests
             replay.Current.CloseSnapshots.Select(item => item.ContentSha256).ToArray());
         Assert.Single(replay.Current.CloseApprovals);
     }
+
+    [Fact]
+    public void ShouldRefuseSecondOpeningGivenOpeningAlreadyAcceptedOnPeriod()
+    {
+        // Arrange
+        var period = NewPeriod();
+        var plan = ApprovedPlan();
+        Assert.Null(period.PrepareOpening(plan.Current!, Opening(), ProposerId, "Compliance lead", Now, out _));
+        var synthetic = Synthetic();
+        Assert.True(period.AcceptOpening(Provenance(period, PeriodId), synthetic, synthetic).IsSuccess);
+
+        // Act
+        var prepared = period.PrepareOpening(plan.Current!, Opening(), ProposerId, "Compliance lead", Now, out var initial);
+        var second = period.AcceptOpening(Provenance(period, PeriodId), synthetic, synthetic);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(prepared).Code);
+        Assert.Null(initial);
+        Assert.False(second.IsSuccess);
+        Assert.Equal(0, period.Revision);
+        Assert.NotNull(period.Pending);
+    }
+
+    [Fact]
+    public void ShouldRefuseDelayedApplyGivenAmendmentCanceledBeforeApply()
+    {
+        // Arrange
+        var period = StartedPeriod();
+        var synthetic = Synthetic();
+        var amendmentId = Uuid.CreateVersion4();
+        var change = new TypeIIPeriodAmendmentChange(PeriodStart, PeriodEnd.AddDays(7), "Extend the window.", ProposerId,
+            "Compliance lead", Now.AddMonths(1));
+        Assert.True(period.AcceptAmendment(period.Revision, Provenance(period, amendmentId), synthetic, synthetic)
+            .IsSuccess);
+        var canceled = period.CancelAmendment(amendmentId, Provenance(period, Uuid.CreateVersion4(), amendmentId),
+            synthetic);
+
+        // Act
+        var delayed = period.ApplyAmendment(Provenance(period, Uuid.CreateVersion4(), amendmentId), change,
+            new TypeIIPeriodCalendarAuthorization(amendmentId, 2), synthetic);
+        var cancelAgain = period.PrepareCancel(amendmentId, period.Revision);
+
+        // Assert
+        Assert.True(canceled.IsSuccess, canceled.Error?.Message);
+        Assert.False(delayed.IsSuccess);
+        Assert.True(period.IsFenced(amendmentId));
+        Assert.False(cancelAgain.IsSuccess);
+        Assert.Equal(PeriodEnd, period.Current!.PeriodEnd);
+        Assert.Equal(new TypeIIPeriodCalendarAuthorization(PeriodId, 1), period.CalendarAuthorization);
+    }
+
+    [Fact]
+    public void ShouldKeepCloseBlockedGivenPendingAmendmentUntilItEnds()
+    {
+        // Arrange
+        var period = StartedPeriod();
+        var synthetic = Synthetic();
+        var amendmentId = Uuid.CreateVersion4();
+        Assert.True(period.AcceptAmendment(period.Revision, Provenance(period, amendmentId), synthetic, synthetic)
+            .IsSuccess);
+        var occurrences = period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId).ToArray();
+
+        // Act
+        var blocked = period.RecordCloseValidation(period.Revision,
+            new TypeIIPeriodCloseValidationContent(SourceReferences(), occurrences, occurrences, [], [], [GapId]),
+            ValidatorId, "Close validator", Now.AddMonths(12));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(blocked).Code);
+        Assert.Equal("active", period.Current.Status);
+    }
+
+    static ImmutableContentRef Synthetic() => new(Uuid.CreateVersion4(), new string('a', 64), 2, "application/json",
+        "synthetic-content.v1");
+
+    static OperationProvenance Provenance(TypeIIPeriodAggregate period, Uuid root) =>
+        Provenance(period, root, root);
+
+    static OperationProvenance Provenance(TypeIIPeriodAggregate period, Uuid logicalId, Uuid root) => new(logicalId, root,
+        logicalId == root ? null : root, "Synthetic", ActorReference.ForMember(ProposerId, "Compliance lead"),
+        period.Stream, "initial", null, new string('e', 64), Now, period.Stream, period.Stream);
 
     static TypeIIPeriodAggregate NewPeriod() => new(TenantId, ProgramId, PeriodId);
     static TypeIIPeriodAggregate StartedPeriod()

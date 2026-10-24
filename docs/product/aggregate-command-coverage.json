@@ -41,26 +41,26 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 458,
-    "factsWithReducer": 436,
-    "factsWithAggregateEmitter": 430,
+    "domainEventContracts": 459,
+    "factsWithReducer": 437,
+    "factsWithAggregateEmitter": 431,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 1,
     "aggregateTypes": 111,
     "aggregateTypesWithCommandPath": 108,
-    "requestContracts": 707,
-    "commonRequestContracts": 705,
+    "requestContracts": 713,
+    "commonRequestContracts": 711,
     "requestClassificationCounts": {
-      "command": 347,
+      "command": 348,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 72,
+      "internal_reaction": 77,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 648,
+    "registeredCoreHandlerRegistrations": 654,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 38,
     "unwiredAggregateProducerClassifications": {
@@ -4788,55 +4788,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "ObservationPeriodAmendmentCancelled",
-      "contract": "src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentCancelled.cs",
-      "reducers": [
-        {
-          "aggregate": "TypeIIObservationCalendar",
-          "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-        }
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "ObservationPeriodAmendmentCompleted",
-      "contract": "src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentCompleted.cs",
-      "reducers": [
-        {
-          "aggregate": "TypeIIObservationCalendar",
-          "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "ObservationPeriodAmendmentReserved",
-      "contract": "src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentReserved.cs",
-      "reducers": [
-        {
-          "aggregate": "TypeIIObservationCalendar",
-          "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-      ],
-      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -4852,7 +4806,12 @@
       "emitters": [
         "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIRangeHost.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -4882,40 +4841,6 @@
       "note": "T3-01 #310 closes through ObservationPeriodCloseFrozen"
     },
     {
-      "fact": "ObservationPeriodReservationReleased",
-      "contract": "src/Compliance.Common/Features/Operations/ObservationPeriodReservationReleased.cs",
-      "reducers": [
-        {
-          "aggregate": "TypeIIObservationCalendar",
-          "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "ObservationPeriodReserved",
-      "contract": "src/Compliance.Common/Features/Operations/ObservationPeriodReserved.cs",
-      "reducers": [
-        {
-          "aggregate": "TypeIIObservationCalendar",
-          "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
       "fact": "ObservationPeriodStarted",
       "contract": "src/Compliance.Common/Features/Operations/ObservationPeriodStarted.cs",
       "reducers": [
@@ -4927,7 +4852,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -8498,6 +8425,117 @@
       ],
       "disposition": "aggregate_fact",
       "note": ""
+    },
+    {
+      "fact": "TypeIIPeriodAmendmentAccepted",
+      "contract": "src/Compliance.Common/Features/Operations/TypeIIPeriodAmendmentAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "TypeIIPeriod",
+          "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TypeIIPeriodAmendmentCanceled",
+      "contract": "src/Compliance.Common/Features/Operations/TypeIIPeriodAmendmentCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "TypeIIPeriod",
+          "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIRangeHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TypeIIPeriodOpeningAccepted",
+      "contract": "src/Compliance.Common/Features/Operations/TypeIIPeriodOpeningAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "TypeIIPeriod",
+          "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TypeIIPeriodOpeningRejected",
+      "contract": "src/Compliance.Common/Features/Operations/TypeIIPeriodOpeningRejected.cs",
+      "reducers": [
+        {
+          "aggregate": "TypeIIPeriod",
+          "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIRangeHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TypeIIPeriodRangeAuthorized",
+      "contract": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "TypeIIObservationCalendar",
+          "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TypeIIPeriodRangeSettled",
+      "contract": "src/Compliance.Common/Features/Operations/TypeIIPeriodRangeSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "TypeIIObservationCalendar",
+          "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     }
   ],
   "aggregates": [
@@ -11654,22 +11692,19 @@
       "aggregate": "TypeIIObservationCalendar",
       "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
       "appliedFacts": [
-        "ObservationPeriodAmendmentCancelled",
-        "ObservationPeriodAmendmentCompleted",
-        "ObservationPeriodAmendmentReserved",
-        "ObservationPeriodReservationReleased",
-        "ObservationPeriodReserved"
+        "TypeIIPeriodRangeAuthorized",
+        "TypeIIPeriodRangeSettled"
       ],
-      "commandRequests": [
-        "AmendTypeIIObservationPeriod",
-        "FreezeTypeIIPeriodClose",
-        "StartTypeIIObservationPeriod"
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "AcquireTypeIIPeriodRange",
+        "SettleTypeIIPeriodRange"
       ],
-      "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIObservationCalendarTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIRangeFixture.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11682,17 +11717,26 @@
         "ObservationPeriodCloseFrozen",
         "ObservationPeriodCloseProposed",
         "ObservationPeriodStarted",
+        "TypeIIPeriodAmendmentAccepted",
+        "TypeIIPeriodAmendmentCanceled",
         "TypeIIPeriodCloseAmended",
-        "TypeIIPeriodCloseApproved"
+        "TypeIIPeriodCloseApproved",
+        "TypeIIPeriodOpeningAccepted",
+        "TypeIIPeriodOpeningRejected"
       ],
       "commandRequests": [
         "AmendTypeIIObservationPeriod",
         "ApproveTypeIIPeriodClose",
+        "CancelTypeIIPeriodAmendment",
         "FreezeTypeIIPeriodClose",
         "GenerateDueControlOccurrences",
         "StartTypeIIObservationPeriod"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "ApplyTypeIIPeriodRange",
+        "RejectTypeIIPeriodAmendment",
+        "RejectTypeIIPeriodOpening"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs",
         "test/Compliance.Tests/Features/AuditPopulations/DefineAuditPopulationHandlerTests.cs",
@@ -11700,8 +11744,12 @@
         "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/TypeIIPeriodTests.cs",
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs",
         "test/Compliance.Tests/Features/Programs/ProposeProgramRolloverHandlerTests.cs",
-        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIPeriodTestExtensions.cs",
+        "test/Compliance.Tests/Testing/TypeIIRangeFixture.cs",
+        "test/Compliance.Tests/Testing/TypeIIRangeHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12471,7 +12519,7 @@
     {
       "request": "AmendTypeIIObservationPeriod",
       "contract": "src/Compliance.Common/Features/Operations/AmendTypeIIObservationPeriod.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -12486,12 +12534,12 @@
         "TypeIIPeriod"
       ],
       "aggregateTargets": [
-        "TypeIIObservationCalendar",
         "TypeIIPeriod"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIRangeFixture.cs"
       ],
       "note": ""
     },
@@ -16331,11 +16379,9 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "TypeIIObservationCalendar",
         "TypeIIPeriod"
       ],
       "aggregateTargets": [
-        "TypeIIObservationCalendar",
         "TypeIIPeriod"
       ],
       "helperServices": [],
@@ -28111,7 +28157,7 @@
     {
       "request": "StartTypeIIObservationPeriod",
       "contract": "src/Compliance.Common/Features/Operations/StartTypeIIObservationPeriod.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28122,18 +28168,17 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "TypeIIObservationCalendar",
         "TypeIIPeriod"
       ],
       "aggregateTargets": [
-        "TypeIIObservationCalendar",
         "TypeIIPeriod"
       ],
       "helperServices": [
         "TypeIIPlanAggregate"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs"
+        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIRangeFixture.cs"
       ],
       "note": ""
     },
@@ -28822,6 +28867,157 @@
         "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs"
       ],
       "note": "Typed delivery outcome: the relay accepted one attempt. Technical state of the delivery ledger, not a fact of the address stream; an outcome of a replaced attempt is ignored. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "AcquireTypeIIPeriodRange",
+      "contract": "src/Compliance.Common/Features/Operations/AcquireTypeIIPeriodRange.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, ITypeIIRangeReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AcquireTypeIIPeriodRangeHandler",
+          "source": "src/Compliance.Core/Features/Operations/AcquireTypeIIPeriodRangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TypeIIObservationCalendar"
+      ],
+      "helperServices": [
+        "TypeIIRangeReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+      ],
+      "note": "System-only Type II range process receiver; holds the exact old and new range on the program calendar, or rejects the opening or amendment on a proven overlap. No HTTP/MCP route."
+    },
+    {
+      "request": "ApplyTypeIIPeriodRange",
+      "contract": "src/Compliance.Common/Features/Operations/ApplyTypeIIPeriodRange.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, ITypeIIRangeReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyTypeIIPeriodRangeHandler",
+          "source": "src/Compliance.Core/Features/Operations/ApplyTypeIIPeriodRangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TypeIIPeriod"
+      ],
+      "helperServices": [
+        "TypeIIRangeReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+      ],
+      "note": "System-only Type II range process receiver; applies the exact persisted opening or amendment with the calendar permit unless a period-local fence won. No HTTP/MCP route."
+    },
+    {
+      "request": "CancelTypeIIPeriodAmendment",
+      "contract": "src/Compliance.Common/Features/Operations/CancelTypeIIPeriodAmendment.cs",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
+      "classification": "command",
+      "handlers": [
+        {
+          "name": "CancelTypeIIPeriodAmendmentHandler",
+          "source": "src/Compliance.Core/Features/Operations/CancelTypeIIPeriodAmendmentHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "TypeIIPeriod"
+      ],
+      "aggregateTargets": [
+        "TypeIIPeriod"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs",
+        "test/Compliance.Tests/Testing/TypeIIRangeFixture.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "RejectTypeIIPeriodAmendment",
+      "contract": "src/Compliance.Common/Features/Operations/RejectTypeIIPeriodAmendment.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, ITypeIIRangeReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RejectTypeIIPeriodAmendmentHandler",
+          "source": "src/Compliance.Core/Features/Operations/RejectTypeIIPeriodAmendmentHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TypeIIPeriod"
+      ],
+      "helperServices": [
+        "TypeIIRangeReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+      ],
+      "note": "System-only abort receiver; rejects a pending amendment only on a calendar conflict proven against the calendar. No HTTP/MCP route."
+    },
+    {
+      "request": "RejectTypeIIPeriodOpening",
+      "contract": "src/Compliance.Common/Features/Operations/RejectTypeIIPeriodOpening.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, ITypeIIRangeReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RejectTypeIIPeriodOpeningHandler",
+          "source": "src/Compliance.Core/Features/Operations/RejectTypeIIPeriodOpeningHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TypeIIPeriod"
+      ],
+      "helperServices": [
+        "TypeIIRangeReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+      ],
+      "note": "System-only abort receiver; rejects a pending opening only on a calendar conflict proven against the calendar. No HTTP/MCP route."
+    },
+    {
+      "request": "SettleTypeIIPeriodRange",
+      "contract": "src/Compliance.Common/Features/Operations/SettleTypeIIPeriodRange.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, ITypeIIRangeReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleTypeIIPeriodRangeHandler",
+          "source": "src/Compliance.Core/Features/Operations/SettleTypeIIPeriodRangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TypeIIObservationCalendar"
+      ],
+      "helperServices": [
+        "TypeIIRangeReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
+      ],
+      "note": "System-only Type II range process receiver; settles exactly the reservation named by the period fact. No HTTP/MCP route."
     }
   ],
   "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",

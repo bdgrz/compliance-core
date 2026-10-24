@@ -1,5 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -9,216 +11,135 @@ public sealed class TypeIIObservationCalendarTests
 {
     static readonly Uuid TenantId = Uuid.CreateVersion4();
     static readonly Uuid ProgramId = Uuid.CreateVersion4();
-    static readonly Uuid ActorId = Uuid.CreateVersion4();
-    static readonly DateOnly PeriodStart = new(2026, 10, 1);
-    static readonly DateOnly PeriodEnd = new(2027, 9, 30);
-    static readonly DateTimeOffset ReservedAt = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
+    static readonly DateTimeOffset At = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
+    static readonly ObservationRange Year = new(new DateOnly(2026, 10, 1), new DateOnly(2027, 9, 30));
+    static readonly ImmutableContentRef Intent = new(Uuid.Parse("00000000-0000-4000-8000-0000000000a1",
+        System.Globalization.CultureInfo.InvariantCulture), new string('a', 64), 2, "application/json",
+        "type-i-i-range-intent.v1");
 
     [Fact]
-    public void ShouldRetainExactReservationGivenFirstPeriodStart()
-    {
-        // Arrange
-        var periodId = Uuid.CreateVersion4();
-        var planId = Uuid.CreateVersion4();
-        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
-
-        // Act
-        var failure = calendar.Reserve(periodId, Uuid.CreateVersion4(), planId,
-            PeriodStart, PeriodEnd, Hash('a'), ActorId, "Compliance lead", ReservedAt);
-
-        // Assert
-        Assert.Null(failure);
-        var reservation = Assert.Single(calendar.Current!.Periods);
-        Assert.Equal(periodId, reservation.PeriodId);
-        Assert.Equal(planId, reservation.PlanId);
-        Assert.Equal(PeriodStart, reservation.PeriodStart);
-        Assert.Equal(PeriodEnd, reservation.PeriodEnd);
-        Assert.Equal(Hash('a'), reservation.OpeningSnapshotSha256);
-        Assert.Equal(1, calendar.Revision);
-    }
-
-    [Fact]
-    public void ShouldRejectOverlappingPeriodGivenExistingProgramReservation()
-    {
-        // Arrange
-        var calendar = CalendarWithReservation(PeriodStart, PeriodEnd);
-        var periodId = Uuid.CreateVersion4();
-
-        // Act
-        var failure = calendar.Reserve(periodId, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            PeriodStart.AddMonths(6), PeriodEnd.AddMonths(6), Hash('b'), ActorId,
-            "Compliance lead", ReservedAt.AddMinutes(1));
-
-        // Assert
-        Assert.Equal(CommandFailureCode.StateConflict, failure?.Code);
-        Assert.Single(calendar.Current!.Periods);
-        Assert.Equal(1, calendar.Revision);
-    }
-
-    [Fact]
-    public void ShouldAllowAdjacentPeriodsGivenNonOverlappingProgramBoundaries()
-    {
-        // Arrange
-        var calendar = CalendarWithReservation(PeriodStart, PeriodEnd);
-
-        // Act
-        var failure = calendar.Reserve(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), PeriodEnd.AddDays(1), PeriodEnd.AddYears(1), Hash('b'),
-            ActorId, "Compliance lead", ReservedAt.AddMinutes(1));
-
-        // Assert
-        Assert.Null(failure);
-        Assert.Equal(2, calendar.Current!.Periods.Count);
-    }
-
-    [Fact]
-    public void ShouldTreatSameReservationAsIdempotentGivenLaterRetryTime()
-    {
-        // Arrange
-        var periodId = Uuid.CreateVersion4();
-        var examinationId = Uuid.CreateVersion4();
-        var planId = Uuid.CreateVersion4();
-        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
-        Assert.Null(calendar.Reserve(periodId, examinationId, planId, PeriodStart, PeriodEnd,
-            Hash('a'), ActorId, "Compliance lead", ReservedAt));
-
-        // Act
-        var retry = calendar.Reserve(periodId, examinationId, planId, PeriodStart, PeriodEnd,
-            Hash('a'), ActorId, "Compliance lead", ReservedAt.AddHours(1));
-
-        // Assert
-        Assert.Null(retry);
-        Assert.Single(calendar.Current!.Periods);
-        Assert.Equal(1, calendar.Revision);
-        Assert.Equal(ReservedAt, calendar.Current.Periods[0].CreatedAt);
-    }
-
-    [Fact]
-    public void ShouldKeepOriginalRangeUntilReservedAmendmentCompletesGivenProgramReservation()
-    {
-        // Arrange
-        var calendar = CalendarWithReservation(PeriodStart, PeriodEnd);
-        var periodId = calendar.Current!.Periods[0].PeriodId;
-        var amendedStart = PeriodStart.AddDays(-30);
-        var amendedEnd = PeriodEnd.AddDays(-30);
-
-        // Act
-        var reserved = calendar.BeginAmendment(periodId, amendedStart, amendedEnd,
-            "Align with the approved testing window", ActorId, "Compliance lead",
-            ReservedAt.AddMinutes(1));
-
-        // Assert
-        Assert.Null(reserved);
-        var pending = Assert.Single(calendar.Current!.Periods);
-        Assert.Equal(PeriodStart, pending.PeriodStart);
-        Assert.Equal(PeriodEnd, pending.PeriodEnd);
-        Assert.Equal(amendedStart, pending.PendingAmendment!.PeriodStart);
-        Assert.Equal(amendedEnd, pending.PendingAmendment.PeriodEnd);
-
-        // Act
-        var completed = calendar.CompleteAmendment(periodId, amendedStart, amendedEnd,
-            "Align with the approved testing window", ActorId, "Compliance lead",
-            ReservedAt.AddMinutes(2));
-
-        // Assert
-        Assert.Null(completed);
-        var amended = Assert.Single(calendar.Current!.Periods);
-        Assert.Equal(amendedStart, amended.PeriodStart);
-        Assert.Equal(amendedEnd, amended.PeriodEnd);
-        Assert.Null(amended.PendingAmendment);
-        Assert.Equal(amendedEnd, amended.LastAmendment!.PeriodEnd);
-        Assert.Equal(3, calendar.Revision);
-    }
-
-    [Fact]
-    public void ShouldReservePendingAmendmentRangeAgainstNewPeriodsGivenPendingAmendment()
-    {
-        // Arrange
-        var calendar = CalendarWithReservation(PeriodStart, PeriodEnd);
-        var periodId = calendar.Current!.Periods[0].PeriodId;
-        var amendedStart = PeriodEnd.AddDays(1);
-        var amendedEnd = PeriodEnd.AddYears(1);
-        Assert.Null(calendar.BeginAmendment(periodId, amendedStart, amendedEnd,
-            "Align with the approved testing window", ActorId, "Compliance lead",
-            ReservedAt.AddMinutes(1)));
-
-        // Act
-        var failure = calendar.Reserve(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), amendedStart, amendedEnd, Hash('b'), ActorId,
-            "Compliance lead", ReservedAt.AddMinutes(2));
-
-        // Assert
-        Assert.Equal(CommandFailureCode.StateConflict, failure?.Code);
-        Assert.Single(calendar.Current!.Periods);
-        Assert.Equal(2, calendar.Revision);
-    }
-
-    [Fact]
-    public void ShouldCancelFailedAmendmentReservationAndAllowRangeReuseGivenPendingAmendment()
-    {
-        // Arrange
-        var calendar = CalendarWithReservation(PeriodStart, PeriodEnd);
-        var periodId = calendar.Current!.Periods[0].PeriodId;
-        var amendedStart = PeriodEnd.AddDays(1);
-        var amendedEnd = PeriodEnd.AddYears(1);
-        const string reason = "Align with the approved testing window";
-        Assert.Null(calendar.BeginAmendment(periodId, amendedStart, amendedEnd, reason,
-            ActorId, "Compliance lead", ReservedAt.AddMinutes(1)));
-
-        // Act
-        var cancelled = calendar.CancelAmendment(periodId, amendedStart, amendedEnd, reason,
-            ActorId, "Compliance lead", ReservedAt.AddMinutes(2));
-        var reserve = calendar.Reserve(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), amendedStart, amendedEnd, Hash('b'), ActorId,
-            "Compliance lead", ReservedAt.AddMinutes(3));
-
-        // Assert
-        Assert.Null(cancelled);
-        Assert.Null(reserve);
-        Assert.Null(calendar.Current!.Periods.Single(item => item.PeriodId == periodId)
-            .PendingAmendment);
-        Assert.Equal(4, calendar.Revision);
-        Assert.Equal(2, calendar.Current.Periods.Count);
-    }
-
-    [Fact]
-    public void ShouldRejectAmendmentThatOverlapsAnotherPeriodGivenExistingReservation()
+    public void ShouldRefuseOverlapGivenInclusiveEndpointsOfAnotherPeriodRange()
     {
         // Arrange
         var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
-        var first = Uuid.CreateVersion4();
-        var second = Uuid.CreateVersion4();
-        Assert.Null(calendar.Reserve(first, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            PeriodStart, PeriodEnd, Hash('a'), ActorId, "Compliance lead", ReservedAt));
-        Assert.Null(calendar.Reserve(second, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            PeriodEnd.AddYears(1).AddDays(1), PeriodEnd.AddYears(2), Hash('b'), ActorId,
-            "Compliance lead", ReservedAt.AddMinutes(1)));
+        Authorize(calendar, Uuid.CreateVersion4(), Uuid.CreateVersion4(), Year);
 
         // Act
-        var failure = calendar.BeginAmendment(second, PeriodEnd, PeriodEnd.AddYears(1),
-            "Align with the approved testing window", ActorId, "Compliance lead",
-            ReservedAt.AddMinutes(2));
+        var sharedLastDay = Refusal(calendar, new ObservationRange(Year.UntilInclusive, Year.UntilInclusive.AddDays(30)));
+        var sharedFirstDay = Refusal(calendar, new ObservationRange(Year.From.AddDays(-30), Year.From));
+        var adjacentAfter = Refusal(calendar, new ObservationRange(Year.UntilInclusive.AddDays(1), Year.UntilInclusive.AddDays(30)));
+        var adjacentBefore = Refusal(calendar, new ObservationRange(Year.From.AddDays(-30), Year.From.AddDays(-1)));
 
         // Assert
-        Assert.Equal(CommandFailureCode.StateConflict, failure?.Code);
-        Assert.Null(calendar.Current!.Periods.Single(item => item.PeriodId == second)
-            .PendingAmendment);
-        Assert.Equal(2, calendar.Revision);
+        Assert.Equal(RequestErrorKind.Conflict, sharedLastDay?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, sharedFirstDay?.Kind);
+        Assert.Null(adjacentAfter);
+        Assert.Null(adjacentBefore);
     }
 
     [Fact]
-    public void ShouldReplayReservedAndCompletedAmendmentGivenCommittedCalendarEvents()
+    public void ShouldHoldOldAndNewRangeUntilActivatedGivenAmendmentOfOnePeriod()
     {
         // Arrange
-        var calendar = CalendarWithReservation(PeriodStart, PeriodEnd);
-        var periodId = calendar.Current!.Periods[0].PeriodId;
-        var amendedStart = PeriodStart.AddDays(-30);
-        var amendedEnd = PeriodEnd.AddDays(-30);
-        const string reason = "Align with the approved testing window";
-        Assert.Null(calendar.BeginAmendment(periodId, amendedStart, amendedEnd, reason,
-            ActorId, "Compliance lead", ReservedAt.AddMinutes(1)));
-        Assert.Null(calendar.CompleteAmendment(periodId, amendedStart, amendedEnd, reason,
-            ActorId, "Compliance lead", ReservedAt.AddMinutes(2)));
+        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var (period, opening, amendment) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var moved = new ObservationRange(Year.From.AddMonths(1), Year.UntilInclusive.AddMonths(1));
+        Authorize(calendar, period, opening, Year);
+        Settle(calendar, period, TypeIIRangeSettlementKind.Activated, opening, null);
+
+        // Act
+        var authorized = Authorize(calendar, period, amendment, moved, opening);
+        var oldHeld = Refusal(calendar, Year);
+        var newHeld = Refusal(calendar, moved);
+        Settle(calendar, period, TypeIIRangeSettlementKind.Activated, amendment, opening);
+        var oldReleased = Refusal(calendar, new ObservationRange(Year.From, Year.From.AddDays(10)));
+        var newStillHeld = Refusal(calendar, moved);
+
+        // Assert
+        Assert.True(authorized.IsSuccess, authorized.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, oldHeld?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, newHeld?.Kind);
+        Assert.Null(oldReleased);
+        Assert.Equal(RequestErrorKind.Conflict, newStillHeld?.Kind);
+        Assert.Equal(TypeIIRangeReservationState.Released, calendar.Find(opening)!.State);
+        Assert.Equal(TypeIIRangeReservationState.Active, calendar.Find(amendment)!.State);
+        Assert.Equal([1L, 2L], new[] { calendar.Find(opening)!.Generation, calendar.Find(amendment)!.Generation });
+    }
+
+    [Fact]
+    public void ShouldReleaseOnlyPendingRangeGivenCanceledAmendmentAndKeepOldActive()
+    {
+        // Arrange
+        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var (period, opening, amendment) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var moved = new ObservationRange(Year.From.AddMonths(1), Year.UntilInclusive.AddMonths(1));
+        Authorize(calendar, period, opening, Year);
+        Settle(calendar, period, TypeIIRangeSettlementKind.Activated, opening, null);
+        Authorize(calendar, period, amendment, moved, opening);
+
+        // Act
+        var released = Settle(calendar, period, TypeIIRangeSettlementKind.Released, amendment, null);
+        var oldHeld = Refusal(calendar, Year);
+        var newFree = Refusal(calendar, new ObservationRange(moved.UntilInclusive.AddDays(1).AddMonths(1), moved.UntilInclusive.AddMonths(2)));
+        var newReleased = Refusal(calendar, new ObservationRange(Year.UntilInclusive.AddDays(1), moved.UntilInclusive));
+
+        // Assert
+        Assert.True(released.IsSuccess, released.Error?.Message);
+        Assert.Equal(TypeIIRangeReservationState.Active, calendar.Find(opening)!.State);
+        Assert.Equal(TypeIIRangeReservationState.Released, calendar.Find(amendment)!.State);
+        Assert.Equal(RequestErrorKind.Conflict, oldHeld?.Kind);
+        Assert.Null(newFree);
+        Assert.Null(newReleased);
+    }
+
+    [Fact]
+    public void ShouldRefuseLateAcquisitionGivenOperationFencedBeforeAnyGrant()
+    {
+        // Arrange
+        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var (period, operation) = (Uuid.CreateVersion4(), Uuid.CreateVersion4());
+
+        // Act
+        var fenced = Settle(calendar, period, TypeIIRangeSettlementKind.Fenced, operation, null);
+        var late = Authorize(calendar, period, operation, Year, tryOnly: true);
+
+        // Assert
+        Assert.True(fenced.IsSuccess, fenced.Error?.Message);
+        Assert.Equal(TypeIIRangeReservationState.Fenced, calendar.Find(operation)!.State);
+        Assert.Equal(RequestErrorKind.Conflict, late.Error?.Kind);
+        Assert.Equal(0L, calendar.ReservationGeneration);
+    }
+
+    [Fact]
+    public void ShouldRefuseSettlementGivenAnotherPeriodOrAlreadyReleasedReservation()
+    {
+        // Arrange
+        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var (period, other, operation) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        Authorize(calendar, period, operation, Year);
+
+        // Act
+        var wrongPeriod = Settle(calendar, other, TypeIIRangeSettlementKind.Released, operation, null);
+        var released = Settle(calendar, period, TypeIIRangeSettlementKind.Released, operation, null);
+        var again = Settle(calendar, period, TypeIIRangeSettlementKind.Released, operation, null);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, wrongPeriod.Error?.Kind);
+        Assert.True(released.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, again.Error?.Kind);
+    }
+
+    [Fact]
+    public void ShouldRebuildReservationsFromOrderedFactsGivenReplay()
+    {
+        // Arrange
+        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+        var (period, opening, amendment) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var moved = new ObservationRange(Year.From.AddMonths(1), Year.UntilInclusive.AddMonths(1));
+        Authorize(calendar, period, opening, Year);
+        Settle(calendar, period, TypeIIRangeSettlementKind.Activated, opening, null);
+        Authorize(calendar, period, amendment, moved, opening);
+        Settle(calendar, period, TypeIIRangeSettlementKind.Activated, amendment, opening);
         var events = new AggregateScenario<TypeIIObservationCalendar>(calendar).PendingEvents.ToArray();
 
         // Act
@@ -227,65 +148,34 @@ public sealed class TypeIIObservationCalendarTests
 
         // Assert
         Assert.Equal(calendar.Revision, replay.Revision);
-        var original = Assert.Single(calendar.Current!.Periods);
-        var replayed = Assert.Single(replay.Current!.Periods);
-        Assert.Equal(original.PeriodStart, replayed.PeriodStart);
-        Assert.Equal(original.PeriodEnd, replayed.PeriodEnd);
-        Assert.Equal(original.LastAmendment, replayed.LastAmendment);
-        Assert.Null(replayed.PendingAmendment);
+        Assert.Equal(calendar.ReservationGeneration, replay.ReservationGeneration);
+        Assert.Equal(TypeIIRangeReservationState.Released, replay.Find(opening)!.State);
+        Assert.Equal(TypeIIRangeReservationState.Active, replay.Find(amendment)!.State);
+        Assert.Equal(moved, replay.Find(amendment)!.Range);
     }
 
-    [Fact]
-    public void ShouldAllowDateReuseAfterClosingPeriodGivenReleasedReservation()
+    static RequestError? Refusal(TypeIIObservationCalendar calendar, ObservationRange range) =>
+        calendar.FindOverlap(Uuid.CreateVersion4(), range) is null
+            ? null
+            : new RequestError(RequestErrorKind.Conflict, "overlap");
+
+    static Result Authorize(TypeIIObservationCalendar calendar, Uuid period, Uuid operation, ObservationRange range,
+        Uuid? prior = null, bool tryOnly = false)
     {
-        // Arrange
-        var calendar = CalendarWithReservation(PeriodStart, PeriodEnd);
-        var closedPeriodId = calendar.Current!.Periods[0].PeriodId;
-
-        // Act
-        var released = calendar.Release(closedPeriodId, Uuid.CreateVersion4(), Hash('c'),
-            ActorId, "Compliance lead", ReservedAt.AddDays(1));
-        var reused = calendar.Reserve(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), PeriodStart, PeriodEnd, Hash('b'), ActorId,
-            "Compliance lead", ReservedAt.AddDays(2));
-
-        // Assert
-        Assert.Null(released);
-        Assert.Null(reused);
-        Assert.Equal(3, calendar.Revision);
-        Assert.False(calendar.Current!.Periods.Single(item =>
-            item.PeriodId == closedPeriodId).IsActive);
-        Assert.True(calendar.Current.Periods.Single(item =>
-            item.PeriodId != closedPeriodId).IsActive);
+        var kind = prior is null ? TypeIIRangeOperationKind.Opening : TypeIIRangeOperationKind.Amendment;
+        var authorized = calendar.Authorize(Provenance(calendar, operation), Intent, period, kind, range, prior);
+        Assert.True(tryOnly || authorized.IsSuccess, authorized.Error?.Message);
+        return authorized;
     }
 
-    [Fact]
-    public void ShouldReplayReservationReleaseGivenFrozenCloseSnapshot()
-    {
-        // Arrange
-        var calendar = CalendarWithReservation(PeriodStart, PeriodEnd);
-        var periodId = calendar.Current!.Periods[0].PeriodId;
-        var closeSnapshotId = Uuid.CreateVersion4();
-        Assert.Null(calendar.Release(periodId, closeSnapshotId, Hash('c'), ActorId,
-            "Compliance lead", ReservedAt.AddDays(1)));
-        var events = new AggregateScenario<TypeIIObservationCalendar>(calendar).PendingEvents.ToArray();
+    static Result Settle(TypeIIObservationCalendar calendar, Uuid period, TypeIIRangeSettlementKind kind, Uuid operation,
+        Uuid? released) => calendar.Settle(Provenance(calendar, Uuid.CreateVersion4(), operation), Intent, period, kind,
+        operation, released);
 
-        // Act
-        var replay = new AggregateScenario<TypeIIObservationCalendar>(
-            new TypeIIObservationCalendar(TenantId, ProgramId)).Given(events).Aggregate;
+    static OperationProvenance Provenance(TypeIIObservationCalendar calendar, Uuid operation) =>
+        Provenance(calendar, Uuid.CreateVersion4(), operation);
 
-        // Assert
-        Assert.Equal(2, replay.Revision);
-        Assert.False(Assert.Single(replay.Current!.Periods).IsActive);
-    }
-
-    static TypeIIObservationCalendar CalendarWithReservation(DateOnly start, DateOnly end)
-    {
-        var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
-        Assert.Null(calendar.Reserve(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), start, end, Hash('a'), ActorId, "Compliance lead", ReservedAt));
-        return calendar;
-    }
-
-    static string Hash(char value) => new(value, 64);
+    static OperationProvenance Provenance(TypeIIObservationCalendar calendar, Uuid logicalId, Uuid root) => new(logicalId,
+        root, null, "Synthetic", ActorReference.ForMember(Uuid.CreateVersion4(), "Compliance lead"), calendar.Stream,
+        "initial", null, new string('b', 64), At, calendar.Stream, calendar.Stream);
 }
