@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
@@ -17,12 +18,19 @@ public sealed class GetControlDraftRevisionHandler(IControlDraftDirectoryReader 
             request.ControlId, request.Revision, ct).ConfigureAwait(false);
         if (!freshness.IsSuccess)
             return Result<ControlDraftRevisionView>.Failure(freshness.Error);
-        var revision = await directory.GetRevisionAsync(request.TenantId, request.ControlId,
-            request.Revision, ct).ConfigureAwait(false);
-        return revision is not null && revision.TenantId == request.TenantId &&
-               revision.ProgramId == request.ProgramId && revision.ControlId == request.ControlId
-            ? Result<ControlDraftRevisionView>.Success(revision)
-            : Result<ControlDraftRevisionView>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The control draft revision projection is incomplete.", isTransient: true));
+        try
+        {
+            var revision = await directory.GetRevisionAsync(request.TenantId, request.ControlId,
+                request.Revision, ct).ConfigureAwait(false);
+            return revision is not null && revision.TenantId == request.TenantId &&
+                   revision.ProgramId == request.ProgramId && revision.ControlId == request.ControlId
+                ? Result<ControlDraftRevisionView>.Success(revision)
+                : Result<ControlDraftRevisionView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The control draft revision projection is incomplete.", isTransient: true));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<ControlDraftRevisionView>.Failure(ControlReadFailure.Of(error));
+        }
     }
 }

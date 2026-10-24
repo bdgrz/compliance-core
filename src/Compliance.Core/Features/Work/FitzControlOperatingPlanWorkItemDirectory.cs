@@ -9,7 +9,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Work;
 
 sealed class FitzControlOperatingPlanWorkItemDirectory(IKvClient client,
-    IAggregateReader sourceReader, IImmutableContentStore content)
+    ControlReader controlSources, IImmutableContentStore content)
     : FitzKvProjectionStore(client,
         "kv://bdgrz/accountable-work-items/control-operating-plans-v1", ProjectorName),
       IAccountableWorkItemDirectoryReader, IControlOperatingPlanWorkItemProjection
@@ -74,7 +74,11 @@ sealed class FitzControlOperatingPlanWorkItemDirectory(IKvClient client,
         await IncrementRevisionAsync(ct).ConfigureAwait(false);
     }
 
-    public async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+    public ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+        Uuid programId, CancellationToken ct = default) =>
+        ControlSourceFailures.ClassifyAsync(() => LoadProgramCoreAsync(tenantId, programId, ct));
+
+    async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramCoreAsync(Uuid tenantId,
         Uuid programId, CancellationToken ct = default)
     {
         var candidates = new List<WorkCandidate>();
@@ -94,7 +98,7 @@ sealed class FitzControlOperatingPlanWorkItemDirectory(IKvClient client,
                     plan.Revision < 1)
                     return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
 
-                var control = await ControlOperationsSource.LoadControlAsync(sourceReader, tenantId,
+                var control = await ControlOperationsSource.LoadControlAsync(controlSources, tenantId,
                     programId, plan.ControlId, ct).ConfigureAwait(false);
                 if (control is null || control.IsRetired ||
                     control.ApprovedVersion is not { Status: ControlOperationStates.Approved } current ||

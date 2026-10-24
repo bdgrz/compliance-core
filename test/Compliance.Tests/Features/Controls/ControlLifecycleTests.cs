@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Text.Json;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -198,8 +199,8 @@ public sealed class ControlLifecycleTests
     public void ShouldRejectDiscardGivenDraftWithAssignedResponsibility()
     {
         // Arrange
-        var controlId = ControlDraft.IdFor(TenantId, ProgramId, "LC-08");
-        var control = new ControlDraft(TenantId, controlId);
+        var controlId = ControlRules.IdFor(TenantId, ProgramId, "LC-08");
+        var control = new ControlRules(TenantId, controlId);
         Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "LC-08", Content(),
             AuthorId, "Author", Now).IsSuccess);
         var assignmentId = Uuid.CreateVersion4();
@@ -233,7 +234,7 @@ public sealed class ControlLifecycleTests
     }
 
     [Fact]
-    public void ShouldReplaySupersessionAndRetirementGivenRoundTrippedEvents()
+    public async Task ShouldReplaySupersessionAndRetirementGivenRoundTrippedEvents()
     {
         // Arrange
         var source = Approved("LC-10");
@@ -250,13 +251,8 @@ public sealed class ControlLifecycleTests
             ReviewerId, "Reviewer", Now.AddHours(5)));
         Assert.Null(source.Retire(ProgramId, source.Revision, Uuid.CreateVersion4(),
             retirementReview, Digest, "Retire", ApproverId, "Approver", Now.AddHours(6)));
-        var events = new AggregateScenario<ControlDraft>(source).PendingEvents;
-        var seeded = events.Select((ev, index) =>
-            DomainEventSeed.Attach(RoundTrip(ev), source.Id, (ulong)index + 1)).ToArray();
-
         // Act
-        var replayed = new AggregateScenario<ControlDraft>(new ControlDraft(TenantId, source.Id))
-            .Given(seeded).Aggregate;
+        var replayed = await ControlNativeRuleReplay.ReadAsync(source);
 
         // Assert
         Assert.Equal(source.ReadVersions().Select(Key), replayed.ReadVersions().Select(Key));
@@ -269,14 +265,10 @@ public sealed class ControlLifecycleTests
         (version.VersionId, version.Status, version.EffectiveFrom, version.EffectiveUntil,
             version.PredecessorVersionId);
 
-    static DomainEvent RoundTrip(DomainEvent ev) => (DomainEvent)JsonSerializer.Deserialize(
-        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonContext.Default),
-        ev.GetType(), ComplianceCoreJsonContext.Default)!;
-
-    static ControlDraft Approved(string identifier)
+    static ControlRules Approved(string identifier)
     {
-        var controlId = ControlDraft.IdFor(TenantId, ProgramId, identifier);
-        var control = new ControlDraft(TenantId, controlId);
+        var controlId = ControlRules.IdFor(TenantId, ProgramId, identifier);
+        var control = new ControlRules(TenantId, controlId);
         Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), identifier, Content(),
             AuthorId, "Author", Now).IsSuccess);
         var reviewId = ReviewAndAssignOwner(control, Now);
@@ -285,7 +277,7 @@ public sealed class ControlLifecycleTests
         return control;
     }
 
-    static Uuid ReviewAndAssignOwner(ControlDraft control, DateTimeOffset at)
+    static Uuid ReviewAndAssignOwner(ControlRules control, DateTimeOffset at)
     {
         Assert.Null(AssignOwner(control, Uuid.CreateVersion4(), at));
         var reviewId = Uuid.CreateVersion4();
@@ -294,10 +286,10 @@ public sealed class ControlLifecycleTests
         return reviewId;
     }
 
-    static ResponsibilityScope Scope(ControlDraft control) => new("control", control.Id,
+    static ResponsibilityScope Scope(ControlRules control) => new("control", control.Id,
         control.DraftVersionId, control.Revision);
 
-    static CommandFailure? AssignOwner(ControlDraft control, Uuid assignmentId,
+    static CommandFailure? AssignOwner(ControlRules control, Uuid assignmentId,
         DateTimeOffset at) => control.AssignResponsibility(Scope(control), assignmentId, OwnerId,
         ResponsibilityType.ControlOwner, AuthorId, "Author", at.AddMinutes(1), at.AddMinutes(-1),
         null, []);

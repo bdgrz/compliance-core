@@ -1,40 +1,25 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-public sealed class ProposeControlSuccessorHandler(IAggregateExecutor executor,
-    IControlApplicabilityReferenceValidator applicability,
-    ControlLifecycleReleaseGate releaseGate, TimeProvider clock)
+public sealed class ProposeControlSuccessorHandler(ControlOperations operations,
+    IControlApplicabilityReferenceValidator applicability, ControlLifecycleReleaseGate releaseGate)
     : IRequestHandler<ProposeControlSuccessor, ControlSuccessorRegistration>
 {
-    public async ValueTask<Result<ControlSuccessorRegistration>> HandleAsync(
-        IRequestContext<ProposeControlSuccessor> context, CancellationToken ct)
+    public ValueTask<Result<ControlSuccessorRegistration>> HandleAsync(IRequestContext<ProposeControlSuccessor> context, CancellationToken ct)
     {
-        if (!releaseGate.IsEnabled)
-            return Result<ControlSuccessorRegistration>.Failure(
-                ControlLifecycleReleaseGate.Unavailable);
         var request = context.Request;
-        if (ControlDraft.ValidateContent(request.Content) is { } structural)
-            return Result<ControlSuccessorRegistration>.Failure(structural);
-        var validation = await applicability.ValidateAsync(request.TenantId, request.Content, ct)
-            .ConfigureAwait(false);
-        if (!validation.IsSuccess)
-            return Result<ControlSuccessorRegistration>.Failure(validation.Error);
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
-        return await executor.ExecuteAsync(new ControlDraft(request.TenantId, request.ControlId),
-            control =>
+        return operations.ExecuteAsync<ProposeControlSuccessor, ControlSuccessorRegistration>(context, request.TenantId,
+            request.ProgramId, request.ControlId, request.CommandId, nameof(ProposeControlSuccessor), null,
+            async (snapshot, actor, at, token) =>
             {
-                var failure = control.ProposeSuccessor(request.ProgramId,
-                    request.ExpectedApprovedVersionId, request.Content,
-                    RbacIds.Member(request.TenantId, userId),
-                    UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow());
-                return CommandFailureRequestAdapter.ToOutcome(failure,
-                    new ControlSuccessorRegistration(request.ControlId, control.DraftVersionId,
-                        request.ExpectedApprovedVersionId, control.Revision));
+                if (!releaseGate.IsEnabled)
+                    return Result.Failure(ControlLifecycleReleaseGate.Unavailable);
+                if (ControlDraft.ValidateContent(request.Content) is { } structural)
+                    return Result.Failure(structural);
+                return await applicability.ValidateAsync(request.TenantId, request.Content, token).ConfigureAwait(false);
             },
-            context, ct).ConfigureAwait(false);
+            (rules, actor, at) => ControlOperations.Outcome(rules.ProposeSuccessor(request.ProgramId,
+                request.ExpectedApprovedVersionId, request.Content, actor.MemberId, actor.Display, at)), null, null, ct);
     }
 }

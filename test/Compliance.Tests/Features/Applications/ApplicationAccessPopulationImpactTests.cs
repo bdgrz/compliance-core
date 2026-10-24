@@ -29,7 +29,7 @@ public sealed class ApplicationAccessPopulationImpactTests
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
             null, null, Uuid.CreateVersion4(), "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
-        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var events = new InMemoryEventStore();
         var populations = new StubPopulationDirectory(
         [
@@ -73,7 +73,7 @@ public sealed class ApplicationAccessPopulationImpactTests
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
             null, null, Uuid.CreateVersion4(), "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
-        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var events = new InMemoryEventStore();
         var populations = new StubPopulationDirectory([], nextCursor: "next");
         var handler = CreateHandler(tenantId, applicationId, sourceReader, applications,

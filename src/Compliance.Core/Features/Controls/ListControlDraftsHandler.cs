@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
@@ -18,7 +19,7 @@ public sealed class ListControlDraftsHandler(IControlDraftDirectoryReader direct
         if (!program.IsCreated)
             return Result<Page<ControlDraftView>>.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The program was not found."));
-        var ready = await consistency.EnsureCaughtUpAsync(request.TenantId, ct)
+        var ready = await consistency.CaptureAsync(request.TenantId, ct)
             .ConfigureAwait(false);
         if (!ready.IsSuccess)
             return Result<Page<ControlDraftView>>.Failure(ready.Error);
@@ -33,6 +34,13 @@ public sealed class ListControlDraftsHandler(IControlDraftDirectoryReader direct
             return Result<Page<ControlDraftView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The control draft cursor is invalid."));
         }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<Page<ControlDraftView>>.Failure(ControlReadFailure.Of(error));
+        }
+        var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(request.TenantId, ready.Value, ct).ConfigureAwait(false);
+        if (!confirmed.IsSuccess)
+            return Result<Page<ControlDraftView>>.Failure(confirmed.Error!);
         return page.Items.Any(item => item.TenantId != request.TenantId ||
                                       item.ProgramId != request.ProgramId)
             ? Result<Page<ControlDraftView>>.Failure(new RequestError(RequestErrorKind.Conflict,

@@ -37,7 +37,7 @@ public sealed class ControlOwnerPersonReadContractTests
         var actor = ActorReference.ForMember(actorId, "Saved author");
         var at = new DateTimeOffset(2026, 10, 11, 12, 0, 0, TimeSpan.Zero);
         await ProgramManagementServices.SeedAsync(factory.Services,
-            new ControlDraft(tenantId, controlId), control =>
+            new ControlRules(tenantId, controlId), control =>
             {
                 var created = control.Create(programId, Uuid.CreateVersion4(), "OWNER-HTTP",
                     new ControlDraftContent("Access review", "Review access", "Description",
@@ -58,7 +58,7 @@ public sealed class ControlOwnerPersonReadContractTests
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(
             CancellationToken.None));
         await ProgramManagementServices.SeedAsync(factory.Services,
-            new ControlDraft(tenantId, controlId), control =>
+            new ControlRules(tenantId, controlId), control =>
             {
                 Assert.Null(control.DesignatePersonOwner(programId, 1, Uuid.CreateVersion4(),
                     null, null, "Cleared.", actorId, actor, at.AddMinutes(1)));
@@ -68,7 +68,7 @@ public sealed class ControlOwnerPersonReadContractTests
         using var clearedDocument = JsonDocument.Parse(await cleared.Content.ReadAsStringAsync(
             CancellationToken.None));
         await ProgramManagementServices.SeedAsync(factory.Services,
-            new ControlDraft(tenantId, controlId), control =>
+            new ControlRules(tenantId, controlId), control =>
             {
                 Assert.Null(control.DesignatePersonOwner(programId, 1, Uuid.CreateVersion4(),
                     personId, null, "Owner restored.", actorId, actor, at.AddMinutes(2)));
@@ -131,7 +131,9 @@ public sealed class ControlOwnerPersonReadContractTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var path = document.RootElement.GetProperty("paths").GetProperty(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person");
-        Assert.True(path.TryGetProperty("put", out _));
+        var writePath = document.RootElement.GetProperty("paths").GetProperty(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person/{command_id}");
+        Assert.True(writePath.TryGetProperty("put", out _));
         var operation = path.GetProperty("get");
         Assert.Equal(["tenant_id", "program_id", "control_id"], operation.GetProperty("parameters")
             .EnumerateArray().Select(parameter => parameter.GetProperty("name").GetString()));

@@ -5,7 +5,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
 
-sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregateReader sourceReader,
+sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, ControlReader controlSources,
     IImmutableContentStore content)
     : FitzKvProjectionStore(client,
         "kv://bdgrz/accountable-work-items/control-occurrences-v1", ProjectorName),
@@ -49,7 +49,12 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
             today.AddDays(ControlCadenceSchedule.MaximumDueWithinDays), null, ct);
     }
 
-    public async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+    public ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+        Uuid programId, DateOnly today, DateOnly horizon, Uuid? workItemId,
+        CancellationToken ct = default) =>
+        ControlSourceFailures.ClassifyAsync(() => LoadProgramCoreAsync(tenantId, programId, today, horizon, workItemId, ct));
+
+    async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramCoreAsync(Uuid tenantId,
         Uuid programId, DateOnly today, DateOnly horizon, Uuid? workItemId,
         CancellationToken ct = default)
     {
@@ -152,7 +157,7 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
                  pendingPlan.Status != PendingApproval))
                 return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
 
-            var control = await ControlOperationsSource.LoadControlAsync(sourceReader, tenantId,
+            var control = await ControlOperationsSource.LoadControlAsync(controlSources, tenantId,
                 programId, controlId, ct).ConfigureAwait(false);
             if (control is null)
                 continue;

@@ -2,9 +2,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Controls;
 
@@ -17,55 +16,69 @@ public sealed class ControlDraftActorSnapshotTests
     static readonly string ContentJson = """{"title":"Access review","objective":"Review access","description":"Management reviews access","implementation_narrative":"The owner reviews access quarterly.","expected_evidence_descriptions":["Dated review record"]}""";
 
     [Fact]
-    public void ShouldSnapshotEachActorDisplayGivenDisplayChangesBetweenEvents()
+    public async Task ShouldSnapshotEachActorDisplayGivenDisplayChangesBetweenEvents()
     {
         // Arrange
+        await using var source = new ControlProjectionScenario();
         var controlId = ControlDraft.IdFor(TenantId, ProgramId, "AC-01");
-        var scenario = new AggregateScenario<ControlDraft>(new ControlDraft(TenantId, controlId));
-        Assert.True(scenario.When(control => AggregateOutcome.CommitOnSuccess(control.Create(
-            ProgramId, Uuid.CreateVersion4(), "AC-01", Content(), MemberId, "First display",
-            At))).IsSuccess);
-        var created = Assert.IsType<ControlDraftCreated>(Assert.Single(scenario.PendingEvents));
-        Assert.True(scenario.When(control => CommandFailureRequestAdapter.ToOutcome(control.Revise(
-            ProgramId, 1, Content() with { Title = "Updated review" }, MemberId, "Second display",
-            At.AddMinutes(1)))).IsSuccess);
-        var revised = Assert.IsType<ControlDraftRevised>(Assert.Single(scenario.PendingEvents));
+        var rules = new ControlRules(TenantId, controlId);
+        Assert.True(rules.Create(ProgramId, Uuid.CreateVersion4(), "AC-01", Content(), MemberId,
+            "First display", At).IsSuccess);
+        var created = Assert.IsType<ControlDraftCreated>(Assert.Single(await source.PublishAsync(rules)));
+        Assert.Null(rules.Revise(ProgramId, 1, Content() with { Title = "Updated review" }, MemberId,
+            "Second display", At.AddMinutes(1)));
+        var revised = Assert.IsType<ControlDraftRevised>(Assert.Single(await source.PublishAsync(rules)));
 
         // Act
-        Assert.True(scenario.When(control => CommandFailureRequestAdapter.ToOutcome(control.Discard(
-            ProgramId, 2, "Withdraw draft", MemberId, "Third display",
-            At.AddMinutes(2)))).IsSuccess);
+        Assert.Null(rules.Discard(ProgramId, 2, "Withdraw draft", MemberId, "Third display", At.AddMinutes(2)));
+        var discarded = Assert.IsType<ControlDraftDiscarded>(Assert.Single(await source.PublishAsync(rules)));
 
         // Assert
         Assert.Equal(ActorReference.ForMember(MemberId, "First display"), created.StoredActor);
         Assert.Equal(ActorReference.ForMember(MemberId, "Second display"), revised.StoredActor);
-        Assert.Equal([new ControlDraftDiscarded(TenantId, ProgramId, controlId, 2, MemberId,
-                "Third display", "Withdraw draft", At.AddMinutes(2))
-            {
-                StoredActor = ActorReference.ForMember(MemberId, "Third display"),
-            }], scenario.PendingEvents);
+        Assert.Equal(TenantId, discarded.TenantId);
+        Assert.Equal(ProgramId, discarded.ProgramId);
+        Assert.Equal(controlId, discarded.ControlId);
+        Assert.Equal(2, discarded.Revision);
+        Assert.Equal(MemberId, discarded.ActorMemberId);
+        Assert.Equal("Third display", discarded.ActorDisplay);
+        Assert.Equal("Withdraw draft", discarded.Rationale);
+        Assert.Equal(At.AddMinutes(2), discarded.DiscardedAt);
+        Assert.Equal(ActorReference.ForMember(MemberId, "Third display"), discarded.StoredActor);
+        Assert.Equal(nameof(DiscardControlDraft), discarded.Operation.CommandKind);
+        var retained = await source.Reader.HydrateAsync(new ControlDraft(TenantId, controlId));
+        Assert.Equal(rules.SourcePhysicalPosition, retained.CommittedStreamPosition);
+        Assert.False(retained.IsVisible);
     }
 
     [Fact]
-    public void ShouldReplayLegacyEventsWithMemberActorGivenEventsWithoutActor()
+    public async Task ShouldReplayLegacyEventsWithMemberActorGivenEventsWithoutActor()
     {
         // Arrange
+        await using var source = new ControlProjectionScenario();
         var controlId = ControlDraft.IdFor(TenantId, ProgramId, "AC-01");
-        var created = Deserialize<ControlDraftCreated>($$"""
+        var created = Deserialize<ControlDraftCreatedContent>($$"""
             {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","control_id":"{{controlId}}","create_request_id":"{{Uuid.CreateVersion4()}}","identifier":"AC-01","content":{{ContentJson}},"actor_member_id":"{{MemberId}}","actor_display":"First display","changed_at":"2026-09-23T12:00:00+00:00"}
             """);
-        var revised = Deserialize<ControlDraftRevised>($$"""
+        var revised = Deserialize<ControlDraftRevisedContent>($$"""
             {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","control_id":"{{controlId}}","revision":2,"content":{{ContentJson}},"actor_member_id":"{{MemberId}}","actor_display":"Second display","changed_at":"2026-09-23T12:01:00+00:00"}
             """);
-        var discarded = Deserialize<ControlDraftDiscarded>($$"""
+        var discarded = Deserialize<ControlDraftDiscardedContent>($$"""
             {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","control_id":"{{controlId}}","revision":2,"actor_member_id":"{{MemberId}}","actor_display":"Third display","rationale":"Withdraw draft","discarded_at":"2026-09-23T12:02:00+00:00"}
             """);
+        var rules = new ControlRules(TenantId, controlId);
+        rules.Apply(created);
+        var nativeCreated = Assert.IsType<ControlDraftCreated>(await source.PublishExplicitAsync(rules, created,
+            nameof(CreateControlDraft), controlId, MemberId, At));
+        rules.Apply(revised);
+        var nativeRevised = Assert.IsType<ControlDraftRevised>(await source.PublishExplicitAsync(rules, revised,
+            nameof(ReviseControlDraft), Uuid.CreateVersion4(), MemberId, At.AddMinutes(1)));
+        rules.Apply(discarded);
+        var nativeDiscarded = Assert.IsType<ControlDraftDiscarded>(await source.PublishExplicitAsync(rules, discarded,
+            nameof(DiscardControlDraft), Uuid.CreateVersion4(), MemberId, At.AddMinutes(2)));
 
         // Act
-        var replayed = new AggregateScenario<ControlDraft>(new ControlDraft(TenantId, controlId))
-            .Given(DomainEventSeed.Attach(created, controlId, 1),
-                DomainEventSeed.Attach(revised, controlId, 2),
-                DomainEventSeed.Attach(discarded, controlId, 3)).Aggregate;
+        var replayed = await source.Reader.HydrateAsync(new ControlDraft(TenantId, controlId));
 
         // Assert
         Assert.Equal(2, replayed.Revision);
@@ -73,9 +86,15 @@ public sealed class ControlDraftActorSnapshotTests
         Assert.Null(created.StoredActor);
         Assert.Null(revised.StoredActor);
         Assert.Null(discarded.StoredActor);
+        Assert.Null(nativeCreated.StoredActor);
+        Assert.Null(nativeRevised.StoredActor);
+        Assert.Null(nativeDiscarded.StoredActor);
         Assert.Equal(ActorReference.ForMember(MemberId, "First display"), created.Actor);
         Assert.Equal(ActorReference.ForMember(MemberId, "Second display"), revised.Actor);
         Assert.Equal(ActorReference.ForMember(MemberId, "Third display"), discarded.Actor);
+        Assert.Equal(created.Actor, nativeCreated.Actor);
+        Assert.Equal(revised.Actor, nativeRevised.Actor);
+        Assert.Equal(discarded.Actor, nativeDiscarded.Actor);
     }
 
     [Fact]

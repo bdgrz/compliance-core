@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.NativeOperations;
+using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
@@ -9,8 +12,27 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     actor is kept separate, and <c>CorrelatedMemberId</c> is snapshotted only to apply
 ///     owner-based separation of duties; it never grants access.
 /// </summary>
-[Discriminator("bdgrz.control.owner_person.designated", 1)]
+[Discriminator("bdgrz.control.owner_person.designated", 2)]
 public sealed record ControlOwnerPersonDesignated(Uuid TenantId, Uuid ProgramId,
     Uuid ControlId, Uuid VersionId, long Revision, Uuid DesignationId, Uuid? PersonId,
     Uuid? CorrelatedMemberId, string Rationale, Uuid ActorMemberId, ActorReference Actor,
-    DateTimeOffset DesignatedAt) : DomainEvent;
+    DateTimeOffset DesignatedAt) : DomainEvent, IControlFact
+{
+    /// <summary>The exact native acceptance and immutable original result.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public OperationProvenance Operation { get; init; } = default!;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? FirstResponse { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? OperationResult { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ControlAuthorityHeader Header { get; init; } = default!;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef Change { get; init; } = default!;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef Authority { get; init; } = default!;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public long NativeSequence { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public int ChangeCount { get; init; }
+}

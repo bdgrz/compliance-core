@@ -10,6 +10,23 @@ public static class ResponsibilityDecisionGuard
         Uuid memberId, ResponsibilityType decisionType, DateTimeOffset at,
         bool isRecordAuthor, SeparationOfDutiesWaiver? waiver)
     {
+        return ValidateCore(set, scope, memberId, decisionType, at, isRecordAuthor, waiver is not null,
+            exact => waiver?.TenantId == set.TenantId && waiver.Allows(exact, memberId, at));
+    }
+
+    public static CommandFailure? ValidateAuthorized(ResponsibilitySet set, ResponsibilityScope scope,
+        Uuid memberId, ResponsibilityType decisionType, DateTimeOffset at,
+        bool isRecordAuthor, SeparationOfDutiesWaiverProof? waiver)
+    {
+        return ValidateCore(set, scope, memberId, decisionType, at, isRecordAuthor, waiver is not null,
+            exact => waiver is not null && Bdgrz.Compliance.Features.Controls.ControlWaiverProof.Allows(waiver,
+                set.TenantId, exact, memberId, at));
+    }
+
+    static CommandFailure? ValidateCore(ResponsibilitySet set, ResponsibilityScope scope,
+        Uuid memberId, ResponsibilityType decisionType, DateTimeOffset at,
+        bool isRecordAuthor, bool hasWaiver, Func<SeparationOfDutiesWaiverScope, bool> authorizes)
+    {
         ArgumentNullException.ThrowIfNull(set);
         if (decisionType is not (ResponsibilityType.AssignedReviewer or
             ResponsibilityType.PolicyApprover))
@@ -25,12 +42,12 @@ public static class ResponsibilityDecisionGuard
         {
             var exactScope = new SeparationOfDutiesWaiverScope(scope.RecordType, scope.RecordId,
                 scope.VersionId, scope.Revision, action);
-            return waiver?.TenantId == set.TenantId && waiver.Allows(exactScope, memberId, at)
+            return authorizes(exactScope)
                 ? null
                 : CommandFailure.ActorProhibited(
                     "The member has a conflicting responsibility and requires an active exact-scope waiver.");
         }
-        return isRecordAuthor || waiver is null
+        return isRecordAuthor || !hasWaiver
             ? null
             : CommandFailure.ActorProhibited(
                 "A separation-of-duties waiver may only be used for a current conflict.");

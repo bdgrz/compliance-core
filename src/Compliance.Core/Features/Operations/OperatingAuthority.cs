@@ -112,7 +112,7 @@ public sealed class OperatingAuthority(IAggregateReader reader,
     }
 
     /// <summary>Each approved control version's exclusive end, from retirement or supersession.</summary>
-    public static IReadOnlyDictionary<Uuid, DateOnly?> VersionWindows(ControlDraft? control) =>
+    public static IReadOnlyDictionary<Uuid, DateOnly?> VersionWindows(ControlReadSnapshot? control) =>
         control is null
             ? []
             : control.ReadVersions().ToDictionary(static version => version.VersionId,

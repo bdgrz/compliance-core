@@ -29,10 +29,10 @@ public sealed class ControlOwnerPersonReadTests
         var personId = Uuid.CreateVersion4();
         await ProgramManagementServices.SeedAsync(provider, new Person(tenantId, personId),
             person => person.Record("Workforce owner", "owner@example.com", actor, Now));
-        await ProgramManagementServices.SeedAsync(provider, new ControlDraft(tenantId, controlId),
+        await ProgramManagementServices.SeedAsync(provider, new ControlRules(tenantId, controlId),
             control => control.Create(programId, Uuid.CreateVersion4(), "OWNER-01", Content(),
                 actorId, actor.Display, Now));
-        await ProgramManagementServices.SeedAsync(provider, new ControlDraft(tenantId, controlId),
+        await ProgramManagementServices.SeedAsync(provider, new ControlRules(tenantId, controlId),
             control =>
             {
                 Assert.Null(control.DesignatePersonOwner(programId, 1, designationId, personId,
@@ -40,7 +40,7 @@ public sealed class ControlOwnerPersonReadTests
                 return Result.Success;
             });
         var before = await ProgramManagementServices.HydrateAsync(provider,
-            new ControlDraft(tenantId, controlId));
+            new ControlRules(tenantId, controlId));
 
         // Act
         var result = await RequestScenario.For(provider)
@@ -61,8 +61,8 @@ public sealed class ControlOwnerPersonReadTests
         Assert.True(person.IsCreated);
         Assert.Null(person.CorrelatedUserId);
         var after = await ProgramManagementServices.HydrateAsync(provider,
-            new ControlDraft(tenantId, controlId));
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+            new ControlRules(tenantId, controlId));
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Fact]
@@ -71,9 +71,11 @@ public sealed class ControlOwnerPersonReadTests
         // Arrange
         await using var fixture = await Fixture.CreateAsync();
         var original = await fixture.ReadAsync();
+        var replacementMember = Uuid.CreateVersion4();
         var replacement = fixture.Designated(Uuid.CreateVersion4()) with
         {
-            Actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Replacement recorder"),
+            ActorMemberId = replacementMember,
+            Actor = ActorReference.ForMember(replacementMember, "Replacement recorder"),
             DesignatedAt = Now.AddHours(1),
             Rationale = "Replacement rationale.",
         };
@@ -138,7 +140,7 @@ public sealed class ControlOwnerPersonReadTests
     {
         // Arrange
         await using var fixture = await Fixture.CreateAsync();
-        var successorId = Uuid.CreateVersion4();
+        var successorId = ControlVersionIds.Sequence(fixture.ControlId, 2);
         await fixture.SeedAsync(fixture.Approved(), fixture.Successor(successorId), fixture.Revised(2));
 
         // Act
@@ -165,15 +167,15 @@ public sealed class ControlOwnerPersonReadTests
         await fixture.SeedAsync(fixture.Approved());
         if (state == "withdrawn")
         {
-            var successorId = Uuid.CreateVersion4();
+            var successorId = ControlVersionIds.Sequence(fixture.ControlId, 2);
             await fixture.SeedAsync(fixture.Successor(successorId), fixture.Revised(2),
                 fixture.Designated(Uuid.CreateVersion4(), successorId, 2),
-                new ControlProposalWithdrawn(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+                new ControlProposalWithdrawnContent(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                     Uuid.CreateVersion4(), "successor", successorId, fixture.InitialVersionId, 2,
                     "Withdrawn.", fixture.MemberId, fixture.Actor, Now), fixture.Revised(3));
         }
         if (state == "retired")
-            await fixture.SeedAsync(new ControlRetired(fixture.TenantId, fixture.ProgramId,
+            await fixture.SeedAsync(new ControlRetiredContent(fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, Uuid.CreateVersion4(), fixture.InitialVersionId, 1,
                 Uuid.CreateVersion4(), Uuid.CreateVersion4(), new DateOnly(2027, 1, 1), "digest",
                 fixture.MemberId, fixture.Actor.Display, "Retired.", Now));
@@ -201,7 +203,7 @@ public sealed class ControlOwnerPersonReadTests
         // Arrange
         await using var fixture = await Fixture.CreateAsync();
         if (condition == "discarded")
-            await fixture.SeedAsync(new ControlDraftDiscarded(fixture.TenantId, fixture.ProgramId,
+            await fixture.SeedAsync(new ControlDraftDiscardedContent(fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, 1, fixture.MemberId, fixture.Actor.Display, "Discarded.", Now));
         var before = await fixture.PositionsAsync();
         var controlId = condition == "unknown" ? Uuid.CreateVersion4() : fixture.ControlId;
@@ -258,7 +260,7 @@ public sealed class ControlOwnerPersonReadTests
         if (!enabled)
             await RequestScenario.For(fixture.Provider)
                 .GivenActor(ProgramManagementServices.Actor(fixture.UserId))
-                .When(new DesignateControlOwnerPerson(fixture.TenantId, fixture.ProgramId,
+                .When(new DesignateControlOwnerPerson(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                     fixture.ControlId, 1, null, "Clear owner."))
                 .ExpectAuthorized().ExpectHandled().ExpectFailure(RequestErrorKind.Conflict);
         var after = await fixture.ReadAsync();
@@ -268,7 +270,7 @@ public sealed class ControlOwnerPersonReadTests
         Assert.Equal(current, after);
         Assert.Equal(before, await fixture.PositionsAsync());
         var source = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ControlDraft(fixture.TenantId, fixture.ControlId));
+            new ControlRules(fixture.TenantId, fixture.ControlId));
         Assert.Equal(current.Designation!.PersonId, source.CurrentPersonOwner!.PersonId);
         Assert.Equal(current.Designation.DesignationId, source.CurrentPersonOwner.DesignationId);
         Assert.Equal(fixture.MemberId, source.CurrentPersonOwner.CorrelatedMemberId);
@@ -276,7 +278,7 @@ public sealed class ControlOwnerPersonReadTests
             permission => Assert.Equal(RbacPermissions.ProgramManage, permission));
     }
 
-    static ControlPersonOwnerDesignationView View(ControlOwnerPersonDesignated designation) =>
+    static ControlPersonOwnerDesignationView View(ControlOwnerPersonDesignatedContent designation) =>
         new(designation.PersonId!.Value, designation.DesignationId, designation.Rationale,
             designation.Actor, designation.DesignatedAt);
 
@@ -319,7 +321,7 @@ public sealed class ControlOwnerPersonReadTests
                             fixture.MemberId), Uuid.CreateVersion4(),
                         new AccessGrantScope(AccessGrantScopeKind.Program, fixture.ProgramId),
                         new AccessGrantSource("manual", "owner-read-test"), fixture.Actor, Now, null)));
-            await fixture.SeedAsync(new ControlDraftCreated(fixture.TenantId, fixture.ProgramId,
+            await fixture.SeedAsync(new ControlDraftCreatedContent(fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, Uuid.CreateVersion4(), "OWNER-REPLAY", Content(), fixture.MemberId,
                 fixture.Actor.Display, Now));
             if (designated)
@@ -327,32 +329,84 @@ public sealed class ControlOwnerPersonReadTests
             return fixture;
         }
 
-        public ControlOwnerPersonDesignated Designated(Uuid? personId, Uuid? versionId = null,
+        public ControlOwnerPersonDesignatedContent Designated(Uuid? personId, Uuid? versionId = null,
             long revision = 1) => new(TenantId, ProgramId, ControlId, versionId ?? InitialVersionId,
             revision, Uuid.CreateVersion4(), personId, personId is null ? null : MemberId,
             "Saved rationale.", MemberId, Actor, Now);
 
-        public ControlDraftRevised Revised(long revision) => new(TenantId, ProgramId, ControlId,
+        public ControlDraftRevisedContent Revised(long revision) => new(TenantId, ProgramId, ControlId,
             revision, Content() with { Title = $"Revision {revision}" }, MemberId, Actor.Display, Now);
 
-        public ControlApproved Approved() => new(TenantId, ProgramId, ControlId, InitialVersionId,
+        public ControlApprovedContent Approved() => new(TenantId, ProgramId, ControlId, InitialVersionId,
             1, Uuid.CreateVersion4(), Uuid.CreateVersion4(), Content(), Uuid.CreateVersion4(), MemberId,
             Uuid.CreateVersion4(), "Approver", "Approved.", new DateOnly(2026, 10, 12), Now);
 
-        public ControlSuccessorProposed Successor(Uuid versionId) => new(TenantId, ProgramId,
+        public ControlSuccessorProposedContent Successor(Uuid versionId) => new(TenantId, ProgramId,
             ControlId, versionId, InitialVersionId, 2, MemberId, Actor.Display, Now);
 
-        public async Task SeedAsync(params DomainEvent[] events)
+        public async Task SeedAsync(params IControlMutationContent[] changes)
         {
-            var control = await ProgramManagementServices.HydrateAsync(Provider,
-                new ControlDraft(TenantId, ControlId));
-            var seeded = events.Select((ev, index) => DomainEventSeed.Attach(
-                (DomainEvent)JsonSerializer.Deserialize(JsonSerializer.Serialize(ev, ev.GetType(),
-                    ComplianceCoreJsonContext.Default), ev.GetType(), ComplianceCoreJsonContext.Default)!,
-                ControlId, control.CommittedStreamPosition + (ulong)index + 1)).ToArray();
-            await Provider.GetRequiredService<IEventStore>().AppendAsync(
-                new EventStreamAddress(TenantId.ToString(), "controls", ControlId.ToString()),
-                control.CommittedStreamPosition, seeded, CancellationToken.None);
+            await using var scope = Provider.CreateAsyncScope();
+            var services = scope.ServiceProvider;
+            var rules = await services.GetRequiredService<ControlReader>().RulesAsync(TenantId, ControlId);
+            foreach (var change in changes)
+            {
+                switch (change)
+                {
+                    case ControlDraftCreatedContent created:
+                        Assert.True(rules.Create(ProgramId, created.CreateRequestId, created.Identifier, created.Content,
+                            created.ActorMemberId, created.ActorDisplay, created.ChangedAt).IsSuccess);
+                        break;
+                    case ControlDraftRevisedContent revised when revised.Revision > rules.Revision:
+                        Assert.Null(rules.Revise(ProgramId, rules.Revision, revised.Content,
+                            revised.ActorMemberId, revised.ActorDisplay, revised.ChangedAt));
+                        break;
+                    case ControlDraftRevisedContent:
+                        // The native atomic successor/withdrawal already includes this exact content revision.
+                        break;
+                    case ControlOwnerPersonDesignatedContent designated:
+                        Assert.Null(rules.DesignatePersonOwner(ProgramId, designated.Revision, designated.DesignationId,
+                            designated.PersonId, designated.CorrelatedMemberId, designated.Rationale,
+                            designated.ActorMemberId, designated.Actor, designated.DesignatedAt));
+                        break;
+                    case ControlApprovedContent approved:
+                        var reviewer = Uuid.CreateVersion4();
+                        Assert.Null(rules.Review(ProgramId, rules.Revision, approved.AcceptedReviewDecisionId, "accept",
+                            "Reviewed retained fixture", reviewer, "Independent reviewer", approved.DecidedAt));
+                        var person = Assert.IsType<ControlPersonOwner>(rules.CurrentPersonOwner);
+                        Assert.Null(rules.Approve(ProgramId, rules.Revision, approved.ApprovalDecisionId,
+                            approved.AcceptedReviewDecisionId, approved.EffectiveFrom, approved.Rationale,
+                            new HashSet<Uuid>(), approved.ActorMemberId, approved.ActorDisplay, approved.DecidedAt,
+                            verifiedPersonOwner: person));
+                        break;
+                    case ControlSuccessorProposedContent proposed:
+                        Assert.Null(rules.ProposeSuccessor(ProgramId, proposed.PredecessorVersionId,
+                            Content() with { Title = $"Revision {proposed.Revision}" }, proposed.ActorMemberId,
+                            proposed.ActorDisplay, proposed.ChangedAt));
+                        break;
+                    case ControlProposalWithdrawnContent withdrawn:
+                        Assert.Null(rules.Withdraw(ProgramId, withdrawn.Revision, withdrawn.DecisionId, withdrawn.Rationale,
+                            withdrawn.ActorMemberId, withdrawn.Actor, withdrawn.WithdrawnAt));
+                        break;
+                    case ControlRetiredContent retired:
+                        Assert.Null(rules.ProposeRetirement(ProgramId, retired.VersionId, retired.EffectiveUntil,
+                            "Retirement fixture", Uuid.CreateVersion4(), "Retirement proposer", retired.DecidedAt));
+                        Assert.Null(rules.Review(ProgramId, rules.Revision, retired.AcceptedReviewDecisionId, "accept",
+                            "Reviewed retirement fixture", Uuid.CreateVersion4(), "Reviewer", retired.DecidedAt));
+                        Assert.Null(rules.Retire(ProgramId, rules.Revision, retired.DecisionId,
+                            retired.AcceptedReviewDecisionId, retired.ImpactDigest, retired.Rationale,
+                            retired.ActorMemberId, retired.ActorDisplay, retired.DecidedAt));
+                        break;
+                    case ControlDraftDiscardedContent discarded:
+                        Assert.Null(rules.Discard(ProgramId, discarded.Revision, discarded.Rationale,
+                            discarded.ActorMemberId, discarded.ActorDisplay, discarded.DiscardedAt));
+                        break;
+                    default:
+                        throw new InvalidOperationException("Unknown retained Control fixture change.");
+                }
+            }
+            await ControlSeeds.AppendAsync(services.GetRequiredService<IAggregateReader>(),
+                services.GetRequiredService<IAggregateWriter>(), services.GetRequiredService<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(), rules);
         }
 
         public async Task<ControlDraftOwnerPersonView> ReadAsync() =>
@@ -363,7 +417,7 @@ public sealed class ControlOwnerPersonReadTests
         public async Task<ulong[]> PositionsAsync() =>
         [
             (await ProgramManagementServices.HydrateAsync(Provider,
-                new ControlDraft(TenantId, ControlId))).CommittedStreamPosition,
+                new ControlRules(TenantId, ControlId))).SourcePhysicalPosition,
             (await ProgramManagementServices.HydrateAsync(Provider,
                 new Member(TenantId, UserId))).CommittedStreamPosition,
             (await ProgramManagementServices.HydrateAsync(Provider,

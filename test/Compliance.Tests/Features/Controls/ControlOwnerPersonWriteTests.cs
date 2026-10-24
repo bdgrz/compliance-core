@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Text.Json;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Workforce;
@@ -26,12 +28,13 @@ public sealed class ControlOwnerPersonWriteTests
         var foreignEvents = await fixture.EventsAsync(fixture.ForeignTenantId);
         var requestId = Uuid.CreateVersion4();
         var correlationId = Uuid.CreateVersion4();
+        var request = fixture.Request(fixture.CandidatePersonId) with { CommandId = requestId };
 
         // Act
         await RequestScenario.For(fixture.Provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.UserId))
             .GivenMetadata(new RequestMetadata(requestId, correlationId, null))
-            .When(fixture.Request(fixture.CandidatePersonId))
+            .When(request)
             .ExpectAuthorized().ExpectHandled().ExpectSuccess();
 
         // Assert
@@ -40,22 +43,28 @@ public sealed class ControlOwnerPersonWriteTests
         var appended = Assert.Single(afterEvents.Skip(localEvents.Length));
         Assert.Equal(new EventStreamAddress(fixture.TenantId.ToString(), "controls",
             fixture.ControlId.ToString()), appended.Stream);
-        Assert.Equal(before.CommittedStreamPosition, appended.ResourceOffset);
+        Assert.Equal(before.SourcePhysicalPosition, appended.ResourceOffset);
         var designation = Assert.IsType<ControlOwnerPersonDesignated>(appended.Event);
         var expectedActor = ActorReference.ForMember(fixture.MemberId, "author@example.com");
-        Assert.Equal(new ControlOwnerPersonDesignated(fixture.TenantId, fixture.ProgramId,
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var mutation = await ControlFactContent.ReadChangeAsync(
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), designation);
+        Assert.Equal(new ControlOwnerPersonDesignatedContent(fixture.TenantId, fixture.ProgramId,
             fixture.ControlId, before.DraftVersionId, before.Revision, requestId,
             fixture.CandidatePersonId, null, "The workforce owner is accountable.",
-            fixture.MemberId, expectedActor, Now), designation);
+            fixture.MemberId, expectedActor, Now), Assert.Single(mutation.Changes));
+        Assert.Equal(requestId, designation.Operation.LogicalId);
+        Assert.NotNull(designation.FirstResponse);
+        Assert.Equal("mutation-result-content.v1", designation.OperationResult!.Schema);
         Assert.Equal(requestId, designation.Metadata.CausationId);
         Assert.Equal(correlationId, designation.Metadata.CorrelationId);
-        Assert.Equal(before.CommittedStreamPosition + 1, designation.Metadata.AggregateVersion);
+        Assert.Equal(before.SourcePhysicalPosition + 1, designation.Metadata.AggregateVersion);
         Assert.Equal(foreignEvents, await fixture.EventsAsync(fixture.ForeignTenantId));
         var after = await fixture.ControlAsync();
-        Assert.Equal(before.CommittedStreamPosition + 1, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition + 1, after.SourcePhysicalPosition);
         Assert.Equal(before.DraftVersionId, after.DraftVersionId);
         Assert.Equal(before.Revision, after.Revision);
-        Assert.Equal(before.CurrentContent, after.CurrentContent);
+        Assert.Equal(JsonSerializer.Serialize(before.CurrentContent), JsonSerializer.Serialize(after.CurrentContent));
         Assert.Equal(new ControlPersonOwner(fixture.CandidatePersonId, null, requestId),
             after.CurrentPersonOwner);
         Assert.Equal(new ControlPersonOwnerDesignationView(fixture.CandidatePersonId, requestId,
@@ -178,11 +187,11 @@ public sealed class ControlOwnerPersonWriteTests
                         ActorReference.ForMember(RbacIds.Member(fixture.ForeignTenantId,
                             Uuid.CreateVersion4()), "Foreign recorder"), Now.AddDays(-1)));
             await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new ControlDraft(fixture.TenantId, fixture.ControlId), control =>
+                new ControlRules(fixture.TenantId, fixture.ControlId), control =>
                     control.Create(fixture.ProgramId, Uuid.CreateVersion4(), "OWNER-WRITE", Content(),
                         fixture.MemberId, fixture.Actor.Display, Now.AddDays(-1)));
             await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new ControlDraft(fixture.TenantId, fixture.ControlId), control =>
+                new ControlRules(fixture.TenantId, fixture.ControlId), control =>
                 {
                     Assert.Null(control.DesignatePersonOwner(fixture.ProgramId, 1,
                         fixture.OriginalDesignationId, fixture.OriginalPersonId, null,
@@ -192,11 +201,11 @@ public sealed class ControlOwnerPersonWriteTests
             return fixture;
         }
 
-        public DesignateControlOwnerPerson Request(Uuid personId) => new(TenantId, ProgramId,
+        public DesignateControlOwnerPerson Request(Uuid personId) => new(Uuid.CreateVersion4(), TenantId, ProgramId,
             ControlId, 1, personId, "  The workforce owner is accountable.  ");
 
-        public Task<ControlDraft> ControlAsync() => ProgramManagementServices.HydrateAsync(Provider,
-            new ControlDraft(TenantId, ControlId));
+        public Task<ControlRules> ControlAsync() => ProgramManagementServices.HydrateAsync(Provider,
+            new ControlRules(TenantId, ControlId));
 
         public Task<Person> PersonAsync(Uuid tenantId, Uuid personId) =>
             ProgramManagementServices.HydrateAsync(Provider, new Person(tenantId, personId));
@@ -210,17 +219,17 @@ public sealed class ControlOwnerPersonWriteTests
             return events.ToArray();
         }
 
-        public async Task AssertOwnerUnchangedAsync(ControlDraft before)
+        public async Task AssertOwnerUnchangedAsync(ControlRules before)
         {
             Assert.Equal(new ControlPersonOwner(OriginalPersonId, null, OriginalDesignationId),
                 before.CurrentPersonOwner);
             var after = await ControlAsync();
             Assert.Equal(before.CurrentPersonOwner, after.CurrentPersonOwner);
             Assert.Equal(before.CurrentPersonOwnerDesignation, after.CurrentPersonOwnerDesignation);
-            Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+            Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
             Assert.Equal(before.DraftVersionId, after.DraftVersionId);
             Assert.Equal(before.Revision, after.Revision);
-            Assert.Equal(before.CurrentContent, after.CurrentContent);
+            Assert.Equal(JsonSerializer.Serialize(before.CurrentContent), JsonSerializer.Serialize(after.CurrentContent));
         }
 
         public ValueTask DisposeAsync() => Provider.DisposeAsync();

@@ -346,7 +346,7 @@ public sealed class ControlCriterionMappingHandlerTests
             var owner = Uuid.CreateVersion4();
             var reviewId = Uuid.CreateVersion4();
             await ProgramManagementServices.SeedAsync(provider,
-                new ControlDraft(fixture.TenantId, fixture.ControlId), control =>
+                new ControlRules(fixture.TenantId, fixture.ControlId), control =>
                 {
                     var created = control.Create(fixture.ProgramId, Uuid.CreateVersion4(),
                         "AC-MAP", new ControlDraftContent("Access review", "Review access",
@@ -396,7 +396,7 @@ public sealed class ControlCriterionMappingHandlerTests
             var owner = Uuid.CreateVersion4();
             var reviewId = Uuid.CreateVersion4();
             return ProgramManagementServices.SeedAsync(Provider,
-                new ControlDraft(TenantId, ControlId), control =>
+                new ControlRules(TenantId, ControlId), control =>
                 {
                     Assert.Null(control.ProposeSuccessor(ProgramId, ControlVersionId,
                         new ControlDraftContent("Access review v2", "Review access",

@@ -3,17 +3,21 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evaluations;
 
-public sealed class ListControlEvaluationPlanVersionsHandler(IAggregateReader reader)
+public sealed class ListControlEvaluationPlanVersionsHandler(IAggregateReader reader, ControlReader controlSources)
     : IRequestHandler<ListControlEvaluationPlanVersions, Page<ControlEvaluationPlanVersionView>>
 {
-    public async ValueTask<Result<Page<ControlEvaluationPlanVersionView>>> HandleAsync(
+    public ValueTask<Result<Page<ControlEvaluationPlanVersionView>>> HandleAsync(
+        IRequestContext<ListControlEvaluationPlanVersions> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<Page<ControlEvaluationPlanVersionView>>> HandleCoreAsync(
         IRequestContext<ListControlEvaluationPlanVersions> context, CancellationToken ct)
     {
         var request = context.Request;
         if (request.Limit is < 1 or > 200)
             return Result<Page<ControlEvaluationPlanVersionView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The page limit must be from 1 to 200."));
-        if (await ControlOperationsSource.LoadControlAsync(reader, request.TenantId,
+        if (await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId,
                 request.ProgramId, request.ControlId, ct).ConfigureAwait(false) is null)
             return Result<Page<ControlEvaluationPlanVersionView>>.Failure(
                 ControlOperationsSource.ControlNotFound());

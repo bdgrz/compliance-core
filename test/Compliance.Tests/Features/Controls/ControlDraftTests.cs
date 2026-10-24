@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Text.Json;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -23,20 +24,20 @@ public sealed class ControlDraftTests
         var otherTenantId = Uuid.CreateVersion4();
 
         // Act
-        var first = ControlDraft.IdFor(TenantId, ProgramId, "ac-01");
-        var normalized = ControlDraft.IdFor(TenantId, ProgramId, " AC-01 ");
+        var first = ControlRules.IdFor(TenantId, ProgramId, "ac-01");
+        var normalized = ControlRules.IdFor(TenantId, ProgramId, " AC-01 ");
 
         // Assert
         Assert.Equal(first, normalized);
-        Assert.NotEqual(first, ControlDraft.IdFor(TenantId, otherProgramId, "AC-01"));
-        Assert.NotEqual(first, ControlDraft.IdFor(otherTenantId, ProgramId, "AC-01"));
+        Assert.NotEqual(first, ControlRules.IdFor(TenantId, otherProgramId, "AC-01"));
+        Assert.NotEqual(first, ControlRules.IdFor(otherTenantId, ProgramId, "AC-01"));
     }
 
     [Fact]
     public void ShouldKeepNewDeclarationsUnresolvedGivenLegacyDraftEventContent()
     {
         // Arrange
-        var controlId = ControlDraft.IdFor(TenantId, ProgramId, "AC-LEGACY");
+        var controlId = ControlRules.IdFor(TenantId, ProgramId, "AC-LEGACY");
         var createRequestId = Uuid.CreateVersion4();
         var json = $$"""
             {"tenant_id":"{{TenantId}}","program_id":"{{ProgramId}}","control_id":"{{controlId}}","create_request_id":"{{createRequestId}}","identifier":"AC-LEGACY","content":{"title":"Access review","objective":"Review access","description":"Management reviews access","implementation_narrative":"The owner reviews the access list quarterly.","expected_evidence_descriptions":["Dated review record"]},"actor_member_id":"{{AuthorId}}","actor_display":"Author","changed_at":"2026-09-22T12:00:00+00:00"}
@@ -44,7 +45,7 @@ public sealed class ControlDraftTests
 
         // Act
         var created = JsonSerializer.Deserialize(json,
-            ComplianceCoreJsonContext.Default.ControlDraftCreated);
+            ComplianceCoreJsonContext.Default.ControlDraftCreatedContent);
 
         // Assert
         Assert.NotNull(created);
@@ -60,9 +61,9 @@ public sealed class ControlDraftTests
     {
         // Arrange
         var requestId = Uuid.CreateVersion4();
-        var controlId = ControlDraft.IdFor(TenantId, ProgramId, "AC-01");
+        var controlId = ControlRules.IdFor(TenantId, ProgramId, "AC-01");
         var original = Content();
-        AggregateScenario<ControlDraft> Revised()
+        ControlRuleScenario Revised()
         {
             var scenario = Scenario("AC-01");
             Assert.True(scenario.When(control => AggregateOutcome.CommitOnSuccess(control.Create(
@@ -72,7 +73,7 @@ public sealed class ControlDraftTests
                 "Second author", Now.AddMinutes(1)))).IsSuccess);
             return scenario;
         }
-        AggregateScenario<ControlDraft>[] scenarios = [Revised(), Revised(), Revised()];
+        ControlRuleScenario[] scenarios = [Revised(), Revised(), Revised()];
 
         // Act
         var replay = scenarios[0].When(control => AggregateOutcome.CommitOnSuccess(control.Create(
@@ -107,12 +108,12 @@ public sealed class ControlDraftTests
         Assert.All([stale, wrongProgram], scenario => Assert.True(scenario.When(control =>
             AggregateOutcome.CommitOnSuccess(control.Create(ProgramId, Uuid.CreateVersion4(),
                 "AC-02", Content(), AuthorId, "Author One", Now))).IsSuccess));
-        var created = Assert.IsType<ControlDraftCreated>(Assert.Single(stale.PendingEvents));
+        var created = Assert.IsType<ControlDraftCreatedContent>(Assert.Single(stale.PendingEvents));
         Assert.All([stale, wrongProgram], scenario => Assert.True(scenario.When(control =>
             CommandFailureRequestAdapter.ToOutcome(control.Revise(ProgramId, 1,
                 Content() with { Title = "Revised" }, nextAuthorId, "Author Two",
                 Now.AddMinutes(1)))).IsSuccess));
-        var revised = Assert.IsType<ControlDraftRevised>(Assert.Single(stale.PendingEvents));
+        var revised = Assert.IsType<ControlDraftRevisedContent>(Assert.Single(stale.PendingEvents));
 
         // Act
         var staleResult = stale.When(control => CommandFailureRequestAdapter.ToOutcome(control.Revise(
@@ -211,7 +212,7 @@ public sealed class ControlDraftTests
 
         // Assert
         Assert.True(created.IsSuccess);
-        var draft = Assert.IsType<ControlDraftCreated>(Assert.Single(scenario.PendingEvents));
+        var draft = Assert.IsType<ControlDraftCreatedContent>(Assert.Single(scenario.PendingEvents));
         Assert.Equal("Security lead", draft.Content.OwnerReference);
         Assert.NotNull(draft.Content.Applicability);
         Assert.Equal(3, draft.Content.Applicability!.Count);
@@ -238,8 +239,8 @@ public sealed class ControlDraftTests
     public void ShouldDiscardUnpublishedDraftAndRejectFurtherEditsGivenExistingDraft()
     {
         // Arrange
-        var controlId = ControlDraft.IdFor(TenantId, ProgramId, "AC-06");
-        AggregateScenario<ControlDraft> Created()
+        var controlId = ControlRules.IdFor(TenantId, ProgramId, "AC-06");
+        ControlRuleScenario Created()
         {
             var scenario = Scenario("AC-06");
             Assert.True(scenario.When(control => AggregateOutcome.CommitOnSuccess(control.Create(
@@ -247,7 +248,7 @@ public sealed class ControlDraftTests
                 Now))).IsSuccess);
             return scenario;
         }
-        AggregateScenario<ControlDraft> Discarded()
+        ControlRuleScenario Discarded()
         {
             var scenario = Created();
             Assert.True(scenario.When(control => CommandFailureRequestAdapter.ToOutcome(control.Discard(
@@ -256,7 +257,7 @@ public sealed class ControlDraftTests
             return scenario;
         }
         var discardedScenario = Created();
-        AggregateScenario<ControlDraft>[] afterDiscard = [Discarded(), Discarded(), Discarded()];
+        ControlRuleScenario[] afterDiscard = [Discarded(), Discarded(), Discarded()];
 
         // Act
         var stale = Created().When(control => CommandFailureRequestAdapter.ToOutcome(control.Discard(
@@ -287,7 +288,7 @@ public sealed class ControlDraftTests
         Assert.Equal(RequestErrorKind.NotFound,
             Assert.IsType<RequestError>(discardedAgain.Error).Kind);
         Assert.Equal(1UL, discardedScenario.CommittedEventCount);
-        Assert.Equal([new ControlDraftDiscarded(TenantId, ProgramId, controlId, 1, AuthorId,
+        Assert.Equal([new ControlDraftDiscardedContent(TenantId, ProgramId, controlId, 1, AuthorId,
                 "Author", "Not needed in this program.", Now.AddMinutes(1))
             {
                 StoredActor = ActorReference.ForMember(AuthorId, "Author"),
@@ -332,8 +333,8 @@ public sealed class ControlDraftTests
         string identifier, ControlDraftContent content)
     {
         // Arrange
-        var scenario = new AggregateScenario<ControlDraft>(
-            new ControlDraft(TenantId, Uuid.CreateVersion4()));
+        var scenario = new ControlRuleScenario(
+            new ControlRules(TenantId, Uuid.CreateVersion4()));
 
         // Act
         var result = scenario.When(control => AggregateOutcome.CommitOnSuccess(control.Create(
@@ -354,7 +355,7 @@ public sealed class ControlDraftTests
             "AC-01", Content() with
             {
                 ImplementationNarrative = new string('n', 12000),
-                ExpectedEvidenceDescriptions = Enumerable.Repeat(new string('e', 2000), 20)
+                ExpectedEvidenceDescriptions = Enumerable.Repeat(new string('e', 2001), 20)
                     .ToArray(),
             }
         },
@@ -370,8 +371,8 @@ public sealed class ControlDraftTests
         },
     };
 
-    static AggregateScenario<ControlDraft> Scenario(string identifier) => new(
-        new ControlDraft(TenantId, ControlDraft.IdFor(TenantId, ProgramId, identifier)));
+    static ControlRuleScenario Scenario(string identifier) => new(
+        new ControlRules(TenantId, ControlRules.IdFor(TenantId, ProgramId, identifier)));
 
     static ControlDraftContent Content() => new("Access review", "Review access",
         "Management reviews access", "The owner reviews the access list quarterly.",

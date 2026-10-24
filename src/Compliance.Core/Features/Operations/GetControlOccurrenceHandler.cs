@@ -3,15 +3,19 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Reads one occurrence with every attestation version and review decision.</summary>
-public sealed class GetControlOccurrenceHandler(IAggregateReader reader, ControlOperationsReader operations,
+public sealed class GetControlOccurrenceHandler(ControlReader controlSources, ControlOperationsReader operations,
     TimeProvider clock)
     : IRequestHandler<GetControlOccurrence, ControlOccurrenceView>
 {
-    public async ValueTask<Result<ControlOccurrenceView>> HandleAsync(
+    public ValueTask<Result<ControlOccurrenceView>> HandleAsync(
+        IRequestContext<GetControlOccurrence> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlOccurrenceView>> HandleCoreAsync(
         IRequestContext<GetControlOccurrence> context, CancellationToken ct)
     {
         var request = context.Request;
-        var control = await ControlOperationsSource.LoadControlAsync(reader, request.TenantId,
+        var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId,
             request.ProgramId, request.ControlId, ct).ConfigureAwait(false);
         if (control is null)
             return Result<ControlOccurrenceView>.Failure(ControlOperationsSource.ControlNotFound());

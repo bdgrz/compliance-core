@@ -14,7 +14,7 @@ public sealed class RiskTreatmentControlImpactContributor(RiskGovernanceReader g
     public string Context => "risk_treatments";
 
     public async ValueTask<Result<ControlImpactContribution>> ContributeAsync(
-        ControlDraft subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
+        ControlReadSnapshot subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);
         var ledger = await governance.ReadAsync(subject.TenantId, subject.ProgramId, ct).ConfigureAwait(false);

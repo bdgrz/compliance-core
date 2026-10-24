@@ -150,7 +150,7 @@ public sealed class ApplicationEvidenceSourceReferencePreviewTests
     {
         var visibility = RestrictedApplicationVisibilityFixture.Create(sourceReader);
         var controlVersions = new FitzApplicationControlVersionReferenceDirectory(
-            new InMemoryKvClient());
+            new InMemoryKvClient(), new ControlProjectionFacts().Content);
         return new PreviewApplicationChangeHandler(sourceReader, applications, boundaries,
             new ApplicationBoundaryReferenceReadConsistency(boundaries, events), controls,
             new ApplicationControlDraftReferenceReadConsistency(controls, events), visibility,

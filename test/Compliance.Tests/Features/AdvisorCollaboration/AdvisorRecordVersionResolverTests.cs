@@ -45,7 +45,7 @@ public sealed class AdvisorRecordVersionResolverTests
         var control = await fixture.SeedControlAsync();
         var selected = AdvisorRecordVersion.ControlDraft(control.Id, control.DraftVersionId,
             control.Revision);
-        var reader = new AdvisorSharedSourceReader(fixture.Reader, fixture.Resolver(),
+        var reader = new AdvisorSharedSourceReader(fixture.Reader, fixture.Controls, fixture.Resolver(),
             fixture.Metadata, new BoundaryReader(null), fixture.Readiness);
         var handoffId = Uuid.CreateVersion4();
 
@@ -55,7 +55,8 @@ public sealed class AdvisorRecordVersionResolverTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(control.CurrentContent, result.Value.ControlDraftContent);
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(control.CurrentContent),
+            System.Text.Json.JsonSerializer.Serialize(result.Value.ControlDraftContent));
         Assert.Equal(selected, result.Value.SelectedSource);
         Assert.Null(result.Value.ControlVersion);
         Assert.Null(result.Value.EvidenceArtifact);
@@ -374,6 +375,8 @@ public sealed class AdvisorRecordVersionResolverTests
         public IDomainEventReader Events { get; }
         public EvidenceArtifactMetadataRead Metadata { get; }
         public ReadinessReader Readiness { get; }
+        public IImmutableContentStore Content => _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        public ControlReader Controls => new(Reader, Events, Content);
         public RequestDispatchContext SystemDispatch { get; } =
             new(RequestActor.System);
 
@@ -399,8 +402,8 @@ public sealed class AdvisorRecordVersionResolverTests
         }
 
         public AdvisorRecordVersionResolver Resolver(IBoundaryDirectoryReader? boundaries = null,
-            ReadinessReader? readiness = null) => new(Reader, Metadata,
-            new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events), EmptyOperations.Evaluations(Reader, Events)), boundaries ?? new BoundaryReader(null),
+            ReadinessReader? readiness = null) => new(Reader, Controls, Metadata,
+            new EvidenceSupportTargetSource(Reader, Controls, EmptyOperations.Reader(Reader, Events), EmptyOperations.Evaluations(Reader, Events)), boundaries ?? new BoundaryReader(null),
             readiness ?? Readiness);
 
         public async Task<ReadinessReader> SeedReadinessAsync(Uuid latest, ReadinessAssessmentView assessment)
@@ -418,15 +421,15 @@ public sealed class AdvisorRecordVersionResolverTests
             return Readiness;
         }
 
-        public async Task<ControlDraft> SeedControlAsync()
+        public async Task<ControlRules> SeedControlAsync()
         {
-            var controlId = Uuid.CreateVersion4();
-            var control = new ControlDraft(TenantId, controlId);
+            var controlId = ControlDraft.IdFor(TenantId, ProgramId, "AC-01");
+            var control = new ControlRules(TenantId, controlId);
             Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "AC-01",
                 new ControlDraftContent("Access review", "Review access", "Management reviews access",
                     "The owner reviews the access list quarterly.", ["Dated approval record"]),
                 MemberId, "Lead", Now).IsSuccess);
-            await Writer.SaveAsync(control, SystemDispatch);
+            await ControlSeeds.AppendAsync(Reader, Writer, Content, control, CancellationToken.None);
             return control;
         }
 
@@ -478,9 +481,9 @@ public sealed class AdvisorRecordVersionResolverTests
             return policy;
         }
 
-        public async Task<ControlDraft> SeedApprovedControlAsync()
+        public async Task<ControlRules> SeedApprovedControlAsync()
         {
-            var control = new ControlDraft(TenantId, Uuid.CreateVersion4());
+            var control = new ControlRules(TenantId, ControlDraft.IdFor(TenantId, ProgramId, "AC-02"));
             var authorId = MemberId;
             var ownerId = Uuid.CreateVersion4();
             var reviewerId = Uuid.CreateVersion4();
@@ -500,11 +503,11 @@ public sealed class AdvisorRecordVersionResolverTests
             Assert.Null(control.Approve(ProgramId, control.Revision, Uuid.CreateVersion4(),
                 reviewId, new DateOnly(2026, 1, 1), "Approved", new HashSet<Uuid> { ownerId },
                 approverId, "Approver", Now.AddMinutes(3)));
-            await Writer.SaveAsync(control, SystemDispatch);
+            await ControlSeeds.AppendAsync(Reader, Writer, Content, control, CancellationToken.None);
             return control;
         }
 
-        public async Task<ControlDraft> SeedControlWithSuccessorAsync()
+        public async Task<ControlRules> SeedControlWithSuccessorAsync()
         {
             var control = await SeedApprovedControlAsync();
             var prior = control.ApprovedVersion!;
@@ -523,7 +526,7 @@ public sealed class AdvisorRecordVersionResolverTests
             Assert.Null(control.Approve(ProgramId, control.Revision, Uuid.CreateVersion4(), reviewId,
                 new DateOnly(2027, 1, 1), "Successor ready.", new HashSet<Uuid> { ownerId },
                 Uuid.CreateVersion4(), "Approver", Now.AddMinutes(7), impactDigest: "digest"));
-            await Writer.SaveAsync(control, SystemDispatch);
+            await ControlSeeds.AppendAsync(Reader, Writer, Content, control, CancellationToken.None);
             return control;
         }
 

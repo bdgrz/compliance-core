@@ -6,10 +6,10 @@ namespace Bdgrz.Compliance.Features.Operations;
 /// <summary>Loads the control and operating state an operations request acts on.</summary>
 static class ControlOperationsSource
 {
-    public static async ValueTask<ControlDraft?> LoadControlAsync(IAggregateReader reader,
+    public static async ValueTask<ControlReadSnapshot?> LoadControlAsync(ControlReader controlSources,
         Uuid tenantId, Uuid programId, Uuid controlId, CancellationToken ct)
     {
-        var control = await reader.HydrateAsync(new ControlDraft(tenantId, controlId), ct)
+        var control = await controlSources.ReadAsync(tenantId, programId, controlId, ct)
             .ConfigureAwait(false);
         return control.IsVisible && control.ProgramId == programId ? control : null;
     }
@@ -19,7 +19,7 @@ static class ControlOperationsSource
     ///     starting on or before the horizon.
     /// </summary>
     public static async ValueTask<IReadOnlyList<PlannedControlOccurrences>> ReadPlannedAsync(
-        IAggregateReader reader, ControlOperationsSnapshot snapshot, Uuid tenantId, Uuid programId,
+        ControlReader controlSources, ControlOperationsSnapshot snapshot, Uuid tenantId, Uuid programId,
         DateOnly today, DateOnly horizon, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
@@ -28,7 +28,7 @@ static class ControlOperationsSource
         {
             if (snapshot.CurrentPlan(controlId) is not { } plan)
                 continue;
-            var control = await LoadControlAsync(reader, tenantId, programId, controlId, ct)
+            var control = await LoadControlAsync(controlSources, tenantId, programId, controlId, ct)
                 .ConfigureAwait(false);
             if (control is null)
                 continue;

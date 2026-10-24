@@ -79,6 +79,7 @@ public sealed class DraftActorSnapshotE2ETests(BrokerStackFixture broker)
                 using (var controlRevision = await owner.PutAsJsonAsync(drafts[0].Current, new
                 {
                     expected_revision = 1,
+                    command_id = Uuid.CreateVersion4(),
                     content = ControlContent("Monthly access review"),
                 }))
                     Assert.Equal(HttpStatusCode.NoContent, controlRevision.StatusCode);

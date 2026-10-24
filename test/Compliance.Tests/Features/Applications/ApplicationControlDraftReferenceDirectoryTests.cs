@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Fitz.Testing;
@@ -8,6 +9,7 @@ namespace Bdgrz.Compliance.Tests.Features.Applications;
 
 public sealed class ApplicationControlDraftReferenceDirectoryTests
 {
+    readonly ControlProjectionFacts _controlFacts = new();
     [Fact]
     public async Task ShouldReplaceAndRemoveCurrentDraftReferencesGivenControlLifecycle()
     {
@@ -18,26 +20,26 @@ public sealed class ApplicationControlDraftReferenceDirectoryTests
         var applicationId = Uuid.CreateVersion4();
         var instanceId = Uuid.CreateVersion4();
         var actorId = Uuid.CreateVersion4();
-        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient());
+        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var identity = new CheckpointIdentity("ApplicationControlDraftReferencesV1",
             EventStreamPattern.ForPattern(tenantId.ToString(), "controls"));
         var now = new DateTimeOffset(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
-        await ApplyAsync(directory, identity, new ControlDraftCreated(tenantId, programId,
+        await ApplyAsync(directory, identity, await _controlFacts.FreezeAsync(new ControlDraftCreatedContent(tenantId, programId,
             controlId, Uuid.CreateVersion4(), "AC-01", Content(
                 Entry("application", applicationId, "Payroll"),
                 Entry("system_instance", instanceId, "Payroll production")), actorId,
-            "Author", now));
+            "Author", now)));
 
         // Act
-        await ApplyAsync(directory, identity, new ControlDraftRevised(tenantId, programId,
+        await ApplyAsync(directory, identity, await _controlFacts.FreezeAsync(new ControlDraftRevisedContent(tenantId, programId,
             controlId, 2, Content(Entry("system_instance", instanceId,
-                "Payroll production")), actorId, "Author", now.AddMinutes(1)));
+                "Payroll production")), actorId, "Author", now.AddMinutes(1))));
         var removedApplication = await directory.ListAsync(tenantId, "application",
             applicationId, 20, null);
         var currentInstance = await directory.ListAsync(tenantId, "system_instance",
             instanceId, 20, null);
-        await ApplyAsync(directory, identity, new ControlDraftDiscarded(tenantId, programId,
-            controlId, 2, actorId, "Author", "Duplicate draft", now.AddMinutes(2)));
+        await ApplyAsync(directory, identity, await _controlFacts.FreezeAsync(new ControlDraftDiscardedContent(tenantId, programId,
+            controlId, 2, actorId, "Author", "Duplicate draft", now.AddMinutes(2))));
         var removedInstance = await directory.ListAsync(tenantId, "system_instance",
             instanceId, 20, null);
 
@@ -58,20 +60,20 @@ public sealed class ApplicationControlDraftReferenceDirectoryTests
         var otherTenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var applicationId = Uuid.CreateVersion4();
-        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient());
+        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var now = new DateTimeOffset(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
-        var legacy = new ControlDraftCreated(tenantId, programId, Uuid.CreateVersion4(),
+        var legacy = await _controlFacts.FreezeAsync(new ControlDraftCreatedContent(tenantId, programId, Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), "AC-LEGACY", new ControlDraftContent("Legacy control",
                 "Preserve legacy history", "A retained legacy control", "Keep it readable.",
-                ["Legacy record"]), Uuid.CreateVersion4(), "Author", now);
-        var unresolved = new ControlDraftCreated(tenantId, programId, Uuid.CreateVersion4(),
+                ["Legacy record"]), Uuid.CreateVersion4(), "Author", now));
+        var unresolved = await _controlFacts.FreezeAsync(new ControlDraftCreatedContent(tenantId, programId, Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), "AC-RISK", Content(new ControlApplicabilityReference(
                 Uuid.CreateVersion4(), "risk", "Payroll risk", null,
-                "Risk scope remains unresolved.", true)), Uuid.CreateVersion4(), "Author", now);
-        var otherTenant = new ControlDraftCreated(otherTenantId, Uuid.CreateVersion4(),
+                "Risk scope remains unresolved.", true)), Uuid.CreateVersion4(), "Author", now));
+        var otherTenant = await _controlFacts.FreezeAsync(new ControlDraftCreatedContent(otherTenantId, Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), Uuid.CreateVersion4(), "AC-OTHER", Content(
                 Entry("application", applicationId, "Other payroll")), Uuid.CreateVersion4(),
-            "Author", now);
+            "Author", now));
 
         // Act
         await ApplyAsync(directory, Identity(tenantId), legacy);
@@ -94,13 +96,13 @@ public sealed class ApplicationControlDraftReferenceDirectoryTests
         var tenantId = Uuid.CreateVersion4();
         var controlId = Uuid.CreateVersion4();
         var applicationId = Uuid.CreateVersion4();
-        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient());
+        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var identity = Identity(tenantId);
-        DomainEvent created = new ControlDraftCreated(tenantId, Uuid.CreateVersion4(), controlId,
+        DomainEvent created = await _controlFacts.FreezeAsync(new ControlDraftCreatedContent(tenantId, Uuid.CreateVersion4(), controlId,
             Uuid.CreateVersion4(), "AC-01", Content(Entry("application", applicationId,
-                "Payroll")), Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow);
-        DomainEvent outOfOrder = new ControlDraftRevised(tenantId, Uuid.CreateVersion4(), controlId,
-            3, Content(), Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow);
+                "Payroll")), Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow));
+        DomainEvent outOfOrder = await _controlFacts.FreezeAsync(new ControlDraftRevisedContent(tenantId, Uuid.CreateVersion4(), controlId,
+            3, Content(), Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow));
 
         // Act
         await using (var failed = await directory.BeginAsync(
@@ -131,15 +133,15 @@ public sealed class ApplicationControlDraftReferenceDirectoryTests
         var programId = Uuid.CreateVersion4();
         var controlId = Uuid.CreateVersion4();
         var applicationId = Uuid.CreateVersion4();
-        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient());
+        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var identity = Identity(tenantId);
-        DomainEvent created = new ControlDraftCreated(tenantId, programId, controlId,
+        DomainEvent created = await _controlFacts.FreezeAsync(new ControlDraftCreatedContent(tenantId, programId, controlId,
             Uuid.CreateVersion4(), "AC-01", Content(Entry("application", applicationId,
-                "Payroll")), Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow);
-        DomainEvent foreignRevision = new ControlDraftRevised(otherTenantId, programId, controlId,
-            2, Content(), Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow);
-        DomainEvent foreignDiscard = new ControlDraftDiscarded(otherTenantId, programId, controlId,
-            1, Uuid.CreateVersion4(), "Author", "Foreign tenant", DateTimeOffset.UtcNow);
+                "Payroll")), Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow));
+        DomainEvent foreignRevision = await _controlFacts.FreezeAsync(new ControlDraftRevisedContent(otherTenantId, programId, controlId,
+            2, Content(), Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow));
+        DomainEvent foreignDiscard = await _controlFacts.FreezeAsync(new ControlDraftDiscardedContent(otherTenantId, programId, controlId,
+            1, Uuid.CreateVersion4(), "Author", "Foreign tenant", DateTimeOffset.UtcNow));
         await ApplyAsync(directory, identity, created);
 
         // Act
@@ -164,13 +166,13 @@ public sealed class ApplicationControlDraftReferenceDirectoryTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var controlId = Uuid.CreateVersion4();
-        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient());
+        var directory = new FitzApplicationControlDraftReferenceDirectory(new InMemoryKvClient(), _controlFacts.Content);
         var events = new InMemoryEventStore();
         var consistency = new ApplicationControlDraftReferenceReadConsistency(directory, events);
         var stream = new EventStreamAddress(tenantId.ToString(), "controls", controlId.ToString());
-        DomainEvent created = new ControlDraftCreated(tenantId, Uuid.CreateVersion4(), controlId,
+        DomainEvent created = await _controlFacts.FreezeAsync(new ControlDraftCreatedContent(tenantId, Uuid.CreateVersion4(), controlId,
             Uuid.CreateVersion4(), "AC-01", Content(), Uuid.CreateVersion4(), "Author",
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow));
         created.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), controlId, 1,
             DateTimeOffset.UtcNow));
 

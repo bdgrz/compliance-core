@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Evaluations;
@@ -22,7 +23,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await fixture.ProposeAsync(0);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
                 sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -53,9 +54,9 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         var now = DateTimeOffset.UtcNow;
         var today = DateOnly.FromDateTime(now.UtcDateTime);
         var horizon = today.AddDays(30);
-        var ledgerWork = await WorkSource.LoadAsync(sourceReader, null, sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlMappingReader>(), sourceScope.ServiceProvider.GetRequiredService<ApplicabilityReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(), fixture.TenantId, fixture.ProgramId, today, horizon, now, null, fixture.Boundaries, new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
+        var ledgerWork = await WorkSource.LoadAsync(sourceReader, sourceScope.ServiceProvider.GetRequiredService<ControlReader>(), null, sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlMappingReader>(), sourceScope.ServiceProvider.GetRequiredService<ApplicabilityReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(), fixture.TenantId, fixture.ProgramId, today, horizon, now, null, fixture.Boundaries, new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(), sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
 
         // Act
@@ -83,9 +84,9 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         var horizon = today.AddDays(30);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var ledgerWork = await WorkSource.LoadAsync(sourceReader, null, sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlMappingReader>(), sourceScope.ServiceProvider.GetRequiredService<ApplicabilityReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(), fixture.TenantId, fixture.ProgramId, today, horizon, now, null, fixture.Boundaries, new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
+        var ledgerWork = await WorkSource.LoadAsync(sourceReader, sourceScope.ServiceProvider.GetRequiredService<ControlReader>(), null, sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlMappingReader>(), sourceScope.ServiceProvider.GetRequiredService<ApplicabilityReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(), fixture.TenantId, fixture.ProgramId, today, horizon, now, null, fixture.Boundaries, new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(), sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
 
         // Act
@@ -113,9 +114,9 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         var horizon = today.AddDays(120);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var ledgerWork = await WorkSource.LoadAsync(sourceReader, null, sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlMappingReader>(), sourceScope.ServiceProvider.GetRequiredService<ApplicabilityReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(), fixture.TenantId, fixture.ProgramId, today, horizon, now, null, fixture.Boundaries, new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
+        var ledgerWork = await WorkSource.LoadAsync(sourceReader, sourceScope.ServiceProvider.GetRequiredService<ControlReader>(), null, sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), sourceScope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlMappingReader>(), sourceScope.ServiceProvider.GetRequiredService<ApplicabilityReader>(), sourceScope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(), fixture.TenantId, fixture.ProgramId, today, horizon, now, null, fixture.Boundaries, new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(), sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
 
         // Act
@@ -143,7 +144,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(), sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var now = DateTimeOffset.UtcNow;
         var today = DateOnly.FromDateTime(now.UtcDateTime);
@@ -194,7 +195,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(), sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -231,7 +232,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(), sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -260,7 +261,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await fixture.PlanAsync();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
                 sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var now = DateTimeOffset.UtcNow;

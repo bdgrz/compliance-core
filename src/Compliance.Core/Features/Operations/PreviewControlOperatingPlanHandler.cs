@@ -3,17 +3,21 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Shows what a proposed plan would schedule, conflict with, and reassign; records nothing.</summary>
-public sealed class PreviewControlOperatingPlanHandler(IAggregateReader reader,
+public sealed class PreviewControlOperatingPlanHandler(ControlReader controlSources,
     ControlOperationsReader operations, OperatingAuthority authority)
     : IRequestHandler<PreviewControlOperatingPlan, ControlOperatingPlanPreview>
 {
     const int UpcomingCount = 4;
 
-    public async ValueTask<Result<ControlOperatingPlanPreview>> HandleAsync(
+    public ValueTask<Result<ControlOperatingPlanPreview>> HandleAsync(
+        IRequestContext<PreviewControlOperatingPlan> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlOperatingPlanPreview>> HandleCoreAsync(
         IRequestContext<PreviewControlOperatingPlan> context, CancellationToken ct)
     {
         var request = context.Request;
-        var checkedPlan = await OperatingPlanChecks.CheckAsync(reader, authority, request.TenantId,
+        var checkedPlan = await OperatingPlanChecks.CheckAsync(controlSources, authority, request.TenantId,
             request.ProgramId, request.ControlId, request.ControlVersionId, request.Owner,
             request.BackupOwner, request.ReviewerMemberId, ct).ConfigureAwait(false);
         if (!checkedPlan.IsSuccess)

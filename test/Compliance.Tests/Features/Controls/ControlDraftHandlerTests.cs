@@ -52,21 +52,21 @@ public sealed class ControlDraftHandlerTests
             new RecordingPermissionAuthorizer(allowed: true),
             portia => portia.AddRequestHandler<DiscardControlDraftHandler>(),
             services => services.AddSingleton(new ControlDraftDiscardReleaseGate(false)));
-        await ProgramManagementServices.SeedAsync(provider, new ControlDraft(tenantId, controlId),
+        await ProgramManagementServices.SeedAsync(provider, new ControlRules(tenantId, controlId),
             control => control.Create(programId, Uuid.CreateVersion4(), "AC-GATED", Content(),
                 RbacIds.Member(tenantId, userId), "Author", DateTimeOffset.UtcNow));
 
         await RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(userId))
             // Act
-            .When(new DiscardControlDraft(tenantId, programId, controlId, 1,
+            .When(new DiscardControlDraft(Uuid.CreateVersion4(), tenantId, programId, controlId, 1,
                 "The reader rollout is not complete."))
             // Assert
             .ExpectAuthorized()
             .ExpectHandled()
             .ExpectFailure(RequestErrorKind.Conflict);
         var source = await ProgramManagementServices.HydrateAsync(provider,
-            new ControlDraft(tenantId, controlId));
+            new ControlRules(tenantId, controlId));
         Assert.True(source.IsVisible);
         Assert.Equal(1, source.Revision);
     }
@@ -100,13 +100,13 @@ public sealed class ControlDraftHandlerTests
                     RbacIds.Member(tenantId, userId), "Author", DateTimeOffset.UtcNow));
                 return Result.Success;
             });
-        await ProgramManagementServices.SeedAsync(provider, new ControlDraft(tenantId, controlId),
+        await ProgramManagementServices.SeedAsync(provider, new ControlRules(tenantId, controlId),
             control => control.Create(programId, requestId, request.Identifier, content,
                 RbacIds.Member(tenantId, userId), "Author", DateTimeOffset.UtcNow));
 
         await RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(userId))
-            .GivenMetadata(new RequestMetadata(requestId, requestId, null))
+            .GivenMetadata(new RequestMetadata(controlId, requestId, null))
             // Act
             .When(request)
             // Assert
@@ -130,20 +130,20 @@ public sealed class ControlDraftHandlerTests
             new RecordingPermissionAuthorizer(allowed: true),
             portia => portia.AddRequestHandler<ReviseControlDraftHandler>(),
             services => services.AddSingleton<IControlApplicabilityReferenceValidator>(validator));
-        await ProgramManagementServices.SeedAsync(provider, new ControlDraft(tenantId, controlId),
+        await ProgramManagementServices.SeedAsync(provider, new ControlRules(tenantId, controlId),
             control => control.Create(programId, Uuid.CreateVersion4(), "AC-NOOP", content,
                 RbacIds.Member(tenantId, userId), "Author", DateTimeOffset.UtcNow));
 
         // Act
         await RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(userId))
-            .When(new ReviseControlDraft(tenantId, programId, controlId, 1, content))
+            .When(new ReviseControlDraft(Uuid.CreateVersion4(), tenantId, programId, controlId, 1, content))
             // Assert
             .ExpectAuthorized()
             .ExpectHandled()
             .ExpectSuccess();
         var saved = await ProgramManagementServices.HydrateAsync(provider,
-            new ControlDraft(tenantId, controlId));
+            new ControlRules(tenantId, controlId));
 
         // Assert
         Assert.Equal(0, validator.Calls);

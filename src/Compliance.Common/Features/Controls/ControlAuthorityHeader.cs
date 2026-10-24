@@ -1,0 +1,13 @@
+using Bdgrz.Compliance.Features.Proofs;
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.Controls;
+
+/// <summary>Compact current authority; full content, assignments and history are immutable verified content.</summary>
+public sealed record ControlAuthorityHeader(Uuid TenantId, Uuid ProgramId, Uuid ControlId, string Identifier,
+    long Revision, bool IsCreated, bool IsVisible, bool IsApproved, bool IsRetired, bool HasOpenDraft,
+    Uuid DraftVersionId, Uuid? PendingTargetId, Uuid? PendingRetirementId, DateOnly? PendingRetirementEffectiveUntil,
+    Uuid? PendingAuthorMemberId, Uuid? AcceptedReviewDecisionId, Uuid? AcceptedReviewerMemberId,
+    Uuid? LatestReviewDecisionId, DateTimeOffset? PendingDecisionChangedAt, int ApprovedVersionCount,
+    Uuid? ApprovedVersionId, DateOnly? ApprovedEffectiveFrom, bool EverReviewed, bool ResponsibilityEverAssigned,
+    ImmutableContentRef Content);

@@ -247,6 +247,8 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzProgramDirectory>());
         services.AddScoped<ProgramHistoryReadConsistency>();
         services.AddScoped<ProgramSetupWorkReadConsistency>();
+        services.AddScoped<ControlReader>();
+        services.AddScoped<ControlOperations>();
         services.AddScoped<FitzControlDraftDirectoryV2>();
         services.AddScoped<IControlDraftDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzControlDraftDirectoryV2>());
@@ -1811,10 +1813,10 @@ public static class ComplianceServiceCollectionExtensions
                 FitzAdvisorHandoffDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AdvisorFeedbackWorkItemProjector>(
                 FitzAdvisorFeedbackWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
-            .AddProjector<ControlDraftDirectoryV2Projector>("ControlDraftDirectoryV2",
+            .AddProjector<ControlDraftDirectoryV2Projector>(FitzControlDraftDirectoryV2.ProjectorName,
                 WorkloadScope.PerTenant)
             .AddProjector<ControlDraftHistoryDirectoryV1Projector>(
-                "ControlDraftHistoryDirectoryV1", WorkloadScope.PerTenant)
+                FitzControlDraftHistoryDirectoryV1.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<CommitmentDraftDirectoryProjector>("CommitmentDraftDirectory",
                 WorkloadScope.PerTenant)
             .AddProjector<PolicyDirectoryProjector>(FitzPolicyDirectory.ProjectorName,

@@ -13,12 +13,16 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     the command id distinguishes authored attempts.
 /// </summary>
 public sealed class OpenControlOccurrenceHandler(NativeOperationExecutor operations,
-    ControlOperationsReader operatingReader, IAggregateReader reader, OperatingAuthority authority,
+    ControlOperationsReader operatingReader, ControlReader controlSources, OperatingAuthority authority,
     IImmutableContentStore content, TimeProvider clock) : IRequestHandler<OpenControlOccurrence, ControlOccurrenceView>
 {
     const string CommandKind = "OpenControlOccurrence";
 
-    public async ValueTask<Result<ControlOccurrenceView>> HandleAsync(
+    public ValueTask<Result<ControlOccurrenceView>> HandleAsync(
+        IRequestContext<OpenControlOccurrence> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlOccurrenceView>> HandleCoreAsync(
         IRequestContext<OpenControlOccurrence> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -26,7 +30,7 @@ public sealed class OpenControlOccurrenceHandler(NativeOperationExecutor operati
             !request.BusinessWindow.IsValid)
             return Result<ControlOccurrenceView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "An occurrence opening requires a command id, a valid business window and a non-negative expected revision."));
-        var control = await ControlOperationsSource.LoadControlAsync(reader, request.TenantId, request.ProgramId,
+        var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId, request.ProgramId,
             request.ControlId, ct).ConfigureAwait(false);
         if (control is null)
             return Result<ControlOccurrenceView>.Failure(ControlOperationsSource.ControlNotFound());

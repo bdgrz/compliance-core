@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Commitments;
@@ -268,7 +269,7 @@ public sealed class CommitmentDecisionWorkTests
         var authority = services.GetRequiredService<OperatingAuthority>();
         var consistency = new CommitmentDraftListReadConsistency(fixture.Commitments,
             new InMemoryEventStore());
-        var queue = new WorkQueueReader(reader, authority, TimeProvider.System,
+        var queue = new WorkQueueReader(reader, services.GetRequiredService<ControlReader>(), authority, TimeProvider.System,
             services.GetRequiredService<WorkQueueReadConsistency>(),
             commitments: fixture.Commitments, commitmentConsistency: consistency,
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -309,7 +310,7 @@ public sealed class CommitmentDecisionWorkTests
             CancellationToken.None);
         var projection = new CommitmentDecisionWorkProjectionReader(
             await ReadCommitmentCheckpointAsync(events, fixture.TenantId), live.Value);
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             new WorkQueueReadConsistency(events, [projection]),
             commitments: fixture.Commitments, commitmentConsistency: consistency,

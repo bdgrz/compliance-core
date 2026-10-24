@@ -1,27 +1,31 @@
 using System.Globalization;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
 /// <summary>
-///     Serves approved-version and decision reads from the control's own event stream. A control
-///     holds at most one initial version and a bounded decision list, so source reads are exact,
-///     never lag, and keep replay as the only recovery step.
+///     Serves approved-version and decision reads from verified native source/content at an exact owner cut.
+///     Discovery and presentation histories never become command-owner state.
 /// </summary>
-public sealed class ControlActivationSource(IAggregateReader reader)
+public sealed class ControlActivationSource(ControlReader controls)
 {
     public const int MaximumPageSize = 200;
 
-    public async ValueTask<Result<ControlDraft>> LoadAsync(Uuid tenantId, Uuid programId,
+    public async ValueTask<Result<ControlReadSnapshot>> LoadAsync(Uuid tenantId, Uuid programId,
         Uuid controlId, CancellationToken ct)
     {
-        var control = await reader.HydrateAsync(new ControlDraft(tenantId, controlId), ct)
-            .ConfigureAwait(false);
-        return control.IsVisible && control.ProgramId == programId
-            ? Result<ControlDraft>.Success(control)
-            : Result<ControlDraft>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The control was not found."));
+        try
+        {
+            var control = await controls.ReadAsync(tenantId, programId, controlId, ct).ConfigureAwait(false);
+            return control.IsVisible ? Result<ControlReadSnapshot>.Success(control)
+                : Result<ControlReadSnapshot>.Failure(new RequestError(RequestErrorKind.NotFound, "The control was not found."));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<ControlReadSnapshot>.Failure(ControlReadFailure.Of(error));
+        }
     }
 
     public static Result<ControlVersionView> Version(ControlVersionView? version, string missing) =>

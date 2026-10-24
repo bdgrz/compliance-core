@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Captures approved control versions effective on the Type I examination date.</summary>
 public sealed class ControlTypeIBaselineSourceContributor(
-    IControlDraftDirectoryReader directory, IAggregateReader reader,
+    IControlDraftDirectoryReader directory, ControlReader controlSources,
     ControlDraftListReadConsistency consistency) : ITypeIBaselineSourceContributor
 {
     const int PageSize = 200;
@@ -18,7 +18,11 @@ public sealed class ControlTypeIBaselineSourceContributor(
 
     public string Family => "controls";
 
-    public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+    public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+        ExaminationEngagementView engagement, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => ReadCoreAsync(engagement, ct));
+
+    async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(
         ExaminationEngagementView engagement, CancellationToken ct)
     {
         var fence = await consistency.CaptureAsync(engagement.TenantId, ct)
@@ -47,8 +51,7 @@ public sealed class ControlTypeIBaselineSourceContributor(
                     !seenControlIds.Add(item.ControlId))
                     return InvalidDirectory();
 
-                var control = await reader.HydrateAsync(
-                    new ControlDraft(engagement.TenantId, item.ControlId), ct)
+                var control = await controlSources.ReadAsync(engagement.TenantId, engagement.ProgramId, item.ControlId, ct)
                     .ConfigureAwait(false);
                 if (!control.IsCreated || !control.IsVisible ||
                     control.TenantId != engagement.TenantId || control.Id != item.ControlId ||
@@ -98,7 +101,7 @@ public sealed class ControlTypeIBaselineSourceContributor(
     }
 
     static bool IsValidEffectiveVersion(ControlVersionView version,
-        ExaminationEngagementView engagement, ControlDraft control, string identifier) =>
+        ExaminationEngagementView engagement, ControlReadSnapshot control, string identifier) =>
         version.TenantId == engagement.TenantId && version.ProgramId == engagement.ProgramId &&
         version.ControlId == control.Id && version.Identifier == identifier &&
         version.VersionId != Uuid.Empty && version.Revision >= 1 &&

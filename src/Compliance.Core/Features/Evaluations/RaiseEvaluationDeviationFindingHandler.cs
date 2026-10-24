@@ -12,12 +12,16 @@ namespace Bdgrz.Compliance.Features.Evaluations;
 ///     due in 30 days at medium severity, matching the occurrence-finding product default.
 /// </summary>
 public sealed class RaiseEvaluationDeviationFindingHandler(NativeOperationExecutor operations,
-    IAggregateReader reader, IImmutableContentStore content, ControlEvaluationReader evaluations, TimeProvider clock)
+    IAggregateReader reader, ControlReader controlSources, IImmutableContentStore content, ControlEvaluationReader evaluations, TimeProvider clock)
     : IRequestHandler<RaiseEvaluationDeviationFinding>
 {
     public const string ProcessId = "reactor:" + ControlEvaluationDeviationFindingReactor.WorkloadName;
 
-    public async ValueTask<Result> HandleAsync(
+    public ValueTask<Result> HandleAsync(
+        IRequestContext<RaiseEvaluationDeviationFinding> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result> HandleCoreAsync(
         IRequestContext<RaiseEvaluationDeviationFinding> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -29,8 +33,7 @@ public sealed class RaiseEvaluationDeviationFindingHandler(NativeOperationExecut
             deviation.FindingId != request.FindingId)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The submitted material deviation was not found."));
-        var control = await reader.HydrateAsync(new ControlDraft(request.TenantId,
-            request.ControlId), ct).ConfigureAwait(false);
+        var control = await controlSources.ReadAsync(request.TenantId, request.ProgramId, request.ControlId, ct).ConfigureAwait(false);
         var owner = control.ReadVersions().FirstOrDefault(version =>
             version.VersionId == evaluation.ControlVersionId)?.OwnerMemberId is { } member &&
                     member != Uuid.Empty

@@ -14,12 +14,16 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     owner. An exact retry returns the original frozen view.
 /// </summary>
 public sealed class ApproveControlOperatingPlanHandler(NativeOperationExecutor operations,
-    ControlOperationsReader operatingReader, IAggregateReader reader, IImmutableContentStore content,
+    ControlOperationsReader operatingReader, IAggregateReader reader, ControlReader controlSources, IImmutableContentStore content,
     TimeProvider clock) : IRequestHandler<ApproveControlOperatingPlan, ControlOperatingPlanView>
 {
     const string CommandKind = "ApproveControlOperatingPlan";
 
-    public async ValueTask<Result<ControlOperatingPlanView>> HandleAsync(
+    public ValueTask<Result<ControlOperatingPlanView>> HandleAsync(
+        IRequestContext<ApproveControlOperatingPlan> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlOperatingPlanView>> HandleCoreAsync(
         IRequestContext<ApproveControlOperatingPlan> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
@@ -30,7 +34,7 @@ public sealed class ApproveControlOperatingPlanHandler(NativeOperationExecutor o
         if (request.CommandId == Uuid.Empty || request.PlanVersionId == Uuid.Empty || request.ExpectedRevision < 0)
             return Result<ControlOperatingPlanView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A plan approval requires a command id, a plan version and a non-negative expected revision."));
-        var control = await ControlOperationsSource.LoadControlAsync(reader, request.TenantId, request.ProgramId,
+        var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId, request.ProgramId,
             request.ControlId, ct).ConfigureAwait(false);
         if (control is null)
             return Result<ControlOperatingPlanView>.Failure(ControlOperationsSource.ControlNotFound());

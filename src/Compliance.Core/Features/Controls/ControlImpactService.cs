@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     Builds the bounded, digest-stable impact preview for a pending Control successor or
 ///     retirement from the Control's own stream plus each registered owning-context contributor.
 /// </summary>
-public sealed class ControlImpactService(IAggregateReader reader,
+public sealed class ControlImpactService(ControlReader controlSources,
     IEnumerable<IControlImpactContributor> contributors)
 {
     const int MaximumRecordsPerContext = 200;
@@ -26,11 +26,14 @@ public sealed class ControlImpactService(IAggregateReader reader,
         "responsibilities", "risk_treatments", "work",
     ];
 
-    public async ValueTask<Result<ControlImpactPreview>> PreviewAsync(
+    public ValueTask<Result<ControlImpactPreview>> PreviewAsync(
+        PreviewControlImpact request, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => PreviewCoreAsync(request, ct));
+
+    async ValueTask<Result<ControlImpactPreview>> PreviewCoreAsync(
         PreviewControlImpact request, CancellationToken ct)
     {
-        var control = await reader.HydrateAsync(new ControlDraft(request.TenantId,
-            request.ControlId), ct).ConfigureAwait(false);
+        var control = await controlSources.ReadAsync(request.TenantId, request.ProgramId, request.ControlId, ct).ConfigureAwait(false);
         if (!control.IsVisible || control.ProgramId != request.ProgramId)
             return Result<ControlImpactPreview>.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The control was not found."));

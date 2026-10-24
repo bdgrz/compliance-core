@@ -4,7 +4,10 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-[Discriminator("bdgrz.control.draft.revise", 1)]
-public sealed record ReviseControlDraft(Uuid TenantId, Uuid ProgramId, Uuid ControlId,
+[Discriminator("bdgrz.control.draft.revise", 2)]
+public sealed record ReviseControlDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid ControlId,
     long ExpectedRevision, ControlDraftContent Content) : IRequest,
-    IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

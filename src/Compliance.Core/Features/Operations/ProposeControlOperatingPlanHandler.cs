@@ -13,13 +13,17 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     so an exact retry returns the original frozen view even after later changes to the line.
 /// </summary>
 public sealed class ProposeControlOperatingPlanHandler(NativeOperationExecutor operations,
-    ControlOperationsReader operatingReader, IAggregateReader reader, OperatingAuthority authority,
+    ControlOperationsReader operatingReader, IAggregateReader reader, ControlReader controlSources, OperatingAuthority authority,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ProposeControlOperatingPlan, ControlOperatingPlanView>
 {
     const string CommandKind = "ProposeControlOperatingPlan";
 
-    public async ValueTask<Result<ControlOperatingPlanView>> HandleAsync(
+    public ValueTask<Result<ControlOperatingPlanView>> HandleAsync(
+        IRequestContext<ProposeControlOperatingPlan> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlOperatingPlanView>> HandleCoreAsync(
         IRequestContext<ProposeControlOperatingPlan> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -40,7 +44,7 @@ public sealed class ProposeControlOperatingPlanHandler(NativeOperationExecutor o
         ImmutableContentRef? result = null;
         if (current.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
         {
-            var checkedPlan = await OperatingPlanChecks.CheckAsync(reader, authority, request.TenantId,
+            var checkedPlan = await OperatingPlanChecks.CheckAsync(controlSources, authority, request.TenantId,
                 request.ProgramId, request.ControlId, request.ControlVersionId, request.Owner, request.BackupOwner,
                 request.ReviewerMemberId, ct).ConfigureAwait(false);
             if (!checkedPlan.IsSuccess)

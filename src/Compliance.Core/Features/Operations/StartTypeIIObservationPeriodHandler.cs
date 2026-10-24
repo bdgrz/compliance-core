@@ -18,14 +18,18 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     <c>TypeIIRangeProcess</c> then acquires the range and applies the opening. An exact retry replays the original
 ///     acknowledgment even after the plan or the period changed.
 /// </summary>
-public sealed class StartTypeIIObservationPeriodHandler(NativeOperationExecutor operations, IAggregateReader reader,
+public sealed class StartTypeIIObservationPeriodHandler(NativeOperationExecutor operations, IAggregateReader reader, ControlReader controlSources,
     FindingReader findings, ControlOperationsReader operating, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<StartTypeIIObservationPeriod, OperationAcceptedResponse>
 {
     const string CommandKind = "StartTypeIIObservationPeriod";
     const string InitialEpisode = "initial";
 
-    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+    public ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+        IRequestContext<StartTypeIIObservationPeriod> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<OperationAcceptedResponse>> HandleCoreAsync(
         IRequestContext<StartTypeIIObservationPeriod> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -86,7 +90,7 @@ public sealed class StartTypeIIObservationPeriodHandler(NativeOperationExecutor 
             return Fail(RequestErrorKind.Conflict, "The period must match the exact current approved Type II plan.");
 
         var planContent = planVersion.Content;
-        var checkedSources = await TypeIIPlanSourceValidator.ValidateAsync(reader, findings, operating,
+        var checkedSources = await TypeIIPlanSourceValidator.ValidateAsync(reader, controlSources, findings, operating,
             request.TenantId, request.ProgramId, request.ExaminationId, planContent, now, ct)
             .ConfigureAwait(false);
         if (!checkedSources.IsSuccess)

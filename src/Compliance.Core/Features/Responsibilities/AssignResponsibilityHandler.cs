@@ -10,13 +10,15 @@ namespace Bdgrz.Compliance.Features.Responsibilities;
 
 public sealed class AssignResponsibilityHandler(IAggregateExecutor executor,
     IAggregateReader reader, ITenantMembershipDirectoryReader memberships,
-    IResponsibilityScopeValidator scopeValidator, TimeProvider clock)
+    IResponsibilityScopeValidator scopeValidator, ControlOperations controls, TimeProvider clock)
     : IRequestHandler<AssignResponsibility>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<AssignResponsibility> context,
         CancellationToken ct)
     {
         var request = context.Request;
+        if (request.RecordType == SeparationOfDutiesRecordTypes.Control)
+            return await controls.AssignResponsibilityAsync(context, memberships, scopeValidator, ct).ConfigureAwait(false);
         var scopeResult = await scopeValidator.ValidateAsync(request.TenantId, request.Scope, ct)
             .ConfigureAwait(false);
         if (!scopeResult.IsSuccess)
@@ -51,13 +53,6 @@ public sealed class AssignResponsibilityHandler(IAggregateExecutor executor,
             return await executor.ExecuteAsync(new CommitmentDraft(request.TenantId,
                 request.Scope.RecordId), commitment => CommandFailureRequestAdapter.ToOutcome(
                 commitment.AssignResponsibility(request.Scope, context.RequestId, memberId,
-                    request.Type, actorMemberId, actorDisplay, assignedAt,
-                    request.EffectiveFrom, request.EffectiveUntil, waivers)),
-                context, ct).ConfigureAwait(false);
-        if (request.RecordType == SeparationOfDutiesRecordTypes.Control)
-            return await executor.ExecuteAsync(new ControlDraft(request.TenantId,
-                request.Scope.RecordId), control => CommandFailureRequestAdapter.ToOutcome(
-                control.AssignResponsibility(request.Scope, context.RequestId, memberId,
                     request.Type, actorMemberId, actorDisplay, assignedAt,
                     request.EffectiveFrom, request.EffectiveUntil, waivers)),
                 context, ct).ConfigureAwait(false);

@@ -6,10 +6,13 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Evidence;
 
 /// <summary>Verifies a support link against current source-of-truth aggregate revisions.</summary>
-sealed class EvidenceSupportTargetSource(IAggregateReader reader, ControlOperationsReader operations,
+sealed class EvidenceSupportTargetSource(IAggregateReader reader, ControlReader controlSources, ControlOperationsReader operations,
     ControlEvaluationReader evaluations)
 {
     public ValueTask<Result> RequireExactAsync(LinkEvidenceSupport request, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => RequireExactCoreAsync(request, ct));
+
+    ValueTask<Result> RequireExactCoreAsync(LinkEvidenceSupport request, CancellationToken ct) =>
         request.SupportedRecordType?.Trim().ToLowerInvariant() switch
         {
             "control" => RequireControlAsync(request, ct),
@@ -23,8 +26,7 @@ sealed class EvidenceSupportTargetSource(IAggregateReader reader, ControlOperati
 
     async ValueTask<Result> RequireControlAsync(LinkEvidenceSupport request, CancellationToken ct)
     {
-        var control = await reader.HydrateAsync(new ControlDraft(request.TenantId,
-            request.SupportedRecordId), ct).ConfigureAwait(false);
+        var control = await controlSources.ReadAsync(request.TenantId, request.ProgramId, request.SupportedRecordId, ct).ConfigureAwait(false);
         if (!control.IsVisible || control.ProgramId != request.ProgramId)
             return Missing();
         return control.Revision == request.SupportedRecordRevision ? Result.Success : Stale();
@@ -33,8 +35,7 @@ sealed class EvidenceSupportTargetSource(IAggregateReader reader, ControlOperati
     async ValueTask<Result> RequireControlVersionAsync(LinkEvidenceSupport request,
         CancellationToken ct)
     {
-        var control = await reader.HydrateAsync(new ControlDraft(request.TenantId,
-            request.SupportedRecordId), ct).ConfigureAwait(false);
+        var control = await controlSources.ReadAsync(request.TenantId, request.ProgramId, request.SupportedRecordId, ct).ConfigureAwait(false);
         if (!control.IsVisible || control.ProgramId != request.ProgramId)
             return Missing();
         var version = control.ReadVersions().FirstOrDefault(item =>

@@ -16,7 +16,7 @@ public sealed class ReadinessControlImpactContributor(ReadinessReader readiness)
     public string Context => "readiness";
 
     public async ValueTask<Result<ControlImpactContribution>> ContributeAsync(
-        ControlDraft subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
+        ControlReadSnapshot subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);
         var records = new List<ControlAffectedRecord>();

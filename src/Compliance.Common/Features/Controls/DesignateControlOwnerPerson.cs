@@ -9,7 +9,10 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     pending draft revision; a null <c>PersonId</c> clears the designation. Activation verifies
 ///     the person against the workforce roster.
 /// </summary>
-[Discriminator("bdgrz.control.owner_person.designate", 1)]
-public sealed record DesignateControlOwnerPerson(Uuid TenantId, Uuid ProgramId,
+[Discriminator("bdgrz.control.owner_person.designate", 2)]
+public sealed record DesignateControlOwnerPerson(Uuid CommandId, Uuid TenantId, Uuid ProgramId,
     Uuid ControlId, long ExpectedRevision, Uuid? PersonId, string Rationale)
-    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

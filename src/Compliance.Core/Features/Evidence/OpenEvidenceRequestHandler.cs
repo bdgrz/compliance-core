@@ -15,10 +15,14 @@ namespace Bdgrz.Compliance.Features.Evidence;
 ///     id is the logical operation: an exact retry returns the frozen original request even after later changes, and a
 ///     different intent under the same id conflicts.
 /// </summary>
-public sealed class OpenEvidenceRequestHandler(NativeOperationExecutor operations, IAggregateReader reader,
+public sealed class OpenEvidenceRequestHandler(NativeOperationExecutor operations, IAggregateReader reader, ControlReader controlSources,
     IImmutableContentStore content, TimeProvider clock) : IRequestHandler<OpenEvidenceRequest, EvidenceRequestView>
 {
-    public async ValueTask<Result<EvidenceRequestView>> HandleAsync(IRequestContext<OpenEvidenceRequest> context,
+    public ValueTask<Result<EvidenceRequestView>> HandleAsync(IRequestContext<OpenEvidenceRequest> context,
+        CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<EvidenceRequestView>> HandleCoreAsync(IRequestContext<OpenEvidenceRequest> context,
         CancellationToken ct)
     {
         var request = context.Request;
@@ -51,7 +55,7 @@ public sealed class OpenEvidenceRequestHandler(NativeOperationExecutor operation
                 return Result<EvidenceRequestView>.Failure(FindingCommands.InactiveOwner());
             if (request.ControlId is { } controlId)
             {
-                var control = await reader.HydrateAsync(new ControlDraft(request.TenantId, controlId), ct)
+                var control = await controlSources.ReadAsync(request.TenantId, request.ProgramId, controlId, ct)
                     .ConfigureAwait(false);
                 if (!control.IsCreated || control.ProgramId != request.ProgramId)
                     return Result<EvidenceRequestView>.Failure(new RequestError(RequestErrorKind.Validation,

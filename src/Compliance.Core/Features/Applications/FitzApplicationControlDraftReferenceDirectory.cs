@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-sealed class FitzApplicationControlDraftReferenceDirectory(IKvClient client)
+sealed class FitzApplicationControlDraftReferenceDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client,
             "kv://bdgrz/application-control-draft-references-v1/projection",
             "ApplicationControlDraftReferencesV1"),
@@ -11,33 +12,31 @@ sealed class FitzApplicationControlDraftReferenceDirectory(IKvClient client)
 {
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        if (domainEvent is IControlFact { ChangeCount: 0 })
+            return;
         switch (domainEvent)
         {
             case ControlDraftCreated created:
+                var initialContent = await ControlFactContent.ReadDraftAsync(content, created, ct)
+                    .ConfigureAwait(false);
                 var initial = new ControlDraftReferenceState(created.TenantId, created.ControlId,
-                    created.ProgramId, created.Identifier, 1, ReferenceIds(created.Content));
+                    created.ProgramId, created.Identifier, 1, ReferenceIds(initialContent));
                 await ApplicationControlDraftReferenceSchema.States.InsertAsync(Transaction,
                     initial, ct).ConfigureAwait(false);
-                await InsertAsync(created.TenantId, initial, created.Content, ct)
+                await InsertAsync(created.TenantId, initial, initialContent, ct)
                     .ConfigureAwait(false);
                 break;
             case ControlDraftRevised revised:
-                var revising = await RequireStateAsync(revised.ControlId, ct).ConfigureAwait(false);
-                if (revising.TenantId != revised.TenantId || revising.ProgramId != revised.ProgramId ||
-                    revising.Revision + 1 != revised.Revision)
-                    throw new InvalidOperationException(
-                        "A control draft reference revision is out of order.");
-                await DeleteReferencesAsync(revising.ControlId, revising.EntryIds, ct)
-                    .ConfigureAwait(false);
-                var revisedState = revising with
-                {
-                    Revision = revised.Revision,
-                    EntryIds = ReferenceIds(revised.Content),
-                };
-                await ApplicationControlDraftReferenceSchema.States.ReplaceAsync(Transaction,
-                    revising, revisedState, ct).ConfigureAwait(false);
-                await InsertAsync(revised.TenantId, revisedState, revised.Content, ct)
-                    .ConfigureAwait(false);
+                await ReviseAsync(revised.TenantId, revised.ProgramId, revised.ControlId,
+                    revised.Header.Revision, revised, ct).ConfigureAwait(false);
+                break;
+            case ControlSuccessorProposed proposed:
+                await ReviseAsync(proposed.TenantId, proposed.ProgramId, proposed.ControlId,
+                    proposed.Header.Revision, proposed, ct).ConfigureAwait(false);
+                break;
+            case ControlProposalWithdrawn withdrawn:
+                await ReviseAsync(withdrawn.TenantId, withdrawn.ProgramId, withdrawn.ControlId,
+                    withdrawn.Header.Revision, withdrawn, ct).ConfigureAwait(false);
                 break;
             case ControlDraftDiscarded discarded:
                 var discarding = await RequireStateAsync(discarded.ControlId, ct)
@@ -53,6 +52,21 @@ sealed class FitzApplicationControlDraftReferenceDirectory(IKvClient client)
                     discarded.ControlId, ct).ConfigureAwait(false);
                 break;
         }
+    }
+
+    async ValueTask ReviseAsync(Uuid tenantId, Uuid programId, Uuid controlId,
+        long revision, IControlFact fact, CancellationToken ct)
+    {
+        var revising = await RequireStateAsync(controlId, ct).ConfigureAwait(false);
+        if (revising.TenantId != tenantId || revising.ProgramId != programId ||
+            revising.Revision + 1 != revision)
+            throw new InvalidOperationException("A control draft reference revision is out of order.");
+        var revisedContent = await ControlFactContent.ReadDraftAsync(content, fact, ct).ConfigureAwait(false);
+        await DeleteReferencesAsync(controlId, revising.EntryIds, ct).ConfigureAwait(false);
+        var next = revising with { Revision = revision, EntryIds = ReferenceIds(revisedContent) };
+        await ApplicationControlDraftReferenceSchema.States.ReplaceAsync(Transaction,
+            revising, next, ct).ConfigureAwait(false);
+        await InsertAsync(tenantId, next, revisedContent, ct).ConfigureAwait(false);
     }
 
     static Uuid[] ReferenceIds(ControlDraftContent content) =>

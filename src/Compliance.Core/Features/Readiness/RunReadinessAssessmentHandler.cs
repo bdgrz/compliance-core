@@ -20,14 +20,18 @@ namespace Bdgrz.Compliance.Features.Readiness;
 ///     runs. A source that is not readable or consistent yet fails the admission as transient; a missing business input
 ///     is recorded as an explicit gap by the computation, never as a partial assessment.
 /// </summary>
-public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operations, IAggregateReader reader,
+public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operations, IAggregateReader reader, ControlReader controlSources,
     ControlMappingReader mappingReader, ICriteriaCatalog catalog, IReadinessSourceReader sources,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<RunReadinessAssessment, OperationAcceptedResponse>
 {
     const string CommandKind = "RunReadinessAssessment";
 
-    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+    public ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+        IRequestContext<RunReadinessAssessment> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<OperationAcceptedResponse>> HandleCoreAsync(
         IRequestContext<RunReadinessAssessment> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -91,7 +95,7 @@ public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operat
                      .Where(mapping => ReadinessRules.ActiveAt(mapping, asOf) is not null)
                      .Select(static mapping => mapping.ControlId).Distinct())
         {
-            var control = await reader.HydrateAsync(new ControlDraft(tenant, controlId), ct).ConfigureAwait(false);
+            var control = await controlSources.ReadAsync(tenant, request.ProgramId, controlId, ct).ConfigureAwait(false);
             controls.Add(new ReadinessEffectiveControl(controlId,
                 control.IsVisible && control.ProgramId == request.ProgramId
                     ? ReadinessControlSelection.EffectiveVersionAt(control, asOf)

@@ -20,7 +20,7 @@ namespace Bdgrz.Compliance.Features.Work;
 ///     a member the source's separation of duties excludes. Scoped per request, it memoizes holder,
 ///     membership, and eligibility answers so each is hydrated at most once.
 /// </summary>
-public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority authority,
+public sealed class WorkQueueReader(IAggregateReader reader, ControlReader controlSources, OperatingAuthority authority,
     TimeProvider clock, WorkQueueReadConsistency queueConsistency,
     ICampaignDirectoryReader? campaigns = null,
     IBoundaryDirectoryReader? boundaries = null,
@@ -96,7 +96,7 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
         var today = todayOverride ?? DateOnly.FromDateTime(now.UtcDateTime);
         var projectedKinds = _accountableWorkItems.SelectMany(static reader =>
                 reader.ProjectedKinds).ToHashSet(StringComparer.Ordinal);
-        var work = await WorkSource.LoadAsync(reader, findings, riskGovernance, evidenceRequests, operatingReader,
+        var work = await WorkSource.LoadAsync(reader, controlSources, findings, riskGovernance, evidenceRequests, operatingReader,
             mappingReader, applicabilityReader, evaluationReader, tenantId, programId, today,
             today.AddDays(horizonDays), now, workItemId, boundaries,
             projectedKinds, ct)
@@ -150,7 +150,7 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
         }
         if (controls is not null && !ControlDecisionWork.IsFullyProjected(projectedKinds))
         {
-            var decisions = await ControlDecisionWork.LoadAsync(reader, controls,
+            var decisions = await ControlDecisionWork.LoadAsync(controlSources, controls,
                 controlConsistency, authority, tenantId, programId, now, workItemId,
                 controlActivationGate?.IsEnabled == true,
                 controlLifecycleGate?.IsEnabled == true, ct).ConfigureAwait(false);

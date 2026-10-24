@@ -8,7 +8,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     their review; and their open corrective actions. Items order by due date, then
 ///     materiality, then creation, then source ID (M0-D15).
 /// </summary>
-public sealed class ListMyControlWorkHandler(IAggregateReader reader,
+public sealed class ListMyControlWorkHandler(ControlReader controls,
     ControlOperationsReader operations, FindingReader findings, OperatingAuthority authority, TimeProvider clock)
     : IRequestHandler<ListMyControlWork, MyControlWorkView>
 {
@@ -28,7 +28,7 @@ public sealed class ListMyControlWorkHandler(IAggregateReader reader,
         var responsibilities = new List<ControlResponsibilityView>();
         var items = new List<(WorkItemView Item, DateTimeOffset CreatedAt)>();
         foreach (var (controlId, plan, identifier, occurrences) in await ControlOperationsSource
-                     .ReadPlannedAsync(reader, ledger, request.TenantId, request.ProgramId, today,
+                     .ReadPlannedAsync(controls, ledger, request.TenantId, request.ProgramId, today,
                          horizon, ct).ConfigureAwait(false))
         {
             var owns = await authority.HoldsAsync(request.TenantId, plan.Owner, actor.MemberId, ct)

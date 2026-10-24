@@ -13,11 +13,15 @@ namespace Bdgrz.Compliance.Features.ControlMappings;
 ///     that is no longer current is flagged for remapping. Coverage never states that a
 ///     criterion is satisfied.
 /// </summary>
-public sealed class ListCriteriaCoverageHandler(IAggregateReader reader, ICriteriaCatalog catalog,
+public sealed class ListCriteriaCoverageHandler(IAggregateReader reader, ControlReader controlSources, ICriteriaCatalog catalog,
     CriteriaCoverageReadConsistency coverage, ICriteriaTextOverlayReader overlays)
     : IRequestHandler<ListCriteriaCoverage, Page<CriterionCoverageView>>
 {
-    public async ValueTask<Result<Page<CriterionCoverageView>>> HandleAsync(
+    public ValueTask<Result<Page<CriterionCoverageView>>> HandleAsync(
+        IRequestContext<ListCriteriaCoverage> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<Page<CriterionCoverageView>>> HandleCoreAsync(
         IRequestContext<ListCriteriaCoverage> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -48,8 +52,7 @@ public sealed class ListCriteriaCoverageHandler(IAggregateReader reader, ICriter
                      .Where(static mapping => mapping.ActiveVersionNumber is not null)
                      .Select(static mapping => mapping.ControlId).Distinct())
         {
-            var control = await reader.HydrateAsync(new ControlDraft(request.TenantId,
-                controlId), ct).ConfigureAwait(false);
+            var control = await controlSources.ReadAsync(request.TenantId, request.ProgramId, controlId, ct).ConfigureAwait(false);
             current[controlId] = control.ApprovedVersion is { Status: "approved" } version
                 ? version.VersionId
                 : null;

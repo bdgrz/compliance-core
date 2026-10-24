@@ -293,7 +293,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         public Uuid ReviewerId { get; } = Uuid.CreateVersion4();
         public Uuid ExecutiveId { get; } = Uuid.CreateVersion4();
         public Uuid OtherReviewerId { get; } = Uuid.CreateVersion4();
-        public Uuid ControlId { get; } = Uuid.CreateVersion4();
+        public Uuid ControlId => ControlDraft.IdFor(TenantId, ProgramId, "AC-T2-01");
         public Uuid ControlVersionId => ControlVersionIds.Initial(ControlId);
         public DateOnly PeriodStart { get; } = new(2026, 10, 1);
         public DateOnly PeriodEnd { get; } = new(2027, 9, 30);
@@ -353,7 +353,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
             Assert.True(ownerMember.Register().IsSuccess);
             await Writer.SaveAsync(ownerMember, new RequestDispatchContext(RequestActor.System));
 
-            var control = new ControlDraft(TenantId, ControlId);
+            var control = new ControlRules(TenantId, ControlId);
             Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "AC-T2-01",
                 new ControlDraftContent("Quarterly access review", "Review user access",
                     "Management reviews access quarterly.",
@@ -371,7 +371,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
                 new DateOnly(2026, 10, 1), "Approved for operation.", new HashSet<Uuid> { MemberId },
                 ExecutiveId, "Chief Executive", Now.AddMinutes(-16)));
             var controlVersion = control.ApprovedVersion!;
-            await Writer.SaveAsync(control, new RequestDispatchContext(RequestActor.System));
+            await ControlSeeds.WriteAsync(Writer, Host.Content, control, CancellationToken.None);
 
             var operatingPlanId = Uuid.CreateVersion4();
             await ControlOperatingSeed.ProposeAsync(Host.Provider, TenantId, ProgramId, ControlId, controlVersion.VersionId,

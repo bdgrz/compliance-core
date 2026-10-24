@@ -19,7 +19,7 @@ public sealed class FitzControlDecisionWorkItemDirectoryTests
         var fixture = await OperationsFixture.CreateAsync();
         fixture.Permissions.Managers.Add(fixture.ReviewerMemberId);
         fixture.Permissions.Managers.Add(fixture.OwnerMemberId);
-        var controlId = Uuid.CreateVersion4();
+        var controlId = ControlDraft.IdFor(fixture.TenantId, fixture.ProgramId, "AC-PROJ");
         var createdAt = DateTimeOffset.UtcNow.AddMinutes(-3);
         var reviewAssignmentId = Uuid.CreateVersion4();
         var approvalAssignmentId = Uuid.CreateVersion4();
@@ -43,14 +43,14 @@ public sealed class FitzControlDecisionWorkItemDirectoryTests
         var events = services.GetRequiredService<IDomainEventReader>();
         var kvClient = new InMemoryKvClient();
         var directory = new FitzControlDecisionWorkItemDirectory(kvClient,
-            services.GetRequiredService<IAggregateReader>(),
+            services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(),
             new ControlActivationReleaseGate(true), new ControlLifecycleReleaseGate(true));
         await ProjectPendingEventsAsync(directory, events, fixture.TenantId);
         var initial = Assert.Single((await directory.LoadProgramAsync(fixture.TenantId,
             fixture.ProgramId, createdAt, DateOnly.MaxValue, null)).Value);
         var activationDisabled = new FitzControlDecisionWorkItemDirectory(kvClient,
-            services.GetRequiredService<IAggregateReader>(),
+            services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(),
             new ControlActivationReleaseGate(false), new ControlLifecycleReleaseGate(true));
         Assert.Empty((await activationDisabled.LoadProgramAsync(fixture.TenantId,
@@ -119,7 +119,7 @@ public sealed class FitzControlDecisionWorkItemDirectoryTests
         var retirementApproval = Assert.Single((await directory.LoadProgramAsync(fixture.TenantId,
             fixture.ProgramId, retirementReviewedAt, DateOnly.MaxValue, null)).Value);
         var lifecycleDisabled = new FitzControlDecisionWorkItemDirectory(kvClient,
-            services.GetRequiredService<IAggregateReader>(),
+            services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(),
             new ControlActivationReleaseGate(true), new ControlLifecycleReleaseGate(false));
         Assert.Empty((await lifecycleDisabled.LoadProgramAsync(fixture.TenantId,
@@ -172,7 +172,7 @@ public sealed class FitzControlDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var controlId = Uuid.CreateVersion4();
+        var controlId = ControlDraft.IdFor(fixture.TenantId, fixture.ProgramId, "AC-FALLBACK");
         var createdAt = DateTimeOffset.UtcNow.AddMinutes(-1);
         var responsibilityScope = new ResponsibilityScope("control", controlId,
             ControlVersionIds.Initial(controlId), 1);
@@ -189,7 +189,7 @@ public sealed class FitzControlDecisionWorkItemDirectoryTests
         var services = scope.ServiceProvider;
         var events = services.GetRequiredService<IDomainEventReader>();
         var directory = new FitzControlDecisionWorkItemDirectory(new InMemoryKvClient(),
-            services.GetRequiredService<IAggregateReader>(),
+            services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(),
             new ControlActivationReleaseGate(true), new ControlLifecycleReleaseGate(true));
 
@@ -203,10 +203,10 @@ public sealed class FitzControlDecisionWorkItemDirectoryTests
     }
 
     static async Task ApplyControlAsync(OperationsFixture fixture, Uuid controlId,
-        Func<ControlDraft, Result> apply) => await ProgramManagementServices.SeedAsync(
-        fixture.Provider, new ControlDraft(fixture.TenantId, controlId), apply);
+        Func<ControlRules, Result> apply) => await ProgramManagementServices.SeedAsync(
+        fixture.Provider, new ControlRules(fixture.TenantId, controlId), apply);
 
-    static void Assign(ControlDraft control, OperationsFixture fixture,
+    static void Assign(ControlRules control, OperationsFixture fixture,
         ResponsibilityScope scope, Uuid assignmentId, Uuid memberId, ResponsibilityType type,
         DateTimeOffset at)
     {

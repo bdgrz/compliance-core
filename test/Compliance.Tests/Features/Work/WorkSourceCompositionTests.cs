@@ -598,7 +598,7 @@ public sealed class WorkSourceCompositionTests
     {
         var controlId = ControlDraft.IdFor(fixture.TenantId, fixture.ProgramId, identifier);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ControlDraft(fixture.TenantId, controlId), control =>
+            new ControlRules(fixture.TenantId, controlId), control =>
             {
                 var content = new ControlDraftContent("Mixed work control", "Protect access",
                     "Review access on a schedule.", "The owner records the review.",
@@ -645,7 +645,7 @@ public sealed class WorkSourceCompositionTests
             });
     }
 
-    static void AssignControl(ControlDraft control, OperationsFixture fixture,
+    static void AssignControl(ControlRules control, OperationsFixture fixture,
         ResponsibilityScope scope, Uuid memberId, ResponsibilityType type, DateTimeOffset at) =>
         Assert.Null(control.AssignResponsibility(scope, Uuid.CreateVersion4(), memberId, type,
             fixture.LeadMemberId, "Lead", at, at.AddMinutes(-1), null, []));

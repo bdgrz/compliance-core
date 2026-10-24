@@ -11,11 +11,15 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     program manager may review, and never the performer or recorder without a waiver.
 /// </summary>
 public sealed class ReviewControlOccurrenceHandler(NativeOperationExecutor operations,
-    ControlOperationsReader operatingReader, IAggregateReader reader, OperatingAuthority authority,
+    ControlOperationsReader operatingReader, IAggregateReader reader, ControlReader controlSources, OperatingAuthority authority,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ReviewControlOccurrence, ControlOccurrenceView>
 {
-    public async ValueTask<Result<ControlOccurrenceView>> HandleAsync(
+    public ValueTask<Result<ControlOccurrenceView>> HandleAsync(
+        IRequestContext<ReviewControlOccurrence> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlOccurrenceView>> HandleCoreAsync(
         IRequestContext<ReviewControlOccurrence> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
@@ -28,7 +32,7 @@ public sealed class ReviewControlOccurrenceHandler(NativeOperationExecutor opera
                 "A review requires a command id and a non-negative expected revision."));
         var now = clock.GetUtcNow();
         var today = DateOnly.FromDateTime(now.UtcDateTime);
-        var control = await ControlOperationsSource.LoadControlAsync(reader, request.TenantId, request.ProgramId,
+        var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId, request.ProgramId,
             request.ControlId, ct).ConfigureAwait(false);
         if (control is null)
             return Result<ControlOccurrenceView>.Failure(ControlOperationsSource.ControlNotFound());

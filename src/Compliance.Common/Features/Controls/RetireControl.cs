@@ -4,8 +4,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-[Discriminator("bdgrz.control.retire", 1)]
-public sealed record RetireControl(Uuid TenantId, Uuid ProgramId, Uuid ControlId,
+[Discriminator("bdgrz.control.retire", 2)]
+public sealed record RetireControl(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid ControlId,
     long ExpectedRevision, Uuid AcceptedReviewDecisionId, string ImpactDigest,
     string Rationale, Uuid? SeparationOfDutiesWaiverId = null)
-    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

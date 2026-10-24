@@ -1,10 +1,11 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-sealed class FitzApplicationControlVersionReferenceDirectory(IKvClient client)
+sealed class FitzApplicationControlVersionReferenceDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client,
             "kv://bdgrz/application-control-version-references-v1/projection",
             ProjectorName),
@@ -37,6 +38,8 @@ sealed class FitzApplicationControlVersionReferenceDirectory(IKvClient client)
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        if (domainEvent is IControlFact { ChangeCount: 0 })
+            return;
         switch (domainEvent)
         {
             case ControlDraftCreated created:
@@ -214,7 +217,9 @@ sealed class FitzApplicationControlVersionReferenceDirectory(IKvClient client)
             approved.EffectiveFrom == default)
             throw new InvalidOperationException(
                 "An approved control version has invalid version, revision, or effective date data.");
-        var references = (approved.Content.Applicability ?? []).Where(IsIndexed).ToArray();
+        var approvedContent = await ControlFactContent.ReadDraftAsync(content, approved, ct)
+            .ConfigureAwait(false);
+        var references = (approvedContent.Applicability ?? []).Where(IsIndexed).ToArray();
         if (references.Length > MaximumApplicabilityEntries)
             throw new InvalidOperationException(
                 "An approved control version exceeds its applicability-reference bound.");
