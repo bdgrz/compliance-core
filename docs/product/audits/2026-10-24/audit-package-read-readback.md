@@ -1,0 +1,9 @@
+# Scoped package read producers
+
+GetAuditPackage and ListAuditPackages now have registered HTTP producers. Detail uses the canonical existing package_id route; a custom binder reads tenant/program/package only from that route and ignores misleading query identities. Existing program read authorization remains mandatory and MCP exposure is unchanged.
+
+The per-tenant directory projects only immutable creation identity, program and creation ordering. List composes current authoritative native views on each bounded page, verifies a caught-up unchanged source checkpoint before/after composition, keeps cursor scope/query binding, and returns failure rather than a partial page. Missing content is transient; corrupt content is permanent. Known detail reads do not depend on a discovery projection. No area-wide history reconstruction is used for paging.
+
+RED:3production-host tests failed on missing GET/OpenAPI producers (1existing negative case passed). GREEN: strict Release build0warnings/errors;52 focused/direct/production-host/web smoke tests; all5,510 backend unit tests. Integration refinements corrected fixture-only scoped permission adapters, failed-Result assertions, actual RequestContext type and transaction disposal before a query-side read; production authorization was not relaxed. Source tests cover native current state, tenant/program/cursor isolation, stable creation pagination, lag, raced source append/checkpoint advancement, missing/corrupt data and no partial page.
+
+Jev1.14.0 directly reviewed10 current implementation/dependency hash sets; no risk signal reached0.65. Separate direct preflight selected merge_scoped_repair probability0.73 (introduced_regression0.18, scope_misrepresentation0.12), supported by executable and source evidence. Faithful source-byte publication remains separate ongoing S29 work; bare-ID/global operation lookup remains independently blocked. No deployment, reset or GitHub issue was created.

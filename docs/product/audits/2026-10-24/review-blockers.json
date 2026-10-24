@@ -44,7 +44,9 @@
     "audit-package-file-triage.json",
     "foundation-file-reviews.json",
     "foundation-file-triage.json",
-    "foundation-integration-jev-response.json"
+    "foundation-integration-jev-response.json",
+    "audit-package-read-file-reviews.json",
+    "audit-package-read-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -96,9 +98,12 @@
     {
       "id": "audit-package-scoped-queries",
       "slice": "S29",
-      "status": "offline_implementation",
+      "status": "validated_awaiting_merge",
       "externalDependency": false,
-      "evidence": "Get/List DTOs have full program/tenant scope but owning public handlers/index/routes were absent; implementing independently of bare-ID lookup blocker."
+      "evidence": "Get/List DTOs have full program/tenant scope but owning public handlers/index/routes were absent; implementing independently of bare-ID lookup blocker.",
+      "focusedGreen": "52passed/0failed includingproductionHTTP/OpenAPI",
+      "fullUnitGreen": "5510passed/0failed",
+      "jev": "10current implementation/dependency hashes;0highsignals;directpreflightmerge0.73"
     },
     {
       "id": "audit-package-source-byte-publication",
@@ -109,11 +114,13 @@
     },
     {
       "id": "grant-and-freeze-replay",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "focusedGreen": "949passed/0failed",
       "mcpGreen": "1passed/0failed",
       "fullUnitGreen": "5491passed/0failed",
-      "jev": "5current files;4 high signals source/test triaged; direct integration choice merge_scoped_repair0.81"
+      "jev": "5current files;4 high signals source/test triaged; direct integration choice merge_scoped_repair0.81",
+      "pullRequest": 1094,
+      "mergeCommit": "e046974fb01cca7dc80fb42df6ee107ca4346977"
     }
   ],
   "resolved": [

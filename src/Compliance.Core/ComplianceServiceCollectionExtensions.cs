@@ -78,6 +78,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ArtifactRetentionRead>();
         services.AddScoped<AuditPackageSourceBuilder>();
         services.AddScoped<AuditPackageReader>();
+        services.AddScoped<FitzAuditPackageDirectory>();
+        services.AddScoped<IAuditPackageDirectoryReader>(provider => provider.GetRequiredService<FitzAuditPackageDirectory>());
+        services.AddScoped<IAuditPackageDirectoryProjection>(provider => provider.GetRequiredService<FitzAuditPackageDirectory>());
+        services.AddScoped<AuditPackageDirectoryReadConsistency>();
         services.AddScoped<AuditPackageRootOperation>();
         services.AddScoped<AuditPackageSourceVerifier>();
         services.AddScoped<AuditPackageArchiveBuilder>();
@@ -1215,6 +1219,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<SignManagementRepresentationLetterHandler>()
             .AddRequestHandler<RecordExaminationOutcomeHandler>()
             .AddRequestHandler<RecordManagementExaminationReviewHandler>()
+            .AddRequestHandler<GetAuditPackageHandler>()
+            .AddRequestHandler<ListAuditPackagesHandler>()
             .AddRequestHandler<CreateAuditPackageHandler>()
             .AddRequestHandler<AmendAuditPackageHandler>()
             .AddRequestHandler<ValidateAuditPackageHandler>()
@@ -1635,6 +1641,7 @@ public static class ComplianceServiceCollectionExtensions
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<IdentityRecoveryAcceptanceReactor>("IdentityRecoveryAcceptanceV1", WorkloadScope.Global,
                 options => options.FailureAttemptLimit = int.MaxValue)
+            .AddProjector<AuditPackageDirectoryProjector>(FitzAuditPackageDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<PlatformUserDirectoryProjector>("PlatformUserDirectoryV2", WorkloadScope.Global)
             .AddProjector<IdentityDirectoryProjector>("UserIdentityDirectory", WorkloadScope.Global)
             .AddProjector<EmailAddressDirectoryProjector>("EmailAddressDirectory", WorkloadScope.Global)
