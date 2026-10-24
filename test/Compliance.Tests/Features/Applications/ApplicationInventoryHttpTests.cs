@@ -104,11 +104,11 @@ public sealed class ApplicationInventoryHttpTests
             retireBody.Replace("Decommissioned", "Another reason", StringComparison.Ordinal));
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, revisedAgain.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, revisedAgain.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, staleOther.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, retired.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, retiredAgain.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retired.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retiredAgain.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, retiredChanged.StatusCode);
         var events = await fixture.EventsAsync("applications", applicationId);
         Assert.Collection(events, ev => Assert.IsType<ApplicationDeclared>(ev.Event),
@@ -142,8 +142,8 @@ public sealed class ApplicationInventoryHttpTests
         Assert.Equal(HttpStatusCode.OK, declared.StatusCode);
         Assert.Equal(instanceId, await RegisteredIdAsync(declared, "system_instance_id"));
         Assert.Equal(HttpStatusCode.OK, declaredAgain.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, retired.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, retiredAgain.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retired.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retiredAgain.StatusCode);
         Assert.Equal(HttpStatusCode.OK, declaredAfterRetirement.StatusCode);
         Assert.Collection(await fixture.EventsAsync("system-instances", instanceId),
             ev => Assert.IsType<SystemInstanceRegistered>(ev.Event),

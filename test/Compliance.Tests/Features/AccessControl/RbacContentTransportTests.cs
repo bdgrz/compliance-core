@@ -64,7 +64,7 @@ public sealed class RbacContentTransportTests
                 return;
             }
             using var response = await client.PutAsJsonAsync($"/api/v1/tenants/{tenant}/teams/{team}", new { name });
-            Assert.Equal(succeeds ? HttpStatusCode.NoContent : HttpStatusCode.Conflict, response.StatusCode);
+            Assert.Equal(succeeds ? HttpStatusCode.OK : HttpStatusCode.Conflict, response.StatusCode);
         }
 
         async Task DeleteAsync(Uuid commandId)
@@ -83,7 +83,7 @@ public sealed class RbacContentTransportTests
                 $"/api/v1/tenants/{tenant}/teams/{team}/deletions/{commandId}")
             { Content = new StringContent("{}", Encoding.UTF8, "application/json") };
             using var response = await client.SendAsync(request);
-            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
     }
 
@@ -91,7 +91,7 @@ public sealed class RbacContentTransportTests
     [InlineData("", HttpStatusCode.NotFound)]
     [InlineData("malformed", HttpStatusCode.BadRequest)]
     [InlineData("00000000-0000-0000-0000-000000000000", HttpStatusCode.BadRequest)]
-    [InlineData(OperationId, HttpStatusCode.NoContent)]
+    [InlineData(OperationId, HttpStatusCode.OK)]
     public async Task ShouldValidateRequiredRouteIdentityGivenAnAuthorizedRoleDeletion(
         string commandId, HttpStatusCode expected)
     {
@@ -116,7 +116,7 @@ public sealed class RbacContentTransportTests
 
         // Assert
         Assert.Equal(expected, response.StatusCode);
-        Assert.Equal(expected == HttpStatusCode.NoContent ? 1 : 0, facts.OfType<RoleDeleted>().Count());
+        Assert.Equal(expected == HttpStatusCode.OK ? 1 : 0, facts.OfType<RoleDeleted>().Count());
     }
 
     [Fact]

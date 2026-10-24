@@ -54,14 +54,6 @@ public sealed class CriteriaEvaluationTransportTests
             ProgramBase + "/controls/{control_id}/evaluations/{evaluation_id}/reviews/{command_id}",
         };
 
-        var unit = new HashSet<string>(StringComparer.Ordinal)
-        {
-            ProgramBase + "/control-mappings/{mapping_id}/reviews/{command_id}",
-            ProgramBase + "/control-mappings/{mapping_id}/retirements/{command_id}",
-            ProgramBase + "/criterion-applicability/{decision_id}/reviews/{command_id}",
-            ProgramBase + "/criterion-applicability/{decision_id}/withdrawals/{command_id}",
-        };
-
         // Act
         using var response = await client.GetAsync("/openapi/v1.json");
         using var document = JsonDocument.Parse(await response.Content.ReadAsStreamAsync());
@@ -73,8 +65,7 @@ public sealed class CriteriaEvaluationTransportTests
         {
             var operation = paths.GetProperty(route).GetProperty("put");
             Assert.True(operation.TryGetProperty("requestBody", out _), route);
-            // A command that returns no value answers 204, as every other Unit command route does.
-            Assert.True(operation.GetProperty("responses").TryGetProperty(unit.Contains(route) ? "204" : "200", out _),
+            Assert.True(operation.GetProperty("responses").TryGetProperty("200", out _),
                 route);
             Assert.False(operation.GetProperty("responses").TryGetProperty("202", out _), route);
         }
@@ -166,16 +157,16 @@ public sealed class CriteriaEvaluationTransportTests
         Assert.Equal(HttpStatusCode.OK, proposed.StatusCode);
         Assert.Equal(proposedText, await proposedAgain.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Conflict, changedProposal.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, reviewed.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, reviewedAgain.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, reviewed.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, reviewedAgain.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, changedReview.StatusCode);
         Assert.Equal(proposedText, await proposedAfterReview.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.OK, decided.StatusCode);
         Assert.Equal(decidedText, await decidedAgain.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Conflict, changedDecision.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, decisionReviewed.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, withdrawn.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, retired.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, decisionReviewed.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, withdrawn.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retired.StatusCode);
         using var registration = JsonDocument.Parse(proposedText);
         Assert.Equal(mappingId.ToString(), registration.RootElement.GetProperty("mapping_id").GetString());
         Assert.Equal(1, registration.RootElement.GetProperty("revision").GetInt64());

@@ -344,7 +344,7 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
         using var response = await fixture.SendAsync(preview, body, query);
 
         // Assert
-        Assert.Equal(preview ? HttpStatusCode.OK : HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(preview ? HttpStatusCode.OK : HttpStatusCode.OK, response.StatusCode);
         var events = await fixture.EventsAsync();
         if (preview)
             Assert.Single(events);
@@ -413,7 +413,7 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
         else
         {
             Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
-            Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
             using var json = JsonDocument.Parse(await preview.Content.ReadAsStringAsync());
             Assert.Contains(json.RootElement.GetProperty("changes").EnumerateArray(),
                 change => change.GetProperty("field").GetString() == field &&
@@ -443,7 +443,7 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
         Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
         using var json = JsonDocument.Parse(await preview.Content.ReadAsStringAsync());
         Assert.Empty(json.RootElement.GetProperty("changes").EnumerateArray());
-        Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         var after = await fixture.EventsAsync();
         Assert.Equal(before.Length + 1, after.Length);
         var revised = Assert.IsType<ApplicationRevised>(after[^1].Event);
@@ -555,7 +555,7 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
         using var cleared = await fixture.ReviseAsync(2, $",\"{field}\":null");
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, omitted.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, omitted.StatusCode);
         Assert.Equal(2, retained.Length);
         var revised = Assert.IsType<ApplicationRevised>(retained[^1].Event);
         Assert.Equal("internal", revised.Classification);

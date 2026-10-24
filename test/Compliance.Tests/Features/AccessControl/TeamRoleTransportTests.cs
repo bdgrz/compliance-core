@@ -80,7 +80,7 @@ public sealed class TeamRoleTransportTests
             if (assignment is null)
                 request.Content = new StringContent($"{{\"expected_revision\":{revision}}}", Encoding.UTF8, "application/json");
             using var response = await client.SendAsync(request);
-            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
     }
 
@@ -88,8 +88,8 @@ public sealed class TeamRoleTransportTests
     [InlineData("", "", HttpStatusCode.NotFound)]
     [InlineData("malformed", "", HttpStatusCode.BadRequest)]
     [InlineData("00000000-0000-0000-0000-000000000000", "", HttpStatusCode.BadRequest)]
-    [InlineData(OperationId, "", HttpStatusCode.NoContent)]
-    [InlineData(OperationId, ",\"command_id\":\"" + OperationId + "\"", HttpStatusCode.NoContent)]
+    [InlineData(OperationId, "", HttpStatusCode.OK)]
+    [InlineData(OperationId, ",\"command_id\":\"" + OperationId + "\"", HttpStatusCode.OK)]
     [InlineData(OperationId, ",\"command_id\":\"" + AnotherId + "\"", HttpStatusCode.BadRequest)]
     [InlineData(OperationId, ",\"command_id\":null", HttpStatusCode.BadRequest)]
     [InlineData(OperationId, ",\"command_id\":\"malformed\"", HttpStatusCode.BadRequest)]
@@ -114,7 +114,7 @@ public sealed class TeamRoleTransportTests
 
         // Assert
         Assert.Equal(expected, response.StatusCode);
-        Assert.Equal(expected == HttpStatusCode.NoContent ? 1UL : 0UL, owner.Version);
+        Assert.Equal(expected == HttpStatusCode.OK ? 1UL : 0UL, owner.Version);
     }
 
     [Theory]

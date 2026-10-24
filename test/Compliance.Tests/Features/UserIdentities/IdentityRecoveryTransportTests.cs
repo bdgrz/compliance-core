@@ -52,7 +52,7 @@ public sealed class IdentityRecoveryTransportTests
         var facts = await FactsAsync(factory);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, started.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, started.StatusCode);
         Assert.Equal(HttpStatusCode.Accepted, first.StatusCode);
         Assert.Equal(HttpStatusCode.Accepted, retry.StatusCode);
         Assert.Equal(firstBody, retryBody);
@@ -83,7 +83,7 @@ public sealed class IdentityRecoveryTransportTests
         using var changed = await SendCompletionAsync(client, path, body, "attacker-subject");
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, started.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, started.StatusCode);
         Assert.Equal(HttpStatusCode.Accepted, first.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, changed.StatusCode);
         Assert.Single((await FactsAsync(factory)).OfType<IdentityRecoveryChallengeClaimed>());
@@ -104,7 +104,7 @@ public sealed class IdentityRecoveryTransportTests
             new { email_address = Email });
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, unknown.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, unknown.StatusCode);
         Assert.Equal(unknown.StatusCode, known.StatusCode);
         Assert.Equal(await unknown.Content.ReadAsStringAsync(), await known.Content.ReadAsStringAsync());
     }

@@ -59,15 +59,15 @@ public sealed class TenantInvitationTransportTests
 
             using var response = await client.PutAsJsonAsync($"/api/v1/tenants/{tenant}/member-invitations/{invitation}",
                 new { email_address = "transport@example.com", built_in_role = BuiltInRbac.ComplianceManagementRole });
-            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
     }
 
     [Theory]
     [InlineData("malformed", "", HttpStatusCode.BadRequest)]
     [InlineData("00000000-0000-0000-0000-000000000000", "", HttpStatusCode.BadRequest)]
-    [InlineData(InvitationId, "", HttpStatusCode.NoContent)]
-    [InlineData(InvitationId, ",\"invitation_id\":\"" + InvitationId + "\"", HttpStatusCode.NoContent)]
+    [InlineData(InvitationId, "", HttpStatusCode.OK)]
+    [InlineData(InvitationId, ",\"invitation_id\":\"" + InvitationId + "\"", HttpStatusCode.OK)]
     [InlineData(InvitationId, ",\"invitation_id\":\"" + AnotherId + "\"", HttpStatusCode.BadRequest)]
     [InlineData(InvitationId, ",\"invitation_id\":null", HttpStatusCode.BadRequest)]
     [InlineData(InvitationId, ",\"invitation_id\":\"malformed\"", HttpStatusCode.BadRequest)]
@@ -102,7 +102,7 @@ public sealed class TenantInvitationTransportTests
 
         // Assert
         Assert.Equal(expected, response.StatusCode);
-        Assert.Equal(expected == HttpStatusCode.NoContent ? 1 : 0, facts.Count);
+        Assert.Equal(expected == HttpStatusCode.OK ? 1 : 0, facts.Count);
     }
 
     [Theory]
