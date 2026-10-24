@@ -278,6 +278,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<CommitmentVersionReadConsistency>();
         services.AddScoped<CommitmentImpactService>();
         services.AddScoped<ICommitmentReferenceReader, EventSourcedCommitmentReferenceReader>();
+        services.AddScoped<PolicyReader>();
+        services.AddScoped<PolicyOperations>();
         services.AddScoped<FitzPolicyDirectory>();
         services.AddScoped<IPolicyDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzPolicyDirectory>());

@@ -60,8 +60,9 @@ public sealed class FitzPolicyDirectoryTests
     public async Task ShouldProjectLifecycleAndDeleteDiscardedDraftGivenPolicyEvents()
     {
         // Arrange
-        var directory = new FitzPolicyDirectory(new InMemoryKvClient());
-        var policy = new Policy(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-B"));
+        await using var source = new PolicySourceFixture();
+        var directory = new FitzPolicyDirectory(new InMemoryKvClient(), source.Policies);
+        var policy = new PolicyRules(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-B"));
         Assert.True(policy.Create(ProgramId, Uuid.CreateVersion4(), "POL-B", Content("Draft"),
             Actor(AuthorId), AuthorId, Now).IsSuccess);
         Assert.Null(policy.Revise(ProgramId, 1, Content("Reviewed", 6), Actor(AuthorId), AuthorId,
@@ -73,22 +74,26 @@ public sealed class FitzPolicyDirectoryTests
             new DateOnly(2026, 10, 1), true, "Ok", null, Actor(ApproverId), ApproverId, Now));
         Assert.Null(policy.ProposeSuccessor(ProgramId, 1, Content("Successor"), Actor(AuthorId),
             AuthorId, Now));
-        var unused = new Policy(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-A"));
+        var unused = new PolicyRules(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-A"));
         Assert.True(unused.Create(ProgramId, Uuid.CreateVersion4(), "POL-A", Content("Unused"),
             Actor(AuthorId), AuthorId, Now).IsSuccess);
         Assert.Null(unused.Discard(ProgramId, 1, "Not needed", Actor(AuthorId), Now));
-        var other = new Policy(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var other = new Policy(TenantId, Uuid.CreateVersion4());
+        await source.SeedAsync(policy);
+        await source.SeedAsync(unused);
+        var policyFacts = await source.FactsAsync(TenantId, policy.Id);
+        var discardedFacts = await source.FactsAsync(TenantId, unused.Id);
+        var malformed = await new PolicyProjectionFacts().FreezeAsync(new PolicyDraftDiscardedContent(TenantId,
+            ProgramId, other.Id, 1, "Out of order", Actor(AuthorId), Now));
 
         // Act
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
                          Identity(TenantId), ProjectionCheckpoint.Start)))
         {
-            foreach (var ev in new AggregateScenario<Policy>(policy).PendingEvents
-                         .Concat(new AggregateScenario<Policy>(unused).PendingEvents))
+            foreach (var ev in policyFacts.Concat(discardedFacts))
                 await directory.ApplyAsync(ev);
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await directory.ApplyAsync(new PolicyDraftDiscarded(TenantId, ProgramId,
-                    other.Id, 1, "Out of order", Actor(AuthorId), Now)));
+                await directory.ApplyAsync(malformed));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var page = await directory.ListProgramAsync(TenantId, ProgramId, 50, null);
@@ -110,8 +115,9 @@ public sealed class FitzPolicyDirectoryTests
     public async Task ShouldListRetiredSummaryAndKeepVersionHistoryGivenSuccessorRetirement()
     {
         // Arrange
-        var directory = new FitzPolicyDirectory(new InMemoryKvClient());
-        var policy = new Policy(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-HISTORY"));
+        await using var source = new PolicySourceFixture();
+        var directory = new FitzPolicyDirectory(new InMemoryKvClient(), source.Policies);
+        var policy = new PolicyRules(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-HISTORY"));
         Assert.True(policy.Create(ProgramId, Uuid.CreateVersion4(), "POL-HISTORY",
             Content("Initial"), Actor(AuthorId), AuthorId, Now).IsSuccess);
         var firstReview = Uuid.CreateVersion4();
@@ -138,7 +144,8 @@ public sealed class FitzPolicyDirectoryTests
             Now.AddMinutes(8)));
 
         // Act
-        var events = new AggregateScenario<Policy>(policy).PendingEvents.ToArray();
+        await source.SeedAsync(policy);
+        var events = await source.FactsAsync(TenantId, policy.Id);
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
                          Identity(TenantId), ProjectionCheckpoint.Start)))
         {
@@ -150,7 +157,7 @@ public sealed class FitzPolicyDirectoryTests
         var replayedPolicy = new AggregateScenario<Policy>(new Policy(TenantId, policy.Id))
             .Given(events.Select((ev, index) => DomainEventSeed.Attach(RoundTrip(ev), policy.Id,
                 (ulong)index + 1)).ToArray()).Aggregate;
-        var reader = new PolicyAggregateReader(replayedPolicy);
+        var reader = new PolicyReader(new PolicyAggregateReader(replayedPolicy), source.Events, source.Content);
         var versions = await new ListPolicyVersionsHandler(reader).HandleAsync(
             new RequestContext<ListPolicyVersions>(new ListPolicyVersions(TenantId, ProgramId,
                 policy.Id), new ClaimsPrincipal()), CancellationToken.None);

@@ -1,29 +1,21 @@
 using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
-public sealed class ConfirmPolicyReviewHandler(IAggregateExecutor executor, TimeProvider clock)
-    : IRequestHandler<ConfirmPolicyReview, PolicyDecisionView>
+public sealed class ConfirmPolicyReviewHandler(PolicyOperations operations) : IRequestHandler<ConfirmPolicyReview, PolicyDecisionView>
 {
-    public ValueTask<Result<PolicyDecisionView>> HandleAsync(
-        IRequestContext<ConfirmPolicyReview> context, CancellationToken ct)
+    public ValueTask<Result<PolicyDecisionView>> HandleAsync(IRequestContext<ConfirmPolicyReview> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
             return ValueTask.FromResult(Result<PolicyDecisionView>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Policy sign-off requires personal HTTP submission.")));
         var request = context.Request;
-        var actor = PolicyActor.From(context, request.TenantId);
-        return executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId),
-            policy =>
-            {
-                var failure = policy.ConfirmPeriodicReview(request.ProgramId,
-                    request.ExpectedVersion, context.RequestId, request.Rationale,
-                    actor.Reference, actor.MemberId, clock.GetUtcNow());
-                return CommandFailureRequestAdapter.ToOutcome(failure,
-                    policy.FindDecision(context.RequestId)!);
-            }, context, ct);
+        return operations.ExecuteAsync<ConfirmPolicyReview, PolicyDecisionView>(context, request.TenantId, request.ProgramId,
+            request.PolicyId, request.CommandId, nameof(ConfirmPolicyReview), request.ExpectedVersion,
+            (_, _, _, _) => PolicyOperations.Ready(),
+            (rules, actor, at) => PolicyOperations.Outcome(rules.ConfirmPeriodicReview(request.ProgramId, request.ExpectedVersion, request.CommandId, request.Rationale, actor.Reference, actor.MemberId, at)), null, ct);
     }
 }

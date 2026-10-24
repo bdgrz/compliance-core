@@ -27,7 +27,7 @@ public sealed class PolicyCampaignHandlerTests
         var fixture = await Fixture.CreateAsync();
         var predecessor = await fixture.ApprovePolicyAsync();
         var successor = await fixture.Scenario(fixture.AuthorUserId)
-            .When(new ProposePolicySuccessor(fixture.TenantId, fixture.ProgramId,
+            .When(new ProposePolicySuccessor(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 predecessor.PolicyId, 1, predecessor.Content with { Title = "Successor" }))
             .ExpectSuccess();
         var review = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ReviewerUserId, new ReviewPolicyDraft(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
@@ -42,7 +42,7 @@ public sealed class PolicyCampaignHandlerTests
                 successor.Value.Revision, review.Value.DecisionId,
                 new DateOnly(2026, 11, 1), true, "Approved", preview.Value.Digest), RequestErrorKind.Conflict);
         var retained = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new Policy(fixture.TenantId, predecessor.PolicyId));
+            new PolicyRules(fixture.TenantId, predecessor.PolicyId));
 
         // Assert
         Assert.True(approval.Error!.IsTransient);
@@ -320,7 +320,7 @@ public sealed class PolicyCampaignHandlerTests
 
         public async Task<PolicyVersionView> ApprovePolicyAsync()
         {
-            var registration = await Scenario(AuthorUserId).When(new CreatePolicyDraft(TenantId,
+            var registration = await Scenario(AuthorUserId).When(new CreatePolicyDraft(Policy.IdFor(TenantId, ProgramId, "POL-AC"), TenantId,
                 ProgramId, "POL-AC", new PolicyContent("Access Control Policy", "Govern access",
                     PolicyAudience.CoreSecurity, null, 12, "All access is reviewed.", null,
                     "Security lead", []))).ExpectSuccess();

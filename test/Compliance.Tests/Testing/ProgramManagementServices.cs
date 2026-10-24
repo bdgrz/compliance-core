@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Controls;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -52,6 +53,8 @@ static class ProgramManagementServices
         collection.AddScoped<Bdgrz.Compliance.Features.Readiness.ReadinessReader>();
         collection.AddScoped<ControlReader>();
         collection.AddScoped<ControlOperations>();
+        collection.AddScoped<PolicyReader>();
+        collection.AddScoped<PolicyOperations>();
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
@@ -89,6 +92,41 @@ static class ProgramManagementServices
     {
         await using var scope = provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<ControlReader>()
+            .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+    }
+
+    public static async Task SeedAsync(IServiceProvider provider, PolicyRules selected,
+        Func<PolicyRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<PolicyReader>()
+            .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await PolicySeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IImmutableContentStore>(), rules, CancellationToken.None);
+    }
+
+    public static async Task SeedAsync<TOut>(IServiceProvider provider, PolicyRules selected,
+        Func<PolicyRules, Result<TOut>> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<PolicyReader>()
+            .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await PolicySeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IImmutableContentStore>(), rules, CancellationToken.None);
+    }
+
+    public static async Task<PolicyRules> HydrateAsync(IServiceProvider provider, PolicyRules selected)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<PolicyReader>()
             .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
     }
 

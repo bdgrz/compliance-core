@@ -4,7 +4,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.PolicyDistribution;
 
 /// <summary>Launches acknowledgement of the exact current approved policy version.</summary>
-sealed class LaunchPolicyCampaignHandler(CampaignLaunch launch, IAggregateReader reader)
+sealed class LaunchPolicyCampaignHandler(CampaignLaunch launch, IAggregateReader reader, PolicyReader policySources)
     : IRequestHandler<LaunchPolicyCampaign, CampaignRegistration>
 {
     public ValueTask<Result<CampaignRegistration>> HandleAsync(IRequestContext<LaunchPolicyCampaign> context,
@@ -16,7 +16,7 @@ sealed class LaunchPolicyCampaignHandler(CampaignLaunch launch, IAggregateReader
 
         async ValueTask<Result<CampaignLaunchTerms>> ResolveAsync(CancellationToken token)
         {
-            var policy = await PolicySource.ReadAsync(reader, request.TenantId, request.ProgramId,
+            var policy = await PolicySource.ReadAsync(policySources, request.TenantId, request.ProgramId,
                 request.PolicyId, token).ConfigureAwait(false);
             if (!policy.IsSuccess)
                 return Result<CampaignLaunchTerms>.Failure(policy.Error);

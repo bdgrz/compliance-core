@@ -4,7 +4,10 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
-[Discriminator("bdgrz.policy.draft.create", 1)]
-public sealed record CreatePolicyDraft(Uuid TenantId, Uuid ProgramId, string Identifier,
+[Discriminator("bdgrz.policy.draft.create", 2)]
+public sealed record CreatePolicyDraft(Uuid PolicyId, Uuid TenantId, Uuid ProgramId, string Identifier,
     PolicyContent Content)
-    : IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => PolicyId;
+}

@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Policies;
@@ -21,8 +24,9 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureEffectiveApprovedVersionGivenSuccessorApprovedAfterTypeIDate()
     {
         // Arrange
+        await using var source = new PolicySourceFixture();
         var policy = ApprovedPolicy("POL-AC", VersionStart, ApprovalAt);
-        var contributor = Contributor(policy);
+        var contributor = Contributor(policy, source);
         var beforeSuccessor = await contributor.ReadAsync(Engagement(TypeIDate),
             CancellationToken.None);
         var afterTypeIDate = new DateTimeOffset(2027, 4, 1, 12, 0, 0, TimeSpan.Zero);
@@ -38,14 +42,14 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
         Assert.True(beforeSuccessor.IsSuccess, beforeSuccessor.Error?.Message);
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal("policies", result.Value.Family);
-        var source = Assert.Single(result.Value.Sources);
-        Assert.Equal("policy_version", source.Kind);
-        Assert.Equal(policy.Id, source.RecordId);
-        Assert.Equal(Uuid.CreateVersion5(policy.Id, "policy_version_v1:1"), source.VersionId);
-        Assert.Equal(1, source.Revision);
+        var reference = Assert.Single(result.Value.Sources);
+        Assert.Equal("policy_version", reference.Kind);
+        Assert.Equal(policy.Id, reference.RecordId);
+        Assert.Equal(Uuid.CreateVersion5(policy.Id, "policy_version_v1:1"), reference.VersionId);
+        Assert.Equal(1, reference.Revision);
         Assert.Equal(Assert.Single(beforeSuccessor.Value.Sources).ContentSha256,
-            source.ContentSha256);
-        Assert.Matches("^[0-9a-f]{64}$", source.ContentSha256);
+            reference.ContentSha256);
+        Assert.Matches("^[0-9a-f]{64}$", reference.ContentSha256);
         Assert.Empty(result.Value.Blockers);
     }
 
@@ -53,9 +57,10 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
     public async Task ShouldExcludeApprovalMadeAfterTypeIDateGivenBackdatedEffectiveDate()
     {
         // Arrange
+        await using var source = new PolicySourceFixture();
         var policy = ApprovedPolicy("POL-FUTURE", new DateOnly(2027, 3, 1),
             new DateTimeOffset(2027, 4, 1, 12, 0, 0, TimeSpan.Zero));
-        var contributor = Contributor(policy);
+        var contributor = Contributor(policy, source);
 
         // Act
         var result = await contributor.ReadAsync(Engagement(TypeIDate), CancellationToken.None);
@@ -72,6 +77,7 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
     public async Task ShouldKeepVersionEffectiveGivenRetirementApprovedAfterTypeIDate()
     {
         // Arrange
+        await using var source = new PolicySourceFixture();
         var policy = ApprovedPolicy("POL-RETRO", VersionStart, ApprovalAt);
         var afterTypeIDate = new DateTimeOffset(2027, 4, 1, 12, 0, 0, TimeSpan.Zero);
         Assert.Null(policy.ProposeRetirement(ProgramId, 1, new DateOnly(2027, 3, 15),
@@ -80,16 +86,16 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
         Assert.Null(policy.ApproveRetirement(ProgramId, policy.Revision, Uuid.CreateVersion4(),
             review, "Approved after the examination date", Actor(ApproverId), ApproverId,
             afterTypeIDate.AddMinutes(2)));
-        var contributor = Contributor(policy);
+        var contributor = Contributor(policy, source);
 
         // Act
         var result = await contributor.ReadAsync(Engagement(TypeIDate), CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        var source = Assert.Single(result.Value.Sources);
-        Assert.Equal("policy_version", source.Kind);
-        Assert.Equal(Uuid.CreateVersion5(policy.Id, "policy_version_v1:1"), source.VersionId);
+        var reference = Assert.Single(result.Value.Sources);
+        Assert.Equal("policy_version", reference.Kind);
+        Assert.Equal(Uuid.CreateVersion5(policy.Id, "policy_version_v1:1"), reference.VersionId);
         Assert.DoesNotContain(result.Value.Sources, item => item.Kind == "policy_retirement");
     }
 
@@ -97,6 +103,7 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureScheduledRetirementGivenApprovalKnownOnTypeIDate()
     {
         // Arrange
+        await using var source = new PolicySourceFixture();
         var policy = ApprovedPolicy("POL-SCHEDULED", VersionStart, ApprovalAt);
         var approvedAt = new DateTimeOffset(2027, 3, 1, 12, 0, 0, TimeSpan.Zero);
         Assert.Null(policy.ProposeRetirement(ProgramId, 1, new DateOnly(2027, 5, 1),
@@ -104,7 +111,7 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
         var review = Accept(policy, ReviewerId, approvedAt.AddMinutes(1));
         Assert.Null(policy.ApproveRetirement(ProgramId, policy.Revision, Uuid.CreateVersion4(),
             review, "Approved", Actor(ApproverId), ApproverId, approvedAt.AddMinutes(2)));
-        var contributor = Contributor(policy);
+        var contributor = Contributor(policy, source);
 
         // Act
         var result = await contributor.ReadAsync(Engagement(TypeIDate), CancellationToken.None);
@@ -112,7 +119,7 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal(["policy_retirement", "policy_version"],
-            result.Value.Sources.Select(static source => source.Kind));
+            result.Value.Sources.Select(static entry => entry.Kind));
         Assert.Contains(result.Value.ScopeDifferences,
             difference => difference.Contains("retirement scheduled after the Type I date",
                 StringComparison.Ordinal));
@@ -122,9 +129,10 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
     public async Task ShouldIgnorePeriodicReviewGivenReviewIsAfterTypeIDate()
     {
         // Arrange
+        await using var source = new PolicySourceFixture();
         var policy = ApprovedPolicy("POL-OVERDUE", new DateOnly(2026, 1, 1),
             new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
-        var contributor = Contributor(policy);
+        var contributor = Contributor(policy, source);
         var beforeReview = await contributor.ReadAsync(Engagement(TypeIDate),
             CancellationToken.None);
         Assert.Null(policy.ConfirmPeriodicReview(ProgramId, 1, Uuid.CreateVersion4(),
@@ -144,11 +152,87 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
                 StringComparison.Ordinal));
     }
 
-    static PolicyTypeIBaselineSourceContributor Contributor(Policy policy)
+    [Fact]
+    public async Task ShouldExcludeLaterApprovalGivenExactRecordedThroughCutoff()
     {
-        var directory = new Directory(policy);
-        return new PolicyTypeIBaselineSourceContributor(directory, new PolicyReader(policy),
-            new PolicyDirectoryReadConsistency(directory, new InMemoryEventStore()));
+        // Arrange
+        await using var source = new PolicySourceFixture();
+        var policy = ApprovedPolicy("POL-RECORDED", VersionStart, ApprovalAt);
+        Assert.Null(policy.ProposeSuccessor(ProgramId, 1, Content("Later approval"), Actor(AuthorId), AuthorId,
+            new DateTimeOffset(2027, 3, 15, 12, 0, 0, TimeSpan.Zero)));
+        ApproveDraft(policy, new DateOnly(2027, 2, 1), new DateTimeOffset(2027, 3, 15, 12, 2, 0, TimeSpan.Zero),
+            "impact-digest");
+        var context = new TypeIBaselineSourceReadContext(Uuid.Empty, [])
+        { RecordedThrough = new DateTimeOffset(2027, 3, 1, 12, 0, 0, TimeSpan.Zero) };
+
+        // Act
+        var result = await Contributor(policy, source).ReadAsync(Engagement(TypeIDate), context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var captured = Assert.Single(result.Value.Sources);
+        Assert.Equal(Uuid.CreateVersion5(policy.Id, "policy_version_v1:1"), captured.VersionId);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldReturnTypedSourceFailureGivenUnreadableNativePolicy(bool unavailable)
+    {
+        // Arrange
+        await using var source = new PolicySourceFixture();
+        var policy = ApprovedPolicy("POL-FAILURE", VersionStart, ApprovalAt);
+        await source.SeedAsync(policy);
+        var directory = new Directory(policy, source);
+        var store = new UnreadableMutation(source.Content, unavailable);
+        var reads = new PolicyReader(source.Reader, source.Events, store);
+        var contributor = new PolicyTypeIBaselineSourceContributor(directory, reads,
+            new PolicyDirectoryReadConsistency(directory, source.Events));
+        var before = await source.Reader.HydrateAsync(new Policy(TenantId, policy.Id));
+
+        // Act
+        var result = await contributor.ReadAsync(Engagement(TypeIDate), CancellationToken.None);
+        var after = await source.Reader.HydrateAsync(new Policy(TenantId, policy.Id));
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(unavailable, result.Error!.IsTransient);
+        Assert.Equal(1, store.RejectedReads);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+    }
+
+    sealed class UnreadableMutation(IImmutableContentStore inner, bool unavailable) : IImmutableContentStore
+    {
+        public int RejectedReads { get; private set; }
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema, string mediaType,
+            ReadOnlyMemory<byte> bytes, CancellationToken ct = default) => inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default)
+        {
+            if (reference.Schema != PolicyFactContent.ChangeSchema)
+                return inner.ReadVerifiedAsync(realm, reference, ct);
+            RejectedReads++;
+            throw unavailable ? new ImmutableContentUnavailableException("The native policy mutation is temporarily absent.")
+                : new ImmutableContentIntegrityException("The native policy mutation digest differs.");
+        }
+    }
+
+    static ContributorScenario Contributor(PolicyRules policy, PolicySourceFixture source) => new(policy, source);
+
+    sealed class ContributorScenario(PolicyRules policy, PolicySourceFixture source)
+    {
+        public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(ExaminationEngagementView engagement,
+            CancellationToken ct) => ReadAsync(engagement, new TypeIBaselineSourceReadContext(Uuid.Empty, []), ct);
+
+        public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(ExaminationEngagementView engagement,
+            TypeIBaselineSourceReadContext context, CancellationToken ct)
+        {
+            await source.SeedAsync(policy);
+            var directory = new Directory(policy, source);
+            return await new PolicyTypeIBaselineSourceContributor(directory, source.Policies,
+                new PolicyDirectoryReadConsistency(directory, source.Events)).ReadAsync(engagement, context, ct);
+        }
     }
 
     static ExaminationEngagementView Engagement(DateOnly periodStart) => new(TenantId,
@@ -156,17 +240,17 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
         ["security"], Uuid.CreateVersion4(), [], "draft", 1, ApprovalAt, AuthorId,
         "Examiner");
 
-    static Policy ApprovedPolicy(string identifier, DateOnly effectiveFrom,
+    static PolicyRules ApprovedPolicy(string identifier, DateOnly effectiveFrom,
         DateTimeOffset approvedAt)
     {
-        var policy = new Policy(TenantId, Policy.IdFor(TenantId, ProgramId, identifier));
+        var policy = new PolicyRules(TenantId, Policy.IdFor(TenantId, ProgramId, identifier));
         Assert.True(policy.Create(ProgramId, Uuid.CreateVersion4(), identifier, Content(),
             Actor(AuthorId), AuthorId, approvedAt.AddMinutes(-2)).IsSuccess);
         ApproveDraft(policy, effectiveFrom, approvedAt);
         return policy;
     }
 
-    static void ApproveDraft(Policy policy, DateOnly effectiveFrom, DateTimeOffset approvedAt,
+    static void ApproveDraft(PolicyRules policy, DateOnly effectiveFrom, DateTimeOffset approvedAt,
         string? impactDigest = null)
     {
         var review = Accept(policy, ReviewerId, approvedAt.AddMinutes(-1));
@@ -175,7 +259,7 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
             ApproverId, approvedAt));
     }
 
-    static Uuid Accept(Policy policy, Uuid reviewer, DateTimeOffset decidedAt)
+    static Uuid Accept(PolicyRules policy, Uuid reviewer, DateTimeOffset decidedAt)
     {
         var decisionId = Uuid.CreateVersion4();
         Assert.Null(policy.Review(ProgramId, policy.Revision, decisionId, "accept", "Reviewed",
@@ -190,10 +274,17 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
     static ActorReference Actor(Uuid memberId) => ActorReference.ForMember(memberId,
         memberId.ToString());
 
-    sealed class Directory(Policy policy) : IPolicyDirectoryReader
+    sealed class Directory(PolicyRules policy, PolicySourceFixture source) : IPolicyDirectoryReader
     {
-        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+        public async ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default)
+        {
+            var cursor = EventCursor.Start;
+            await foreach (var record in source.Events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(), "policies"),
+                EventCursor.Start, ct))
+                cursor = record.NextCursor;
+            return new ProjectionCheckpoint(cursor);
+        }
 
         public ValueTask<Page<PolicySummaryView>> ListProgramAsync(Uuid tenantId, Uuid programId,
             int limit, string? cursor, CancellationToken ct = default)
@@ -208,12 +299,4 @@ public sealed class PolicyTypeIBaselineSourceContributorTests
         }
     }
 
-    sealed class PolicyReader(Policy policy) : IAggregateReader
-    {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(policy.Id == aggregate.Id && policy is TAggregate found
-                ? found
-                : aggregate);
-    }
 }

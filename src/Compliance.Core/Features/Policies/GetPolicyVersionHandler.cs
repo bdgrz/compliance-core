@@ -2,7 +2,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
-public sealed class GetPolicyVersionHandler(IAggregateReader reader)
+public sealed class GetPolicyVersionHandler(PolicyReader reader)
     : IRequestHandler<GetPolicyVersion, PolicyVersionView>
 {
     public async ValueTask<Result<PolicyVersionView>> HandleAsync(

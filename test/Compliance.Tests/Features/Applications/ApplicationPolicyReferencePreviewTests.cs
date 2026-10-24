@@ -29,15 +29,15 @@ public sealed class ApplicationPolicyReferencePreviewTests
             applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
-        var policies = new FitzApplicationPolicyReferenceDirectory(kv);
+        var policies = PolicyProjectionFacts.ReferenceDirectory(kv);
         var events = new InMemoryEventStore();
         var content = new PolicyContent("Access Policy", "Govern payroll access",
             PolicyAudience.CoreSecurity, null, 12, "Policy text", null, "Security lead",
             [new PolicyApplicabilityReference("application", "Payroll", applicationId)]);
-        await ProjectPolicyAsync(policies, tenantId, new PolicyDraftCreated(tenantId, programId,
+        await ProjectPolicyAsync(policies, tenantId, new PolicyDraftCreatedContent(tenantId, programId,
             policyId, Uuid.CreateVersion4(), "POL-01", content, Policy.Hash(content),
             ActorReference.ForMember(Uuid.CreateVersion4(), "Author"), Uuid.CreateVersion4(), now));
-        await ProjectPolicyAsync(policies, tenantId, new PolicyApproved(tenantId, programId,
+        await ProjectPolicyAsync(policies, tenantId, new PolicyApprovedContent(tenantId, programId,
             policyId, 1, 1, true, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             Policy.Hash(content), new DateOnly(2026, 1, 1), null, null, "Approved",
             ActorReference.ForMember(Uuid.CreateVersion4(), "Approver"), Uuid.CreateVersion4(),
@@ -87,12 +87,12 @@ public sealed class ApplicationPolicyReferencePreviewTests
             applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
-        var policies = new FitzApplicationPolicyReferenceDirectory(kv);
+        var policies = PolicyProjectionFacts.ReferenceDirectory(kv);
         var events = new InMemoryEventStore();
         var content = new PolicyContent("Access Policy", "Govern payroll access",
             PolicyAudience.CoreSecurity, null, 12, "Policy text", null, "Security lead",
             [new PolicyApplicabilityReference("control", "AC-01", Uuid.CreateVersion4())]);
-        await ProjectPolicyAsync(policies, tenantId, new PolicyDraftCreated(tenantId, programId,
+        await ProjectPolicyAsync(policies, tenantId, new PolicyDraftCreatedContent(tenantId, programId,
             policyId, Uuid.CreateVersion4(), "POL-01", content, Policy.Hash(content),
             ActorReference.ForMember(Uuid.CreateVersion4(), "Author"), Uuid.CreateVersion4(), now));
         var instanceConsistency = new SystemInstanceReadConsistency(applications, sourceReader,
@@ -127,14 +127,14 @@ public sealed class ApplicationPolicyReferencePreviewTests
     }
 
     static async Task ProjectPolicyAsync(FitzApplicationPolicyReferenceDirectory directory,
-        Uuid tenantId, DomainEvent domainEvent)
+        Uuid tenantId, IPolicyMutationContent domainEvent)
     {
         var identity = new CheckpointIdentity(
             FitzApplicationPolicyReferenceDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "policies"));
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
             ProjectionCheckpoint.Start));
-        await directory.ApplyAsync(domainEvent);
+        await PolicyProjectionFacts.ApplyAsync(directory, domainEvent);
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 

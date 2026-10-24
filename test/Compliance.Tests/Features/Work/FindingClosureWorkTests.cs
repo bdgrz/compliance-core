@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.ControlMappings;
@@ -172,7 +173,7 @@ public sealed class FindingClosureWorkTests
         var captured = await consistency.CaptureAsync(fixture.TenantId, CancellationToken.None);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [directory],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),

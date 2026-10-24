@@ -5,13 +5,13 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
 
-sealed class FitzPolicyDecisionWorkItemDirectory(IKvClient client, IAggregateReader sourceReader,
+sealed class FitzPolicyDecisionWorkItemDirectory(IKvClient client, PolicyReader sourceReader,
     TimeProvider clock)
     : FitzKvProjectionStore(client,
-        "kv://bdgrz/accountable-work-items/policy-decisions-v2", ProjectorName),
+        "kv://bdgrz/accountable-work-items/policy-decisions-v3", ProjectorName),
       IAccountableWorkItemDirectoryReader, IPolicyDecisionWorkItemProjection
 {
-    public const string ProjectorName = "AccountableWorkItemPolicyDecisionV2";
+    public const string ProjectorName = "AccountableWorkItemPolicyDecisionV3";
     const string RevisionKey = ProjectorName;
 
     string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
@@ -47,7 +47,7 @@ sealed class FitzPolicyDecisionWorkItemDirectory(IKvClient client, IAggregateRea
             throw new InvalidOperationException(
                 "A policy work event cannot replace state outside its recorded scope.");
 
-        var policy = await sourceReader.HydrateAsync(new Policy(tenantId, policyId), ct)
+        var policy = await sourceReader.ReadAsync(tenantId, programId, policyId, ct)
             .ConfigureAwait(false);
         if (policy.ProgramId == Uuid.Empty || policy.ProgramId != programId)
             throw new InvalidOperationException(

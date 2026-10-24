@@ -10,23 +10,37 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Captures policy versions and lifecycle decisions known on the Type I date.</summary>
 public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader directory,
-    IAggregateReader reader, PolicyDirectoryReadConsistency consistency)
+    PolicyReader reader, PolicyDirectoryReadConsistency consistency)
     : ITypeIBaselineSourceContributor
 {
     const int PageSize = 200;
 
     public string Family => "policies";
 
-    public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
-        ExaminationEngagementView engagement, CancellationToken ct)
+    public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+        ExaminationEngagementView engagement, CancellationToken ct) =>
+        ReadAsync(engagement, new TypeIBaselineSourceReadContext(Uuid.Empty, []), ct);
+
+
+
+    public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context, CancellationToken ct) =>
+        PolicySourceFailures.ClassifyAsync(() => ReadCoreAsync(engagement, context, ct));
+
+    async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context, CancellationToken ct)
     {
+        if (engagement is null || context is null || context.PreviouslyCapturedSources is null)
+            return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A policy baseline read requires its engagement and exact source context."));
         var fence = await consistency.CaptureAsync(engagement.TenantId, ct)
             .ConfigureAwait(false);
         if (!fence.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(fence.Error);
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
+        var effectiveThrough = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
+        var through = context.RecordedThrough ?? effectiveThrough;
         var sources = new List<TypeIBaselineSourceReference>();
         var scopeDifferences = new List<string>();
         var seenPolicyIds = new HashSet<Uuid>();
@@ -48,8 +62,7 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
                     !seenPolicyIds.Add(item.PolicyId))
                     return InvalidDirectory();
 
-                var policy = await reader.HydrateAsync(new Policy(engagement.TenantId,
-                    item.PolicyId), ct).ConfigureAwait(false);
+                var policy = await reader.ReadAsync(engagement.TenantId, engagement.ProgramId, item.PolicyId, ct).ConfigureAwait(false);
                 if (!policy.IsVisible || policy.Id != item.PolicyId ||
                     policy.ProgramId != engagement.ProgramId ||
                     policy.Identifier != item.Identifier || policy.Revision != item.Revision)
@@ -154,7 +167,7 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
     }
 
     internal static IReadOnlyList<TypeIBaselineSourceReference> ReferencesAsOf(Uuid tenantId,
-        Policy policy, DateOnly periodStart, DateTimeOffset through, out bool valid)
+        PolicyReadSnapshot policy, DateOnly periodStart, DateTimeOffset through, out bool valid)
     {
         var sources = new List<TypeIBaselineSourceReference>();
         valid = true;
@@ -199,7 +212,7 @@ public sealed class PolicyTypeIBaselineSourceContributor(IPolicyDirectoryReader 
         return sources;
     }
 
-    static bool IsValidHistory(Uuid tenantId, Policy policy,
+    static bool IsValidHistory(Uuid tenantId, PolicyReadSnapshot policy,
         IReadOnlyList<PolicyVersionView> versions,
         IReadOnlyList<PolicyDecisionView> decisions)
     {

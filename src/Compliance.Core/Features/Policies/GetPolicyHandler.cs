@@ -3,7 +3,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Policies;
 
 /// <summary>Reads the authoritative policy stream, so the record never lags its commands.</summary>
-public sealed class GetPolicyHandler(IAggregateReader reader, TimeProvider clock)
+public sealed class GetPolicyHandler(PolicyReader reader, TimeProvider clock)
     : IRequestHandler<GetPolicy, PolicyView>
 {
     public async ValueTask<Result<PolicyView>> HandleAsync(IRequestContext<GetPolicy> context,

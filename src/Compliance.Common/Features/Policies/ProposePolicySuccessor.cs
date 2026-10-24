@@ -5,7 +5,10 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Policies;
 
 /// <summary>Opens a successor draft from the exact current approved version.</summary>
-[Discriminator("bdgrz.policy.successor.propose", 1)]
-public sealed record ProposePolicySuccessor(Uuid TenantId, Uuid ProgramId, Uuid PolicyId,
+[Discriminator("bdgrz.policy.successor.propose", 2)]
+public sealed record ProposePolicySuccessor(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid PolicyId,
     long ExpectedVersion, PolicyContent Content)
-    : IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

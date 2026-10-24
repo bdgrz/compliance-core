@@ -45,7 +45,7 @@ public sealed class AdvisorRecordVersionResolverTests
         var control = await fixture.SeedControlAsync();
         var selected = AdvisorRecordVersion.ControlDraft(control.Id, control.DraftVersionId,
             control.Revision);
-        var reader = new AdvisorSharedSourceReader(fixture.Reader, fixture.Controls, fixture.Resolver(),
+        var reader = new AdvisorSharedSourceReader(fixture.Controls, fixture.PolicySources, fixture.Resolver(),
             fixture.Metadata, new BoundaryReader(null), fixture.Readiness);
         var handoffId = Uuid.CreateVersion4();
 
@@ -377,6 +377,7 @@ public sealed class AdvisorRecordVersionResolverTests
         public ReadinessReader Readiness { get; }
         public IImmutableContentStore Content => _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
         public ControlReader Controls => new(Reader, Events, Content);
+        public PolicyReader PolicySources => new(Reader, Events, Content);
         public RequestDispatchContext SystemDispatch { get; } =
             new(RequestActor.System);
 
@@ -402,7 +403,7 @@ public sealed class AdvisorRecordVersionResolverTests
         }
 
         public AdvisorRecordVersionResolver Resolver(IBoundaryDirectoryReader? boundaries = null,
-            ReadinessReader? readiness = null) => new(Reader, Controls, Metadata,
+            ReadinessReader? readiness = null) => new(Reader, Controls, PolicySources, Metadata,
             new EvidenceSupportTargetSource(Reader, Controls, EmptyOperations.Reader(Reader, Events), EmptyOperations.Evaluations(Reader, Events)), boundaries ?? new BoundaryReader(null),
             readiness ?? Readiness);
 
@@ -433,7 +434,7 @@ public sealed class AdvisorRecordVersionResolverTests
             return control;
         }
 
-        public async Task<Policy> SeedApprovedPolicyAsync()
+        public async Task<PolicyRules> SeedApprovedPolicyAsync()
         {
             var policy = await SeedPolicyDraftAsync();
             var author = ActorReference.ForMember(MemberId, "Author");
@@ -446,11 +447,11 @@ public sealed class AdvisorRecordVersionResolverTests
                 new DateOnly(2026, 1, 1), true, "Approved", null,
                 ActorReference.ForMember(approverId, "Approver"), approverId,
                 Now.AddMinutes(2)));
-            await Writer.SaveAsync(policy, SystemDispatch);
+            await PolicySeeds.AppendAsync(Reader, Writer, Content, policy, CancellationToken.None);
             return policy;
         }
 
-        public async Task<Policy> SeedPolicyWithSuccessorAsync()
+        public async Task<PolicyRules> SeedPolicyWithSuccessorAsync()
         {
             var policy = await SeedApprovedPolicyAsync();
             Assert.Null(policy.ProposeSuccessor(ProgramId, 1,
@@ -466,18 +467,18 @@ public sealed class AdvisorRecordVersionResolverTests
                 new DateOnly(2027, 1, 1), false, "Approved", "successor-impact",
                 ActorReference.ForMember(approverId, "Approver"), approverId,
                 Now.AddMinutes(5)));
-            await Writer.SaveAsync(policy, SystemDispatch);
+            await PolicySeeds.AppendAsync(Reader, Writer, Content, policy, CancellationToken.None);
             return policy;
         }
 
-        public async Task<Policy> SeedPolicyDraftAsync()
+        public async Task<PolicyRules> SeedPolicyDraftAsync()
         {
-            var policy = new Policy(TenantId, Uuid.CreateVersion4());
+            var policy = new PolicyRules(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-01"));
             var content = new PolicyContent("Access policy", "Protect access", "core_security",
                 [], 12, "Access must be reviewed quarterly.", null, "Security owner", []);
             Assert.True(policy.Create(ProgramId, Uuid.CreateVersion4(), "POL-01", content,
                 ActorReference.ForMember(MemberId, "Author"), MemberId, Now).IsSuccess);
-            await Writer.SaveAsync(policy, SystemDispatch);
+            await PolicySeeds.AppendAsync(Reader, Writer, Content, policy, CancellationToken.None);
             return policy;
         }
 

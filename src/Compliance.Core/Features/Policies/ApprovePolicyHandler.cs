@@ -1,58 +1,40 @@
-using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
-/// <summary>
-///     Approves the exact reviewed revision. A successor must acknowledge the complete, unchanged
-///     impact preview. HTTP-only personal approval.
-/// </summary>
-public sealed class ApprovePolicyHandler(IAggregateExecutor executor, IAggregateReader reader,
-    PolicyImpactService impact, TimeProvider clock)
-    : IRequestHandler<ApprovePolicy, PolicyVersionView>
+public sealed class ApprovePolicyHandler(PolicyOperations operations, PolicyImpactService impact) : IRequestHandler<ApprovePolicy, PolicyVersionView>
 {
-    public async ValueTask<Result<PolicyVersionView>> HandleAsync(
-        IRequestContext<ApprovePolicy> context, CancellationToken ct)
+    public ValueTask<Result<PolicyVersionView>> HandleAsync(IRequestContext<ApprovePolicy> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
-            return Result<PolicyVersionView>.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Policy sign-off requires personal HTTP submission."));
+            return ValueTask.FromResult(Result<PolicyVersionView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Policy sign-off requires personal HTTP submission.")));
         var request = context.Request;
-        var actor = PolicyActor.From(context, request.TenantId);
-        var operation = AuthoredCommandReplay.Create(new Policy(request.TenantId, request.PolicyId, request.CommandId), request.CommandId,
-            nameof(ApprovePolicy), actor.MemberId, request.ExpectedRevision, request, clock.GetUtcNow());
-        var replayOwner = await reader.HydrateAsync(new Policy(request.TenantId, request.PolicyId, request.CommandId), ct).ConfigureAwait(false);
-        if (AuthoredCommandReplay.TryReplay(replayOwner.ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure is null ? Result<PolicyVersionView>.Success(replayOwner.ReplayedApproval!)
-                : Result<PolicyVersionView>.Failure(replayFailure.ToRequestError());
-        var current = await PolicySource.ReadAsync(reader, request.TenantId, request.ProgramId,
-            request.PolicyId, ct).ConfigureAwait(false);
-        if (!current.IsSuccess)
-            return Result<PolicyVersionView>.Failure(current.Error);
-        if (current.Value.DraftPredecessorVersion is not null)
-        {
-            var preview = await impact.PreviewAsync(request.TenantId, request.ProgramId,
-                request.PolicyId, request.ExpectedRevision, ct).ConfigureAwait(false);
-            if (!preview.IsSuccess)
-                return Result<PolicyVersionView>.Failure(preview.Error);
-            if (!StringComparer.Ordinal.Equals(preview.Value.Digest, request.ImpactDigest))
-                return Result<PolicyVersionView>.Failure(new RequestError(
-                    RequestErrorKind.Conflict, "The impact preview changed. Reload it before approving."));
-        }
-
-        var waiver = await PolicySource.WaiverAsync(reader, request.TenantId,
-            request.SeparationOfDutiesWaiverId, ct).ConfigureAwait(false);
-        return await executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId, request.CommandId),
-            policy =>
+        SeparationOfDutiesWaiverProof? proof = null;
+        return operations.ExecuteAsync<ApprovePolicy, PolicyVersionView>(context, request.TenantId, request.ProgramId,
+            request.PolicyId, request.CommandId, nameof(ApprovePolicy), request.ExpectedRevision,
+            async (snapshot, actor, at, token) =>
             {
-                var failure = policy.Approve(request.ProgramId, request.ExpectedRevision,
-                    request.CommandId, request.AcceptedReviewDecisionId, request.EffectiveFrom,
-                    request.Major, request.Rationale, request.ImpactDigest, actor.Reference,
-                    actor.MemberId, clock.GetUtcNow(), waiver, operation: operation);
-                return CommandFailureRequestAdapter.ToOutcome(failure, policy.ReplayedApproval ?? policy.CurrentVersion!);
-            }, context, ct).ConfigureAwait(false);
+                if (snapshot.DraftPredecessorVersion is not null)
+                {
+                    var preview = await impact.PreviewAsync(request.TenantId, request.ProgramId, request.PolicyId,
+                        request.ExpectedRevision, token).ConfigureAwait(false);
+                    if (!preview.IsSuccess)
+                        return Result.Failure(preview.Error!);
+                    if (!StringComparer.Ordinal.Equals(preview.Value.Digest, request.ImpactDigest))
+                        return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                            "The impact preview changed. Reload it before approving."));
+                }
+                var resolved = await operations.ResolveWaiverAsync(request.TenantId, request.SeparationOfDutiesWaiverId,
+                    actor.MemberId, request.PolicyId, snapshot.Revision, SeparationOfDutiesActions.Approve, at, token).ConfigureAwait(false);
+                if (!resolved.IsSuccess)
+                    return Result.Failure(resolved.Error!);
+                proof = resolved.Value;
+                return Result.Success;
+            },
+            (rules, actor, at) => PolicyOperations.Outcome(rules.Approve(request.ProgramId, request.ExpectedRevision, request.CommandId, request.AcceptedReviewDecisionId, request.EffectiveFrom, request.Major, request.Rationale, request.ImpactDigest, actor.Reference, actor.MemberId, at, proof)), () => proof, ct);
     }
 }

@@ -15,6 +15,97 @@ namespace Bdgrz.Compliance.Tests.Features.Policies;
 public sealed class PersonalPolicyDecisionTransportTests
 {
     [Fact]
+    public async Task ShouldReturnOriginalPeriodicReviewGivenExactHandlerRetry()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync("periodic_review");
+        var source = await fixture.ReadAsync();
+        var commandId = Uuid.CreateVersion4();
+        var request = new ConfirmPolicyReview(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program, fixture.PolicyId,
+            source.CurrentVersion!.Version, "The approved policy remains current.");
+        var first = await IdentifiedHttpAsync(fixture.Provider, fixture.Reviewer, request, commandId);
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        var accepted = await fixture.ReadAsync();
+
+        // Act
+        var replay = await IdentifiedHttpAsync(fixture.Provider, fixture.Reviewer, request, commandId);
+        var retained = await fixture.ReadAsync();
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(first.Value, replay.Value);
+        Assert.Equal(accepted.SourcePhysicalPosition, retained.SourcePhysicalPosition);
+        Assert.Equal(accepted.ReadDecisions().Count, retained.ReadDecisions().Count);
+    }
+
+    [Fact]
+    public async Task ShouldReturnOriginalRevisionRegistrationGivenHandlerRetryAfterLaterEdit()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync("review");
+        var source = await fixture.ReadAsync();
+        var commandId = Uuid.CreateVersion4();
+        var request = new RevisePolicyDraft(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program, fixture.PolicyId, 1,
+            source.DraftContent! with { Body = "First revised policy body." });
+        var first = await IdentifiedHttpAsync(fixture.Provider, fixture.Author, request, commandId);
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        var later = await IdentifiedHttpAsync(fixture.Provider, fixture.Author,
+            new RevisePolicyDraft(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program, fixture.PolicyId, 2,
+                request.Content with { Body = "A later independent edit." }), Uuid.CreateVersion4());
+        Assert.True(later.IsSuccess, later.Error?.Message);
+        var advanced = await fixture.ReadAsync();
+
+        // Act
+        var replay = await IdentifiedHttpAsync(fixture.Provider, fixture.Author, request, commandId);
+        var retained = await fixture.ReadAsync();
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(first.Value, replay.Value);
+        Assert.Equal(2, replay.Value.Revision);
+        Assert.Equal(3, retained.Revision);
+        Assert.Equal("A later independent edit.", retained.DraftContent!.Body);
+        Assert.Equal(advanced.SourcePhysicalPosition, retained.SourcePhysicalPosition);
+    }
+
+    [Fact]
+    public async Task ShouldAcceptLegalEscapedBodyGivenCreatePolicyHandler()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync("review");
+        var body = new string('<', Policy.MaximumBodyLength);
+        var request = new CreatePolicyDraft(Policy.IdFor(fixture.Tenant, fixture.Program, "POL-ESCAPED"), fixture.Tenant, fixture.Program, "POL-ESCAPED",
+            new PolicyContent("Escaped body", "Preserve complete authored material", PolicyAudience.CoreSecurity,
+                null, 12, body, null, "Security owner", []));
+
+        // Act
+        var result = await SendHttpAsync(fixture.Provider, fixture.Author, request);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var retained = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new PolicyRules(fixture.Tenant, result.Value.PolicyId));
+        Assert.Equal(body, retained.DraftContent!.Body);
+        Assert.Equal(1, retained.Revision);
+    }
+
+    static async Task<Result<T>> IdentifiedHttpAsync<T>(IServiceProvider provider, Uuid user,
+        IRequest<T> request, Uuid commandId)
+    {
+        request = request switch
+        {
+            ConfirmPolicyReview confirm => (IRequest<T>)(object)(confirm with { CommandId = commandId }),
+            RevisePolicyDraft revise => (IRequest<T>)(object)(revise with { CommandId = commandId }),
+            _ => request,
+        };
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
+            new RequestDispatchContext(ProgramManagementServices.Actor(user),
+                new HttpInvocation("POST", "/synthetic/policy/decision", "/synthetic/policy/decision", "synthetic"),
+                new RequestMetadata(commandId, commandId)), CancellationToken.None);
+    }
+
+    [Fact]
     public async Task ShouldReturnFirstApprovalBodyGivenExactRetryAfterPolicyRetirement()
     {
         // Arrange
@@ -23,7 +114,7 @@ public sealed class PersonalPolicyDecisionTransportTests
         var request = new ApprovePolicy(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program,
             fixture.PolicyId, 1, source.ReadDecisions()[0].DecisionId, new DateOnly(2026, 9, 1), true, "Approved");
         var first = await SendHttpAsync(fixture.Provider, fixture.Approver, request);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.Tenant, fixture.PolicyId), policy =>
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.Tenant, fixture.PolicyId), policy =>
         {
             var author = RbacIds.Member(fixture.Tenant, fixture.Author);
             var reviewer = RbacIds.Member(fixture.Tenant, fixture.Reviewer);
@@ -51,7 +142,7 @@ public sealed class PersonalPolicyDecisionTransportTests
             System.Text.Json.JsonSerializer.Serialize(replay.Value));
         Assert.Equal("approved", replay.Value.Status);
         Assert.True(after.IsRetired);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Fact]
@@ -62,7 +153,7 @@ public sealed class PersonalPolicyDecisionTransportTests
         var request = new ReviewPolicyDraft(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program,
             fixture.PolicyId, 1, "accept", "Reviewed");
         var first = await SendHttpAsync(fixture.Provider, fixture.Reviewer, request);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.Tenant, fixture.PolicyId), policy =>
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.Tenant, fixture.PolicyId), policy =>
         {
             Assert.Null(policy.Revise(fixture.Program, 1, policy.DraftContent! with { Body = "Later body" },
                 ActorReference.ForMember(RbacIds.Member(fixture.Tenant, fixture.Author), "Renamed author"),
@@ -79,7 +170,7 @@ public sealed class PersonalPolicyDecisionTransportTests
 
         // Assert
         Assert.Equal(first.Value, replay.Value);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Theory]
@@ -107,7 +198,7 @@ public sealed class PersonalPolicyDecisionTransportTests
         Assert.False(result.Success);
         Assert.Equal(RequestErrorKind.Forbidden, result.Kind);
         Assert.Contains("personal HTTP", result.Message!, StringComparison.Ordinal);
-        Assert.Equal(before.CommittedStreamPosition, retained.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, retained.SourcePhysicalPosition);
         Assert.Equal(before.Revision, retained.Revision);
         Assert.Equal(before.ReadDecisions(), retained.ReadDecisions());
     }
@@ -130,7 +221,7 @@ public sealed class PersonalPolicyDecisionTransportTests
 
         // Assert
         Assert.True(result.Success, result.Message);
-        Assert.Equal(before.CommittedStreamPosition + 1, retained.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition + 1, retained.SourcePhysicalPosition);
         Assert.Equal(RbacIds.Member(fixture.Tenant, fixture.Decider(action)).ToString(), retained.ReadDecisions()[^1].Actor.Id);
         Assert.Equal(before.ReadDecisions().Count + 1, retained.ReadDecisions().Count);
     }
@@ -155,7 +246,7 @@ public sealed class PersonalPolicyDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Kind);
         Assert.Equal(message, result.Message);
-        Assert.Equal(before.CommittedStreamPosition, retained.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, retained.SourcePhysicalPosition);
     }
 
     internal static async Task<Result<T>> SendHttpAsync<T>(IServiceProvider provider, Uuid user,
@@ -176,7 +267,7 @@ public sealed class PersonalPolicyDecisionTransportTests
     {
         public Uuid Tenant { get; } = Uuid.CreateVersion4();
         public Uuid Program { get; } = Uuid.CreateVersion4();
-        public Uuid PolicyId { get; } = Uuid.CreateVersion4();
+        public Uuid PolicyId => Policy.IdFor(Tenant, Program, "POL-TRANSPORT");
         public Uuid Author { get; } = Uuid.CreateVersion4();
         public Uuid Reviewer { get; } = Uuid.CreateVersion4();
         public Uuid Approver { get; } = Uuid.CreateVersion4();
@@ -214,7 +305,7 @@ public sealed class PersonalPolicyDecisionTransportTests
                     fixture.Author, "Client manager", At));
                 return Result.Success;
             });
-            await ProgramManagementServices.SeedAsync(fixture._provider, new Policy(fixture.Tenant, fixture.PolicyId), policy =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new PolicyRules(fixture.Tenant, fixture.PolicyId), policy =>
             {
                 Assert.True(policy.Create(fixture.Program, Uuid.CreateVersion4(), "POL-TRANSPORT",
                     new PolicyContent("Access control", "Govern access", PolicyAudience.CoreSecurity, null, 12,
@@ -247,7 +338,7 @@ public sealed class PersonalPolicyDecisionTransportTests
         public Uuid Decider(string action) => action is "review" or "retirement_review" or "periodic_review" ? Reviewer : Approver;
         Uuid Member(Uuid user) => RbacIds.Member(Tenant, user);
         ActorReference Actor(Uuid user) => ActorReference.ForMember(Member(user), "Client member");
-        public Task<Policy> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new Policy(Tenant, PolicyId));
+        public Task<PolicyRules> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new PolicyRules(Tenant, PolicyId));
         public async Task<(bool Success, RequestErrorKind? Kind, string? Message)> DecideAsync(string action, string transport, Uuid? actor = null)
         {
             var policy = await ReadAsync();
@@ -255,8 +346,8 @@ public sealed class PersonalPolicyDecisionTransportTests
             {
                 "review" or "retirement_review" => await SendAsync(new ReviewPolicyDraft(Uuid.CreateVersion4(), Tenant, Program, PolicyId, policy.Revision, "accept", "Reviewed"), transport, actor ?? Decider(action)),
                 "approval" => await SendAsync(new ApprovePolicy(Uuid.CreateVersion4(), Tenant, Program, PolicyId, policy.Revision, _review, Effective, true, "Approved"), transport, actor ?? Decider(action)),
-                "retirement" => await SendAsync(new ApprovePolicyRetirement(Tenant, Program, PolicyId, policy.Revision, _review, "Retired"), transport, actor ?? Decider(action)),
-                _ => await SendAsync(new ConfirmPolicyReview(Tenant, Program, PolicyId, policy.CurrentVersion!.Version, "Confirmed"), transport, actor ?? Decider(action))
+                "retirement" => await SendAsync(new ApprovePolicyRetirement(Uuid.CreateVersion4(), Tenant, Program, PolicyId, policy.Revision, _review, "Retired"), transport, actor ?? Decider(action)),
+                _ => await SendAsync(new ConfirmPolicyReview(Uuid.CreateVersion4(), Tenant, Program, PolicyId, policy.CurrentVersion!.Version, "Confirmed"), transport, actor ?? Decider(action))
             };
         }
         async Task<(bool Success, RequestErrorKind? Kind, string? Message)> SendAsync<T>(IRequest<T> request, string transport, Uuid actor)

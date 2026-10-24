@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.ControlMappings;
@@ -228,7 +229,7 @@ public sealed class WorkQueueSearchTests
         var consistency = new WorkQueueReadConsistency(events, directories);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: directories,
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -283,7 +284,7 @@ public sealed class WorkQueueSearchTests
         var consistency = new WorkQueueReadConsistency(events, [evidence]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [evidence],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),

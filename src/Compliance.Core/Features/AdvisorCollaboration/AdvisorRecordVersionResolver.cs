@@ -8,7 +8,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>Checks the exact source version and program scope before a handoff can include it.</summary>
-sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates, ControlReader controlSources,
+sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates, ControlReader controlSources, PolicyReader policySources,
     EvidenceArtifactMetadataRead evidenceMetadata, EvidenceSupportTargetSource evidenceTargets,
     IBoundaryDirectoryReader boundaries, ReadinessReader readiness)
     : IAdvisorRecordVersionResolver
@@ -80,10 +80,16 @@ sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates, ControlRe
             : Stale();
     }
 
-    async ValueTask<Result> RequirePolicyDraftAsync(Uuid tenantId, Uuid programId,
+
+
+    ValueTask<Result> RequirePolicyDraftAsync(Uuid tenantId, Uuid programId,
+        AdvisorRecordVersion selected, CancellationToken ct) =>
+        PolicySourceFailures.ClassifyAsync(() => RequirePolicyDraftCoreAsync(tenantId, programId, selected, ct));
+
+    async ValueTask<Result> RequirePolicyDraftCoreAsync(Uuid tenantId, Uuid programId,
         AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var policy = await aggregates.HydrateAsync(new Policy(tenantId, selected.RecordId), ct)
+        var policy = await policySources.ReadAsync(tenantId, programId, selected.RecordId, ct)
             .ConfigureAwait(false);
         if (!policy.IsVisible || policy.ProgramId != programId)
             return Missing();
@@ -92,10 +98,16 @@ sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates, ControlRe
             : Stale();
     }
 
-    async ValueTask<Result> RequirePolicyVersionAsync(Uuid tenantId, Uuid programId,
+
+
+    ValueTask<Result> RequirePolicyVersionAsync(Uuid tenantId, Uuid programId,
+        AdvisorRecordVersion selected, CancellationToken ct) =>
+        PolicySourceFailures.ClassifyAsync(() => RequirePolicyVersionCoreAsync(tenantId, programId, selected, ct));
+
+    async ValueTask<Result> RequirePolicyVersionCoreAsync(Uuid tenantId, Uuid programId,
         AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var policy = await aggregates.HydrateAsync(new Policy(tenantId, selected.RecordId), ct)
+        var policy = await policySources.ReadAsync(tenantId, programId, selected.RecordId, ct)
             .ConfigureAwait(false);
         if (!policy.IsVisible || policy.ProgramId != programId)
             return Missing();
