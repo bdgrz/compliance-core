@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization.Metadata;
 
@@ -15,6 +16,7 @@ public static class ResultSchemaRegistry
         ["operation-accepted-response.v1"] = ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
         ["operation-status-response.v1"] = ComplianceCoreJsonContext.Default.OperationStatusResponse,
         ["mutation-result-content.v1"] = ComplianceCoreJsonContext.Default.MutationResultContent,
+        [AdministratorTransitionResponse.Schema] = ComplianceCoreJsonContext.Default.AdministratorTransitionResponse,
     };
 
     /// <summary>Registered schema names.</summary>

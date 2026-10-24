@@ -2249,10 +2249,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListTeams, Page<TeamView>>("/api/v1/tenants/{tenant_id}/teams")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaPost<AssignTeamMember>("/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}")
+    app.MapPortiaPut<AssignTeamMember, AdministratorTransitionResponse>(
+            "/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaDelete<RemoveTeamMember>("/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}")
+    app.MapPortiaPut<RemoveTeamMember, AdministratorTransitionResponse>(
+            "/api/v1/tenants/{tenant_id}/members/{member_id}/team-removals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
     app.MapPortiaGet<ListTeamMembers, Page<TeamMemberView>>("/api/v1/tenants/{tenant_id}/teams/{team_id}/members")

@@ -43,11 +43,11 @@ public sealed class FitzTeamMemberDirectoryReaderTests
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new TeamMemberAssigned(TenantId, TeamId, memberId));
+            await reader.ApplyAsync(TeamMemberFacts.Assigned(TenantId, TeamId, memberId));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var assignmentId = RbacIds.TeamMember(TenantId, TeamId, memberId);
-        DomainEvent removed = new TeamMemberRemoved(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
+        DomainEvent removed = TeamMemberFacts.Removed(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
         removed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), assignmentId, 1,
             DateTimeOffset.UtcNow));
         await events.AppendAsync(new EventStreamAddress(TenantId.ToString(), "rbac-team-members",
@@ -74,13 +74,13 @@ public sealed class FitzTeamMemberDirectoryReaderTests
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new TeamMemberAssigned(TenantId, TeamId, memberId));
+            await reader.ApplyAsync(TeamMemberFacts.Assigned(TenantId, TeamId, memberId));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
-        var removed = new TeamMemberRemoved(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
+        var removed = TeamMemberFacts.Removed(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
         removed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
             RbacIds.TeamMember(TenantId, TeamId, memberId), 1, DateTimeOffset.UtcNow));
-        var assigned = new TeamMemberAssigned(TenantId, nextTeamId, memberId);
+        var assigned = TeamMemberFacts.Assigned(TenantId, nextTeamId, memberId);
         assigned.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
             RbacIds.TeamMember(TenantId, nextTeamId, memberId), 1, DateTimeOffset.UtcNow));
         await events.AppendAsync(new EventStreamAddress(TenantId.ToString(), "rbac-team-members",
@@ -109,16 +109,16 @@ public sealed class FitzTeamMemberDirectoryReaderTests
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new TeamMemberAssigned(TenantId, TeamId, memberId));
+            await reader.ApplyAsync(TeamMemberFacts.Assigned(TenantId, TeamId, memberId));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var assignmentId = RbacIds.TeamMember(TenantId, TeamId, memberId);
         var address = new EventStreamAddress(TenantId.ToString(), "rbac-team-members",
             assignmentId.ToString());
-        DomainEvent removed = new TeamMemberRemoved(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
+        DomainEvent removed = TeamMemberFacts.Removed(TenantId, TeamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
         removed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), assignmentId, 1,
             DateTimeOffset.UtcNow));
-        DomainEvent reassigned = new TeamMemberAssigned(TenantId, TeamId, memberId);
+        DomainEvent reassigned = TeamMemberFacts.Assigned(TenantId, TeamId, memberId);
         reassigned.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), assignmentId, 2,
             DateTimeOffset.UtcNow.AddSeconds(1)));
         await events.AppendAsync(address, 0, [removed, reassigned]);
@@ -204,7 +204,7 @@ public sealed class FitzTeamMemberDirectoryReaderTests
         var repository = new FitzTeamMemberDirectoryReader(client, new InMemoryEventStore());
         var identity = new CheckpointIdentity("TeamMemberDirectory", EventStreamPattern.ForPattern(TenantId.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
-        await repository.ApplyAsync(new TeamMemberAssigned(TenantId, teamId, memberId));
+        await repository.ApplyAsync(TeamMemberFacts.Assigned(TenantId, teamId, memberId));
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 }

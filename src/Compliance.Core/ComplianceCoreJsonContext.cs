@@ -1819,6 +1819,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(TeamDefined))]
 [JsonSerializable(typeof(TeamDeleted))]
 [JsonSerializable(typeof(TeamMemberAssigned))]
+[JsonSerializable(typeof(AdministratorTransitionResponse))]
+[JsonSerializable(typeof(AdministratorTransitionResponseState))]
 [JsonSerializable(typeof(TeamMemberRemoved))]
 [JsonSerializable(typeof(RoleDefined))]
 [JsonSerializable(typeof(RoleRenamed))]

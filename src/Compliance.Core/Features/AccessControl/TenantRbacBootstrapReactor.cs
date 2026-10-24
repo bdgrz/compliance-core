@@ -15,7 +15,7 @@ public sealed partial class TenantRbacBootstrapReactor(
         var adminRoleId = BuiltInRbac.TenantAdministrationRoleId(tenantId);
         var ownerBecomesAdministrator = context.Trigger.CreatorIsAdministrator ||
                                         context.Trigger.FirstAdministratorEmail is null;
-        List<IRequest> commands =
+        List<object> commands =
         [
             new DefineRole(tenantId, adminRoleId, BuiltInRbac.TenantAdministrationRoleName),
             new DefineTeam(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), BuiltInRbac.AdministratorsTeamName),
@@ -36,7 +36,7 @@ public sealed partial class TenantRbacBootstrapReactor(
         if (ownerBecomesAdministrator)
         {
             var memberId = RbacIds.Member(tenantId, context.Trigger.OwnerUserId);
-            commands.Add(new AssignTeamMember(tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), memberId));
+            commands.Add(TeamMemberEffects.Assign(sourceEventId, tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), memberId));
         }
 
         commands.AddRange(
@@ -56,6 +56,17 @@ public sealed partial class TenantRbacBootstrapReactor(
                 (RbacPermissions.TenantAccess or RbacPermissions.TenantRbacManage or RbacPermissions.ProgramManage)));
 
         foreach (var command in commands)
-            await bus.SendReactionAsync(command, context, ct);
+        {
+            if (command is AssignTeamMember assignment)
+            {
+                var assigned = await bus.SendAsync(assignment, context, ct).ConfigureAwait(false);
+                if (!assigned.IsSuccess)
+                    throw new ReactionCommandFailedException(assigned.Error);
+            }
+            else
+            {
+                await bus.SendReactionAsync((IRequest)command, context, ct);
+            }
+        }
     }
 }

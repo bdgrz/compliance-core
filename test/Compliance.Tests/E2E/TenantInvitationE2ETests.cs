@@ -513,9 +513,19 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
         // A historical or accidental team grant must not become standing client access.
         var staffMemberId = RbacIds.Member(tenantId,
             Uuid.Parse(staffId, CultureInfo.InvariantCulture));
-        using var assignedStaff = await administratorClient.PostAsync(
-            $"/api/v1/tenants/{tenantId}/teams/{administratorsTeamId}/members/{staffMemberId}", null);
-        Assert.Equal(HttpStatusCode.NoContent, assignedStaff.StatusCode);
+        Uuid staffEpisodeId;
+        await using (var episodeScope = factory.Services.CreateAsyncScope())
+            staffEpisodeId = (await episodeScope.ServiceProvider.GetRequiredService<IAggregateReader>()
+                .HydrateAsync(Member.ForVerification(tenantId, staffMemberId))).MembershipEpisodeId;
+        using var assignedStaff = await administratorClient.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/teams/{administratorsTeamId}/members/{staffMemberId}/{Uuid.CreateVersion4()}",
+            new
+            {
+                member_episode_id = staffEpisodeId,
+                expected_assignment_revision = 0,
+                expected_assignment_generation = 0,
+            });
+        Assert.Equal(HttpStatusCode.OK, assignedStaff.StatusCode);
         var projectedAssignment = false;
         deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         while (DateTimeOffset.UtcNow < deadline)

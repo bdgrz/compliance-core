@@ -356,9 +356,20 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
                 await Task.Delay(250);
             }
             Assert.True(staffMembershipProjected);
-            using var assigned = await creator.PostAsync(
-                $"/api/v1/tenants/{tenantId}/teams/{administratorsTeamId}/members/{memberId}", null);
-            Assert.Equal(HttpStatusCode.NoContent, assigned.StatusCode);
+            Uuid memberEpisodeId;
+            await using (var episodeScope = worker.Services.CreateAsyncScope())
+                memberEpisodeId = (await episodeScope.ServiceProvider.GetRequiredService<IAggregateReader>()
+                    .HydrateAsync(Bdgrz.Compliance.Features.AccessControl.Member.ForVerification(tenantId, memberId)))
+                    .MembershipEpisodeId;
+            using var assigned = await creator.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/teams/{administratorsTeamId}/members/{memberId}/{Uuid.CreateVersion4()}",
+                new
+                {
+                    member_episode_id = memberEpisodeId,
+                    expected_assignment_revision = 0,
+                    expected_assignment_generation = 0,
+                });
+            Assert.Equal(HttpStatusCode.OK, assigned.StatusCode);
             var assignmentProjected = false;
             deadline = DateTimeOffset.UtcNow.AddSeconds(120);
             while (DateTimeOffset.UtcNow < deadline)

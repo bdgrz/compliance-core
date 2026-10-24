@@ -26,8 +26,10 @@ public sealed partial class TeamCleanupReactor(
                 .ConfigureAwait(false);
             foreach (var member in page.Items)
             {
-                await bus.SendReactionAsync(new RemoveTeamMember(tenantId, teamId, member.MemberId), context, ct)
-                    .ConfigureAwait(false);
+                var removal = await bus.SendAsync(TeamMemberEffects.Remove(context.Trigger.Metadata.EventId, tenantId,
+                    teamId, member.MemberId), context, ct).ConfigureAwait(false);
+                if (!removal.IsSuccess)
+                    throw new ReactionCommandFailedException(removal.Error);
             }
 
             cursor = page.NextCursor;

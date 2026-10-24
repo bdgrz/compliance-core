@@ -59,7 +59,7 @@ sealed class ActivationReactionProbe
             $"({Stopwatch.GetElapsedTime(started, ended).TotalMilliseconds:F0}ms)={exception.GetType().Name}");
     }
 
-    void RecordPreparation(IRequest command, long started, string outcome)
+    void RecordPreparation(IRequestBase command, long started, string outcome)
     {
         var ended = Stopwatch.GetTimestamp();
         _preparationAttempts.Enqueue($"{command.GetType().Name}:" +
@@ -84,8 +84,6 @@ sealed class ActivationReactionProbe
             var targetPreparation = request switch
             {
                 RegisterMember member => string.Equals(member.TenantId.ToString(), targetTenantId,
-                    StringComparison.Ordinal),
-                AssignTeamMember assignment => string.Equals(assignment.TenantId.ToString(), targetTenantId,
                     StringComparison.Ordinal),
                 _ => false,
             };
@@ -113,9 +111,26 @@ sealed class ActivationReactionProbe
             }
         }
 
-        public ValueTask<Result<TOut>> DispatchAsync<TOut>(IRequest<TOut> request,
-            RequestDispatchContext context, CancellationToken ct = default) =>
-            inner.DispatchAsync(request, context, ct);
+        public async ValueTask<Result<TOut>> DispatchAsync<TOut>(IRequest<TOut> request,
+            RequestDispatchContext context, CancellationToken ct = default)
+        {
+            if (request is not AssignTeamMember assignment || !string.Equals(assignment.TenantId.ToString(),
+                    Volatile.Read(ref probe._targetTenantId), StringComparison.Ordinal))
+                return await inner.DispatchAsync(request, context, ct);
+
+            var started = Stopwatch.GetTimestamp();
+            try
+            {
+                var result = await inner.DispatchAsync(request, context, ct);
+                probe.RecordPreparation(request, started, result.IsSuccess ? "success" : result.Error.Kind.ToString());
+                return result;
+            }
+            catch (Exception exception)
+            {
+                probe.RecordPreparation(request, started, exception.GetType().Name);
+                throw;
+            }
+        }
 
         public IAsyncEnumerable<TOut> DispatchStreamAsync<TOut>(IStreamRequest<TOut> request,
             RequestDispatchContext context, CancellationToken ct = default) =>

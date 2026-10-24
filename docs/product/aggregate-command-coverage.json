@@ -12412,7 +12412,7 @@
     {
       "request": "AssignTeamMember",
       "contract": "src/Compliance.Common/Features/AccessControl/AssignTeamMember.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest<AdministratorTransitionResponse>, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -23755,7 +23755,7 @@
     {
       "request": "RemoveTeamMember",
       "contract": "src/Compliance.Common/Features/AccessControl/RemoveTeamMember.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest<AdministratorTransitionResponse>, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {

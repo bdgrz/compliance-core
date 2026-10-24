@@ -28,7 +28,7 @@ public sealed class FitzPermissionAuthorizerTests
                 EventStreamPattern.ForPattern(tenantId.ToString()));
             await using var batch = await permissions!.BeginAsync(new ProjectionBatchContext(
                 identity, ProjectionCheckpoint.Start));
-            await permissions.ApplyAsync(new TeamMemberRemoved(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
+            await permissions.ApplyAsync(TeamMemberFacts.Removed(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         });
         permissions = new FitzPermissionAuthorizer(client, new FixedMembershipDirectory(true), events,
@@ -214,10 +214,10 @@ public sealed class FitzPermissionAuthorizerTests
         var identity = new CheckpointIdentity("PermissionProjection", pattern);
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
         var assignmentId = RbacIds.TeamMember(tenantId, teamId, memberId);
-        DomainEvent assigned = new TeamMemberAssigned(tenantId, teamId, memberId);
+        DomainEvent assigned = TeamMemberFacts.Assigned(tenantId, teamId, memberId);
         assigned.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), assignmentId, 1,
             DateTimeOffset.UtcNow));
-        DomainEvent removal = new TeamMemberRemoved(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
+        DomainEvent removal = TeamMemberFacts.Removed(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4());
         removal.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), assignmentId, 2,
             DateTimeOffset.UtcNow));
         await events.AppendAsync(new EventStreamAddress(tenantId.ToString(), "rbac-team-members",
@@ -260,7 +260,7 @@ public sealed class FitzPermissionAuthorizerTests
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
         var otherMemberId = RbacIds.Member(tenantId, Uuid.CreateVersion4());
         var assignmentId = RbacIds.TeamMember(tenantId, teamId, otherMemberId);
-        DomainEvent removal = new TeamMemberRemoved(tenantId, teamId, otherMemberId, Uuid.Empty, Uuid.CreateVersion4());
+        DomainEvent removal = TeamMemberFacts.Removed(tenantId, teamId, otherMemberId, Uuid.Empty, Uuid.CreateVersion4());
         removal.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), assignmentId, 1,
             DateTimeOffset.UtcNow));
         await events.AppendAsync(new EventStreamAddress(tenantId.ToString(), "rbac-team-members",
@@ -326,7 +326,7 @@ public sealed class FitzPermissionAuthorizerTests
             await permissions.ApplyAsync(MemberFacts.Registered(tenantId, memberId, userId));
             await permissions.ApplyAsync(new TeamDefined(tenantId, teamId, "Administrators"));
             await permissions.ApplyAsync(new RoleDefined(tenantId, roleId, "Tenant Administration"));
-            await permissions.ApplyAsync(new TeamMemberAssigned(tenantId, teamId, memberId));
+            await permissions.ApplyAsync(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
             await permissions.ApplyAsync(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
             await permissions.ApplyAsync(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
@@ -369,7 +369,7 @@ public sealed class FitzPermissionAuthorizerTests
             RbacIds.Member(tenantId, userId), userId));
         await permissions.ApplyAsync(new TeamDefined(tenantId, teamId, "Administrators"));
         await permissions.ApplyAsync(new RoleDefined(tenantId, roleId, "Org Admin"));
-        await permissions.ApplyAsync(new TeamMemberAssigned(tenantId, teamId,
+        await permissions.ApplyAsync(TeamMemberFacts.Assigned(tenantId, teamId,
             RbacIds.Member(tenantId, userId)));
         await permissions.ApplyAsync(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         await permissions.ApplyAsync(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
