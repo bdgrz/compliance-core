@@ -59,33 +59,33 @@ public sealed class MethodologyTemplateCommandHandlerTests
         var approve = new ApproveMethodologyTemplateVersion(Uuid.CreateVersion4(), TemplateId, 2, "Publish");
         var retire = new RetireMethodologyTemplate(Uuid.CreateVersion4(), TemplateId, 4,
             new DateOnly(2026, 10, 31), "Retire");
-        Assert.True((await new CreateMethodologyTemplateHandler(scenario.Executor, scenario.Clock)
+        Assert.True((await new CreateMethodologyTemplateHandler(scenario.TemplateOperations())
             .HandleAsync(Scenario.Context(create, author), CancellationToken.None)).IsSuccess);
-        Assert.True((await new ReviseMethodologyTemplateDraftHandler(scenario.Executor, scenario.Clock)
+        Assert.True((await new ReviseMethodologyTemplateDraftHandler(scenario.TemplateOperations())
             .HandleAsync(Scenario.Context(revise, author), CancellationToken.None)).IsSuccess);
-        Assert.True((await new ReviewMethodologyTemplateHandler(scenario.Executor, scenario.Clock)
+        Assert.True((await new ReviewMethodologyTemplateHandler(scenario.TemplateOperations())
             .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None)).IsSuccess);
-        Assert.True((await new ApproveMethodologyTemplateVersionHandler(scenario.Executor, scenario.Clock)
+        Assert.True((await new ApproveMethodologyTemplateVersionHandler(scenario.TemplateOperations())
             .HandleAsync(Scenario.Context(approve, approver), CancellationToken.None)).IsSuccess);
-        Assert.True((await new RetireMethodologyTemplateHandler(scenario.Executor, scenario.Clock)
+        Assert.True((await new RetireMethodologyTemplateHandler(scenario.TemplateOperations())
             .HandleAsync(Scenario.Context(retire, approver), CancellationToken.None)).IsSuccess);
         var before = await scenario.Reader.HydrateAsync(new MethodologyTemplate(TemplateId));
         var later = new FixedTimeProvider(Now.AddHours(1));
 
         // Act
-        var creationReplay = await new CreateMethodologyTemplateHandler(scenario.Executor, later)
+        var creationReplay = await new CreateMethodologyTemplateHandler(scenario.TemplateOperations(later))
             .HandleAsync(Scenario.Context(create, author), CancellationToken.None);
-        var revisionReplay = await new ReviseMethodologyTemplateDraftHandler(scenario.Executor, later)
+        var revisionReplay = await new ReviseMethodologyTemplateDraftHandler(scenario.TemplateOperations(later))
             .HandleAsync(Scenario.Context(revise, author), CancellationToken.None);
-        var reviewReplay = await new ReviewMethodologyTemplateHandler(scenario.Executor, later)
+        var reviewReplay = await new ReviewMethodologyTemplateHandler(scenario.TemplateOperations(later))
             .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None);
-        var approvalReplay = await new ApproveMethodologyTemplateVersionHandler(scenario.Executor, later)
+        var approvalReplay = await new ApproveMethodologyTemplateVersionHandler(scenario.TemplateOperations(later))
             .HandleAsync(Scenario.Context(approve, approver), CancellationToken.None);
-        var retirementReplay = await new RetireMethodologyTemplateHandler(scenario.Executor, later)
+        var retirementReplay = await new RetireMethodologyTemplateHandler(scenario.TemplateOperations(later))
             .HandleAsync(Scenario.Context(retire, approver), CancellationToken.None);
-        var changedRevision = await new ReviseMethodologyTemplateDraftHandler(scenario.Executor, later)
+        var changedRevision = await new ReviseMethodologyTemplateDraftHandler(scenario.TemplateOperations(later))
             .HandleAsync(Scenario.Context(revise with { ExpectedRevision = 2 }, author), CancellationToken.None);
-        var changedActor = await new ReviewMethodologyTemplateHandler(scenario.Executor, later)
+        var changedActor = await new ReviewMethodologyTemplateHandler(scenario.TemplateOperations(later))
             .HandleAsync(Scenario.Context(review, approver), CancellationToken.None);
         var after = await scenario.Reader.HydrateAsync(new MethodologyTemplate(TemplateId));
 
@@ -157,11 +157,11 @@ public sealed class MethodologyTemplateCommandHandlerTests
         var author = Uuid.CreateVersion4();
         var reviewer = Uuid.CreateVersion4();
         var approver = Uuid.CreateVersion4();
-        var create = new CreateMethodologyTemplateHandler(scenario.Executor, scenario.Clock);
-        var revise = new ReviseMethodologyTemplateDraftHandler(scenario.Executor, scenario.Clock);
-        var review = new ReviewMethodologyTemplateHandler(scenario.Executor, scenario.Clock);
-        var approve = new ApproveMethodologyTemplateVersionHandler(scenario.Executor, scenario.Clock);
-        var retire = new RetireMethodologyTemplateHandler(scenario.Executor, scenario.Clock);
+        var create = new CreateMethodologyTemplateHandler(scenario.TemplateOperations());
+        var revise = new ReviseMethodologyTemplateDraftHandler(scenario.TemplateOperations());
+        var review = new ReviewMethodologyTemplateHandler(scenario.TemplateOperations());
+        var approve = new ApproveMethodologyTemplateVersionHandler(scenario.TemplateOperations());
+        var retire = new RetireMethodologyTemplateHandler(scenario.TemplateOperations());
 
         // Act
         var created = await create.HandleAsync(Scenario.Context(
@@ -187,9 +187,11 @@ public sealed class MethodologyTemplateCommandHandlerTests
         Assert.True(reviewed.IsSuccess, reviewed.Error?.Message);
         Assert.True(published.IsSuccess, published.Error?.Message);
         Assert.True(retired.IsSuccess, retired.Error?.Message);
-        Assert.Equal("retired", aggregate.Current!.Status);
-        Assert.Equal(new DateOnly(2026, 10, 31), aggregate.Current.RetiredEffectiveOn);
-        var publishedVersion = aggregate.Current.Versions[^1];
+        var view = await scenario.Templates.ReadAsync(TemplateId);
+        Assert.True(aggregate.IsRetired);
+        Assert.Equal("retired", view!.Status);
+        Assert.Equal(new DateOnly(2026, 10, 31), view.RetiredEffectiveOn);
+        var publishedVersion = view.Versions[^1];
         Assert.Equal("published", publishedVersion.Status);
         Assert.Equal(Content("Revised procedure.").Records[0].Summary, publishedVersion.Content.Records[0].Summary);
         var decision = Assert.IsType<MethodologyTemplateReviewView>(publishedVersion.Review);
@@ -254,13 +256,13 @@ public sealed class MethodologyTemplateCommandHandlerTests
             Scenario.Context(new CreateProgram(tenantId, "Northwind SOC 2", new ProgramPlan(null, null, null,
                 null, null, null)), clientAdmin), CancellationToken.None);
         var programId = createProgram.Value!.ProgramId;
-        var createTemplate = new CreateMethodologyTemplateHandler(scenario.Executor, scenario.Clock);
-        var reviseTemplate = new ReviseMethodologyTemplateDraftHandler(scenario.Executor, scenario.Clock);
-        var reviewTemplate = new ReviewMethodologyTemplateHandler(scenario.Executor, scenario.Clock);
-        var approveTemplate = new ApproveMethodologyTemplateVersionHandler(scenario.Executor, scenario.Clock);
-        var applyTemplate = new ApplyMethodologyTemplateHandler(scenario.Executor, scenario.Reader, scenario.Clock);
+        var createTemplate = new CreateMethodologyTemplateHandler(scenario.TemplateOperations());
+        var reviseTemplate = new ReviseMethodologyTemplateDraftHandler(scenario.TemplateOperations());
+        var reviewTemplate = new ReviewMethodologyTemplateHandler(scenario.TemplateOperations());
+        var approveTemplate = new ApproveMethodologyTemplateVersionHandler(scenario.TemplateOperations());
+        var applyTemplate = new ApplyMethodologyTemplateHandler(scenario.Executor, scenario.Reader, scenario.Templates, scenario.Clock);
         var proposeSuccessor = new ProposeTemplateSuccessorAdoptionHandler(scenario.Executor, scenario.Reader,
-            scenario.Clock);
+            scenario.Templates, scenario.Clock);
         var recordDisposition = new RecordTemplateSuccessorDispositionHandler(scenario.Executor, scenario.Clock);
 
         // Act
@@ -322,11 +324,12 @@ public sealed class MethodologyTemplateCommandHandlerTests
     {
         readonly ServiceProvider _services;
         readonly AsyncServiceScope _scope;
+        readonly InMemoryEventStore _events = new();
 
         public Scenario()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(_events);
             services.AddPortia();
             _services = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _services.CreateAsyncScope();
@@ -338,6 +341,9 @@ public sealed class MethodologyTemplateCommandHandlerTests
         public IImmutableContentStore ContentStore { get; } = new FitzKvImmutableContentStore(
             new PersistenceKvClient(new InMemoryKvClient()));
         public MethodologyTemplateContributionReader Contributions => new(Reader, ContentStore);
+        public MethodologyTemplateReader Templates => new(Reader, _events, ContentStore);
+        public MethodologyTemplateOperations TemplateOperations(TimeProvider? clock = null) =>
+            new(new NativeOperationExecutor(Reader, Executor, ContentStore), Templates, ContentStore, clock ?? Clock);
         public MethodologyTemplateContributionOperations ContributionOperations(TimeProvider? clock = null) =>
             new(new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, clock ?? Clock);
         public IAggregateExecutor Executor { get; }

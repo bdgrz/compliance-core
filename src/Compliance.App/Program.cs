@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AuditorRequests;
@@ -2672,6 +2673,14 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Audit packages");
+    app.MapPortiaGet<GetMethodologyTemplateVersion, MethodologyTemplateVersionView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/methodology-template-versions/{methodology_template_version_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Methodology templates");
+    app.MapPortiaGet<ListMethodologyTemplates, Page<MethodologyTemplateSummaryView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/methodology-templates")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Methodology templates");
     app.MapPortiaPut<CreateAuditPackage>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

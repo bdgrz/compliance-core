@@ -1,0 +1,19 @@
+{
+  "reviewed": 32,
+  "blockedReviews": 0,
+  "signalsTriaged": 1,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+      "sha256": "f78470556e03d086be709a52ed15a613da0597e0e230be27d4960b12162237a9",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.62,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.51
+      },
+      "classification": "native_executor_and_verified_reader_cover_recovery",
+      "evidence": "The compact reducer retains only exact authority, content/publication pointers and selected native receipt. NativeOperationExecutor resolves accepted operations before async immutable preparation and rechecks acceptance on failed preparation/OCC. All five operation results use MutationResultContent envelopes; original outcome survives retirement/unavailable history. Reader validates exact revision cut, immutable prefix, scope and attribution; directory only locates published identity and source checkpoint fences reads. 51owning focused/HTTP tests pass; no concrete unresolved recovery defect found."
+    }
+  ]
+}

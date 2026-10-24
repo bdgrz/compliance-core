@@ -679,6 +679,12 @@ public static class ComplianceServiceCollectionExtensions
             new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>()));
         services.AddScoped<NativeOperationExecutor>();
         services.AddScoped<MethodologyTemplateContributionOperations>();
+        services.AddScoped<FitzMethodologyTemplateDirectory>();
+        services.AddScoped<IMethodologyTemplateDirectoryReader>(provider => provider.GetRequiredService<FitzMethodologyTemplateDirectory>());
+        services.AddScoped<IMethodologyTemplateDirectoryProjection>(provider => provider.GetRequiredService<FitzMethodologyTemplateDirectory>());
+        services.AddScoped<MethodologyTemplateDirectoryReadConsistency>();
+        services.AddScoped<MethodologyTemplateReader>();
+        services.AddScoped<MethodologyTemplateOperations>();
         services.AddScoped<MethodologyTemplateContributionReader>();
         services.AddScoped<FollowUpCompletionVerifier>();
         services.AddSingleton<IProcessRecordStore>(provider =>
@@ -1509,6 +1515,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.AuthorizeEvidenceRequestActionCompletionUseHandler>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.SettleEvidenceRequestActionCompletionUseHandler>()
             .AddRequestAuthorizer<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReceiverAuthorizer>()
+            .AddRequestHandler<GetMethodologyTemplateVersionHandler>()
+            .AddRequestHandler<ListMethodologyTemplatesHandler>()
             .AddRequestHandler<CreateMethodologyTemplateHandler>()
             .AddRequestHandler<ReviseMethodologyTemplateDraftHandler>()
             .AddRequestHandler<ReviewMethodologyTemplateHandler>()
@@ -1643,6 +1651,7 @@ public static class ComplianceServiceCollectionExtensions
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<IdentityRecoveryAcceptanceReactor>("IdentityRecoveryAcceptanceV1", WorkloadScope.Global,
                 options => options.FailureAttemptLimit = int.MaxValue)
+            .AddProjector<MethodologyTemplateDirectoryProjector>(FitzMethodologyTemplateDirectory.ProjectorName, WorkloadScope.Global)
             .AddProjector<AuditPackageDirectoryProjector>(FitzAuditPackageDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<PlatformUserDirectoryProjector>("PlatformUserDirectoryV2", WorkloadScope.Global)
             .AddProjector<IdentityDirectoryProjector>("UserIdentityDirectory", WorkloadScope.Global)

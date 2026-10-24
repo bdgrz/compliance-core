@@ -1,548 +1,173 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Hosting.Persistence;
-using System.Collections.ObjectModel;
-using System.Security.Cryptography;
-using System.Text.Json;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
-/// <summary>Platform-owned authored template versions, independent review, approval, and retirement.</summary>
+/// <summary>The compact current version/publication authority of a platform template; history is not command state.</summary>
 public sealed class MethodologyTemplate : Aggregate
 {
-    public NativeAcceptance ReplayAcceptance { get; }
-    OperationProvenance? _pendingOperation;
+    public const string Realm = "bdgrz";
+    public const string Area = "methodology-templates";
+    long _revision;
+    bool _retired;
+    bool _hasPublished;
 
-    const int MaximumVersions = 64;
-    const int MaximumRecords = 100;
-    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
-    const int MaximumTextLength = 2000;
-    static readonly HashSet<string> TemplateKinds = new(StringComparer.Ordinal)
-        { "soc2", "iso27001", "custom" };
-    static readonly HashSet<string> RecordKinds = new(StringComparer.Ordinal)
-        { "control", "policy", "evidence_request", "risk" };
-
-    MethodologyTemplateView? _current;
-    MethodologyTemplateView? _initial;
-
-    public long Revision => _current?.Revision ?? 0;
-    public MethodologyTemplateView? Current => _current;
-
-    public MethodologyTemplate(Uuid templateId, Uuid selectedCommandId = default)
-        : base(templateId, new EventStreamAddress("bdgrz", "methodology-templates", templateId.ToString()))
+    public MethodologyTemplate(Uuid templateId, Uuid selectedLogicalId = default)
+        : base(templateId, new EventStreamAddress(Realm, Area, templateId.ToString()))
     {
-        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
-        On<MethodologyTemplateCreated>(Apply);
-        On<MethodologyTemplateDraftRevised>(Apply);
-        On<MethodologyTemplateDraftReviewed>(Apply);
-        On<MethodologyTemplateVersionPublished>(Apply);
-        On<MethodologyTemplateRetired>(Apply);
+        if (templateId == Uuid.Empty)
+            throw new ArgumentException("A template requires its immutable identity.");
+        Acceptance = new NativeAcceptance(selectedLogicalId);
+        On<MethodologyTemplateCreated>(ApplyFact);
+        On<MethodologyTemplateDraftRevised>(ApplyFact);
+        On<MethodologyTemplateDraftReviewed>(ApplyFact);
+        On<MethodologyTemplateVersionPublished>(ApplyFact);
+        On<MethodologyTemplateRetired>(ApplyFact);
     }
 
-    public CommandFailure? Create(MethodologyTemplateContent content, string changeNotes,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset createdAt)
-    {
-        if (_current is not null)
-            return _initial is { } initial && SameCreate(initial, content, changeNotes, actorMemberId, actorDisplay, createdAt)
-                ? null : CommandFailure.StateConflict("The methodology template identity already has different initial content.");
-        if (Id == Uuid.Empty || !ValidActor(actorMemberId, actorDisplay, createdAt) ||
-            NormalizeContent(content) is not { } normalized ||
-            normalized.Records.Any(item => item.ContributionApprovalId is not null) ||
-            !Bounded(changeNotes, 1, MaximumTextLength))
-            return Invalid("A template requires original bounded content, change notes, and an attributed platform author.");
-        var version = NewVersion(normalized, 1, changeNotes.Trim(), actorMemberId,
-            actorDisplay.Trim(), createdAt) with
-        { TemplateId = Id };
-        var state = new MethodologyTemplateView(Id, "active", 1, [version], null, null,
-            actorMemberId, actorDisplay.Trim(), createdAt, StateDigest(Id, "active", [version], null, null));
-        return Emit(state, actorMemberId, createdAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new MethodologyTemplateCreated(tenant, subject, revision, actor, snapshot, at), "create", true);
-    }
+    public NativeAcceptance Acceptance { get; }
+    public long Revision => _revision;
+    public long VersionNumber { get; private set; }
+    public Uuid VersionId { get; private set; }
+    public string? VersionStatus { get; private set; }
+    public Uuid AuthorMemberId { get; private set; }
+    public Uuid? ReviewerMemberId { get; private set; }
+    public string? ContentSha256 { get; private set; }
+    public ImmutableContentRef? CurrentContent { get; private set; }
+    public ImmutableContentRef? CurrentVersionContent { get; private set; }
+    public DateTimeOffset UpdatedAt { get; private set; }
+    public bool IsRetired => _retired;
+    public long PublishedVersionNumber { get; private set; }
+    public Uuid PublishedVersionId { get; private set; }
 
-    public CommandFailure? ReviseDraft(long expectedRevision, MethodologyTemplateContent content,
-        string changeNotes, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt,
-        OperationProvenance? operation = null) =>
-        ReviseDraftCore(expectedRevision, content, changeNotes, actorMemberId, actorDisplay, revisedAt, null, operation);
+    public Result PrepareCreate() => _revision == 0 ? Result.Success : Conflict("The template identity already exists.");
+    public Result PrepareRevise(long expectedRevision) => Target(expectedRevision) is { IsSuccess: false } failure
+        ? failure : _retired || VersionStatus == "reviewed"
+            ? Conflict("Only an active draft, returned draft or published template can be revised.") : Result.Success;
+    public Result PrepareReview(long version, Uuid memberId) => _revision == 0 ? Missing()
+        : _retired || version != VersionNumber || VersionStatus != "draft"
+            ? Conflict("Review must answer the current active draft.")
+            : memberId == AuthorMemberId ? Forbidden("A template author cannot review their own draft.") : Result.Success;
+    public Result PreparePublish(long version, Uuid memberId) => _revision == 0 ? Missing()
+        : _retired || version != VersionNumber || VersionStatus != "reviewed"
+            ? Conflict("Publication requires the independently reviewed current draft.")
+            : memberId == AuthorMemberId || memberId == ReviewerMemberId
+                ? Forbidden("The author and reviewer cannot approve this template version.") : Result.Success;
+    public Result PrepareRetire(long expectedRevision) => Target(expectedRevision) is { IsSuccess: false } failure
+        ? failure : _retired || !_hasPublished ? Conflict("Retirement requires an active published template.") : Result.Success;
 
-    public CommandFailure? ReviseDraftWithAcceptedContribution(long expectedRevision,
-        MethodologyTemplateContent content, MethodologyTemplateContributionShareView contribution,
-        string changeNotes, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt,
-        OperationProvenance? operation = null)
+    public Result Append(string kind, long preparedRevision, OperationProvenance operation, Uuid memberId,
+        MethodologyTemplateVersionView version, ImmutableContentRef change, ImmutableContentRef first,
+        ImmutableContentRef result)
     {
-        if (!ValidContributionShare(contribution))
-            return Invalid("Template content can incorporate only an accepted, independently reviewed de-identified contribution.");
-        var reference = new MethodologyTemplateContributionAcceptanceReference(contribution.AcceptanceId,
-            contribution.ContentSha256, contribution.Review.ReviewedByMemberId,
-            contribution.Review.ReviewedByDisplay, contribution.Review.ReviewedAt,
-            contribution.AcceptedByMemberId, contribution.AcceptedByDisplay,
-            contribution.AcceptanceRationale, contribution.AcceptedAt);
-        return ReviseDraftCore(expectedRevision, content, changeNotes, actorMemberId,
-            actorDisplay, revisedAt, reference, operation);
-    }
-
-    CommandFailure? ReviseDraftCore(long expectedRevision, MethodologyTemplateContent content,
-        string changeNotes, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt,
-        MethodologyTemplateContributionAcceptanceReference? newContribution,
-        OperationProvenance? operation = null)
-    {
-        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure;
-        _pendingOperation = operation;
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The methodology template was not found.");
-        if (SameDraftRevision(current, content, changeNotes, actorMemberId, actorDisplay, revisedAt))
-            return null;
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        if (current.Status != "active" || current.Versions.Count >= MaximumVersions ||
-            !ValidActor(actorMemberId, actorDisplay, revisedAt) || revisedAt < current.UpdatedAt ||
-            NormalizeContent(content) is not { } normalized || !Bounded(changeNotes, 1, MaximumTextLength))
-            return Invalid("A template revision requires active status, bounded original content, change notes, and attribution.");
-        var previous = current.Versions[^1];
-        if (previous.Status == "reviewed")
-            return CommandFailure.StateConflict("An independently approved draft must be published or returned before revision.");
-        if (Digest(normalized) == previous.ContentSha256)
-            return CommandFailure.StateConflict("A template revision must change content.");
-        var acceptedContributions = current.Versions.SelectMany(item => item.AcceptedContributions ?? [])
-            .GroupBy(item => item.AcceptanceId).Select(group => group.First()).ToArray();
-        if (newContribution is not null)
+        if (_revision != preparedRevision)
+            return Conflict("The template changed while its immutable content was prepared.");
+        var guard = kind switch
         {
-            var contributedRecords = normalized.Records.Where(item =>
-                item.ContributionApprovalId == newContribution.AcceptanceId).ToArray();
-            if (acceptedContributions.Any(item => item.AcceptanceId == newContribution.AcceptanceId) ||
-                contributedRecords.Length != 1 || Digest(contributedRecords[0]) != newContribution.ContentSha256)
-                return Invalid("The accepted contribution content and approval must match exactly once in the template revision.");
-            acceptedContributions = [.. acceptedContributions, newContribution];
+            nameof(CreateMethodologyTemplate) => PrepareCreate(),
+            nameof(ReviseMethodologyTemplateDraft) => PrepareRevise(preparedRevision),
+            nameof(ReviewMethodologyTemplate) => PrepareReview(version.VersionNumber, memberId),
+            nameof(ApproveMethodologyTemplateVersion) => PreparePublish(version.VersionNumber, memberId),
+            nameof(RetireMethodologyTemplate) => PrepareRetire(preparedRevision),
+            _ => Conflict("The template command kind is unsupported."),
+        };
+        if (!guard.IsSuccess)
+            return guard;
+        DomainEvent fact = kind switch
+        {
+            nameof(CreateMethodologyTemplate) => new MethodologyTemplateCreated(Uuid.Empty, Id, _revision + 1,
+                memberId, version.VersionNumber, version.VersionId, version.Status, version.AuthoredByMemberId,
+                version.Review?.ReviewedByMemberId, version.ContentSha256, change, operation.AcceptedAt, operation, first, result),
+            nameof(ReviseMethodologyTemplateDraft) => new MethodologyTemplateDraftRevised(Uuid.Empty, Id, _revision + 1,
+                memberId, version.VersionNumber, version.VersionId, version.Status, version.AuthoredByMemberId,
+                version.Review?.ReviewedByMemberId, version.ContentSha256, change, operation.AcceptedAt, operation, first, result),
+            nameof(ReviewMethodologyTemplate) => new MethodologyTemplateDraftReviewed(Uuid.Empty, Id, _revision + 1,
+                memberId, version.VersionNumber, version.VersionId, version.Status, version.AuthoredByMemberId,
+                version.Review?.ReviewedByMemberId, version.ContentSha256, change, operation.AcceptedAt, operation, first, result),
+            nameof(ApproveMethodologyTemplateVersion) => new MethodologyTemplateVersionPublished(Uuid.Empty, Id, _revision + 1,
+                memberId, version.VersionNumber, version.VersionId, version.Status, version.AuthoredByMemberId,
+                version.Review?.ReviewedByMemberId, version.ContentSha256, change, operation.AcceptedAt, operation, first, result),
+            _ => new MethodologyTemplateRetired(Uuid.Empty, Id, _revision + 1,
+                memberId, version.VersionNumber, version.VersionId, version.Status, version.AuthoredByMemberId,
+                version.Review?.ReviewedByMemberId, version.ContentSha256, change, operation.AcceptedAt, operation, first, result),
+        };
+        RaiseEvent(fact);
+        return Result.Success;
+    }
+
+    void ApplyFact(DomainEvent value)
+    {
+        var fact = (IMethodologyTemplateFact)value;
+        OwnerProvenance.RequireOwn(this, fact.Operation.LogicalId, fact.Operation);
+        if (fact.SubjectId != Id || fact.TenantId != Uuid.Empty || fact.Revision != _revision + 1 ||
+            fact.VersionId == Uuid.Empty || fact.Change is null || fact.OccurredAt == default || fact.OccurredAt < UpdatedAt ||
+            fact.Operation.AcceptedAt != fact.OccurredAt || fact.Operation.Actor.Kind != "platform_operator" ||
+            fact.FirstResponse is null || fact.OperationResult is null ||
+            !Uuid.TryParse(fact.Operation.Actor.Id, out var userId) || userId == Uuid.Empty ||
+            fact.ActorMemberId != RbacIds.Member(Uuid.Empty, userId) ||
+            fact.Operation.Episode != Id.ToString() || fact.Operation.AffectedOwner != Stream ||
+            fact.Operation.ExpectedRevisionOwner != Stream || fact.Operation.CausationEventId is not null ||
+            fact.Operation.RootOperationId != fact.Operation.LogicalId)
+            throw new InvalidOperationException("The template fact has an invalid exact owner or native binding.");
+        Result guard;
+        switch (value)
+        {
+            case MethodologyTemplateCreated created:
+                guard = PrepareCreate();
+                if (fact.VersionNumber != 1 || fact.VersionStatus != "draft" || created.ActorMemberId != fact.AuthorMemberId ||
+                    fact.Operation.LogicalId != Id || fact.Operation.OriginalExpectedRevision is not null ||
+                    fact.Operation.CommandKind != nameof(CreateMethodologyTemplate))
+                    throw new InvalidOperationException("A template starts with its exact first authored version.");
+                break;
+            case MethodologyTemplateDraftRevised revised:
+                guard = PrepareRevise(_revision);
+                if (fact.VersionNumber != VersionNumber + 1 || fact.VersionStatus != "draft" ||
+                    revised.ActorMemberId != fact.AuthorMemberId || fact.ReviewerMemberId is not null ||
+                    fact.Operation.OriginalExpectedRevision != (ulong)_revision ||
+                    fact.Operation.CommandKind != nameof(ReviseMethodologyTemplateDraft))
+                    throw new InvalidOperationException("A revision creates one fresh version on the exact current authority.");
+                break;
+            case MethodologyTemplateDraftReviewed reviewed:
+                guard = PrepareReview(fact.VersionNumber, reviewed.ActorMemberId);
+                if (fact.VersionStatus is not ("reviewed" or "changes_requested") ||
+                    fact.ReviewerMemberId != reviewed.ActorMemberId || fact.Operation.OriginalExpectedRevision is not null ||
+                    fact.Operation.CommandKind != nameof(ReviewMethodologyTemplate))
+                    throw new InvalidOperationException("A template review is an independent immutable current-version decision.");
+                break;
+            case MethodologyTemplateVersionPublished published:
+                guard = PreparePublish(fact.VersionNumber, published.ActorMemberId);
+                if (fact.VersionStatus != "published" || fact.Operation.OriginalExpectedRevision is not null ||
+                    fact.Operation.CommandKind != nameof(ApproveMethodologyTemplateVersion))
+                    throw new InvalidOperationException("A publication must answer the independently reviewed version.");
+                _hasPublished = true;
+                PublishedVersionNumber = fact.VersionNumber;
+                PublishedVersionId = fact.VersionId;
+                break;
+            default:
+                guard = PrepareRetire(_revision);
+                if (fact.VersionNumber != VersionNumber || fact.Operation.OriginalExpectedRevision != (ulong)_revision ||
+                    fact.Operation.CommandKind != nameof(RetireMethodologyTemplate))
+                    throw new InvalidOperationException("Retirement must answer the current template revision.");
+                _retired = true;
+                break;
         }
-        if (normalized.Records.Any(item => item.ContributionApprovalId is { } approvalId &&
-            acceptedContributions.All(reference => reference.AcceptanceId != approvalId)))
-            return Invalid("A de-identified contribution requires its accepted review provenance.");
-        var versions = current.Versions.ToArray();
-        if (previous.Status is "draft" or "changes_requested")
-            versions[^1] = previous with { Status = "superseded" };
-        var version = NewVersion(normalized, current.Versions.Count + 1, changeNotes.Trim(),
-            actorMemberId, actorDisplay.Trim(), revisedAt, acceptedContributions);
-        var updatedVersions = Append(versions, version);
-        var state = State(current, "active", updatedVersions, null, null,
-            actorMemberId, actorDisplay.Trim(), revisedAt);
-        return Emit(state, actorMemberId, revisedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new MethodologyTemplateDraftRevised(tenant, subject, revision, actor, snapshot, at), "revise");
+        if (!guard.IsSuccess || value is not (MethodologyTemplateCreated or MethodologyTemplateDraftRevised) &&
+            (fact.VersionId != VersionId || fact.AuthorMemberId != AuthorMemberId || fact.ContentSha256 != ContentSha256))
+            throw new InvalidOperationException("The template fact violates its current authoritative version.");
+        CurrentContent = fact.Change;
+        if (value is not MethodologyTemplateRetired)
+            CurrentVersionContent = fact.Change;
+        Acceptance.Observe(value);
+        (_revision, VersionNumber, VersionId, VersionStatus, AuthorMemberId, ReviewerMemberId, ContentSha256, UpdatedAt) =
+            (fact.Revision, fact.VersionNumber, fact.VersionId, fact.VersionStatus, fact.AuthorMemberId,
+                fact.ReviewerMemberId, fact.ContentSha256, fact.OccurredAt);
     }
 
-    public CommandFailure? ReviewDraft(long expectedRevision, string outcome, string comments,
-        Uuid reviewerMemberId, string reviewerDisplay, DateTimeOffset reviewedAt,
-        OperationProvenance? operation = null)
-    {
-        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure;
-        _pendingOperation = operation;
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The methodology template was not found.");
-        outcome = Clean(outcome).ToLowerInvariant();
-        comments = Clean(comments);
-        if (current.Versions[^1].Review is { } priorReview)
-            return priorReview.Outcome == outcome && priorReview.Comments == comments &&
-                priorReview.ReviewedByMemberId == reviewerMemberId && priorReview.ReviewedByDisplay == Clean(reviewerDisplay) &&
-                priorReview.ReviewedAt == reviewedAt
-                ? null : CommandFailure.StateConflict("A methodology-template review decision is immutable.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        var draft = current.Versions[^1];
-        if (current.Status != "active" || draft.Status != "draft" ||
-            outcome is not ("approved" or "changes_requested") ||
-            !Bounded(comments, 1, MaximumTextLength) || !ValidActor(reviewerMemberId, reviewerDisplay, reviewedAt) ||
-            reviewedAt < current.UpdatedAt)
-            return CommandFailure.StateConflict("Only the current draft can receive a bounded, attributable review decision.");
-        if (reviewerMemberId == draft.AuthoredByMemberId)
-            return CommandFailure.ActorProhibited("A methodology-template author cannot review their own draft.");
-        var review = new MethodologyTemplateReviewView(Uuid.CreateVersion4(), outcome,
-            comments, reviewerMemberId, reviewerDisplay.Trim(), reviewedAt);
-        var versions = current.Versions.ToArray();
-        versions[^1] = draft with { Status = outcome == "approved" ? "reviewed" : "changes_requested", Review = review };
-        var state = State(current, "active", versions, null, null,
-            reviewerMemberId, reviewerDisplay.Trim(), reviewedAt);
-        return Emit(state, reviewerMemberId, reviewedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new MethodologyTemplateDraftReviewed(tenant, subject, revision, actor, snapshot, at), "review");
-    }
-
-    public CommandFailure? ApproveVersion(long expectedRevision, string rationale,
-        Uuid approverMemberId, string approverDisplay, DateTimeOffset approvedAt,
-        OperationProvenance? operation = null)
-    {
-        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure;
-        _pendingOperation = operation;
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The methodology template was not found.");
-        rationale = Clean(rationale);
-        if (current.Versions[^1].Status == "published")
-        {
-            var published = current.Versions[^1];
-            return published.ApprovalRationale == rationale && published.ApprovedByMemberId == approverMemberId &&
-                published.ApprovedByDisplay == Clean(approverDisplay) && published.ApprovedAt == approvedAt
-                ? null : CommandFailure.StateConflict("A published template version cannot be re-approved with different details.");
-        }
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        var draft = current.Versions[^1];
-        if (current.Status != "active" || draft.Status != "reviewed" || draft.Review is not { Outcome: "approved" } review ||
-            !Bounded(rationale, 1, MaximumTextLength) || !ValidActor(approverMemberId, approverDisplay, approvedAt) ||
-            approvedAt < current.UpdatedAt)
-            return CommandFailure.StateConflict("Publishing requires an approved independent review and an attributable approval rationale.");
-        if (approverMemberId == draft.AuthoredByMemberId || approverMemberId == review.ReviewedByMemberId)
-            return CommandFailure.ActorProhibited("The author and reviewer cannot approve a template version.");
-        var versions = current.Versions.ToArray();
-        versions[^1] = draft with
-        {
-            Status = "published",
-            ApprovedByMemberId = approverMemberId,
-            ApprovedByDisplay = approverDisplay.Trim(),
-            ApprovedAt = approvedAt,
-            ApprovalRationale = rationale,
-        };
-        var state = State(current, "active", versions, null, null,
-            approverMemberId, approverDisplay.Trim(), approvedAt);
-        return Emit(state, approverMemberId, approvedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new MethodologyTemplateVersionPublished(tenant, subject, revision, actor, snapshot, at), "publish");
-    }
-
-    public CommandFailure? Retire(long expectedRevision, DateOnly effectiveOn, string rationale,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset retiredAt,
-        OperationProvenance? operation = null)
-    {
-        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure;
-        _pendingOperation = operation;
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The methodology template was not found.");
-        rationale = Clean(rationale);
-        if (current.Status == "retired")
-            return current.RetiredEffectiveOn == effectiveOn && current.RetirementRationale == rationale
-                && current.ActorMemberId == actorMemberId && current.ActorDisplay == Clean(actorDisplay) &&
-                current.UpdatedAt == retiredAt
-                ? null : CommandFailure.StateConflict("A retired methodology template cannot be changed.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        if (current.Status != "active" || current.Versions.All(item => item.Status != "published") ||
-            effectiveOn == default || !Bounded(rationale, 1, MaximumTextLength) ||
-            !ValidActor(actorMemberId, actorDisplay, retiredAt) || retiredAt < current.UpdatedAt)
-            return CommandFailure.StateConflict("Retirement requires a published template and an attributable effective date and rationale.");
-        var state = State(current, "retired", current.Versions, rationale, effectiveOn,
-            actorMemberId, actorDisplay.Trim(), retiredAt);
-        return Emit(state, actorMemberId, retiredAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new MethodologyTemplateRetired(tenant, subject, revision, actor, snapshot, at), "retire");
-    }
-
-    void Apply(MethodologyTemplateCreated ev)
-    {
-        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-            ev.ActorMemberId, ev.State, ev.OccurredAt, true, "create");
-        _initial = Freeze(ev.State);
-    }
-    void Apply(MethodologyTemplateDraftRevised ev)
-    {
-        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
-        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, false, "revise");
-    }
-    void Apply(MethodologyTemplateDraftReviewed ev)
-    {
-        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
-        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, false, "review");
-    }
-    void Apply(MethodologyTemplateVersionPublished ev)
-    {
-        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
-        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, false, "publish");
-    }
-    void Apply(MethodologyTemplateRetired ev)
-    {
-        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
-        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, false, "retire");
-    }
-
-    void ApplyState(Uuid tenantId, Uuid subjectId, long revision, Uuid? actorMemberId,
-        MethodologyTemplateView state, DateTimeOffset occurredAt, bool creating, string transition)
-    {
-        if (tenantId != Uuid.Empty || subjectId != Id || state is null || state.TemplateId != Id ||
-            state.Revision != revision || state.UpdatedAt != occurredAt || revision != Revision + 1 ||
-            creating != (_current is null) || actorMemberId == Uuid.Empty || state.ActorMemberId != actorMemberId ||
-            ValidateState(state) is not null || _current is null && (transition != "create" || !ValidInitialState(state)) ||
-            _current is { } prior && !ValidTransition(prior, state, actorMemberId, transition))
-            throw new InvalidOperationException("The methodology-template event is invalid.");
-        _current = Freeze(state);
-    }
-
-    CommandFailure? Emit(MethodologyTemplateView state, Uuid actorMemberId,
-        DateTimeOffset occurredAt,
-        Func<Uuid, Uuid, long, Uuid?, MethodologyTemplateView, DateTimeOffset, DomainEvent> createEvent,
-        string transition, bool creating = false)
-    {
-        if (ValidateState(state) is not null ||
-            (creating ? _current is not null : _current is null || !ValidTransition(_current, state, actorMemberId, transition)))
-            return Invalid("The methodology-template transition is invalid.");
-        var ev = createEvent(Uuid.Empty, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        ev = ev switch
-        {
-            MethodologyTemplateDraftRevised fact => fact with { Operation = _pendingOperation },
-            MethodologyTemplateDraftReviewed fact => fact with { Operation = _pendingOperation },
-            MethodologyTemplateVersionPublished fact => fact with { Operation = _pendingOperation },
-            MethodologyTemplateRetired fact => fact with { Operation = _pendingOperation },
-            _ => ev,
-        };
-        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
-            return Invalid("The methodology-template snapshot exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    static bool ValidTransition(MethodologyTemplateView prior, MethodologyTemplateView next,
-        Uuid? actor, string transition)
-    {
-        if (next.Revision != prior.Revision + 1 || next.TemplateId != prior.TemplateId ||
-            next.Versions.Count < prior.Versions.Count || next.Versions.Count > prior.Versions.Count + 1 ||
-            next.UpdatedAt < prior.UpdatedAt ||
-            !ValidVersionPrefix(prior.Versions, next.Versions, transition) ||
-            next.ActorMemberId != actor || next.ActorDisplay.Length == 0)
-            return false;
-        return transition switch
-        {
-            "revise" => prior.Status == "active" && next.Status == "active" &&
-                next.Versions.Count == prior.Versions.Count + 1 && next.Versions[^1].Status == "draft" &&
-                next.Versions[^1].AuthoredByMemberId == actor && next.Versions[^1].AuthoredAt == next.UpdatedAt,
-            "review" => prior.Status == "active" && next.Status == "active" &&
-                next.Versions.Count == prior.Versions.Count && next.Versions[^1].Review is { } review &&
-                review.ReviewedByMemberId == actor && review.ReviewedAt == next.UpdatedAt,
-            "publish" => prior.Status == "active" && next.Status == "active" &&
-                next.Versions.Count == prior.Versions.Count && next.Versions[^1] is
-                { Status: "published", ApprovedByMemberId: { } approved, ApprovedAt: { } at } &&
-                approved == actor && at == next.UpdatedAt &&
-                next.Versions[^1].ApprovalRationale is { } rationale && Bounded(rationale, 1, MaximumTextLength),
-            "retire" => prior.Status == "active" && next.Status == "retired" &&
-                next.Versions.Count == prior.Versions.Count && next.RetirementRationale is not null &&
-                next.RetiredEffectiveOn is not null,
-            _ => false,
-        };
-    }
-
-    static bool ValidVersionPrefix(IReadOnlyList<MethodologyTemplateVersionView> prior,
-        IReadOnlyList<MethodologyTemplateVersionView> next, string transition)
-    {
-        for (var index = 0; index < prior.Count; index++)
-        {
-            var before = prior[index];
-            var after = next[index];
-            if (before.VersionId != after.VersionId || before.VersionNumber != after.VersionNumber ||
-                before.ContentSha256 != after.ContentSha256 || Digest(before.Content) != Digest(after.Content) ||
-                before.AuthoredByMemberId != after.AuthoredByMemberId || before.AuthoredByDisplay != after.AuthoredByDisplay ||
-                before.AuthoredAt != after.AuthoredAt || before.ChangeNotes != after.ChangeNotes ||
-                Digest(before.AcceptedContributions ?? []) != Digest(after.AcceptedContributions ?? []) ||
-                transition != "publish" && before.ApprovalRationale != after.ApprovalRationale)
-                return false;
-            if (index < prior.Count - 1 && Digest(before) != Digest(after))
-                return false;
-            if (index == prior.Count - 1 && transition switch
-            {
-                "review" => after.Status is not ("reviewed" or "changes_requested") || before.Review is not null ||
-                    after.ApprovedByMemberId is not null || after.ApprovalRationale is not null ||
-                    Digest(before.AcceptedContributions ?? []) != Digest(after.AcceptedContributions ?? []),
-                "publish" => before.Status != "reviewed" || Digest(before.Review) != Digest(after.Review) ||
-                    after.Status != "published" || after.ApprovedByMemberId is null ||
-                    after.ApprovalRationale is null || before.ApprovalRationale is not null ||
-                    Digest(before.AcceptedContributions ?? []) != Digest(after.AcceptedContributions ?? []),
-                "revise" when next.Count > prior.Count => before.Status is "draft" or "changes_requested"
-                    ? after.Status != "superseded" : Digest(before) != Digest(after),
-                _ => Digest(before) != Digest(after),
-            })
-                return false;
-        }
-        return true;
-    }
-
-    static CommandFailure? ValidateState(MethodologyTemplateView state)
-    {
-        if (state.TemplateId == Uuid.Empty || state.Revision <= 0 || state.Versions is null ||
-            state.Versions.Count is < 1 or > MaximumVersions ||
-            state.Versions.Where((version, index) => !ValidVersion(version, state.TemplateId) ||
-                version.VersionNumber != index + 1).Any() ||
-            state.Versions.Select(item => item.VersionId).Distinct().Count() != state.Versions.Count ||
-            state.Status is not ("active" or "retired") ||
-            (state.Status == "retired"
-                ? !Bounded(state.RetirementRationale, 1, MaximumTextLength) || state.RetiredEffectiveOn is null
-                : state.RetirementRationale is not null || state.RetiredEffectiveOn is not null) ||
-            !ValidActor(state.ActorMemberId, state.ActorDisplay, state.UpdatedAt) ||
-            state.ContentSha256 != StateDigest(state.TemplateId, state.Status, state.Versions,
-                state.RetirementRationale, state.RetiredEffectiveOn))
-            return Invalid("The methodology-template snapshot is invalid.");
-        return null;
-    }
-
-    static bool ValidVersion(MethodologyTemplateVersionView version, Uuid templateId)
-    {
-        if (version is null || version.TemplateId != templateId || version.VersionId == Uuid.Empty ||
-            NormalizeContent(version.Content) is not { } content || Digest(content) != version.ContentSha256 ||
-            !ValidActor(version.AuthoredByMemberId, version.AuthoredByDisplay, version.AuthoredAt) ||
-            !Bounded(version.ChangeNotes, 1, MaximumTextLength) ||
-            version.Status is not ("draft" or "reviewed" or "changes_requested" or "published" or "superseded"))
-            return false;
-        if (version.Review is { } review &&
-            (review.ReviewId == Uuid.Empty || review.Outcome is not ("approved" or "changes_requested") ||
-             !Bounded(review.Comments, 1, MaximumTextLength) ||
-             !ValidActor(review.ReviewedByMemberId, review.ReviewedByDisplay, review.ReviewedAt) ||
-             review.ReviewedByMemberId == version.AuthoredByMemberId || review.ReviewedAt < version.AuthoredAt))
-            return false;
-        if (version.Status == "reviewed" && version.Review?.Outcome != "approved" ||
-            version.Status == "changes_requested" && version.Review?.Outcome != "changes_requested")
-            return false;
-        var acceptedContributions = version.AcceptedContributions ?? [];
-        if (acceptedContributions.Select(item => item.AcceptanceId).Distinct().Count() != acceptedContributions.Count ||
-            acceptedContributions.Any(item => !ValidAcceptanceReference(item)) ||
-            version.Content.Records.Any(record => record.ContributionApprovalId is { } acceptanceId &&
-                acceptedContributions.All(item => item.AcceptanceId != acceptanceId ||
-                    item.ContentSha256 != Digest(record))))
-            return false;
-        return version.Status == "published"
-            ? version.Review?.Outcome == "approved" && version.ApprovedByMemberId is { } approver &&
-              approver != version.AuthoredByMemberId && approver != version.Review.ReviewedByMemberId &&
-              version.ApprovedByDisplay is { } display && Bounded(display, 1, 200) &&
-              version.ApprovedAt is { } at && at >= version.Review.ReviewedAt &&
-              Bounded(version.ApprovalRationale, 1, MaximumTextLength)
-            : version.ApprovedByMemberId is null && version.ApprovedByDisplay is null &&
-              version.ApprovedAt is null && version.ApprovalRationale is null;
-    }
-
-    static MethodologyTemplateContent? NormalizeContent(MethodologyTemplateContent? content)
-    {
-        if (content is null || !Bounded(content.Name, 1, 200) || !Bounded(content.Description, 1, MaximumTextLength) ||
-            content.Records is null || content.Records.Count is < 1 or > MaximumRecords)
-            return null;
-        var kind = Clean(content.TemplateKind).ToLowerInvariant();
-        if (!TemplateKinds.Contains(kind) || content.Records.Any(item => !ValidRecord(item)) ||
-            content.Records.Select(item => item.EntryKey.Trim()).Distinct(StringComparer.Ordinal).Count() != content.Records.Count ||
-            content.Records.Where(item => item.ContributionApprovalId is not null)
-                .Select(item => item.ContributionApprovalId).Distinct().Count() !=
-                content.Records.Count(item => item.ContributionApprovalId is not null))
-            return null;
-        return content with
-        {
-            Name = content.Name.Trim(),
-            Description = content.Description.Trim(),
-            TemplateKind = kind,
-            Records = Freeze(content.Records.Select(item => item with
-            {
-                EntryKey = item.EntryKey.Trim(),
-                RecordKind = item.RecordKind.Trim().ToLowerInvariant(),
-                Title = item.Title.Trim(),
-                Summary = item.Summary.Trim(),
-                CriteriaReferences = Freeze(item.CriteriaReferences.Select(reference => reference with
-                { Identifier = reference.Identifier.Trim().ToUpperInvariant() })
-                    .OrderBy(reference => reference.EditionId.ToString(), StringComparer.Ordinal)
-                    .ThenBy(reference => reference.Identifier, StringComparer.Ordinal).ToArray()),
-            }).OrderBy(item => item.EntryKey, StringComparer.Ordinal).ToArray()),
-        };
-    }
-
-    static bool ValidRecord(MethodologyTemplateRecordContent item) => item is not null &&
-        Token(item.EntryKey, 100) && RecordKinds.Contains(Clean(item.RecordKind).ToLowerInvariant()) &&
-        Bounded(item.Title, 1, 200) && Bounded(item.Summary, 1, MaximumTextLength) &&
-        item.ContributionApprovalId != Uuid.Empty &&
-        item.CriteriaReferences is not null && item.CriteriaReferences.Count <= 50 &&
-        item.CriteriaReferences.All(reference => reference is not null && reference.EditionId != Uuid.Empty &&
-            Token(reference.Identifier, 100));
-
-    static bool ValidInitialState(MethodologyTemplateView state) => state.Status == "active" &&
-        state.Versions.Count > 0 && state.Versions[0].VersionNumber == 1 &&
-        state.Versions[0].Status == "draft" && state.Versions[0].Review is null &&
-        state.Versions[0].ApprovedByMemberId is null && state.Versions[0].AcceptedContributions is { Count: 0 } &&
-        state.Versions[0].Content.Records.All(item => item.ContributionApprovalId is null);
-
-    static bool SameCreate(MethodologyTemplateView state, MethodologyTemplateContent content,
-        string notes, Uuid actor, string display, DateTimeOffset at) =>
-        state.Revision == 1 && state.Versions.Count == 1 &&
-        NormalizeContent(content) is { } normalized && Digest(normalized) == state.Versions[0].ContentSha256 &&
-        state.Versions[0].ChangeNotes == Clean(notes) && state.Versions[0].AuthoredByMemberId == actor;
-
-    static bool SameDraftRevision(MethodologyTemplateView state, MethodologyTemplateContent content,
-        string notes, Uuid actor, string display, DateTimeOffset at) =>
-        NormalizeContent(content) is { } normalized && state.Versions[^1] is { } version &&
-        Digest(normalized) == version.ContentSha256 && version.ChangeNotes == Clean(notes) &&
-        version.AuthoredByMemberId == actor && version.AuthoredByDisplay == Clean(display) && version.AuthoredAt == at;
-
-    static MethodologyTemplateVersionView NewVersion(MethodologyTemplateContent content, long number,
-        string notes, Uuid actor, string display, DateTimeOffset at,
-        IReadOnlyList<MethodologyTemplateContributionAcceptanceReference>? acceptedContributions = null) => new(
-        Uuid.Empty, Uuid.CreateVersion4(), number, "draft", content, Digest(content), actor,
-        display, at, null, null, null, null, notes, Freeze((acceptedContributions ?? []).ToArray()));
-
-    static MethodologyTemplateView State(MethodologyTemplateView current, string status,
-        IReadOnlyList<MethodologyTemplateVersionView> versions, string? retirementRationale,
-        DateOnly? retiredEffectiveOn, Uuid actor, string display, DateTimeOffset at)
-    {
-        var ownedVersions = Freeze(versions.Select(version => version with { TemplateId = current.TemplateId }).ToArray());
-        return new MethodologyTemplateView(current.TemplateId, status, current.Revision + 1,
-            ownedVersions, retirementRationale, retiredEffectiveOn, actor, display, at,
-            StateDigest(current.TemplateId, status, ownedVersions, retirementRationale, retiredEffectiveOn));
-    }
-
-    static MethodologyTemplateView Freeze(MethodologyTemplateView state) => state with
-    {
-        Versions = Freeze(state.Versions.Select(version => version with
-        {
-            Content = FreezeContent(version.Content),
-            AcceptedContributions = Freeze((version.AcceptedContributions ?? []).ToArray()),
-        }).ToArray()),
-    };
-
-    static MethodologyTemplateContent FreezeContent(MethodologyTemplateContent content) => content with
-    {
-        Records = Freeze(content.Records.Select(item => item with
-        {
-            CriteriaReferences = Freeze(item.CriteriaReferences.ToArray()),
-        }).ToArray()),
-    };
-
-    static bool ValidContributionShare(MethodologyTemplateContributionShareView contribution) =>
-        contribution is not null && contribution.AcceptanceId != Uuid.Empty &&
-        contribution.Content is { } content && content.ContributionApprovalId == contribution.AcceptanceId &&
-        ValidRecord(content) && Digest(content) == contribution.ContentSha256 &&
-        contribution.Review is { Outcome: "approved" } review && review.ReviewId != Uuid.Empty &&
-        ValidActor(review.ReviewedByMemberId, review.ReviewedByDisplay, review.ReviewedAt) &&
-        Bounded(review.Comments, 1, MaximumTextLength) &&
-        contribution.AcceptedByMemberId != Uuid.Empty &&
-        contribution.AcceptedByMemberId != review.ReviewedByMemberId &&
-        ValidActor(contribution.AcceptedByMemberId, contribution.AcceptedByDisplay, contribution.AcceptedAt) &&
-        Bounded(contribution.AcceptanceRationale, 1, MaximumTextLength) &&
-        contribution.AcceptedAt >= review.ReviewedAt;
-
-    static bool ValidAcceptanceReference(MethodologyTemplateContributionAcceptanceReference reference) =>
-        reference is not null && reference.AcceptanceId != Uuid.Empty && Sha256(reference.ContentSha256) &&
-        ValidActor(reference.ReviewedByMemberId, reference.ReviewedByDisplay, reference.ReviewedAt) &&
-        reference.AcceptedByMemberId != Uuid.Empty && reference.AcceptedByMemberId != reference.ReviewedByMemberId &&
-        ValidActor(reference.AcceptedByMemberId, reference.AcceptedByDisplay, reference.AcceptedAt) &&
-        Bounded(reference.AcceptanceRationale, 1, MaximumTextLength) && reference.AcceptedAt >= reference.ReviewedAt;
-
-    static string StateDigest(Uuid templateId, string status,
-        IReadOnlyList<MethodologyTemplateVersionView> versions, string? retirementRationale,
-        DateOnly? retiredEffectiveOn) => Digest(new { templateId, status, versions, retirementRationale, retiredEffectiveOn });
-    static string Digest<T>(T value) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(value))).ToLowerInvariant();
-    static bool Sha256(string? value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
-    static bool Bounded(string? value, int minimum, int maximum) => value is not null &&
-        value.Trim().Length >= minimum && value.Trim().Length <= maximum && !value.Any(char.IsControl);
-    static bool Token(string? value, int max) => Bounded(value, 1, max) && value!.Trim().All(character =>
-        char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '.');
-    static string Clean(string? value) => value?.Trim() ?? string.Empty;
-    static bool ValidActor(Uuid id, string? display, DateTimeOffset at) => id != Uuid.Empty && Bounded(display, 1, 200) && at != default;
-    CommandFailure StaleRevision() => CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("methodology template", Revision));
-    static CommandFailure Invalid(string message) => CommandFailure.InvalidContent(message);
-    static ReadOnlyCollection<T> Freeze<T>(T[] values) => Array.AsReadOnly(values);
-    static ReadOnlyCollection<T> Append<T>(IEnumerable<T> values, T item) => Freeze(values.Append(item).ToArray());
+    Result Target(long expectedRevision) => _revision == 0 ? Missing()
+        : expectedRevision != _revision ? Conflict("The template revision is stale.") : Result.Success;
+    static Result Missing() => Result.Failure(new RequestError(RequestErrorKind.NotFound, "The methodology template was not found."));
+    static Result Conflict(string message) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
+    static Result Forbidden(string message) => Result.Failure(new RequestError(RequestErrorKind.Forbidden, message));
 }
