@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "8825d5519f7adbbcd21262ffae9814d319a1845c",
+  "sourceCommit": "b020548de4205c86975c2ac928643cd1a4ab1cbf",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -12,7 +12,7 @@
     "factsWithoutReducerOrEmitter": 21,
     "legacyReducerOnlyFacts": 2,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 126,
+    "aggregateTypesWithCommandPath": 125,
     "requestContracts": 783,
     "commonRequestContracts": 781,
     "requestClassificationCounts": {
@@ -24,13 +24,13 @@
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 726,
+    "registeredCoreHandlerRegistrations": 728,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 34,
+    "unwiredAggregateProducerOperations": 38,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 21
+      "no_registered_request_route": 25
     },
     "factReplayGuardRows": 0
   },
@@ -5055,7 +5055,9 @@
       "emitters": [
         "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHandlerTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -10899,20 +10901,19 @@
         "MethodologyTemplateRetired",
         "MethodologyTemplateVersionPublished"
       ],
-      "commandRequests": [
-        "ApproveMethodologyTemplateVersion",
-        "CreateMethodologyTemplate",
-        "RetireMethodologyTemplate",
-        "ReviewMethodologyTemplate",
-        "ReviseMethodologyTemplateDraft"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs",
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateTests.cs",
+        "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "MethodologyTemplateContribution",
@@ -11987,6 +11988,7 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -13519,15 +13521,17 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "ComplianceProgram",
-        "MethodologyTemplate",
         "TemplateApplication"
       ],
       "aggregateTargets": [
         "TemplateApplication"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "MethodologyTemplateReader"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs"
       ],
       "note": ""
     },
@@ -14062,15 +14066,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "MethodologyTemplate"
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "MethodologyTemplateOperations"
       ],
-      "aggregateTargets": [
-        "MethodologyTemplate"
-      ],
-      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateTests.cs",
+        "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
       ],
       "note": ""
     },
@@ -16902,7 +16908,7 @@
     {
       "request": "CreateMethodologyTemplate",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/CreateMethodologyTemplate.cs",
-      "interfaces": "IRequest, IPlatformOperatorRequest, ICallable",
+      "interfaces": "IRequest, IPlatformOperatorRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16912,15 +16918,18 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "MethodologyTemplate"
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "MethodologyTemplateOperations"
       ],
-      "aggregateTargets": [
-        "MethodologyTemplate"
-      ],
-      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateTests.cs",
+        "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
       ],
       "note": ""
     },
@@ -19784,12 +19793,22 @@
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/GetMethodologyTemplateVersion.cs",
       "interfaces": "IRequest<MethodologyTemplateVersionView>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "GetMethodologyTemplateVersionHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/GetMethodologyTemplateVersionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "MethodologyTemplateReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -22582,12 +22601,22 @@
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/ListMethodologyTemplates.cs",
       "interfaces": "IRequest<Page<MethodologyTemplateSummaryView>>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "ListMethodologyTemplatesHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/ListMethodologyTemplatesHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "MethodologyTemplateReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -25250,13 +25279,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "MethodologyTemplate",
         "TemplateApplication"
       ],
       "aggregateTargets": [
         "TemplateApplication"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "MethodologyTemplateReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
       ],
@@ -28514,15 +28544,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "MethodologyTemplate"
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "MethodologyTemplateOperations"
       ],
-      "aggregateTargets": [
-        "MethodologyTemplate"
-      ],
-      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHandlerTests.cs"
       ],
       "note": ""
     },
@@ -28814,15 +28844,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "MethodologyTemplate"
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "MethodologyTemplateOperations"
       ],
-      "aggregateTargets": [
-        "MethodologyTemplate"
-      ],
-      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateTests.cs",
+        "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
       ],
       "note": ""
     },
@@ -29441,15 +29473,18 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "MethodologyTemplate"
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "MethodologyTemplateOperations"
       ],
-      "aggregateTargets": [
-        "MethodologyTemplate"
-      ],
-      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateReadHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateTests.cs",
+        "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
       ],
       "note": ""
     },
@@ -31428,9 +31463,53 @@
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {
+      "fact": "MethodologyTemplateCreated",
+      "aggregate": "MethodologyTemplate",
+      "method": "Append",
+      "methodArgumentCount": 8,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "MethodologyTemplateDraftReviewed",
+      "aggregate": "MethodologyTemplate",
+      "method": "Append",
+      "methodArgumentCount": 8,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
       "fact": "MethodologyTemplateDraftRevised",
       "aggregate": "MethodologyTemplate",
-      "method": "ReviseDraftWithAcceptedContribution",
+      "method": "Append",
+      "methodArgumentCount": 8,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "MethodologyTemplateRetired",
+      "aggregate": "MethodologyTemplate",
+      "method": "Append",
+      "methodArgumentCount": 8,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "MethodologyTemplateVersionPublished",
+      "aggregate": "MethodologyTemplate",
+      "method": "Append",
       "methodArgumentCount": 8,
       "source": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
       "callerSources": [],

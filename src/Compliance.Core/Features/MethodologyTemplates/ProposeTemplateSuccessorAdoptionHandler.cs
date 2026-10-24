@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Versioning;
@@ -6,7 +7,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
 public sealed class ProposeTemplateSuccessorAdoptionHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock) : IRequestHandler<ProposeTemplateSuccessorAdoption>
+    IAggregateReader reader, MethodologyTemplateReader templates, TimeProvider clock) : IRequestHandler<ProposeTemplateSuccessorAdoption>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<ProposeTemplateSuccessorAdoption> context,
         CancellationToken ct)
@@ -25,22 +26,29 @@ public sealed class ProposeTemplateSuccessorAdoptionHandler(IAggregateExecutor e
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A tenant, program, template, and successor version are required."));
 
-        var template = await reader.HydrateAsync(new MethodologyTemplate(request.TemplateId), ct)
-            .ConfigureAwait(false);
-        var successor = template.Current?.Versions.FirstOrDefault(item =>
-            item.VersionNumber == request.NewTemplateVersion);
-        if (successor is null)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The methodology-template successor version was not found."));
-        if (successor.Status != "published")
+        try
+        {
+            var successor = await templates.VersionAsync(request.TemplateId, request.NewTemplateVersion, ct)
+                .ConfigureAwait(false);
+            if (successor is null)
+                return Result.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The methodology-template successor version was not found."));
+            if (successor.Status != "published")
+                return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "Only a published methodology-template version can be proposed to an existing application."));
+
+
+            return await executor.ExecuteAsync(new TemplateApplication(request.TenantId, request.ProgramId,
+                    TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey), request.CommandId),
+                application => CommandFailureRequestAdapter.ToOutcome(application.ProposeSuccessor(
+                    request.ExpectedRevision, successor, request.Disposition, actor.MemberId, actor.Display,
+                    clock.GetUtcNow(), operation: operation)), context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "Only a published methodology-template version can be proposed to an existing application."));
-
-
-        return await executor.ExecuteAsync(new TemplateApplication(request.TenantId, request.ProgramId,
-                TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey), request.CommandId),
-            application => CommandFailureRequestAdapter.ToOutcome(application.ProposeSuccessor(
-                request.ExpectedRevision, successor, request.Disposition, actor.MemberId, actor.Display,
-                clock.GetUtcNow(), operation: operation)), context, ct).ConfigureAwait(false);
+                "The methodology template's immutable content cannot be verified.",
+                isTransient: exception is ImmutableContentUnavailableException));
+        }
     }
 }

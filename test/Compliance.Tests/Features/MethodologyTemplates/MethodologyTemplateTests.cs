@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.MethodologyTemplates;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -14,59 +16,71 @@ public sealed class MethodologyTemplateTests
     static readonly DateTimeOffset Now = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public void ShouldPublishIndependentlyReviewedImmutableVersionAndRetainAuthorshipGivenSuccessiveDraft()
+    public async Task ShouldPublishIndependentlyReviewedImmutableVersionAndRetainAuthorshipGivenSuccessiveDraft()
     {
         // Arrange
-        var template = new MethodologyTemplate(TemplateId);
+        await using var template = new MethodologyTemplateScenario(Now);
 
         // Act
-        var created = template.Create(Content("initial"), "Initial version.", AuthorId, "Practice lead", Now);
-        var selfReview = template.ReviewDraft(template.Revision, "approved", "Ready for independent review.",
-            AuthorId, "Practice lead", Now.AddMinutes(1));
-        var reviewed = template.ReviewDraft(template.Revision, "approved", "Checked for client identifiers and license scope.",
-            ReviewerId, "Independent reviewer", Now.AddMinutes(2));
-        var published = template.ApproveVersion(template.Revision, "Approved for platform use.",
-            ApproverId, "Platform approver", Now.AddMinutes(3));
-        var priorVersion = template.Current!.Versions.Single();
-        var revised = template.ReviseDraft(template.Revision, Content("successor"), "Updated onboarding control.",
-            AuthorId, "Practice lead", Now.AddMinutes(4));
+        var created = await template.CreateAsync(new CreateMethodologyTemplate(TemplateId, Content("initial"),
+            "Initial version."), AuthorId);
+        template.Clock.Now = Now.AddMinutes(1);
+        var selfReview = await template.ReviewAsync(new ReviewMethodologyTemplate(Uuid.CreateVersion4(), TemplateId,
+            1, "approved", "Ready for independent review."), AuthorId);
+        template.Clock.Now = Now.AddMinutes(2);
+        var reviewed = await template.ReviewAsync(new ReviewMethodologyTemplate(Uuid.CreateVersion4(), TemplateId,
+            1, "approved", "Checked for client identifiers and license scope."), ReviewerId);
+        template.Clock.Now = Now.AddMinutes(3);
+        var published = await template.PublishAsync(new ApproveMethodologyTemplateVersion(Uuid.CreateVersion4(),
+            TemplateId, 1, "Approved for platform use."), ApproverId);
+        var priorVersion = Assert.Single((await template.Views.ReadAsync(TemplateId))!.Versions);
+        template.Clock.Now = Now.AddMinutes(4);
+        var revised = await template.ReviseAsync(new ReviseMethodologyTemplateDraft(Uuid.CreateVersion4(),
+            TemplateId, 3, Content("successor"), "Updated onboarding control."), AuthorId);
+        var view = await template.Views.ReadAsync(TemplateId);
 
         // Assert
-        Assert.Null(created);
-        Assert.Equal(CommandFailureCode.ActorProhibited, Assert.IsType<CommandFailure>(selfReview).Code);
-        Assert.Null(reviewed);
-        Assert.Null(published);
-        Assert.Null(revised);
+        Assert.True(created.IsSuccess, created.Error?.Message);
+        Assert.Equal(RequestErrorKind.Forbidden, selfReview.Error?.Kind);
+        Assert.True(reviewed.IsSuccess, reviewed.Error?.Message);
+        Assert.True(published.IsSuccess, published.Error?.Message);
+        Assert.True(revised.IsSuccess, revised.Error?.Message);
         Assert.Equal("published", priorVersion.Status);
-        Assert.Equal(AuthorId, priorVersion.AuthoredByMemberId);
-        Assert.Equal(ApproverId, priorVersion.ApprovedByMemberId);
+        Assert.Equal(RbacIds.Member(Uuid.Empty, AuthorId), priorVersion.AuthoredByMemberId);
+        Assert.Equal(RbacIds.Member(Uuid.Empty, ApproverId), priorVersion.ApprovedByMemberId);
         Assert.Equal("initial", priorVersion.Content.Records.Single().Summary);
-        Assert.Equal(2, template.Current.Versions.Count);
-        Assert.Equal("draft", template.Current.Versions[^1].Status);
-        Assert.Equal("successor", template.Current.Versions[^1].Content.Records.Single().Summary);
-        Assert.Equal("initial", template.Current.Versions[0].Content.Records.Single().Summary);
+        Assert.Equal(2, view!.Versions.Count);
+        Assert.Equal("draft", view.Versions[^1].Status);
+        Assert.Equal("successor", view.Versions[^1].Content.Records.Single().Summary);
+        Assert.Equal("initial", view.Versions[0].Content.Records.Single().Summary);
     }
 
     [Fact]
-    public void ShouldReplayVersionReviewsAndApprovalGivenRetainedTemplateEvents()
+    public async Task ShouldReplayVersionReviewsAndApprovalGivenRetainedTemplateEvents()
     {
         // Arrange
-        var template = new MethodologyTemplate(TemplateId);
-        Assert.Null(template.Create(Content("first"), "Initial version.", AuthorId, "Practice lead", Now));
-        Assert.Null(template.ReviewDraft(template.Revision, "approved", "Reviewed.", ReviewerId,
-            "Independent reviewer", Now.AddMinutes(1)));
-        Assert.Null(template.ApproveVersion(template.Revision, "Approved.", ApproverId,
-            "Platform approver", Now.AddMinutes(2)));
-        var events = new AggregateScenario<MethodologyTemplate>(template).PendingEvents.ToArray();
+        await using var template = new MethodologyTemplateScenario(Now);
+        Assert.True((await template.CreateAsync(new CreateMethodologyTemplate(TemplateId, Content("first"),
+            "Initial version."), AuthorId)).IsSuccess);
+        template.Clock.Now = Now.AddMinutes(1);
+        Assert.True((await template.ReviewAsync(new ReviewMethodologyTemplate(Uuid.CreateVersion4(), TemplateId,
+            1, "approved", "Reviewed."), ReviewerId)).IsSuccess);
+        template.Clock.Now = Now.AddMinutes(2);
+        Assert.True((await template.PublishAsync(new ApproveMethodologyTemplateVersion(Uuid.CreateVersion4(),
+            TemplateId, 1, "Approved."), ApproverId)).IsSuccess);
+        var events = await template.FactsAsync(TemplateId);
+        var original = await template.Views.ReadAsync(TemplateId);
 
         // Act
         var replay = new AggregateScenario<MethodologyTemplate>(new MethodologyTemplate(TemplateId))
-            .Given(events).Aggregate;
+            .Given(events.ToArray()).Aggregate;
+        var replayView = await template.Views.ReadAsync(replay, CancellationToken.None);
 
         // Assert
-        Assert.Equal(template.Current!.ContentSha256, replay.Current!.ContentSha256);
-        Assert.Equal("published", replay.Current.Versions.Single().Status);
-        Assert.Equal(ReviewerId, replay.Current.Versions.Single().Review!.ReviewedByMemberId);
+        Assert.Equal(original!.ContentSha256, replayView!.ContentSha256);
+        Assert.Equal("published", replay.VersionStatus);
+        Assert.Equal("published", replayView.Versions.Single().Status);
+        Assert.Equal(RbacIds.Member(Uuid.Empty, ReviewerId), replayView.Versions.Single().Review!.ReviewedByMemberId);
     }
 
     internal static MethodologyTemplateContent Content(string summary) => new(

@@ -22,6 +22,18 @@
       "implementedFence": "ArtifactRetentionLegacyGuard refuses affected reads and new native decisions; no data is removed and disposition remains disabled.",
       "requiredNextWork": "Select and implement a verified migration preserving every original hold placement/release, attribution, exact content/source position and basis period before a persisted-data rollout; quiesce legacy writers and prove complete migration.",
       "independentWorkContinued": "Prepared native retention basis/legal-hold owners, handlers, readers and focused tests on fresh owner streams. Protected download/crypto remains a separate next slice."
+    },
+    {
+      "id": "protected-download-cross-artifact-grant-identity",
+      "slice": "S31",
+      "status": "blocked",
+      "existingIssues": [
+        1042,
+        1055
+      ],
+      "evidence": "ArtifactDownloadGrant tenant/GrantId uses root command ID while admission is artifact-local. Same ID on two artifacts admits two roots without realm-wide binding, then collides on the receiving grant. A foreign terminal cannot authorize decrypt/replay/settlement or produce a second cancellation; using it leaks authority or strands source pins.",
+      "implementedFence": "Unqualified protocol is preserved offline and public cutover excluded. Foreign terminal paths fail closed in the candidate. Independently correct configured AES store proceeds.",
+      "nextWork": "Provide selected realm-wide root binding protocol or select a compatible artifact-qualified receiving identity and verified terminal settlement contract."
     }
   ],
   "remainingSlices": [
@@ -49,7 +61,10 @@
     "audit-package-read-integration-jev.json",
     "contribution-file-reviews.json",
     "contribution-file-triage.json",
-    "contribution-integration-jev.json"
+    "contribution-integration-jev.json",
+    "methodology-history-file-reviews.json",
+    "methodology-history-file-triage.json",
+    "methodology-history-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -130,10 +145,26 @@
     {
       "id": "methodology-template-contribution",
       "slice": "S34",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "focusedGreen": "23passed/0failed",
       "fullUnitGreen": "5521passed/0failed",
-      "jev": "12current files;1helper signal triaged;directintegrationmerge.72"
+      "jev": "12current files;1helper signal triaged;directintegrationmerge.72",
+      "pullRequest": 1096,
+      "mergeCommit": "b020548de4205c86975c2ac928643cd1a4ab1cbf"
+    },
+    {
+      "id": "methodology-template-history-and-published-reads",
+      "slice": "S34",
+      "status": "validated_awaiting_merge",
+      "focusedGreen": "79passed/0failed including51owningHTTP tests",
+      "fullUnitGreen": "5546passed/0failed",
+      "jev": "32currentfiles;1signaltriaged;directintegrationmerge.61"
+    },
+    {
+      "id": "application-preview-http-fixture-projection",
+      "status": "repair_prepared",
+      "externalDependency": false,
+      "evidence": "13broaderWebIntegration failures: unchanged fixture omits incoming-relationship checkpoint. Test-only real-projection seed patch prepared; do not weaken production source fence."
     }
   ],
   "resolved": [

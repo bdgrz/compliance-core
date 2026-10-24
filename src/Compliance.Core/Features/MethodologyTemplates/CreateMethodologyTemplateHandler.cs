@@ -1,17 +1,14 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
-public sealed class CreateMethodologyTemplateHandler(IAggregateExecutor executor, TimeProvider clock)
-    : IRequestHandler<CreateMethodologyTemplate>
+public sealed class CreateMethodologyTemplateHandler(MethodologyTemplateOperations operations) : IRequestHandler<CreateMethodologyTemplate>
 {
     public ValueTask<Result> HandleAsync(IRequestContext<CreateMethodologyTemplate> context, CancellationToken ct)
     {
-        var actor = MethodologyTemplateCommandActor.For(context, Uuid.Empty);
         var request = context.Request;
-        return executor.ExecuteAsync(new MethodologyTemplate(request.TemplateId), template =>
-                CommandFailureRequestAdapter.ToOutcome(template.Create(request.Content, request.ChangeNotes,
-                    actor.MemberId, actor.Display, clock.GetUtcNow())), context, ct);
+        return operations.ExecuteAsync(context, request.TemplateId, request.TemplateId, nameof(CreateMethodologyTemplate),
+            null, (owner, member) => owner.PrepareCreate(),
+            (rules, member, display, at) => rules.Create(request.Content, request.ChangeNotes, member, display, at), ct);
     }
 }

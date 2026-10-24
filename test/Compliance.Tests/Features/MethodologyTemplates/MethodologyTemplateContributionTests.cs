@@ -42,30 +42,40 @@ public sealed class MethodologyTemplateContributionTests
         var accepted = await contribution.AcceptAsync(new AcceptTemplateContribution(Uuid.CreateVersion4(),
             TenantId, ContributionId, "Approved for platform methodology use."), AcceptorId);
         var share = await contribution.Views.ShareAsync(TenantId, ContributionId);
-        var template = new MethodologyTemplate(TemplateId);
-        Assert.Null(template.Create(MethodologyTemplateTests.Content("Platform authored procedure."),
-            "Initial version.", TemplateAuthorId, "Practice lead", Now));
-        var content = template.Current!.Versions[^1].Content with
+        await using var template = new MethodologyTemplateScenario(Now);
+        Assert.True((await template.CreateAsync(new CreateMethodologyTemplate(TemplateId,
+            MethodologyTemplateTests.Content("Platform authored procedure."), "Initial version."), TemplateAuthorId)).IsSuccess);
+        var initial = await template.Views.ReadAsync(TemplateId);
+        var content = initial!.Versions[^1].Content with
         {
-            Records = [.. template.Current.Versions[^1].Content.Records, share!.Content],
+            Records = [.. initial.Versions[^1].Content.Records, share!.Content],
         };
-        var revised = template.ReviseDraftWithAcceptedContribution(template.Revision, content, share!,
-            "Added a reviewed deidentified access-review procedure.", TemplateAuthorId,
-            "Practice lead", Now.AddMinutes(4));
+        template.Clock.Now = Now.AddMinutes(4);
+        var request = new ReviseMethodologyTemplateDraft(Uuid.CreateVersion4(), TemplateId, initial.Revision,
+            content, "Added a reviewed deidentified access-review procedure.");
+        // Exercise the native local boundary with already verified fixture share material. The public cross-tenant
+        // transfer producer remains explicitly blocked until its selected exact proof contract is supplied.
+        var revised = await template.Operations().ExecuteAsync(MethodologyTemplateScenario.Context(request,
+            TemplateAuthorId), TemplateId, request.CommandId, nameof(ReviseMethodologyTemplateDraft),
+            request.ExpectedRevision, (owner, member) => owner.PrepareRevise(request.ExpectedRevision),
+            (rules, member, display, at) => rules.ReviseDraftWithAcceptedContribution(request.ExpectedRevision,
+                request.Content, share!, request.ChangeNotes, member, display, at), CancellationToken.None);
+        var current = await template.Views.ReadAsync(TemplateId);
         var contributionEvents = await contribution.FactsAsync(TenantId);
         var contributionReplay = new AggregateScenario<MethodologyTemplateContribution>(
             new MethodologyTemplateContribution(TenantId, ContributionId)).Given(contributionEvents.ToArray()).Aggregate;
         var contributionView = await contribution.Views.ReadAsync(TenantId, ContributionId);
-        var events = new AggregateScenario<MethodologyTemplate>(template).PendingEvents.ToArray();
+        var events = await template.FactsAsync(TemplateId);
         var templateReplay = new AggregateScenario<MethodologyTemplate>(new MethodologyTemplate(TemplateId))
-            .Given(events).Aggregate;
+            .Given(events.ToArray()).Aggregate;
+        var replayView = await template.Views.ReadAsync(templateReplay, CancellationToken.None);
 
         // Assert
         Assert.True(proposed.IsSuccess, proposed.Error?.Message);
         Assert.Equal(RequestErrorKind.Forbidden, selfReview.Error?.Kind);
         Assert.True(reviewed.IsSuccess, reviewed.Error?.Message);
         Assert.True(accepted.IsSuccess, accepted.Error?.Message);
-        Assert.Null(revised);
+        Assert.True(revised.IsSuccess, revised.Error?.Message);
         Assert.NotNull(share);
         Assert.Equal("accepted", contributionView!.Status);
         Assert.DoesNotContain(TenantId.ToString(), JsonSerializer.Serialize(share));
@@ -74,10 +84,10 @@ public sealed class MethodologyTemplateContributionTests
         Assert.DoesNotContain(SourceRecordId.ToString(), JsonSerializer.Serialize(events));
         Assert.Equal("accepted", contributionReplay.Status);
         Assert.Equal(SourceRecordId, contributionView.SourceRecordId);
-        Assert.Equal(template.Current.ContentSha256, templateReplay.Current!.ContentSha256);
-        Assert.Equal(share.AcceptanceId, template.Current!.Versions[^1].AcceptedContributions!.Single().AcceptanceId);
-        Assert.Equal(share.ContentSha256, template.Current.Versions[^1].AcceptedContributions!.Single().ContentSha256);
-        Assert.Equal("quarterly-access-review", template.Current.Versions[^1].Content.Records[^1].EntryKey);
+        Assert.Equal(current!.ContentSha256, replayView!.ContentSha256);
+        Assert.Equal(share.AcceptanceId, current!.Versions[^1].AcceptedContributions!.Single().AcceptanceId);
+        Assert.Equal(share.ContentSha256, current.Versions[^1].AcceptedContributions!.Single().ContentSha256);
+        Assert.Equal("quarterly-access-review", current.Versions[^1].Content.Records[^1].EntryKey);
     }
 
     [Fact]
