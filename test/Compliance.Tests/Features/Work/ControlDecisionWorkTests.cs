@@ -365,7 +365,8 @@ public sealed class ControlDecisionWorkTests
             controlConsistency: consistency,
             controlActivationGate: new ControlActivationReleaseGate(activationEnabled),
             controlLifecycleGate: new ControlLifecycleReleaseGate(lifecycleEnabled),
-            accountableWorkItems: projectedWorkItems);
+            accountableWorkItems: projectedWorkItems,
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
         return await queue.ReadAsync(tenantId, programId, actor, 30, CancellationToken.None);

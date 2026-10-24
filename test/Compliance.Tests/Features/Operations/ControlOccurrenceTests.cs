@@ -155,7 +155,7 @@ public sealed class ControlOccurrenceTests
             fixture.Review(submitted, "returned"));
 
         // Act
-        var corrected = await fixture.AsAsync(fixture.OwnerUserId, new CorrectControlAttestation(
+        var corrected = await fixture.AsAsync(fixture.OwnerUserId, new CorrectControlAttestation(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, fixture.ControlId, returned.OccurrenceId,
             returned.Revision, "complete", DateTimeOffset.UtcNow.AddMinutes(-1), null, null,
             "Added the missing ticket.", null, OperationsFixture.FullSupport,
@@ -203,18 +203,14 @@ public sealed class ControlOccurrenceTests
             Trigger: "a production change ships", DueWithinDays: 2));
 
         // Act
-        var opened = await fixture.AsAsync(fixture.OwnerUserId, new OpenControlOccurrence(
-            fixture.TenantId, fixture.ProgramId, fixture.ControlId, "Release 4.2",
-            fixture.Today));
+        var opened = await fixture.AsAsync(fixture.OwnerUserId, fixture.Open("Release 4.2", fixture.Today));
 
         // Assert
         Assert.Equal("event_driven", opened.Kind);
         Assert.Equal("open", opened.State);
         Assert.Equal(fixture.Today.AddDays(2), opened.DueOn);
         Assert.Equal(opened.OccurrenceId, Assert.Single(await fixture.OccurrencesAsync()).OccurrenceId);
-        await fixture.Scenario(fixture.OutsiderUserId).When(new OpenControlOccurrence(
-                fixture.TenantId, fixture.ProgramId, fixture.ControlId, "Release 4.3",
-                fixture.Today))
+        await fixture.Scenario(fixture.OutsiderUserId).When(fixture.Open("Release 4.3", fixture.Today))
             .ExpectFailure(RequestErrorKind.Forbidden);
     }
 
@@ -227,8 +223,7 @@ public sealed class ControlOccurrenceTests
 
         await fixture.Scenario(fixture.OwnerUserId)
             // Act
-            .When(new OpenControlOccurrence(fixture.TenantId, fixture.ProgramId,
-                fixture.ControlId, "Extra run", fixture.Today))
+            .When(fixture.Open("Extra run", fixture.Today))
             // Assert
             .ExpectFailure(RequestErrorKind.Conflict);
     }

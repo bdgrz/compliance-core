@@ -5,7 +5,7 @@ namespace Bdgrz.Compliance.Features.Work;
 
 public sealed partial class ControlOccurrenceWorkItemProjector(
     IControlOccurrenceWorkItemProjection projection)
-    : Projector(projection, EventStreamPattern.ForTenant("control-operations"),
+    : Projector(projection, EventStreamPattern.ForTenant(),
         FitzControlOccurrenceWorkItemDirectory.ProjectorName),
       IProjectorHandler<ControlOperatingPlanProposed>,
       IProjectorHandler<ControlOperatingPlanApproved>,

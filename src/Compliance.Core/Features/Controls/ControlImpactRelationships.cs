@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Controls;
 static class ControlImpactRelationships
 {
     public static IReadOnlyList<FindingView> Findings(ControlDraft subject,
-        ControlOperationsLedger operations, IReadOnlyList<ControlEvaluationView> evaluations,
+        ControlOperationsSnapshot operations, IReadOnlyList<ControlEvaluationView> evaluations,
         FindingReadSnapshot remediation)
     {
         var evaluationIds = evaluations.Select(static evaluation => evaluation.EvaluationId).ToHashSet();

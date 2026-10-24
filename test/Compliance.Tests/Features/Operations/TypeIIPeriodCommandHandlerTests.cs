@@ -215,15 +215,15 @@ public sealed class TypeIIPeriodCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         await fixture.RegisterActorAsync();
-        await fixture.SeedCloseReadyPeriodAsync();
+        await fixture.SeedCoveredCloseReadyPeriodAsync();
         var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
             .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
-                fixture.ProgramId, fixture.PeriodId, 2,
+                fixture.ProgramId, fixture.PeriodId, 3,
                 "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
         Assert.True(approved.IsSuccess, approved.Error?.Message);
         var closeSnapshotId = Uuid.CreateVersion4();
         var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, closeSnapshotId, 3);
+            fixture.PeriodId, closeSnapshotId, 4);
 
         // Act
         var result = await fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso)
@@ -260,14 +260,14 @@ public sealed class TypeIIPeriodCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         await fixture.RegisterActorAsync();
-        await fixture.SeedCloseReadyPeriodAsync();
+        await fixture.SeedCoveredCloseReadyPeriodAsync();
         var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
             .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
-                fixture.ProgramId, fixture.PeriodId, 2,
+                fixture.ProgramId, fixture.PeriodId, 3,
                 "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
         Assert.True(approved.IsSuccess, approved.Error?.Message);
         var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, Uuid.CreateVersion4(), 3);
+            fixture.PeriodId, Uuid.CreateVersion4(), 4);
         var handler = fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso);
         var context = fixture.Context(request);
         Assert.True((await handler.HandleAsync(context, CancellationToken.None)).IsSuccess);
@@ -280,8 +280,94 @@ public sealed class TypeIIPeriodCommandHandlerTests
 
         // Assert
         Assert.True(retry.IsSuccess, retry.Error?.Message);
-        Assert.Equal(4, period.Revision);
+        Assert.Equal(5, period.Revision);
         Assert.Single(period.Current!.CloseSnapshots);
+    }
+
+    [Fact]
+    public async Task ShouldBlockCloseGivenSelectedRecurringOccurrenceNotMaterialized()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.RegisterActorAsync();
+        var selected = await fixture.SeedSelectedPeriodAsync();
+        var record = await fixture.Host.StartFanOutAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId, selected);
+        var applied = new List<NativeFactReference>();
+        foreach (var target in record.Targets.Take(record.Targets.Count - 1))
+        {
+            var sent = await fixture.Host.SendAsync(await fixture.Host.FanOutStepAsync(record, target));
+            applied.Add(Assert.IsType<ReceiverOutcome.Applied>(sent.Value).Fact);
+        }
+        await fixture.RecordCloseValidationAsync();
+        var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+                fixture.PeriodId, 3, "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
+        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId, fixture.PeriodId,
+            Uuid.CreateVersion4(), 4);
+
+        // Act: all but one occurrence materialized, so the close is blocked.
+        var blocked = await fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso)
+            .HandleAsync(fixture.Context(request), CancellationToken.None);
+        var incomplete = await CoverageAsync(fixture);
+
+        // Act: a replayed receiver returns its original fact, then the missing occurrence is filled.
+        var replayed = await fixture.Host.SendAsync(await fixture.Host.FanOutStepAsync(record, record.Targets[0]));
+        var missing = await fixture.Host.SendAsync(await fixture.Host.FanOutStepAsync(record, record.Targets[^1]));
+        var complete = await CoverageAsync(fixture);
+        var closed = await fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso)
+            .HandleAsync(fixture.Context(request), CancellationToken.None);
+        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, blocked.Error?.Kind);
+        Assert.Contains("1 selected occurrences are not materialized", blocked.Error!.Message, StringComparison.Ordinal);
+        Assert.False(incomplete.IsComplete);
+        Assert.Equal(3, incomplete.Materialized.Count);
+        Assert.Equal(4, incomplete.Selected.Count);
+        Assert.Equal(Uuid.Parse(record.Targets[^1], System.Globalization.CultureInfo.InvariantCulture),
+            Assert.Single(incomplete.NotMaterialized));
+        Assert.Equal(applied[0], Assert.IsType<ReceiverOutcome.Replayed>(replayed.Value).Fact);
+        Assert.IsType<ReceiverOutcome.Applied>(missing.Value);
+        Assert.True(complete.IsComplete);
+        Assert.Equal(4, complete.Materialized.Count);
+        Assert.True(closed.IsSuccess, closed.Error?.Message);
+        Assert.Equal("closed", period.Current!.Status);
+        Assert.Single(await fixture.Host.EventsAsync<ObservationPeriodCloseFrozen>(period.Stream));
+    }
+
+    [Fact]
+    public async Task ShouldBlockCloseGivenExpectedRecurringOccurrenceNeverSelected()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.RegisterActorAsync();
+        await fixture.SeedCloseReadyPeriodAsync();
+        var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+                fixture.PeriodId, 2, "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
+
+        // Act
+        var result = await fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso).HandleAsync(
+            fixture.Context(new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId, fixture.PeriodId,
+                Uuid.CreateVersion4(), 3)), CancellationToken.None);
+        var coverage = await CoverageAsync(fixture);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Contains("4 expected occurrences are not selected", result.Error!.Message, StringComparison.Ordinal);
+        Assert.Empty(coverage.Selected);
+        Assert.Equal(4, coverage.NotSelected.Count);
+    }
+
+    static async Task<TypeIIOccurrenceCoverageProof> CoverageAsync(Fixture fixture)
+    {
+        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId));
+        return await new TypeIIOccurrenceCoverage(fixture.Reader, fixture.Host.Content).ProveAsync(period,
+            CancellationToken.None);
     }
 
     [Fact]
@@ -290,14 +376,14 @@ public sealed class TypeIIPeriodCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         await fixture.RegisterActorAsync();
-        await fixture.SeedCloseReadyPeriodAsync();
+        await fixture.SeedCoveredCloseReadyPeriodAsync();
         var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
             .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
-                fixture.ProgramId, fixture.PeriodId, 2,
+                fixture.ProgramId, fixture.PeriodId, 3,
                 "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
         Assert.True(approved.IsSuccess, approved.Error?.Message);
         var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, Uuid.CreateVersion4(), 3);
+            fixture.PeriodId, Uuid.CreateVersion4(), 4);
 
         // Act
         var result = await fixture.FreezeHandler().HandleAsync(fixture.Context(request),
@@ -326,6 +412,8 @@ public sealed class TypeIIPeriodCommandHandlerTests
         public Uuid ApproverMemberId { get; } = Uuid.CreateVersion4();
         public Uuid ValidatorMemberId { get; } = Uuid.CreateVersion4();
         public Uuid ControlOwnerId { get; } = Uuid.CreateVersion4();
+        public Uuid ControlId { get; } = Uuid.CreateVersion4();
+        public Uuid ControlVersionId { get; } = Uuid.CreateVersion4();
         public Uuid GapId { get; } = Uuid.CreateVersion4();
         public DateOnly PeriodStart { get; } = new(2026, 10, 1);
         public DateOnly PeriodEnd { get; } = new(2027, 9, 30);
@@ -372,7 +460,8 @@ public sealed class TypeIIPeriodCommandHandlerTests
 
         public FreezeTypeIIPeriodCloseHandler FreezeHandler(params string[] permissions) =>
             new(Executor, Reader, new ManagementExecutiveAuthority(Reader,
-                new ExecutivePermissions(permissions)), CloseClock);
+                new ExecutivePermissions(permissions)), new TypeIIOccurrenceCoverage(Reader, Host.Content),
+                CloseClock);
 
         public AmendTypeIIObservationPeriod Amendment(long expectedRevision, DateOnly? start, DateOnly? end,
             string reason) => new(Uuid.CreateVersion4(), TenantId, ProgramId, PeriodId, expectedRevision, start, end,
@@ -425,6 +514,50 @@ public sealed class TypeIIPeriodCommandHandlerTests
             await Writer.SaveAsync(calendar, new RequestDispatchContext(RequestActor.System));
         }
 
+        /// <summary>
+        ///     Starts the period, approves its control's quarterly operating plan, and selects every due recurring
+        ///     occurrence. Nothing is materialized yet.
+        /// </summary>
+        public async Task<DueControlOccurrencesGenerated> SeedSelectedPeriodAsync()
+        {
+            await SeedStartedPeriodAsync();
+            var planId = Uuid.CreateVersion4();
+            await ControlOperatingSeed.ProposeAsync(Host.Provider, TenantId, ProgramId, ControlId, ControlVersionId,
+                ["Dated review record"], planId, new OperatingHolder("member", ControlOwnerId), null,
+                ReviewerMemberId, new ControlCadence(ControlCadenceSchedule.Recurring, "quarterly", PeriodStart, 0),
+                PeriodStart, "Operate quarterly.", ProposerMemberId, "Compliance lead", StartedAt.AddDays(-2));
+            await ControlOperatingSeed.ApproveAsync(Host.Provider, TenantId, ProgramId, ControlId, planId,
+                ApproverMemberId, "Approver", StartedAt.AddDays(-1));
+            var generated = await Host.GenerateHandler(Clock).HandleAsync(Context(
+                new GenerateDueControlOccurrences(TenantId, ProgramId, PeriodId, PeriodEnd, "close-coverage")),
+                CancellationToken.None);
+            Assert.True(generated.IsSuccess, generated.Error?.Message);
+            return Assert.Single(await Host.EventsAsync<DueControlOccurrencesGenerated>(
+                new TypeIIPeriod(TenantId, ProgramId, PeriodId).Stream));
+        }
+
+        /// <summary>Records the close validation of the period as the validator handler leaves it.</summary>
+        public async Task RecordCloseValidationAsync()
+        {
+            var period = await Reader.HydrateAsync(new TypeIIPeriod(TenantId, ProgramId, PeriodId));
+            var occurrenceIds = period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId)
+                .ToArray();
+            Assert.Null(period.RecordCloseValidation(period.Revision,
+                new TypeIIPeriodCloseValidationContent(ValidationReferences(), occurrenceIds,
+                    occurrenceIds, [], [], [GapId]), ValidatorMemberId, "Close validator",
+                CloseValidationAt));
+            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+        }
+
+        /// <summary>A close-ready period whose recurring occurrences are all selected and materialized.</summary>
+        public async Task SeedCoveredCloseReadyPeriodAsync()
+        {
+            var selected = await SeedSelectedPeriodAsync();
+            var run = await Host.RunFanOutAsync(TenantId, ProgramId, PeriodId, selected);
+            Assert.Equal(ProcessState.Completed, run.State);
+            await RecordCloseValidationAsync();
+        }
+
         public async Task SeedCloseReadyPeriodAsync()
         {
             await SeedStartedPeriodAsync();
@@ -442,7 +575,7 @@ public sealed class TypeIIPeriodCommandHandlerTests
             Uuid.CreateVersion4(), PeriodStart, PeriodEnd, "Audit Firm", ["security", "availability"],
             Uuid.CreateVersion4(), Uuid.CreateVersion4(), [Reference("policy"), Reference("risk"),
                 Reference("vendor"), Reference("finding"), Reference("change")],
-            [new TypeIIControlPlanEntry(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            [new TypeIIControlPlanEntry(ControlId, ControlVersionId,
                 "Quarterly access review", ControlOwnerId, "quarterly", 4, PeriodStart, null,
                 ExpectedEvidenceDescriptions: ["Dated review record"])],
             [new TypeIICarriedForwardGap("finding", GapId, Uuid.CreateVersion4(), 1,

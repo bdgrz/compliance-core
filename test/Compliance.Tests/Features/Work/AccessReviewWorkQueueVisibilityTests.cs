@@ -229,7 +229,8 @@ public sealed class AccessReviewWorkQueueVisibilityTests
             permissions, visibility);
         WorkQueueReader CreateQueue() => new(aggregateReader,
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [source], accessReviewQueueEligibility: eligibility);
+            accountableWorkItems: [source], accessReviewQueueEligibility: eligibility,
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         return new QueueScenario(fixture, scope, CreateQueue, source, grants, permissions,
             systemInstanceId, aggregateReader);
     }

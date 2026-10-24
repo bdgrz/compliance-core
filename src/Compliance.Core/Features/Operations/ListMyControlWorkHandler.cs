@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     materiality, then creation, then source ID (M0-D15).
 /// </summary>
 public sealed class ListMyControlWorkHandler(IAggregateReader reader,
-    IDomainEventReader events, OperatingAuthority authority, TimeProvider clock)
+    ControlOperationsReader operations, IDomainEventReader events, OperatingAuthority authority, TimeProvider clock)
     : IRequestHandler<ListMyControlWork, MyControlWorkView>
 {
     const int DefaultHorizonDays = 30;
@@ -24,8 +24,7 @@ public sealed class ListMyControlWorkHandler(IAggregateReader reader,
         var actor = OperationsActor.From(context.Actor, request.TenantId);
         var today = ControlOperationsSource.Today(clock);
         var horizon = today.AddDays(request.HorizonDays ?? DefaultHorizonDays);
-        var ledger = await reader.HydrateAsync(new ControlOperationsLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
+        var ledger = await operations.ReadAsync(request.TenantId, request.ProgramId, ct).ConfigureAwait(false);
         var responsibilities = new List<ControlResponsibilityView>();
         var items = new List<(WorkItemView Item, DateTimeOffset CreatedAt)>();
         foreach (var (controlId, plan, identifier, occurrences) in await ControlOperationsSource
@@ -53,14 +52,14 @@ public sealed class ListMyControlWorkHandler(IAggregateReader reader,
                 var opened = occurrence.Reviews.Count > 0 || occurrence.Attestations.Count > 0
                     ? occurrence.Attestations[^1].RecordedAt
                     : DateTimeOffset.MinValue;
-                if ((owns || backs) && occurrence.State is ControlOperationsLedger.Expected or
-                        ControlOperationsLedger.Missed or ControlOperationsLedger.Open or
-                        ControlOperationsLedger.Returned)
+                if ((owns || backs) && occurrence.State is ControlOperationStates.Expected or
+                        ControlOperationStates.Missed or ControlOperationStates.Open or
+                        ControlOperationStates.Returned)
                     items.Add((Item("control_occurrence", occurrence.OccurrenceId, controlId, null,
                         $"Perform {identifier} for {occurrence.PeriodStart:yyyy-MM-dd}",
                         occurrence.DueOn, today, null), opened));
-                if (reviews && occurrence.State is ControlOperationsLedger.Submitted or
-                        ControlOperationsLedger.Deferred)
+                if (reviews && occurrence.State is ControlOperationStates.Submitted or
+                        ControlOperationStates.Deferred)
                     items.Add((Item("occurrence_review", occurrence.OccurrenceId, controlId, null,
                         $"Review {identifier} for {occurrence.PeriodStart:yyyy-MM-dd}",
                         occurrence.DueOn, today, null), opened));

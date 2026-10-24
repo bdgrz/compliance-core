@@ -20,15 +20,15 @@ public sealed class PersonalOperatingPlanApprovalTransportTests
         var proposed = await source.ProposeAsync(0);
         await using var provider = await PersonalReadinessClosureTransportTests.ComposeAsync(source.Provider,
             source.TenantId, source.ProgramId, source.Permissions);
-        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOperatingPlan(source.TenantId, source.ProgramId, source.ControlId));
         await using var scope = provider.CreateAsyncScope();
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new ApproveControlOperatingPlan(source.TenantId, source.ProgramId, source.ControlId,
-                proposed.Revision, proposed.PlanVersionId, "Approve independently."),
+            new ApproveControlOperatingPlan(Uuid.CreateVersion4(), source.TenantId, source.ProgramId,
+                source.ControlId, proposed.Revision, proposed.PlanVersionId, "Approve independently."),
             PersonalReadinessClosureTransportTests.Context(source.ApproverUserId, transport), CancellationToken.None);
-        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOperatingPlan(source.TenantId, source.ProgramId, source.ControlId));
 
         // Assert
         if (transport == "http")
@@ -43,7 +43,7 @@ public sealed class PersonalOperatingPlanApprovalTransportTests
             Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
             Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
             Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-            Assert.Equal("pending_approval", after.FindPlan(source.ControlId, proposed.PlanVersionId)!.Status);
+            Assert.Equal(proposed.PlanVersionId, after.PendingPlanVersionId);
         }
     }
     [Fact]
@@ -55,12 +55,12 @@ public sealed class PersonalOperatingPlanApprovalTransportTests
         var proposed = await source.ProposeAsync(0);
         await using var provider = await PersonalReadinessClosureTransportTests.ComposeAsync(source.Provider,
             source.TenantId, source.ProgramId, source.Permissions);
-        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOperatingPlan(source.TenantId, source.ProgramId, source.ControlId));
 
         // Act
-        var result = await HttpAsync(provider, source.LeadUserId, new ApproveControlOperatingPlan(source.TenantId,
-            source.ProgramId, source.ControlId, proposed.Revision, proposed.PlanVersionId, "Self approval."), RequestErrorKind.Forbidden);
-        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var result = await HttpAsync(provider, source.LeadUserId, new ApproveControlOperatingPlan(Uuid.CreateVersion4(),
+            source.TenantId, source.ProgramId, source.ControlId, proposed.Revision, proposed.PlanVersionId, "Self approval."), RequestErrorKind.Forbidden);
+        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOperatingPlan(source.TenantId, source.ProgramId, source.ControlId));
 
         // Assert
         Assert.Equal("The member who proposed an operating plan cannot approve it.", result.Error!.Message);

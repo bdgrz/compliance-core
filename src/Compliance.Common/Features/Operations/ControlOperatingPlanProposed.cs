@@ -1,7 +1,14 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
-[Discriminator("bdgrz.control.operating_plan.proposed", 1)]
-public sealed record ControlOperatingPlanProposed(Uuid TenantId, Uuid ProgramId, Uuid ControlId,
-    long Revision, ControlOperatingPlanView Plan) : DomainEvent;
+/// <summary>
+///     A pending plan version on one control's plan line. The logical id of <paramref name="Operation" /> is the
+///     immutable plan version id; the complete <see cref="ControlOperatingPlanView" /> is verified immutable content.
+/// </summary>
+[Discriminator("bdgrz.control.operating_plan.proposed", 2)]
+public sealed record ControlOperatingPlanProposed(Uuid TenantId, Uuid ProgramId, Uuid ControlId, long Revision,
+    ImmutableContentRef PlanContent, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

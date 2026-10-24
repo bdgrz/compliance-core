@@ -173,7 +173,8 @@ public sealed class FindingClosureWorkTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [directory]);
+            accountableWorkItems: [directory],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
 
         // Act
         var read = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId,

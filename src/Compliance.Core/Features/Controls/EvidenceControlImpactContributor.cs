@@ -12,7 +12,8 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     authoritative program streams. Unresolved textual support remains represented by its
 ///     canonical owning record; this preview does not verify artifact existence or content.
 /// </summary>
-public sealed class EvidenceControlImpactContributor(IAggregateReader reader, IDomainEventReader events)
+public sealed class EvidenceControlImpactContributor(IAggregateReader reader, IDomainEventReader events,
+    ControlOperationsReader operatingReader)
     : IControlImpactContributor
 {
     public string Context => "evidence";
@@ -33,8 +34,8 @@ public sealed class EvidenceControlImpactContributor(IAggregateReader reader, ID
         foreach (var request in requests.Where(static request => request.ArtifactId is not null))
             AddArtifact(request.ArtifactId!.Value.ToString(),
                 $"Fulfilled evidence request {request.EvidenceRequestId} retains this artifact.");
-        var operations = await reader.HydrateAsync(new ControlOperationsLedger(subject.TenantId,
-            subject.ProgramId), ct).ConfigureAwait(false);
+        var operations = await operatingReader.ReadAsync(subject.TenantId, subject.ProgramId, ct)
+            .ConfigureAwait(false);
         foreach (var occurrence in operations.ReadRecordedOccurrences(subject.Id))
             foreach (var attestation in occurrence.Attestations.Where(static item => item.Evidence.Count > 0))
             {

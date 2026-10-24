@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Features.Readiness;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -442,12 +443,8 @@ public sealed class WorkSourceCompositionTests
     {
         var cadence = new ControlCadence("ad_hoc", DueWithinDays: 10);
         await fixture.PlanAsync(cadence: cadence, effectiveFrom: fixture.Today.AddDays(-1));
-        var first = await fixture.AsAsync(fixture.OwnerUserId, new OpenControlOccurrence(
-            fixture.TenantId, fixture.ProgramId, fixture.ControlId, "First independent check.",
-            fixture.Today));
-        _ = await fixture.AsAsync(fixture.OwnerUserId, new OpenControlOccurrence(
-            fixture.TenantId, fixture.ProgramId, fixture.ControlId, "Second independent check.",
-            fixture.Today));
+        var first = await fixture.AsAsync(fixture.OwnerUserId, fixture.Open("First independent check.", fixture.Today));
+        _ = await fixture.AsAsync(fixture.OwnerUserId, fixture.Open("Second independent check.", fixture.Today));
         await fixture.AsAsync(fixture.OwnerUserId, fixture.Attest(first));
         var planSet = await fixture.GetPlansAsync();
         await fixture.ProposeAsync(planSet.Revision, cadence: cadence,
@@ -956,7 +953,7 @@ public sealed class WorkSourceCompositionTests
 
         // Act
         await PersonalOperatingPlanApprovalTransportTests.HttpAsync(provider, fixture.ApproverUserId,
-            new ApproveControlOperatingPlan(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            new ApproveControlOperatingPlan(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 plan.Revision, plan.PlanVersionId, "Independent approval."), RequestErrorKind.Forbidden);
         var mine = await Scenario(fixture.ApproverUserId)
             .When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine")).ExpectSuccess();
@@ -973,7 +970,7 @@ public sealed class WorkSourceCompositionTests
         await Scenario(fixture.LeadUserId).When(new AssignWorkItem(fixture.TenantId, fixture.ProgramId,
             item.WorkItemId, 1, fixture.OwnerMemberId)).ExpectSuccess();
         await PersonalOperatingPlanApprovalTransportTests.HttpAsync(provider, fixture.OwnerUserId,
-            new ApproveControlOperatingPlan(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            new ApproveControlOperatingPlan(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 plan.Revision, plan.PlanVersionId, "Independent replacement approval."));
         await CatchUpAsync(provider, fixture.TenantId);
         var after = await Scenario(fixture.OwnerUserId)
@@ -1090,7 +1087,7 @@ public sealed class WorkSourceCompositionTests
         var source = await Scenario().When(new GetControlOccurrence(fixture.TenantId,
             fixture.ProgramId, performedItem.ControlId!.Value, performedItem.SourceId)).ExpectSuccess();
         var performed = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, fixture.OwnerUserId, fixture.Attest(source.Value));
-        Assert.Equal(ControlOperationsLedger.Submitted, performed.Value.State);
+        Assert.Equal(ControlOperationStates.Submitted, performed.Value.State);
         await CatchUpAsync(provider, fixture.TenantId);
         var before = await Scenario().When(new ListWork(fixture.TenantId,
             fixture.ProgramId, "team")).ExpectSuccess();
@@ -1438,6 +1435,7 @@ public sealed class WorkSourceCompositionTests
         }).Build();
         _ = services.AddCompliance(configuration, developerAuthentication: true);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        services.AddSingleton(fixture.Provider.GetRequiredService<IImmutableContentStore>());
         services.AddSingleton(events);
         services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
         if (accessReviewPermissions is not null)

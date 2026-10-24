@@ -7,7 +7,8 @@ namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Records a source-bound proposal for one Type II operating plan.</summary>
 public sealed class ProposeTypeIIOperatingPlanHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IDomainEventReader events, TimeProvider clock) : IRequestHandler<ProposeTypeIIOperatingPlan>
+    IAggregateReader reader, IDomainEventReader events, ControlOperationsReader operating, TimeProvider clock)
+    : IRequestHandler<ProposeTypeIIOperatingPlan>
 {
     public async ValueTask<Result> HandleAsync(
         IRequestContext<ProposeTypeIIOperatingPlan> context, CancellationToken ct)
@@ -29,7 +30,7 @@ public sealed class ProposeTypeIIOperatingPlanHandler(IAggregateExecutor executo
         if (existing.Current is not null)
             return await ExecuteProposalAsync().ConfigureAwait(false);
 
-        var sources = await TypeIIPlanSourceValidator.ValidateAsync(reader, events, request.TenantId,
+        var sources = await TypeIIPlanSourceValidator.ValidateAsync(reader, events, operating, request.TenantId,
             request.ProgramId, request.ExaminationId, request.Content, now, ct)
             .ConfigureAwait(false);
         if (!sources.IsSuccess)

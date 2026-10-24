@@ -62,6 +62,17 @@ static class TypeIIPeriodTestExtensions
         return null;
     }
 
+    /// <summary>Selects the due occurrences of a generation key as the native operation of the period.</summary>
+    public static Result Generate(this TypeIIPeriod period, string generationKey, DateOnly throughDate,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset at)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+        var logicalId = TypeIIPeriod.GenerationLogicalId(period.Id, generationKey);
+        return period.GenerateDueOccurrences(Provenance(period, logicalId, logicalId, "GenerateDueControlOccurrences",
+            actorMemberId, actorDisplay, at), generationKey, throughDate, actorMemberId, actorDisplay, at, Synthetic,
+            Synthetic, Synthetic, Synthetic);
+    }
+
     static OperationProvenance Provenance(TypeIIPeriod period, Uuid logicalId, Uuid rootId, string kind,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset at) => new(logicalId, rootId,
         logicalId == rootId ? null : rootId, kind, ActorReference.ForMember(actorMemberId, actorDisplay),

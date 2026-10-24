@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Controls;
@@ -282,7 +283,8 @@ public sealed class WorkQueueReadConsistencyTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [evidence]);
+            accountableWorkItems: [evidence],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -324,7 +326,8 @@ public sealed class WorkQueueReadConsistencyTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [correctiveActions]);
+            accountableWorkItems: [correctiveActions],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -376,7 +379,8 @@ public sealed class WorkQueueReadConsistencyTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [riskWork]);
+            accountableWorkItems: [riskWork],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actorContext = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -418,7 +422,8 @@ public sealed class WorkQueueReadConsistencyTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [evaluationWork]);
+            accountableWorkItems: [evaluationWork],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.LeadUserId, fixture.LeadMemberId, "Lead");
 
         // Act
@@ -461,7 +466,8 @@ public sealed class WorkQueueReadConsistencyTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [applicabilityWork]);
+            accountableWorkItems: [applicabilityWork],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.LeadUserId, fixture.LeadMemberId, "Lead");
 
         // Act
@@ -497,7 +503,8 @@ public sealed class WorkQueueReadConsistencyTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [mappingWork]);
+            accountableWorkItems: [mappingWork],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.LeadUserId, fixture.LeadMemberId, "Lead");
 
         // Act
@@ -521,7 +528,7 @@ public sealed class WorkQueueReadConsistencyTests
         await fixture.ProposeAsync(0);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var planWork = new ProjectedWorkItems(ProjectionCheckpoint.Start,
-            area: "control-operations", kind: WorkSource.ControlOperatingPlanApproval,
+            area: ControlOperatingPlan.Area, kind: WorkSource.ControlOperatingPlanApproval,
             projectorName: "TestControlOperatingPlanWorkItems");
         var consistency = new WorkQueueReadConsistency(events, [planWork]);
 
@@ -544,7 +551,8 @@ public sealed class WorkQueueReadConsistencyTests
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var occurrenceWork = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         var consistency = new WorkQueueReadConsistency(events,
             [occurrenceWork]);
 
@@ -570,13 +578,15 @@ public sealed class WorkQueueReadConsistencyTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var services = sourceScope.ServiceProvider;
         var occurrenceWork = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            services.GetRequiredService<IAggregateReader>());
+            services.GetRequiredService<IAggregateReader>(),
+                services.GetRequiredService<IImmutableContentStore>());
         await FitzControlOccurrenceWorkItemDirectoryTests.CatchUpAsync(fixture, occurrenceWork);
         var consistency = new WorkQueueReadConsistency(events,
             [occurrenceWork]);
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [occurrenceWork]);
+            accountableWorkItems: [occurrenceWork],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.OwnerUserId, fixture.OwnerMemberId, "Owner");
 
         // Act
@@ -610,7 +620,8 @@ public sealed class WorkQueueReadConsistencyTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [planWork]);
+            accountableWorkItems: [planWork],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 

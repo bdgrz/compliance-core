@@ -268,7 +268,8 @@ public sealed class CommitmentDecisionWorkTests
             new InMemoryEventStore());
         var queue = new WorkQueueReader(reader, authority, TimeProvider.System,
             services.GetRequiredService<WorkQueueReadConsistency>(),
-            commitments: fixture.Commitments, commitmentConsistency: consistency);
+            commitments: fixture.Commitments, commitmentConsistency: consistency,
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 
@@ -305,7 +306,8 @@ public sealed class CommitmentDecisionWorkTests
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             new WorkQueueReadConsistency(events, [projection]),
             commitments: fixture.Commitments, commitmentConsistency: consistency,
-            accountableWorkItems: [projection]);
+            accountableWorkItems: [projection],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 

@@ -229,7 +229,8 @@ public sealed class WorkQueueSearchTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: directories);
+            accountableWorkItems: directories,
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var handler = new ListWorkHandler(queue);
         var context = new RequestContext<ListWork>(new ListWork(fixture.TenantId,
                 fixture.ProgramId, "all", Search: search),
@@ -278,7 +279,8 @@ public sealed class WorkQueueSearchTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [evidence]);
+            accountableWorkItems: [evidence],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var context = new RequestContext<ListWork>(new ListWork(fixture.TenantId,
                 fixture.ProgramId, "all", Search: "no such visible work"),
             ProgramManagementServices.Actor(fixture.ApproverUserId));

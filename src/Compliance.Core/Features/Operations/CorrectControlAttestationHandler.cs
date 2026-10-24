@@ -1,12 +1,15 @@
 using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Records a new attestation version superseding the latest; HTTP-only.</summary>
-public sealed class CorrectControlAttestationHandler(IAggregateExecutor executor,
-    IAggregateReader reader, OperatingAuthority authority, TimeProvider clock)
+public sealed class CorrectControlAttestationHandler(NativeOperationExecutor operations,
+    ControlOperationsReader operatingReader, IAggregateReader reader, OperatingAuthority authority,
+    IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<CorrectControlAttestation, ControlOccurrenceView>
 {
     public async ValueTask<Result<ControlOccurrenceView>> HandleAsync(
@@ -17,26 +20,19 @@ public sealed class CorrectControlAttestationHandler(IAggregateExecutor executor
             return Result<ControlOccurrenceView>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Occurrence proofs require personal HTTP submission."));
         var request = context.Request;
+        if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
+            return Result<ControlOccurrenceView>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A correction requires a command id and a non-negative expected revision."));
         var now = clock.GetUtcNow();
-        var prepared = await OccurrenceAttestation.PrepareAsync(reader, authority, request.TenantId,
-            request.ProgramId, request.ControlId, request.OccurrenceId, request.PerformedByPersonId,
-            context.Actor, now, ct).ConfigureAwait(false);
+        var prepared = await OccurrenceAttestation.PrepareAsync(reader, operatingReader, authority, request.TenantId,
+            request.ProgramId, request.ControlId, request.OccurrenceId, request.PerformedByPersonId, context.Actor, now,
+            ct).ConfigureAwait(false);
         if (!prepared.IsSuccess)
             return Result<ControlOccurrenceView>.Failure(prepared.Error!);
-        var (actor, performer, windows) = prepared.Value;
         var input = new AttestationInput(request.Result, request.PerformedAt, request.CoveredFrom,
-            request.CoveredUntil, request.Notes, request.Rationale, request.Evidence ?? [],
-            performer);
-        return await executor.ExecuteAsync(new ControlOperationsLedger(request.TenantId,
-                request.ProgramId),
-            ledger =>
-            {
-                var failure = ledger.Correct(request.ControlId, request.OccurrenceId,
-                    request.ExpectedRevision, input, request.CorrectionReason, actor.MemberId,
-                    actor.Display, now);
-                return CommandFailureRequestAdapter.ToOutcome(failure,
-                    ledger.ReadOccurrence(request.ControlId, request.OccurrenceId, windows,
-                        DateOnly.FromDateTime(now.UtcDateTime))!);
-            }, context, ct).ConfigureAwait(false);
+            request.CoveredUntil, request.Notes, request.Rationale, request.Evidence ?? [], prepared.Value!.Performer);
+        return await OccurrenceProofs.AttestAsync(operations, reader, content, context, "CorrectControlAttestation",
+            request.CommandId, request.ExpectedRevision, AuthoredIntentDigest.Compute(request), prepared.Value, input,
+            request.CorrectionReason ?? string.Empty, now, ct).ConfigureAwait(false);
     }
 }

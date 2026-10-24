@@ -178,7 +178,8 @@ public sealed class RiskAcceptanceWorkTests
         var consistency = new WorkQueueReadConsistency(events, [projected]);
         var queue = new WorkQueueReader(reader,
             scope.ServiceProvider.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
-            consistency, risks: fixture.Risks, accountableWorkItems: [projected]);
+            consistency, risks: fixture.Risks, accountableWorkItems: [projected],
+            operatingReader: scope.ServiceProvider.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 

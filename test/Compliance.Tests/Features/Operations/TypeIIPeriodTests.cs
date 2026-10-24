@@ -104,52 +104,40 @@ public sealed class TypeIIPeriodTests
     }
 
     [Fact]
-    public void ShouldGenerateDueExpectedOccurrencesOncePerPeriodAcrossGenerationKeysGivenActivePeriod()
+    public void ShouldRecordEachGenerationAsNativeFactAndRejectKeyReuseGivenActivePeriod()
     {
         // Arrange
         var period = StartedPeriod();
-        var expected = period.Current!.ExpectedOccurrences;
         var throughDate = new DateOnly(2027, 3, 1);
-        var expectedDue = expected.Where(item => item.DueOn <= throughDate)
+        var expectedDue = period.Current!.ExpectedOccurrences.Where(item => item.DueOn <= throughDate)
             .Select(item => item.OccurrenceId).OrderBy(static id => id.ToString()).ToArray();
 
         // Act
-        var first = period.GenerateDueOccurrences("period-generation-001", throughDate,
-            ProposerId, "Compliance lead", Now.AddMonths(1));
-        var retry = period.GenerateDueOccurrences("period-generation-001", throughDate,
-            ProposerId, "Compliance lead", Now.AddMonths(1).AddMinutes(1));
-        var nextBatch = period.GenerateDueOccurrences("period-generation-002", throughDate,
-            ProposerId, "Compliance lead", Now.AddMonths(1).AddMinutes(2));
-        var conflictingRetry = period.GenerateDueOccurrences("period-generation-001",
-            throughDate.AddDays(1), ProposerId, "Compliance lead", Now.AddMonths(1).AddMinutes(3));
+        var due = period.DueExpectedOccurrences(throughDate, new HashSet<Uuid>());
+        var afterSelection = period.DueExpectedOccurrences(throughDate, expectedDue.ToHashSet());
+        var first = period.Generate("period-generation-001", throughDate, ProposerId, "Compliance lead",
+            Now.AddMonths(1));
+        var reuse = period.PrepareGenerateDueOccurrences("period-generation-001", throughDate, ProposerId,
+            "Compliance lead", Now.AddMonths(1).AddMinutes(1));
+        var next = period.Generate("period-generation-002", throughDate, ProposerId, "Compliance lead",
+            Now.AddMonths(1).AddMinutes(2));
 
         // Assert
-        Assert.Null(first);
-        Assert.Null(retry);
-        Assert.Null(nextBatch);
-        Assert.Equal(CommandFailureCode.StateConflict,
-            Assert.IsType<CommandFailure>(conflictingRetry).Code);
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        Assert.True(next.IsSuccess, next.Error?.Message);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(reuse).Code);
+        Assert.Equal(expectedDue, due.Select(item => item.OccurrenceId));
+        Assert.Empty(afterSelection);
         Assert.Equal(3, period.Revision);
-        var batches = period.OccurrenceGenerationBatches;
-        Assert.Equal(2, batches.Count);
-        Assert.Equal("period-generation-001", batches[0].GenerationKey);
-        Assert.Equal(throughDate, batches[0].ThroughDate);
-        Assert.Equal(expectedDue, batches[0].OccurrenceIds);
-        Assert.Equal(Now.AddMonths(1), batches[0].GeneratedAt);
-        Assert.Empty(batches[1].OccurrenceIds);
+        Assert.Equal(["period-generation-001", "period-generation-002"],
+            period.OccurrenceGenerations.Select(generation => generation.GenerationKey));
+        Assert.All(period.OccurrenceGenerations, generation => Assert.Equal(throughDate, generation.ThroughDate));
+        Assert.Equal(Now.AddMonths(1), period.OccurrenceGenerations[0].OccurredAt);
 
         var events = new AggregateScenario<TypeIIPeriodAggregate>(period).PendingEvents.ToArray();
         var replay = new AggregateScenario<TypeIIPeriodAggregate>(NewPeriod()).Given(events).Aggregate;
-        var replayedBatches = replay.OccurrenceGenerationBatches;
-        Assert.Equal(batches.Count, replayedBatches.Count);
-        for (var index = 0; index < batches.Count; index++)
-        {
-            Assert.Equal(batches[index].GenerationKey, replayedBatches[index].GenerationKey);
-            Assert.Equal(batches[index].ThroughDate, replayedBatches[index].ThroughDate);
-            Assert.Equal(batches[index].OccurrenceIds, replayedBatches[index].OccurrenceIds);
-            Assert.Equal(batches[index].ActorMemberId, replayedBatches[index].ActorMemberId);
-            Assert.Equal(batches[index].GeneratedAt, replayedBatches[index].GeneratedAt);
-        }
+        Assert.Equal(period.OccurrenceGenerations.Select(generation => generation.GenerationKey),
+            replay.OccurrenceGenerations.Select(generation => generation.GenerationKey));
         Assert.Equal(period.Revision, replay.Revision);
     }
 
@@ -160,18 +148,16 @@ public sealed class TypeIIPeriodTests
         var period = StartedPeriod();
 
         // Act
-        var before = period.GenerateDueOccurrences("before-period", PeriodStart.AddDays(-1),
+        var before = period.PrepareGenerateDueOccurrences("before-period", PeriodStart.AddDays(-1),
             ProposerId, "Compliance lead", Now.AddMonths(1));
-        var after = period.GenerateDueOccurrences("after-period", PeriodEnd.AddDays(1),
+        var after = period.PrepareGenerateDueOccurrences("after-period", PeriodEnd.AddDays(1),
             ProposerId, "Compliance lead", Now.AddMonths(1));
 
         // Assert
-        Assert.Equal(CommandFailureCode.InvalidContent,
-            Assert.IsType<CommandFailure>(before).Code);
-        Assert.Equal(CommandFailureCode.InvalidContent,
-            Assert.IsType<CommandFailure>(after).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(before).Code);
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(after).Code);
         Assert.Equal(1, period.Revision);
-        Assert.Empty(period.OccurrenceGenerationBatches);
+        Assert.Empty(period.OccurrenceGenerations);
     }
 
     [Fact]

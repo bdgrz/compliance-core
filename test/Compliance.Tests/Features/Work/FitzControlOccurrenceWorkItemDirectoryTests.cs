@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Work;
@@ -19,7 +20,8 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await fixture.ProposeAsync(0);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -39,9 +41,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         var fixture = await OperationsFixture.CreateAsync();
         var cadence = new ControlCadence("ad_hoc", DueWithinDays: 10);
         await fixture.PlanAsync(cadence: cadence);
-        var opened = await fixture.AsAsync(fixture.OwnerUserId, new OpenControlOccurrence(
-            fixture.TenantId, fixture.ProgramId, fixture.ControlId, "Quarterly access review",
-            fixture.Today));
+        var opened = await fixture.AsAsync(fixture.OwnerUserId, fixture.Open("Quarterly access review", fixture.Today));
         var replacementOwner = new OperatingHolder(OperatingAuthority.MemberHolder,
             fixture.BackupMemberId);
         await fixture.PlanAsync(owner: replacementOwner, cadence: cadence,
@@ -52,11 +52,12 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         var today = DateOnly.FromDateTime(now.UtcDateTime);
         var horizon = today.AddDays(30);
         var ledgerWork = await WorkSource.LoadAsync(sourceReader,
-            sourceScope.ServiceProvider.GetRequiredService<IDomainEventReader>(), fixture.TenantId,
+            sourceScope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), fixture.TenantId,
             fixture.ProgramId, today, horizon, now, null, fixture.Boundaries,
             new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader);
+            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
 
         // Act
@@ -85,11 +86,12 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var ledgerWork = await WorkSource.LoadAsync(sourceReader,
-            sourceScope.ServiceProvider.GetRequiredService<IDomainEventReader>(), fixture.TenantId,
+            sourceScope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), fixture.TenantId,
             fixture.ProgramId, today, horizon, now, null, fixture.Boundaries,
             new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader);
+            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
 
         // Act
@@ -118,11 +120,12 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var ledgerWork = await WorkSource.LoadAsync(sourceReader,
-            sourceScope.ServiceProvider.GetRequiredService<IDomainEventReader>(), fixture.TenantId,
+            sourceScope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), fixture.TenantId,
             fixture.ProgramId, today, horizon, now, null, fixture.Boundaries,
             new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader);
+            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
 
         // Act
@@ -150,7 +153,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader);
+            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var now = DateTimeOffset.UtcNow;
         var today = DateOnly.FromDateTime(now.UtcDateTime);
@@ -201,7 +204,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader);
+            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -231,14 +234,14 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         var returned = await fixture.AsAsync(fixture.ReviewerUserId,
             fixture.Review(submitted, "returned"));
         var corrected = await fixture.AsAsync(fixture.BackupUserId,
-            new CorrectControlAttestation(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            new CorrectControlAttestation(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 returned.OccurrenceId, returned.Revision, "complete",
                 DateTimeOffset.UtcNow.AddMinutes(-1), null, null, "Correction recorded.", null,
                 OperationsFixture.FullSupport, "Included the missing support."));
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader);
+            sourceReader, sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -267,7 +270,8 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         await fixture.PlanAsync();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         await CatchUpAsync(fixture, directory);
         var now = DateTimeOffset.UtcNow;
         var today = DateOnly.FromDateTime(now.UtcDateTime);

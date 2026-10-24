@@ -373,18 +373,13 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
             var controlVersion = control.ApprovedVersion!;
             await Writer.SaveAsync(control, new RequestDispatchContext(RequestActor.System));
 
-            var controlOperations = new ControlOperationsLedger(TenantId, ProgramId);
             var operatingPlanId = Uuid.CreateVersion4();
-            Assert.Null(controlOperations.ProposePlan(ControlId, 0, operatingPlanId, controlVersion,
-                new OperatingHolder("member", MemberId), null, ReviewerId, false,
-                new ControlCadence(ControlCadenceSchedule.Recurring, "quarterly", PeriodStart, 5),
-                PeriodStart, "Operate quarterly and retain dated evidence.", AuthorId,
-                "Control plan author", Now.AddMinutes(-14), null));
-            Assert.Null(controlOperations.ApprovePlan(ControlId, 1, operatingPlanId,
-                "The quarterly schedule and owner are approved.", ExecutiveId, "Chief Executive",
-                Now.AddMinutes(-13), null));
-            await Writer.SaveAsync(controlOperations,
-                new RequestDispatchContext(RequestActor.System));
+            await ControlOperatingSeed.ProposeAsync(Host.Provider, TenantId, ProgramId, ControlId, controlVersion.VersionId,
+                controlVersion.Content.ExpectedEvidenceDescriptions, operatingPlanId, new OperatingHolder("member", MemberId), null, ReviewerId,
+                new ControlCadence(ControlCadenceSchedule.Recurring, "quarterly", PeriodStart, 5), PeriodStart,
+                "Operate quarterly and retain dated evidence.", AuthorId, "Control plan author", Now.AddMinutes(-14));
+            await ControlOperatingSeed.ApproveAsync(Host.Provider, TenantId, ProgramId, ControlId, operatingPlanId,
+                ExecutiveId, "Chief Executive", Now.AddMinutes(-13));
 
             var systemDescriptionSource = new SystemDescriptionSourceReference("approved_boundary",
                 BoundaryId, Uuid.CreateVersion4(), 1, Hash('a'), "current");

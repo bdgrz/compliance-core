@@ -213,7 +213,8 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            campaigns: new UnexpectedCampaignDirectory(), accountableWorkItems: [projected]);
+            campaigns: new UnexpectedCampaignDirectory(), accountableWorkItems: [projected],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 

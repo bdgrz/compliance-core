@@ -349,7 +349,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListReadinessGaps>(tool => tool.ReadOnly())
         .AddMcpTool<ListTypeIEntryDecisions>(tool => tool.ReadOnly())
         .AddMcpTool<ListReadinessAnnotations>(tool => tool.ReadOnly())
-        .AddMcpTool<ProposeControlOperatingPlan>()
+        .AddMcpTool<ProposeControlOperatingPlan>(tool => tool.Idempotent())
         .AddMcpTool<PreviewControlOperatingPlan>(tool => tool.ReadOnly())
         .AddMcpTool<GetControlOperatingPlan>(tool => tool.ReadOnly())
         .AddMcpTool<ListControlOperatingBlockers>(tool => tool.ReadOnly())
@@ -1319,16 +1319,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/annotations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Readiness");
-    app.MapPortiaPost<ProposeControlOperatingPlan, ControlOperatingPlanView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals")
+    app.MapPortiaPut<ProposeControlOperatingPlan, ControlOperatingPlanView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
     app.MapPortiaPost<PreviewControlOperatingPlan, ControlOperatingPlanPreview>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/preview")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
-    app.MapPortiaPost<ApproveControlOperatingPlan, ControlOperatingPlanView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}/approvals")
+    app.MapPortiaPut<ApproveControlOperatingPlan, ControlOperatingPlanView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}/approvals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
     app.MapPortiaGet<GetControlOperatingPlan, ControlOperatingPlanSetView>(
@@ -1343,8 +1343,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/my-work")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
-    app.MapPortiaPost<OpenControlOccurrence, ControlOccurrenceView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences")
+    app.MapPortiaPut<OpenControlOccurrence, ControlOccurrenceView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
     app.MapPortiaGet<ListControlOccurrences, Page<ControlOccurrenceView>>(
@@ -1355,16 +1355,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
-    app.MapPortiaPost<AttestControlOccurrence, ControlOccurrenceView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations")
+    app.MapPortiaPut<AttestControlOccurrence, ControlOccurrenceView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
-    app.MapPortiaPost<CorrectControlAttestation, ControlOccurrenceView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections")
+    app.MapPortiaPut<CorrectControlAttestation, ControlOccurrenceView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
-    app.MapPortiaPost<ReviewControlOccurrence, ControlOccurrenceView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews")
+    app.MapPortiaPut<ReviewControlOccurrence, ControlOccurrenceView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control operations");
     app.MapPortiaPost<StartControlEvaluation, ControlEvaluationView>(

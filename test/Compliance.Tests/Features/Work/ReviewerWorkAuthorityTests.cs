@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Features.Controls;
 using Bdgrz.Compliance.Tests.Features.Evaluations;
 using Bdgrz.Compliance.Tests.Features.Risks;
@@ -275,6 +276,7 @@ public sealed class ReviewerWorkAuthorityTests
                 {
                     services.AddSingleton(events);
                     services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
+                    services.AddSingleton(operations.Provider.GetRequiredService<IImmutableContentStore>());
                     services.AddScoped<ITenantMembershipDirectoryReader, MembershipDirectory>();
                     services.AddScoped<OperatingAuthority>();
                     services.AddSingleton(new ControlActivationReleaseGate(true));
@@ -300,7 +302,8 @@ public sealed class ReviewerWorkAuthorityTests
                             new FitzControlEvaluationWorkItemDirectory(client));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzControlOperatingPlanWorkItemDirectory(client,
-                                provider.GetRequiredService<IAggregateReader>()));
+                                provider.GetRequiredService<IAggregateReader>(),
+                                provider.GetRequiredService<IImmutableContentStore>()));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzControlMappingWorkItemDirectory(client));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
@@ -544,7 +547,7 @@ public sealed class ReviewerWorkAuthorityTests
             else if (kind == "operating_plan")
             {
                 await PersonalOperatingPlanApprovalTransportTests.HttpAsync(Provider, GuestUserId,
-                    new ApproveControlOperatingPlan(Operations.TenantId, Operations.ProgramId,
+                    new ApproveControlOperatingPlan(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                         Operations.ControlId, pending.Revision, pending.Id, "Approved independently."), error);
             }
             else if (kind == "mapping")

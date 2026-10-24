@@ -25,7 +25,6 @@ public sealed class TypeIIPeriod : Aggregate
     const int MaximumSources = 1000;
     const int MaximumOccurrences = 10000;
     const int MaximumAmendments = 64;
-    const int MaximumOccurrenceGenerationBatches = 256;
     const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 2000;
     static readonly HashSet<string> ExecutiveRoles = new(StringComparer.OrdinalIgnoreCase)
@@ -42,13 +41,13 @@ public sealed class TypeIIPeriod : Aggregate
     Uuid? _pending;
     TypeIIPeriodCalendarAuthorization? _live;
     TypeIIPeriodView? _current;
-    IReadOnlyList<OccurrenceGenerationBatchView> _occurrenceGenerationBatches =
-        Array.Empty<OccurrenceGenerationBatchView>();
+    readonly List<DueControlOccurrencesGenerated> _generations = [];
 
     public long Revision => _current?.Revision ?? 0;
     public TypeIIPeriodView? Current => _current;
-    public IReadOnlyList<OccurrenceGenerationBatchView> OccurrenceGenerationBatches =>
-        _occurrenceGenerationBatches;
+
+    /// <summary>Every occurrence generation of the period in order; each selects a complete immutable manifest.</summary>
+    public IReadOnlyList<DueControlOccurrencesGenerated> OccurrenceGenerations => _generations;
 
     /// <summary>Opens one period, selecting the logical operation to resolve.</summary>
     public TypeIIPeriod(Uuid tenantId, Uuid programId, Uuid periodId, Uuid selectedLogicalId = default)
@@ -350,8 +349,8 @@ public sealed class TypeIIPeriod : Aggregate
         if (current.ExpectedOccurrences.Any(item => item.DueOn is { } due &&
                 (due < periodStart || due > periodEnd)))
             return CommandFailure.StateConflict("A period amendment cannot exclude an approved expected occurrence.");
-        if (_occurrenceGenerationBatches.Any(batch => batch.ThroughDate < periodStart ||
-                batch.ThroughDate > periodEnd))
+        if (_generations.Any(generation => generation.ThroughDate < periodStart ||
+                generation.ThroughDate > periodEnd))
             return CommandFailure.StateConflict(
                 "A period amendment cannot move its boundaries outside a recorded generation batch.");
 
@@ -375,46 +374,64 @@ public sealed class TypeIIPeriod : Aggregate
         return null;
     }
 
-    /// <summary>
-    /// Records the exact due expected occurrence identities selected by a durable generation key.
-    /// The downstream scheduler can safely materialize each identity from this retained batch.
-    /// </summary>
-    public CommandFailure? GenerateDueOccurrences(string generationKey, DateOnly throughDate,
+    /// <summary>The logical operation identity of one generation key of this period.</summary>
+    public static Uuid GenerationLogicalId(Uuid periodId, string generationKey) =>
+        Uuid.CreateVersion5(periodId, "due-occurrences:" + Clean(generationKey));
+
+    /// <summary>Checks the generation guards without raising anything.</summary>
+    public CommandFailure? PrepareGenerateDueOccurrences(string generationKey, DateOnly throughDate,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset generatedAt)
     {
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The Type II observation period was not found.");
-
         generationKey = Clean(generationKey);
-        var prior = _occurrenceGenerationBatches.FirstOrDefault(batch =>
-            batch.GenerationKey == generationKey);
-        if (prior is not null)
-            return prior.ThroughDate == throughDate && prior.ActorMemberId == actorMemberId &&
-                   prior.ActorDisplay == Clean(actorDisplay)
-                ? null
-                : CommandFailure.StateConflict(
-                    "A generation key cannot be reused for another date or actor.");
-
+        if (_generations.Any(generation => generation.GenerationKey == generationKey))
+            return CommandFailure.StateConflict("A generation key cannot be reused for another date or actor.");
         if (current.Status != "active")
             return CommandFailure.StateConflict("Occurrences can only be generated for an active period.");
-        if (!Token(generationKey, 200) || throughDate < current.PeriodStart ||
-            throughDate > current.PeriodEnd || !ValidActor(actorMemberId, actorDisplay, generatedAt) ||
-            generatedAt < current.UpdatedAt ||
-            _occurrenceGenerationBatches.Count >= MaximumOccurrenceGenerationBatches)
+        if (!Token(generationKey, 200) || throughDate < current.PeriodStart || throughDate > current.PeriodEnd ||
+            !ValidActor(actorMemberId, actorDisplay, generatedAt) || generatedAt < current.UpdatedAt)
             return Invalid("Occurrence generation requires a bounded key, an in-period date, and an attributed actor.");
-
-        var alreadyGenerated = _occurrenceGenerationBatches
-            .SelectMany(static batch => batch.OccurrenceIds).ToHashSet();
-        var ids = DueOccurrenceIds(current, throughDate, alreadyGenerated);
-        var batch = new OccurrenceGenerationBatchView(current.Revision + 1, generationKey,
-            throughDate, ids, actorMemberId, actorDisplay.Trim(), generatedAt);
-        var ev = new DueControlOccurrencesGenerated(_tenantId, Id, current.Revision + 1,
-            generationKey, throughDate, ids, actorMemberId, actorDisplay.Trim(), generatedAt);
-        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
-            return Invalid("The occurrence generation batch exceeds the bounded event payload.");
-
-        RaiseEvent(ev);
         return null;
+    }
+
+    /// <summary>
+    ///     The recurring expected occurrences due on or before the date that no earlier generation selected, in
+    ///     canonical order. <paramref name="alreadySelected" /> holds the expected occurrence ids of every earlier
+    ///     manifest.
+    /// </summary>
+    public IReadOnlyList<TypeIIPeriodOccurrenceView> DueExpectedOccurrences(DateOnly throughDate,
+        IReadOnlySet<Uuid> alreadySelected)
+    {
+        ArgumentNullException.ThrowIfNull(alreadySelected);
+        return _current is not { } current
+            ? []
+            : current.ExpectedOccurrences
+                .Where(item => item.DueOn is { } due && due <= throughDate && !alreadySelected.Contains(item.OccurrenceId))
+                .OrderBy(static item => IdKey(item.OccurrenceId), StringComparer.Ordinal)
+                .ToArray();
+    }
+
+    /// <summary>
+    ///     Selects the due recurring occurrences of a generation key as one native operation of this period. The
+    ///     complete selection is immutable content, never a count cap; selecting is not materializing.
+    /// </summary>
+    public Result GenerateDueOccurrences(OperationProvenance operation, string generationKey, DateOnly throughDate,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset generatedAt, ImmutableContentRef occurrenceIds,
+        ImmutableContentRef creationIntents, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        generationKey = Clean(generationKey);
+        if (operation.Owner != Stream || operation.LogicalId != GenerationLogicalId(Id, generationKey))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A generation is the logical operation of its own period and key."));
+        if (PrepareGenerateDueOccurrences(generationKey, throughDate, actorMemberId, actorDisplay, generatedAt) is
+            { } failure)
+            return Result.Failure(failure.ToRequestError());
+        RaiseEvent(new DueControlOccurrencesGenerated(_tenantId, Id, Revision + 1, generationKey, throughDate,
+            occurrenceIds, actorMemberId, actorDisplay.Trim(), generatedAt, operation, creationIntents, firstResponse,
+            operationResult));
+        return Result.Success;
     }
 
     public CommandFailure? RecordCloseValidation(long expectedRevision,
@@ -676,30 +693,23 @@ public sealed class TypeIIPeriod : Aggregate
 
     void Apply(DueControlOccurrencesGenerated ev)
     {
+        Acceptance.Observe(ev);
         if (_current is not { } current || ev.TenantId != _tenantId || ev.SubjectId != Id ||
             ev.Revision != Revision + 1 || ev.ActorMemberId is not { } actorMemberId ||
             actorMemberId == Uuid.Empty || ev.OccurredAt == default ||
             current.Status != "active" || ev.OccurredAt < current.UpdatedAt ||
             !Token(ev.GenerationKey, 200) || ev.GenerationKey != Clean(ev.GenerationKey) ||
             ev.ThroughDate < current.PeriodStart || ev.ThroughDate > current.PeriodEnd ||
-            !ValidActor(actorMemberId, ev.ActorDisplay, ev.OccurredAt) ||
-            _occurrenceGenerationBatches.Count >= MaximumOccurrenceGenerationBatches ||
-            _occurrenceGenerationBatches.Any(batch => batch.GenerationKey == ev.GenerationKey))
+            !ValidActor(actorMemberId, ev.ActorDisplay, ev.OccurredAt) || ev.Operation.Owner != Stream ||
+            ev.Operation.LogicalId != GenerationLogicalId(Id, ev.GenerationKey) || ev.FirstResponse is null ||
+            _generations.Any(generation => generation.GenerationKey == ev.GenerationKey))
             throw new InvalidOperationException("The occurrence generation event is invalid.");
 
-        var alreadyGenerated = _occurrenceGenerationBatches
-            .SelectMany(static batch => batch.OccurrenceIds).ToHashSet();
-        var ids = NormalizeIds(ev.OccurrenceIds);
-        if (ids is null || !ids.SequenceEqual(ev.OccurrenceIds) ||
-            !ids.SequenceEqual(DueOccurrenceIds(current, ev.ThroughDate, alreadyGenerated)))
-            throw new InvalidOperationException("The occurrence generation event does not match its due period population.");
-
-        var batch = new OccurrenceGenerationBatchView(ev.Revision, ev.GenerationKey,
-            ev.ThroughDate, ids, actorMemberId, ev.ActorDisplay.Trim(), ev.OccurredAt);
         var next = current with { Revision = ev.Revision };
         if (ValidateState(next) is not null)
             throw new InvalidOperationException("The occurrence generation event is invalid.");
-        _occurrenceGenerationBatches = Append(_occurrenceGenerationBatches, batch);
+        _generations.Add(ev);
+        _facts.Add(ev);
         _current = Freeze(next);
     }
     void Apply(ObservationPeriodCloseProposed ev) => ApplyState(ev.TenantId, ev.SubjectId,
@@ -1207,12 +1217,4 @@ public sealed class TypeIIPeriod : Aggregate
             AffectedExaminationMaterialIds = Freeze(item.AffectedExaminationMaterialIds.ToArray()),
         }).ToArray()),
     };
-
-    static Uuid[] DueOccurrenceIds(TypeIIPeriodView state, DateOnly throughDate,
-        HashSet<Uuid> alreadyGenerated) => state.ExpectedOccurrences
-        .Where(item => item.DueOn is { } due && due <= throughDate &&
-            !alreadyGenerated.Contains(item.OccurrenceId))
-        .Select(static item => item.OccurrenceId)
-        .OrderBy(IdKey, StringComparer.Ordinal)
-        .ToArray();
 }

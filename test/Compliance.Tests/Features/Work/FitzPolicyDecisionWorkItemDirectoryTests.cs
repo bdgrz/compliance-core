@@ -120,7 +120,8 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var authority = services.GetRequiredService<OperatingAuthority>();
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId, "Approver");
         WorkQueueReader Queue(FitzPolicyDecisionWorkItemDirectory source) => new(reader, authority, TimeProvider.System,
-            new WorkQueueReadConsistency(events, [source]), accountableWorkItems: [source]);
+            new WorkQueueReadConsistency(events, [source]), accountableWorkItems: [source],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
 
         // Act
         var before = await Queue(directory).ReadAsync(fixture.TenantId, fixture.ProgramId, actor, 30,

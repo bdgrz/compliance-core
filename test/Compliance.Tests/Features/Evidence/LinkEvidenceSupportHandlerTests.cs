@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
@@ -190,7 +191,7 @@ public sealed class LinkEvidenceSupportHandlerTests
         }
 
         public LinkEvidenceSupportHandler Handler() => new(Access,
-            new EvidenceArtifactMetadataRead(Reader, Events), new EvidenceSupportTargetSource(Reader),
+            new EvidenceArtifactMetadataRead(Reader, Events), new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events)),
             _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), TimeProvider.System);
 
         public LinkEvidenceSupport Request(Uuid artifactId, Uuid controlId, long revision) =>

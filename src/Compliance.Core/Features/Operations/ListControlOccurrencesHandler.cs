@@ -7,7 +7,8 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     Lists a control's occurrence population: recorded occurrences plus expected periods that
 ///     start within the next 90 days, ordered by due date.
 /// </summary>
-public sealed class ListControlOccurrencesHandler(IAggregateReader reader, TimeProvider clock)
+public sealed class ListControlOccurrencesHandler(IAggregateReader reader, ControlOperationsReader operations,
+    TimeProvider clock)
     : IRequestHandler<ListControlOccurrences, Page<ControlOccurrenceView>>
 {
     const int HorizonDays = 90;
@@ -21,10 +22,10 @@ public sealed class ListControlOccurrencesHandler(IAggregateReader reader, TimeP
         if (control is null)
             return Result<Page<ControlOccurrenceView>>.Failure(
                 ControlOperationsSource.ControlNotFound());
-        var ledger = await reader.HydrateAsync(new ControlOperationsLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
+        var snapshot = await operations.ReadControlAsync(request.TenantId, request.ProgramId, request.ControlId, ct)
+            .ConfigureAwait(false);
         var today = ControlOperationsSource.Today(clock);
-        var items = ledger.ReadOccurrences(request.ControlId,
+        var items = snapshot.ReadOccurrences(request.ControlId,
                 OperatingAuthority.VersionWindows(control), today, today.AddDays(HorizonDays))
             .Where(view => request.State is null || view.State == request.State)
             .ToArray();

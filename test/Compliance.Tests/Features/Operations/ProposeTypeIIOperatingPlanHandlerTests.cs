@@ -1,3 +1,7 @@
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
@@ -442,15 +446,19 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
                 [new Claim("iss", "bdgrz"), new Claim("sub", UserId.ToString()),
                     new Claim("name", "Plan author")], "BdgrzSession"));
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var events = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(events);
+            services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+                new PersistenceKvClient(new InMemoryKvClient())));
             services.AddPortia();
             provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             scope = provider.CreateAsyncScope();
             Reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             Writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-            Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader,
-                (IDomainEventReader)scope.ServiceProvider.GetRequiredService<IEventStore>(), Clock);
+            Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader, events,
+                new ControlOperationsReader(Reader, events,
+                    scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Clock);
         }
 
         public ProposeTypeIIOperatingPlan Request(TypeIIPlanContent content) =>
@@ -502,18 +510,13 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             var controlVersion = control.ApprovedVersion!;
             await Writer.SaveAsync(control, new RequestDispatchContext(RequestActor.System));
 
-            var controlOperations = new ControlOperationsLedger(TenantId, ProgramId);
             var operatingPlanId = Uuid.CreateVersion4();
-            Assert.Null(controlOperations.ProposePlan(ControlId, 0, operatingPlanId, controlVersion,
-                new OperatingHolder("member", MemberId), null, ReviewerId, false,
-                new ControlCadence(ControlCadenceSchedule.Recurring, "quarterly", PeriodStart, 5),
-                PeriodStart, "Operate quarterly and retain dated evidence.", AuthorId,
-                "Control plan author", Now.AddMinutes(-14), null));
-            Assert.Null(controlOperations.ApprovePlan(ControlId, 1, operatingPlanId,
-                "The quarterly schedule and owner are approved.", ExecutiveId, "Chief Executive",
-                Now.AddMinutes(-13), null));
-            await Writer.SaveAsync(controlOperations,
-                new RequestDispatchContext(RequestActor.System));
+            await ControlOperatingSeed.ProposeAsync(provider, TenantId, ProgramId, ControlId, controlVersion.VersionId,
+                controlVersion.Content.ExpectedEvidenceDescriptions, operatingPlanId, new OperatingHolder("member", MemberId), null, ReviewerId,
+                new ControlCadence(ControlCadenceSchedule.Recurring, "quarterly", PeriodStart, 5), PeriodStart,
+                "Operate quarterly and retain dated evidence.", AuthorId, "Control plan author", Now.AddMinutes(-14));
+            await ControlOperatingSeed.ApproveAsync(provider, TenantId, ProgramId, ControlId, operatingPlanId,
+                ExecutiveId, "Chief Executive", Now.AddMinutes(-13));
 
             var boundaryVersionId = Uuid.CreateVersion4();
             var boundaryHash = Hash('a');

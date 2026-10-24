@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Readiness;
@@ -212,6 +213,7 @@ public sealed class PersonalReadinessClosureTransportTests
         services.AddSingleton(store);
         services.AddSingleton<IDomainEventReader>((IDomainEventReader)store);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        services.AddSingleton(source.GetRequiredService<IImmutableContentStore>());
         permissions ??= new RecordingPermissionAuthorizer(allowed: true);
         services.AddSingleton(permissions);
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(permissions));

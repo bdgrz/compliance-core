@@ -4,7 +4,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Shows what a proposed plan would schedule, conflict with, and reassign; records nothing.</summary>
 public sealed class PreviewControlOperatingPlanHandler(IAggregateReader reader,
-    OperatingAuthority authority)
+    ControlOperationsReader operations, OperatingAuthority authority)
     : IRequestHandler<PreviewControlOperatingPlan, ControlOperatingPlanPreview>
 {
     const int UpcomingCount = 4;
@@ -19,9 +19,9 @@ public sealed class PreviewControlOperatingPlanHandler(IAggregateReader reader,
         if (!checkedPlan.IsSuccess)
             return Result<ControlOperatingPlanPreview>.Failure(checkedPlan.Error!);
         var (version, reviewerHoldsWork) = checkedPlan.Value;
-        var ledger = await reader.HydrateAsync(new ControlOperationsLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
-        if (ControlOperationsLedger.ValidatePlan(version, request.Owner, request.BackupOwner,
+        var ledger = await operations.ReadControlAsync(request.TenantId, request.ProgramId, request.ControlId, ct)
+            .ConfigureAwait(false);
+        if (ControlOperationRules.ValidatePlan(version, request.Owner, request.BackupOwner,
                 request.ReviewerMemberId, request.Cadence, request.EffectiveFrom,
                 ledger.CurrentPlan(request.ControlId)) is { } invalid)
             return Result<ControlOperatingPlanPreview>.Failure(new RequestError(
@@ -30,9 +30,9 @@ public sealed class PreviewControlOperatingPlanHandler(IAggregateReader reader,
                 version.EffectiveUntil, request.EffectiveFrom.AddYears(2))
             .Take(UpcomingCount)
             .Select(period => new ControlOccurrenceView(request.TenantId, request.ProgramId,
-                request.ControlId, ControlCadenceSchedule.OccurrenceId(request.ControlId,
-                    period.Start), 0, ControlOperationsLedger.Expected,
-                ControlOperationsLedger.Expected, version.VersionId, Uuid.Empty, period.Start,
+                request.ControlId, ControlOccurrenceIdentity.Of(request.TenantId,
+                    request.ProgramId, request.ControlId, ControlOccurrenceIdentity.WindowOf(period)), 0, ControlOperationStates.Expected,
+                ControlOperationStates.Expected, version.VersionId, Uuid.Empty, period.Start,
                 period.End, period.DueOn, null, request.Owner, [], [], []))
             .ToArray();
         string[] conflicts = reviewerHoldsWork

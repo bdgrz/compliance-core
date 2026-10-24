@@ -54,7 +54,7 @@ public sealed class ControlOperatingPlanWorkTests
             new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
 
         // Act
-        await fixture.AsAsync(fixture.ApproverUserId, new ApproveControlOperatingPlan(
+        await fixture.AsAsync(fixture.ApproverUserId, new ApproveControlOperatingPlan(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, fixture.ControlId, plan.Revision,
             plan.PlanVersionId, "Independent approval."));
         var after = await fixture.AsAsync(fixture.ApproverUserId,

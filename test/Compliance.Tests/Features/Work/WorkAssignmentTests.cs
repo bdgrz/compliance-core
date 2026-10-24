@@ -357,7 +357,7 @@ public sealed class WorkAssignmentTests
         var proposed = await fixture.ProposeAsync(0,
             owner: new OperatingHolder("person", fixture.PersonId),
             reviewer: fixture.ApproverMemberId);
-        await fixture.AsAsync(fixture.ApproverUserId, new ApproveControlOperatingPlan(
+        await fixture.AsAsync(fixture.ApproverUserId, new ApproveControlOperatingPlan(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, fixture.ControlId, proposed.Revision,
             proposed.PlanVersionId, "Independent approval."));
         var missed = (await fixture.OccurrencesAsync("missed"))[0];
