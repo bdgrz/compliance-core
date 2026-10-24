@@ -1,11 +1,12 @@
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Changes;
 
 /// <summary>Reconstructs exact verified business content at a native owner cut or recorded-through receipt cut.</summary>
-public sealed class SignificantChangeReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content)
+public sealed class SignificantChangeReader(IAggregateReader reader, IDomainEventReader events, IImmutableContentStore content, INativeEventReceiptReader? receipts = null)
 {
     public async ValueTask<SignificantChangeReadSnapshot> ReadAsync(Uuid tenantId, Uuid programId, Uuid changeId,
         CancellationToken ct = default)
@@ -31,18 +32,29 @@ public sealed class SignificantChangeReader(IAggregateReader reader, IDomainEven
             return new(owner, rules);
         var sequence = 0L;
         ISignificantChangeFact? last = null;
-        DateTimeOffset? previousReceipt = null;
+        var observedSequence = 0L;
+        var excluded = false;
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(owner.TenantId.ToString(),
             SignificantChange.Area, owner.Id.ToString()), EventCursor.Start, ct).ConfigureAwait(false))
         {
             if (record.Event.Metadata.IsAudit)
                 continue;
-            if (record.Event is not ISignificantChangeFact fact || fact.NativeSequence != sequence + 1 ||
-                record.Stream != owner.Stream || fact.Header.ProgramId != programId ||
-                previousReceipt is { } receipt && fact.Operation.AcceptedAt < receipt)
+            if (record.Event is not ISignificantChangeFact fact || fact.NativeSequence != observedSequence + 1 ||
+                record.Stream != owner.Stream || fact.Header.ProgramId != programId)
                 throw new ImmutableContentIntegrityException("The change history has another native sequence, scope or receipt order.");
-            if (fact.NativeSequence > owner.NativeSequence || through is { } cutoff && fact.Operation.AcceptedAt > cutoff)
+            if (fact.NativeSequence > owner.NativeSequence)
                 break;
+            observedSequence = fact.NativeSequence;
+            if (through is { } cutoff)
+            {
+                if (receipts is null)
+                    throw new ImmutableContentUnavailableException("The exact broker receipt reader is not configured for this recorded-through query.");
+                var recordedAt = await receipts.RecordedAtAsync(record, ct).ConfigureAwait(false);
+                if (recordedAt > cutoff)
+                { excluded = true; continue; }
+                if (excluded)
+                    throw new ImmutableContentIntegrityException("The broker receipt cutoff does not select a complete causal prefix of the owner history.");
+            }
             var mutation = await content.ReadJsonAsync<SignificantChangeMutation>(owner.TenantId.ToString(), fact.Change, ct).ConfigureAwait(false);
             var body = await content.ReadJsonAsync<SignificantChangeView>(owner.TenantId.ToString(), fact.CurrentContent, ct).ConfigureAwait(false);
             if (fact.Change.Schema != SignificantChangeContentStore.ChangeSchema || fact.CurrentContent.Schema != SignificantChangeContentStore.BodySchema ||
@@ -52,9 +64,10 @@ public sealed class SignificantChangeReader(IAggregateReader reader, IDomainEven
                 throw new ImmutableContentIntegrityException("The change immutable body differs from its native transition or authority.");
             SignificantChangeContentStore.Apply(rules, mutation);
             sequence = fact.NativeSequence;
-            previousReceipt = fact.Operation.AcceptedAt;
             last = fact;
         }
+        if (observedSequence != owner.NativeSequence)
+            throw new ImmutableContentUnavailableException("The complete captured native source cut is not readable yet.");
         if (through is null && (sequence != owner.NativeSequence || last is null || last.Header != owner.Header || last.CurrentContent != owner.CurrentContent))
             throw new ImmutableContentUnavailableException("The complete exact native change cut is not readable yet.");
         return new(owner, rules);

@@ -1,0 +1,43 @@
+{
+  "reviewed": 52,
+  "blockedReviews": 0,
+  "signalsTriaged": 3,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Changes/SignificantChangeOperations.cs",
+      "sha256": "8c7f6629f982cdfe998fb3344055a52dab68ded95fd0883370e5374c266fc1d6",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.5,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.45
+      },
+      "classification": "verified_native_authority_and_broker_receipt_cut",
+      "evidence": "Current program/restricted caller authorization precedes native retry. Async validation/content preparation is inside NativeOperationExecutor recovery; equal concurrent acceptance is rechecked after preparation refusal. Native append compares exact before/after immutable hashes and re-executes actual local rule at captured native/physical cuts. Typed Unit descriptor/result bytes remain original on replay. Five producer/callback bodies preserve original authored digests and actor provenance; current focused source, HTTP, exact-binding, unknown append and body integrity tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Changes/SignificantChangeRules.cs",
+      "sha256": "b588b1494ae2902d05b76a03e096070401990252d2e8977be1810dda8afd280d",
+      "signals": {
+        "authority_gap": 0.41,
+        "invariant_gap": 0.62,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.43
+      },
+      "classification": "verified_native_authority_and_broker_receipt_cut",
+      "evidence": "Pure transient business/read fold, not runtime Aggregate.Current. Runtime owner keeps bounded scalar header/current body ref/native sequence and selected acceptance only. Complete governed IDs/version/assessment/link/decision history stays verified immutable content. Both unsupported event-size rejection and invented32 lifetime cap were replaced: legal1000+1000 refs and40native versions pass with bounded native frames. All selected review work and corrective action IDs must be linked before period close eligibility; no bypass without description review."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseHistory.cs",
+      "sha256": "109b5db418b3c282481418411264c3f160b65e586d224454047a8acbcefdde10",
+      "signals": {
+        "authority_gap": 0.57,
+        "invariant_gap": 0.56,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.37
+      },
+      "classification": "verified_native_authority_and_broker_receipt_cut",
+      "evidence": "Scoped source discovery and change read-through now use authenticated broker commit receipts, never preparation/occurrence metadata. Receipt adapter verifies exact route/resource offset/event metadata/type/typed payload digest; millisecond precision is explicit and actual isolated broker proof passed. Change history refuses non-prefix causal cuts; current restricted visibility remains live even for historical export. Exact canonical body/mutation bytes and optional receipt time are sealed and re-confirmed. Complete 1000-governed-ID source-to-close-to-ZIP test passes. Other21family shared receipt/legacy incident causal guards remain explicit independent follow-up, not falsely claimed fixed."
+    }
+  ]
+}

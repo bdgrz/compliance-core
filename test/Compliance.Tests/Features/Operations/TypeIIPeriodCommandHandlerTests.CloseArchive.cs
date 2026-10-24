@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Tests.Features.Changes;
 using Bdgrz.Compliance.Tests.Testing;
@@ -48,7 +50,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             var publisher = new TypeIIPeriodCloseSourcePublication(artifacts, fixture.Host.Content);
             var sources = new PublishingCloseSources(publisher, includeChange ? new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events,
                 new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true)),
-                new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content), fixture.Host.Content) : null);
+                new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()) : null);
             var request = await CloseRequestAsync(fixture);
             var validator = Uuid.CreateVersion4();
             var actor = new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss", "bdgrz"), new Claim("sub", validator.ToString()),

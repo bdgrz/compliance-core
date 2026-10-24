@@ -10,4 +10,6 @@ public sealed record TypeIIPeriodCloseNativeSource(NativeFactReference Fact, str
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<TypeIIPeriodCloseContentBlob>? ContentBlobs { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTimeOffset? RecordedAt { get; init; }
 }

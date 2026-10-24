@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Features.Content;
@@ -16,14 +17,15 @@ sealed class SignificantChangeNativeFixture : IAsyncDisposable
     public SignificantChangeNativeFixture()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<IEventStore>(Events);
+        Receipts = new ReceiptTrackingEventStore(Events, Clock);
+        services.AddSingleton<IEventStore>(Receipts);
         services.AddPortia();
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         _scope = _provider.CreateAsyncScope();
         Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-        Changes = new SignificantChangeReader(Reader, Events, Content);
+        Changes = new SignificantChangeReader(Reader, Events, Content, Receipts);
         Operations = new SignificantChangeOperations(new NativeOperationExecutor(Reader, executor, Content), Changes, Content, Clock);
     }
     public Uuid Tenant { get; } = Uuid.CreateVersion4();
@@ -31,6 +33,7 @@ sealed class SignificantChangeNativeFixture : IAsyncDisposable
     public Uuid Change { get; } = Uuid.CreateVersion4();
     public Uuid User { get; } = Uuid.CreateVersion4();
     public InMemoryEventStore Events { get; } = new();
+    public ReceiptTrackingEventStore Receipts { get; }
     public HookedContent Content { get; } = new(ChangeSeeds.Content());
     public MutableClock Clock { get; } = new();
     public IAggregateReader Reader { get; }
@@ -68,9 +71,14 @@ sealed class SignificantChangeNativeFixture : IAsyncDisposable
     internal sealed class HookedContent(IImmutableContentStore inner) : IImmutableContentStore
     {
         public Func<Task>? BeforeRead { get; set; }
+        public Action? BeforeWrite { get; set; }
         public Func<ImmutableContentRef, Exception?>? Failure { get; set; }
-        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
-            inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            if (BeforeWrite is { } before)
+            { BeforeWrite = null; before(); }
+            return inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        }
         public async Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference, CancellationToken ct = default)
         {
             if (BeforeRead is { } before)

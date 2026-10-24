@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -10,6 +11,60 @@ namespace Bdgrz.Compliance.Tests.Features.Changes;
 
 public sealed class SignificantChangeNativeTests
 {
+    [Fact]
+    public async Task ShouldReadHistoryGivenPreparationTimestampRegressesAcrossValidNativeAppends()
+    {
+        // Arrange
+        await using var fixture = new SignificantChangeNativeFixture();
+        var rules = new SignificantChangeRules(fixture.Tenant, fixture.Program, fixture.Change);
+        var work = Uuid.CreateVersion4();
+        var assessor = Uuid.CreateVersion4();
+        var member = Uuid.CreateVersion4();
+        var started = fixture.Clock.Now;
+        Assert.Null(rules.Record(fixture.Body(), member, "Recorder", started));
+        Assert.Null(rules.Assess(1, new SignificantChangeImpactContent("significant", "Reviewed material system boundary and description impact.",
+            true, false, false, false, ["scope", "system_description"], [new("control", Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1)],
+            [work], [], [], [], true), assessor, "Assessor", started.AddMinutes(1)));
+        Assert.Null(rules.LinkReviewWork(2, [work], member, "Work linker", started.AddMinutes(3)));
+        Assert.Null(rules.RecordSystemDescriptionDecision(3, "no_change", Uuid.CreateVersion4(), "Exact independent decision.",
+            member, "Decision maker", started.AddMinutes(2)));
+        fixture.Clock.Now = started.AddMinutes(4);
+        await ChangeSeeds.WriteAsync(fixture.Writer, fixture.Content, rules);
+
+        // Act
+        var current = await fixture.Changes.ReadAsync(fixture.Tenant, fixture.Program, fixture.Change);
+
+        // Assert
+        Assert.Equal(4, current.View!.Revision);
+        Assert.True(current.View.PeriodCloseEligible);
+        var facts = await fixture.FactsAsync();
+        Assert.True(((ISignificantChangeFact)facts[3]).Operation.AcceptedAt < ((ISignificantChangeFact)facts[2]).Operation.AcceptedAt);
+    }
+
+    [Fact]
+    public async Task ShouldExcludePreparedBeforeCutGivenNativeAppendCommitsAfterRecordedThrough()
+    {
+        // Arrange
+        await using var fixture = new SignificantChangeNativeFixture();
+        var original = fixture.Body();
+        await fixture.RecordAsync(original);
+        var cutoff = fixture.Clock.Now.AddMinutes(1);
+        fixture.Content.BeforeWrite = () => fixture.Clock.Now = cutoff.AddMinutes(1);
+        var request = new ReviseSignificantChange(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program, fixture.Change, 1,
+            original with { Title = "Prepared before cut but committed later" }, "Later append");
+        Assert.True((await new ReviseSignificantChangeHandler(fixture.Operations).HandleAsync(fixture.Context(request), CancellationToken.None)).IsSuccess);
+
+        // Act
+        var historical = await fixture.Changes.ReadThroughAsync(fixture.Tenant, fixture.Program, fixture.Change, cutoff);
+        var current = await fixture.Changes.ReadAsync(fixture.Tenant, fixture.Program, fixture.Change);
+
+        // Assert
+        Assert.Equal(original.Title, historical.View!.Current!.Content.Title);
+        Assert.Equal(1, historical.View.Revision);
+        Assert.Equal("Prepared before cut but committed later", current.View!.Current!.Content.Title);
+        Assert.True(((ISignificantChangeFact)(await fixture.FactsAsync())[^1]).Operation.AcceptedAt < cutoff);
+    }
+
     [Fact]
     public async Task ShouldReplayOriginalAcceptanceGivenLaterRevisionAndLostResponseRetry()
     {
@@ -211,6 +266,63 @@ public sealed class SignificantChangeNativeTests
         Assert.True(current.IsSuccess, current.Error?.Message);
         Assert.Equal("Production migration", Assert.Single(current.Value.Items).Name);
     }
+    [Fact]
+    public async Task ShouldRefuseNonPrefixReceiptCutGivenBrokerTimestampsDoNotOrderCausally()
+    {
+        // Arrange
+        await using var fixture = new SignificantChangeNativeFixture();
+        var body = fixture.Body();
+        await fixture.RecordAsync(body);
+        var cutoff = fixture.Clock.Now;
+        Assert.True((await new ReviseSignificantChangeHandler(fixture.Operations).HandleAsync(fixture.Context(new ReviseSignificantChange(Uuid.CreateVersion4(),
+            fixture.Tenant, fixture.Program, fixture.Change, 1, body with { Title = "Later causal event" }, "Correction")), CancellationToken.None)).IsSuccess);
+        var receipts = new ChosenReceipts(source => ((ISignificantChangeFact)source.Event).NativeSequence == 1 ? cutoff.AddMinutes(1) : cutoff.AddMinutes(-1));
+        var reader = new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Content, receipts);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await reader.ReadThroughAsync(fixture.Tenant, fixture.Program, fixture.Change, cutoff));
+
+        // Assert
+        Assert.IsType<ImmutableContentIntegrityException>(failure);
+        Assert.Equal(2, receipts.Reads);
+    }
+    [Fact]
+    public async Task ShouldNotReadReceiptAuthorityGivenOrdinaryCurrentHistoryQuery()
+    {
+        // Arrange
+        await using var fixture = new SignificantChangeNativeFixture();
+        await fixture.RecordAsync();
+        var receipts = new ChosenReceipts(_ => throw new InvalidOperationException("Current reads never require receipt network calls."));
+        var reader = new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Content, receipts);
+
+        // Act
+        var current = await reader.ReadAsync(fixture.Tenant, fixture.Program, fixture.Change);
+
+        // Assert
+        Assert.NotNull(current.View);
+        Assert.Equal(0, receipts.Reads);
+    }
+    [Fact]
+    public async Task ShouldRemainPendingGivenRecordedThroughReaderHasNoReceiptAuthority()
+    {
+        // Arrange
+        await using var fixture = new SignificantChangeNativeFixture();
+        await fixture.RecordAsync();
+        var reader = new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Content);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await reader.ReadThroughAsync(fixture.Tenant, fixture.Program, fixture.Change, fixture.Clock.Now));
+
+        // Assert
+        Assert.IsType<ImmutableContentUnavailableException>(failure);
+    }
+    sealed class ChosenReceipts(Func<DomainEventRecord, DateTimeOffset> at) : INativeEventReceiptReader
+    {
+        public int Reads { get; private set; }
+        public ValueTask<DateTimeOffset> RecordedAtAsync(DomainEventRecord source, CancellationToken ct = default)
+        { Reads++; return ValueTask.FromResult(at(source)); }
+    }
+
     static async Task ProjectAsync(FitzSignificantChangeDirectory directory, SignificantChangeNativeFixture fixture)
     {
         var checkpoint = await directory.LoadCheckpointAsync(fixture.Tenant);

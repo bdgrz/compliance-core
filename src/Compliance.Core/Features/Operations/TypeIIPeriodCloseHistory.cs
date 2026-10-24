@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Authoritative change/incident histories with exact scope, current restricted visibility and receipt cutoff.</summary>
 public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEventReader events,
-    RestrictedComplianceRecordVisibility visibility, SignificantChangeReader changes, IImmutableContentStore content)
+    RestrictedComplianceRecordVisibility visibility, SignificantChangeReader changes, IImmutableContentStore content, INativeEventReceiptReader receipts)
 {
     const int MaximumRecords = 100_000;
 
@@ -87,13 +87,16 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
             var state = State(record.Event);
             if (state is null)
                 throw new ImmutableContentIntegrityException("A close source scan returned an unrecognized native record.");
-            if (state.Value.Program != program || state.Value.At > through)
+            if (state.Value.Program != program)
+                continue;
+            var recordedAt = await receipts.RecordedAtAsync(record, ct).ConfigureAwait(false);
+            if (recordedAt > through)
                 continue;
             if (state.Value.Tenant != tenant || state.Value.Record.ToString() != record.Stream.Resource)
                 throw new ImmutableContentIntegrityException("A close source payload differs from its native tenant or record identity.");
             if (result.Count >= MaximumRecords)
                 throw new ImmutableContentIntegrityException("The complete native close source population exceeds the supported capture bound.");
-            var captured = Capture(record.Stream, record.Event);
+            var captured = Capture(record.Stream, record.Event) with { RecordedAt = recordedAt };
             if (record.Event is ISignificantChangeFact change)
             {
                 var body = await content.ReadVerifiedAsync(tenant.ToString(), change.CurrentContent, ct).ConfigureAwait(false);
@@ -129,6 +132,6 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
         ? JsonSerializer.Deserialize(state, ComplianceCoreJsonContext.Default.ComplianceIncidentView) : null;
     static bool Same(IReadOnlyList<TypeIIPeriodCloseNativeSource> left, IReadOnlyList<TypeIIPeriodCloseNativeSource> right) =>
         left.Count == right.Count && left.Zip(right).All(pair => pair.First.Fact == pair.Second.Fact &&
-            pair.First.EventKind == pair.Second.EventKind && pair.First.PayloadSha256 == pair.Second.PayloadSha256 &&
+            pair.First.EventKind == pair.Second.EventKind && pair.First.RecordedAt == pair.Second.RecordedAt && pair.First.PayloadSha256 == pair.Second.PayloadSha256 &&
             AuthoredIntentDigest.Compute(pair.First.ContentBlobs ?? []) == AuthoredIntentDigest.Compute(pair.Second.ContentBlobs ?? []));
 }
