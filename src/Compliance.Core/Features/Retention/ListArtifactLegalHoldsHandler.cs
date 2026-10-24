@@ -3,7 +3,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Retention;
 
-sealed class ListArtifactLegalHoldsHandler(IAggregateReader reader)
+sealed class ListArtifactLegalHoldsHandler(IAggregateReader reader, IDomainEventReader events)
     : IRequestHandler<ListArtifactLegalHolds, Page<ArtifactLegalHoldView>>
 {
     public async ValueTask<Result<Page<ArtifactLegalHoldView>>> HandleAsync(
@@ -15,46 +15,40 @@ sealed class ListArtifactLegalHoldsHandler(IAggregateReader reader)
         var source = await ArtifactRetentionSourceReader.LoadAsync(reader, request.TenantId,
             request.SourceKind, request.SourceId, ct).ConfigureAwait(false);
         if (!source.IsSuccess)
-            return Result<Page<ArtifactLegalHoldView>>.Failure(source.Error);
-        var retention = await reader.HydrateAsync(new ArtifactRetention(request.TenantId,
-            request.SourceKind, request.SourceId), ct).ConfigureAwait(false);
-        var observedPosition = retention.CommittedStreamPosition;
-        var valid = retention.ValidateSource(source.Value);
-        if (!valid.IsSuccess)
-            return Result<Page<ArtifactLegalHoldView>>.Failure(valid.Error);
-        if (request.MinimumRevision > retention.Revision)
-            return Fail(RequestErrorKind.Conflict, "The requested retention revision is not yet durable.", true);
-        var prefix = string.Create(CultureInfo.InvariantCulture,
-            $"retention_holds_v1:{request.TenantId}:{request.SourceKind}:{request.SourceId}:{retention.Revision}:{source.Value.Position}:");
+            return Result<Page<ArtifactLegalHoldView>>.Failure(source.Error!);
+        var directory = new ArtifactRetentionReader(reader, events);
+        var retention = await directory.ReadAsync(source.Value, ct).ConfigureAwait(false);
+        if (!retention.IsSuccess)
+            return Result<Page<ArtifactLegalHoldView>>.Failure(retention.Error!);
+        if (request.MinimumRevision > retention.Value.Revision)
+            return Fail(RequestErrorKind.Conflict, "The requested retention composition revision is not yet durable.", true);
+        var identity = ArtifactRetentionBasis.IdentityOf(source.Value.Source);
+        var prefix = $"retention_holds_v2:{identity}:{retention.Value.Stamp}:";
         var offset = 0;
         if (request.Cursor is { } cursor)
         {
             var parts = cursor.Split(':');
-            if (parts.Length != 7 || parts[0] != "retention_holds_v1" ||
-                parts[1] != request.TenantId.ToString() || parts[2] != request.SourceKind ||
-                parts[3] != request.SourceId.ToString() ||
-                !long.TryParse(parts[4], NumberStyles.None, CultureInfo.InvariantCulture, out var revision) ||
-                !ulong.TryParse(parts[5], NumberStyles.None, CultureInfo.InvariantCulture, out var position) ||
-                !int.TryParse(parts[6], NumberStyles.None, CultureInfo.InvariantCulture, out offset))
+            if (parts.Length != 4 || parts[0] != "retention_holds_v2" || parts[1] != identity.ToString() ||
+                parts[2].Length != 64 || !int.TryParse(parts[3], NumberStyles.None, CultureInfo.InvariantCulture, out offset))
                 return Fail(RequestErrorKind.Validation, "The retention history cursor is invalid.");
-            if (revision != retention.Revision || position != source.Value.Position)
+            if (parts[2] != retention.Value.Stamp)
                 return Fail(RequestErrorKind.Conflict, "The retention history cursor is stale.", true);
         }
-        var holds = retention.GetLegalHolds().OrderBy(hold => hold.HoldId.ToString(), StringComparer.Ordinal).ToArray();
-        if (offset > holds.Length)
+        var holds = retention.Value.Holds;
+        if (offset > holds.Count)
             return Fail(RequestErrorKind.Validation, "The retention history cursor is invalid.");
         var items = Array.AsReadOnly(holds.Skip(offset).Take(request.Limit ?? 50).ToArray());
-        var next = offset + items.Count < holds.Length ? prefix + (offset + items.Count).ToString(CultureInfo.InvariantCulture) : null;
+        var next = offset + items.Count < holds.Count
+            ? prefix + (offset + items.Count).ToString(CultureInfo.InvariantCulture) : null;
         var fence = await ArtifactRetentionSourceReader.CheckAsync(reader, source.Value, ct).ConfigureAwait(false);
         if (!fence.IsSuccess)
-            return Result<Page<ArtifactLegalHoldView>>.Failure(fence.Error);
-        var current = await reader.HydrateAsync(new ArtifactRetention(request.TenantId,
-            request.SourceKind, request.SourceId), ct).ConfigureAwait(false);
-        if (current.CommittedStreamPosition != observedPosition)
+            return Result<Page<ArtifactLegalHoldView>>.Failure(fence.Error!);
+        var current = await directory.ReadAsync(source.Value, ct).ConfigureAwait(false);
+        if (!current.IsSuccess || current.Value.Stamp != retention.Value.Stamp)
             return Fail(RequestErrorKind.Conflict, "Retention changed during this request.", true);
         return Result<Page<ArtifactLegalHoldView>>.Success(new(items, next));
     }
 
     static Result<Page<ArtifactLegalHoldView>> Fail(RequestErrorKind kind, string message, bool transient = false) =>
-        Result<Page<ArtifactLegalHoldView>>.Failure(new RequestError(kind, message, isTransient: transient));
+        Result<Page<ArtifactLegalHoldView>>.Failure(new RequestError(kind, message, transient));
 }

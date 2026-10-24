@@ -405,16 +405,14 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
     async ValueTask<Result<RetentionAsOf>> ReadRetentionAsOfAsync(Uuid tenantId, Uuid artifactId,
         DateTimeOffset through, CancellationToken ct)
     {
-        var retention = await aggregates.HydrateAsync(new ArtifactRetention(tenantId,
-            "evidence_artifact", artifactId), ct).ConfigureAwait(false);
-        var confirmation = await aggregates.HydrateAsync(new ArtifactRetention(tenantId,
-            "evidence_artifact", artifactId), ct).ConfigureAwait(false);
-        if (retention.CommittedStreamPosition != confirmation.CommittedStreamPosition ||
-            retention.Revision != confirmation.Revision || retention.Source != confirmation.Source ||
-            retention.Basis != confirmation.Basis ||
-            !retention.GetLegalHolds().SequenceEqual(confirmation.GetLegalHolds()))
-            return Result<RetentionAsOf>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "Artifact retention changed during the Type I source read.", isTransient: true));
+        var loaded = await ArtifactRetentionSourceReader.LoadAsync(aggregates, tenantId,
+            "evidence_artifact", artifactId, ct).ConfigureAwait(false);
+        if (!loaded.IsSuccess)
+            return Result<RetentionAsOf>.Failure(loaded.Error!);
+        var read = await new ArtifactRetentionReader(aggregates, events).ReadAsync(loaded.Value, ct).ConfigureAwait(false);
+        if (!read.IsSuccess)
+            return Result<RetentionAsOf>.Failure(read.Error!);
+        var retention = read.Value;
         if (retention.Source is { } source && (source.TenantId != tenantId ||
                 source.SourceKind != "evidence_artifact" || source.SourceId != artifactId ||
                 !IsDigest(source.ContentSha256)))
@@ -423,7 +421,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         var basis = retention.Basis is { RecordedAt: var recordedAt } value && recordedAt <= through
             ? value
             : null;
-        var holds = retention.GetLegalHolds().Where(hold => hold.PlacedAt <= through)
+        var holds = retention.Holds.Where(hold => hold.PlacedAt <= through)
             .Select(hold => hold.ReleasedAt is { } releasedAt && releasedAt > through
                 ? hold with { ReleaseReason = null, ReleasedBy = null, ReleasedAt = null }
                 : hold)

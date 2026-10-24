@@ -258,6 +258,8 @@ public sealed class GenerateAuditPopulationExportHandlerTests
         readonly TimeProvider _clock = new FixedTimeProvider(Now.AddHours(1));
         readonly LocalArtifactContentStore _store;
         readonly Inspector _inspector;
+        readonly Bdgrz.Compliance.Features.Content.IImmutableContentStore _content =
+            new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient());
 
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid ProgramId { get; } = Uuid.CreateVersion4();
@@ -272,7 +274,9 @@ public sealed class GenerateAuditPopulationExportHandlerTests
             _store = new LocalArtifactContentStore(new ArtifactContentStoreOptions(_root, new byte[32], 8 * 1024 * 1024), _clock);
             _inspector = new Inspector(inspectionState, _store);
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var events = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(events);
+            services.AddSingleton<IDomainEventReader>(events);
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
@@ -282,7 +286,8 @@ public sealed class GenerateAuditPopulationExportHandlerTests
         }
 
         public GenerateAuditPopulationExportHandler Handler() => new(Executor, Reader,
-            new EvidenceIntake(_store, _inspector, Reader, Writer, _clock), _clock);
+            new EvidenceIntake(_store, _inspector, Reader, Writer, _clock), _clock,
+            new Bdgrz.Compliance.Features.NativeOperations.NativeOperationExecutor(Reader, Executor, _content), _content, _scope.ServiceProvider.GetRequiredService<IDomainEventReader>());
 
         public GenerateAuditPopulationExport Request(Uuid populationId, string format, string key) =>
             new(TenantId, ProgramId, populationId, 1, format, key);
@@ -329,8 +334,12 @@ public sealed class GenerateAuditPopulationExportHandlerTests
         public Task<EvidenceArtifact> ArtifactAsync(Uuid id) =>
             Reader.HydrateAsync(new EvidenceArtifact(TenantId, id)).AsTask();
 
-        public Task<ArtifactRetention> RetentionAsync(Uuid artifactId) =>
-            Reader.HydrateAsync(new ArtifactRetention(TenantId, "evidence_artifact", artifactId)).AsTask();
+        public async Task<ArtifactRetentionBasis> RetentionAsync(Uuid artifactId)
+        {
+            var artifact = await Reader.HydrateAsync(new EvidenceArtifact(TenantId, artifactId));
+            return await Reader.HydrateAsync(new ArtifactRetentionBasis(new(TenantId, "evidence_artifact",
+                artifactId, artifact.ContentSha256!)));
+        }
 
         public async Task<byte[]> ArtifactBytesAsync(EvidenceArtifact artifact)
         {

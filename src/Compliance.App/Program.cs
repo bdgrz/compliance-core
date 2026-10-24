@@ -2298,16 +2298,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/retention")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Artifact retention");
-    app.MapPortiaPost<RecordArtifactRetentionBasis>(
-            "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/basis")
+    app.MapPortiaPut<RecordArtifactRetentionBasis>(
+            "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/basis/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Artifact retention");
-    app.MapPortiaPost<PlaceArtifactLegalHold>(
-            "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds")
+    app.MapPortiaPut<PlaceArtifactLegalHold>(
+            "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Artifact retention");
-    app.MapPortiaPost<ReleaseArtifactLegalHold>(
-            "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}/releases")
+    app.MapPortiaPut<ReleaseArtifactLegalHold>(
+            "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}/releases/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Artifact retention");
     app.MapPortiaPut<StageApplicationImport, ApplicationImportRegistration>(

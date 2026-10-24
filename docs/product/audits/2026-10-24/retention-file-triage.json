@@ -1,0 +1,534 @@
+{
+  "generatedAt": "2026-10-24T15:59:34.094827+00:00",
+  "reviewed": 22,
+  "blockedRequests": 0,
+  "newActionableFindings": 0,
+  "coverageBoundary": "22 existing changed Core/Common files, per parent instruction. Program wiring/tests are validated by executable contracts; retired owner retains prior review evidence.",
+  "retiredOwner": {
+    "path": "src/Compliance.Core/Features/Retention/ArtifactRetention.cs",
+    "kinds": [
+      "aggregate"
+    ],
+    "sha256": "0be83795914dec39e40ed53c80f61b6aff3727c993e69c763074e68ee3bf7cfb",
+    "review_key": "e394d53b6dde1b2b93efc43a43c63885e97e3cd21052d512363ff3ce24a160fa",
+    "reviewed_at": "2026-10-24T15:05:33.038Z",
+    "status": "reviewed",
+    "model": "jev-1.14.0",
+    "answers": {
+      "authority_gap": {
+        "type": "noul",
+        "noul": 0.65
+      },
+      "invariant_gap": {
+        "type": "noul",
+        "noul": 0.61
+      },
+      "recovery_gap": {
+        "type": "noul",
+        "noul": 0.71
+      },
+      "incomplete_path": {
+        "type": "noul",
+        "noul": 0.49
+      }
+    },
+    "currentStatus": "retired",
+    "replacementOwners": [
+      "ArtifactRetentionBasis",
+      "ArtifactLegalHold"
+    ],
+    "postChangeSha": null
+  },
+  "testEvidence": "Behavioral RED2failed/0passed on old combined owner; strict Release build0warnings/0errors; focused140passed; full5453passed/0failed; frame cases verify all3 native facts<=48KiB. Web smoke17passed/11failed on digest URL test configuration and unrelated stale route/header expectations, recorded separately.",
+  "contractAlignment": {
+    "basisIdentity": "typed AggregateIdentity(ArtifactRetentionBasis,tenant,source_kind,source_id,content_sha256)",
+    "recordBasis": "CommandId,TenantId,SourceKind,SourceId,ExpectedContentSha256,ExpectedRevision,Reason,PeriodStart?,PeriodEnd?",
+    "placeHold": "HoldId creation; TenantId,SourceKind,SourceId,ExpectedContentSha256,HoldId,ExpectedRevision=0,Reason",
+    "releaseHold": "CommandId,TenantId,SourceKind,SourceId,ExpectedContentSha256,HoldId,ExpectedRevision=1,Reason",
+    "actor": "current personal Bdgrz HTTP/org-admin policy; full original actor identity in native binding; original display retained on fact",
+    "source": "exact source kind/id/tenant/hash and durable position; native evidence period or explicit import period; release cannot regress position",
+    "frame": "reason<=2000 characters; actor display<=2000 characters; new focused serialization cases assert all three current native facts<=48KiB with maximally escaped bounded values (awaiting parent run)",
+    "disposition": "always false; no approval/execution roots mapped"
+  },
+  "rows": [
+    {
+      "path": "src/Compliance.Common/Features/Retention/ArtifactLegalHoldPlaced.cs",
+      "sha256": "c8b631ac92d34a9db9e2f9c1f806dea70a8d1dead357daba35bd6e309f8ad4f6",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.15,
+        "invariant_gap": 0.09,
+        "recovery_gap": 0.11,
+        "incomplete_path": 0.1
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 typed native contracts",
+      "rationale": "These contracts carry typed operation identity/native provenance and the existing exact retention/source/actor fields. Current validation and authorization belong in registered handler/owner code, which is included elsewhere in this review. Basis/release CommandId and HoldId creation identity match the accepted selected command catalogs; native facts expose operation, first-response and operation-result references.",
+      "evidence": [
+        "src/Compliance.Common/Features/Retention/ArtifactLegalHoldPlaced.cs:1",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1030",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1285",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1592"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Retention/ArtifactLegalHoldReleased.cs",
+      "sha256": "946db18acfbc2d92382e029db3cdc1b14b622705b1c0e876ad7cad2082d87ac6",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.16,
+        "invariant_gap": 0.08,
+        "recovery_gap": 0.11,
+        "incomplete_path": 0.11
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 typed native contracts",
+      "rationale": "These contracts carry typed operation identity/native provenance and the existing exact retention/source/actor fields. Current validation and authorization belong in registered handler/owner code, which is included elsewhere in this review. Basis/release CommandId and HoldId creation identity match the accepted selected command catalogs; native facts expose operation, first-response and operation-result references.",
+      "evidence": [
+        "src/Compliance.Common/Features/Retention/ArtifactLegalHoldReleased.cs:1",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1030",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1285",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1592"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Retention/ArtifactRetentionBasisRecorded.cs",
+      "sha256": "620d8f6db0f54cf3be50949d8fe10ef9118293a8e1ae79a3b9ca4b5410471d4a",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.17,
+        "invariant_gap": 0.1,
+        "recovery_gap": 0.11,
+        "incomplete_path": 0.11
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 typed native contracts",
+      "rationale": "These contracts carry typed operation identity/native provenance and the existing exact retention/source/actor fields. Current validation and authorization belong in registered handler/owner code, which is included elsewhere in this review. Basis/release CommandId and HoldId creation identity match the accepted selected command catalogs; native facts expose operation, first-response and operation-result references.",
+      "evidence": [
+        "src/Compliance.Common/Features/Retention/ArtifactRetentionBasisRecorded.cs:1",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1030",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1285",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1592"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Retention/ArtifactRetentionBound.cs",
+      "sha256": "5c96a1f49e86c317e3436283e508e7cc027a8956cb9cdd17e31c6f0fc660897c",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.19,
+        "invariant_gap": 0.1,
+        "recovery_gap": 0.13,
+        "incomplete_path": 0.12
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 typed native contracts",
+      "rationale": "These contracts carry typed operation identity/native provenance and the existing exact retention/source/actor fields. Current validation and authorization belong in registered handler/owner code, which is included elsewhere in this review. Basis/release CommandId and HoldId creation identity match the accepted selected command catalogs; native facts expose operation, first-response and operation-result references.",
+      "evidence": [
+        "src/Compliance.Common/Features/Retention/ArtifactRetentionBound.cs:1",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1030",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1285",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1592"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Retention/RecordArtifactRetentionBasis.cs",
+      "sha256": "99b8e5f41fd5e186457c0c9c38c9bb465291cebe1e126efda58dba8b00134ed7",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.16,
+        "invariant_gap": 0.09,
+        "recovery_gap": 0.18,
+        "incomplete_path": 0.1
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 typed native contracts",
+      "rationale": "These contracts carry typed operation identity/native provenance and the existing exact retention/source/actor fields. Current validation and authorization belong in registered handler/owner code, which is included elsewhere in this review. Basis/release CommandId and HoldId creation identity match the accepted selected command catalogs; native facts expose operation, first-response and operation-result references.",
+      "evidence": [
+        "src/Compliance.Common/Features/Retention/RecordArtifactRetentionBasis.cs:1",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1030",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1285",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1592"
+      ]
+    },
+    {
+      "path": "src/Compliance.Common/Features/Retention/ReleaseArtifactLegalHold.cs",
+      "sha256": "015bc83e2bc8d03fe21aad5c56127b4a2277ad804d832252f79fa97336566a99",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.16,
+        "invariant_gap": 0.09,
+        "recovery_gap": 0.18,
+        "incomplete_path": 0.1
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 typed native contracts",
+      "rationale": "These contracts carry typed operation identity/native provenance and the existing exact retention/source/actor fields. Current validation and authorization belong in registered handler/owner code, which is included elsewhere in this review. Basis/release CommandId and HoldId creation identity match the accepted selected command catalogs; native facts expose operation, first-response and operation-result references.",
+      "evidence": [
+        "src/Compliance.Common/Features/Retention/ReleaseArtifactLegalHold.cs:1",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1030",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1285",
+        "docs/product/audits/2026-10-23/target-command-contracts.md:1592"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/GenerateAuditPopulationExportHandler.cs",
+      "sha256": "e8796007ed690813e20d6850caf460a0203eedbf11bd2ef7eaa01878ffe12a91",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.51,
+        "invariant_gap": 0.59,
+        "recovery_gap": 0.64,
+        "incomplete_path": 0.25
+      },
+      "classification": "bounded_consumer_migration_existing_followup",
+      "knownFamily": "S35 export process",
+      "rationale": "Existing synchronous generated-export policy is preserved while its seven-year basis now uses the same native exact-content basis owner. Original collector and stable generated-export child identity are used. A complete independent export process remains existing S35 work; this bounded patch does not claim it delivered. All ten existing export acceptance methods remain. The score alone supplies no new defect in this owner migration.",
+      "evidence": [
+        "src/Compliance.Core/Features/AuditPopulations/GenerateAuditPopulationExportHandler.cs:136",
+        "test/Compliance.Tests/Features/AuditPopulations/GenerateAuditPopulationExportHandlerTests.cs:22",
+        "test/Compliance.Tests/Features/AuditPopulations/GenerateAuditPopulationExportHandlerTests.cs:65"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContributor.cs",
+      "sha256": "b480fafffc16337f2a87ff94e0c0740fff85dd71c7af3e788f9638736138b867",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.51,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.28
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 read consumer",
+      "rationale": "The read-only Type I contributor now delegates retention discovery, independent owner hydration and repeated-source/tail confirmation to ArtifactRetentionReader. It returns failures for unknown legacy history and filters both basis and hold lifecycle as of the Type I date; a release after that date is removed from the point-in-time view. The contributor owns no mutation or retry receipt. Existing tests preserve exact in-scope source selection, later source exclusions and point-in-time governance digests. The signal does not demonstrate a concrete source/replay defect.",
+      "evidence": [
+        "src/Compliance.Core/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContributor.cs:405",
+        "src/Compliance.Core/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContributor.cs:421",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionReader.cs:11",
+        "test/Compliance.Tests/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContributorTests.cs:32",
+        "test/Compliance.Tests/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContributorTests.cs:61"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactDisposition.cs",
+      "sha256": "84fcce3b1b1ba21120e45ee800759fc5fbb8e6b9b597d86fbfe0a893ffbb8ff2",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.62,
+        "recovery_gap": 0.72,
+        "incomplete_path": 0.32
+      },
+      "classification": "known_deferred_gap",
+      "knownFamily": "S35",
+      "rationale": "The owner still retains bounded technical execution attempts and the legacy native-unaware callback retry comparison. This is existing S35 process/receipt migration work; this patch only changes the policy constant reference. Approval/execution handlers and routes remain unregistered, current retention assessment always denies disposition, and the named callback verifies exact source event/attempt before mutation. No new reachable deletion path was introduced.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactDisposition.cs:8",
+        "src/Compliance.Core/Features/Retention/ArtifactDisposition.cs:110",
+        "src/Compliance.Core/Features/Retention/RecordArtifactDispositionResultHandler.cs:12",
+        "src/Compliance.Core/Features/Retention/RecordArtifactDispositionResultHandler.cs:51",
+        "test/Compliance.Tests/Features/Retention/RecordArtifactDispositionResultHandlerTests.cs:15",
+        "test/Compliance.Tests/Features/Retention/RecordArtifactDispositionResultHandlerTests.cs:41"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs",
+      "sha256": "cde075b683e38101a5750a7bb7890865bd81770fef0312700ee95753ac9f802b",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.49,
+        "invariant_gap": 0.36,
+        "recovery_gap": 0.45,
+        "incomplete_path": 0.17
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 independent legal hold",
+      "rationale": "Each HoldId has its own owner-local placement/release counter and immutable exact content binding. Release requires the same source, no regressing physical position, an attributed time after placement and the original revision one. Exact placement replay after release returns original success without restoring the hold, and changed authored source/actor/revision conflicts through native binding.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs:10",
+        "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs:42",
+        "src/Compliance.Core/Features/Retention/ArtifactLegalHold.cs:73",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs:17",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs:67"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactRetentionBasis.cs",
+      "sha256": "cc16267db6e6cd3e7ee9d319b1ff6f8a09ed34f130ca9b3b9de808e330d552b8",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.51,
+        "recovery_gap": 0.61,
+        "incomplete_path": 0.28
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 exact-content basis",
+      "rationale": "Identity includes the exact immutable tenant/source tuple plus lowercase SHA-256, not mutable artifact ID alone. New native admission requires original revision zero, one supported exact evidence/native or explicit import period, seven years through the seventh anniversary, bounded reason and actor. The complete accepted original request/actor/revision resolves before fresh source checks through NativeOperationExecutor; there is only one accepting native basis fact.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionBasis.cs:22",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionBasis.cs:36",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionBasis.cs:61",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionMutation.cs:78",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs:43"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactRetentionLegacyGuard.cs",
+      "sha256": "a5ed40d5f5f088cb639317373c3248c41ee5a377eae57e43ce36ea6ce2f2c3aa",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.3,
+        "invariant_gap": 0.33,
+        "recovery_gap": 0.28,
+        "incomplete_path": 0.19
+      },
+      "classification": "explicit_local_blocker_fail_closed",
+      "knownFamily": "persisted-data migration",
+      "rationale": "The accepted catalogs do not specify a trusted conversion of historical combined streams to independent owners. This guard intentionally fails closed for affected reads and new decisions; it is not an unfinished enabled effect. A verified history/provenance migration and quiescent old writers remain required before a persisted-data rollout; fresh independent owner work can proceed.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionLegacyGuard.cs:8",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs:234"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactRetentionMutation.cs",
+      "sha256": "d100ffefe6f6a4aa74a79878d46b605c1bb8ae8548258088744dbe3b2f5e45b5",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.51,
+        "invariant_gap": 0.53,
+        "recovery_gap": 0.47,
+        "incomplete_path": 0.26
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 native decision admission",
+      "rationale": "The registered current tenant/org-admin authorizer remains mandatory. The helper rejects non-personal/non-HTTP invocations, malformed typed identity/digest and negative revision. NativeOperationExecutor resolves original binding before the new-operation callback loads/fences source, freezes Unit response/result and applies the owner-local decision. Exact retries remain possible after source state changes; a missing legacy migration blocks new decisions.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionMutation.cs:13",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionMutation.cs:53",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionMutation.cs:67",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionAdminAuthorizer.cs:8",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionNativeOperationTests.cs:162",
+        "test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs:24"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactRetentionRead.cs",
+      "sha256": "a575a2aa5c04e77b9f92aa7a6ca18757517d023613c1f06eefc403e4a7c87504",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.34,
+        "invariant_gap": 0.45,
+        "recovery_gap": 0.49,
+        "incomplete_path": 0.19
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 current retention query",
+      "rationale": "Source and independent-owner snapshots are rechecked around the query, unknown migration fails closed and minimum revision is a query-composition fence rather than an admission revision. Existing current administrator authorization and MCP-safe read contract remain.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionRead.cs:7",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs:142",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs:397"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactRetentionReader.cs",
+      "sha256": "7f50346cbcdecb747e82467cc71176f2aa205fc09d3d8e0dc7802a30e5bf518c",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.48,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.63,
+        "incomplete_path": 0.29
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 read composition",
+      "rationale": "Independent holds are discovered from committed placement facts in the tenant and exact content scope, physical owner addresses/IDs are checked, and each owner is hydrated. The reader snapshots scalar values then repeats discovery and compares stamps including source position and owner tails/revisions. This is a query composition, never a disposal seal or absence proof for destructive effects; the assessment always denies disposition.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionReader.cs:11",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionReader.cs:26",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionReader.cs:40",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs:222",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs:301"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactRetentionRules.cs",
+      "sha256": "0c938cf5370ebd797ff667b1f97f1821835818708b6bba4d06f870bc4fdfdabc",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.37,
+        "invariant_gap": 0.18,
+        "recovery_gap": 0.36,
+        "incomplete_path": 0.19
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 owner local validation",
+      "rationale": "Shared policy/source/actor/reason/period checks are bounded; native original operation binding compares full actor identity/owner/revision/intent through NativeAcceptance. This helper is not the foreign authorization boundary and should not repeat current organization authorization.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionRules.cs:10",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionRules.cs:26",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionTests.cs:171"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactRetentionSnapshot.cs",
+      "sha256": "12dfc2b3cacb16dffbb631fb87eb48b8d39ee448ca716dfcc3b2844ed63dd770",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.13,
+        "invariant_gap": 0.14,
+        "recovery_gap": 0.15,
+        "incomplete_path": 0.48
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 fail-closed assessment",
+      "rationale": "This read composition always returns DispositionAllowed=false and retains explicit engagement/reliance/approval/storage enforcement blockers, even after seven years and every legal hold release. Missing disposal implementation is deliberately disabled, not a placeholder successful deletion.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionSnapshot.cs:7",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionTests.cs:119"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactRetentionSourceReader.cs",
+      "sha256": "f684d7cfbece4e8517dc5b681d91e5a7e93fcfeb9a323a037c417e1b344a8729",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.41,
+        "invariant_gap": 0.41,
+        "recovery_gap": 0.3,
+        "incomplete_path": 0.19
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 exact immutable source proof",
+      "rationale": "Source selection requires supported tenant/source IDs and exact native registration ownership. Evidence uses its immutable captured period/hash and durable source tail; import retention pins the staging event position/hash so unrelated later lifecycle facts do not change the retained content. The captured complete source snapshot is reloaded for the admission fence.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionSourceReader.cs:9",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionSourceReader.cs:20",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionSourceReader.cs:40",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs:47"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ListArtifactLegalHoldsHandler.cs",
+      "sha256": "3beb9affc7274d066c9ba263f844bcb5c24a00db393bf7f1a71f151d373347e8",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.44,
+        "invariant_gap": 0.53,
+        "recovery_gap": 0.63,
+        "incomplete_path": 0.28
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 legal hold history query",
+      "rationale": "History delegates authoritative independent-owner reads; cursor binds exact content identity and source/owner stamp, rejects foreign/stale cursors and checks both captured source and owner set before returning. Read-only queries do not require native mutation receipts. Current administrator authorization remains the existing request authorizer; HTTP-only mutation is separate.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ListArtifactLegalHoldsHandler.cs:10",
+        "src/Compliance.Core/Features/Retention/ListArtifactLegalHoldsHandler.cs:32",
+        "src/Compliance.Core/Features/Retention/ListArtifactLegalHoldsHandler.cs:53",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs:103"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/PlaceArtifactLegalHoldHandler.cs",
+      "sha256": "a4f1dc4f7f8568e1905d633fe2d89ef9e87d475ed1d876353cb36f12bf2a2664",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.12,
+        "invariant_gap": 0.17,
+        "recovery_gap": 0.19,
+        "incomplete_path": 0.1
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 typed handler adapter",
+      "rationale": "The adapter delegates to ArtifactRetentionMutation, which owns current personal HTTP validation, exact source guards and native operation receipt ordering. No throwing stub, independent external effect, or omitted mutation path exists in this thin handler.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/PlaceArtifactLegalHoldHandler.cs:5",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionMutation.cs:13"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/RecordArtifactRetentionBasisHandler.cs",
+      "sha256": "9e364c6e784b5ee06f75db555683e4bd6de916dba9eaef7a944702a7e3e43ab3",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.09,
+        "invariant_gap": 0.1,
+        "recovery_gap": 0.13,
+        "incomplete_path": 0.13
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 typed handler adapter",
+      "rationale": "The adapter delegates to ArtifactRetentionMutation, which owns current personal HTTP validation, exact source guards and native operation receipt ordering. No throwing stub, independent external effect, or omitted mutation path exists in this thin handler.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/RecordArtifactRetentionBasisHandler.cs:5",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionMutation.cs:13"
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ReleaseArtifactLegalHoldHandler.cs",
+      "sha256": "5b24ade9f1ed9fd0c946e549d9172a34807a3b6bb339f8a0a9d0062381afda46",
+      "shaCurrent": true,
+      "dependencyHashDrift": [],
+      "model": "jev-1.14.0",
+      "signals": {
+        "authority_gap": 0.13,
+        "invariant_gap": 0.18,
+        "recovery_gap": 0.15,
+        "incomplete_path": 0.12
+      },
+      "classification": "no_demonstrated_defect",
+      "knownFamily": "S31 typed handler adapter",
+      "rationale": "The adapter delegates to ArtifactRetentionMutation, which owns current personal HTTP validation, exact source guards and native operation receipt ordering. No throwing stub, independent external effect, or omitted mutation path exists in this thin handler.",
+      "evidence": [
+        "src/Compliance.Core/Features/Retention/ReleaseArtifactLegalHoldHandler.cs:5",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionMutation.cs:13"
+      ]
+    }
+  ]
+}

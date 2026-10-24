@@ -1,4 +1,7 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Evidence;
@@ -20,21 +23,21 @@ public sealed class ArtifactRetentionHandlerTests
         await using var fixture = new Fixture();
         var id = await fixture.EvidenceAsync();
         var context = new Cntryl.Portia.RequestContext<RecordArtifactRetentionBasis>(
-            new(fixture.Tenant, "evidence_artifact", id, Fixture.Sha, 0, "Native source verified"), fixture.Http);
+            new(Uuid.CreateVersion4(), fixture.Tenant, "evidence_artifact", id, Fixture.Sha, 0, "Native source verified"), fixture.Http);
         var handler = new RecordArtifactRetentionBasisHandler(fixture.Mutation);
 
         // Act
         var recorded = await handler.HandleAsync(context, CancellationToken.None);
         var replay = await handler.HandleAsync(context, CancellationToken.None);
-        var read = await fixture.Read.GetAsync(fixture.Tenant, "evidence_artifact", id, 2, CancellationToken.None);
-        var aggregate = await fixture.Reader.HydrateAsync(new ArtifactRetention(fixture.Tenant, "evidence_artifact", id));
+        var read = await fixture.Read.GetAsync(fixture.Tenant, "evidence_artifact", id, 1, CancellationToken.None);
+        var aggregate = await fixture.Reader.HydrateAsync(new ArtifactRetentionBasis(new(fixture.Tenant, "evidence_artifact", id, Fixture.Sha)));
 
         // Assert
         Assert.True(recorded.IsSuccess);
         Assert.True(replay.IsSuccess);
         Assert.True(read.IsSuccess);
         Assert.Equal(new DateOnly(2019, 12, 31), read.Value.PeriodEnd);
-        Assert.Equal(2UL, aggregate.CommittedStreamPosition);
+        Assert.Equal(1UL, aggregate.CommittedStreamPosition);
         Assert.Contains("storage_hold_enforcement_pending", read.Value.Blockers);
         Assert.False(read.Value.DispositionAllowed);
     }
@@ -49,7 +52,7 @@ public sealed class ArtifactRetentionHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         var id = await fixture.EvidenceAsync();
-        var request = new RecordArtifactRetentionBasis(change == "tenant" ? Uuid.CreateVersion4() : fixture.Tenant,
+        var request = new RecordArtifactRetentionBasis(Uuid.CreateVersion4(), change == "tenant" ? Uuid.CreateVersion4() : fixture.Tenant,
             "evidence_artifact", id, change == "digest" ? new string('b', 64) : Fixture.Sha, 0,
             "Verified", change == "period" ? new DateOnly(2020, 1, 1) : null,
             change == "period" ? new DateOnly(2020, 12, 31) : null);
@@ -58,7 +61,7 @@ public sealed class ArtifactRetentionHandlerTests
         var result = await new RecordArtifactRetentionBasisHandler(fixture.Mutation).HandleAsync(
             new Cntryl.Portia.RequestContext<RecordArtifactRetentionBasis>(request, change == "system" ? RequestActor.System : fixture.Actor),
             CancellationToken.None);
-        var aggregate = await fixture.Reader.HydrateAsync(new ArtifactRetention(fixture.Tenant, "evidence_artifact", id));
+        var aggregate = await fixture.Reader.HydrateAsync(new ArtifactRetentionBasis(new(fixture.Tenant, "evidence_artifact", id, Fixture.Sha)));
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -77,12 +80,12 @@ public sealed class ArtifactRetentionHandlerTests
         var missing = await new GetApplicationImportRetentionHandler(fixture.Read).HandleAsync(
             new Cntryl.Portia.RequestContext<GetApplicationImportRetention>(new(fixture.Tenant, batch), fixture.Http), CancellationToken.None);
         var periodless = await new RecordArtifactRetentionBasisHandler(fixture.Mutation).HandleAsync(
-            new Cntryl.Portia.RequestContext<RecordArtifactRetentionBasis>(new(fixture.Tenant, "application_import", batch,
+            new Cntryl.Portia.RequestContext<RecordArtifactRetentionBasis>(new(Uuid.CreateVersion4(), fixture.Tenant, "application_import", batch,
                 missing.Value.Source.ContentSha256, 0, "Staged now"), fixture.Http), CancellationToken.None);
         var explicitBasis = await new RecordArtifactRetentionBasisHandler(fixture.Mutation).HandleAsync(
-            new Cntryl.Portia.RequestContext<RecordArtifactRetentionBasis>(new(fixture.Tenant, "application_import", batch,
+            new Cntryl.Portia.RequestContext<RecordArtifactRetentionBasis>(new(Uuid.CreateVersion4(), fixture.Tenant, "application_import", batch,
                 missing.Value.Source.ContentSha256, 0, "Period verified", new(2019, 1, 1), new(2019, 12, 31)), fixture.Http), CancellationToken.None);
-        var read = await fixture.Read.GetAsync(fixture.Tenant, "application_import", batch, 2, CancellationToken.None);
+        var read = await fixture.Read.GetAsync(fixture.Tenant, "application_import", batch, 1, CancellationToken.None);
 
         // Assert
         Assert.True(missing.IsSuccess);
@@ -104,16 +107,16 @@ public sealed class ArtifactRetentionHandlerTests
         var place = new PlaceArtifactLegalHoldHandler(fixture.Mutation);
         for (var index = 0; index < holds.Length; index++)
             Assert.True((await place.HandleAsync(new Cntryl.Portia.RequestContext<PlaceArtifactLegalHold>(new(fixture.Tenant,
-                "evidence_artifact", id, Fixture.Sha, holds[index], index == 0 ? 0 : index + 1, "Preserve"), fixture.Http),
+                "evidence_artifact", id, Fixture.Sha, holds[index], 0, "Preserve"), fixture.Http),
                 CancellationToken.None)).IsSuccess);
-        var list = new ListArtifactLegalHoldsHandler(fixture.Reader);
+        var list = new ListArtifactLegalHoldsHandler(fixture.Reader, fixture.Events);
         var request = new ListArtifactLegalHolds(fixture.Tenant, "evidence_artifact", id, 1);
         var page = await list.HandleAsync(new Cntryl.Portia.RequestContext<ListArtifactLegalHolds>(request, fixture.Http), CancellationToken.None);
 
         // Act
         var release = await new ReleaseArtifactLegalHoldHandler(fixture.Mutation).HandleAsync(
-            new Cntryl.Portia.RequestContext<ReleaseArtifactLegalHold>(new(fixture.Tenant, "evidence_artifact", id, Fixture.Sha,
-                holds[0], 4, "Matter closed"), fixture.Http), CancellationToken.None);
+            new Cntryl.Portia.RequestContext<ReleaseArtifactLegalHold>(new(Uuid.CreateVersion4(), fixture.Tenant, "evidence_artifact", id, Fixture.Sha,
+                holds[0], 1, "Matter closed"), fixture.Http), CancellationToken.None);
         var stale = await list.HandleAsync(new Cntryl.Portia.RequestContext<ListArtifactLegalHolds>(request with { Cursor = page.Value.NextCursor }, fixture.Http), CancellationToken.None);
         var foreign = await list.HandleAsync(new Cntryl.Portia.RequestContext<ListArtifactLegalHolds>(request with { SourceId = Uuid.CreateVersion4(), Cursor = page.Value.NextCursor }, fixture.Http), CancellationToken.None);
         var all = await list.HandleAsync(new Cntryl.Portia.RequestContext<ListArtifactLegalHolds>(request with { Limit = 200 }, fixture.Http), CancellationToken.None);
@@ -143,9 +146,9 @@ public sealed class ArtifactRetentionHandlerTests
         var source = Uuid.CreateVersion4();
         IArtifactRetentionAdminRequest request = operation switch
         {
-            "basis" => new RecordArtifactRetentionBasis(tenant, "application_import", source, Fixture.Sha, 0, "Verified"),
+            "basis" => new RecordArtifactRetentionBasis(Uuid.CreateVersion4(), tenant, "application_import", source, Fixture.Sha, 0, "Verified"),
             "place" => new PlaceArtifactLegalHold(tenant, "application_import", source, Fixture.Sha, source, 0, "Preserve"),
-            "release" => new ReleaseArtifactLegalHold(tenant, "application_import", source, Fixture.Sha, source, 0, "Release"),
+            "release" => new ReleaseArtifactLegalHold(Uuid.CreateVersion4(), tenant, "application_import", source, Fixture.Sha, source, 0, "Release"),
             "get" => new GetArtifactRetention(tenant, "application_import", source),
             "list" => new ListArtifactLegalHolds(tenant, "application_import", source),
             _ => new GetApplicationImportRetention(tenant, source),
@@ -240,7 +243,7 @@ public sealed class ArtifactRetentionHandlerTests
         }, change == "source");
 
         // Act
-        var result = await new ArtifactRetentionRead(reader, TimeProvider.System).GetAsync(fixture.Tenant,
+        var result = await new ArtifactRetentionRead(reader, fixture.Events, TimeProvider.System).GetAsync(fixture.Tenant,
             "evidence_artifact", id, null, CancellationToken.None);
 
         // Assert
@@ -254,7 +257,7 @@ public sealed class ArtifactRetentionHandlerTests
         public async ValueTask<T> HydrateAsync<T>(T aggregate, CancellationToken ct = default) where T : Aggregate
         {
             var loaded = await inner.HydrateAsync(aggregate, ct);
-            if (!_changed && (source ? aggregate is EvidenceArtifact : aggregate is ArtifactRetention))
+            if (!_changed && (source ? aggregate is EvidenceArtifact : aggregate is ArtifactRetentionBasis))
             {
                 _changed = true;
                 await race();
@@ -269,7 +272,7 @@ public sealed class ArtifactRetentionHandlerTests
     }
 
     [Fact]
-    public async Task ShouldCommitOneDecisionGivenCompetingExpectedRetentionRevision()
+    public async Task ShouldCommitIndependentHoldsGivenSameOwnerLocalRevision()
     {
         // Arrange
         await using var fixture = new Fixture();
@@ -283,14 +286,14 @@ public sealed class ArtifactRetentionHandlerTests
         // Act
         var results = await Task.WhenAll(handler.HandleAsync(first, CancellationToken.None).AsTask(),
             handler.HandleAsync(second, CancellationToken.None).AsTask());
-        var retention = await fixture.Reader.HydrateAsync(new ArtifactRetention(fixture.Tenant, "evidence_artifact", id));
+        var source = await ArtifactRetentionSourceReader.LoadAsync(fixture.Reader, fixture.Tenant,
+            "evidence_artifact", id, CancellationToken.None);
+        var retention = await new ArtifactRetentionReader(fixture.Reader, fixture.Events).ReadAsync(source.Value);
 
         // Assert
-        Assert.Single(results, result => result.IsSuccess);
-        Assert.Single(results, result => !result.IsSuccess);
-        Assert.Single(retention.GetLegalHolds());
-        Assert.Equal(2, retention.Revision);
-        Assert.Equal(2UL, retention.CommittedStreamPosition);
+        Assert.All(results, result => Assert.True(result.IsSuccess, result.Error?.Message));
+        Assert.Equal(2, retention.Value.Holds.Count);
+        Assert.Equal(2, retention.Value.Revision);
     }
 
     [Theory]
@@ -305,9 +308,9 @@ public sealed class ArtifactRetentionHandlerTests
 
         // Act
         var failed = history
-            ? !(await new ListArtifactLegalHoldsHandler(reader).HandleAsync(new Cntryl.Portia.RequestContext<ListArtifactLegalHolds>(
+            ? !(await new ListArtifactLegalHoldsHandler(reader, fixture.Events).HandleAsync(new Cntryl.Portia.RequestContext<ListArtifactLegalHolds>(
                 new(fixture.Tenant, "evidence_artifact", id), fixture.Http), CancellationToken.None)).IsSuccess
-            : !(await new ArtifactRetentionRead(reader, TimeProvider.System).GetAsync(fixture.Tenant,
+            : !(await new ArtifactRetentionRead(reader, fixture.Events, TimeProvider.System).GetAsync(fixture.Tenant,
                 "evidence_artifact", id, null, CancellationToken.None)).IsSuccess;
 
         // Assert
@@ -316,30 +319,28 @@ public sealed class ArtifactRetentionHandlerTests
 
     sealed class ReusingPolicyReader(IAggregateReader inner) : IAggregateReader
     {
-        ArtifactRetention? _shared;
+        ArtifactRetentionBasis? _shared;
         public async ValueTask<T> HydrateAsync<T>(T aggregate, CancellationToken ct = default) where T : Aggregate
         {
-            if (aggregate is not ArtifactRetention retention)
-            {
-                if (aggregate is EvidenceArtifact)
-                    _sourceId = aggregate.Id;
+            if (aggregate is not ArtifactRetentionBasis basis)
                 return await inner.HydrateAsync(aggregate, ct);
-            }
             if (_shared is null)
-                _shared = retention;
-            else
+                _shared = basis;
+            else if (_shared.Basis is null)
             {
-                var tenant = Uuid.Parse(retention.Stream.Realm, null);
-                var source = new ArtifactRetentionSource(tenant, "evidence_artifact", _sourceId, Fixture.Sha);
                 var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Org Admin");
+                var id = Uuid.CreateVersion4();
                 var now = DateTimeOffset.UtcNow;
-                new AggregateScenario<ArtifactRetention>(_shared).Given(
-                    DomainEventSeed.Attach(new ArtifactRetentionBound(source, 1, 1, actor, now), _shared.Id, 1),
-                    DomainEventSeed.Attach(new ArtifactLegalHoldPlaced(source, 2, 1, Uuid.CreateVersion4(), "Concurrent hold", actor, now), _shared.Id, 2));
+                var operation = new OperationProvenance(id, id, null, "RecordArtifactRetentionBasis", actor,
+                    _shared.Stream, "initial", 0, new string('a', 64), now, _shared.Stream, _shared.Stream);
+                var response = new ImmutableContentRef(id, new string('a', 64), 1, "application/json", "test.v1");
+                new AggregateScenario<ArtifactRetentionBasis>(_shared).Given(DomainEventSeed.Attach(
+                    new ArtifactRetentionBasisRecorded(_shared.Source, 1, 1, ArtifactRetentionRules.Policy,
+                        new(2019, 1, 1), new(2019, 12, 31), new(2026, 12, 31), "source_period", "Verified", actor,
+                        now, operation, response, response), _shared.Id, 1));
             }
             return (T)(Aggregate)_shared;
         }
-        Uuid _sourceId;
     }
 
     [Theory]
@@ -374,20 +375,21 @@ public sealed class ArtifactRetentionHandlerTests
         var result = operation switch
         {
             "basis" => await new RecordArtifactRetentionBasisHandler(fixture.Mutation).HandleAsync(
-                new Cntryl.Portia.RequestContext<RecordArtifactRetentionBasis>(new(fixture.Tenant, "evidence_artifact", id,
+                new Cntryl.Portia.RequestContext<RecordArtifactRetentionBasis>(new(Uuid.CreateVersion4(), fixture.Tenant, "evidence_artifact", id,
                     Fixture.Sha, 0, "Verified"), dispatch), CancellationToken.None),
             "place" => await new PlaceArtifactLegalHoldHandler(fixture.Mutation).HandleAsync(
                 new Cntryl.Portia.RequestContext<PlaceArtifactLegalHold>(new(fixture.Tenant, "evidence_artifact", id,
                     Fixture.Sha, hold, 0, "Preserve"), dispatch), CancellationToken.None),
             _ => await new ReleaseArtifactLegalHoldHandler(fixture.Mutation).HandleAsync(
-                new Cntryl.Portia.RequestContext<ReleaseArtifactLegalHold>(new(fixture.Tenant, "evidence_artifact", id,
-                    Fixture.Sha, hold, 2, "Release"), dispatch), CancellationToken.None),
+                new Cntryl.Portia.RequestContext<ReleaseArtifactLegalHold>(new(Uuid.CreateVersion4(), fixture.Tenant, "evidence_artifact", id,
+                    Fixture.Sha, hold, 1, "Release"), dispatch), CancellationToken.None),
         };
-        var retained = await fixture.Reader.HydrateAsync(new ArtifactRetention(fixture.Tenant, "evidence_artifact", id));
+        var source = await ArtifactRetentionSourceReader.LoadAsync(fixture.Reader, fixture.Tenant, "evidence_artifact", id, CancellationToken.None);
+        var retained = await new ArtifactRetentionReader(fixture.Reader, fixture.Events).ReadAsync(source.Value);
 
         // Assert
         Assert.Equal(allowed, result.IsSuccess);
-        Assert.Equal(allowed ? operation == "release" ? 3 : 2 : operation == "release" ? 2 : 0, retained.Revision);
+        Assert.Equal(allowed ? operation == "release" ? 2 : 1 : operation == "release" ? 1 : 0, retained.Value.Revision);
     }
 
     [Fact]
@@ -402,7 +404,7 @@ public sealed class ArtifactRetentionHandlerTests
         // Act
         var artifact = await new GetArtifactRetentionHandler(fixture.Read).HandleAsync(
             new Cntryl.Portia.RequestContext<GetArtifactRetention>(new(fixture.Tenant, "evidence_artifact", id), dispatch), CancellationToken.None);
-        var holds = await new ListArtifactLegalHoldsHandler(fixture.Reader).HandleAsync(
+        var holds = await new ListArtifactLegalHoldsHandler(fixture.Reader, fixture.Events).HandleAsync(
             new Cntryl.Portia.RequestContext<ListArtifactLegalHolds>(new(fixture.Tenant, "evidence_artifact", id), dispatch), CancellationToken.None);
         var import = await new GetApplicationImportRetentionHandler(fixture.Read).HandleAsync(
             new Cntryl.Portia.RequestContext<GetApplicationImportRetention>(new(fixture.Tenant, batch), dispatch), CancellationToken.None);
@@ -432,6 +434,7 @@ public sealed class ArtifactRetentionHandlerTests
             new HttpInvocation("POST", "/api/v1/tenants/retention", null, "retention-test"));
         public IAggregateReader Reader { get; }
         public IAggregateExecutor Executor { get; }
+        public IDomainEventReader Events { get; }
         public IAggregateWriter Writer { get; }
         public ArtifactRetentionMutation Mutation { get; }
         public ArtifactRetentionRead Read { get; }
@@ -439,18 +442,21 @@ public sealed class ArtifactRetentionHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var events = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(events);
+            services.AddSingleton<IDomainEventReader>(events);
             services.AddSingleton(TimeProvider.System);
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+            Events = _scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Content = new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(
                 new Cntryl.Fitz.Testing.InMemoryKvClient());
-            Mutation = new(Executor, Reader, TimeProvider.System);
-            Read = new(Reader, TimeProvider.System);
+            Mutation = new(new NativeOperationExecutor(Reader, Executor, Content), Reader, Content, TimeProvider.System, Events);
+            Read = new(Reader, Events, TimeProvider.System);
         }
 
         public async Task<Uuid> EvidenceAsync()

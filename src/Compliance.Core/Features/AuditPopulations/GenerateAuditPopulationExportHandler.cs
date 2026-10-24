@@ -4,13 +4,16 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Artifacts;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Retention;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditPopulations;
 
 public sealed class GenerateAuditPopulationExportHandler(IAggregateExecutor executor,
-    IAggregateReader reader, EvidenceIntake evidenceIntake, TimeProvider clock)
+    IAggregateReader reader, EvidenceIntake evidenceIntake, TimeProvider clock,
+    NativeOperationExecutor operations, IImmutableContentStore content, IDomainEventReader events)
     : IRequestHandler<GenerateAuditPopulationExport, AuditPopulationExportReceipt>
 {
     const string RetentionReason = "M0-D16 default retention for a generated audit population export.";
@@ -141,14 +144,14 @@ public sealed class GenerateAuditPopulationExportHandler(IAggregateExecutor exec
             "evidence_artifact", artifact.Id, ct).ConfigureAwait(false);
         if (!source.IsSuccess)
             return Result.Failure(source.Error);
-        var recorded = await executor.ExecuteAsync(new ArtifactRetention(registration.TenantId,
-            "evidence_artifact", artifact.Id), aggregate => AggregateOutcome.CommitOnSuccess(
-            aggregate.RecordBasis(source.Value, aggregate.Revision, periodStart, periodEnd,
-                RetentionReason, registration.Collector, clock.GetUtcNow())), context, ct).ConfigureAwait(false);
+        var commandId = Uuid.CreateVersion5(artifact.Id, "generated-export-retention-basis:v1");
+        var request = new RecordArtifactRetentionBasis(commandId, registration.TenantId, "evidence_artifact",
+            artifact.Id, source.Value.Source.ContentSha256, 0, RetentionReason, periodStart, periodEnd);
+        var recorded = await new ArtifactRetentionMutation(operations, reader, content, clock, events)
+            .RecordBasisAsync(context, request, registration.Collector, ct).ConfigureAwait(false);
         if (!recorded.IsSuccess)
             return recorded;
-        var current = await reader.HydrateAsync(new ArtifactRetention(registration.TenantId,
-            "evidence_artifact", artifact.Id), ct).ConfigureAwait(false);
+        var current = await reader.HydrateAsync(new ArtifactRetentionBasis(source.Value.Source), ct).ConfigureAwait(false);
         if (current.Basis is not { } basis || basis.PeriodStart != periodStart || basis.PeriodEnd != periodEnd ||
             basis.RetainsThrough != periodEnd.AddYears(7) || basis.Reason != RetentionReason ||
             basis.RecordedBy != registration.Collector)
