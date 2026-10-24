@@ -595,7 +595,7 @@ public sealed class TeamMemberTests
         var cleanup = new MemberAuthorityCleanup(reader, executor, provider.GetRequiredService<IDomainEventReader>(),
             provider.GetRequiredService<IProjectionCheckpointStore>(), TimeProvider.System);
         // The guard is deliberately absent: a non-administrator team must never reach it.
-        var handler = new AssignTeamMemberHandler(executor, new NativeOperationExecutor(reader, executor, content),
+        var handler = new AssignTeamMemberHandler(new NativeOperationExecutor(reader, executor, content),
             null!, reader, cleanup, content, TimeProvider.System);
         return await handler.HandleAsync(new RequestContext<AssignTeamMember>(request, actor ?? RequestActor.System),
             CancellationToken.None);
@@ -608,8 +608,8 @@ public sealed class TeamMemberTests
         var executor = provider.GetRequiredService<IAggregateExecutor>();
         var content = provider.GetRequiredService<IImmutableContentStore>();
         // The guard is deliberately absent: a non-administrator team must never reach it.
-        var handler = new RemoveTeamMemberHandler(executor, new NativeOperationExecutor(reader, executor, content),
-            null!, content, TimeProvider.System);
+        var handler = new RemoveTeamMemberHandler(new NativeOperationExecutor(reader, executor, content),
+            null!, reader, content, TimeProvider.System);
         return await handler.HandleAsync(new RequestContext<RemoveTeamMember>(request, actor ?? RequestActor.System),
             CancellationToken.None);
     }

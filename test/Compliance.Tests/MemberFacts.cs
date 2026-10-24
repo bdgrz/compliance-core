@@ -41,4 +41,48 @@ static class MemberFacts
         return new MemberRegistered(tenantId, memberId, userId, affiliation, membershipEpisodeId, membershipExpiresOn,
             commandId, operation, null);
     }
+
+    static readonly DateTimeOffset FactAt = new(2026, 10, 23, 12, 0, 0, TimeSpan.Zero);
+
+    /// <summary>A frozen intent reference of the right schema; nothing reads it back.</summary>
+    public static ImmutableContentRef Intent() => new(Uuid.CreateVersion4(), new string('c', 64), 2,
+        "application/json", AdministratorTransitionIntent.Schema);
+
+    static OperationProvenance Lifecycle(Uuid tenantId, Uuid memberId, string commandKind)
+    {
+        var owner = new EventStreamAddress(tenantId.ToString(), "rbac-members", memberId.ToString());
+        var id = Uuid.CreateVersion4();
+        return new OperationProvenance(id, id, null, commandKind, Actor, owner, "current", null, new string('a', 64),
+            FactAt, owner, owner);
+    }
+
+    /// <summary>Suspends without any expectation under a fresh logical id.</summary>
+    public static Result Suspend(this Member member, Uuid actorMemberId, string actorDisplay, DateTimeOffset at,
+        string reason) => member.Suspend(Lifecycle(member.Stream.Realm.ToUuid(), member.Id, "SuspendMember"), Intent(),
+        null, actorMemberId, actorDisplay, at, reason, Uuid.Empty, -1);
+
+    /// <summary>Reinstates without any expectation under a fresh logical id.</summary>
+    public static Result Reinstate(this Member member, Uuid actorMemberId, string actorDisplay, DateTimeOffset at) =>
+        member.Reinstate(Lifecycle(member.Stream.Realm.ToUuid(), member.Id, "ReinstateMember"), Intent(), null,
+            actorMemberId, actorDisplay, at, Uuid.Empty, -1);
+
+    /// <summary>Deprovisions without any expectation under a fresh logical id.</summary>
+    public static Result Deprovision(this Member member, Uuid actorMemberId, string actorDisplay, DateTimeOffset at,
+        string reason) => member.Deprovision(Lifecycle(member.Stream.Realm.ToUuid(), member.Id, "DeprovisionMember"),
+        Intent(), null, actorMemberId, actorDisplay, at, reason, Uuid.Empty, -1);
+
+    static Uuid ToUuid(this string value) => Uuid.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+
+    public static MemberSuspended Suspended(Uuid tenantId, Uuid memberId, Uuid userId, Uuid actorMemberId,
+        string actorDisplay, DateTimeOffset at, string reason) => new(tenantId, memberId, userId, actorMemberId,
+        actorDisplay, at, reason, Lifecycle(tenantId, memberId, "SuspendMember"), Intent(), null, null);
+
+    public static MemberReinstated Reinstated(Uuid tenantId, Uuid memberId, Uuid userId, string affiliation,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset at) => new(tenantId, memberId, userId, affiliation,
+        actorMemberId, actorDisplay, at, Lifecycle(tenantId, memberId, "ReinstateMember"), Intent(), null, null);
+
+    public static MemberDeprovisioned Deprovisioned(Uuid tenantId, Uuid memberId, Uuid userId, Uuid actorMemberId,
+        string actorDisplay, DateTimeOffset at, string reason, Uuid membershipEpisodeId) => new(tenantId, memberId,
+        userId, actorMemberId, actorDisplay, at, reason, membershipEpisodeId,
+        Lifecycle(tenantId, memberId, "DeprovisionMember"), Intent(), null, null);
 }

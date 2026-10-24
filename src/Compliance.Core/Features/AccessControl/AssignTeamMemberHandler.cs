@@ -8,11 +8,12 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>
 ///     Assigns a team member. A non-administrator team is a direct native operation on the team-member owner and
-///     never reads the tenant manager guard; reassignment to the built-in Administrators team still restores the
-///     member in the guard first (#432) until the guard-first owner replaces that branch.
+///     never reads the tenant manager guard; assignment to the built-in Administrators team is route-determined and
+///     appends a guard fact first, then the administrator transition process assigns the team and registers the
+///     member's availability only after exact eligibility is proven.
 /// </summary>
-public sealed class AssignTeamMemberHandler(IAggregateExecutor executor, NativeOperationExecutor operations,
-    TenantManagerInvariant managers, IAggregateReader reader, MemberAuthorityCleanup cleanup,
+public sealed class AssignTeamMemberHandler(NativeOperationExecutor operations,
+    AdministratorTransitionAdmission admissions, IAggregateReader reader, MemberAuthorityCleanup cleanup,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<AssignTeamMember, AdministratorTransitionResponse>
 {
@@ -43,14 +44,6 @@ public sealed class AssignTeamMemberHandler(IAggregateExecutor executor, NativeO
         var administrators = request.TeamId == BuiltInRbac.AdministratorsTeamId(request.TenantId);
         var episodeId = request.MemberEpisodeId == Uuid.Empty ? member.MembershipEpisodeId : request.MemberEpisodeId;
 
-        if (administrators && replay)
-            return decision == NativeAcceptanceDecision.Conflict
-                ? Result<AdministratorTransitionResponse>.Failure(AcceptedAppendResult.ConflictError)
-                : Result<AdministratorTransitionResponse>.Success(new AdministratorTransitionResponse(
-                    request.CommandId, AdministratorTransitionResponseState.Completed, null,
-                    prior.Acceptance.SelectedOperation!.Operation.AcceptedAt));
-        if (!replay && administrators && !member.IsRegistered)
-            return Fail(RequestErrorKind.NotFound, "The tenant member was not found.");
         if (!replay && prior.IsAssigned && prior.MembershipEpisodeId != member.MembershipEpisodeId)
         {
             var settled = await cleanup.ReconcileTeamAssignmentAsync(context, request, prior.MembershipEpisodeId,
@@ -60,7 +53,7 @@ public sealed class AssignTeamMemberHandler(IAggregateExecutor executor, NativeO
         }
 
         if (administrators)
-            return await AssignAdministratorAsync(context, request, member, provenance, ct).ConfigureAwait(false);
+            return await AssignAdministratorAsync(context, request, member, actor, episodeId, ct).ConfigureAwait(false);
 
         var accepted = await operations.ExecuteAsync(new NativeOperation<TeamMember>(binding,
             () => Owner(request, request.CommandId), owner => owner.Acceptance,
@@ -76,31 +69,39 @@ public sealed class AssignTeamMemberHandler(IAggregateExecutor executor, NativeO
     }
 
     async ValueTask<Result<AdministratorTransitionResponse>> AssignAdministratorAsync(
-        IRequestContext<AssignTeamMember> context, AssignTeamMember request, Member member,
-        OperationProvenance provenance, CancellationToken ct)
+        IRequestContext<AssignTeamMember> context, AssignTeamMember request, Member member, ActorReference actor,
+        Uuid episodeId, CancellationToken ct)
     {
-        foreach (var reason in new[]
-                 {
-                     TenantManagerInvariant.Suspended,
-                     TenantManagerInvariant.Deprovisioned,
-                     TenantManagerInvariant.RemovedFromAdministrators,
-                 })
-        {
-            var restored = await managers.RestoreAsync(context, request.TenantId,
-                request.MemberId, reason, ct).ConfigureAwait(false);
-            if (!restored.IsSuccess)
-                return Result<AdministratorTransitionResponse>.Failure(restored.Error!);
-        }
-
-        var episodeId = member.MembershipEpisodeId;
-        var result = await executor.ExecuteAsync(Owner(request, Uuid.Empty),
-            assignment => AggregateOutcome.CommitOnSuccess(assignment.AssignForAdministrators(provenance, episodeId)),
-            context, ct).ConfigureAwait(false);
-        if (!result.IsSuccess)
-            return Result<AdministratorTransitionResponse>.Failure(result.Error!);
-        var completed = Result<AdministratorTransitionResponse>.Success(new AdministratorTransitionResponse(
-            request.CommandId, AdministratorTransitionResponseState.Completed, null, provenance.AcceptedAt));
-        return await VerifyMemberEpisodeAsync(context, request, episodeId, completed, ct).ConfigureAwait(false);
+        if (episodeId == Uuid.Empty)
+            return Fail(RequestErrorKind.NotFound, "The tenant member was not found.");
+        var assignment = await reader.HydrateAsync(Owner(request, Uuid.Empty), ct).ConfigureAwait(false);
+        var admission = new AdministratorAdmission(request.CommandId, request.TenantId, AdministratorCommandKinds.Assign,
+            actor, AuthoredIntentDigest.Compute(request), clock.GetUtcNow(), request.MemberId, episodeId,
+            assignment.Stream, assignment.Id, request.ExpectedAssignmentRevision, guard =>
+            {
+                var removalPending = guard.PendingFor(episodeId).Any(static pending =>
+                    pending is { IsWithdrawal: true, Reason: TenantManagerGuard.RemovedFromAdministrators });
+                var unfinished = AdministratorAdmissions.Unfinished(guard, episodeId, false,
+                    static pending => pending is { IsWithdrawal: true, Reason: TenantManagerGuard.RemovedFromAdministrators });
+                if (!unfinished.IsSuccess)
+                    return Result<AdministratorSourceBinding>.Failure(unfinished.Error!);
+                if (!member.IsRegistered)
+                    return Result<AdministratorSourceBinding>.Failure(new RequestError(RequestErrorKind.NotFound,
+                        "The tenant member was not found."));
+                if (member.MembershipEpisodeId != episodeId)
+                    return Result<AdministratorSourceBinding>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The member is on a different membership episode."));
+                var prepared = assignment.PrepareAssign(episodeId, request.ExpectedAssignmentRevision,
+                    request.ExpectedAssignmentGeneration, removalPending);
+                if (!prepared.IsSuccess)
+                    return Result<AdministratorSourceBinding>.Failure(prepared.Error!);
+                // A removal admitted but not applied yet will add one fact before this assignment applies.
+                var behindRemoval = removalPending && assignment.IsAssigned;
+                return Result<AdministratorSourceBinding>.Success(new AdministratorSourceBinding(member.MemberRevision,
+                    assignment.AssignmentGeneration + 1, assignment.AssignmentRevision + (behindRemoval ? 1UL : 0UL),
+                    null));
+            });
+        return await admissions.AdmitAsync(context, admission, ct).ConfigureAwait(false);
     }
 
     /// <summary>

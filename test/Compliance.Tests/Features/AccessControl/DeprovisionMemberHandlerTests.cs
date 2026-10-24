@@ -1,6 +1,7 @@
-using System.Security.Claims;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -61,44 +62,41 @@ public sealed class DeprovisionMemberHandlerTests
     public async Task ShouldRemoveAuthorityAndRetainHistoryGivenFreshInvitationAfterDeprovisioning()
     {
         // Arrange
-        await using var provider = CreateProvider();
-        var reader = provider.GetRequiredService<IAggregateReader>();
-        var executor = provider.GetRequiredService<IAggregateExecutor>();
-        var memberId = RbacIds.Member(TenantId, UserId);
-        await SeedAsync(provider, new Member(TenantId, UserId), member => member.Register());
-        var membershipEpisodeId = (await reader.HydrateAsync(new Member(TenantId, UserId)))
-            .MembershipEpisodeId;
-        await SeedAsync(provider, new TeamMember(TenantId, TeamId, memberId),
-            member => member.Assign(membershipEpisodeId));
+        await using var host = new AdministratorTransitionHost();
+        var provider = host.Provider;
+        var reader = host.Reader;
+        var actor = await host.AddAdministratorAsync();
+        await host.AddAdministratorAsync();
+        var member = await host.AddMemberAsync();
+        await host.SeedAsync(new TeamMember(host.TenantId, TeamId, member.MemberId),
+            assignment => assignment.Assign(member.EpisodeId));
         var terms = new AccessGrantTerms(
-            new AccessGrantPrincipal(AccessGrantPrincipalKind.Member, memberId), RoleId,
+            new AccessGrantPrincipal(AccessGrantPrincipalKind.Member, member.MemberId), RoleId,
             new AccessGrantScope(AccessGrantScopeKind.Program, Uuid.CreateVersion4()),
             new AccessGrantSource("manual", "access-review"),
-            ActorReference.ForMember(RbacIds.Member(TenantId, ActorUserId), "Alex Admin"), ActionAt, null);
-        await SeedAsync(provider, new AccessGrant(TenantId, GrantId), grant => grant.Issue(terms, membershipEpisodeId));
-        var teamMembers = new TestTeamMemberDirectory([new TeamMemberView(TeamId, memberId)]);
+            ActorReference.ForMember(actor.MemberId, "Alex Admin"), ActionAt, null);
+        await host.SeedAsync(new AccessGrant(host.TenantId, GrantId), grant => grant.Issue(terms, member.EpisodeId));
         var cleanup = Cleanup(provider);
-        var managerInvariant = new TenantManagerInvariant(reader, executor, teamMembers);
-        var handler = new DeprovisionMemberHandler(executor, reader, TimeProvider.System,
-            managerInvariant, cleanup);
 
         // Act
-        var deprovision = await handler.HandleAsync(new RequestContext<DeprovisionMember>(
-            new DeprovisionMember(TenantId, UserId, "Access is no longer required."), Actor(ActorUserId)),
+        var deprovision = await host.DeprovisionAsync(actor, member);
+        var process = await host.DriveAsync(deprovision.Value!.OperationId);
+        var current = await host.MemberAsync(member);
+        var retired = current.TerminationProof!;
+        var completed = await cleanup.CompleteAsync(new RequestDispatchContext(RequestActor.System), retired,
             CancellationToken.None);
         var reinvited = await Registration(provider, cleanup).HandleAsync(
-            new RequestContext<RegisterMember>(new RegisterMember(Uuid.CreateVersion4(), TenantId, UserId), RequestActor.System),
-            CancellationToken.None);
-        var memberAfterInvite = await reader.HydrateAsync(new Member(TenantId, UserId));
-        var assignmentAfterInvite = await reader.HydrateAsync(new TeamMember(TenantId, TeamId, memberId));
-        var grantAfterInvite = await reader.HydrateAsync(new AccessGrant(TenantId, GrantId));
-        var history = new List<DomainEvent>();
-        await foreach (var record in provider.GetRequiredService<IEventStore>()
-                           .ReadAsync(new Member(TenantId, UserId).Stream, 0))
-            history.Add(record.Event);
+            new RequestContext<RegisterMember>(new RegisterMember(Uuid.CreateVersion4(), host.TenantId, member.UserId),
+                RequestActor.System), CancellationToken.None);
+        var memberAfterInvite = await host.MemberAsync(member);
+        var assignmentAfterInvite = await reader.HydrateAsync(new TeamMember(host.TenantId, TeamId, member.MemberId));
+        var grantAfterInvite = await reader.HydrateAsync(new AccessGrant(host.TenantId, GrantId));
+        var history = await host.FactsAsync(memberAfterInvite.Stream);
 
         // Assert
-        Assert.True(deprovision.IsSuccess);
+        Assert.Equal(AdministratorTransitionResponseState.Accepted, deprovision.Value.State);
+        Assert.Equal(ProcessState.Completed, process.State);
+        Assert.True(completed.IsSuccess);
         Assert.True(reinvited.IsSuccess);
         Assert.True(memberAfterInvite.IsRegistered);
         Assert.False(memberAfterInvite.IsDeprovisioned);
@@ -113,53 +111,37 @@ public sealed class DeprovisionMemberHandlerTests
     public async Task ShouldHideMembershipGivenMemberExistsOnlyInAnotherTenant()
     {
         // Arrange
-        await using var provider = CreateProvider();
-        var reader = provider.GetRequiredService<IAggregateReader>();
-        var executor = provider.GetRequiredService<IAggregateExecutor>();
-        await SeedAsync(provider, new Member(OtherTenantId, UserId), member => member.Register());
-        var teamMembers = new TestTeamMemberDirectory([]);
-        var cleanup = Cleanup(provider);
-        var handler = new DeprovisionMemberHandler(executor, reader, TimeProvider.System,
-            new TenantManagerInvariant(reader, executor, teamMembers), cleanup);
+        await using var host = new AdministratorTransitionHost();
+        var actor = await host.AddAdministratorAsync();
+        await host.SeedAsync(new Member(OtherTenantId, UserId), member => member.Register());
 
         // Act
-        var result = await handler.HandleAsync(new RequestContext<DeprovisionMember>(
-            new DeprovisionMember(TenantId, UserId, "Access is no longer required."), Actor(ActorUserId)),
-            CancellationToken.None);
+        var result = await host.SubmitAsync(actor, new DeprovisionMember(Uuid.CreateVersion4(), host.TenantId, UserId,
+            "Access is no longer required.", Uuid.CreateVersion4(), 0));
 
         // Assert
         Assert.Equal(RequestErrorKind.NotFound, Assert.IsType<RequestError>(result.Error).Kind);
-        Assert.False((await reader.HydrateAsync(new Member(TenantId, UserId))).IsRegistered);
-        Assert.True((await reader.HydrateAsync(new Member(OtherTenantId, UserId))).IsRegistered);
+        Assert.False((await host.Reader.HydrateAsync(new Member(host.TenantId, UserId))).IsRegistered);
+        Assert.True((await host.Reader.HydrateAsync(new Member(OtherTenantId, UserId))).IsRegistered);
+        Assert.Empty(await host.GuardFactsAsync());
     }
 
     [Fact]
     public async Task ShouldKeepLastAdministratorGivenDeprovisionRequest()
     {
         // Arrange
-        await using var provider = CreateProvider();
-        var reader = provider.GetRequiredService<IAggregateReader>();
-        var executor = provider.GetRequiredService<IAggregateExecutor>();
-        var memberId = RbacIds.Member(TenantId, UserId);
-        var administrators = BuiltInRbac.AdministratorsTeamId(TenantId);
-        await SeedAsync(provider, new Member(TenantId, UserId), member => member.Register());
-        var membershipEpisodeId = (await reader.HydrateAsync(new Member(TenantId, UserId)))
-            .MembershipEpisodeId;
-        await SeedAsync(provider, new TeamMember(TenantId, administrators, memberId),
-            member => member.Assign(membershipEpisodeId));
-        var teamMembers = new TestTeamMemberDirectory([new TeamMemberView(administrators, memberId)]);
-        var cleanup = Cleanup(provider);
-        var handler = new DeprovisionMemberHandler(executor, reader, TimeProvider.System,
-            new TenantManagerInvariant(reader, executor, teamMembers), cleanup);
+        await using var host = new AdministratorTransitionHost();
+        var only = await host.AddAdministratorAsync();
+        var other = await host.AddMemberAsync();
 
         // Act
-        var result = await handler.HandleAsync(new RequestContext<DeprovisionMember>(
-            new DeprovisionMember(TenantId, UserId, "Access is no longer required."), Actor(ActorUserId)),
-            CancellationToken.None);
+        var result = await host.DeprovisionAsync(other, only);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(result.Error).Kind);
-        Assert.True((await reader.HydrateAsync(new Member(TenantId, UserId))).IsRegistered);
+        Assert.False(result.Error.IsTransient);
+        Assert.True((await host.MemberAsync(only)).IsRegistered);
+        Assert.Empty(await host.GuardFactsAsync());
     }
 
     static MemberAuthorityCleanup Cleanup(IServiceProvider provider) => new(
@@ -197,21 +179,4 @@ public sealed class DeprovisionMemberHandlerTests
             CancellationToken.None);
         Assert.True(result.IsSuccess);
     }
-
-    static ClaimsPrincipal Actor(Uuid userId) => new(new ClaimsIdentity(
-        [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
-
-    sealed class TestTeamMemberDirectory(IReadOnlyList<TeamMemberView> items) : ITeamMemberDirectoryReader
-    {
-        public ValueTask<Page<TeamMemberView>> ListAsync(Uuid tenantId, Uuid teamId, int? limit,
-            string? cursor, string? search, bool descending, CancellationToken ct = default) =>
-            ValueTask.FromResult(new Page<TeamMemberView>(items.Where(item => item.TeamId == teamId &&
-                (search is null || item.MemberId.ToString().Contains(search, StringComparison.OrdinalIgnoreCase)))
-                .ToArray(), null));
-
-        public ValueTask<IReadOnlyList<TeamMemberView>> ListMemberAssignmentsAsync(Uuid tenantId,
-            Uuid memberId, CancellationToken ct = default) => ValueTask.FromResult<IReadOnlyList<TeamMemberView>>(
-            items.Where(item => item.MemberId == memberId).ToArray());
-    }
-
 }

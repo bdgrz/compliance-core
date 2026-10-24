@@ -1,7 +1,9 @@
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text.Json;
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.TechnologyInventory;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Evidence;
@@ -438,6 +440,8 @@ public sealed class ArtifactMetadataAccessTests
             services.AddSingleton<IEventStore>(events);
             services.AddSingleton<IDomainEventReader>(new FaultingReader(events, Faults));
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
+            services.AddSingleton<ISourceFactResolver>(provider =>
+                new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
             services.AddSingleton<TimeProvider>(new Clock());
             Provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         }
@@ -451,6 +455,7 @@ public sealed class ArtifactMetadataAccessTests
                 return tenant.ConfirmSlug("artifact-test");
             });
             await fixture.RunReactorAsync("TenantRbacBootstrap");
+            await fixture.DriveAdministratorTransitionsAsync();
             await fixture.ProjectAsync();
             await ProgramManagementServices.SeedAsync(fixture.Provider,
                 new EvidenceArtifact(fixture.TenantId, fixture.ArtifactId), artifact => artifact.Register(
@@ -533,6 +538,24 @@ public sealed class ArtifactMetadataAccessTests
             await checkpoints.SaveAsync(new CheckpointIdentity("TenantRbacBootstrap",
                 EventStreamPattern.ForPattern("bdgrz", "tenants")), ProjectionCheckpoint.Start);
             await RunReactorAsync("TenantRbacBootstrap");
+            await DriveAdministratorTransitionsAsync();
+        }
+
+        /// <summary>Starts and drives the process of every guard admission, as the root-fact reactors do in a worker.</summary>
+        public async Task DriveAdministratorTransitionsAsync()
+        {
+            await using var scope = Provider.CreateAsyncScope();
+            var services = scope.ServiceProvider;
+            var reaction = services.GetRequiredService<ProcessRootReaction>();
+            await foreach (var record in services.GetRequiredService<IDomainEventReader>()
+                               .ReadAsync(new TenantManagerGuard(TenantId).Stream, 0))
+            {
+                if (record.Event is TenantManagerWithdrawalAccepted or TenantManagerRestorationAccepted
+                    or TenantManagerSourceMutationAdmitted)
+                    Assert.Equal(ProcessState.Completed, (await reaction.StartAsync(AdministratorTransitionProcess.Name,
+                        new RecordReactorContext(record), ((ITenantManagerGuardFact)record.Event).Intent, [],
+                        "fixture")).State);
+            }
         }
 
         public async Task RunReactorAsync(string name)

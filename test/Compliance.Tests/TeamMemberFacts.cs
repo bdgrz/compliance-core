@@ -22,12 +22,12 @@ static class TeamMemberFacts
 
     /// <summary>Assigns the member for the episode (an empty episode stays empty) without any expectation, under a fresh logical id unless one is given.</summary>
     public static Result Assign(this TeamMember owner, Uuid membershipEpisodeId = default, Uuid commandId = default) =>
-        owner.AssignForAdministrators(Provenance(owner, commandId == Uuid.Empty ? Uuid.CreateVersion4() : commandId,
-            "AssignTeamMember"), membershipEpisodeId);
+        owner.ApplyAssignment(Provenance(owner, commandId == Uuid.Empty ? Uuid.CreateVersion4() : commandId,
+            "AssignTeamMember"), membershipEpisodeId == Uuid.Empty ? Uuid.CreateVersion4() : membershipEpisodeId, -1, -1);
 
     /// <summary>Removes the current assignment without any expectation, under a fresh logical id.</summary>
     public static Result Remove(this TeamMember owner) =>
-        owner.RemoveForAdministrators(Provenance(owner, Uuid.CreateVersion4(), "RemoveTeamMember"));
+        owner.ApplyRemoval(Provenance(owner, Uuid.CreateVersion4(), "RemoveTeamMember"), Uuid.Empty, -1, -1);
 
     public static TeamMemberAssigned Assigned(Uuid tenantId, Uuid teamId, Uuid memberId,
         Uuid membershipEpisodeId = default, Uuid commandId = default)

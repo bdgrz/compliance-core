@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.Tenants;
 using Bdgrz.Compliance.Features.TechnologyInventory;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
+using Cntryl.Portia.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 
@@ -422,10 +423,12 @@ public sealed class GetMemberAccessHandlerTests
     {
         // Arrange
         var edge = new MemberAccessEdge(TeamId, RoleId, [RbacPermissions.ProgramManage]);
+        var episode = Uuid.CreateVersion4();
         var handler = new GetMemberAccessHandler(new MembershipDirectory("client_personnel"),
             new StandingAccessReader(edge), new TeamDirectory(TeamId), new RoleDirectory(),
             new GrantDirectory(), new TeamMemberDirectory(MemberId, TeamId),
-            new RolePermissionDirectory(), new RbacSourceReader(), new FixedTimeProvider(Now), new FixedMemberAccessEligibility(true));
+            new RolePermissionDirectory(), new RbacSourceReader { Episode = episode }, new FixedTimeProvider(Now),
+            new FixedMemberAccessEligibility(true) { MembershipEpisodeId = episode });
 
         // Act
         var result = await handler.HandleAsync(new RequestContext<GetMemberAccess>(
@@ -599,6 +602,7 @@ public sealed class GetMemberAccessHandlerTests
         public bool PermissionRemoved { get; init; }
         public bool TeamMemberRemoved { get; init; }
         public bool TeamRoleRemoved { get; init; }
+        public Uuid Episode { get; init; } = Uuid.CreateVersion4();
 
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
             CancellationToken ct = default) where TAggregate : Aggregate
@@ -622,7 +626,7 @@ public sealed class GetMemberAccessHandlerTests
                     RbacPermissionFacts.Hydrate(permission, PermissionRemoved);
                     break;
                 case TeamMember member:
-                    Assert.True(member.Assign().IsSuccess);
+                    Assert.True(member.Assign(Episode).IsSuccess);
                     if (TeamMemberRemoved)
                         Assert.True(member.Remove().IsSuccess);
                     break;

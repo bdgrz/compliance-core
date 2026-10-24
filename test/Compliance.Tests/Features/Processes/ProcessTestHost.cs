@@ -61,7 +61,8 @@ sealed class ProcessTestHost : IAsyncDisposable
         new ProcessStageDefinition("acquire", ["AcquireX"]),
         new ProcessStageDefinition("apply", ["ApplyA", "ApplyB"]),
         new ProcessStageDefinition("settle", ["SettleX"]),
-    ], ["RejectX"], step => new ProbeReceive(step.CommandId, step.Receiver, step.Target));
+    ], ["RejectX"], (step, _, _) => ValueTask.FromResult<IRequest<ReceiverOutcome>?>(
+        new ProbeReceive(step.CommandId, step.Receiver, step.Target)));
 
     public async Task<ProcessRecord> StartAsync(params string[] targets)
     {

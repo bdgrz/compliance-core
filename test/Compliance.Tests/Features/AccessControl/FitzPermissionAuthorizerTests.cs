@@ -112,7 +112,7 @@ public sealed class FitzPermissionAuthorizerTests
         Assert.Empty(await permissions.ReadAsync(tenantId, memberId));
         Assert.False(await permissions.IsAllowedAsync(tenantId, userId, memberId,
             RbacPermissions.TenantAccess));
-        DomainEvent suspension = new MemberSuspended(tenantId, memberId, userId, Uuid.CreateVersion4(),
+        DomainEvent suspension = MemberFacts.Suspended(tenantId, memberId, userId, Uuid.CreateVersion4(),
             "Alex Admin", DateTimeOffset.UtcNow, "Employment ended.");
         suspension.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), memberId, 1,
             DateTimeOffset.UtcNow));
@@ -146,7 +146,7 @@ public sealed class FitzPermissionAuthorizerTests
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
         Assert.True(await permissions.IsAllowedAsync(tenantId, userId, memberId,
             RbacPermissions.TenantAccess));
-        DomainEvent suspension = new MemberSuspended(tenantId, memberId, userId, Uuid.CreateVersion4(),
+        DomainEvent suspension = MemberFacts.Suspended(tenantId, memberId, userId, Uuid.CreateVersion4(),
             "Alex Admin", DateTimeOffset.UtcNow, "Employment ended.");
         suspension.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), memberId, 1,
             DateTimeOffset.UtcNow));
@@ -168,7 +168,7 @@ public sealed class FitzPermissionAuthorizerTests
         var deniedAfterProjection = await permissions.IsAllowedAsync(tenantId, userId,
             memberId, RbacPermissions.TenantAccess);
 
-        DomainEvent reinstatement = new MemberReinstated(tenantId, memberId, userId,
+        DomainEvent reinstatement = MemberFacts.Reinstated(tenantId, memberId, userId,
             "client_personnel",
             Uuid.CreateVersion4(), "Alex Admin", DateTimeOffset.UtcNow);
         reinstatement.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), memberId, 2,

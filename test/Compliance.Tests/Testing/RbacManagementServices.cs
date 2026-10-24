@@ -35,7 +35,9 @@ static class RbacManagementServices
             new PersistenceKvClient(new InMemoryKvClient())));
         services.AddScoped<NativeOperationExecutor>();
         services.AddScoped<MemberAuthorityCleanup>();
-        services.AddScoped<TenantManagerInvariant>();
+        services.AddScoped<TenantManagerGuardBootstrap>();
+        services.AddScoped<TenantManagerGuardLoader>();
+        services.AddScoped<AdministratorTransitionAdmission>();
         handlers(services.AddPortia().AddRequestAuthorizer<RbacManagementAuthorizer>());
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }

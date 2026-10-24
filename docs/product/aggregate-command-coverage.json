@@ -41,26 +41,26 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 418,
-    "factsWithReducer": 398,
-    "factsWithAggregateEmitter": 391,
+    "domainEventContracts": 422,
+    "factsWithReducer": 402,
+    "factsWithAggregateEmitter": 395,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 18,
     "legacyReducerOnlyFacts": 2,
     "aggregateTypes": 103,
     "aggregateTypesWithCommandPath": 100,
-    "requestContracts": 651,
-    "commonRequestContracts": 649,
+    "requestContracts": 659,
+    "commonRequestContracts": 657,
     "requestClassificationCounts": {
       "command": 347,
       "deferred_command": 5,
       "confirmed_command_gap": 8,
-      "internal_reaction": 16,
+      "internal_reaction": 24,
       "query_or_reconstruction": 274,
       "internal_executor_context": 1
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 593,
+    "registeredCoreHandlerRegistrations": 601,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 41,
     "unwiredAggregateProducerClassifications": {
@@ -4131,8 +4131,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/DeprovisionMemberHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/MemberLifecycleTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/PermissionProjectionStateTests.cs",
-        "test/Compliance.Tests/Features/Tenants/FitzTenantMembershipDirectoryReaderTests.cs"
+        "test/Compliance.Tests/MemberFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4183,8 +4182,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
         "test/Compliance.Tests/Features/AccessControl/MemberLifecycleTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/PermissionProjectionStateTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FitzPermissionAuthorizerTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/MemberFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4203,10 +4202,10 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/MemberLifecycleTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/PermissionProjectionStateTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FitzPermissionAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Tenants/FitzTenantMembershipDirectoryReaderTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/MemberFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6425,13 +6424,10 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ProgramRecoveryE2ETests.cs",
-        "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FitzTeamMemberDirectoryReaderTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/InternalRbacTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/PermissionProjectionStateTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FitzPermissionAuthorizerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TeamMemberTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantSelfServiceActivationReactorTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/TeamMemberTransportTests.cs",
+        "test/Compliance.Tests/TeamMemberFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6449,13 +6445,11 @@
         "src/Compliance.Core/Features/AccessControl/TeamMember.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/FitzTeamMemberDirectoryReaderTests.cs",
         "test/Compliance.Tests/Features/AccessControl/GetMemberAccessHandlerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/InternalRbacTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/PermissionProjectionStateTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FitzPermissionAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/PermissionProjectorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TeamMemberTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TeamMemberTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TeamMemberTransportTests.cs",
+        "test/Compliance.Tests/TeamMemberFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6765,6 +6759,44 @@
       "note": ""
     },
     {
+      "fact": "TenantManagerRestorationAccepted",
+      "contract": "src/Compliance.Common/Features/AccessControl/TenantManagerRestorationAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "TenantManagerGuard",
+          "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TenantManagerRestorationCompleted",
+      "contract": "src/Compliance.Common/Features/AccessControl/TenantManagerRestorationCompleted.cs",
+      "reducers": [
+        {
+          "aggregate": "TenantManagerGuard",
+          "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "TenantManagerRestored",
       "contract": "src/Compliance.Common/Features/AccessControl/TenantManagerRestored.cs",
       "reducers": [
@@ -6776,13 +6808,15 @@
       "emitters": [
         "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
     {
-      "fact": "TenantManagerWithdrawn",
-      "contract": "src/Compliance.Common/Features/AccessControl/TenantManagerWithdrawn.cs",
+      "fact": "TenantManagerSourceMutationAdmitted",
+      "contract": "src/Compliance.Common/Features/AccessControl/TenantManagerSourceMutationAdmitted.cs",
       "reducers": [
         {
           "aggregate": "TenantManagerGuard",
@@ -6792,7 +6826,51 @@
       "emitters": [
         "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TenantManagerWithdrawalAccepted",
+      "contract": "src/Compliance.Common/Features/AccessControl/TenantManagerWithdrawalAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "TenantManagerGuard",
+          "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TenantManagerWithdrawalCompleted",
+      "contract": "src/Compliance.Common/Features/AccessControl/TenantManagerWithdrawalCompleted.cs",
+      "reducers": [
+        {
+          "aggregate": "TenantManagerGuard",
+          "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -7777,7 +7855,6 @@
       ],
       "commandRequests": [
         "AssignTeamMember",
-        "DeprovisionMember",
         "GrantAccess",
         "ProvisionGuestProgramAccess",
         "RegisterMember",
@@ -9313,12 +9390,12 @@
         "MemberSuspended"
       ],
       "commandRequests": [
-        "DeprovisionMember",
-        "RegisterMember",
-        "ReinstateMember",
-        "SuspendMember"
+        "RegisterMember"
       ],
       "internalReactionRequests": [
+        "ApplyMemberRestoration",
+        "ApplyMemberWithdrawal",
+        "ApplyNeutralMemberSourceMutation",
         "CompleteMemberRetirement"
       ],
       "testSymbolReferences": [
@@ -9344,13 +9421,13 @@
         "test/Compliance.Tests/E2E/SnapshotE2ETests.cs",
         "test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs",
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
-        "test/Compliance.Tests/E2E/TenantManagerInvariantE2ETests.cs",
         "test/Compliance.Tests/E2E/TenantReadLeakMatrixE2ETests.cs",
         "test/Compliance.Tests/Features/AccessControl/AccessGrantPermissionAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AccessGrantProjectionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AccessGrantProposalValidatorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AccessGrantTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ActualStaffEngagementLocatorTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
@@ -9371,6 +9448,7 @@
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ListTeamMembersHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/MemberLifecycleTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/PermissionProjectionStateTests.cs",
         "test/Compliance.Tests/Features/AccessControl/PersonalWaiverApprovalTransportTests.cs",
@@ -9379,8 +9457,10 @@
         "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
         "test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TeamMemberTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TeamMemberTransportTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantAccessAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/WaiverManagementIndependenceTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
@@ -9442,6 +9522,7 @@
         "test/Compliance.Tests/Features/Evidence/LinkEvidenceSupportHandlerTests.cs",
         "test/Compliance.Tests/Features/Examinations/ApproveManagementAssertionHandlerTests.cs",
         "test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Examinations/FindingBaselineMigrationTests.cs",
         "test/Compliance.Tests/Features/Examinations/ManagementRepresentationLetterCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/Examinations/PreviewTypeIBaselineHandlerTests.cs",
         "test/Compliance.Tests/Features/Examinations/RecordExaminationOutcomeHandlerTests.cs",
@@ -9453,6 +9534,9 @@
         "test/Compliance.Tests/Features/Exports/RecordClientExportBuildResultHandlerTests.cs",
         "test/Compliance.Tests/Features/Exports/RecordClientExportDeliveryHandlerTests.cs",
         "test/Compliance.Tests/Features/Incidents/ComplianceIncidentDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Kernel/KernelContractSerializationTests.cs",
+        "test/Compliance.Tests/Features/NativeOperations/NativeAcceptanceTests.cs",
+        "test/Compliance.Tests/Features/NativeOperations/NativeOperationExecutorTests.cs",
         "test/Compliance.Tests/Features/Operations/GenerateDueControlOccurrencesHandlerTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Operations/PersonalOccurrenceProofTransportTests.cs",
@@ -9464,6 +9548,7 @@
         "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Features/Processes/ProcessRootReactionTests.cs",
         "test/Compliance.Tests/Features/Programs/ApproveProgramRolloverHandlerTests.cs",
         "test/Compliance.Tests/Features/Programs/ComplianceProgramTests.cs",
         "test/Compliance.Tests/Features/Programs/ProposeProgramRolloverHandlerTests.cs",
@@ -9476,6 +9561,7 @@
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalTypeIEntryTransportTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
         "test/Compliance.Tests/Features/Responsibilities/ListMemberResponsibilitiesHandlerTests.cs",
         "test/Compliance.Tests/Features/Responsibilities/MemberAssignmentLagTests.cs",
         "test/Compliance.Tests/Features/Retention/ArtifactDisclosureHandlerTests.cs",
@@ -9495,6 +9581,7 @@
         "test/Compliance.Tests/Features/Tenants/MemberTenantDiscoveryLagTests.cs",
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorOrTenantAdminAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Tenants/ResolveMyTenantSlugHandlerTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantPagedReadContractTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantSelfServiceActivationReactorTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantSlugChangeAttributionTests.cs",
@@ -9515,6 +9602,8 @@
         "test/Compliance.Tests/Features/Workforce/WorkforceAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceRosterReconciliationTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs",
+        "test/Compliance.Tests/MemberFacts.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs",
         "test/Compliance.Tests/Testing/AttestAssignmentHistoryFixture.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -10361,11 +10450,13 @@
       ],
       "commandRequests": [
         "AssignTeamMember",
-        "DeprovisionMember",
         "RegisterMember",
         "RemoveTeamMember"
       ],
       "internalReactionRequests": [
+        "ApplyAdministratorAssignmentRestoration",
+        "ApplyAdministratorAssignmentWithdrawal",
+        "ApplyNeutralAdministratorAssignmentMutation",
         "CleanupRetiredMembershipRelationship",
         "CompleteMemberRetirement"
       ],
@@ -10374,19 +10465,24 @@
         "test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs",
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
         "test/Compliance.Tests/Features/AccessControl/AccessGrantPermissionAuthorizerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/DeprovisionMemberHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FitzPermissionAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FitzTeamMemberDirectoryReaderTests.cs",
         "test/Compliance.Tests/Features/AccessControl/GetMemberAccessHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/InternalRbacTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/RemoveTeamMemberRequestScenarioTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TeamMemberTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs",
-        "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TeamMemberTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/TechnologyInventoryScopedGrantTests.cs",
-        "test/Compliance.Tests/Features/Tenants/ActivateTenantReadinessTests.cs"
+        "test/Compliance.Tests/Features/Tenants/ActivateTenantReadinessTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs",
+        "test/Compliance.Tests/TeamMemberFacts.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10632,8 +10728,12 @@
       "aggregate": "TenantManagerGuard",
       "source": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs",
       "appliedFacts": [
+        "TenantManagerRestorationAccepted",
+        "TenantManagerRestorationCompleted",
         "TenantManagerRestored",
-        "TenantManagerWithdrawn"
+        "TenantManagerSourceMutationAdmitted",
+        "TenantManagerWithdrawalAccepted",
+        "TenantManagerWithdrawalCompleted"
       ],
       "commandRequests": [
         "AssignTeamMember",
@@ -10642,12 +10742,15 @@
         "RemoveTeamMember",
         "SuspendMember"
       ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/TenantManagerInvariantE2ETests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs"
+      "internalReactionRequests": [
+        "CompleteAdministratorRestoration",
+        "CompleteAdministratorWithdrawal"
       ],
-      "helperOnlyConstruction": "TenantManagerInvariant",
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
+      ],
       "commandRouteDisposition": "registered_command_route"
     },
     {
@@ -11566,6 +11669,53 @@
       "note": ""
     },
     {
+      "request": "ApplyAdministratorAssignmentRestoration",
+      "contract": "src/Compliance.Common/Features/AccessControl/ApplyAdministratorAssignmentRestoration.cs",
+      "interfaces": "IAdministratorTransitionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyAdministratorAssignmentRestorationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ApplyAdministratorAssignmentRestorationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TeamMember"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
+      ],
+      "note": "Process receiver: assigns the administrators team for a restoration or first registration. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ApplyAdministratorAssignmentWithdrawal",
+      "contract": "src/Compliance.Common/Features/AccessControl/ApplyAdministratorAssignmentWithdrawal.cs",
+      "interfaces": "IAdministratorTransitionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyAdministratorAssignmentWithdrawalHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ApplyAdministratorAssignmentWithdrawalHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TeamMember"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs"
+      ],
+      "note": "Process receiver: removes the administrators-team assignment after the guard withdrew availability. System principal only; no HTTP/MCP route."
+    },
+    {
       "request": "ApplyApplicationImportEffect",
       "contract": "src/Compliance.Common/Features/Applications/ApplyApplicationImportEffect.cs",
       "interfaces": "IRequest",
@@ -11595,6 +11745,53 @@
       "note": ""
     },
     {
+      "request": "ApplyMemberRestoration",
+      "contract": "src/Compliance.Common/Features/AccessControl/ApplyMemberRestoration.cs",
+      "interfaces": "IAdministratorTransitionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyMemberRestorationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ApplyMemberRestorationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "Member"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
+      ],
+      "note": "Process receiver: reinstates the member after earlier same-episode withdrawals settle. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ApplyMemberWithdrawal",
+      "contract": "src/Compliance.Common/Features/AccessControl/ApplyMemberWithdrawal.cs",
+      "interfaces": "IAdministratorTransitionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyMemberWithdrawalHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ApplyMemberWithdrawalHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "Member"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs"
+      ],
+      "note": "Process receiver: suspends or deprovisions the member episode after the guard withdrew availability. System principal only; no HTTP/MCP route."
+    },
+    {
       "request": "ApplyMethodologyTemplate",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/ApplyMethodologyTemplate.cs",
       "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
@@ -11620,6 +11817,53 @@
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "ApplyNeutralAdministratorAssignmentMutation",
+      "contract": "src/Compliance.Common/Features/AccessControl/ApplyNeutralAdministratorAssignmentMutation.cs",
+      "interfaces": "IAdministratorTransitionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyNeutralAdministratorAssignmentMutationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ApplyNeutralAdministratorAssignmentMutationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TeamMember"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs"
+      ],
+      "note": "Process receiver: applies an administrators-team removal the guard admitted as neutral. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ApplyNeutralMemberSourceMutation",
+      "contract": "src/Compliance.Common/Features/AccessControl/ApplyNeutralMemberSourceMutation.cs",
+      "interfaces": "IAdministratorTransitionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyNeutralMemberSourceMutationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ApplyNeutralMemberSourceMutationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "Member"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
+      ],
+      "note": "Process receiver: applies a member mutation the guard admitted as neutral. System principal only; no HTTP/MCP route."
     },
     {
       "request": "ApproveAccessExpectation",
@@ -12431,14 +12675,16 @@
         "TenantManagerGuard"
       ],
       "helperServices": [
-        "TenantManagerInvariant",
+        "AdministratorTransitionAdmission",
         "MemberAuthorityCleanup"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ActivationReactionProbe.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TeamMemberTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs"
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs",
+        "test/Compliance.Tests/TeamMemberFacts.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
       "note": ""
     },
@@ -13042,6 +13288,53 @@
         "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "CompleteAdministratorRestoration",
+      "contract": "src/Compliance.Common/Features/AccessControl/CompleteAdministratorRestoration.cs",
+      "interfaces": "IAdministratorTransitionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteAdministratorRestorationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/CompleteAdministratorRestorationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TenantManagerGuard"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
+      ],
+      "note": "Process receiver: settles a restoration on the guard and restores availability only when eligible. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "CompleteAdministratorWithdrawal",
+      "contract": "src/Compliance.Common/Features/AccessControl/CompleteAdministratorWithdrawal.cs",
+      "interfaces": "IAdministratorTransitionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteAdministratorWithdrawalHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/CompleteAdministratorWithdrawalHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "TenantManagerGuard"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs"
+      ],
+      "note": "Process receiver: settles a withdrawal on the guard from the exact applied source fact. System principal only; no HTTP/MCP route."
     },
     {
       "request": "CompleteCorrectiveAction",
@@ -14228,7 +14521,7 @@
     {
       "request": "DeprovisionMember",
       "contract": "src/Compliance.Common/Features/AccessControl/DeprovisionMember.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest<AdministratorTransitionResponse>, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -14242,18 +14535,16 @@
         "Member"
       ],
       "aggregateTargets": [
-        "AccessGrant",
-        "Member",
-        "TeamMember",
         "TenantManagerGuard"
       ],
       "helperServices": [
-        "MemberAuthorityCleanup",
-        "TenantManagerInvariant"
+        "AdministratorTransitionAdmission"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/DeprovisionMemberHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/RbacManagementRequestScenarioTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/DeprovisionMemberHandlerTests.cs"
+        "test/Compliance.Tests/MemberFacts.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
       "note": ""
     },
@@ -23522,7 +23813,7 @@
     {
       "request": "ReinstateMember",
       "contract": "src/Compliance.Common/Features/AccessControl/ReinstateMember.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest<AdministratorTransitionResponse>, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -23536,14 +23827,14 @@
         "Member"
       ],
       "aggregateTargets": [
-        "Member",
         "TenantManagerGuard"
       ],
       "helperServices": [
-        "TenantManagerInvariant"
+        "AdministratorTransitionAdmission"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs"
+        "test/Compliance.Tests/MemberFacts.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
       "note": ""
     },
@@ -23773,12 +24064,14 @@
         "TenantManagerGuard"
       ],
       "helperServices": [
-        "TenantManagerInvariant"
+        "AdministratorTransitionAdmission"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/RemoveTeamMemberRequestScenarioTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TeamCleanupReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/RemoveTeamMemberRequestScenarioTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/TeamMemberTests.cs",
+        "test/Compliance.Tests/TeamMemberFacts.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
       "note": ""
     },
@@ -26203,7 +26496,7 @@
     {
       "request": "SuspendMember",
       "contract": "src/Compliance.Common/Features/AccessControl/SuspendMember.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest<AdministratorTransitionResponse>, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -26217,15 +26510,15 @@
         "Member"
       ],
       "aggregateTargets": [
-        "Member",
         "TenantManagerGuard"
       ],
       "helperServices": [
-        "TenantManagerInvariant"
+        "AdministratorTransitionAdmission"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/TenantManagerInvariantE2ETests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/MemberFacts.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs"
       ],
       "note": ""
     },

@@ -83,7 +83,7 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
                          identity, ProjectionCheckpoint.Start)))
         {
             await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId));
-            await reader.ApplyAsync(new MemberSuspended(TenantId, memberId, UserId, actorMemberId,
+            await reader.ApplyAsync(MemberFacts.Suspended(TenantId, memberId, UserId, actorMemberId,
                 "Alex Admin", suspendedAt, "Employment ended."));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -119,7 +119,7 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
         {
             await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId,
                 membershipEpisodeId: membershipEpisodeId));
-            await reader.ApplyAsync(new MemberDeprovisioned(TenantId, memberId, UserId, actorMemberId,
+            await reader.ApplyAsync(MemberFacts.Deprovisioned(TenantId, memberId, UserId, actorMemberId,
                 "Alex Admin", deprovisionedAt, "Access is no longer required.", membershipEpisodeId));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -155,7 +155,7 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
         {
             await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId,
                 membershipEpisodeId: membershipEpisodeId));
-            await reader.ApplyAsync(new MemberDeprovisioned(TenantId, memberId, UserId, actorMemberId,
+            await reader.ApplyAsync(MemberFacts.Deprovisioned(TenantId, memberId, UserId, actorMemberId,
                 "Alex Admin", deprovisionedAt, "Access is no longer required.", membershipEpisodeId));
             await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId, "firm_staff"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);

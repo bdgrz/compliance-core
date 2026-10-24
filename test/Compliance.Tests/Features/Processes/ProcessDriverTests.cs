@@ -198,6 +198,49 @@ public sealed class ProcessDriverTests
         Assert.DoesNotContain(host.Recorder.Calls.Skip(3), c => c.Receiver is "ApplyA" or "ApplyB");
     }
 
+    [Fact]
+    public async Task ShouldRecordProducedFactByReceiverGivenAppliedOutcome()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1");
+
+        // Act
+        var record = await host.RunAsync();
+        var stored = await host.Store.ReadAsync(ProcessTestHost.Key);
+
+        // Assert
+        Assert.Equal(["AcquireX", "ApplyA", "ApplyB", "SettleX"], record.Facts.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(record.Facts, stored!.Facts);
+    }
+
+    [Fact]
+    public async Task ShouldRetryLaterGivenReceiverSourceNotProvableYet()
+    {
+        // Arrange
+        var unprovable = true;
+        var definition = ProcessTestHost.Definition() with
+        {
+            CreateReceiver = (step, _, _) => unprovable && step.Receiver == "ApplyA"
+                ? throw new Bdgrz.Compliance.Features.SourceFacts.SourceFactVerificationException("lagging")
+                : ValueTask.FromResult<IRequest<ReceiverOutcome>?>(new ProbeReceive(step.CommandId, step.Receiver,
+                    step.Target)),
+        };
+        await using var host = new ProcessTestHost(definition: definition);
+        await host.StartAsync("t1");
+
+        // Act
+        var waiting = await host.RunAsync();
+        unprovable = false;
+        var resumed = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Pending, waiting.State);
+        Assert.Contains("not provable yet", waiting.Note, StringComparison.Ordinal);
+        Assert.Equal(1, waiting.Attempts);
+        Assert.Equal(ProcessState.Completed, resumed.State);
+    }
+
     /// <summary>Decorates the store so one ReplaceAsync, chosen by count, fails after the receiver already ran.</summary>
     sealed class CrashOnceStore
     {

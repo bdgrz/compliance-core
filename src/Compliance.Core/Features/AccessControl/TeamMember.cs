@@ -76,8 +76,11 @@ public sealed class TeamMember : Aggregate
     /// <summary>
     ///     Checks the assignment guards against hydrated state without raising anything; the first half of the
     ///     native acceptance pair. Negative expectations are unconstrained and reserved for system callers.
+    ///     <paramref name="removalPending" /> is true when the guard admitted a removal of this assignment that is not
+    ///     applied yet, which the assignment then waits behind.
     /// </summary>
-    public Result PrepareAssign(Uuid membershipEpisodeId, long expectedRevision, long expectedGeneration)
+    public Result PrepareAssign(Uuid membershipEpisodeId, long expectedRevision, long expectedGeneration,
+        bool removalPending = false)
     {
         if (membershipEpisodeId == Uuid.Empty)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
@@ -88,7 +91,7 @@ public sealed class TeamMember : Aggregate
         if (!_isAssigned)
             return Result.Success;
         return _membershipEpisodeId == membershipEpisodeId
-            ? Result.Failure(AlreadyAssignedConflict)
+            ? removalPending ? Result.Success : Result.Failure(AlreadyAssignedConflict)
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Settle the prior membership assignment before assigning another episode."));
     }
@@ -145,27 +148,35 @@ public sealed class TeamMember : Aggregate
     }
 
     /// <summary>
-    ///     Administrators-team assignment, kept on the tenant manager invariant until the guard-first owner replaces
-    ///     it: idempotent for the same episode and without a frozen first response.
+    ///     Accepts an assignment a process receiver applies on behalf of an admitted root operation. The fact carries
+    ///     no first response: the guard fact that admitted the operation owns it.
     /// </summary>
-    internal Result AssignForAdministrators(OperationProvenance operation, Uuid membershipEpisodeId)
+    public Result ApplyAssignment(OperationProvenance operation, Uuid membershipEpisodeId, long expectedRevision,
+        long expectedGeneration)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (_isAssigned && _membershipEpisodeId != membershipEpisodeId)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "Settle the prior membership assignment before assigning another episode."));
-        if (!_isAssigned)
-            RaiseEvent(new TeamMemberAssigned(_tenantId, _teamId, _memberId, membershipEpisodeId, operation.LogicalId,
-                operation, null));
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A team assignment requires its own logical operation."));
+        var prepared = PrepareAssign(membershipEpisodeId, expectedRevision, expectedGeneration);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new TeamMemberAssigned(_tenantId, _teamId, _memberId, membershipEpisodeId, operation.LogicalId,
+            operation, null));
         return Result.Success;
     }
 
-    /// <summary>Administrators-team removal, kept on the tenant manager invariant until the guard-first owner replaces it.</summary>
-    internal Result RemoveForAdministrators(OperationProvenance operation)
+    /// <summary>Accepts a removal a process receiver applies on behalf of an admitted root operation.</summary>
+    public Result ApplyRemoval(OperationProvenance operation, Uuid membershipEpisodeId, long expectedRevision,
+        long expectedGeneration)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (!_isAssigned)
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The member is not on this team."));
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A team removal requires its own logical operation."));
+        var prepared = PrepareRemove(membershipEpisodeId, expectedRevision, expectedGeneration);
+        if (!prepared.IsSuccess)
+            return prepared;
         RaiseEvent(new TeamMemberRemoved(_tenantId, _teamId, _memberId, _membershipEpisodeId, _assignmentEventId,
             null, operation.LogicalId, operation, null));
         return Result.Success;
@@ -176,6 +187,13 @@ public sealed class TeamMember : Aggregate
         ulong? originalExpectedRevision, string authoredIntentSha256, DateTimeOffset acceptedAt, Uuid? causationEventId = null) =>
         new(commandId, commandId, causationEventId, commandKind, actor, Stream, episode, originalExpectedRevision,
             authoredIntentSha256, acceptedAt, Stream, Stream);
+
+    /// <summary>The provenance of a process receiver's operation, which keeps the root operation it serves.</summary>
+    public OperationProvenance Provenance(Uuid logicalId, Uuid rootOperationId, Uuid? causationEventId,
+        string commandKind, ActorReference actor, string episode, ulong? originalExpectedRevision,
+        string authoredIntentSha256, DateTimeOffset acceptedAt) =>
+        new(logicalId, rootOperationId, causationEventId, commandKind, actor, Stream, episode,
+            originalExpectedRevision, authoredIntentSha256, acceptedAt, Stream, Stream);
 
     internal Result RemoveForRetirement(MembershipTerminationProof proof, Uuid assignmentEventId, Uuid relationshipId,
         DateTimeOffset acceptedAt)
