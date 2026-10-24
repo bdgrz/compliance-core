@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Criteria;
 
-sealed class FitzCriteriaTextOverlayDirectory(IKvClient client)
+sealed class FitzCriteriaTextOverlayDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client, "kv://bdgrz/criteria-text-overlay-directory-v1/projection",
         ProjectorName), ICriteriaTextOverlayDirectoryReader, ICriteriaTextOverlayDirectoryProjection
 {
@@ -19,7 +20,7 @@ sealed class FitzCriteriaTextOverlayDirectory(IKvClient client)
     async ValueTask<IProjectionBatch> BeginOverlayBatchAsync(ProjectionBatchContext context,
         CancellationToken ct)
     {
-        if (context.Identity.Pattern.Area != CriteriaTextOverlayLedger.Area ||
+        if (context.Identity.Pattern.Area != CriteriaTextOverlay.Area ||
             context.Identity.Pattern.Resource is not null ||
             !Uuid.TryParse(context.Identity.Pattern.Realm, null, out var tenantId) ||
             tenantId == Uuid.Empty)
@@ -33,7 +34,7 @@ sealed class FitzCriteriaTextOverlayDirectory(IKvClient client)
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
         CancellationToken ct = default) => base.LoadCheckpointAsync(new CheckpointIdentity(
         ProjectorName, EventStreamPattern.ForPattern(tenantId.ToString(),
-            CriteriaTextOverlayLedger.Area)), ct);
+            CriteriaTextOverlay.Area)), ct);
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
@@ -45,6 +46,8 @@ sealed class FitzCriteriaTextOverlayDirectory(IKvClient client)
             throw new InvalidOperationException(
                 "A criteria overlay event must belong to its tenant projection batch.");
 
+        var overlay = await content.ReadJsonAsync<CriteriaTextOverlayContent>(revised.TenantId.ToString(),
+            revised.OverlayContent, ct).ConfigureAwait(false);
         var key = CriteriaTextOverlayDirectorySchema.Key(revised.EditionId,
             revised.Identifier);
         var current = await CriteriaTextOverlayDirectorySchema.Overlays.GetAsync(Transaction,
@@ -59,7 +62,7 @@ sealed class FitzCriteriaTextOverlayDirectory(IKvClient client)
             return;
         if (current is not null && revised.Revision == current.Revision)
         {
-            if (!Same(current, revised))
+            if (!Same(current, revised, overlay))
                 throw new InvalidOperationException(
                     "A criteria overlay revision cannot replace retained content.");
             return;
@@ -70,8 +73,8 @@ sealed class FitzCriteriaTextOverlayDirectory(IKvClient client)
                 "A criteria overlay revision requires its immediate predecessor.");
 
         var next = new CriteriaTextOverlayRevision(revised.TenantId, revised.EditionId,
-            revised.Identifier, revised.Revision, revised.Content, revised.Actor,
-            revised.RecordedAt);
+            revised.Identifier, revised.Revision, overlay, revised.Operation.Actor,
+            revised.Operation.AcceptedAt);
         if (current is null)
             await CriteriaTextOverlayDirectorySchema.Overlays.InsertAsync(Transaction, next, ct)
                 .ConfigureAwait(false);
@@ -105,9 +108,9 @@ sealed class FitzCriteriaTextOverlayDirectory(IKvClient client)
     }
 
     static bool Same(CriteriaTextOverlayRevision current,
-        CriteriaTextOverlayEntryRevised revised) =>
+        CriteriaTextOverlayEntryRevised revised, CriteriaTextOverlayContent overlay) =>
         current.TenantId == revised.TenantId && current.EditionId == revised.EditionId &&
         string.Equals(current.Identifier, revised.Identifier, StringComparison.Ordinal) &&
-        current.Revision == revised.Revision && current.Content == revised.Content &&
-        current.Actor == revised.Actor && current.RecordedAt == revised.RecordedAt;
+        current.Revision == revised.Revision && current.Content == overlay &&
+        current.Actor == revised.Operation.Actor && current.RecordedAt == revised.Operation.AcceptedAt;
 }

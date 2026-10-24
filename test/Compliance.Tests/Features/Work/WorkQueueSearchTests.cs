@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Tests.Testing;
@@ -228,7 +230,10 @@ public sealed class WorkQueueSearchTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: directories,
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var handler = new ListWorkHandler(queue);
         var context = new RequestContext<ListWork>(new ListWork(fixture.TenantId,
                 fixture.ProgramId, "all", Search: search),
@@ -278,7 +283,10 @@ public sealed class WorkQueueSearchTests
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [evidence],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var context = new RequestContext<ListWork>(new ListWork(fixture.TenantId,
                 fixture.ProgramId, "all", Search: "no such visible work"),
             ProgramManagementServices.Actor(fixture.ApproverUserId));

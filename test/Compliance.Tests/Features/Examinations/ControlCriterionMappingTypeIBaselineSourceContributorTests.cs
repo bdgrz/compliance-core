@@ -2,6 +2,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Criteria;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -53,8 +54,9 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
     public async Task ShouldKeepMappingDigestStableGivenSuccessorApprovedAfterTypeIDate()
     {
         // Arrange
-        var atTheTypeIDate = await Fixture();
-        var withFutureSuccessor = await Fixture(includeFutureSuccessor: true);
+        var mappingId = Uuid.CreateVersion4();
+        var atTheTypeIDate = await Fixture(firstMappingId: mappingId);
+        var withFutureSuccessor = await Fixture(includeFutureSuccessor: true, firstMappingId: mappingId);
 
         // Act
         var original = await atTheTypeIDate.Contributor.ReadAsync(Engagement(),
@@ -146,42 +148,41 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
 
     static async Task<FixtureState> Fixture(bool includeFutureSuccessor = false,
         bool approveInitial = true, bool includeControlSource = true,
-        Uuid? capturedControlVersionId = null, bool successorBeforePeriod = false)
+        Uuid? capturedControlVersionId = null, bool successorBeforePeriod = false, Uuid? firstMappingId = null)
     {
-        var ledger = new ControlCriterionMappingLedger(TenantId, ProgramId);
-        Assert.Null(ledger.Propose(ControlId, ControlVersionId, Edition.EditionId,
-            Criterion.Identifier, Criterion.Kind, 0, "Restricts access",
-            "All production systems", AuthorId, "Author", BeforePeriod,
-            out var registration));
-        var mappingId = Assert.IsType<ControlCriterionMappingRegistration>(registration).MappingId;
+        var line = new ControlCriterionMapping(TenantId, ProgramId, ControlId, Edition.EditionId,
+            Criterion.Identifier);
+        var mappingId = firstMappingId ?? Uuid.CreateVersion4();
+        Assert.True(line.Propose(NativeFacts.Root(line, mappingId, "ProposeControlCriterionMapping", 0, AuthorId,
+                BeforePeriod), ControlVersionId, Criterion.Kind, "Restricts access", "All production systems",
+            AuthorId, "Author", BeforePeriod, NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
         if (approveInitial)
-            Assert.Null(ledger.Review(mappingId, 1, ReviewDecisionId, "accept",
-                "The mapping matches the selected criterion.", ReviewerId, "Reviewer",
-                BeforePeriod.AddDays(1)));
+            Assert.True(line.Review(NativeFacts.Root(line, ReviewDecisionId, "ReviewControlCriterionMapping", 1,
+                    ReviewerId, BeforePeriod.AddDays(1)), mappingId, "accept",
+                "The mapping matches the selected criterion.", ReviewerId, "Reviewer", BeforePeriod.AddDays(1),
+                null, NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
         if (includeFutureSuccessor)
         {
             var revision = approveInitial ? 2 : 1;
             var successorAt = successorBeforePeriod ? BeforePeriod.AddDays(4) : AfterPeriod;
-            Assert.Null(ledger.Propose(ControlId, FutureControlVersionId, Edition.EditionId,
-                Criterion.Identifier, Criterion.Kind, revision, "Maps the successor control",
-                "The successor covers production systems", AuthorId, "Author", successorAt,
-                out _));
+            var successorId = Uuid.CreateVersion4();
+            Assert.True(line.Propose(NativeFacts.Root(line, successorId, "ProposeControlCriterionMapping", revision,
+                    AuthorId, successorAt), FutureControlVersionId, Criterion.Kind, "Maps the successor control",
+                "The successor covers production systems", AuthorId, "Author", successorAt, NativeFacts.Ref(),
+                NativeFacts.Ref()).IsSuccess);
             if (approveInitial)
-                Assert.Null(ledger.Review(mappingId, revision + 1, Uuid.CreateVersion4(), "accept",
-                    "The successor mapping is approved.", ReviewerId, "Reviewer",
-                    successorAt.AddDays(1)));
+                Assert.True(line.Review(NativeFacts.Root(line, Uuid.CreateVersion4(), "ReviewControlCriterionMapping",
+                        revision + 1, ReviewerId, successorAt.AddDays(1)), successorId, "accept",
+                    "The successor mapping is approved.", ReviewerId, "Reviewer", successorAt.AddDays(1), null,
+                    NativeFacts.Ref(), NativeFacts.Ref()).IsSuccess);
         }
 
-        var pending = new AggregateScenario<ControlCriterionMappingLedger>(ledger).PendingEvents;
-        var stream = new EventStreamAddress(TenantId.ToString(), "control-criterion-mappings",
-            ProgramId.ToString());
-        var attached = pending.ToArray();
         var events = new InMemoryEventStore();
-        await events.AppendAsync(stream, 0, attached);
-        var sourceLedger = new AggregateScenario<ControlCriterionMappingLedger>(
-            new ControlCriterionMappingLedger(TenantId, ProgramId)).Given(attached).Aggregate;
+        await events.AppendAsync(line.Stream, 0, NativeFacts.Raised(line));
+        var mappingReader = new ControlMappingReader(new UnusedAggregateReader(), events);
+        var views = (await mappingReader.ReadProgramAsync(TenantId, ProgramId)).Mappings.ToArray();
         var checkpoint = await CheckpointAfterAsync(events);
-        var mappingDirectory = new MappingDirectory(sourceLedger.ReadAll().ToArray(), checkpoint);
+        var mappingDirectory = new MappingDirectory(views, checkpoint);
         var consistency = new CriteriaCoverageReadConsistency(mappingDirectory,
             new ApplicabilityDirectory(checkpoint), events);
         var references = new List<TypeIBaselineSourceReference>
@@ -195,8 +196,8 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
             references.Add(new TypeIBaselineSourceReference("control_version", ControlId,
                 capturedControlVersionId ?? ControlVersionId, 1, new string('b', 64)));
         var context = new TypeIBaselineSourceReadContext(Uuid.Empty, references);
-        var contributor = new ControlCriterionMappingTypeIBaselineSourceContributor(
-            new MappingAggregateReader(sourceLedger), consistency, Catalog);
+        var contributor = new ControlCriterionMappingTypeIBaselineSourceContributor(mappingReader, consistency,
+            Catalog);
         return new FixtureState(mappingId, contributor, context);
     }
 
@@ -219,11 +220,11 @@ public sealed class ControlCriterionMappingTypeIBaselineSourceContributorTests
         ControlCriterionMappingTypeIBaselineSourceContributor Contributor,
         TypeIBaselineSourceReadContext Context);
 
-    sealed class MappingAggregateReader(ControlCriterionMappingLedger source) : IAggregateReader
+    sealed class UnusedAggregateReader : IAggregateReader
     {
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
             CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(source is TAggregate typed ? typed : aggregate);
+            throw new NotSupportedException("The baseline read composes mapping lines from committed facts only.");
     }
 
     sealed class MappingDirectory(ControlCriterionMappingView[] mappings,

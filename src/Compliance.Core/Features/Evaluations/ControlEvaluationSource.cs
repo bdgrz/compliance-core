@@ -1,9 +1,8 @@
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evaluations;
 
-/// <summary>Loads the control an evaluation request acts on and resolves deviation routing.</summary>
+/// <summary>Resolves the deviation routing of an evaluation read.</summary>
 static class ControlEvaluationSource
 {
     public static RequestError EvaluationNotFound() =>
@@ -16,7 +15,7 @@ static class ControlEvaluationSource
         static EvaluationDeviationView Route(EvaluationDeviationView deviation,
             FindingReadSnapshot remediation) =>
             deviation.FindingId is { } findingId && remediation.Contains(findingId)
-                ? deviation with { Status = ControlEvaluationLedger.RoutedToFinding }
+                ? deviation with { Status = ControlEvaluationStates.RoutedToFinding }
                 : deviation;
 
         return view with
@@ -28,16 +27,4 @@ static class ControlEvaluationSource
             }).ToArray(),
         };
     }
-
-    public static async ValueTask<Result<ControlEvaluationView>> ExecuteAsync<TRequest>(
-        IAggregateExecutor executor, IRequestContext<TRequest> context, Uuid tenantId,
-        Uuid programId, Uuid controlId, Uuid evaluationId,
-        Func<ControlEvaluationLedger, CommandFailure?> command, CancellationToken ct)
-        where TRequest : IRequestBase =>
-        await executor.ExecuteAsync(new ControlEvaluationLedger(tenantId, programId), ledger =>
-        {
-            var failure = command(ledger);
-            return CommandFailureRequestAdapter.ToOutcome(failure,
-                ledger.Read(controlId, evaluationId)!);
-        }, context, ct).ConfigureAwait(false);
 }

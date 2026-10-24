@@ -46,7 +46,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
                 "A criterion applicability event must have a complete tenant and decision scope.");
 
         var key = CriterionApplicabilityWorkItemDirectorySchema.DecisionKey(scope.ProgramId,
-            scope.DecisionId);
+            scope.LineId);
         var current = await CriterionApplicabilityWorkItemDirectorySchema.Decisions.GetAsync(
             Transaction, key, ct).ConfigureAwait(false);
         CriterionApplicabilityWorkState next;
@@ -83,8 +83,20 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
         Uuid programId, CancellationToken ct = default)
     {
         var candidates = new List<WorkCandidate>();
-        string? cursor = null;
         await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        var pending = new Dictionary<Uuid, CriterionApplicabilityWorkState>();
+        string? stateCursor = null;
+        do
+        {
+            var states = await CriterionApplicabilityWorkItemDirectorySchema.Decisions.QueryAsync(tx,
+                CriterionApplicabilityWorkItemDirectorySchema.StatesByProgram.Query()
+                    .WithPrefix(programId.ToString()).Take(200).After(stateCursor), ct).ConfigureAwait(false);
+            foreach (var state in states.Items.Where(static state => state.State == Pending))
+                pending[state.DecisionId] = state;
+            stateCursor = states.NextCursor;
+        } while (stateCursor is not null);
+
+        string? cursor = null;
         do
         {
             var page = await CriterionApplicabilityWorkItemDirectorySchema.WorkItems.QueryAsync(tx,
@@ -93,9 +105,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
                 .ConfigureAwait(false);
             foreach (var item in page.Items)
             {
-                var state = await CriterionApplicabilityWorkItemDirectorySchema.Decisions.GetAsync(tx,
-                    CriterionApplicabilityWorkItemDirectorySchema.DecisionKey(programId,
-                        item.SourceId), ct).ConfigureAwait(false);
+                pending.TryGetValue(item.SourceId, out var state);
                 if (item.TenantId != tenantId || item.ProgramId != programId ||
                     item.Kind != WorkSource.CriterionApplicabilityReview ||
                     item.ControlId is not null || item.FindingId is not null || item.RiskId is not null ||
@@ -115,7 +125,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
 
     async ValueTask<CriterionApplicabilityWorkState> ProposeAsync(
         CriterionApplicabilityWorkState? current, CriterionNotApplicableProposed proposed,
-        (Uuid TenantId, Uuid ProgramId, Uuid DecisionId, long Revision) scope,
+        DecisionScope scope,
         CancellationToken ct)
     {
         if (proposed.EditionId == Uuid.Empty || proposed.ProposerMemberId == Uuid.Empty ||
@@ -145,7 +155,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
             proposed.ProposerMemberId, proposed.VersionNumber, proposed.ProposedAt);
         await AddWorkItemAsync(proposed.TenantId, proposed.ProgramId, candidate, ct)
             .ConfigureAwait(false);
-        return new CriterionApplicabilityWorkState(proposed.TenantId, proposed.ProgramId,
+        return new CriterionApplicabilityWorkState(proposed.TenantId, proposed.ProgramId, scope.LineId,
             proposed.DecisionId, proposed.EditionId, proposed.CriterionIdentifier,
             proposed.Revision, proposed.VersionNumber, proposed.ProposerMemberId,
             proposed.ProposedAt, Pending);
@@ -153,7 +163,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
 
     async ValueTask<CriterionApplicabilityWorkState> ReviewAsync(
         CriterionApplicabilityWorkState? current, CriterionApplicabilityReviewed reviewed,
-        (Uuid TenantId, Uuid ProgramId, Uuid DecisionId, long Revision) scope,
+        DecisionScope scope,
         CancellationToken ct)
     {
         if (current is null)
@@ -161,7 +171,7 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
                 "A criterion applicability proposal cannot be reviewed before it is projected.");
         ValidateNextRevision(current, scope);
         if (current.State != Pending || current.VersionNumber != reviewed.VersionNumber ||
-            reviewed.Outcome is not ("accept" or "reject"))
+            current.DecisionId != reviewed.DecisionId || reviewed.Outcome is not ("accept" or "reject"))
             throw new InvalidOperationException(
                 "A criterion applicability review must resolve its current proposed version.");
         await RemoveWorkItemAsync(reviewed.TenantId, reviewed.ProgramId,
@@ -175,14 +185,15 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
 
     async ValueTask<CriterionApplicabilityWorkState> WithdrawAsync(
         CriterionApplicabilityWorkState? current, CriterionNotApplicableWithdrawn withdrawn,
-        (Uuid TenantId, Uuid ProgramId, Uuid DecisionId, long Revision) scope,
+        DecisionScope scope,
         CancellationToken ct)
     {
         if (current is null)
             throw new InvalidOperationException(
                 "A criterion applicability decision cannot be withdrawn before it is projected.");
         ValidateNextRevision(current, scope);
-        if (current.State != NotApplicable || current.VersionNumber != withdrawn.VersionNumber)
+        if (current.State != NotApplicable || current.VersionNumber != withdrawn.VersionNumber ||
+            current.DecisionId != withdrawn.DecisionId)
             throw new InvalidOperationException(
                 "Only the currently accepted criterion applicability decision can be withdrawn.");
         await RemoveWorkItemAsync(withdrawn.TenantId, withdrawn.ProgramId,
@@ -246,11 +257,10 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
     }
 
     static void ValidateNextRevision(CriterionApplicabilityWorkState current,
-        (Uuid TenantId, Uuid ProgramId, Uuid DecisionId, long Revision) scope)
+        DecisionScope scope)
     {
         if (current.TenantId != scope.TenantId || current.ProgramId != scope.ProgramId ||
-            current.DecisionId != scope.DecisionId ||
-            scope.Revision != checked(current.Revision + 1))
+            current.LineId != scope.LineId || scope.Revision != checked(current.Revision + 1))
             throw new InvalidOperationException(
                 "A criterion applicability event must advance its existing source revision and scope.");
     }
@@ -258,18 +268,22 @@ sealed class FitzCriterionApplicabilityWorkItemDirectory(IKvClient client)
     static Uuid WorkItemIdFor(Uuid decisionId, int versionNumber) =>
         WorkSource.CriterionApplicabilityReviewWorkItemId(decisionId, versionNumber);
 
-    static (Uuid TenantId, Uuid ProgramId, Uuid DecisionId, long Revision) ScopeFor(
-        DomainEvent domainEvent) => domainEvent switch
-        {
-            CriterionNotApplicableProposed ev =>
-                (ev.TenantId, ev.ProgramId, ev.DecisionId, ev.Revision),
-            CriterionApplicabilityReviewed ev =>
-                (ev.TenantId, ev.ProgramId, ev.DecisionId, ev.Revision),
-            CriterionNotApplicableWithdrawn ev =>
-                (ev.TenantId, ev.ProgramId, ev.DecisionId, ev.Revision),
-            _ => throw new InvalidOperationException(
-                $"The criterion applicability projector cannot apply {domainEvent.GetType().Name}.")
-        };
+    static DecisionScope ScopeFor(DomainEvent domainEvent) => domainEvent switch
+    {
+        CriterionNotApplicableProposed ev => new DecisionScope(ev.TenantId, ev.ProgramId, ev.DecisionId,
+            CriterionApplicability.IdentityOf(ev.TenantId, ev.ProgramId, ev.EditionId, ev.CriterionIdentifier),
+            ev.Revision),
+        CriterionApplicabilityReviewed ev => new DecisionScope(ev.TenantId, ev.ProgramId, ev.DecisionId,
+            CriterionApplicability.IdentityOf(ev.TenantId, ev.ProgramId, ev.EditionId, ev.CriterionIdentifier),
+            ev.Revision),
+        CriterionNotApplicableWithdrawn ev => new DecisionScope(ev.TenantId, ev.ProgramId, ev.DecisionId,
+            CriterionApplicability.IdentityOf(ev.TenantId, ev.ProgramId, ev.EditionId, ev.CriterionIdentifier),
+            ev.Revision),
+        _ => throw new InvalidOperationException(
+            $"The criterion applicability projector cannot apply {domainEvent.GetType().Name}.")
+    };
+
+    sealed record DecisionScope(Uuid TenantId, Uuid ProgramId, Uuid DecisionId, Uuid LineId, long Revision);
 
     static RequestError InvalidScope() => new(RequestErrorKind.Conflict,
         "The criterion applicability work projection has an invalid tenant or program scope.");

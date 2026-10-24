@@ -393,7 +393,7 @@ public sealed class AdvisorRecordVersionResolverTests
 
         public AdvisorRecordVersionResolver Resolver(IBoundaryDirectoryReader? boundaries = null,
             IReadinessDirectoryReader? readiness = null) => new(Reader, Metadata,
-            new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events)), boundaries ?? new BoundaryReader(null),
+            new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events), EmptyOperations.Evaluations(Reader, Events)), boundaries ?? new BoundaryReader(null),
             readiness ?? new ReadinessReader(null, null));
 
         public async Task<ControlDraft> SeedControlAsync()

@@ -165,11 +165,11 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | SystemBoundary | Boundaries | narrow | ROOTACCESS-01 (pending), ROOTACCESS-02 (pending), ROOTACCESS-04 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Boundaries/SystemBoundary.cs) |
 | SignificantChange | Changes | narrow | ROOT-06 (pending), ROOT-07 (pending), CORE-01 (complete) | 0.82 | [source](../../../../src/Compliance.Core/Features/Changes/SignificantChange.cs) |
 | CommitmentDraft | Commitments | narrow | ROOTACCESS-01 (pending), ROOTACCESS-02 (pending), ROOTACCESS-04 (pending) | 0.69 | [source](../../../../src/Compliance.Core/Features/Commitments/CommitmentDraft.cs) |
-| ControlCriterionMappingLedger | ControlMappings | split | OPS-01 (pending), OPS-11 (pending), OPS-15 (pending) | 0.85 | [source](../../../../src/Compliance.Core/Features/ControlMappings/ControlCriterionMappingLedger.cs) |
-| CriterionApplicabilityLedger | ControlMappings | split | OPS-01 (pending), OPS-11 (pending), OPS-15 (pending) | 0.85 | [source](../../../../src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityLedger.cs) |
+| ControlCriterionMappingLedger | ControlMappings | split | OPS-01 (pending), OPS-11 (pending), OPS-15 (pending) | 0.85 | retired by the criteria and evaluation split (#1022) |
+| CriterionApplicabilityLedger | ControlMappings | split | OPS-01 (pending), OPS-11 (pending), OPS-15 (pending) | 0.85 | retired by the criteria and evaluation split (#1022) |
 | ControlDraft | Controls | narrow | OPS-11 (pending), OPS-13 (pending), OPS-15 (pending) | 0.63 | [source](../../../../src/Compliance.Core/Features/Controls/ControlDraft.cs) |
-| CriteriaTextOverlayLedger | Criteria | split | OPS-05 (pending) | 0.76 | [source](../../../../src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs) |
-| ControlEvaluationLedger | Evaluations | split | OPS-02 (pending), OPS-11 (pending), OPS-15 (pending), OPS-16 (pending) | 0.84 | [source](../../../../src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs) |
+| CriteriaTextOverlayLedger | Criteria | split | OPS-05 (pending) | 0.76 | retired by the criteria and evaluation split (#1022) |
+| ControlEvaluationLedger | Evaluations | split | OPS-02 (pending), OPS-11 (pending), OPS-15 (pending), OPS-16 (pending) | 0.84 | retired by the criteria and evaluation split (#1022) |
 | ControlEvaluationPlan | Evaluations | narrow | OPS-13 (pending) | 0.52 | [source](../../../../src/Compliance.Core/Features/Evaluations/ControlEvaluationPlan.cs) |
 | EvidenceArtifact | Evidence | narrow | ASSURE-08 (pending) | 0.76 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceArtifact.cs) |
 | EvidenceRedaction | Evidence | narrow | ASSURE-06 (pending), ASSURE-07 (pending) | 0.85 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs) |

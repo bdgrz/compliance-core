@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Work;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -31,7 +32,7 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
 
         // Act
         var failure = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await directory.ApplyAsync(Reviewed(tenantId, programId, decisionId,
+            await directory.ApplyAsync(Reviewed(tenantId, programId, editionId, decisionId,
                 ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer"), 3, 1, "reject",
                 proposedAt.AddMinutes(1))));
 
@@ -47,6 +48,7 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var decisionId = Uuid.CreateVersion4();
+        var secondId = Uuid.CreateVersion4();
         var editionId = Uuid.CreateVersion4();
         var proposerId = Uuid.CreateVersion4();
         var reviewerId = Uuid.CreateVersion4();
@@ -75,9 +77,9 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          firstCheckpoint)))
         {
-            await directory.ApplyAsync(Reviewed(tenantId, programId, decisionId, reviewer,
+            await directory.ApplyAsync(Reviewed(tenantId, programId, editionId, decisionId, reviewer,
                 2, 1, "reject", proposedAt.AddMinutes(1)));
-            await directory.ApplyAsync(Proposed(tenantId, programId, decisionId, editionId,
+            await directory.ApplyAsync(Proposed(tenantId, programId, secondId, editionId,
                 proposerId, proposer, 3, 2, proposedAt.AddMinutes(2)));
             await batch.CommitAsync(secondCheckpoint);
         }
@@ -86,7 +88,7 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          secondCheckpoint)))
         {
-            await directory.ApplyAsync(Reviewed(tenantId, programId, decisionId, reviewer,
+            await directory.ApplyAsync(Reviewed(tenantId, programId, editionId, secondId, reviewer,
                 4, 2, "accept", proposedAt.AddMinutes(3)));
             await batch.CommitAsync(reviewedCheckpoint);
         }
@@ -96,8 +98,11 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
                          reviewedCheckpoint)))
         {
             await directory.ApplyAsync(new CriterionNotApplicableWithdrawn(tenantId, programId,
-                decisionId, 5, 2, "The criterion applies now.", proposer,
-                proposedAt.AddMinutes(4)));
+                secondId, 5, 2, "The criterion applies now.", proposer,
+                proposedAt.AddMinutes(4), editionId, "AC-2.4",
+                NativeFacts.Root(new CriterionApplicability(tenantId, programId, editionId, "AC-2.4"),
+                    Uuid.CreateVersion4(), "WithdrawCriterionNotApplicable", 4, proposerId, proposedAt.AddMinutes(4)),
+                NativeFacts.Ref(), NativeFacts.Ref()));
             await batch.CommitAsync(withdrawnCheckpoint);
         }
         var withdrawn = await directory.LoadProgramAsync(tenantId, programId,
@@ -125,6 +130,7 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
         Assert.True(secondProposal.IsSuccess);
         var second = Assert.Single(secondProposal.Value);
         Assert.NotEqual(first.WorkItemId, second.WorkItemId);
+        Assert.Equal(secondId, second.SourceId);
         Assert.Contains(proposerId, second.Excluded);
         Assert.Empty(accepted.Value);
         Assert.Empty(withdrawn.Value);
@@ -137,11 +143,21 @@ public sealed class FitzCriterionApplicabilityWorkItemDirectoryTests
         long revision, int versionNumber, DateTimeOffset proposedAt) =>
         new(tenantId, programId, decisionId, revision, versionNumber, editionId,
             "AC-2.4", "The control is not relevant to this organization.", proposerId,
-            proposer, proposedAt);
+            proposer, proposedAt,
+            NativeFacts.Root(new CriterionApplicability(tenantId, programId, editionId, "AC-2.4"), decisionId,
+                "ProposeCriterionNotApplicable", revision - 1, proposerId, proposedAt), NativeFacts.Ref(),
+            NativeFacts.Ref());
 
-    static CriterionApplicabilityReviewed Reviewed(Uuid tenantId, Uuid programId,
+    static CriterionApplicabilityReviewed Reviewed(Uuid tenantId, Uuid programId, Uuid editionId,
         Uuid decisionId, ActorReference reviewer, long revision, int versionNumber,
-        string outcome, DateTimeOffset reviewedAt) =>
-        new(tenantId, programId, decisionId, revision, versionNumber, Uuid.CreateVersion4(),
-            outcome, "Reviewed the applicability rationale.", reviewer, reviewedAt, null);
+        string outcome, DateTimeOffset reviewedAt)
+    {
+        var reviewId = Uuid.CreateVersion4();
+        return new CriterionApplicabilityReviewed(tenantId, programId, decisionId, revision, versionNumber, reviewId,
+            outcome, "Reviewed the applicability rationale.", reviewer, reviewedAt, null, editionId, "AC-2.4",
+            NativeFacts.Root(new CriterionApplicability(tenantId, programId, editionId, "AC-2.4"), reviewId,
+                "ReviewCriterionApplicability", revision - 1, Uuid.Parse(reviewer.Id,
+                    System.Globalization.CultureInfo.InvariantCulture), reviewedAt), NativeFacts.Ref(),
+            NativeFacts.Ref());
+    }
 }

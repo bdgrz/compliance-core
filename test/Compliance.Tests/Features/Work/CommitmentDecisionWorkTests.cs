@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
@@ -269,7 +271,10 @@ public sealed class CommitmentDecisionWorkTests
         var queue = new WorkQueueReader(reader, authority, TimeProvider.System,
             services.GetRequiredService<WorkQueueReadConsistency>(),
             commitments: fixture.Commitments, commitmentConsistency: consistency,
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 
@@ -307,7 +312,10 @@ public sealed class CommitmentDecisionWorkTests
             new WorkQueueReadConsistency(events, [projection]),
             commitments: fixture.Commitments, commitmentConsistency: consistency,
             accountableWorkItems: [projection],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 

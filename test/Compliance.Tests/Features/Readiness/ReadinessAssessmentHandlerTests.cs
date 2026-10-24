@@ -781,18 +781,14 @@ public sealed class ReadinessAssessmentHandlerTests
                             "Approver", decidedAt, impactDigest: "source-history-fixture-impact"));
                 });
 
-        public Task MapAsync(string identifier, DateTimeOffset reviewedAt) =>
-            ProgramManagementServices.SeedAsync(Provider,
-                new ControlCriterionMappingLedger(TenantId, ProgramId), ledger =>
-                {
-                    var mappingId = ControlCriterionMappingLedger.MappingIdFor(ProgramId,
-                        ControlId, Edition, identifier);
-                    Assert.Null(ledger.Propose(ControlId, ControlVersionId, Edition, identifier,
-                        "criterion", 0, "Access reviews restrict access.", "All systems.",
-                        Uuid.CreateVersion4(), "Author", reviewedAt.AddMinutes(-10), out _));
-                    return Command(ledger.Review(mappingId, 1, Uuid.CreateVersion4(), "accept",
-                        "Matches.", Uuid.CreateVersion4(), "Reviewer", reviewedAt));
-                });
+        public async Task MapAsync(string identifier, DateTimeOffset reviewedAt)
+        {
+            var mappingId = await MappingSeeds.ProposeMappingAsync(Provider, TenantId, ProgramId, ControlId,
+                ControlVersionId, Edition, identifier, 0, "Access reviews restrict access.", "All systems.",
+                Uuid.CreateVersion4(), "Author", reviewedAt.AddMinutes(-10));
+            await MappingSeeds.ReviewMappingAsync(Provider, TenantId, ProgramId, ControlId, Edition, identifier,
+                mappingId, 1, "accept", "Matches.", Uuid.CreateVersion4(), "Reviewer", reviewedAt);
+        }
 
         public async Task<long> PlanAllAndProceedAsync(ReadinessAssessmentView assessment)
         {

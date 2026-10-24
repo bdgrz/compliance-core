@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 
@@ -101,7 +103,8 @@ public sealed class CriteriaCatalogHandlerTests
     public async Task ShouldReturnCatalogEntryWithoutOverlayGivenEmptyProjection()
     {
         // Arrange
-        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient());
+        var directory = new FitzCriteriaTextOverlayDirectory(new InMemoryKvClient(),
+            new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient())));
         var overlays = new FitzCriteriaTextOverlayReader(directory,
             new CriteriaTextOverlayReadConsistency(directory, new EmptyEventReader()));
         var entry = CriteriaCatalog.Platform.GetEntry(EditionId, "CC6.1")!;

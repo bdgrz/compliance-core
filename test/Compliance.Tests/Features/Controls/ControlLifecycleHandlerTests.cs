@@ -660,18 +660,12 @@ public sealed class ControlLifecycleHandlerTests
         {
             var now = DateTimeOffset.UtcNow;
             var edition = Uuid.CreateVersion4();
-            await ProgramManagementServices.SeedAsync(Provider,
-                new ControlCriterionMappingLedger(TenantId, ProgramId), ledger =>
-                {
-                    Assert.Null(ledger.Propose(ControlId, InitialVersionId, edition, "CC6.1",
-                        "criterion", 0, "Reviews restrict access.", "Production.",
-                        Uuid.CreateVersion4(), "Author", now, out _));
-                    return CommandResult(ledger.Review(ledger.ReadAll()[0].MappingId, 1,
-                        Uuid.CreateVersion4(), "accept", "Ok.", Uuid.CreateVersion4(),
-                        "Reviewer", now));
-                });
-            return ControlCriterionMappingLedger.MappingIdFor(ProgramId, ControlId, edition,
-                "CC6.1");
+            var mappingId = await MappingSeeds.ProposeMappingAsync(Provider, TenantId, ProgramId, ControlId,
+                InitialVersionId, edition, "CC6.1", 0, "Reviews restrict access.", "Production.",
+                Uuid.CreateVersion4(), "Author", now);
+            await MappingSeeds.ReviewMappingAsync(Provider, TenantId, ProgramId, ControlId, edition, "CC6.1",
+                mappingId, 1, "accept", "Ok.", Uuid.CreateVersion4(), "Reviewer", now);
+            return mappingId;
         }
 
         public async Task<Uuid> SeedAcceptedRiskTreatmentAsync()
@@ -802,16 +796,14 @@ public sealed class ControlLifecycleHandlerTests
         public async Task<Uuid> SeedEvaluationAsync(Uuid? artifactId = null)
         {
             var evaluationId = Uuid.CreateVersion4();
-            await ProgramManagementServices.SeedAsync(Provider,
-                new ControlEvaluationLedger(TenantId, ProgramId), ledger =>
-                    CommandResult(ledger.Start(ControlId, evaluationId, InitialVersionId,
-                        Uuid.CreateVersion4(), 1,
-                        [new EvaluationProcedureStep("design", "inspection",
-                            [artifactId is { } artifact
-                                ? new EvaluationInspectedItem("artifact", artifact.ToString(), "sha256:original")
-                                : new EvaluationInspectedItem("record", "procedure", "v1")],
-                            "Access review is defined.")], null,
-                        RbacIds.Member(TenantId, ReviewerUserId), "Reviewer", DateTimeOffset.UtcNow)));
+            await EvaluationSeeds.StartAsync(Provider, TenantId, ProgramId, ControlId, evaluationId, InitialVersionId,
+                Uuid.CreateVersion4(), 1,
+                [new EvaluationProcedureStep("design", "inspection",
+                    [artifactId is { } artifact
+                        ? new EvaluationInspectedItem("artifact", artifact.ToString(), "sha256:original")
+                        : new EvaluationInspectedItem("record", "procedure", "v1")],
+                    "Access review is defined.")], RbacIds.Member(TenantId, ReviewerUserId), "Reviewer",
+                DateTimeOffset.UtcNow);
             return evaluationId;
         }
 

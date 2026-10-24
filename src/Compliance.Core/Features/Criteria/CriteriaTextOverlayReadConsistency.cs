@@ -28,7 +28,7 @@ sealed class CriteriaTextOverlayReadConsistency(ICriteriaTextOverlayDirectoryRea
         ProjectionCheckpoint checkpoint, CancellationToken ct)
     {
         await using var pending = events.ReadAsync(EventStreamPattern.ForPattern(
-                tenantId.ToString(), CriteriaTextOverlayLedger.Area), checkpoint.Cursor, ct)
+                tenantId.ToString(), CriteriaTextOverlay.Area), checkpoint.Cursor, ct)
             .GetAsyncEnumerator(ct);
         return await pending.MoveNextAsync().ConfigureAwait(false);
     }

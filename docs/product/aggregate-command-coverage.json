@@ -2323,12 +2323,12 @@
       "contract": "src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingProposed.cs",
       "reducers": [
         {
-          "aggregate": "ControlCriterionMappingLedger",
-          "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMappingLedger.cs"
+          "aggregate": "ControlCriterionMapping",
+          "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/ControlCriterionMappingLedger.cs"
+        "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs"
@@ -2341,12 +2341,12 @@
       "contract": "src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingRetired.cs",
       "reducers": [
         {
-          "aggregate": "ControlCriterionMappingLedger",
-          "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMappingLedger.cs"
+          "aggregate": "ControlCriterionMapping",
+          "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/ControlCriterionMappingLedger.cs"
+        "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs"
@@ -2359,12 +2359,12 @@
       "contract": "src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingReviewed.cs",
       "reducers": [
         {
-          "aggregate": "ControlCriterionMappingLedger",
-          "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMappingLedger.cs"
+          "aggregate": "ControlCriterionMapping",
+          "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/ControlCriterionMappingLedger.cs"
+        "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
@@ -2459,12 +2459,12 @@
       "contract": "src/Compliance.Common/Features/Evaluations/ControlEvaluationDeviationDisposed.cs",
       "reducers": [
         {
-          "aggregate": "ControlEvaluationLedger",
-          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+          "aggregate": "ControlEvaluation",
+          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+        "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -2491,16 +2491,15 @@
       "contract": "src/Compliance.Common/Features/Evaluations/ControlEvaluationReviewed.cs",
       "reducers": [
         {
-          "aggregate": "ControlEvaluationLedger",
-          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+          "aggregate": "ControlEvaluation",
+          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+        "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -2510,16 +2509,15 @@
       "contract": "src/Compliance.Common/Features/Evaluations/ControlEvaluationStarted.cs",
       "reducers": [
         {
-          "aggregate": "ControlEvaluationLedger",
-          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+          "aggregate": "ControlEvaluation",
+          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+        "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -2529,16 +2527,15 @@
       "contract": "src/Compliance.Common/Features/Evaluations/ControlEvaluationStepRecorded.cs",
       "reducers": [
         {
-          "aggregate": "ControlEvaluationLedger",
-          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+          "aggregate": "ControlEvaluation",
+          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+        "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -2548,17 +2545,16 @@
       "contract": "src/Compliance.Common/Features/Evaluations/ControlEvaluationSubmitted.cs",
       "reducers": [
         {
-          "aggregate": "ControlEvaluationLedger",
-          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+          "aggregate": "ControlEvaluation",
+          "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs"
+        "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -2815,16 +2811,15 @@
       "contract": "src/Compliance.Common/Features/Criteria/CriteriaTextOverlayEntryRevised.cs",
       "reducers": [
         {
-          "aggregate": "CriteriaTextOverlayLedger",
-          "source": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs"
+          "aggregate": "CriteriaTextOverlay",
+          "source": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlay.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs"
+        "src/Compliance.Core/Features/Criteria/CriteriaTextOverlay.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Criteria/CriteriaTextOverlayProjectionTests.cs",
-        "test/Compliance.Tests/Features/Criteria/CriteriaTextOverlayLedgerTests.cs",
         "test/Compliance.Tests/Features/Criteria/SetCriteriaTextOverlayHandlerTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -2835,12 +2830,12 @@
       "contract": "src/Compliance.Common/Features/ControlMappings/CriterionApplicabilityReviewed.cs",
       "reducers": [
         {
-          "aggregate": "CriterionApplicabilityLedger",
-          "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityLedger.cs"
+          "aggregate": "CriterionApplicability",
+          "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityLedger.cs"
+        "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
@@ -2854,12 +2849,12 @@
       "contract": "src/Compliance.Common/Features/ControlMappings/CriterionNotApplicableProposed.cs",
       "reducers": [
         {
-          "aggregate": "CriterionApplicabilityLedger",
-          "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityLedger.cs"
+          "aggregate": "CriterionApplicability",
+          "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityLedger.cs"
+        "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
@@ -2873,12 +2868,12 @@
       "contract": "src/Compliance.Common/Features/ControlMappings/CriterionNotApplicableWithdrawn.cs",
       "reducers": [
         {
-          "aggregate": "CriterionApplicabilityLedger",
-          "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityLedger.cs"
+          "aggregate": "CriterionApplicability",
+          "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityLedger.cs"
+        "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs"
@@ -9396,35 +9391,6 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "ControlCriterionMappingLedger",
-      "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMappingLedger.cs",
-      "appliedFacts": [
-        "ControlCriterionMappingProposed",
-        "ControlCriterionMappingRetired",
-        "ControlCriterionMappingReviewed"
-      ],
-      "commandRequests": [
-        "ProposeControlCriterionMapping",
-        "RetireControlCriterionMapping",
-        "ReviewControlCriterionMapping"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingLedgerTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingReducerTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
-        "test/Compliance.Tests/Features/Work/ControlMappingWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "ControlDraft",
       "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs",
       "appliedFacts": [
@@ -9497,34 +9463,6 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "ControlEvaluationLedger",
-      "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs",
-      "appliedFacts": [
-        "ControlEvaluationDeviationDisposed",
-        "ControlEvaluationReviewed",
-        "ControlEvaluationStarted",
-        "ControlEvaluationStepRecorded",
-        "ControlEvaluationSubmitted"
-      ],
-      "commandRequests": [
-        "DisposeControlEvaluationDeviation",
-        "RecordControlEvaluationStep",
-        "ReviewControlEvaluation",
-        "StartControlEvaluation",
-        "SubmitControlEvaluation"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationStartIdempotencyTests.cs",
-        "test/Compliance.Tests/Features/Evaluations/PersonalControlEvaluationTransportTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "ControlEvaluationPlan",
       "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluationPlan.cs",
       "appliedFacts": [
@@ -9538,47 +9476,6 @@
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
-      "aggregate": "CriteriaTextOverlayLedger",
-      "source": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs",
-      "appliedFacts": [
-        "CriteriaTextOverlayEntryRevised"
-      ],
-      "commandRequests": [
-        "SetCriteriaTextOverlay"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Criteria/CriteriaTextOverlayLedgerTests.cs",
-        "test/Compliance.Tests/Features/Criteria/CriteriaTextOverlayProjectionTests.cs",
-        "test/Compliance.Tests/Features/Criteria/SetCriteriaTextOverlayHandlerTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
-      "aggregate": "CriterionApplicabilityLedger",
-      "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityLedger.cs",
-      "appliedFacts": [
-        "CriterionApplicabilityReviewed",
-        "CriterionNotApplicableProposed",
-        "CriterionNotApplicableWithdrawn"
-      ],
-      "commandRequests": [
-        "ProposeCriterionNotApplicable",
-        "ReviewCriterionApplicability",
-        "WithdrawCriterionNotApplicable"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityLedgerTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/ControlMappingWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10359,7 +10256,6 @@
         "test/Compliance.Tests/Features/Changes/RestrictedComplianceRecordMutationAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Changes/RestrictedComplianceRecordVisibilityTests.cs",
         "test/Compliance.Tests/Features/Commitments/PersonalCommitmentDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityLedgerTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlActivationHandlerTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs",
@@ -10459,7 +10355,8 @@
         "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs",
         "test/Compliance.Tests/MemberFacts.cs",
         "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs",
-        "test/Compliance.Tests/Testing/AttestAssignmentHistoryFixture.cs"
+        "test/Compliance.Tests/Testing/AttestAssignmentHistoryFixture.cs",
+        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11038,8 +10935,8 @@
         "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentApprovalTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentReviewTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingLedgerTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityLedgerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlActivationTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
@@ -12521,6 +12418,93 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/TrainingRequirementTests.cs",
         "test/Compliance.Tests/Testing/TrainingSeed.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ControlCriterionMapping",
+      "source": "src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs",
+      "appliedFacts": [
+        "ControlCriterionMappingProposed",
+        "ControlCriterionMappingRetired",
+        "ControlCriterionMappingReviewed"
+      ],
+      "commandRequests": [
+        "ProposeControlCriterionMapping",
+        "RetireControlCriterionMapping",
+        "ReviewControlCriterionMapping"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/MappingSeeds.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ControlEvaluation",
+      "source": "src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs",
+      "appliedFacts": [
+        "ControlEvaluationDeviationDisposed",
+        "ControlEvaluationReviewed",
+        "ControlEvaluationStarted",
+        "ControlEvaluationStepRecorded",
+        "ControlEvaluationSubmitted"
+      ],
+      "commandRequests": [
+        "DisposeControlEvaluationDeviation",
+        "RecordControlEvaluationStep",
+        "ReviewControlEvaluation",
+        "StartControlEvaluation",
+        "SubmitControlEvaluation"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/PersonalControlEvaluationTransportTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlEvaluationWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/EvaluationSeeds.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "CriteriaTextOverlay",
+      "source": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlay.cs",
+      "appliedFacts": [
+        "CriteriaTextOverlayEntryRevised"
+      ],
+      "commandRequests": [
+        "SetCriteriaTextOverlay"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Criteria/CriteriaTextOverlayProjectionTests.cs",
+        "test/Compliance.Tests/Features/Criteria/SetCriteriaTextOverlayHandlerTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "CriterionApplicability",
+      "source": "src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs",
+      "appliedFacts": [
+        "CriterionApplicabilityReviewed",
+        "CriterionNotApplicableProposed",
+        "CriterionNotApplicableWithdrawn"
+      ],
+      "commandRequests": [
+        "ProposeCriterionNotApplicable",
+        "ReviewCriterionApplicability",
+        "WithdrawCriterionNotApplicable"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/MappingSeeds.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     }
@@ -16598,7 +16582,7 @@
     {
       "request": "DisposeControlEvaluationDeviation",
       "contract": "src/Compliance.Common/Features/Evaluations/DisposeControlEvaluationDeviation.cs",
-      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16612,10 +16596,10 @@
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "ControlEvaluationLedger"
+        "ControlEvaluation"
       ],
       "helperServices": [
-        "ControlEvaluationSource"
+        "EvaluationWork"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs"
@@ -17863,9 +17847,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlCriterionMappingLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -17968,7 +17950,6 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlEvaluationLedger",
         "RemediationLedger"
       ],
       "aggregateTargets": [],
@@ -18130,9 +18111,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "CriterionApplicabilityLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -20961,7 +20940,6 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlEvaluationLedger",
         "RemediationLedger"
       ],
       "aggregateTargets": [],
@@ -23490,7 +23468,7 @@
     {
       "request": "ProposeControlCriterionMapping",
       "contract": "src/Compliance.Common/Features/ControlMappings/ProposeControlCriterionMapping.cs",
-      "interfaces": "IRequest<ControlCriterionMappingRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlCriterionMappingRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -23502,15 +23480,19 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "ComplianceProgram",
-        "ControlCriterionMappingLedger"
+        "ControlCriterionMapping"
       ],
       "aggregateTargets": [
-        "ControlCriterionMappingLedger"
+        "ControlCriterionMapping"
       ],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
-        "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/MappingSeeds.cs"
       ],
       "note": ""
     },
@@ -23594,7 +23576,7 @@
     {
       "request": "ProposeCriterionNotApplicable",
       "contract": "src/Compliance.Common/Features/ControlMappings/ProposeCriterionNotApplicable.cs",
-      "interfaces": "IRequest<CriterionApplicabilityRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<CriterionApplicabilityRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -23606,16 +23588,19 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "ComplianceProgram",
-        "CriterionApplicabilityLedger"
+        "CriterionApplicability"
       ],
       "aggregateTargets": [
-        "CriterionApplicabilityLedger"
+        "CriterionApplicability"
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/MappingSeeds.cs"
       ],
       "note": ""
     },
@@ -23916,8 +23901,7 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlDraft",
-        "ControlEvaluationLedger"
+        "ControlDraft"
       ],
       "aggregateTargets": [
         "FindingAggregate"
@@ -24702,7 +24686,7 @@
     {
       "request": "RecordControlEvaluationStep",
       "contract": "src/Compliance.Common/Features/Evaluations/RecordControlEvaluationStep.cs",
-      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -24714,17 +24698,19 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [
-        "ControlEvaluationLedger"
+        "ControlEvaluation"
       ],
       "helperServices": [
-        "ControlEvaluationSource"
+        "EvaluationWork"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
         "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
       ],
       "note": ""
     },
@@ -26632,7 +26618,7 @@
     {
       "request": "RetireControlCriterionMapping",
       "contract": "src/Compliance.Common/Features/ControlMappings/RetireControlCriterionMapping.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26643,14 +26629,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlCriterionMappingLedger"
+        "ControlCriterionMapping"
       ],
       "aggregateTargets": [
-        "ControlCriterionMappingLedger"
+        "ControlCriterionMapping"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs"
+        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs"
       ],
       "note": ""
     },
@@ -26842,7 +26830,7 @@
     {
       "request": "ReviewControlCriterionMapping",
       "contract": "src/Compliance.Common/Features/ControlMappings/ReviewControlCriterionMapping.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26854,24 +26842,28 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "ComplianceProgram",
-        "ControlCriterionMappingLedger",
+        "ControlCriterionMapping",
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "ControlCriterionMappingLedger"
+        "ControlCriterionMapping"
       ],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlMappingWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/MappingSeeds.cs"
       ],
       "note": ""
     },
     {
       "request": "ReviewControlEvaluation",
       "contract": "src/Compliance.Common/Features/Evaluations/ReviewControlEvaluation.cs",
-      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26882,17 +26874,17 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlEvaluationLedger",
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "ControlEvaluationLedger"
+        "ControlEvaluation"
       ],
       "helperServices": [
-        "ControlEvaluationSource"
+        "EvaluationWork"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs",
         "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
@@ -26931,7 +26923,7 @@
     {
       "request": "ReviewCriterionApplicability",
       "contract": "src/Compliance.Common/Features/ControlMappings/ReviewCriterionApplicability.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26943,17 +26935,20 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "ComplianceProgram",
-        "CriterionApplicabilityLedger",
+        "CriterionApplicability",
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "CriterionApplicabilityLedger"
+        "CriterionApplicability"
       ],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityTests.cs",
         "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/MappingSeeds.cs"
       ],
       "note": ""
     },
@@ -28188,7 +28183,6 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "ComplianceProgram",
-        "ControlCriterionMappingLedger",
         "ControlDraft",
         "ReadinessLedger"
       ],
@@ -28279,7 +28273,7 @@
     {
       "request": "SetCriteriaTextOverlay",
       "contract": "src/Compliance.Common/Features/Criteria/SetCriteriaTextOverlay.cs",
-      "interfaces": "IRequest<CriteriaTextOverlayRegistration>, IProgramManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<CriteriaTextOverlayRegistration>, IProgramManagementRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28290,15 +28284,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "CriteriaTextOverlayLedger"
+        "CriteriaTextOverlay"
       ],
       "aggregateTargets": [
-        "CriteriaTextOverlayLedger"
+        "CriteriaTextOverlay"
       ],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Criteria/CriteriaTextOverlayAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Criteria/CriteriaTextOverlayProjectionTests.cs",
         "test/Compliance.Tests/Features/Criteria/SetCriteriaTextOverlayHandlerTests.cs"
       ],
       "note": ""
@@ -28645,7 +28640,7 @@
     {
       "request": "StartControlEvaluation",
       "contract": "src/Compliance.Common/Features/Evaluations/StartControlEvaluation.cs",
-      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28659,19 +28654,20 @@
         "ControlEvaluationPlan"
       ],
       "aggregateTargets": [
-        "ControlEvaluationLedger"
+        "ControlEvaluation"
       ],
-      "helperServices": [
-        "ControlEvaluationSource"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
-        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs",
-        "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Testing/EvaluationSeeds.cs"
       ],
       "note": ""
     },
@@ -28759,7 +28755,7 @@
     {
       "request": "SubmitControlEvaluation",
       "contract": "src/Compliance.Common/Features/Evaluations/SubmitControlEvaluation.cs",
-      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlEvaluationView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28771,18 +28767,20 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [
-        "ControlEvaluationLedger"
+        "ControlEvaluation"
       ],
       "helperServices": [
-        "ControlEvaluationSource"
+        "EvaluationWork"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
         "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ControlEvaluationTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
       ],
       "note": ""
     },
@@ -29019,7 +29017,7 @@
     {
       "request": "WithdrawCriterionNotApplicable",
       "contract": "src/Compliance.Common/Features/ControlMappings/WithdrawCriterionNotApplicable.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -29030,14 +29028,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "CriterionApplicabilityLedger"
+        "CriterionApplicability"
       ],
       "aggregateTargets": [
-        "CriterionApplicabilityLedger"
+        "CriterionApplicability"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs"
+        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/CriterionApplicabilityTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzCriterionApplicabilityWorkItemDirectoryTests.cs"
       ],
       "note": ""
     },

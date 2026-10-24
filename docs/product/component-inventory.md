@@ -1816,8 +1816,8 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### ControlMappings
 
-- [ControlCriterionMappingLedger](../../src/Compliance.Core/Features/ControlMappings/ControlCriterionMappingLedger.cs#L13)
-- [CriterionApplicabilityLedger](../../src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityLedger.cs#L13)
+- [ControlCriterionMapping](../../src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs#L15)
+- [CriterionApplicability](../../src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs#L15)
 
 #### Controls
 
@@ -1825,11 +1825,11 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Criteria
 
-- [CriteriaTextOverlayLedger](../../src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs#L7)
+- [CriteriaTextOverlay](../../src/Compliance.Core/Features/Criteria/CriteriaTextOverlay.cs#L15)
 
 #### Evaluations
 
-- [ControlEvaluationLedger](../../src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs#L14)
+- [ControlEvaluation](../../src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs#L16)
 - [ControlEvaluationPlan](../../src/Compliance.Core/Features/Evaluations/ControlEvaluationPlan.cs#L9)
 
 #### Evidence
@@ -2946,7 +2946,7 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | PUT | `/api/v1/tenants/{tenant_id}/nonattest-services/record-nonattest-service/{service_record_id}` | `RecordNonattestService` | [registration](../../src/Compliance.App/Program.cs#L736) |
 | PUT | `/api/v1/tenants/{tenant_id}/client-independence-evaluations/evaluate-client-independence/{evaluation_id}` | `EvaluateClientIndependence` | [registration](../../src/Compliance.App/Program.cs#L740) |
 | GET | `/api/v1/tenants/{tenant_id}/independence/history` | `GetClientIndependenceHistory` | [registration](../../src/Compliance.App/Program.cs#L744) |
-| PUT | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}/overlay` | `SetCriteriaTextOverlay` | [registration](../../src/Compliance.App/Program.cs#L748) |
+| PUT | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/overlays/set-criteria-text-overlay/{command_id}` | `SetCriteriaTextOverlay` | [registration](../../src/Compliance.App/Program.cs#L748) |
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criteria-edition` | `SelectProgramCriteriaEdition` | [registration](../../src/Compliance.App/Program.cs#L752) |
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}` | `ReviseProgram` | [registration](../../src/Compliance.App/Program.cs#L756) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}` | `GetProgram` | [registration](../../src/Compliance.App/Program.cs#L759) |
@@ -2969,9 +2969,9 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/versions/{version_id}` | `GetControlVersion` | [registration](../../src/Compliance.App/Program.cs#L826) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/decisions` | `ListControlDecisions` | [registration](../../src/Compliance.App/Program.cs#L830) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/decisions/{decision_id}` | `GetControlDecision` | [registration](../../src/Compliance.App/Program.cs#L834) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings` | `ProposeControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L839) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/reviews` | `ReviewControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L843) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/retirements` | `RetireControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L847) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}` | `ProposeControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L839) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/reviews/{command_id}` | `ReviewControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L843) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/retirements/{command_id}` | `RetireControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L847) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}` | `GetControlCriterionMapping` | [registration](../../src/Compliance.App/Program.cs#L851) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings` | `ListControlCriterionMappings` | [registration](../../src/Compliance.App/Program.cs#L855) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criteria-coverage` | `ListCriteriaCoverage` | [registration](../../src/Compliance.App/Program.cs#L859) |
@@ -2982,9 +2982,9 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/proposal-withdrawals` | `WithdrawControlProposal` | [registration](../../src/Compliance.App/Program.cs#L881) |
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person` | `DesignateControlOwnerPerson` | [registration](../../src/Compliance.App/Program.cs#L885) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person` | `GetControlDraftOwnerPerson` | [registration](../../src/Compliance.App/Program.cs#L889) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability` | `ProposeCriterionNotApplicable` | [registration](../../src/Compliance.App/Program.cs#L894) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/reviews` | `ReviewCriterionApplicability` | [registration](../../src/Compliance.App/Program.cs#L898) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/withdrawals` | `WithdrawCriterionNotApplicable` | [registration](../../src/Compliance.App/Program.cs#L902) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}` | `ProposeCriterionNotApplicable` | [registration](../../src/Compliance.App/Program.cs#L894) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/reviews/{command_id}` | `ReviewCriterionApplicability` | [registration](../../src/Compliance.App/Program.cs#L898) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/withdrawals/{command_id}` | `WithdrawCriterionNotApplicable` | [registration](../../src/Compliance.App/Program.cs#L902) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}` | `GetCriterionApplicability` | [registration](../../src/Compliance.App/Program.cs#L906) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability` | `ListCriterionApplicability` | [registration](../../src/Compliance.App/Program.cs#L910) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts` | `CreateCommitmentDraft` | [registration](../../src/Compliance.App/Program.cs#L914) |
@@ -3077,16 +3077,16 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations/{command_id}` | `AttestControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1269) |
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections/{command_id}` | `CorrectControlAttestation` | [registration](../../src/Compliance.App/Program.cs#L1273) |
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews/{command_id}` | `ReviewControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1277) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations` | `StartControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1281) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}` | `StartControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1281) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions` | `DefineControlEvaluationPlan` | [registration](../../src/Compliance.App/Program.cs#L1285) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions` | `ListControlEvaluationPlanVersions` | [registration](../../src/Compliance.App/Program.cs#L1289) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions/{plan_version_id}` | `GetControlEvaluationPlanVersion` | [registration](../../src/Compliance.App/Program.cs#L1294) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations` | `ListControlEvaluations` | [registration](../../src/Compliance.App/Program.cs#L1298) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}` | `GetControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1302) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results` | `RecordControlEvaluationStep` | [registration](../../src/Compliance.App/Program.cs#L1306) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions` | `DisposeControlEvaluationDeviation` | [registration](../../src/Compliance.App/Program.cs#L1310) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions` | `SubmitControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1314) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews` | `ReviewControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1318) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results/{command_id}` | `RecordControlEvaluationStep` | [registration](../../src/Compliance.App/Program.cs#L1306) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions/{command_id}` | `DisposeControlEvaluationDeviation` | [registration](../../src/Compliance.App/Program.cs#L1310) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions/{command_id}` | `SubmitControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1314) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews/{command_id}` | `ReviewControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1318) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests` | `OpenEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1322) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests` | `ListEvidenceRequests` | [registration](../../src/Compliance.App/Program.cs#L1326) |
 | POST | `/api/v1/tenants/{tenant_id}/evidence-redactions/{redaction_id}/preparations` | `PrepareEvidenceRedaction` | [registration](../../src/Compliance.App/Program.cs#L1330) |

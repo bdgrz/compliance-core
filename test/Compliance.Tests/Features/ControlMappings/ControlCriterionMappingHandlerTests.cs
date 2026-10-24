@@ -99,9 +99,11 @@ public sealed class ControlCriterionMappingHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var first = await fixture.ProposeAsync("CC6.1");
-        var retry = await fixture.ProposeAsync("CC6.1");
+        var proposal = fixture.Propose("CC6.1");
+        var first = await fixture.ProposeAsync(proposal);
+        var retry = await fixture.ProposeAsync(proposal);
         await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ReviewerUserId, fixture.Review(first.MappingId, first.Revision, "accept"));
+        var retryAfterReview = await fixture.ProposeAsync(proposal);
 
         await fixture.Scenario(fixture.AuthorUserId)
             // Act
@@ -109,6 +111,7 @@ public sealed class ControlCriterionMappingHandlerTests
             // Assert
             .ExpectFailure(RequestErrorKind.Conflict);
         Assert.Equal(first, retry);
+        Assert.Equal(first, retryAfterReview);
         await fixture.Scenario(fixture.AuthorUserId)
             .When(fixture.Propose("CC6.1") with { Rationale = "Changed", ExpectedRevision = 1 })
             .ExpectFailure(RequestErrorKind.Conflict);
@@ -124,12 +127,12 @@ public sealed class ControlCriterionMappingHandlerTests
         var first = await fixture.ProposeAsync("CC6.1");
         await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ReviewerUserId, fixture.Review(first.MappingId, 1, "accept"));
         var second = await fixture.ProposeAsync("CC6.1", 2, "Narrowed rationale");
-        await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ReviewerUserId, fixture.Review(first.MappingId, second.Revision, "accept"));
+        await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ReviewerUserId, fixture.Review(second.MappingId, second.Revision, "accept"));
 
         await fixture.Scenario(fixture.ReviewerUserId)
             // Act
-            .When(new RetireControlCriterionMapping(fixture.TenantId, fixture.ProgramId,
-                first.MappingId, 4, "The control no longer addresses access provisioning."))
+            .When(new RetireControlCriterionMapping(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                second.MappingId, 4, "The control no longer addresses access provisioning."))
             // Assert
             .ExpectSuccess();
         var mapping = await fixture.GetAsync(first.MappingId);
@@ -194,7 +197,7 @@ public sealed class ControlCriterionMappingHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var proposed = await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.AuthorUserId, new ProposeCriterionNotApplicable(fixture.TenantId, fixture.ProgramId,
+        var proposed = await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.AuthorUserId, new ProposeCriterionNotApplicable(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 CurrentEdition, "CC6.2", 0, "No user accounts are approved by the service."));
         var registration = proposed.Value;
         await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.AuthorUserId, fixture.ReviewApplicability(registration.DecisionId, 1, "accept"), RequestErrorKind.Forbidden);
@@ -218,7 +221,7 @@ public sealed class ControlCriterionMappingHandlerTests
         var decision = Assert.Single(decisions.Items);
         Assert.Equal("accepted", decision.Versions[0].Status);
         await fixture.Scenario(fixture.AuthorUserId)
-            .When(new WithdrawCriterionNotApplicable(fixture.TenantId, fixture.ProgramId,
+            .When(new WithdrawCriterionNotApplicable(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 registration.DecisionId, 2, "The service now approves accounts."))
             .ExpectSuccess();
         Assert.Equal("unmapped", (await fixture.CoverageAsync("CC6.2")).CoverageState);
@@ -236,9 +239,9 @@ public sealed class ControlCriterionMappingHandlerTests
 
         // Act
         // Assert
-        await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.AuthorUserId, new ProposeCriterionNotApplicable(fixture.TenantId, fixture.ProgramId,
+        await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.AuthorUserId, new ProposeCriterionNotApplicable(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 CurrentEdition, FocusIdentifier, 0, "Not applicable."), RequestErrorKind.Validation);
-        await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.AuthorUserId, new ProposeCriterionNotApplicable(fixture.TenantId, fixture.ProgramId,
+        await PersonalMappingDecisionTransportTests.HttpAsync(fixture.Provider, fixture.AuthorUserId, new ProposeCriterionNotApplicable(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 NextEdition, "CC6.2", 0, "Not applicable."), RequestErrorKind.Conflict);
     }
 
@@ -368,20 +371,22 @@ public sealed class ControlCriterionMappingHandlerTests
 
         public ProposeControlCriterionMapping Propose(string identifier, Uuid? edition = null,
             long expectedRevision = 0, string rationale = "Access reviews restrict access.") =>
-            new(TenantId, ProgramId, ControlId, ControlVersionId, edition ?? CurrentEdition,
+            new(Uuid.CreateVersion4(), TenantId, ProgramId, ControlId, ControlVersionId, edition ?? CurrentEdition,
                 identifier, expectedRevision, rationale,
                 "Applies to every production system in scope.");
 
         public async Task<ControlCriterionMappingRegistration> ProposeAsync(string identifier,
-            long expectedRevision = 0, string rationale = "Access reviews restrict access.")
+            long expectedRevision = 0, string rationale = "Access reviews restrict access.") =>
+            await ProposeAsync(Propose(identifier, null, expectedRevision, rationale));
+
+        public async Task<ControlCriterionMappingRegistration> ProposeAsync(ProposeControlCriterionMapping request)
         {
-            var result = await Scenario(AuthorUserId)
-                .When(Propose(identifier, null, expectedRevision, rationale)).ExpectSuccess();
+            var result = await Scenario(AuthorUserId).When(request).ExpectSuccess();
             return result.Value;
         }
 
         public ReviewCriterionApplicability ReviewApplicability(Uuid decisionId, long revision,
-            string outcome) => new(TenantId, ProgramId, decisionId, revision, outcome,
+            string outcome) => new(Uuid.CreateVersion4(), TenantId, ProgramId, decisionId, revision, outcome,
             "The rationale is supported.");
 
         public Task ApproveSuccessorAsync()
@@ -411,7 +416,7 @@ public sealed class ControlCriterionMappingHandlerTests
         }
 
         public ReviewControlCriterionMapping Review(Uuid mappingId, long revision,
-            string outcome) => new(TenantId, ProgramId, mappingId, revision, outcome,
+            string outcome) => new(Uuid.CreateVersion4(), TenantId, ProgramId, mappingId, revision, outcome,
             "The rationale matches the criterion.");
 
         public Task<ControlCriterionMappingView> GetAsync(Uuid mappingId) =>

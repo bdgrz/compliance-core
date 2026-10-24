@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Policies;
@@ -121,7 +123,10 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId, "Approver");
         WorkQueueReader Queue(FitzPolicyDecisionWorkItemDirectory source) => new(reader, authority, TimeProvider.System,
             new WorkQueueReadConsistency(events, [source]), accountableWorkItems: [source],
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
 
         // Act
         var before = await Queue(directory).ReadAsync(fixture.TenantId, fixture.ProgramId, actor, 30,

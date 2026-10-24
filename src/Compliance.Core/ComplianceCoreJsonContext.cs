@@ -621,6 +621,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(CriteriaTextOverlayRevision))]
 [JsonSerializable(typeof(CriteriaTextOverlayRegistration))]
 [JsonSerializable(typeof(SetCriteriaTextOverlay))]
+[JsonSerializable(typeof(CriteriaTextOverlayContent))]
 [JsonSerializable(typeof(IndependenceRuleContent))]
 [JsonSerializable(typeof(IndependenceServiceRuleContent))]
 [JsonSerializable(typeof(IndependenceRuleVersionView))]

@@ -3,8 +3,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.ControlMappings;
 
 /// <summary>
-///     Folds one applicability event into the decision's public view. Both
-///     <see cref="CriterionApplicabilityLedger" /> and the coverage projection use it.
+///     Folds one applicability fact into the criterion line's public view. The owner, its readers and the coverage
+///     projection use it, so projected views match owner reads exactly.
 /// </summary>
 static class CriterionApplicabilityReducer
 {
@@ -18,7 +18,7 @@ static class CriterionApplicabilityReducer
             {
                 Revision = proposed.Revision,
                 Versions = [.. current?.Versions ?? [], new CriterionApplicabilityVersionView(
-                proposed.VersionNumber, "proposed", proposed.Rationale, proposed.Actor,
+                proposed.VersionNumber, proposed.DecisionId, "proposed", proposed.Rationale, proposed.Actor,
                 proposed.ProposedAt, null, null, null, null, null, null, null, null)],
             }),
             CriterionApplicabilityReviewed reviewed => Reviewed(Require(current), reviewed),

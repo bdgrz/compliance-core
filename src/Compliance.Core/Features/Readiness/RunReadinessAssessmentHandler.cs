@@ -9,14 +9,14 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Readiness;
 
 /// <summary>
-///     Reads the program's criteria edition selected at the requested time, mapping ledger, and
+///     Reads the program's criteria edition selected at the requested time, mapping lines, and
 ///     mapped controls, evaluates the current readiness rules as of that time, and records the
 ///     exact inputs and results.
 ///     A missing input is recorded as an acknowledged gap; it never blocks the run.
 /// </summary>
 public sealed class RunReadinessAssessmentHandler(IAggregateExecutor executor,
-    IAggregateReader reader, ICriteriaCatalog catalog, IReadinessSourceReader sources,
-    TimeProvider clock)
+    IAggregateReader reader, ControlMappingReader mappingReader, ICriteriaCatalog catalog,
+    IReadinessSourceReader sources, TimeProvider clock)
     : IRequestHandler<RunReadinessAssessment, ReadinessAssessmentRegistration>
 {
     public async ValueTask<Result<ReadinessAssessmentRegistration>> HandleAsync(
@@ -39,10 +39,8 @@ public sealed class RunReadinessAssessmentHandler(IAggregateExecutor executor,
         var criteria = editionId is { } edition
             ? catalog.ListEntries(edition, null, "criterion", null)
             : [];
-        var ledger = await reader.HydrateAsync(new ControlCriterionMappingLedger(
-            request.TenantId, request.ProgramId), ct).ConfigureAwait(false);
-        var mappings = ledger.ReadAll().Where(mapping => mapping.EditionId == editionId)
-            .ToArray();
+        var mappings = (await mappingReader.ReadProgramAsync(request.TenantId, request.ProgramId, ct)
+                .ConfigureAwait(false)).Mappings.Where(mapping => mapping.EditionId == editionId).ToArray();
         var controls = new Dictionary<Uuid, ControlVersionView?>();
         foreach (var controlId in mappings
                      .Where(mapping => ReadinessRules.ActiveAt(mapping, asOf) is not null)

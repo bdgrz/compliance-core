@@ -13,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     canonical owning record; this preview does not verify artifact existence or content.
 /// </summary>
 public sealed class EvidenceControlImpactContributor(IAggregateReader reader, FindingReader findings,
-    ControlOperationsReader operatingReader)
+    ControlOperationsReader operatingReader, ControlEvaluationReader evaluationReader)
     : IControlImpactContributor
 {
     public string Context => "evidence";
@@ -45,9 +45,8 @@ public sealed class EvidenceControlImpactContributor(IAggregateReader reader, Fi
                         $"Attestation version {attestation.Version} retains operating support for this Control version, including unresolved references.")));
                 AddSupport(attestation.Evidence, $"Attestation {attestation.AttestationId}");
             }
-        var evaluations = await reader.HydrateAsync(new ControlEvaluationLedger(subject.TenantId,
-            subject.ProgramId), ct).ConfigureAwait(false);
-        var linkedEvaluations = evaluations.ReadControl(subject.Id);
+        var linkedEvaluations = await evaluationReader.ReadControlAsync(subject.TenantId, subject.ProgramId,
+            subject.Id, ct).ConfigureAwait(false);
         foreach (var evaluation in linkedEvaluations)
         {
             var inspected = evaluation.Steps

@@ -49,7 +49,7 @@ public sealed class ControlEvaluationPlan : Aggregate
             string.IsNullOrWhiteSpace(objective) || objective.Trim().Length > MaximumObjectiveLength)
             return CommandFailure.InvalidContent(
                 "An evaluation plan version requires an objective and an attributed author.");
-        if (ControlEvaluationLedger.ValidateProcedure(steps) is { } invalid)
+        if (ControlEvaluationRules.ValidateProcedure(steps) is { } invalid)
             return invalid;
         if (steps!.SelectMany(static step => step.InspectedItems).Any(item =>
                 item.Kind == "control" && (item.Reference != Id.ToString() ||

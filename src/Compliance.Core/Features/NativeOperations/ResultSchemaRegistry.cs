@@ -1,11 +1,8 @@
 using Bdgrz.Compliance.Features.AccessControl;
-<<<<<<< HEAD
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Providers;
 using Bdgrz.Compliance.Features.AccessReviews;
-=======
 using Bdgrz.Compliance.Features.PolicyDistribution;
->>>>>>> 4cbdefb4 (refactor(policies): split distribution campaigns, participants and training requirements with a closure process (#1022))
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization.Metadata;
 
@@ -35,7 +32,6 @@ public static class ResultSchemaRegistry
             ComplianceCoreJsonContext.Default.FirmProfessionalDutyDesignationView,
         ["FirmProfessionalDutyDesignationRevoked.DesignationContent.v1"] =
             ComplianceCoreJsonContext.Default.FirmProfessionalDutyDesignationView,
-<<<<<<< HEAD
         [IndependenceContent.ServiceSchema] = ComplianceCoreJsonContext.Default.NonattestServiceView,
         [IndependenceContent.EvaluationSchema] = ComplianceCoreJsonContext.Default.IndependenceEvaluationView,
         [IndependenceContent.EngagementSchema] = ComplianceCoreJsonContext.Default.ServiceEngagementView,
@@ -72,7 +68,6 @@ public static class ResultSchemaRegistry
         [AccessReviewContent.ReassignmentViewSchema] =
             ComplianceCoreJsonContext.Default.AccessReviewResponsibilityReassignmentView,
         [AccessReviewContent.CompletionViewSchema] = ComplianceCoreJsonContext.Default.AccessReviewCampaignCompletionView,
-=======
         ["PolicyCampaignLaunched.Registration.v1"] = ComplianceCoreJsonContext.Default.CampaignRegistration,
         ["PolicyCampaignAudienceAmended.Reconciliation.v1"] =
             ComplianceCoreJsonContext.Default.CampaignReconciliationView,
@@ -83,7 +78,6 @@ public static class ResultSchemaRegistry
         ["PolicyCampaignClosed.Campaign.v1"] = ComplianceCoreJsonContext.Default.CampaignView,
         ["TrainingRequirementDefined.Registration.v1"] =
             ComplianceCoreJsonContext.Default.TrainingRequirementRegistration,
->>>>>>> 4cbdefb4 (refactor(policies): split distribution campaigns, participants and training requirements with a closure process (#1022))
     };
 
     /// <summary>Registered schema names.</summary>

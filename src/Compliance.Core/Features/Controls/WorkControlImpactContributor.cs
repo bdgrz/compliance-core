@@ -13,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     no actor visibility or queue date horizon can hide a retained relationship.
 /// </summary>
 public sealed class WorkControlImpactContributor(IAggregateReader reader, FindingReader findings,
-    ControlOperationsReader operatingReader)
+    ControlOperationsReader operatingReader, ControlEvaluationReader evaluationReader)
     : IControlImpactContributor
 {
     public string Context => "work";
@@ -24,8 +24,8 @@ public sealed class WorkControlImpactContributor(IAggregateReader reader, Findin
         ArgumentNullException.ThrowIfNull(subject);
         var operations = await operatingReader.ReadAsync(subject.TenantId, subject.ProgramId, ct)
             .ConfigureAwait(false);
-        var evaluations = await reader.HydrateAsync(new ControlEvaluationLedger(subject.TenantId,
-            subject.ProgramId), ct).ConfigureAwait(false);
+        var linkedEvaluations = await evaluationReader.ReadControlAsync(subject.TenantId, subject.ProgramId,
+            subject.Id, ct).ConfigureAwait(false);
         var remediation = await findings.ReadAsync(subject.TenantId,
             subject.ProgramId, DateTimeOffset.MinValue, ct).ConfigureAwait(false);
         if (!remediation.IsSuccess)
@@ -43,7 +43,6 @@ public sealed class WorkControlImpactContributor(IAggregateReader reader, Findin
                 "control_occurrence", occurrence.OccurrenceId, occurrence.ControlVersionId,
                 string.Create(CultureInfo.InvariantCulture,
                     $"The {occurrence.State} recorded occurrence (revision {occurrence.Revision}) retains this Control version; preserve its operating history.")));
-        var linkedEvaluations = evaluations.ReadControl(subject.Id);
         foreach (var evaluation in linkedEvaluations)
             records.Add(new ControlAffectedRecord(subject.TenantId, Context,
                 "control_evaluation", evaluation.EvaluationId, evaluation.ControlVersionId,

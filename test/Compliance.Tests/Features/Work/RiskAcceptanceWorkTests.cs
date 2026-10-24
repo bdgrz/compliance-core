@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Risks;
@@ -179,7 +181,10 @@ public sealed class RiskAcceptanceWorkTests
         var queue = new WorkQueueReader(reader,
             scope.ServiceProvider.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             consistency, risks: fixture.Risks, accountableWorkItems: [projected],
-            operatingReader: scope.ServiceProvider.GetRequiredService<ControlOperationsReader>());
+            operatingReader: scope.ServiceProvider.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: scope.ServiceProvider.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: scope.ServiceProvider.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: scope.ServiceProvider.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 

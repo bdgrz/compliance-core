@@ -1,27 +1,54 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evaluations;
 
-/// <summary>Records a minor deviation's disposition; a waiver must be approved, active, and scoped to the deviation.</summary>
-public sealed class DisposeControlEvaluationDeviationHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock)
+/// <summary>
+///     Records a minor deviation's disposition on that evaluation's own stream; a waiver must be approved, active,
+///     and scoped to the deviation and round. An exact retry returns the original view after later work.
+/// </summary>
+public sealed class DisposeControlEvaluationDeviationHandler(NativeOperationExecutor operations,
+    ControlEvaluationReader evaluations, IAggregateReader reader, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<DisposeControlEvaluationDeviation, ControlEvaluationView>
 {
+    const string CommandKind = "DisposeControlEvaluationDeviation";
+
     public async ValueTask<Result<ControlEvaluationView>> HandleAsync(
         IRequestContext<DisposeControlEvaluationDeviation> context, CancellationToken ct)
     {
         var request = context.Request;
+        if (request.CommandId == Uuid.Empty || request.EvaluationId == Uuid.Empty || request.DeviationId == Uuid.Empty ||
+            request.ExpectedRevision < 0)
+            return Result<ControlEvaluationView>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A disposition requires a command id, an evaluation, a deviation and a non-negative expected revision."));
         var actor = OperationsActor.From(context.Actor, request.TenantId);
         var now = clock.GetUtcNow();
-        SeparationOfDutiesWaiver? waiver = null;
-        if (request.WaiverId is { } waiverId)
-            waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId,
-                waiverId), ct).ConfigureAwait(false);
-        return await ControlEvaluationSource.ExecuteAsync(executor, context, request.TenantId,
-            request.ProgramId, request.ControlId, request.EvaluationId,
-            ledger => ledger.DisposeDeviation(request.ControlId, request.EvaluationId,
-                request.DeviationId, request.ExpectedRevision, request.Disposition,
-                request.Rationale, waiver, actor.MemberId, now),
-            ct).ConfigureAwait(false);
+        return await EvaluationWork.RunAsync(operations, evaluations, content, context, request.TenantId,
+            request.ProgramId, request.ControlId, request.EvaluationId, request.CommandId, CommandKind,
+            AuthoredIntentDigest.Compute(request), request.ExpectedRevision, actor, now, async (state, token) =>
+            {
+                SeparationOfDutiesWaiver? waiver = null;
+                if (request.WaiverId is { } waiverId)
+                    waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, waiverId), token)
+                        .ConfigureAwait(false);
+                var failure = ControlEvaluationRules.CheckDisposition(state, request, actor.MemberId, now, waiver);
+                if (failure is not null)
+                    return Result<EvaluationChange>.Failure(failure.ToRequestError());
+                var after = state.Clone();
+                after.DisposeDeviation(state.Revision + 1, request.DeviationId, request.Disposition,
+                    request.Rationale.Trim(), waiver?.Id);
+                return Result<EvaluationChange>.Success(new EvaluationChange(after,
+                    (ControlEvaluation owner) => owner.PrepareWork(request.ExpectedRevision),
+                    (ControlEvaluation owner, OperationProvenance provenance, ImmutableContentRef first,
+                        ImmutableContentRef operationResult) => owner.DisposeDeviation(provenance,
+                        request.DeviationId, request.Disposition, request.Rationale, waiver?.Id, first,
+                        operationResult)));
+            }, ct).ConfigureAwait(false);
     }
 }

@@ -303,7 +303,8 @@ public sealed class ReviewerWorkAuthorityTests
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzFindingClosureWorkItemDirectory(client, provider.GetRequiredService<FindingReader>(), TimeProvider.System));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                            new FitzControlEvaluationWorkItemDirectory(client));
+                            new FitzControlEvaluationWorkItemDirectory(client,
+                                provider.GetRequiredService<IImmutableContentStore>()));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzControlOperatingPlanWorkItemDirectory(client,
                                 provider.GetRequiredService<IAggregateReader>(),
@@ -455,15 +456,15 @@ public sealed class ReviewerWorkAuthorityTests
             {
                 var plan = await Operations.GetOrDefineEvaluationPlanAsync();
                 var evaluation = await Operations.AsAsync(Operations.OwnerUserId,
-                    new StartControlEvaluation(Operations.TenantId, Operations.ProgramId,
+                    new StartControlEvaluation(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                         Operations.ControlId, plan.PlanVersionId));
                 foreach (var step in evaluation.Steps)
                     evaluation = await Operations.AsAsync(Operations.OwnerUserId,
-                        new RecordControlEvaluationStep(Operations.TenantId, Operations.ProgramId,
+                        new RecordControlEvaluationStep(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                             Operations.ControlId, evaluation.EvaluationId, step.StepId,
                             evaluation.Revision, "met", "Inspected exact items.", step.InspectedItems));
                 evaluation = await Operations.AsAsync(Operations.OwnerUserId,
-                    new SubmitControlEvaluation(Operations.TenantId, Operations.ProgramId,
+                    new SubmitControlEvaluation(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                         Operations.ControlId, evaluation.EvaluationId, evaluation.Revision,
                         [new("design", "effective", "Design meets objective."),
                             new("implementation", "effective", "Operates as designed."),
@@ -473,28 +474,12 @@ public sealed class ReviewerWorkAuthorityTests
             var edition = Uuid.CreateVersion4();
             var now = DateTimeOffset.UtcNow;
             if (kind == "mapping")
-            {
-                await ProgramManagementServices.SeedAsync(Operations.Provider,
-                    new ControlCriterionMappingLedger(Operations.TenantId, Operations.ProgramId), ledger =>
-                    {
-                        Assert.Null(ledger.Propose(Operations.ControlId, Operations.ControlVersionId,
-                            edition, "CC6.1", "criterion", 0, "Addresses access review.",
-                            "Applies to production.", Operations.LeadMemberId, "Lead", now, out _));
-                        return Result.Success;
-                    });
-                return new Pending(ControlCriterionMappingLedger.MappingIdFor(Operations.ProgramId,
-                    Operations.ControlId, edition, "CC6.1"), 1);
-            }
-            await ProgramManagementServices.SeedAsync(Operations.Provider,
-                new CriterionApplicabilityLedger(Operations.TenantId, Operations.ProgramId), ledger =>
-                {
-                    Assert.Null(ledger.Propose(edition, "CC6.2", 0, "Does not apply to organization.",
-                        Operations.LeadMemberId, ActorReference.ForMember(Operations.LeadMemberId, "Lead"),
-                        now, out _));
-                    return Result.Success;
-                });
-            return new Pending(CriterionApplicabilityLedger.DecisionIdFor(Operations.ProgramId,
-                edition, "CC6.2"), 1);
+                return new Pending(await MappingSeeds.ProposeMappingAsync(Operations.Provider, Operations.TenantId,
+                    Operations.ProgramId, Operations.ControlId, Operations.ControlVersionId, edition, "CC6.1", 0,
+                    "Addresses access review.", "Applies to production.", Operations.LeadMemberId, "Lead", now), 1);
+            return new Pending(await MappingSeeds.ProposeNotApplicableAsync(Operations.Provider, Operations.TenantId,
+                Operations.ProgramId, edition, "CC6.2", 0, "Does not apply to organization.", Operations.LeadMemberId,
+                "Lead", now), 1);
         }
 
         public async Task ReviewAsync(string kind, Pending pending, RequestErrorKind? error = null)
@@ -542,7 +527,7 @@ public sealed class ReviewerWorkAuthorityTests
             else if (kind == "evaluation")
             {
                 await PersonalControlEvaluationTransportTests.HttpAsync(Provider, GuestUserId,
-                    new ReviewControlEvaluation(Operations.TenantId, Operations.ProgramId,
+                    new ReviewControlEvaluation(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                         Operations.ControlId, pending.Id, pending.Revision, "accepted", "Reviewed independently."), error);
             }
             else if (kind == "operating_plan")
@@ -554,13 +539,13 @@ public sealed class ReviewerWorkAuthorityTests
             else if (kind == "mapping")
             {
                 await PersonalMappingDecisionTransportTests.HttpAsync(Provider, GuestUserId,
-                    new ReviewControlCriterionMapping(Operations.TenantId, Operations.ProgramId,
+                    new ReviewControlCriterionMapping(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                         pending.Id, pending.Revision, "reject", "Reviewed independently."), error);
             }
             else
             {
                 await PersonalMappingDecisionTransportTests.HttpAsync(Provider, GuestUserId,
-                    new ReviewCriterionApplicability(Operations.TenantId, Operations.ProgramId,
+                    new ReviewCriterionApplicability(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                         pending.Id, pending.Revision, "reject", "Reviewed independently."), error);
             }
             if (kind == "policy")

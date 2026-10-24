@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Responsibilities;
@@ -366,7 +368,10 @@ public sealed class ControlDecisionWorkTests
             controlActivationGate: new ControlActivationReleaseGate(activationEnabled),
             controlLifecycleGate: new ControlLifecycleReleaseGate(lifecycleEnabled),
             accountableWorkItems: projectedWorkItems,
-            operatingReader: services.GetRequiredService<ControlOperationsReader>());
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
         return await queue.ReadAsync(tenantId, programId, actor, 30, CancellationToken.None);

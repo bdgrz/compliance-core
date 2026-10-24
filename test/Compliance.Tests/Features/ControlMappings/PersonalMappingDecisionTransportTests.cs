@@ -217,7 +217,7 @@ public sealed class PersonalMappingDecisionTransportTests
             var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
             if (action == "mapping")
             {
-                var proposed = await bus.DispatchAsync(new ProposeControlCriterionMapping(fixture.Tenant, fixture.Program,
+                var proposed = await bus.DispatchAsync(new ProposeControlCriterionMapping(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program,
                     source.ControlId, source.ControlVersionId, Edition, "CC6.1", 0, "Access is reviewed", "Production scope"),
                     Context(fixture.Author, "direct"), CancellationToken.None);
                 Assert.True(proposed.IsSuccess, proposed.Error?.Message);
@@ -225,7 +225,7 @@ public sealed class PersonalMappingDecisionTransportTests
             }
             else if (action == "applicability")
             {
-                var proposed = await bus.DispatchAsync(new ProposeCriterionNotApplicable(fixture.Tenant, fixture.Program,
+                var proposed = await bus.DispatchAsync(new ProposeCriterionNotApplicable(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program,
                     Edition, "CC6.2", 0, "Not applicable"), Context(fixture.Author, "http"), CancellationToken.None);
                 Assert.True(proposed.IsSuccess, proposed.Error?.Message);
                 fixture._decision = proposed.Value.DecisionId;
@@ -234,9 +234,15 @@ public sealed class PersonalMappingDecisionTransportTests
         }
         public Task ChangeEditionAsync() => ProgramManagementServices.SeedAsync(_provider, new ComplianceProgram(Tenant, Program),
             program => { Assert.Null(program.SelectCriteriaEdition(2, NextEdition, Author, "Author", DateTimeOffset.UtcNow)); return Result.Success; });
-        public async Task<ulong> PositionAsync(string action) => action == "mapping"
-            ? (await ProgramManagementServices.HydrateAsync(_provider, new ControlCriterionMappingLedger(Tenant, Program))).CommittedStreamPosition
-            : (await ProgramManagementServices.HydrateAsync(_provider, new CriterionApplicabilityLedger(Tenant, Program))).CommittedStreamPosition;
+        public async Task<ulong> PositionAsync(string action)
+        {
+            var facts = 0UL;
+            var pattern = EventStreamPattern.ForPattern(Tenant.ToString(), action == "mapping" ? "control-criterion-mappings" : "criterion-applicability");
+            await foreach (var record in _provider.GetRequiredService<IDomainEventReader>().ReadAsync(pattern, EventCursor.Start, CancellationToken.None))
+                if (!record.Event.Metadata.IsAudit)
+                    facts++;
+            return facts;
+        }
         public async Task<ActorReference> LastActorAsync(string action)
         {
             ActorReference? actor = null;
@@ -258,11 +264,11 @@ public sealed class PersonalMappingDecisionTransportTests
             var context = Context(user ?? (action == "proposal" ? Author : Reviewer), transport);
             if (action == "proposal")
             {
-                var result = await bus.DispatchAsync(new ProposeCriterionNotApplicable(Tenant, program ?? Program, Edition, criterion, 0, "Not applicable"), context, CancellationToken.None);
+                var result = await bus.DispatchAsync(new ProposeCriterionNotApplicable(Uuid.CreateVersion4(), Tenant, program ?? Program, Edition, criterion, 0, "Not applicable"), context, CancellationToken.None);
                 return result.IsSuccess ? Result.Success : Result.Failure(result.Error);
             }
-            IRequest request = action == "mapping" ? new ReviewControlCriterionMapping(Tenant, program ?? Program, _decision, 1, "accept", "Verified") :
-                new ReviewCriterionApplicability(Tenant, program ?? Program, _decision, 1, "accept", "Verified");
+            IRequest request = action == "mapping" ? new ReviewControlCriterionMapping(Uuid.CreateVersion4(), Tenant, program ?? Program, _decision, 1, "accept", "Verified") :
+                new ReviewCriterionApplicability(Uuid.CreateVersion4(), Tenant, program ?? Program, _decision, 1, "accept", "Verified");
             return await bus.DispatchAsync(request, context, CancellationToken.None);
         }
         public ValueTask DisposeAsync() => _provider.DisposeAsync();

@@ -4,8 +4,9 @@ namespace Bdgrz.Compliance.Features.ControlMappings;
 
 /// <summary>
 ///     A program's reviewed decision that one criterion of an edition does not apply, keyed by
-///     (edition_id, criterion_identifier). Status is pending, not_applicable, rejected, or
-///     withdrawn. A not-applicable decision excludes the criterion from coverage; it never
+///     (edition_id, criterion_identifier). <c>DecisionId</c> is the id of the line's first proposal; each version
+///     carries the id of its own proposal, and <c>Revision</c> counts the facts of the line. Status is pending,
+///     not_applicable, rejected, or withdrawn. A not-applicable decision excludes the criterion from coverage; it never
 ///     states that the criterion is satisfied.
 /// </summary>
 public sealed record CriterionApplicabilityView(Uuid TenantId, Uuid ProgramId, Uuid DecisionId,

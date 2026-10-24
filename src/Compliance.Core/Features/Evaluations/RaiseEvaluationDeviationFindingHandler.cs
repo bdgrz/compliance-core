@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Evaluations;
 ///     due in 30 days at medium severity, matching the occurrence-finding product default.
 /// </summary>
 public sealed class RaiseEvaluationDeviationFindingHandler(NativeOperationExecutor operations,
-    IAggregateReader reader, IImmutableContentStore content, TimeProvider clock)
+    IAggregateReader reader, IImmutableContentStore content, ControlEvaluationReader evaluations, TimeProvider clock)
     : IRequestHandler<RaiseEvaluationDeviationFinding>
 {
     public const string ProcessId = "reactor:" + ControlEvaluationDeviationFindingReactor.WorkloadName;
@@ -21,11 +21,11 @@ public sealed class RaiseEvaluationDeviationFindingHandler(NativeOperationExecut
         IRequestContext<RaiseEvaluationDeviationFinding> context, CancellationToken ct)
     {
         var request = context.Request;
-        var evaluations = await reader.HydrateAsync(new ControlEvaluationLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
-        if (evaluations.Read(request.ControlId, request.EvaluationId) is not { } evaluation ||
-            evaluations.SubmittedDeviation(request.ControlId, request.EvaluationId,
-                request.DeviationId) is not { Classification: ControlEvaluationLedger.Material } deviation ||
+        var evaluation = await evaluations.ReadViewAsync(request.TenantId, request.ProgramId, request.ControlId,
+            request.EvaluationId, ct).ConfigureAwait(false);
+        var deviation = evaluation?.Submissions.SelectMany(static submission => submission.Deviations)
+            .LastOrDefault(item => item.DeviationId == request.DeviationId);
+        if (evaluation is null || deviation is not { Classification: ControlEvaluationStates.Material } ||
             deviation.FindingId != request.FindingId)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The submitted material deviation was not found."));

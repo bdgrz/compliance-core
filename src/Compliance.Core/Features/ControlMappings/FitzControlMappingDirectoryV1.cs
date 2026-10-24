@@ -21,16 +21,19 @@ sealed class FitzControlMappingDirectoryV1(IKvClient client)
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
-        var mappingId = domainEvent switch
+        var lineId = domainEvent switch
         {
-            ControlCriterionMappingProposed proposed => proposed.MappingId,
-            ControlCriterionMappingReviewed reviewed => reviewed.MappingId,
-            ControlCriterionMappingRetired retired => retired.MappingId,
+            ControlCriterionMappingProposed proposed => ControlCriterionMapping.IdentityOf(proposed.TenantId,
+                proposed.ProgramId, proposed.ControlId, proposed.EditionId, proposed.CriterionIdentifier),
+            ControlCriterionMappingReviewed reviewed => ControlCriterionMapping.IdentityOf(reviewed.TenantId,
+                reviewed.ProgramId, reviewed.ControlId, reviewed.EditionId, reviewed.CriterionIdentifier),
+            ControlCriterionMappingRetired retired => ControlCriterionMapping.IdentityOf(retired.TenantId,
+                retired.ProgramId, retired.ControlId, retired.EditionId, retired.CriterionIdentifier),
             _ => throw new ArgumentException("The event is not a control mapping event.",
                 nameof(domainEvent)),
         };
         var current = await ControlCoverageDirectorySchema.Mappings.GetAsync(Transaction,
-            mappingId, ct).ConfigureAwait(false);
+            lineId, ct).ConfigureAwait(false);
         var next = ControlCriterionMappingReducer.Apply(current, domainEvent);
         if (next.Revision != (current?.Revision ?? 0) + 1)
             throw new InvalidOperationException(

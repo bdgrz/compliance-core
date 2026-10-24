@@ -730,6 +730,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ITrainingRequirementDirectoryReader>(provider =>
             provider.GetRequiredService<FitzTrainingRequirementDirectory>());
         services.AddScoped<ControlOperationsReader>();
+        services.AddScoped<ControlMappingReader>();
+        services.AddScoped<ApplicabilityReader>();
+        services.AddScoped<ControlEvaluationReader>();
         services.AddScoped<TypeIIOccurrenceCoverage>();
         services.AddScoped<TypeIIRangeVerifier>();
         services.AddScoped<TypeIIRangeReceivers>();

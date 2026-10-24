@@ -22,7 +22,7 @@ public sealed class CriteriaTextOverlayAuthorizationTests
         var authorizer = new ProgramManagementAuthorizer(new FixedMembershipDirectory(true),
             new ActiveTenant(), permissions, ProgramManagementServices.ResourceScopes());
         var context = new RequestContext<IProgramManagementRequest>(
-            new SetCriteriaTextOverlay(tenantId, Uuid.CreateVersion4(), "CC6.1", null,
+            new SetCriteriaTextOverlay(Uuid.CreateVersion4(), tenantId, Uuid.CreateVersion4(), "CC6.1", 0,
                 new CriteriaTextOverlayContent("Synthetic text", "Supplier", "License",
                     new CriteriaOverlayUsageFlags(true, true))),
             ProgramManagementServices.Actor(userId));

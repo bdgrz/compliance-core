@@ -4,7 +4,7 @@ namespace Bdgrz.Compliance.Features.Criteria;
 
 public sealed partial class CriteriaTextOverlayDirectoryProjector(
     ICriteriaTextOverlayDirectoryProjection projection)
-    : Projector(projection, EventStreamPattern.ForTenant(CriteriaTextOverlayLedger.Area),
+    : Projector(projection, EventStreamPattern.ForTenant(CriteriaTextOverlay.Area),
         FitzCriteriaTextOverlayDirectory.ProjectorName),
     IProjectorHandler<CriteriaTextOverlayEntryRevised>
 {
