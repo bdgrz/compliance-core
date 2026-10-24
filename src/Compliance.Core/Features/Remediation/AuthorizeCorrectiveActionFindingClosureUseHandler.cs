@@ -35,6 +35,10 @@ sealed class AuthorizeCorrectiveActionFindingClosureUseHandler(IAggregateReader 
             children = await ImmutableSelectionManifests.ReadAsync<AdmittedChild>(Content, tenant.ToString(),
                 intent.AdmittedChildren, ct).ConfigureAwait(false);
         }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return Fail($"The admitted action manifest cannot be verified: {exception.Message}", true);
+        }
         catch (ImmutableContentIntegrityException exception)
         {
             return Fail($"The admitted action manifest cannot be verified: {exception.Message}", false);
@@ -68,6 +72,10 @@ sealed class AuthorizeCorrectiveActionFindingClosureUseHandler(IAggregateReader 
                 .ConfigureAwait(false);
             actionOwner = (await FindingContent.ReadAsync<AddCorrectiveAction>(Content, tenant,
                 admission.CanonicalAuthoredContent, ct).ConfigureAwait(false)).OwnerMemberId;
+        }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return Fail($"The admitted action cannot be verified: {exception.Message}", true);
         }
         catch (ImmutableContentIntegrityException exception)
         {
@@ -108,6 +116,11 @@ sealed class AuthorizeCorrectiveActionFindingClosureUseHandler(IAggregateReader 
             facts = await FindingContent.ReadAsync<ClosureActionFacts>(Content,
                 Uuid.Parse(owner.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture), requirement.RequiredFacts, ct)
                 .ConfigureAwait(false);
+        }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The pinned action facts cannot be verified: {exception.Message}", true));
         }
         catch (ImmutableContentIntegrityException exception)
         {

@@ -74,6 +74,10 @@ sealed class FindingClosureVerifier(IAggregateReader reader, IImmutableContentSt
             decision = await FindingContent.ReadAsync<ClosureDecision>(content, tenant, intent.AuthoredDecision, ct)
                 .ConfigureAwait(false);
         }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return FindingClosure.Failed(Transient($"The frozen closure cannot be verified: {exception.Message}"));
+        }
         catch (ImmutableContentIntegrityException exception)
         {
             return FindingClosure.Failed(Permanent($"The frozen closure cannot be verified: {exception.Message}"));

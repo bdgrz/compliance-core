@@ -42,7 +42,9 @@
   "triageArtifacts": [
     "implementation-file-reviews.json",
     "retention-file-reviews.json",
-    "retention-file-triage.json"
+    "retention-file-triage.json",
+    "finding-content-file-reviews.json",
+    "finding-content-readback.md"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -56,7 +58,9 @@
     {
       "id": "retention-owner-split",
       "slice": "S31",
-      "status": "validated_awaiting_merge"
+      "status": "merged",
+      "pullRequest": 1090,
+      "mergeCommit": "8c567dccfceb02817a2a78939b0f89f4aba8b158"
     },
     {
       "id": "versioned-replay",
@@ -66,6 +70,14 @@
       "id": "audit-package-split",
       "slice": "S29",
       "status": "patch_preparation"
+    },
+    {
+      "id": "finding-content-recovery",
+      "status": "validated_awaiting_merge",
+      "behavioralRed": "6failed/0passed; each failed permanent classification assertion",
+      "focusedGreen": "18passed/0failed",
+      "jev": "2/2current files; incomplete-path signal0.75 reviewed against explicit superseded terminal path",
+      "fullUnitGreen": "5459passed/0failed"
     }
   ],
   "resolved": [
