@@ -295,7 +295,7 @@ public sealed class ReviewerWorkAuthorityTests
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzCommitmentDecisionWorkItemDirectory(client, provider.GetRequiredService<IAggregateReader>()));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                            new FitzPolicyDecisionWorkItemDirectory(client, provider.GetRequiredService<IAggregateReader>(), TimeProvider.System));
+                            new FitzPolicyDecisionWorkItemDirectory(client, provider.GetRequiredService<PolicyReader>(), TimeProvider.System));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzControlDecisionWorkItemDirectory(client, provider.GetRequiredService<ControlReader>(),
                                 provider.GetRequiredService<OperatingAuthority>(), new(true), new(true)));
@@ -373,9 +373,9 @@ public sealed class ReviewerWorkAuthorityTests
             }
             if (kind == "policy")
             {
-                var policyId = Uuid.CreateVersion4();
+                var policyId = Policy.IdFor(Operations.TenantId, Operations.ProgramId, "POL-GUEST");
                 await ProgramManagementServices.SeedAsync(Operations.Provider,
-                    new Policy(Operations.TenantId, policyId), policy =>
+                    new PolicyRules(Operations.TenantId, policyId), policy =>
                     {
                         Assert.True(policy.Create(Operations.ProgramId, Uuid.CreateVersion4(), "POL-GUEST",
                             new PolicyContent("Guest review", "Access", PolicyAudience.CoreSecurity, null, 12,
@@ -385,7 +385,7 @@ public sealed class ReviewerWorkAuthorityTests
                         return Result.Success;
                     });
                 var policy = await ProgramManagementServices.HydrateAsync(Operations.Provider,
-                    new Policy(Operations.TenantId, policyId));
+                    new PolicyRules(Operations.TenantId, policyId));
                 var view = policy.ToView(Operations.Today)!;
                 Operations.Policies.Add(new PolicySummaryView(view.TenantId, view.ProgramId, view.PolicyId,
                     view.Identifier, "Guest review", view.Status, view.PendingStatus, view.Revision,
@@ -527,7 +527,7 @@ public sealed class ReviewerWorkAuthorityTests
             if (kind == "policy")
             {
                 var policy = await ProgramManagementServices.HydrateAsync(Operations.Provider,
-                    new Policy(Operations.TenantId, pending.Id));
+                    new PolicyRules(Operations.TenantId, pending.Id));
                 var view = policy.ToView(Operations.Today)!;
                 Operations.Policies.Add(new PolicySummaryView(view.TenantId, view.ProgramId, view.PolicyId,
                     view.Identifier, "Guest review", view.Status, view.PendingStatus, view.Revision,

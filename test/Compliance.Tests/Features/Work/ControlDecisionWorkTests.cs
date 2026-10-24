@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Controls;
@@ -360,7 +361,7 @@ public sealed class ControlDecisionWorkTests
     {
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             services.GetRequiredService<WorkQueueReadConsistency>(),
             controls: controls ?? services.GetRequiredService<IControlDraftDirectoryReader>(),

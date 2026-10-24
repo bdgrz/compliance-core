@@ -1,16 +1,17 @@
 using System.Globalization;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Policies;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client)
+sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client, IImmutableContentStore contentStore)
     : FitzKvProjectionStore(client,
-            "kv://bdgrz/application-policy-references-v1/projection", ProjectorName),
+            "kv://bdgrz/application-policy-references-v2/projection", ProjectorName),
         IApplicationPolicyReferenceDirectory, IApplicationPolicyReferenceProjection
 {
-    public const string ProjectorName = "ApplicationPolicyReferencesV1";
+    public const string ProjectorName = "ApplicationPolicyReferencesV2";
     const int MaximumApplicabilityEntries = 100;
     Uuid? _batchTenantId;
 
@@ -36,27 +37,30 @@ sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client)
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
-        switch (domainEvent)
+        if (domainEvent is not IPolicyFact fact)
+            throw new InvalidOperationException("A policy reference projection requires a native Policy fact.");
+        var mutation = await PolicyFactContent.ReadChangeAsync(contentStore, fact, ct).ConfigureAwait(false);
+        switch (mutation.Change)
         {
-            case PolicyDraftCreated created:
+            case PolicyDraftCreatedContent created:
                 await CreateAsync(created, ct).ConfigureAwait(false);
                 break;
-            case PolicyDraftRevised revised:
+            case PolicyDraftRevisedContent revised:
                 await ReviseAsync(revised, ct).ConfigureAwait(false);
                 break;
-            case PolicyReviewed reviewed:
+            case PolicyReviewedContent reviewed:
                 await ReviewAsync(reviewed, ct).ConfigureAwait(false);
                 break;
-            case PolicyApproved approved:
+            case PolicyApprovedContent approved:
                 await ApproveAsync(approved, ct).ConfigureAwait(false);
                 break;
-            case PolicyRetirementProposed proposed:
+            case PolicyRetirementProposedContent proposed:
                 await ProposeRetirementAsync(proposed, ct).ConfigureAwait(false);
                 break;
-            case PolicyRetired retired:
+            case PolicyRetiredContent retired:
                 await RetireAsync(retired, ct).ConfigureAwait(false);
                 break;
-            case PolicyDraftDiscarded discarded:
+            case PolicyDraftDiscardedContent discarded:
                 await DiscardAsync(discarded, ct).ConfigureAwait(false);
                 break;
             default:
@@ -65,7 +69,7 @@ sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client)
         }
     }
 
-    async ValueTask CreateAsync(PolicyDraftCreated created, CancellationToken ct)
+    async ValueTask CreateAsync(PolicyDraftCreatedContent created, CancellationToken ct)
     {
         EnsureTenant(created.TenantId);
         var content = ReferenceContent(created.Content);
@@ -81,7 +85,7 @@ sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client)
             .ConfigureAwait(false);
     }
 
-    async ValueTask ReviseAsync(PolicyDraftRevised revised, CancellationToken ct)
+    async ValueTask ReviseAsync(PolicyDraftRevisedContent revised, CancellationToken ct)
     {
         EnsureTenant(revised.TenantId);
         var state = await RequireStateAsync(revised.TenantId, revised.ProgramId,
@@ -122,7 +126,7 @@ sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client)
                 .ConfigureAwait(false);
     }
 
-    async ValueTask ReviewAsync(PolicyReviewed reviewed, CancellationToken ct)
+    async ValueTask ReviewAsync(PolicyReviewedContent reviewed, CancellationToken ct)
     {
         EnsureTenant(reviewed.TenantId);
         var state = await RequireStateAsync(reviewed.TenantId, reviewed.ProgramId,
@@ -143,7 +147,7 @@ sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client)
                 .ConfigureAwait(false);
     }
 
-    async ValueTask ApproveAsync(PolicyApproved approved, CancellationToken ct)
+    async ValueTask ApproveAsync(PolicyApprovedContent approved, CancellationToken ct)
     {
         EnsureTenant(approved.TenantId);
         var state = await RequireStateAsync(approved.TenantId, approved.ProgramId,
@@ -197,7 +201,7 @@ sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client)
             hasPendingSuccessor: false, ct).ConfigureAwait(false);
     }
 
-    async ValueTask ProposeRetirementAsync(PolicyRetirementProposed proposed,
+    async ValueTask ProposeRetirementAsync(PolicyRetirementProposedContent proposed,
         CancellationToken ct)
     {
         EnsureTenant(proposed.TenantId);
@@ -223,7 +227,7 @@ sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client)
             }, ct).ConfigureAwait(false);
     }
 
-    async ValueTask RetireAsync(PolicyRetired retired, CancellationToken ct)
+    async ValueTask RetireAsync(PolicyRetiredContent retired, CancellationToken ct)
     {
         EnsureTenant(retired.TenantId);
         var state = await RequireStateAsync(retired.TenantId, retired.ProgramId,
@@ -248,7 +252,7 @@ sealed class FitzApplicationPolicyReferenceDirectory(IKvClient client)
             }, ct).ConfigureAwait(false);
     }
 
-    async ValueTask DiscardAsync(PolicyDraftDiscarded discarded, CancellationToken ct)
+    async ValueTask DiscardAsync(PolicyDraftDiscardedContent discarded, CancellationToken ct)
     {
         EnsureTenant(discarded.TenantId);
         var state = await RequireStateAsync(discarded.TenantId, discarded.ProgramId,

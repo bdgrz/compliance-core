@@ -19,7 +19,7 @@ public sealed class PolicyDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, fixture.LeadMemberId);
 
         // Act
@@ -47,7 +47,7 @@ public sealed class PolicyDecisionWorkTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         fixture.Permissions.Managers.Add(fixture.ReviewerMemberId);
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, fixture.LeadMemberId);
         var reviewWork = Assert.Single((await WorkAsync(fixture, fixture.ApproverUserId)).Items);
         var reviewId = Uuid.CreateVersion4();
@@ -94,7 +94,7 @@ public sealed class PolicyDecisionWorkTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         fixture.Permissions.Managers.Add(fixture.ReviewerMemberId);
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedApprovedPolicyAsync(fixture, policyId, fixture.Today.AddDays(-40), 12);
         await ApplyPolicyAsync(fixture, policyId, policy =>
         {
@@ -136,7 +136,7 @@ public sealed class PolicyDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedApprovedPolicyAsync(fixture, policyId, fixture.Today.AddMonths(-1), 1);
 
         // Act
@@ -166,7 +166,7 @@ public sealed class PolicyDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedApprovedPolicyAsync(fixture, policyId, fixture.Today.AddMonths(-1), 1);
         var first = Assert.Single((await WorkAsync(fixture, fixture.ApproverUserId, 365)).Items);
         await ApplyPolicyAsync(fixture, policyId, policy =>
@@ -192,7 +192,7 @@ public sealed class PolicyDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, fixture.LeadMemberId);
 
         // Act
@@ -213,7 +213,7 @@ public sealed class PolicyDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, fixture.LeadMemberId);
         var first = Assert.Single((await WorkAsync(fixture, fixture.ApproverUserId)).Items);
 
@@ -239,7 +239,7 @@ public sealed class PolicyDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, fixture.LeadMemberId);
         var projected = fixture.Policies.Find(policyId)!;
         fixture.Policies.Add(projected with { PendingStatus = null });
@@ -258,7 +258,7 @@ public sealed class PolicyDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        await SeedApprovedPolicyAsync(fixture, Uuid.CreateVersion4(), fixture.Today, 1);
+        await SeedApprovedPolicyAsync(fixture, Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK"), fixture.Today, 1);
 
         // Act
         var queue = await WorkAsync(fixture, fixture.ApproverUserId);
@@ -272,7 +272,7 @@ public sealed class PolicyDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, fixture.LeadMemberId);
         var sourceItem = Assert.Single((await WorkAsync(fixture, fixture.ApproverUserId)).Items);
         var candidate = new WorkCandidate(sourceItem.WorkItemId, sourceItem.Kind,
@@ -286,7 +286,7 @@ public sealed class PolicyDecisionWorkTests
         var consistency = new WorkQueueReadConsistency(events, [projected]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             policies: fixture.Policies, accountableWorkItems: [projected],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -358,14 +358,14 @@ public sealed class PolicyDecisionWorkTests
     }
 
     static async Task ApplyPolicyAsync(OperationsFixture fixture, Uuid policyId,
-        Func<Policy, Result> apply) =>
+        Func<PolicyRules, Result> apply) =>
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new Policy(fixture.TenantId, policyId), apply);
+            new PolicyRules(fixture.TenantId, policyId), apply);
 
     static async Task RefreshProjectionAsync(OperationsFixture fixture, Uuid policyId)
     {
         var policy = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new Policy(fixture.TenantId, policyId));
+            new PolicyRules(fixture.TenantId, policyId));
         fixture.Policies.Add(policy.ToView(fixture.Today) is { } view
             ? new PolicySummaryView(view.TenantId, view.ProgramId, view.PolicyId, view.Identifier,
                 view.Draft?.Title ?? policy.CurrentVersion?.Content.Title ?? view.Identifier,

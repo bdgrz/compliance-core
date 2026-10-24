@@ -170,8 +170,8 @@ public sealed class PersonalCampaignWaiverTransportTests
                     Assert.Null(person.CorrelateMembership(1, fixture.Manager, actor, fixture._at));
                 return Result.Success;
             });
-            var policyId = Uuid.CreateVersion4();
-            await ProgramManagementServices.SeedAsync(fixture._provider, new Policy(fixture.Tenant, policyId), policy =>
+            var policyId = Policy.IdFor(fixture.Tenant, fixture.Program, "POL-WAIVER");
+            await ProgramManagementServices.SeedAsync(fixture._provider, new PolicyRules(fixture.Tenant, policyId), policy =>
             {
                 var author = Uuid.CreateVersion4();
                 var reviewer = Uuid.CreateVersion4();

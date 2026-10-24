@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Policies;
 ///     bound to the predecessor are listed because they keep that exact version; a successor
 ///     never rewrites them.
 /// </summary>
-public sealed class PolicyImpactService(IAggregateReader reader,
+public sealed class PolicyImpactService(PolicyReader reader,
     ICampaignDirectoryReader campaigns, IDomainEventReader events)
 {
     public async ValueTask<Result<PolicyImpactPreview>> PreviewAsync(Uuid tenantId,

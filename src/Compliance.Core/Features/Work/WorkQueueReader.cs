@@ -20,7 +20,7 @@ namespace Bdgrz.Compliance.Features.Work;
 ///     a member the source's separation of duties excludes. Scoped per request, it memoizes holder,
 ///     membership, and eligibility answers so each is hydrated at most once.
 /// </summary>
-public sealed class WorkQueueReader(IAggregateReader reader, ControlReader controlSources, OperatingAuthority authority,
+public sealed class WorkQueueReader(IAggregateReader reader, ControlReader controlSources, PolicyReader policySources, OperatingAuthority authority,
     TimeProvider clock, WorkQueueReadConsistency queueConsistency,
     ICampaignDirectoryReader? campaigns = null,
     IBoundaryDirectoryReader? boundaries = null,
@@ -129,7 +129,7 @@ public sealed class WorkQueueReader(IAggregateReader reader, ControlReader contr
         }
         if (policies is not null && !PolicyDecisionWork.IsFullyProjected(projectedKinds))
         {
-            var decisions = await PolicyDecisionWork.LoadAsync(reader, policies, policyConsistency,
+            var decisions = await PolicyDecisionWork.LoadAsync(policySources, policies, policyConsistency,
                 tenantId, programId, today, today.AddDays(horizonDays), workItemId, ct)
                 .ConfigureAwait(false);
             if (!decisions.IsSuccess)

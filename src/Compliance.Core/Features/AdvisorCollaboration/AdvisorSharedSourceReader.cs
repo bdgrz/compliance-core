@@ -7,7 +7,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-sealed class AdvisorSharedSourceReader(IAggregateReader aggregates, ControlReader controlSources,
+sealed class AdvisorSharedSourceReader(ControlReader controlSources, PolicyReader policySources,
     IAdvisorRecordVersionResolver versions, EvidenceArtifactMetadataRead evidence,
     IBoundaryDirectoryReader boundaries, ReadinessReader readiness)
     : IAdvisorSharedSourceReader
@@ -76,20 +76,32 @@ sealed class AdvisorSharedSourceReader(IAggregateReader aggregates, ControlReade
             : StaleSource();
     }
 
-    async ValueTask<Result<AdvisorSharedSourceView>> ReadPolicyDraftAsync(Uuid tenantId,
+
+
+    ValueTask<Result<AdvisorSharedSourceView>> ReadPolicyDraftAsync(Uuid tenantId,
+        Uuid programId, Uuid handoffId, AdvisorRecordVersion selected, CancellationToken ct) =>
+        PolicySourceFailures.ClassifyAsync(() => ReadPolicyDraftCoreAsync(tenantId, programId, handoffId, selected, ct));
+
+    async ValueTask<Result<AdvisorSharedSourceView>> ReadPolicyDraftCoreAsync(Uuid tenantId,
         Uuid programId, Uuid handoffId, AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var policy = await aggregates.HydrateAsync(new Policy(tenantId, selected.RecordId), ct)
+        var policy = await policySources.ReadAsync(tenantId, programId, selected.RecordId, ct)
             .ConfigureAwait(false);
         return policy.DraftContent is { } content
             ? Success(tenantId, programId, handoffId, selected, policyDraft: content)
             : StaleSource();
     }
 
-    async ValueTask<Result<AdvisorSharedSourceView>> ReadPolicyVersionAsync(Uuid tenantId,
+
+
+    ValueTask<Result<AdvisorSharedSourceView>> ReadPolicyVersionAsync(Uuid tenantId,
+        Uuid programId, Uuid handoffId, AdvisorRecordVersion selected, CancellationToken ct) =>
+        PolicySourceFailures.ClassifyAsync(() => ReadPolicyVersionCoreAsync(tenantId, programId, handoffId, selected, ct));
+
+    async ValueTask<Result<AdvisorSharedSourceView>> ReadPolicyVersionCoreAsync(Uuid tenantId,
         Uuid programId, Uuid handoffId, AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var policy = await aggregates.HydrateAsync(new Policy(tenantId, selected.RecordId), ct)
+        var policy = await policySources.ReadAsync(tenantId, programId, selected.RecordId, ct)
             .ConfigureAwait(false);
         var version = policy.ReadVersions().FirstOrDefault(item =>
             item.Version == selected.VersionNumber && item.Revision == selected.Revision);

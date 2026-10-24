@@ -101,10 +101,13 @@
     "control-source-use-qualification.json",
     "typeii-close-file-reviews.json",
     "typeii-close-file-triage.json",
-    "typeii-close-integration-jev.json"
+    "typeii-close-integration-jev.json",
+    "policy-file-reviews.json",
+    "policy-file-triage.json",
+    "policy-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
-  "reviewSignalsTriaged": 83,
+  "reviewSignalsTriaged": 87,
   "findingArtifacts": [
     "implementation-file-triage-versioned.json",
     "implementation-file-triage-foundations.json",
@@ -269,12 +272,24 @@
     {
       "id": "native-typeii-close-reconciliation",
       "slice": "S35",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "behavioralRed": "Premature close1failed; source-version-lineage1failed; physical publication freeze regression fixed",
       "focusedGreen": "202passed/0failed includingowningHTTP/sourcepublication/archive",
       "fullUnitGreen": "5651passed/0failed",
       "jev": "37currentfiles;10signalstriaged;directintegrationmerge.82",
-      "remaining": "Complete compact TypeIIPeriod authority/remaining producers/queries prepared separately; no old-schema migration or deployment qualification."
+      "remaining": "Complete compact TypeIIPeriod authority/remaining producers/queries prepared separately; no old-schema migration or deployment qualification.",
+      "pullRequest": 1103,
+      "mergeCommit": "0c5a45c1fa7639bc253245b0464302ec0b48cd82"
+    },
+    {
+      "id": "native-policy-owner-and-consumers",
+      "slice": "S32",
+      "status": "validated_awaiting_merge",
+      "behavioralRed": "3old-handlerfailures;5consumeravailability/cutofffailures+1originalactorlabelfailure",
+      "focusedGreen": "316passed/0failed includingproductionHTTPoriginalUnit200retry;BrokerIntegrationexcluded",
+      "fullUnitGreen": "5672passed/0failed",
+      "jev": "73currentfiles;4signalstriaged;directintegrationmerge.69",
+      "persistenceQualification": "Native v2 facts/new V2/V3 discovery checkpoints; no automatic persisted-v1 migration or deployment qualification."
     }
   ],
   "resolved": [

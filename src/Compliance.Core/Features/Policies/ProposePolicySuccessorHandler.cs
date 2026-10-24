@@ -1,19 +1,17 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
-public sealed class ProposePolicySuccessorHandler(IAggregateExecutor executor,
-    TimeProvider clock) : IRequestHandler<ProposePolicySuccessor, PolicyRegistration>
+public sealed class ProposePolicySuccessorHandler(PolicyOperations operations) : IRequestHandler<ProposePolicySuccessor, PolicyRegistration>
 {
-    public ValueTask<Result<PolicyRegistration>> HandleAsync(
-        IRequestContext<ProposePolicySuccessor> context, CancellationToken ct)
+    public ValueTask<Result<PolicyRegistration>> HandleAsync(IRequestContext<ProposePolicySuccessor> context, CancellationToken ct)
     {
         var request = context.Request;
-        var actor = PolicyActor.From(context, request.TenantId);
-        return executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId),
-            policy => PolicySource.Registration(policy, policy.ProposeSuccessor(
-                request.ProgramId, request.ExpectedVersion, request.Content, actor.Reference,
-                actor.MemberId, clock.GetUtcNow())),
-            context, ct);
+        return operations.ExecuteAsync<ProposePolicySuccessor, PolicyRegistration>(context, request.TenantId, request.ProgramId,
+            request.PolicyId, request.CommandId, nameof(ProposePolicySuccessor), request.ExpectedVersion,
+            (_, _, _, _) => PolicyOperations.Ready(),
+            (rules, actor, at) => PolicyOperations.Outcome(rules.ProposeSuccessor(request.ProgramId, request.ExpectedVersion, request.Content, actor.Reference, actor.MemberId, at)), null, ct);
     }
 }

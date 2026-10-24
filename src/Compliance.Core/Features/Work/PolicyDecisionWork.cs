@@ -19,8 +19,16 @@ static class PolicyDecisionWork
     public static bool IsFullyProjected(IReadOnlySet<string> projectedKinds) =>
         ProjectedKinds.All(projectedKinds.Contains);
 
-    public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, IPolicyDirectoryReader directory,
+
+
+    public static ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
+        PolicyReader reader, IPolicyDirectoryReader directory,
+        PolicyDirectoryReadConsistency? consistency, Uuid tenantId, Uuid programId,
+        DateOnly today, DateOnly horizon, Uuid? workItemId, CancellationToken ct) =>
+        PolicySourceFailures.ClassifyAsync(() => LoadCoreAsync(reader, directory, consistency, tenantId, programId, today, horizon, workItemId, ct));
+
+    static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadCoreAsync(
+        PolicyReader reader, IPolicyDirectoryReader directory,
         PolicyDirectoryReadConsistency? consistency, Uuid tenantId, Uuid programId,
         DateOnly today, DateOnly horizon, Uuid? workItemId, CancellationToken ct)
     {
@@ -45,7 +53,7 @@ static class PolicyDecisionWork
 
             foreach (var summary in page.Items)
             {
-                var policy = await reader.HydrateAsync(new Policy(tenantId, summary.PolicyId), ct)
+                var policy = await reader.ReadAsync(tenantId, programId, summary.PolicyId, ct)
                     .ConfigureAwait(false);
                 if (!policy.IsVisible || policy.ProgramId != programId)
                     return Result<IReadOnlyList<WorkCandidate>>.Failure(SourceChanged());
@@ -70,7 +78,7 @@ static class PolicyDecisionWork
         return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
     }
 
-    internal static List<WorkCandidate> Candidates(Policy policy, PolicyView view, Uuid tenantId,
+    internal static List<WorkCandidate> Candidates(PolicyReadSnapshot policy, PolicyView view, Uuid tenantId,
         Uuid programId, DateOnly horizon, Uuid? workItemId)
     {
         var prefix = $"/api/v1/tenants/{tenantId}/programs/{programId}/policies/{policy.Id}";
@@ -133,7 +141,7 @@ static class PolicyDecisionWork
         return candidates;
     }
 
-    static HashSet<Uuid> ApprovalExclusions(Policy policy)
+    static HashSet<Uuid> ApprovalExclusions(PolicyReadSnapshot policy)
     {
         var excluded = new HashSet<Uuid>(policy.PendingAuthorMemberIds);
         if (policy.AcceptedReviewerMemberId is { } reviewer)

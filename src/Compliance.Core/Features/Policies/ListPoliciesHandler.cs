@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
@@ -30,6 +31,10 @@ public sealed class ListPoliciesHandler(IPolicyDirectoryReader directory,
         {
             return Result<Page<PolicySummaryView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The policy cursor is invalid."));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<Page<PolicySummaryView>>.Failure(PolicyReadFailure.Of(error));
         }
         if (page.Items.Any(item => item.TenantId != request.TenantId ||
                                    item.ProgramId != request.ProgramId))

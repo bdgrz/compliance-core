@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "69226c9b01a8da26fa7f2744a93d1e38c60c8561",
+  "sourceCommit": "0c5a45c1fa7639bc253245b0464302ec0b48cd82",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 488,
-    "factsWithAggregateEmitter": 476,
+    "factsWithAggregateEmitter": 468,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 21,
-    "legacyReducerOnlyFacts": 12,
+    "legacyReducerOnlyFacts": 20,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 124,
+    "aggregateTypesWithCommandPath": 123,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -5441,16 +5441,10 @@
           "source": "src/Compliance.Core/Features/Policies/Policy.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Policies/Policy.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferencePreviewTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyDecisionWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PolicyCampaignAudienceAmended",
@@ -5607,16 +5601,13 @@
           "source": "src/Compliance.Core/Features/Policies/Policy.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Policies/Policy.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferencePreviewTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Policies/PolicyNativeContentTests.cs",
+        "test/Compliance.Tests/Features/Policies/PolicyNativeDirectoryReadTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PolicyDraftDiscarded",
@@ -5627,15 +5618,10 @@
           "source": "src/Compliance.Core/Features/Policies/Policy.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Policies/Policy.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyDecisionWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PolicyDraftRevised",
@@ -5646,15 +5632,10 @@
           "source": "src/Compliance.Core/Features/Policies/Policy.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Policies/Policy.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyDecisionWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PolicyParticipantResultAdmitted",
@@ -5684,14 +5665,10 @@
           "source": "src/Compliance.Core/Features/Policies/Policy.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Policies/Policy.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzPolicyDecisionWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PolicyRetired",
@@ -5702,15 +5679,10 @@
           "source": "src/Compliance.Core/Features/Policies/Policy.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Policies/Policy.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyDecisionWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PolicyRetirementProposed",
@@ -5721,15 +5693,10 @@
           "source": "src/Compliance.Core/Features/Policies/Policy.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Policies/Policy.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyDecisionWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PolicyReviewed",
@@ -5740,15 +5707,12 @@
           "source": "src/Compliance.Core/Features/Policies/Policy.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Policies/Policy.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Policies/PolicyNativeContentTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PopulationSnapshotChunkStored",
@@ -11091,29 +11055,21 @@
         "PolicyRetirementProposed",
         "PolicyReviewed"
       ],
-      "commandRequests": [
-        "ApprovePolicy",
-        "ApprovePolicyRetirement",
-        "ConfirmPolicyReview",
-        "CreatePolicyDraft",
-        "DiscardPolicyDraft",
-        "ProposePolicyRetirement",
-        "ProposePolicySuccessor",
-        "ReviewPolicyDraft",
-        "RevisePolicyDraft"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/E2E/PolicyDistributionE2ETests.cs",
+        "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorRecordVersionResolverTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferenceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferencePreviewTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
         "test/Compliance.Tests/Features/Examinations/PolicyCommunicationTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Examinations/PolicyTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/Examinations/PolicyTypeIBaselineSourceContributorTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "PolicyCampaignParticipant",
@@ -14130,23 +14086,21 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Policy"
-      ],
-      "aggregateTargets": [
-        "Policy"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs"
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
+        "test/Compliance.Tests/Testing/PolicySeeds.cs"
       ],
       "note": ""
     },
     {
       "request": "ApprovePolicyRetirement",
       "contract": "src/Compliance.Common/Features/Policies/ApprovePolicyRetirement.cs",
-      "interfaces": "IRequest<PolicyDecisionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<PolicyDecisionView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14156,15 +14110,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Policy"
-      ],
-      "aggregateTargets": [
-        "Policy"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs",
+        "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
+        "test/Compliance.Tests/Testing/PolicySeeds.cs"
       ],
       "note": ""
     },
@@ -16481,7 +16433,7 @@
     {
       "request": "ConfirmPolicyReview",
       "contract": "src/Compliance.Common/Features/Policies/ConfirmPolicyReview.cs",
-      "interfaces": "IRequest<PolicyDecisionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<PolicyDecisionView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16491,15 +16443,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Policy"
-      ],
-      "aggregateTargets": [
-        "Policy"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs",
+        "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
+        "test/Compliance.Tests/Testing/PolicySeeds.cs"
       ],
       "note": ""
     },
@@ -16974,7 +16924,7 @@
     {
       "request": "CreatePolicyDraft",
       "contract": "src/Compliance.Common/Features/Policies/CreatePolicyDraft.cs",
-      "interfaces": "IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16984,16 +16934,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Policy"
-      ],
-      "aggregateTargets": [
-        "Policy"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs"
+        "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs",
+        "test/Compliance.Tests/Features/Policies/PolicyNativeContentTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
+        "test/Compliance.Tests/Testing/PolicySeeds.cs"
       ],
       "note": ""
     },
@@ -17688,7 +17638,7 @@
     {
       "request": "DiscardPolicyDraft",
       "contract": "src/Compliance.Common/Features/Policies/DiscardPolicyDraft.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<UnitResult>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -17698,14 +17648,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Policy"
-      ],
-      "aggregateTargets": [
-        "Policy"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
+        "test/Compliance.Tests/Testing/PolicySeeds.cs"
+      ],
       "note": ""
     },
     {
@@ -19447,7 +19396,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "PolicyReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs"
       ],
@@ -19975,7 +19926,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "PolicyReader"
+      ],
       "testSymbolReferences": [],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -19994,7 +19947,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "PolicyReader"
+      ],
       "testSymbolReferences": [],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -21209,7 +21164,8 @@
         "PolicyDistributionCampaign"
       ],
       "helperServices": [
-        "CampaignLaunch"
+        "CampaignLaunch",
+        "PolicyReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
@@ -22873,7 +22829,8 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Policies/ListPoliciesHandlerTests.cs"
+        "test/Compliance.Tests/Features/Policies/ListPoliciesHandlerTests.cs",
+        "test/Compliance.Tests/Features/Policies/PolicyNativeDirectoryReadTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -22892,7 +22849,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "PolicyReader"
+      ],
       "testSymbolReferences": [],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -22911,7 +22870,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "PolicyReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs"
       ],
@@ -25145,7 +25106,7 @@
     {
       "request": "ProposePolicyRetirement",
       "contract": "src/Compliance.Common/Features/Policies/ProposePolicyRetirement.cs",
-      "interfaces": "IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -25155,20 +25116,19 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Policy"
-      ],
-      "aggregateTargets": [
-        "Policy"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
+        "test/Compliance.Tests/Testing/PolicySeeds.cs"
+      ],
       "note": ""
     },
     {
       "request": "ProposePolicySuccessor",
       "contract": "src/Compliance.Common/Features/Policies/ProposePolicySuccessor.cs",
-      "interfaces": "IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -25178,15 +25138,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Policy"
-      ],
-      "aggregateTargets": [
-        "Policy"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs"
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
+        "test/Compliance.Tests/Testing/PolicySeeds.cs"
       ],
       "note": ""
     },
@@ -28928,17 +28886,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Policy"
-      ],
-      "aggregateTargets": [
-        "Policy"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs",
+        "test/Compliance.Tests/Features/Policies/PolicyNativeContentTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
+        "test/Compliance.Tests/Testing/PolicySeeds.cs"
       ],
       "note": ""
     },
@@ -29597,7 +29554,7 @@
     {
       "request": "RevisePolicyDraft",
       "contract": "src/Compliance.Common/Features/Policies/RevisePolicyDraft.cs",
-      "interfaces": "IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<PolicyRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -29607,14 +29564,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Policy"
-      ],
-      "aggregateTargets": [
-        "Policy"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs",
+        "test/Compliance.Tests/Features/Policies/PolicyNativeContentTests.cs",
+        "test/Compliance.Tests/Testing/PolicyProjectionFacts.cs",
+        "test/Compliance.Tests/Testing/PolicySeeds.cs"
+      ],
       "note": ""
     },
     {

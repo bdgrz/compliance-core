@@ -1051,8 +1051,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/effective-version")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Commitments");
-    app.MapPortiaPost<CreatePolicyDraft, PolicyRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies")
+    app.MapPortiaPut<CreatePolicyDraft, PolicyRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
     app.MapPortiaGet<ListPolicies, Page<PolicySummaryView>>(
@@ -1067,12 +1067,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/draft")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
-    app.MapPortiaPost<DiscardPolicyDraft>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/draft/discards")
+    app.MapPortiaPut<DiscardPolicyDraft, UnitResult>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/draft/discards/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
-    app.MapPortiaPost<ProposePolicySuccessor, PolicyRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/successors")
+    app.MapPortiaPut<ProposePolicySuccessor, PolicyRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/successors/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
     app.MapPortiaGet<PreviewPolicyImpact, PolicyImpactPreview>(
@@ -1088,16 +1088,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/approvals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
-    app.MapPortiaPost<ConfirmPolicyReview, PolicyDecisionView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/periodic-reviews")
+    app.MapPortiaPut<ConfirmPolicyReview, PolicyDecisionView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/periodic-reviews/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
-    app.MapPortiaPost<ProposePolicyRetirement, PolicyRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirement-proposals")
+    app.MapPortiaPut<ProposePolicyRetirement, PolicyRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirement-proposals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
-    app.MapPortiaPost<ApprovePolicyRetirement, PolicyDecisionView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirements")
+    app.MapPortiaPut<ApprovePolicyRetirement, PolicyDecisionView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirements/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
     app.MapPortiaGet<ListPolicyVersions, Page<PolicyVersionView>>(

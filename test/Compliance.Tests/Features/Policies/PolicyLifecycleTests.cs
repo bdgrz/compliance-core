@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Versioning;
@@ -16,7 +17,7 @@ public sealed class PolicyLifecycleTests
     static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
     static readonly DateOnly January = new(2027, 1, 1);
 
-    static PolicyContent Content(string title = "Access Control Policy", string? body = "Body",
+    static PolicyContent Content(string title = "Access Control PolicyRules", string? body = "Body",
         IReadOnlyList<PolicyApplicabilityReference>? applicability = null,
         string audience = PolicyAudience.CoreSecurity, IReadOnlyList<string>? teams = null,
         int cadence = 12, string? owner = "Security lead") =>
@@ -26,15 +27,15 @@ public sealed class PolicyLifecycleTests
     static ActorReference Actor(Uuid memberId) =>
         ActorReference.ForMember(memberId, memberId.ToString());
 
-    static Policy Draft(PolicyContent? content = null)
+    static PolicyRules Draft(PolicyContent? content = null)
     {
-        var policy = new Policy(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-AC"));
+        var policy = new PolicyRules(TenantId, PolicyRules.IdFor(TenantId, ProgramId, "POL-AC"));
         Assert.True(policy.Create(ProgramId, Uuid.CreateVersion4(), " pol-ac ",
             content ?? Content(), Actor(AuthorId), AuthorId, Now).IsSuccess);
         return policy;
     }
 
-    static Uuid Accept(Policy policy, Uuid reviewer, DateTimeOffset? at = null)
+    static Uuid Accept(PolicyRules policy, Uuid reviewer, DateTimeOffset? at = null)
     {
         var decisionId = Uuid.CreateVersion4();
         Assert.Null(policy.Review(ProgramId, policy.Revision, decisionId, "accept", "Reviewed",
@@ -42,7 +43,7 @@ public sealed class PolicyLifecycleTests
         return decisionId;
     }
 
-    static void Approve(Policy policy, DateOnly effectiveFrom, string? digest = null,
+    static void Approve(PolicyRules policy, DateOnly effectiveFrom, string? digest = null,
         bool major = true, DateTimeOffset? at = null)
     {
         var review = Accept(policy, ReviewerId, at);
@@ -65,7 +66,7 @@ public sealed class PolicyLifecycleTests
         Assert.Equal(1, version.Version);
         Assert.True(version.Major);
         Assert.Equal("approved", version.Status);
-        Assert.Equal(Policy.Hash(version.Content), version.ContentSha256);
+        Assert.Equal(PolicyRules.Hash(version.Content), version.ContentSha256);
         Assert.Equal("POL-AC", version.Identifier);
         Assert.Equal("approved", policy.Status);
         Assert.Null(policy.PendingStatus);
@@ -141,7 +142,7 @@ public sealed class PolicyLifecycleTests
         // Assert
         Assert.Equal(CommandFailureCode.ActorProhibited, Assert.IsType<CommandFailure>(denied).Code);
         Assert.Null(allowed);
-        Assert.Equal(valid.Id, policy.CurrentVersion!.SeparationOfDutiesWaiverId);
+        Assert.Equal(valid.WaiverId, policy.CurrentVersion!.SeparationOfDutiesWaiverId);
     }
 
     [Fact]
@@ -150,7 +151,7 @@ public sealed class PolicyLifecycleTests
         // Arrange
         var policy = Draft();
         Approve(policy, January);
-        Assert.Null(policy.ProposeSuccessor(ProgramId, 1, Content("Access Control Policy v2"),
+        Assert.Null(policy.ProposeSuccessor(ProgramId, 1, Content("Access Control PolicyRules v2"),
             Actor(AuthorId), AuthorId, Now.AddMinutes(10)));
         var july = new DateOnly(2027, 7, 1);
 
@@ -164,7 +165,7 @@ public sealed class PolicyLifecycleTests
         var first = policy.FindVersion(1)!;
         Assert.Equal("superseded", first.Status);
         Assert.Equal(july, first.EffectiveUntil);
-        Assert.Equal("Access Control Policy", first.Content.Title);
+        Assert.Equal("Access Control PolicyRules", first.Content.Title);
         var second = policy.FindVersion(2)!;
         Assert.False(second.Major);
         Assert.Equal(1, second.PredecessorVersion);
@@ -202,10 +203,10 @@ public sealed class PolicyLifecycleTests
     {
         // Arrange
         var unused = Draft(Content(applicability: []));
-        var related = new Policy(TenantId, Uuid.CreateVersion4());
+        var related = new PolicyRules(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-REL"));
         Assert.True(related.Create(ProgramId, Uuid.CreateVersion4(), "POL-REL", Content(),
             Actor(AuthorId), AuthorId, Now).IsSuccess);
-        var reviewed = new Policy(TenantId, Uuid.CreateVersion4());
+        var reviewed = new PolicyRules(TenantId, Policy.IdFor(TenantId, ProgramId, "POL-REV"));
         Assert.True(reviewed.Create(ProgramId, Uuid.CreateVersion4(), "POL-REV",
             Content(applicability: []), Actor(AuthorId), AuthorId, Now).IsSuccess);
         Accept(reviewed, ReviewerId);
@@ -308,7 +309,7 @@ public sealed class PolicyLifecycleTests
         string? team, int cadence, string? body)
     {
         // Arrange
-        var policy = new Policy(TenantId, Uuid.CreateVersion4());
+        var policy = new PolicyRules(TenantId, Uuid.CreateVersion4());
 
         // Act
         var result = policy.Create(ProgramId, Uuid.CreateVersion4(), "POL-BAD",
@@ -324,11 +325,11 @@ public sealed class PolicyLifecycleTests
     public void ShouldRejectDraftGivenBodyBeyondEventPayloadBound()
     {
         // Arrange
-        var policy = new Policy(TenantId, Uuid.CreateVersion4());
+        var policy = new PolicyRules(TenantId, Uuid.CreateVersion4());
 
         // Act
         var result = policy.Create(ProgramId, Uuid.CreateVersion4(), "POL-BIG",
-            Content(body: new string('x', Policy.MaximumBodyLength + 1)), Actor(AuthorId),
+            Content(body: new string('x', PolicyRules.MaximumBodyLength + 1)), Actor(AuthorId),
             AuthorId, Now);
 
         // Assert
@@ -351,7 +352,7 @@ public sealed class PolicyLifecycleTests
     }
 
     [Fact]
-    public void ShouldReplaySameVersionsAndDecisionsGivenRoundTrippedEvents()
+    public async Task ShouldReplaySameVersionsAndDecisionsGivenRoundTrippedEvents()
     {
         // Arrange
         var source = Draft();
@@ -359,13 +360,17 @@ public sealed class PolicyLifecycleTests
         Assert.Null(source.ProposeSuccessor(ProgramId, 1, Content("v2"), Actor(AuthorId),
             AuthorId, Now.AddMinutes(10)));
         Approve(source, new DateOnly(2027, 7, 1), "digest", false, Now.AddMinutes(11));
-        var events = new AggregateScenario<Policy>(source).PendingEvents;
+        await using var fixture = new PolicySourceFixture();
+        await fixture.SeedAsync(source);
+        var events = await fixture.FactsAsync(TenantId, source.Id);
         var seeded = events.Select((ev, index) =>
             DomainEventSeed.Attach(RoundTrip(ev), source.Id, (ulong)index + 1)).ToArray();
 
         // Act
-        var replayed = new AggregateScenario<Policy>(new Policy(TenantId, source.Id))
-            .Given(seeded).Aggregate;
+        var owner = new AggregateScenario<Policy>(new Policy(TenantId, source.Id)).Given(seeded).Aggregate;
+        var replayed = await fixture.Policies.ReadAsync(TenantId, ProgramId, source.Id);
+        Assert.Equal(owner.Header, replayed.Owner.Header);
+        Assert.Equal(events.Count, owner.NativeSequence);
 
         // Assert
         Assert.Equal(Json(source.ReadVersions()), Json(replayed.ReadVersions()));
@@ -380,13 +385,13 @@ public sealed class PolicyLifecycleTests
         JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonContext.Default),
         ev.GetType(), ComplianceCoreJsonContext.Default)!;
 
-    static SeparationOfDutiesWaiver CreateWaiver(SeparationOfDutiesWaiverScope scope,
+    static SeparationOfDutiesWaiverProof CreateWaiver(SeparationOfDutiesWaiverScope scope,
         Uuid beneficiary)
     {
         var waiver = new SeparationOfDutiesWaiver(TenantId, Uuid.CreateVersion4());
         Assert.Null(waiver.Record(scope, beneficiary, Uuid.CreateVersion4(), "Requester",
             "No other qualified approver is available.", Now, Now.AddDays(1)));
         Assert.Null(waiver.Approve(Uuid.CreateVersion4(), "Approver", Now.AddMinutes(1)));
-        return waiver;
+        return ControlTestWaivers.Proof(waiver);
     }
 }

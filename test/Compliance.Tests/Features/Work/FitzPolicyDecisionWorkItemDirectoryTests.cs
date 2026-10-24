@@ -27,7 +27,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var fixture = await OperationsFixture.CreateAsync();
         await using var scope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyDecisionWorkItemDirectory(client,
-            scope.ServiceProvider.GetRequiredService<IAggregateReader>(), TimeProvider.System);
+            scope.ServiceProvider.GetRequiredService<PolicyReader>(), TimeProvider.System);
 
         // Act
         var work = await directory.LoadProgramAsync(tenantId, programId);
@@ -57,7 +57,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var fixture = await OperationsFixture.CreateAsync();
         await using var scope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyDecisionWorkItemDirectory(client,
-            scope.ServiceProvider.GetRequiredService<IAggregateReader>(), TimeProvider.System);
+            scope.ServiceProvider.GetRequiredService<PolicyReader>(), TimeProvider.System);
 
         // Act
         var work = await directory.LoadProgramAsync(tenantId, programId);
@@ -69,7 +69,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
     static PolicyDecisionWorkState StoredPolicy(Uuid tenantId, Uuid programId, OperatingHolder holder)
     {
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(tenantId, programId, "POL-WORK");
         return new PolicyDecisionWorkState(tenantId, programId, policyId, 1,
             [new AccountableWorkItemView(tenantId, programId, Uuid.CreateVersion4(),
                 "policy_draft_review", policyId, null, null, "Review policy", "Pending review",
@@ -86,7 +86,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     }
 
     sealed class PolicyRouteReader(IKvClient client)
-        : FitzKvProjectionStore(client, "kv://bdgrz/accountable-work-items/policy-decisions-v2",
+        : FitzKvProjectionStore(client, "kv://bdgrz/accountable-work-items/policy-decisions-v3",
             FitzPolicyDecisionWorkItemDirectory.ProjectorName)
     {
         public async Task<string> GetRouteAsync(Uuid tenantId)
@@ -101,14 +101,14 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, 12);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var client = new InMemoryKvClient();
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var reader = services.GetRequiredService<IAggregateReader>();
-        var policy = await reader.HydrateAsync(new Policy(fixture.TenantId, policyId));
+        var policy = await services.GetRequiredService<PolicyReader>().ReadAsync(fixture.TenantId, fixture.ProgramId, policyId);
         var sourceCandidate = Assert.Single(PolicyDecisionWork.Candidates(policy, policy.ToView(fixture.Today)!,
             fixture.TenantId, fixture.ProgramId, DateOnly.MaxValue, null));
         var legacyState = new PolicyDecisionWorkState(fixture.TenantId, fixture.ProgramId, policyId,
@@ -118,10 +118,10 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var legacy = new LegacyPolicyStore(client);
         var sourceCheckpoint = await ReadPolicyCheckpointAsync(events, fixture.TenantId);
         await legacy.SeedAsync(legacyState, sourceCheckpoint);
-        var directory = new FitzPolicyDecisionWorkItemDirectory(client, reader, TimeProvider.System);
+        var directory = new FitzPolicyDecisionWorkItemDirectory(client, services.GetRequiredService<PolicyReader>(), TimeProvider.System);
         var authority = services.GetRequiredService<OperatingAuthority>();
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId, "Approver");
-        WorkQueueReader Queue(FitzPolicyDecisionWorkItemDirectory source) => new(reader, services.GetRequiredService<Bdgrz.Compliance.Features.Controls.ControlReader>(), authority, TimeProvider.System,
+        WorkQueueReader Queue(FitzPolicyDecisionWorkItemDirectory source) => new(reader, services.GetRequiredService<Bdgrz.Compliance.Features.Controls.ControlReader>(), services.GetRequiredService<PolicyReader>(), authority, TimeProvider.System,
             new WorkQueueReadConsistency(events, [source]), accountableWorkItems: [source],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
@@ -150,7 +150,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
                 await directory.ApplyAsync(record.Event);
             await batch.CommitAsync(sourceCheckpoint);
         }
-        var restarted = new FitzPolicyDecisionWorkItemDirectory(client, reader, TimeProvider.System);
+        var restarted = new FitzPolicyDecisionWorkItemDirectory(client, services.GetRequiredService<PolicyReader>(), TimeProvider.System);
         var after = await Queue(restarted).ReadAsync(fixture.TenantId, fixture.ProgramId, actor, 30,
             CancellationToken.None);
         var oldState = await legacy.ReadAsync(fixture.TenantId, policyId);
@@ -196,14 +196,14 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, 12);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(), TimeProvider.System);
+            sourceScope.ServiceProvider.GetRequiredService<PolicyReader>(), TimeProvider.System);
         var createdAt = At(fixture.Today);
-        var created = new PolicyDraftCreated(fixture.TenantId, fixture.ProgramId, policyId,
+        var created = new PolicyDraftCreatedContent(fixture.TenantId, fixture.ProgramId, policyId,
             Uuid.CreateVersion4(), "POL-WORK", Content(12), "content-hash",
             Actor(fixture.LeadMemberId), fixture.LeadMemberId, createdAt);
 
@@ -211,8 +211,8 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         await ProjectAsync(directory, events, fixture.TenantId, created);
         var work = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
             fixture.Today, fixture.Today.AddDays(30), null);
-        var policy = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new Policy(fixture.TenantId, policyId));
+        var policy = await sourceScope.ServiceProvider.GetRequiredService<PolicyReader>().ReadAsync(
+            fixture.TenantId, fixture.ProgramId, policyId);
         var expected = PolicyDecisionWork.Candidates(policy, policy.ToView(fixture.Today)!,
             fixture.TenantId, fixture.ProgramId, DateOnly.MaxValue, null);
 
@@ -238,20 +238,20 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, 1);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(), TimeProvider.System);
+            sourceScope.ServiceProvider.GetRequiredService<PolicyReader>(), TimeProvider.System);
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyDraftCreated(fixture.TenantId, fixture.ProgramId, policyId,
+            new PolicyDraftCreatedContent(fixture.TenantId, fixture.ProgramId, policyId,
                 Uuid.CreateVersion4(), "POL-WORK", Content(1), "content-hash",
                 Actor(fixture.LeadMemberId), fixture.LeadMemberId, At(fixture.Today)));
 
         var reviewId = Uuid.CreateVersion4();
         var reviewAt = At(fixture.Today).AddMinutes(1);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.Review(fixture.ProgramId, 1, reviewId, "accept",
@@ -262,7 +262,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
         // Act
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyReviewed(fixture.TenantId, fixture.ProgramId, policyId, 1, reviewId,
+            new PolicyReviewedContent(fixture.TenantId, fixture.ProgramId, policyId, 1, reviewId,
                 "accept", "The policy draft is ready.", Actor(fixture.ReviewerMemberId),
                 fixture.ReviewerMemberId, reviewAt, null));
         var approval = Assert.Single((await directory.LoadProgramAsync(fixture.TenantId,
@@ -270,7 +270,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var approvalId = Uuid.CreateVersion4();
         var approvedOn = fixture.Today.AddMonths(-1);
         var approvedAt = At(approvedOn).AddMinutes(2);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.Approve(fixture.ProgramId, 1, approvalId, reviewId,
@@ -278,7 +278,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
                 Actor(fixture.ApproverMemberId), fixture.ApproverMemberId, approvedAt));
             return Result.Success;
         });
-        var approved = new PolicyApproved(fixture.TenantId, fixture.ProgramId, policyId, 1, 1,
+        var approved = new PolicyApprovedContent(fixture.TenantId, fixture.ProgramId, policyId, 1, 1,
             true, approvalId, reviewId, "content-hash", approvedOn, null, null,
             "Approve the policy.", Actor(fixture.ApproverMemberId), fixture.ApproverMemberId,
             approvedAt, null);
@@ -301,7 +301,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
         var periodicReviewId = Uuid.CreateVersion4();
         var periodicReviewedAt = At(dueOn);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.ConfirmPeriodicReview(fixture.ProgramId, 1, periodicReviewId,
@@ -310,7 +310,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
             return Result.Success;
         });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyPeriodicReviewConfirmed(fixture.TenantId, fixture.ProgramId, policyId, 1,
+            new PolicyPeriodicReviewConfirmedContent(fixture.TenantId, fixture.ProgramId, policyId, 1,
                 periodicReviewId, dueOn, "The current version remains appropriate.",
                 Actor(fixture.ApproverMemberId), fixture.ApproverMemberId, periodicReviewedAt));
         var nextDueOn = dueOn.AddMonths(1);
@@ -331,14 +331,14 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, 12);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(), TimeProvider.System);
+            sourceScope.ServiceProvider.GetRequiredService<PolicyReader>(), TimeProvider.System);
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyDraftCreated(fixture.TenantId, fixture.ProgramId, policyId,
+            new PolicyDraftCreatedContent(fixture.TenantId, fixture.ProgramId, policyId,
                 Uuid.CreateVersion4(), "POL-WORK", Content(12), "content-hash",
                 Actor(fixture.LeadMemberId), fixture.LeadMemberId, At(fixture.Today)));
 
@@ -346,7 +346,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var approvalId = Uuid.CreateVersion4();
         var approvedOn = fixture.Today.AddDays(-40);
         var approvedAt = At(approvedOn).AddMinutes(2);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.Review(fixture.ProgramId, 1, reviewId, "accept",
@@ -358,7 +358,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
             return Result.Success;
         });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyApproved(fixture.TenantId, fixture.ProgramId, policyId, 1, 1, true,
+            new PolicyApprovedContent(fixture.TenantId, fixture.ProgramId, policyId, 1, 1, true,
                 approvalId, reviewId, "content-hash", approvedOn, null, null,
                 "Approve the policy.", Actor(fixture.ApproverMemberId),
                 fixture.ApproverMemberId, approvedAt, null));
@@ -366,7 +366,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var retirementReviewId = Uuid.CreateVersion4();
         var proposedAt = At(fixture.Today);
         var effectiveUntil = fixture.Today.AddMonths(12);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.ProposeRetirement(fixture.ProgramId, 1, effectiveUntil,
@@ -377,13 +377,13 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
         // Act
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyRetirementProposed(fixture.TenantId, fixture.ProgramId, policyId, 2, 1,
+            new PolicyRetirementProposedContent(fixture.TenantId, fixture.ProgramId, policyId, 2, 1,
                 effectiveUntil, "The policy is replaced.", Actor(fixture.LeadMemberId),
                 fixture.LeadMemberId, proposedAt));
         var retirementReview = Assert.Single((await directory.LoadProgramAsync(fixture.TenantId,
             fixture.ProgramId, fixture.Today, fixture.Today.AddDays(30), null)).Value);
         var retirementReviewedAt = At(fixture.Today).AddMinutes(1);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.Review(fixture.ProgramId, 2, retirementReviewId, "accept",
@@ -392,7 +392,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
             return Result.Success;
         });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyReviewed(fixture.TenantId, fixture.ProgramId, policyId, 2,
+            new PolicyReviewedContent(fixture.TenantId, fixture.ProgramId, policyId, 2,
                 retirementReviewId, "accept", "Retirement is appropriate.",
                 Actor(fixture.ReviewerMemberId), fixture.ReviewerMemberId,
                 retirementReviewedAt, null));
@@ -400,7 +400,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
             fixture.ProgramId, fixture.Today, fixture.Today.AddDays(30), null)).Value);
         var retirementId = Uuid.CreateVersion4();
         var retiredAt = At(fixture.Today).AddMinutes(2);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.ApproveRetirement(fixture.ProgramId, 2, retirementId,
@@ -409,7 +409,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
             return Result.Success;
         });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyRetired(fixture.TenantId, fixture.ProgramId, policyId, 2, 1,
+            new PolicyRetiredContent(fixture.TenantId, fixture.ProgramId, policyId, 2, 1,
                 retirementId, retirementReviewId, effectiveUntil,
                 "The replacement is active.", Actor(fixture.ApproverMemberId),
                 fixture.ApproverMemberId, retiredAt, null));
@@ -430,14 +430,14 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, 12);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(), TimeProvider.System);
+            sourceScope.ServiceProvider.GetRequiredService<PolicyReader>(), TimeProvider.System);
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyDraftCreated(fixture.TenantId, fixture.ProgramId, policyId,
+            new PolicyDraftCreatedContent(fixture.TenantId, fixture.ProgramId, policyId,
                 Uuid.CreateVersion4(), "POL-WORK", Content(12), "content-hash",
                 Actor(fixture.LeadMemberId), fixture.LeadMemberId, At(fixture.Today)));
         var original = Assert.Single((await directory.LoadProgramAsync(fixture.TenantId,
@@ -445,7 +445,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
         var reviewId = Uuid.CreateVersion4();
         var reviewedAt = At(fixture.Today).AddMinutes(1);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.Review(fixture.ProgramId, 1, reviewId, "request_changes",
@@ -454,7 +454,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
             return Result.Success;
         });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyReviewed(fixture.TenantId, fixture.ProgramId, policyId, 1, reviewId,
+            new PolicyReviewedContent(fixture.TenantId, fixture.ProgramId, policyId, 1, reviewId,
                 "request_changes", "Clarify the owner responsibilities.",
                 Actor(fixture.ReviewerMemberId), fixture.ReviewerMemberId, reviewedAt, null));
         var returned = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
@@ -462,7 +462,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
         var revisedAt = At(fixture.Today).AddMinutes(2);
         var revisedContent = Content(12, "Revised Access Control Policy");
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.Revise(fixture.ProgramId, 1, revisedContent,
@@ -472,7 +472,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
         // Act
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyDraftRevised(fixture.TenantId, fixture.ProgramId, policyId, 2,
+            new PolicyDraftRevisedContent(fixture.TenantId, fixture.ProgramId, policyId, 2,
                 revisedContent, "revised-content-hash", null,
                 Actor(fixture.LeadMemberId), fixture.LeadMemberId, revisedAt));
         var revised = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
@@ -493,14 +493,14 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, 1);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(), TimeProvider.System);
+            sourceScope.ServiceProvider.GetRequiredService<PolicyReader>(), TimeProvider.System);
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyDraftCreated(fixture.TenantId, fixture.ProgramId, policyId,
+            new PolicyDraftCreatedContent(fixture.TenantId, fixture.ProgramId, policyId,
                 Uuid.CreateVersion4(), "POL-WORK", Content(1), "content-hash",
                 Actor(fixture.LeadMemberId), fixture.LeadMemberId, At(fixture.Today)));
 
@@ -508,7 +508,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var approvalId = Uuid.CreateVersion4();
         var approvedOn = fixture.Today.AddMonths(-2);
         var approvedAt = At(approvedOn).AddMinutes(2);
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.Review(fixture.ProgramId, 1, reviewId, "accept",
@@ -520,13 +520,13 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
             return Result.Success;
         });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyApproved(fixture.TenantId, fixture.ProgramId, policyId, 1, 1, true,
+            new PolicyApprovedContent(fixture.TenantId, fixture.ProgramId, policyId, 1, 1, true,
                 approvalId, reviewId, "content-hash", approvedOn, null, null,
                 "Approve the policy.", Actor(fixture.ApproverMemberId),
                 fixture.ApproverMemberId, approvedAt, null));
         var revisedAt = At(fixture.Today);
         var revisedContent = Content(1, "Successor Access Control Policy");
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.ProposeSuccessor(fixture.ProgramId, 1, revisedContent,
@@ -536,7 +536,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
         // Act
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyDraftRevised(fixture.TenantId, fixture.ProgramId, policyId, 2,
+            new PolicyDraftRevisedContent(fixture.TenantId, fixture.ProgramId, policyId, 2,
                 revisedContent, "successor-content-hash", 1,
                 Actor(fixture.LeadMemberId), fixture.LeadMemberId, revisedAt));
         var work = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
@@ -555,17 +555,17 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var policyId = Uuid.CreateVersion4();
+        var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
         await SeedDraftAsync(fixture, policyId, 12);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(), TimeProvider.System);
+            sourceScope.ServiceProvider.GetRequiredService<PolicyReader>(), TimeProvider.System);
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyDraftCreated(fixture.TenantId, fixture.ProgramId, policyId,
+            new PolicyDraftCreatedContent(fixture.TenantId, fixture.ProgramId, policyId,
                 Uuid.CreateVersion4(), "POL-WORK", Content(12), "content-hash",
                 Actor(fixture.LeadMemberId), fixture.LeadMemberId, At(fixture.Today)));
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.Null(policy.Discard(fixture.ProgramId, 1, "No longer required.",
@@ -575,7 +575,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
         // Act
         await ProjectAsync(directory, events, fixture.TenantId,
-            new PolicyDraftDiscarded(fixture.TenantId, fixture.ProgramId, policyId, 1,
+            new PolicyDraftDiscardedContent(fixture.TenantId, fixture.ProgramId, policyId, 1,
                 "No longer required.", Actor(fixture.LeadMemberId), At(fixture.Today).AddMinutes(1)));
         var work = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
             fixture.Today, fixture.Today.AddDays(30), null);
@@ -591,11 +591,11 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        await SeedDraftAsync(fixture, Uuid.CreateVersion4(), 12);
+        await SeedDraftAsync(fixture, Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK"), 12);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(), TimeProvider.System);
+            sourceScope.ServiceProvider.GetRequiredService<PolicyReader>(), TimeProvider.System);
         var consistency = new WorkQueueReadConsistency(events, [directory]);
 
         // Act
@@ -609,7 +609,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
 
     static async Task SeedDraftAsync(OperationsFixture fixture, Uuid policyId, int cadenceMonths)
     {
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.TenantId,
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new PolicyRules(fixture.TenantId,
             policyId), policy =>
         {
             Assert.True(policy.Create(fixture.ProgramId, Uuid.CreateVersion4(), "POL-WORK",
@@ -620,7 +620,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
     }
 
     static async Task ProjectAsync(FitzPolicyDecisionWorkItemDirectory directory,
-        IDomainEventReader events, Uuid tenantId, DomainEvent domainEvent)
+        IDomainEventReader events, Uuid tenantId, IPolicyMutationContent domainEvent)
     {
         var identity = new CheckpointIdentity(FitzPolicyDecisionWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "policies"));
@@ -628,7 +628,7 @@ public sealed class FitzPolicyDecisionWorkItemDirectoryTests
         var source = await ReadPolicyCheckpointAsync(events, tenantId);
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
             current));
-        await directory.ApplyAsync(domainEvent);
+        await directory.ApplyAsync(await new PolicyProjectionFacts().FreezeAsync(domainEvent));
         await batch.CommitAsync(source);
     }
 

@@ -1,153 +1,112 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
-sealed class FitzPolicyDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/policy-directory/projection", ProjectorName),
+sealed class FitzPolicyDirectory(IKvClient client, PolicyReader policies)
+    : FitzKvProjectionStore(client, "kv://bdgrz/policy-directory-v2/projection", ProjectorName),
         IPolicyDirectoryReader, IPolicyDirectoryProjection
 {
-    public const string ProjectorName = "PolicyDirectoryV1";
+    public const string ProjectorName = "PolicyDirectoryV2";
+    Uuid? _batchTenantId;
+
+    public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context,
+        CancellationToken ct = default) => BeginPolicyBatchAsync(context, ct);
+
+    ValueTask<IProjectionBatch> IProjectionStore.BeginAsync(ProjectionBatchContext context,
+        CancellationToken ct) => BeginPolicyBatchAsync(context, ct);
+
+    async ValueTask<IProjectionBatch> BeginPolicyBatchAsync(ProjectionBatchContext context,
+        CancellationToken ct)
+    {
+        if (context.Identity.Pattern.Area != "policies" || context.Identity.Pattern.Resource is not null ||
+            !Uuid.TryParse(context.Identity.Pattern.Realm, null, out var tenantId) || tenantId == Uuid.Empty)
+            throw new InvalidOperationException("A policy directory batch requires its tenant's policy area.");
+        var batch = await base.BeginAsync(context, ct).ConfigureAwait(false);
+        _batchTenantId = tenantId;
+        return batch;
+    }
 
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-        CancellationToken ct = default) =>
-        base.LoadCheckpointAsync(new CheckpointIdentity(ProjectorName,
+        CancellationToken ct = default) => base.LoadCheckpointAsync(new CheckpointIdentity(ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "policies")), ct);
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
-        if (domainEvent is PolicyDraftCreated created)
+        if (domainEvent is not IPolicyFact fact || fact.Header is not { } header ||
+            fact.Operation is null || _batchTenantId != header.TenantId || fact.TenantId != header.TenantId ||
+            header.ProgramId == Uuid.Empty || header.PolicyId == Uuid.Empty || header.Revision < 1 ||
+            fact.NativeSequence < 1 || header.PolicyId != Policy.IdFor(header.TenantId, header.ProgramId, header.Identifier) ||
+            fact.Operation.Owner != new EventStreamAddress(header.TenantId.ToString(), "policies", header.PolicyId.ToString()))
+            throw new InvalidOperationException("A policy directory fact requires exact native owner and batch scope.");
+        var scope = domainEvent switch
         {
-            await PolicyDirectorySchema.Policies.InsertAsync(Transaction, new PolicyDirectoryRow(
-                new PolicySummaryView(created.TenantId, created.ProgramId, created.PolicyId,
-                    created.Identifier, created.Content.Title, "draft", "draft", 1, null, null,
-                    null, false, created.ChangedAt),
-                created.Content.Title, created.Content.ReviewCadenceMonths, null, null, false),
-                ct).ConfigureAwait(false);
-            return;
-        }
-        var policyId = domainEvent switch
-        {
-            PolicyDraftRevised ev => ev.PolicyId,
-            PolicyReviewed ev => ev.PolicyId,
-            PolicyApproved ev => ev.PolicyId,
-            PolicyPeriodicReviewConfirmed ev => ev.PolicyId,
-            PolicyRetirementProposed ev => ev.PolicyId,
-            PolicyRetired ev => ev.PolicyId,
-            PolicyDraftDiscarded ev => ev.PolicyId,
-            _ => (Uuid?)null,
+            PolicyDraftCreated value => (value.TenantId, value.ProgramId, value.PolicyId),
+            PolicyDraftRevised value => (value.TenantId, value.ProgramId, value.PolicyId),
+            PolicyReviewed value => (value.TenantId, value.ProgramId, value.PolicyId),
+            PolicyApproved value => (value.TenantId, value.ProgramId, value.PolicyId),
+            PolicyPeriodicReviewConfirmed value => (value.TenantId, value.ProgramId, value.PolicyId),
+            PolicyRetirementProposed value => (value.TenantId, value.ProgramId, value.PolicyId),
+            PolicyRetired value => (value.TenantId, value.ProgramId, value.PolicyId),
+            PolicyDraftDiscarded value => (value.TenantId, value.ProgramId, value.PolicyId),
+            _ => (Uuid.Empty, Uuid.Empty, Uuid.Empty),
         };
-        if (policyId is not { } id)
-            return;
-        var row = await PolicyDirectorySchema.Policies.GetAsync(Transaction, id, ct)
-            .ConfigureAwait(false) ?? throw new InvalidOperationException(
-            "A policy event cannot project before its draft was created.");
-        if (domainEvent is PolicyDraftDiscarded)
+        if (scope != (header.TenantId, header.ProgramId, header.PolicyId))
+            throw new InvalidOperationException("The policy directory metadata differs from its native owner scope.");
+        var current = await PolicyDirectorySchema.Policies.GetAsync(Transaction, header.PolicyId, ct).ConfigureAwait(false);
+        var next = new PolicyDirectoryRow(header.TenantId, header.ProgramId, header.PolicyId, header.Identifier,
+            header, fact.NativeSequence);
+        if (current is null)
         {
-            await PolicyDirectorySchema.Policies.DeleteAsync(Transaction, id, ct)
-                .ConfigureAwait(false);
+            if (domainEvent is not PolicyDraftCreated || header.Revision != 1 || fact.NativeSequence != 1)
+                throw new InvalidOperationException("A policy cannot project before its exact native creation.");
+            await PolicyDirectorySchema.Policies.InsertAsync(Transaction, next, ct).ConfigureAwait(false);
             return;
         }
-        await PolicyDirectorySchema.Policies.ReplaceAsync(Transaction, row, Apply(row,
-            domainEvent), ct).ConfigureAwait(false);
-    }
-
-    static PolicyDirectoryRow Apply(PolicyDirectoryRow row, DomainEvent domainEvent)
-    {
-        var summary = row.Summary;
-        switch (domainEvent)
+        if (current.TenantId != header.TenantId || current.ProgramId != header.ProgramId || current.Identifier != header.Identifier)
+            throw new InvalidOperationException("A policy directory identity cannot change its original tenant/program/identifier.");
+        if (fact.NativeSequence < current.NativeSequence)
+            return;
+        if (fact.NativeSequence == current.NativeSequence)
         {
-            case PolicyDraftRevised revised:
-                return row with
-                {
-                    Summary = summary with
-                    {
-                        Revision = revised.Revision,
-                        PendingStatus = "draft",
-                        Title = summary.CurrentVersion is null ? revised.Content.Title : summary.Title,
-                        LastChangedAt = revised.ChangedAt,
-                    },
-                    DraftTitle = revised.Content.Title,
-                    DraftReviewCadenceMonths = revised.Content.ReviewCadenceMonths,
-                };
-            case PolicyReviewed reviewed:
-                var accepted = reviewed.Outcome == "accept";
-                return row with
-                {
-                    Summary = summary with
-                    {
-                        PendingStatus = row.RetirementPending
-                            ? accepted ? "retirement_awaiting_approval" : null
-                            : accepted ? "awaiting_approval" : "changes_requested",
-                        LastChangedAt = reviewed.DecidedAt,
-                    },
-                    RetirementPending = row.RetirementPending && accepted,
-                };
-            case PolicyApproved approved:
-                var reviewedOn = DateOnly.FromDateTime(approved.DecidedAt.UtcDateTime);
-                return row with
-                {
-                    Summary = summary with
-                    {
-                        Status = "approved",
-                        PendingStatus = null,
-                        Title = row.DraftTitle,
-                        CurrentVersion = approved.Version,
-                        CurrentEffectiveFrom = approved.EffectiveFrom,
-                        NextReviewDueOn = reviewedOn.AddMonths(row.DraftReviewCadenceMonths),
-                        LastChangedAt = approved.DecidedAt,
-                    },
-                    CurrentReviewCadenceMonths = row.DraftReviewCadenceMonths,
-                    LastReviewedOn = reviewedOn,
-                };
-            case PolicyPeriodicReviewConfirmed confirmed:
-                return row with
-                {
-                    Summary = summary with
-                    {
-                        NextReviewDueOn = confirmed.ReviewedOn.AddMonths(
-                            row.CurrentReviewCadenceMonths ?? row.DraftReviewCadenceMonths),
-                        LastChangedAt = confirmed.DecidedAt,
-                    },
-                    LastReviewedOn = confirmed.ReviewedOn,
-                };
-            case PolicyRetirementProposed proposed:
-                return row with
-                {
-                    Summary = summary with
-                    {
-                        Revision = proposed.Revision,
-                        PendingStatus = "retirement_proposed",
-                        LastChangedAt = proposed.ProposedAt,
-                    },
-                    RetirementPending = true,
-                };
-            case PolicyRetired retired:
-                return row with
-                {
-                    Summary = summary with
-                    {
-                        Status = "retired",
-                        PendingStatus = null,
-                        NextReviewDueOn = null,
-                        LastChangedAt = retired.DecidedAt,
-                    },
-                    RetirementPending = false,
-                };
-            default:
-                return row;
+            if (current != next)
+                throw new InvalidOperationException("A replayed policy directory fact cannot replace its original native cut.");
+            return;
         }
+        if (domainEvent is PolicyDraftCreated || !current.Header.IsVisible ||
+            fact.NativeSequence != current.NativeSequence + 1 || header.Revision < current.Header.Revision ||
+            header.Revision > current.Header.Revision + 1)
+            throw new InvalidOperationException("A policy mutation must follow its exact native predecessor.");
+        await PolicyDirectorySchema.Policies.ReplaceAsync(Transaction, current, next, ct).ConfigureAwait(false);
     }
 
     public async ValueTask<Page<PolicySummaryView>> ListProgramAsync(Uuid tenantId,
         Uuid programId, int limit, string? cursor, CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        var page = await PolicyDirectorySchema.Policies.QueryAsync(tx,
-            PolicyDirectorySchema.ByProgramIdentifier.Query()
-                .WithPrefix(programId.ToString()).Take(Math.Clamp(limit, 1, 200))
-                .After(cursor), ct).ConfigureAwait(false);
-        return new Page<PolicySummaryView>(
-            page.Items.Select(static row => row.Summary).ToArray(), page.NextCursor);
+        Page<PolicyDirectoryRow> page;
+        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
+            page = await PolicyDirectorySchema.Policies.QueryAsync(tx,
+                PolicyDirectorySchema.ByProgramIdentifier.Query().WithPrefix(programId.ToString())
+                    .Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
+        var values = new List<PolicySummaryView>(page.Items.Count);
+        foreach (var row in page.Items)
+        {
+            if (row.TenantId != tenantId || row.ProgramId != programId)
+                throw new ImmutableContentIntegrityException("The policy directory row has another tenant/program scope.");
+            var source = await policies.ReadAsync(tenantId, programId, row.PolicyId, ct).ConfigureAwait(false);
+            if (source.Owner.Header != row.Header || source.Owner.NativeSequence != row.NativeSequence)
+                throw new ImmutableContentUnavailableException("The policy discovery projection has not reached its exact native source.");
+            if (!source.IsVisible)
+                continue;
+            var view = source.ToView(DateOnly.MinValue);
+            var title = source.CurrentVersion?.Content.Title ?? source.DraftContent?.Title;
+            if (title is null)
+                throw new ImmutableContentIntegrityException("A visible policy has no authored title at its native source.");
+            values.Add(new PolicySummaryView(tenantId, programId, row.PolicyId, row.Identifier, title,
+                view.Status, view.PendingStatus, view.Revision, view.CurrentVersion, view.CurrentEffectiveFrom,
+                view.NextReviewDueOn, false, view.LastChangedAt));
+        }
+        return new Page<PolicySummaryView>(values, page.NextCursor);
     }
 }

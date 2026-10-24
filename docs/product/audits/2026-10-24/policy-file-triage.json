@@ -1,0 +1,55 @@
+{
+  "reviewed": 73,
+  "blockedReviews": 0,
+  "signalsTriaged": 4,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Applications/FitzApplicationPolicyReferenceDirectory.cs",
+      "sha256": "8869fa5e683bf14029a0ed0455ee6cad1ce01b6363219b364ea1d8f602084a5c",
+      "signals": {
+        "authority_gap": 0.74,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.75,
+        "incomplete_path": 0.6
+      },
+      "classification": "native_source_authority_and_recovery_verified_with_explicit_cutover_scope",
+      "evidence": "ReadChangeAsync verifies tenant/program/owner scope, immutable schema/digest and exact native fact reconstruction before transaction writes. Existing projection revision/approval/retirement ordering, tenant batch binding, reverse-reference coverage and rollback behavior remain; the periodic-review projector intentionally advances without changing relationships. Projection exceptions propagate so failed content cannot advance a checkpoint. Current query decisions remain behind the existing source/checkpoint fences. The native consumer/application/reference and full5672unit tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Policies/FitzPolicyDirectory.cs",
+      "sha256": "698c1dd1d765175d9130c6fad10f1ae0f1b1c8a5529b80f470ac22480542f106",
+      "signals": {
+        "authority_gap": 0.48,
+        "invariant_gap": 0.58,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.49
+      },
+      "classification": "native_source_authority_and_recovery_verified_with_explicit_cutover_scope",
+      "evidence": "Discovery stores compact scope/header/native-sequence only at V2 storage/checkpoint. Every bounded selected row composes actual verified native authority and requires exact header/sequence equality; discard remains a hidden tombstone and retirement remains visible. Missing/corrupt source fails the complete page as transient/permanent Conflict via the owning handler, proved by both new rows. Current source fences and query-bound cursors remain. This read model is not mutation authority."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Policies/Policy.cs",
+      "sha256": "33fea308676d3827e7bf95c19a9da2689200fdc9bceb8b76490603dc33796ebc",
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.55,
+        "recovery_gap": 0.64,
+        "incomplete_path": 0.65
+      },
+      "classification": "native_source_authority_and_recovery_verified_with_explicit_cutover_scope",
+      "evidence": "Compact owner keeps current scalar/header references, native sequence and selected acceptance; immutable full bodies and histories are outside command state. Nine native producers freeze original first response/result and recover selected receipt before current content/time/revision/waiver reads. Local append checks exact original body/change/authority, original gate/actor, pending targets, independence proof tuple and bounded native frame. Tests preserve70revisions outside owner, legal escaped body, changed intent/gate/actor, same-revision race and exact waiver after expiry. New RED caught UUID operation display; production now freezes actual original display and ignores current renamed label for identity. No persisted-v1 migration or rollout qualification is claimed."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/FitzPolicyDecisionWorkItemDirectory.cs",
+      "sha256": "8ea3ac677b13a19c4a6998a7d1b5926a9c30d79e3b629bc033bf8111199c912b",
+      "signals": {
+        "authority_gap": 0.64,
+        "invariant_gap": 0.75,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.56
+      },
+      "classification": "native_source_authority_and_recovery_verified_with_explicit_cutover_scope",
+      "evidence": "Work projection composes actual verified native Policy source under its own projection transaction and preserves exact tenant/program/holder/path/kind validation. Existing WorkQueueReadConsistency source/checkpoint/revision fences prevent stale projected candidates from being treated as current work; failed immutable source cannot advance projection checkpoint. Consumer reads retain existing due/horizon/visibility rules. Actual existing work projection and work query regressions pass within316focused and full5672unit checks."
+    }
+  ]
+}

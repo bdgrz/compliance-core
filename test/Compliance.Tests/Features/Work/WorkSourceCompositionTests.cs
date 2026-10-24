@@ -671,7 +671,7 @@ public sealed class WorkSourceCompositionTests
     {
         var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, identifier);
         return ProgramManagementServices.SeedAsync(fixture.Provider,
-            new Policy(fixture.TenantId, policyId), policy =>
+            new PolicyRules(fixture.TenantId, policyId), policy =>
             {
                 Assert.True(policy.Create(fixture.ProgramId, Uuid.CreateVersion4(), identifier,
                     MixedPolicyContent(identifier),

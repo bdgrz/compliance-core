@@ -1,41 +1,30 @@
-using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
-/// <summary>Records the acting member's own review; HTTP-only, never an MCP tool.</summary>
-public sealed class ReviewPolicyDraftHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock)
-    : IRequestHandler<ReviewPolicyDraft, PolicyDecisionView>
+public sealed class ReviewPolicyDraftHandler(PolicyOperations operations) : IRequestHandler<ReviewPolicyDraft, PolicyDecisionView>
 {
-    public async ValueTask<Result<PolicyDecisionView>> HandleAsync(
-        IRequestContext<ReviewPolicyDraft> context, CancellationToken ct)
+    public ValueTask<Result<PolicyDecisionView>> HandleAsync(IRequestContext<ReviewPolicyDraft> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
-            return Result<PolicyDecisionView>.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Policy sign-off requires personal HTTP submission."));
+            return ValueTask.FromResult(Result<PolicyDecisionView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Policy sign-off requires personal HTTP submission.")));
         var request = context.Request;
-        var actor = PolicyActor.From(context, request.TenantId);
-        var operation = AuthoredCommandReplay.Create(new Policy(request.TenantId, request.PolicyId, request.CommandId), request.CommandId,
-            nameof(ReviewPolicyDraft), actor.MemberId, request.ExpectedRevision, request, clock.GetUtcNow());
-        var replayOwner = await reader.HydrateAsync(new Policy(request.TenantId, request.PolicyId, request.CommandId), ct).ConfigureAwait(false);
-        if (AuthoredCommandReplay.TryReplay(replayOwner.ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure is null ? Result<PolicyDecisionView>.Success(replayOwner.FindDecision(request.CommandId)!)
-                : Result<PolicyDecisionView>.Failure(replayFailure.ToRequestError());
-
-        var waiver = await PolicySource.WaiverAsync(reader, request.TenantId,
-            request.SeparationOfDutiesWaiverId, ct).ConfigureAwait(false);
-        return await executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId, request.CommandId),
-            policy =>
+        SeparationOfDutiesWaiverProof? proof = null;
+        return operations.ExecuteAsync<ReviewPolicyDraft, PolicyDecisionView>(context, request.TenantId, request.ProgramId,
+            request.PolicyId, request.CommandId, nameof(ReviewPolicyDraft), request.ExpectedRevision,
+            async (snapshot, actor, at, token) =>
             {
-                var failure = policy.Review(request.ProgramId, request.ExpectedRevision,
-                    request.CommandId, request.Outcome, request.Rationale, actor.Reference,
-                    actor.MemberId, clock.GetUtcNow(), waiver, operation: operation);
-                return CommandFailureRequestAdapter.ToOutcome(failure,
-                    policy.FindDecision(request.CommandId)!);
-            }, context, ct).ConfigureAwait(false);
+                var resolved = await operations.ResolveWaiverAsync(request.TenantId, request.SeparationOfDutiesWaiverId,
+                    actor.MemberId, request.PolicyId, snapshot.Revision, SeparationOfDutiesActions.Review, at, token).ConfigureAwait(false);
+                if (!resolved.IsSuccess)
+                    return Result.Failure(resolved.Error!);
+                proof = resolved.Value;
+                return Result.Success;
+            },
+            (rules, actor, at) => PolicyOperations.Outcome(rules.Review(request.ProgramId, request.ExpectedRevision, request.CommandId, request.Outcome, request.Rationale, actor.Reference, actor.MemberId, at, proof)), () => proof, ct);
     }
 }

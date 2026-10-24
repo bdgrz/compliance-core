@@ -1,20 +1,17 @@
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Policies;
 
-public sealed class DiscardPolicyDraftHandler(IAggregateExecutor executor, TimeProvider clock)
-    : IRequestHandler<DiscardPolicyDraft>
+public sealed class DiscardPolicyDraftHandler(PolicyOperations operations) : IRequestHandler<DiscardPolicyDraft, UnitResult>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<DiscardPolicyDraft> context,
-        CancellationToken ct)
+    public ValueTask<Result<UnitResult>> HandleAsync(IRequestContext<DiscardPolicyDraft> context, CancellationToken ct)
     {
         var request = context.Request;
-        var actor = PolicyActor.From(context, request.TenantId);
-        return executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId),
-            policy => CommandFailureRequestAdapter.ToOutcome(policy.Discard(request.ProgramId,
-                request.ExpectedRevision, request.Rationale, actor.Reference,
-                clock.GetUtcNow())),
-            context, ct);
+        return operations.ExecuteAsync<DiscardPolicyDraft, UnitResult>(context, request.TenantId, request.ProgramId,
+            request.PolicyId, request.CommandId, nameof(DiscardPolicyDraft), request.ExpectedRevision,
+            (_, _, _, _) => PolicyOperations.Ready(),
+            (rules, actor, at) => PolicyOperations.Outcome(rules.Discard(request.ProgramId, request.ExpectedRevision, request.Rationale, actor.Reference, at)), null, ct);
     }
 }

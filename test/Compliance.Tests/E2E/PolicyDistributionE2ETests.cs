@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.Policies;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.Hosting;
@@ -38,14 +39,15 @@ public sealed class PolicyDistributionE2ETests(BrokerStackFixture broker)
         var firstRoster = await FreezeRosterAsync(owner, root);
 
         // Act
-        using var created = await owner.PostAsJsonAsync($"{program}/policies", new
+        var claimedPolicyId = Policy.IdFor(Uuid.Parse(tenantId.ToString(), System.Globalization.CultureInfo.InvariantCulture), Uuid.Parse(programId.ToString(), System.Globalization.CultureInfo.InvariantCulture), "POL-AC");
+        using var created = await owner.PutAsJsonAsync($"{program}/policies/{claimedPolicyId}", new
         {
             identifier = "pol-ac",
             content = Content("Access Control Policy"),
         });
         var policyId = (await ReadAsync(created)).GetProperty("policy_id").GetString();
         var policyPath = $"{program}/policies/{policyId}";
-        using var selfReview = await owner.PostAsJsonAsync($"{policyPath}/reviews",
+        using var selfReview = await owner.PutAsJsonAsync($"{policyPath}/reviews/{Guid.NewGuid()}",
             new { expected_revision = 1, outcome = "accept", rationale = "Mine" });
         using var outsiderRead = await outsider.GetAsync(policyPath);
         var (otherTenantId, otherProgramId) = await CreateProgramAsync(owner);
@@ -55,6 +57,7 @@ public sealed class PolicyDistributionE2ETests(BrokerStackFixture broker)
             new Uri(owner.BaseAddress!, "/mcp"));
         _ = await mcp.When("bdgrz.policy.draft.revise", new Dictionary<string, object?>
         {
+            ["command_id"] = Uuid.CreateVersion4(),
             ["tenant_id"] = tenantId,
             ["program_id"] = programId,
             ["policy_id"] = policyId,
@@ -177,7 +180,8 @@ public sealed class PolicyDistributionE2ETests(BrokerStackFixture broker)
         await worker.StopAsync();
 
         // Act
-        using var created = await owner.PostAsJsonAsync($"{program}/policies", new
+        var claimedPolicyId = Policy.IdFor(Uuid.Parse(tenantId.ToString(), System.Globalization.CultureInfo.InvariantCulture), Uuid.Parse(programId.ToString(), System.Globalization.CultureInfo.InvariantCulture), "POL-SPLIT");
+        using var created = await owner.PutAsJsonAsync($"{program}/policies/{claimedPolicyId}", new
         {
             identifier = "POL-SPLIT",
             content = Content("Split host policy"),

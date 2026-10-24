@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Captures point-in-time policy and training campaign audiences and results.</summary>
 public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
-    ICampaignDirectoryReader directory, IAggregateReader reader, IDomainEventReader events,
+    ICampaignDirectoryReader directory, PolicyReader policySources, IDomainEventReader events,
     CampaignDirectoryReadConsistency consistency, CampaignSource campaigns, IImmutableContentStore store)
     : ITypeIBaselineSourceContributor
 {
@@ -24,7 +24,14 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         ExaminationEngagementView engagement, CancellationToken ct) =>
         ReadAsync(engagement, new TypeIBaselineSourceReadContext(Uuid.Empty, []), ct);
 
-    public async ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+
+
+    public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context,
+        CancellationToken ct) =>
+        PolicySourceFailures.ClassifyAsync(() => ReadCoreAsync(engagement, context, ct));
+
+    async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(
         ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context,
         CancellationToken ct)
     {
@@ -54,7 +61,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         var blockers = new List<string>();
         sources.AddRange(trainingSnapshot.Value.Sources);
         var scopeDifferences = new List<string>();
-        var policyCache = new Dictionary<Uuid, Policy>();
+        var policyCache = new Dictionary<Uuid, PolicyReadSnapshot>();
         var seenCampaignIds = new HashSet<Uuid>();
         var seenCursors = new HashSet<string>(StringComparer.Ordinal);
         string? cursor = null;
@@ -72,13 +79,12 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                 if (item.LaunchedAt > effectiveThrough)
                     continue;
 
-                Policy? policy = null;
+                PolicyReadSnapshot? policy = null;
                 if (item.SubjectKind == "policy")
                 {
                     if (!policyCache.TryGetValue(item.SubjectId, out policy))
                     {
-                        policy = await reader.HydrateAsync(new Policy(engagement.TenantId,
-                            item.SubjectId), ct).ConfigureAwait(false);
+                        policy = await policySources.ReadAsync(engagement.TenantId, engagement.ProgramId, item.SubjectId, ct).ConfigureAwait(false);
                         if (!policy.IsVisible || policy.Id != item.SubjectId ||
                             policy.ProgramId != engagement.ProgramId)
                             return SourceConflict();
@@ -209,7 +215,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         summary.DueOn == launch.DueOn && summary.Status == (isClosed ? "closed" : "open") &&
         summary.LaunchAudience == audienceCount && summary.LaunchedAt == launch.LaunchedAt;
 
-    static bool MatchesPolicySubject(Policy policy, PolicyCampaignLaunched launch, IReadOnlyList<string> teams)
+    static bool MatchesPolicySubject(PolicyReadSnapshot policy, PolicyCampaignLaunched launch, IReadOnlyList<string> teams)
     {
         var subject = launch.Subject;
         var version = policy.FindVersion(subject.Version);

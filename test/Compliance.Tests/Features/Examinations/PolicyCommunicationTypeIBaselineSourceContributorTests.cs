@@ -129,7 +129,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
         Uuid.CreateVersion4(), "type_i", "Audit Firm", TypeIDate, null, ["security"],
         Uuid.CreateVersion4(), [], "draft", 1, LaunchAt, ManagerId, "Examiner");
 
-    static TypeIBaselineSourceReadContext PolicyContext(Policy policy)
+    static TypeIBaselineSourceReadContext PolicyContext(PolicyReadSnapshot policy)
     {
         var references = PolicyTypeIBaselineSourceContributor.ReferencesAsOf(TenantId, policy,
             TypeIDate, new DateTimeOffset(TypeIDate.ToDateTime(TimeOnly.MaxValue,
@@ -149,7 +149,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
             version.Version, version.ContentSha256);
         await fixture.LaunchAsync(subject, audienceKind, audienceTeams ?? []);
         fixture.Subject = subject;
-        fixture.Context = PolicyContext(policy);
+        fixture.Context = PolicyContext(await fixture.PolicyAsync());
         var acknowledged = await fixture.AcknowledgeAsync(Ada, new DateTimeOffset(2027, 3, 1, 12, 0, 0, TimeSpan.Zero));
         Assert.True(acknowledged.IsSuccess, acknowledged.Error?.Message);
         return fixture;
@@ -174,9 +174,9 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
         return fixture;
     }
 
-    static Policy CreateApprovedPolicy()
+    static PolicyRules CreateApprovedPolicy()
     {
-        var policy = new Policy(TenantId, PolicyId);
+        var policy = new PolicyRules(TenantId, PolicyId);
         var createdAt = new DateTimeOffset(2026, 12, 1, 12, 0, 0, TimeSpan.Zero);
         Assert.True(policy.Create(ProgramId, Uuid.CreateVersion4(), "POL-COMMS",
             PolicyContentValue("Access Control Policy v1"), Actor(AuthorId), AuthorId,
@@ -190,7 +190,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
         return policy;
     }
 
-    static void Approve(Policy policy, DateOnly effectiveFrom, DateTimeOffset decidedAt,
+    static void Approve(PolicyRules policy, DateOnly effectiveFrom, DateTimeOffset decidedAt,
         string? impactDigest = null)
     {
         var review = Uuid.CreateVersion4();
@@ -240,9 +240,25 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributorTests
                 var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
                 var campaigns = new CampaignSource(reader, content);
                 var directory = new CampaignDirectory(campaigns, _events);
-                return new PolicyCommunicationTypeIBaselineSourceContributor(directory, reader, _events,
+                return new PolicyCommunicationTypeIBaselineSourceContributor(directory, new PolicyReader(reader, _events, content), _events,
                     new CampaignDirectoryReadConsistency(directory, _events), campaigns, content);
             }
+        }
+
+        public async Task<PolicyReadSnapshot> PolicyAsync()
+        {
+            await using var scope = Provider.CreateAsyncScope();
+            var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+            var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+            return await new PolicyReader(reader, _events, content).ReadAsync(TenantId, ProgramId, PolicyId);
+        }
+
+        public async Task SaveAsync(PolicyRules rules)
+        {
+            await using var scope = Provider.CreateAsyncScope();
+            await PolicySeeds.AppendAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+                scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), rules);
         }
 
         public async Task SaveAsync(Aggregate aggregate)
