@@ -7,6 +7,11 @@ the platform assessment required by
 The acceptance, effect execution, and visibility behavior described below remain
 implementation work under #195 and its first consumer #213.
 
+Superseded in part by the aggregate and reactor cutover (#1022): `ApplicationImportLedger` and `ImportBatch` are
+deleted. `ApplicationImportBatch` (one stream per batch) and `ApplicationImportSource` (one stream per source key and
+namespace) replace them, and acceptance, execution and visibility run as `ApplicationImportExecutionProcess`; see
+[application-import-v1](../product/application-import-v1.md). The evidence below is the original assessment.
+
 ## Evidence and ownership
 
 Compliance now pins Portia 0.8.0 in `Directory.Packages.props`. The relevant

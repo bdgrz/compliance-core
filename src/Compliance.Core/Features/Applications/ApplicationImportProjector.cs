@@ -1,18 +1,34 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-public sealed partial class ApplicationImportProjector(IApplicationImportDirectoryProjection projection)
-    : Projector(projection, EventStreamPattern.ForTenant("application_imports"),
+public sealed partial class ApplicationImportProjector(IApplicationImportDirectoryProjection projection,
+    IImmutableContentStore content)
+    : Projector(projection, EventStreamPattern.ForTenant(ApplicationImportBatch.Area),
         "ApplicationImportDirectoryV1"), IProjectorHandler<ApplicationImportStaged>,
         IProjectorHandler<ApplicationImportCanceled>, IProjectorHandler<ApplicationImportRowCorrelated>,
-        IProjectorHandler<ApplicationImportFailed>, IProjectorHandler<ApplicationImportPlanStarted>, IProjectorHandler<ApplicationImportPlanRowFrozen>,
-        IProjectorHandler<ApplicationImportPlanSealed>, IProjectorHandler<ApplicationImportCommitted>,
-        IProjectorHandler<ApplicationImportRetirementProposalStarted>,
-        IProjectorHandler<ApplicationImportRetirementRowFrozen>, IProjectorHandler<ApplicationImportRetirementProposalSealed>
+        IProjectorHandler<ApplicationImportFailed>, IProjectorHandler<ApplicationImportPlanSealed>,
+        IProjectorHandler<ApplicationImportExecutionAuthorized>, IProjectorHandler<ApplicationImportCancellationAccepted>,
+        IProjectorHandler<ApplicationImportCommitted>, IProjectorHandler<ApplicationImportRetirementProposalSealed>
 {
-    public ValueTask HandleAsync(ApplicationImportStaged ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask HandleAsync(ApplicationImportStaged ev, IProjectorContext context,
+        CancellationToken ct)
+    {
+        IReadOnlyList<ApplicationImportStagedRow> rows;
+        try
+        {
+            rows = (await ApplicationImportContent.ReadAsync<ApplicationImportRowsManifest>(content, ev.TenantId,
+                ev.RowsManifest, ct).ConfigureAwait(false)).Rows;
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            throw new InvalidOperationException(
+                $"The staged rows cannot be projected before their immutable content verifies: {exception.Message}");
+        }
+
+        await projection.ApplyStagedAsync(ev, rows, ct).ConfigureAwait(false);
+    }
 
     public ValueTask HandleAsync(ApplicationImportCanceled ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
@@ -23,19 +39,13 @@ public sealed partial class ApplicationImportProjector(IApplicationImportDirecto
     public ValueTask HandleAsync(ApplicationImportFailed ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
 
-    public ValueTask HandleAsync(ApplicationImportPlanStarted ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(ApplicationImportPlanRowFrozen ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
     public ValueTask HandleAsync(ApplicationImportPlanSealed ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
 
-    public ValueTask HandleAsync(ApplicationImportRetirementProposalStarted ev, IProjectorContext context,
+    public ValueTask HandleAsync(ApplicationImportExecutionAuthorized ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
 
-    public ValueTask HandleAsync(ApplicationImportRetirementRowFrozen ev, IProjectorContext context,
+    public ValueTask HandleAsync(ApplicationImportCancellationAccepted ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
 
     public ValueTask HandleAsync(ApplicationImportRetirementProposalSealed ev, IProjectorContext context,

@@ -1,176 +1,253 @@
 using Bdgrz.Compliance.Features.Applications;
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 
 public sealed class ApplicationImportReadTests
 {
     [Theory]
-    [InlineData("cancel", "canceled")]
+    [InlineData("cancel", "canceling")]
     [InlineData("correlate", "preview_ready")]
     [InlineData("accept", "accepting")]
-    public async Task ShouldReportLagAndRecoverGivenTransitionOnSourceLedger(string transition, string expectedState)
+    public async Task ShouldReportLagAndRecoverGivenTransitionOnBatch(string transition, string expectedState)
     {
         // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var actorId = Uuid.CreateVersion4();
-        var now = DateTimeOffset.UtcNow;
-        var request = new StageApplicationImport(tenantId, Uuid.CreateVersion4(), "manual",
-            "applications", "partial", [new ApplicationImportInputRow("app-1", "Payroll", "Pay staff", null)]);
-        var source = new ImportBatch(tenantId, ImportBatch.BatchIdFor(request));
-        Assert.True(source.Stage(request, actorId, "Lead", now).IsSuccess);
-        var staged = Assert.IsType<ApplicationImportStaged>(
-            Assert.Single(new AggregateScenario<ImportBatch>(source).PendingEvents));
-        var ledger = new ApplicationImportLedger(tenantId, request.SourceKey, request.SourceNamespace);
-        if (transition == "cancel")
-            Assert.Null(ledger.Cancel(source, 1, "Superseded", actorId, "Lead", now));
-        else
+        await using var fixture = new ApplicationImportCompositionTests.Fixture();
+        var (batchId, _, _) = await fixture.SeedAsync("partial");
+        var row = (await fixture.RowsOfAsync(batchId)).Single();
+        var result = transition switch
         {
-            Assert.Null(ledger.Correlate(source, new CorrelateApplicationImportRow(tenantId,
-                source.Id, staged.Rows[0].RowId, 1, "create_new", null, null, "Reviewed identity"),
-                null, actorId, "Lead", now));
-            if (transition == "accept")
-                Assert.True(ledger.BeginAcceptance(source, 2, new Dictionary<Uuid, DeclaredApplication>(), actorId, "Lead", now).IsSuccess);
-        }
-        var lifecycle = new AggregateScenario<ApplicationImportLedger>(ledger).PendingEvents.ToArray();
-        var revision = ledger.GetRevision(source);
-        var directory = new FitzApplicationImportDirectory(new InMemoryKvClient());
-        var identity = new CheckpointIdentity("ApplicationImportDirectoryV1",
-            EventStreamPattern.ForPattern(tenantId.ToString(), "application_imports"));
-        await using (var projection = await directory.BeginAsync(
-            new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
-        {
-            await directory.ApplyAsync(staged);
-            await projection.CommitAsync(ProjectionCheckpoint.Start);
-        }
-        var consistency = new ApplicationImportReadConsistency(directory, new SourceReader(source, ledger));
+            "cancel" => (await fixture.SendPersonalAcceptedAsync(new CancelApplicationImport(Uuid.CreateVersion4(),
+                fixture.Tenant, batchId, 1, "Superseded"))).IsSuccess,
+            "correlate" => (await fixture.SendPersonalAsync(new CorrelateApplicationImportRow(Uuid.CreateVersion4(),
+                fixture.Tenant, batchId, row.RowId, 1, "create_new", null, null, "Reviewed"))).IsSuccess,
+            _ => await AcceptAfterCorrelationAsync(fixture, batchId, row.RowId),
+        };
+        var revision = (await fixture.Reader.HydrateAsync(new ApplicationImportBatch(fixture.Tenant, batchId))).Revision;
 
         // Act
-        var lagging = await consistency.GetFreshAsync(tenantId, source.Id, null, CancellationToken.None);
-        await using (var projection = await directory.BeginAsync(
-            new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
-        {
-            foreach (var ev in lifecycle)
-                await directory.ApplyAsync(ev);
-            await projection.CommitAsync(ProjectionCheckpoint.Start);
-        }
-        var recovered = await consistency.GetFreshAsync(tenantId, source.Id, revision, CancellationToken.None);
+        var lagging = await fixture.Bus.SendAsync(new GetApplicationImport(fixture.Tenant, batchId, revision),
+            fixture.Actor);
+        await fixture.CatchUpImportDirectoryAsync();
+        var recovered = await fixture.Bus.SendAsync(new GetApplicationImport(fixture.Tenant, batchId, revision),
+            fixture.Actor);
 
         // Assert
-        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(lagging.Error).Kind);
-        Assert.True(Assert.IsType<RequestError>(lagging.Error).IsTransient);
-        Assert.True(recovered.IsSuccess);
-        Assert.Equal(revision, recovered.Value.Revision);
+        Assert.True(result);
+        Assert.Equal(RequestErrorKind.Conflict, lagging.Error?.Kind);
+        Assert.True(lagging.Error!.IsTransient);
+        Assert.True(recovered.IsSuccess, recovered.Error?.Message);
+        Assert.Equal(revision, recovered.Value!.Revision);
         Assert.Equal(expectedState, recovered.Value.State);
     }
 
     [Fact]
-    public async Task ShouldShowAttributedChoiceGivenFreshPreviewWithoutAcceptedClaims()
+    public async Task ShouldShowAttributedChoiceGivenFreshPreviewWithoutPublishedClaimForRow()
     {
         // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var actorId = Uuid.CreateVersion4();
-        var now = DateTimeOffset.UtcNow;
-        var request = new StageApplicationImport(tenantId, Uuid.CreateVersion4(), "manual",
-            "applications", "partial", [new ApplicationImportInputRow("app-1", "Payroll", "Pay staff", null)]);
-        var source = new ImportBatch(tenantId, ImportBatch.BatchIdFor(request));
-        Assert.True(source.Stage(request, actorId, "Lead", now).IsSuccess);
-        var staged = Assert.IsType<ApplicationImportStaged>(
-            Assert.Single(new AggregateScenario<ImportBatch>(source).PendingEvents));
-        var ledger = new ApplicationImportLedger(tenantId, "manual", "applications");
-        Assert.Null(ledger.Correlate(source, new CorrelateApplicationImportRow(tenantId,
-            source.Id, staged.Rows[0].RowId, 1, "create_new", null, null, "Reviewed identity"),
-            null, actorId, "Lead", now));
-        var correlated = Assert.Single(new AggregateScenario<ApplicationImportLedger>(ledger).PendingEvents);
-        var directory = new FitzApplicationImportDirectory(new InMemoryKvClient());
-        var identity = new CheckpointIdentity("ApplicationImportDirectoryV1",
-            EventStreamPattern.ForPattern(tenantId.ToString(), "application_imports"));
-        await using (var projection = await directory.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
-        {
-            await directory.ApplyAsync(staged);
-            await directory.ApplyAsync(correlated);
-            await projection.CommitAsync(ProjectionCheckpoint.Start);
-        }
-        var reader = new SourceReader(source, ledger);
-        var consistency = new ApplicationImportReadConsistency(directory, reader);
-        var preview = new PreviewApplicationImportHandler(directory, consistency, reader);
+        await using var fixture = new ApplicationImportCompositionTests.Fixture();
+        var (batchId, _, _) = await fixture.SeedAsync("partial");
+        var row = (await fixture.RowsOfAsync(batchId)).Single();
+        Assert.True((await fixture.SendPersonalAsync(new CorrelateApplicationImportRow(Uuid.CreateVersion4(),
+            fixture.Tenant, batchId, row.RowId, 1, "create_new", null, null, "Reviewed identity"))).IsSuccess);
+        await fixture.CatchUpImportDirectoryAsync();
 
         // Act
-        var result = await preview.HandleAsync(new RequestContext<PreviewApplicationImport>(
-            new PreviewApplicationImport(tenantId, source.Id, MinimumRevision: 2), new()), CancellationToken.None);
+        var preview = await fixture.Bus.SendAsync(new PreviewApplicationImport(fixture.Tenant, batchId,
+            MinimumRevision: 2), fixture.Actor);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        var row = Assert.Single(result.Value.Items);
-        var choice = Assert.IsType<ApplicationImportCorrelationView>(row.Correlation);
+        Assert.True(preview.IsSuccess, preview.Error?.Message);
+        var item = Assert.Single(preview.Value!.Items);
+        var choice = Assert.IsType<ApplicationImportCorrelationView>(item.Correlation);
         Assert.Equal("create_new", choice.Decision);
-        Assert.Equal(actorId, choice.ActorMemberId);
         Assert.Equal("Reviewed identity", choice.Reason);
         Assert.Equal(2, choice.Revision);
-        Assert.Equal("new", row.MatchState);
-        Assert.Empty(row.AcceptanceBlockers);
-    }
-
-    [Theory]
-    [InlineData(1, "projection")]
-    [InlineData(2, "source")]
-    public async Task ShouldReportLagGivenStagedSourceWithoutProjectedRows(
-        long minimumRevision, string laggingLayer)
-    {
-        // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var request = new StageApplicationImport(tenantId, Uuid.CreateVersion4(),
-            "source", "primary", "partial",
-            [new ApplicationImportInputRow("record", "Payroll", "Purpose", null)]);
-        var batchId = ImportBatch.BatchIdFor(request);
-        var source = new ImportBatch(tenantId, batchId);
-        Assert.True(source.Stage(request, Uuid.CreateVersion4(), "Manager",
-            DateTimeOffset.UtcNow).IsSuccess);
-        var directory = new FitzApplicationImportDirectory(new InMemoryKvClient());
-        var consistency = new ApplicationImportReadConsistency(directory, new SourceReader(source));
-
-        // Act
-        var batch = await consistency.GetFreshAsync(tenantId, batchId, minimumRevision,
-            CancellationToken.None);
-        var rows = await new ListApplicationImportRowsHandler(directory, consistency)
-            .HandleAsync(new RequestContext<ListApplicationImportRows>(
-                new ListApplicationImportRows(tenantId, batchId,
-                    MinimumRevision: minimumRevision), new()), CancellationToken.None);
-
-        // Assert
-        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(batch.Error).Kind);
-        Assert.True(Assert.IsType<RequestError>(batch.Error).IsTransient);
-        Assert.Contains(laggingLayer, Assert.IsType<RequestError>(batch.Error).Message,
-            StringComparison.Ordinal);
-        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(rows.Error).Kind);
-        Assert.True(Assert.IsType<RequestError>(rows.Error).IsTransient);
+        Assert.Equal("new", item.MatchState);
+        Assert.Empty(item.AcceptanceBlockers);
     }
 
     [Fact]
-    public async Task ShouldHideUnknownBatchGivenUncreatedSource()
+    public async Task ShouldClassifyObservationGivenPublishedClaimAndChangedGovernance()
     {
-        // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var batchId = Uuid.CreateVersion4();
-        var directory = new FitzApplicationImportDirectory(new InMemoryKvClient());
-        var consistency = new ApplicationImportReadConsistency(directory,
-            new SourceReader(new ImportBatch(tenantId, batchId)));
+        // Arrange: record "omitted" is claimed by the seeded application; a new batch observes it again.
+        await using var fixture = new ApplicationImportCompositionTests.Fixture();
+        var (_, _, applicationId) = await fixture.SeedAsync();
+        var same = await StageAsync(fixture, new ApplicationImportInputRow("omitted", "Observed application",
+            "Purpose", null));
+        var changed = await StageAsync(fixture, new ApplicationImportInputRow("omitted", "Renamed", "New purpose",
+            "Owner"));
+        await fixture.CatchUpImportDirectoryAsync();
 
         // Act
-        var result = await consistency.GetFreshAsync(tenantId, batchId, null,
-            CancellationToken.None);
+        var unchanged = await fixture.Bus.SendAsync(new PreviewApplicationImport(fixture.Tenant, same), fixture.Actor);
+        var differs = await fixture.Bus.SendAsync(new PreviewApplicationImport(fixture.Tenant, changed), fixture.Actor);
 
         // Assert
-        Assert.Equal(RequestErrorKind.NotFound, Assert.IsType<RequestError>(result.Error).Kind);
+        var sameRow = Assert.Single(unchanged.Value!.Items);
+        Assert.Equal("unchanged", sameRow.MatchState);
+        Assert.Equal([applicationId], sameRow.CandidateApplicationIds);
+        Assert.Empty(sameRow.ChangedFields);
+        var changedRow = Assert.Single(differs.Value!.Items);
+        Assert.Equal("changed", changedRow.MatchState);
+        Assert.Equal(["name", "purpose", "owner_reference"], changedRow.ChangedFields);
     }
 
-    sealed class SourceReader(params Aggregate[] sources) : IAggregateReader
+    [Fact]
+    public async Task ShouldBlockPreviewGivenCanceledBatchAndRejectedReportShowCancellation()
     {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult((TAggregate)(sources.SingleOrDefault(source =>
-                source.Stream == aggregate.Stream) ?? aggregate));
+        // Arrange
+        await using var fixture = new ApplicationImportCompositionTests.Fixture();
+        var (batchId, _, _) = await fixture.SeedAsync();
+        Assert.True((await fixture.SendPersonalAcceptedAsync(new CancelApplicationImport(Uuid.CreateVersion4(),
+            fixture.Tenant, batchId, 1, "Superseded"))).IsSuccess);
+        await fixture.CatchUpImportDirectoryAsync();
+
+        // Act
+        var preview = await fixture.Bus.SendAsync(new PreviewApplicationImport(fixture.Tenant, batchId), fixture.Actor);
+        var report = await fixture.Bus.SendAsync(new GetApplicationImportRejectedReport(fixture.Tenant, batchId),
+            fixture.Actor);
+        var missing = await fixture.Bus.SendAsync(new PreviewMissingApplicationImportRows(fixture.Tenant, batchId),
+            fixture.Actor);
+
+        // Assert
+        Assert.Contains("batch_canceled", Assert.Single(preview.Value!.Items).AcceptanceBlockers);
+        Assert.Equal("canceling", report.Value!.State);
+        Assert.Contains("batch_canceled", Assert.Single(report.Value.Rows).Findings);
+        Assert.Contains("batch_canceled", Assert.Single(missing.Value!.Items).AcceptanceBlockers);
+    }
+
+    [Fact]
+    public async Task ShouldReportDurableProgressGivenAcceptedThenPublishedBatch()
+    {
+        // Arrange
+        await using var fixture = new ApplicationImportCompositionTests.Fixture();
+        var (batchId, _, _) = await fixture.SeedAsync("partial");
+        var row = (await fixture.RowsOfAsync(batchId)).Single();
+        Assert.True(await AcceptAfterCorrelationAsync(fixture, batchId, row.RowId));
+
+        // Act
+        var accepting = await fixture.Bus.SendAsync(new GetApplicationImportProgress(fixture.Tenant, batchId),
+            fixture.Actor);
+        var run = await ApplicationImportProcessSupport.RunAsync(fixture.Provider,
+            fixture.Provider.CreateScope().ServiceProvider, fixture.Tenant, batchId);
+        var committed = await fixture.Bus.SendAsync(new GetApplicationImportProgress(fixture.Tenant, batchId),
+            fixture.Actor);
+
+        // Assert
+        Assert.True(accepting.IsSuccess, accepting.Error?.Message);
+        Assert.Equal("accepting", accepting.Value!.State);
+        Assert.Equal(1, accepting.Value.PlannedCount);
+        Assert.Equal(0, accepting.Value.DurableEffectCount);
+        Assert.NotNull(accepting.Value.AcceptedAt);
+        Assert.Equal(ProcessState.Completed, run.State);
+        Assert.Equal("committed", committed.Value!.State);
+        Assert.Equal(1, committed.Value.DurableEffectCount);
+        Assert.Equal(1, committed.Value.AppliedCount);
+        Assert.NotNull(committed.Value.CommittedAt);
+    }
+
+    [Fact]
+    public async Task ShouldReportValidationFindingsGivenRejectedStagedRow()
+    {
+        // Arrange
+        await using var fixture = new ApplicationImportCompositionTests.Fixture();
+        await fixture.SeedAsync();
+        var batchId = await StageAsync(fixture, new ApplicationImportInputRow("", "", "", null),
+            new ApplicationImportInputRow("fine", "Fine", "Purpose", null));
+        await fixture.CatchUpImportDirectoryAsync();
+
+        // Act
+        var report = await fixture.Bus.SendAsync(new GetApplicationImportRejectedReport(fixture.Tenant, batchId),
+            fixture.Actor);
+
+        // Assert: the invalid row lists its findings and the uncorrelated row still needs a decision.
+        Assert.Equal("preview_ready", report.Value!.State);
+        var invalid = report.Value.Rows.Single(item => item.RowNumber == 1);
+        Assert.Equal(["source_record_id_required", "name_required", "purpose_required"], invalid.Findings);
+        Assert.Equal(["correlation_required"], report.Value.Rows.Single(item => item.RowNumber == 2).Findings);
+        Assert.Empty(report.Value.BatchFindings);
+    }
+
+    [Fact]
+    public async Task ShouldRejectLifecycleReadsGivenWrongTenantOrUnsatisfiedRevision()
+    {
+        // Arrange
+        await using var fixture = new ApplicationImportCompositionTests.Fixture();
+        var (batchId, _, _) = await fixture.SeedAsync();
+
+        // Act
+        var wrongTenant = await fixture.Bus.SendAsync(new GetApplicationImportProgress(Uuid.CreateVersion4(), batchId),
+            fixture.Actor);
+        var ahead = await fixture.Bus.SendAsync(new GetApplicationImportProgress(fixture.Tenant, batchId, 99),
+            fixture.Actor);
+        var unknown = await fixture.Bus.SendAsync(new GetApplicationImportRejectedReport(fixture.Tenant,
+            Uuid.CreateVersion4()), fixture.Actor);
+        var invalid = await fixture.Bus.SendAsync(new GetApplicationImport(fixture.Tenant, batchId, 0), fixture.Actor);
+
+        // Assert
+        Assert.False(wrongTenant.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, ahead.Error?.Kind);
+        Assert.True(ahead.Error!.IsTransient);
+        Assert.Equal(RequestErrorKind.NotFound, unknown.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Validation, invalid.Error?.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldReadFrozenOmissionProposalGivenSealedProposalAndHideItAfterChange()
+    {
+        // Arrange
+        await using var fixture = new ApplicationImportCompositionTests.Fixture();
+        var (batchId, _, _) = await fixture.SeedAsync();
+        var batch = await fixture.Reader.HydrateAsync(new ApplicationImportBatch(fixture.Tenant, batchId));
+        var source = await fixture.Reader.HydrateAsync(new ApplicationImportSource(fixture.Tenant, "manual",
+            "applications"));
+        var preview = await fixture.Bus.SendAsync(new PreviewApplicationImportOmissionProposal(fixture.Tenant, batchId),
+            fixture.Actor);
+
+        // Act
+        var frozen = await fixture.SendPersonalAsync(new FreezeApplicationImportOmissionProposal(Uuid.CreateVersion4(),
+            fixture.Tenant, batchId, 1, source.CommittedStreamPosition, batch.ContentDigest!, "Reviewed omission"));
+        var read = await fixture.Bus.SendAsync(new GetApplicationImportOmissionProposal(fixture.Tenant, batchId),
+            fixture.Actor);
+        var row = (await fixture.RowsOfAsync(batchId)).Single();
+        Assert.True((await fixture.SendPersonalAsync(new CorrelateApplicationImportRow(Uuid.CreateVersion4(),
+            fixture.Tenant, batchId, row.RowId, 2, "create_new", null, null, "Reviewed"))).IsSuccess);
+        var hidden = await fixture.Bus.SendAsync(new GetApplicationImportOmissionProposal(fixture.Tenant, batchId),
+            fixture.Actor);
+
+        // Assert
+        Assert.Equal(["omitted"], preview.Value!.MissingRows.Select(missing => missing.SourceRecordId));
+        Assert.True(frozen.IsSuccess, frozen.Error?.Message);
+        Assert.True(read.IsSuccess, read.Error?.Message);
+        Assert.Equal("Reviewed omission", read.Value!.Reason);
+        Assert.Equal(["present"], read.Value.PresentSourceRecordIds);
+        Assert.Equal(2, read.Value.Revision);
+        Assert.Equal(source.CommittedStreamPosition, read.Value.SourcePosition);
+        Assert.Equal(RequestErrorKind.Conflict, hidden.Error?.Kind);
+    }
+
+    static async Task<bool> AcceptAfterCorrelationAsync(ApplicationImportCompositionTests.Fixture fixture, Uuid batchId,
+        Uuid rowId)
+    {
+        var correlated = await fixture.SendPersonalAsync(new CorrelateApplicationImportRow(Uuid.CreateVersion4(),
+            fixture.Tenant, batchId, rowId, 1, "create_new", null, null, "Reviewed"));
+        if (!correlated.IsSuccess)
+            return false;
+        var accepted = await fixture.SendPersonalAcceptedAsync(new AcceptApplicationImport(Uuid.CreateVersion4(),
+            fixture.Tenant, batchId, 2));
+        return accepted.IsSuccess;
+    }
+
+    static async Task<Uuid> StageAsync(ApplicationImportCompositionTests.Fixture fixture,
+        params ApplicationImportInputRow[] rows)
+    {
+        var staged = await fixture.Bus.SendAsync(new StageApplicationImport(fixture.Tenant, Uuid.CreateVersion4(),
+            "manual", "applications", "partial", rows), fixture.Actor);
+        Assert.True(staged.IsSuccess, staged.Error?.Message);
+        return staged.Value!.BatchId;
     }
 }

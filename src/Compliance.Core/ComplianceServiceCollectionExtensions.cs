@@ -692,6 +692,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(ProfessionalDutyChangeProcess.Definition());
         services.AddSingleton(TypeIIRangeProcess.Definition());
         services.AddSingleton(ControlOccurrenceFanOut.Definition());
+        services.AddSingleton(ApplicationImportExecutionProcess.Definition());
+        services.AddScoped<ApplicationImportVerifier>();
+        services.AddScoped<ApplicationImportReceivers>();
         services.AddScoped<ControlOperationsReader>();
         services.AddScoped<TypeIIOccurrenceCoverage>();
         services.AddScoped<TypeIIRangeVerifier>();
@@ -954,8 +957,15 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<FreezeApplicationImportOmissionProposalHandler>()
             .AddRequestHandler<GetApplicationImportOmissionProposalHandler>()
             .AddRequestHandler<CorrelateApplicationImportRowHandler>()
+            .AddRequestHandler<ClaimApplicationImportSourceHandler>()
+            .AddRequestHandler<ReserveApplicationImportTargetHandler>()
             .AddRequestHandler<ApplyApplicationImportEffectHandler>()
-            .AddRequestAuthorizer<ApplyApplicationImportEffectAuthorizer>()
+            .AddRequestHandler<CommitApplicationImportBatchHandler>()
+            .AddRequestHandler<FenceApplicationImportTargetHandler>()
+            .AddRequestHandler<CompleteApplicationImportCancellationHandler>()
+            .AddRequestHandler<ReleaseApplicationImportSourceHandler>()
+            .AddRequestHandler<ReleaseApplicationImportTargetHandler>()
+            .AddRequestAuthorizer<ApplicationImportReceiverAuthorizer>()
             .AddRequestAuthorizer<ApplicationInventoryAuthorizer>()
             .AddRequestHandler<RecordProviderHandler>()
             .AddRequestHandler<ReviseProviderHandler>()
@@ -1513,7 +1523,10 @@ public static class ComplianceServiceCollectionExtensions
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AcceptedStaffDirectoryReconciliationReactor>(AcceptedStaffDirectoryReconciliationReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
-            .AddReactor<ApplicationImportExecutionReactor>(ApplicationImportExecutionReactor.WorkloadName, WorkloadScope.PerTenant)
+            .AddReactor<ImportSourceAdmissionReactor>(ImportSourceAdmissionReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<ImportCancellationReactor>(ImportCancellationReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<TenantSlugReactor>("TenantSlug", WorkloadScope.Global)
             .AddReactor<RiskMethodReassessmentReactor>("RiskMethodReassessmentV1",
                 WorkloadScope.PerTenant)

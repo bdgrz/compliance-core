@@ -154,10 +154,10 @@ These remain the actionable design risks from the full source review. “Split�
 | AccessReviewCampaign | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs) |
 | AccessReviewSystemLedger | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.91 | [source](../../../../src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs) |
 | AdvisorHandoff | AdvisorCollaboration | split | ROOTASSURE-01 (pending), ROOTASSURE-04 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs) |
-| ApplicationImportLedger | Applications | split | ROOT-02 (pending) | 0.86 | [source](../../../../src/Compliance.Core/Features/Applications/ApplicationImportLedger.Commit.cs) |
-| DeclaredApplication | Applications | split | ROOT-01 (pending), ROOT-02 (pending), ROOT-04 (pending), ROOT-05 (pending) | 0.93 | [source](../../../../src/Compliance.Core/Features/Applications/DeclaredApplication.ImportVisibility.cs) |
+| ApplicationImportLedger | Applications | split | ROOT-02 (pending) | 0.86 |  |
+| DeclaredApplication | Applications | split | ROOT-01 (pending), ROOT-02 (pending), ROOT-04 (pending), ROOT-05 (pending) | 0.93 |  |
 | DeclaredSystemInstance | Applications | retain | ROOT-05 (pending) | 0.57 | [source](../../../../src/Compliance.Core/Features/Applications/DeclaredSystemInstance.cs) |
-| ImportBatch | Applications | retain | ROOT-02 (pending), ROOT-05 (pending) | 0.45 | [source](../../../../src/Compliance.Core/Features/Applications/ImportBatch.cs) |
+| ImportBatch | Applications | retain | ROOT-02 (pending), ROOT-05 (pending) | 0.45 |  |
 | SystemInstanceAccessReviewScope | Applications | narrow | ROOT-03 (pending) | 0.84 | [source](../../../../src/Compliance.Core/Features/Applications/SystemInstanceAccessReviewScope.cs) |
 | AuditPackage | AuditPackages | split | ASSURE-02 (pending), ASSURE-10 (pending), CORE-01 (complete) | 0.89 | [source](../../../../src/Compliance.Core/Features/AuditPackages/AuditPackage.cs) |
 | AuditPopulation | AuditPopulations | narrow | ASSURE-04 (pending), ASSURE-10 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.83 | [source](../../../../src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs) |
@@ -254,7 +254,7 @@ The 21 surviving baseline reactor rows retain their original source-reviewed fai
 | RoleCleanupReactor | CHOREO-06 | 0.64 | [source](../../../../src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs) |
 | TeamCleanupReactor | CHOREO-06 | 0.53 | [source](../../../../src/Compliance.Core/Features/AccessControl/TeamCleanupReactor.cs) |
 | TenantRbacBootstrapReactor | — | 0.54 | [source](../../../../src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs) |
-| ApplicationImportExecutionReactor | CHOREO-05 | 0.35 | [source](../../../../src/Compliance.Core/Features/Applications/ApplicationImportExecutionReactor.cs) |
+| ApplicationImportExecutionReactor | CHOREO-05 | 0.35 |  |
 | LinkImpactReviewWorkReactor | CHOREO-09 | 0.49 | [source](../../../../src/Compliance.Core/Features/Changes/LinkImpactReviewWorkReactor.cs) |
 | SystemDescriptionDecisionReactor | CHOREO-09 | 0.57 | [source](../../../../src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs) |
 | ControlEvaluationDeviationFindingReactor | — | 0.30 | [source](../../../../src/Compliance.Core/Features/Evaluations/ControlEvaluationDeviationFindingReactor.cs) |

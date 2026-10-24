@@ -41,31 +41,31 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 458,
-    "factsWithReducer": 436,
-    "factsWithAggregateEmitter": 430,
+    "domainEventContracts": 461,
+    "factsWithReducer": 439,
+    "factsWithAggregateEmitter": 432,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
-    "legacyReducerOnlyFacts": 1,
+    "legacyReducerOnlyFacts": 2,
     "aggregateTypes": 111,
     "aggregateTypesWithCommandPath": 108,
-    "requestContracts": 713,
-    "commonRequestContracts": 711,
+    "requestContracts": 720,
+    "commonRequestContracts": 718,
     "requestClassificationCounts": {
-      "command": 348,
+      "command": 346,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 77,
+      "internal_reaction": 86,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 654,
+    "registeredCoreHandlerRegistrations": 661,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 38,
+    "unwiredAggregateProducerOperations": 37,
     "unwiredAggregateProducerClassifications": {
       "no_registered_request_route": 17,
-      "legacy_emitter_to_prune": 9,
+      "legacy_emitter_to_prune": 8,
       "direct_reactor_executor": 2,
       "direct_processor_executor": 10
     },
@@ -583,7 +583,6 @@
         "test/Compliance.Tests/Features/AccessControl/AccessGrantProposalValidatorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Applications/SystemInstanceBoundedReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
         "test/Compliance.Tests/Features/Applications/DeclaredApplicationTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationEvidenceSourceReferencePreviewTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationReadinessImpactTests.cs",
@@ -600,7 +599,6 @@
         "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
         "test/Compliance.Tests/Features/Applications/SystemInstanceReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationChangePreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementEffectTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationReviewCampaignImpactTests.cs",
         "test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs"
       ],
@@ -612,22 +610,15 @@
       "contract": "src/Compliance.Common/Features/Applications/ApplicationImportCanceled.cs",
       "reducers": [
         {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs"
-        },
-        {
-          "aggregate": "ImportBatch",
-          "source": "src/Compliance.Core/Features/Applications/ImportBatch.cs"
+          "aggregate": "ApplicationImportBatch",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs",
-        "src/Compliance.Core/Features/Applications/ImportBatch.cs"
+        "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ImportBatchTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLedgerTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -637,17 +628,16 @@
       "contract": "src/Compliance.Common/Features/Applications/ApplicationImportCommitted.cs",
       "reducers": [
         {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Commit.cs"
+          "aggregate": "ApplicationImportBatch",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Commit.cs"
+        "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportVisibilityReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementEffectTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportVisibilityReadConsistencyTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -665,8 +655,8 @@
         "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -676,73 +666,29 @@
       "contract": "src/Compliance.Common/Features/Applications/ApplicationImportFailed.cs",
       "reducers": [
         {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Failure.cs"
+          "aggregate": "ApplicationImportBatch",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Failure.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "ApplicationImportPlanRowFrozen",
-      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportPlanRowFrozen.cs",
-      "reducers": [
-        {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportFrozenPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceClaimTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Reducer retained for compatibility/replay; there is no current producer."
     },
     {
       "fact": "ApplicationImportPlanSealed",
       "contract": "src/Compliance.Common/Features/Applications/ApplicationImportPlanSealed.cs",
       "reducers": [
         {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs"
+          "aggregate": "ApplicationImportBatch",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs"
+        "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportFrozenPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "ApplicationImportPlanStarted",
-      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportPlanStarted.cs",
-      "reducers": [
-        {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Acceptance.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportFrozenPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceClaimTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -752,52 +698,14 @@
       "contract": "src/Compliance.Common/Features/Applications/ApplicationImportRetirementProposalSealed.cs",
       "reducers": [
         {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs"
+          "aggregate": "ApplicationImportBatch",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs"
+        "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "ApplicationImportRetirementProposalStarted",
-      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportRetirementProposalStarted.cs",
-      "reducers": [
-        {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "ApplicationImportRetirementRowFrozen",
-      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportRetirementRowFrozen.cs",
-      "reducers": [
-        {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.Retirement.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs"
-      ],
+      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -806,18 +714,14 @@
       "contract": "src/Compliance.Common/Features/Applications/ApplicationImportRowCorrelated.cs",
       "reducers": [
         {
-          "aggregate": "ApplicationImportLedger",
-          "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs"
+          "aggregate": "ApplicationImportBatch",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs"
+        "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs"
-      ],
+      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -826,24 +730,15 @@
       "contract": "src/Compliance.Common/Features/Applications/ApplicationImportStaged.cs",
       "reducers": [
         {
-          "aggregate": "ImportBatch",
-          "source": "src/Compliance.Core/Features/Applications/ImportBatch.cs"
+          "aggregate": "ApplicationImportBatch",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Applications/ImportBatch.cs"
+        "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportMissingPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportAcceptancePlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ImportBatchTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReconciliationPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPreviewCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportBatchTests.cs",
         "test/Compliance.Tests/Features/Applications/FitzApplicationImportDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -962,8 +857,7 @@
         "src/Compliance.Core/Features/Applications/DeclaredApplication.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationRetirementTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationRetirementTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -991,8 +885,7 @@
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionGovernanceTests.cs",
         "test/Compliance.Tests/Features/Applications/AccessReviewScopeLegacyAndProjectionTests.cs",
         "test/Compliance.Tests/Features/Applications/DeclaredSystemInstanceTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8518,6 +8411,131 @@
       ],
       "disposition": "aggregate_fact",
       "note": ""
+    },
+    {
+      "fact": "ApplicationImportCancellationAccepted",
+      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportCancellationAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "ApplicationImportBatch",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/ApplicationImportHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ApplicationImportEffectCanceled",
+      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportEffectCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "DeclaredApplication",
+          "source": "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ApplicationImportExecutionAuthorized",
+      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportExecutionAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "ApplicationImportBatch",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ApplicationImportSourceAdmissionRecorded",
+      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportSourceAdmissionRecorded.cs",
+      "reducers": [
+        {
+          "aggregate": "ApplicationImportSource",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportSource.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Applications/ApplicationImportSource.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ApplicationImportSourceSettled",
+      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportSourceSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "ApplicationImportSource",
+          "source": "src/Compliance.Core/Features/Applications/ApplicationImportSource.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Applications/ApplicationImportSource.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ApplicationImportTargetAuthorized",
+      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportTargetAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "DeclaredApplication",
+          "source": "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ApplicationImportTargetSettled",
+      "contract": "src/Compliance.Common/Features/Applications/ApplicationImportTargetSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "DeclaredApplication",
+          "source": "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Applications/DeclaredApplication.ImportEffects.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     }
   ],
   "aggregates": [
@@ -8672,53 +8690,6 @@
         "test/Compliance.Tests/Features/AdvisorCollaboration/PreviewAdvisorHandoffHandlerTests.cs",
         "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
-      "aggregate": "ApplicationImportLedger",
-      "source": "src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs",
-      "appliedFacts": [
-        "ApplicationImportCanceled",
-        "ApplicationImportCommitted",
-        "ApplicationImportFailed",
-        "ApplicationImportPlanRowFrozen",
-        "ApplicationImportPlanSealed",
-        "ApplicationImportPlanStarted",
-        "ApplicationImportRetirementProposalSealed",
-        "ApplicationImportRetirementProposalStarted",
-        "ApplicationImportRetirementRowFrozen",
-        "ApplicationImportRowCorrelated"
-      ],
-      "commandRequests": [
-        "AcceptApplicationImport",
-        "CancelApplicationImport",
-        "CorrelateApplicationImportRow",
-        "ExecuteApplicationImport",
-        "FreezeApplicationImportOmissionProposal"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportAcceptancePlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportFrozenPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLedgerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportMissingPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPreviewCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReconciliationPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceClaimTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9390,7 +9361,10 @@
       "source": "src/Compliance.Core/Features/Applications/DeclaredApplication.cs",
       "appliedFacts": [
         "ApplicationDeclared",
+        "ApplicationImportEffectCanceled",
         "ApplicationImportEffectPending",
+        "ApplicationImportTargetAuthorized",
+        "ApplicationImportTargetSettled",
         "ApplicationRelationshipAdded",
         "ApplicationRelationshipApproved",
         "ApplicationRelationshipGovernedRemoved",
@@ -9402,7 +9376,6 @@
       ],
       "commandRequests": [
         "AddApplicationRelationship",
-        "ApplyApplicationImportEffect",
         "ApproveApplicationSuccessor",
         "DeclareApplication",
         "RecordApplicationRelationship",
@@ -9411,7 +9384,12 @@
         "RetireApplication",
         "ReviseApplication"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "ApplyApplicationImportEffect",
+        "FenceApplicationImportTarget",
+        "ReleaseApplicationImportTarget",
+        "ReserveApplicationImportTarget"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AccessGrantProposalValidatorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
@@ -9426,20 +9404,6 @@
         "test/Compliance.Tests/Features/Applications/ApplicationControlVersionReferencePreviewTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationEvidenceSourceReferencePreviewTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationHistoryReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportFrozenPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportMissingPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPreviewCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReconciliationPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceClaimTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationListContractTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferencePreviewTests.cs",
@@ -9903,42 +9867,6 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "ImportBatch",
-      "source": "src/Compliance.Core/Features/Applications/ImportBatch.cs",
-      "appliedFacts": [
-        "ApplicationImportCanceled",
-        "ApplicationImportStaged"
-      ],
-      "commandRequests": [
-        "StageApplicationImport"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportAcceptancePlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportFrozenPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLedgerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportMissingPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPreviewCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReconciliationPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceClaimTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
-        "test/Compliance.Tests/Features/Applications/ImportBatchTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "IndependenceRuleCatalog",
       "source": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs",
       "appliedFacts": [
@@ -10184,10 +10112,6 @@
         "test/Compliance.Tests/Features/AdvisorCollaboration/PreviewAdvisorHandoffHandlerTests.cs",
         "test/Compliance.Tests/Features/Applications/AccessReviewScopeLegacyAndProjectionTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationAccessPopulationImpactTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationListContractTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
@@ -10502,7 +10426,6 @@
         "test/Compliance.Tests/E2E/PolicyDistributionE2ETests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorRecordVersionResolverTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferenceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferencePreviewTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs",
@@ -11430,7 +11353,6 @@
         "test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmProfessionalDutyCatalogTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FitzPermissionAuthorizerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FitzRoleDirectoryReaderTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
@@ -11445,19 +11367,7 @@
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/WaiverManagementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportMissingPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReconciliationPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceClaimTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionFieldPresenceHttpTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionGovernanceTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionPreviewContractTests.cs",
@@ -11949,6 +11859,66 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [],
       "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ApplicationImportBatch",
+      "source": "src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs",
+      "appliedFacts": [
+        "ApplicationImportCanceled",
+        "ApplicationImportCancellationAccepted",
+        "ApplicationImportCommitted",
+        "ApplicationImportExecutionAuthorized",
+        "ApplicationImportFailed",
+        "ApplicationImportPlanSealed",
+        "ApplicationImportRetirementProposalSealed",
+        "ApplicationImportRowCorrelated",
+        "ApplicationImportStaged"
+      ],
+      "commandRequests": [
+        "AcceptApplicationImport",
+        "CancelApplicationImport",
+        "CorrelateApplicationImportRow",
+        "FreezeApplicationImportOmissionProposal",
+        "StageApplicationImport"
+      ],
+      "internalReactionRequests": [
+        "CommitApplicationImportBatch",
+        "CompleteApplicationImportCancellation",
+        "ExecuteApplicationImport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportBatchTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportTransportTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportVisibilityReadConsistencyTests.cs",
+        "test/Compliance.Tests/Features/Applications/FitzApplicationImportDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ApplicationImportHost.cs",
+        "test/Compliance.Tests/Testing/ApplicationImportProcessSupport.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ApplicationImportSource",
+      "source": "src/Compliance.Core/Features/Applications/ApplicationImportSource.cs",
+      "appliedFacts": [
+        "ApplicationImportSourceAdmissionRecorded",
+        "ApplicationImportSourceSettled"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "ClaimApplicationImportSource",
+        "ReleaseApplicationImportSource"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceTests.cs",
+        "test/Compliance.Tests/Testing/ApplicationImportHost.cs",
+        "test/Compliance.Tests/Testing/ApplicationImportProcessSupport.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
     }
   ],
   "requests": [
@@ -11987,7 +11957,7 @@
     {
       "request": "AcceptApplicationImport",
       "contract": "src/Compliance.Common/Features/Applications/AcceptApplicationImport.cs",
-      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IApplicationInventoryWriteRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -11998,19 +11968,19 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ApplicationImportLedger",
-        "ImportBatch"
+        "ApplicationImportBatch"
       ],
       "aggregateTargets": [
-        "ApplicationImportLedger"
+        "ApplicationImportBatch"
       ],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPagingTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
+        "test/Compliance.Tests/Testing/ApplicationImportHost.cs"
       ],
       "note": ""
     },
@@ -12625,8 +12595,8 @@
     {
       "request": "ApplyApplicationImportEffect",
       "contract": "src/Compliance.Common/Features/Applications/ApplyApplicationImportEffect.cs",
-      "interfaces": "IRequest",
-      "classification": "command",
+      "interfaces": "IRequest<ReceiverOutcome>, IApplicationImportReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
       "handlers": [
         {
           "name": "ApplyApplicationImportEffectHandler",
@@ -12640,16 +12610,15 @@
         "DeclaredApplication"
       ],
       "helperServices": [
-        "ApplicationImportWriteGuard"
+        "ApplicationImportReceivers"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
+        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
       ],
-      "note": ""
+      "note": "System-only application import process receiver; appends the provisional effects of one frozen target group as one native batch. No HTTP/MCP route."
     },
     {
       "request": "ApplyMemberRestoration",
@@ -12843,9 +12812,7 @@
       "aggregateTargets": [
         "DeclaredApplication"
       ],
-      "helperServices": [
-        "ApplicationImportWriteGuard"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationSuccessorApprovalTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRelationshipRequestTests.cs",
@@ -14003,7 +13970,7 @@
     {
       "request": "CancelApplicationImport",
       "contract": "src/Compliance.Common/Features/Applications/CancelApplicationImport.cs",
-      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IApplicationInventoryWriteRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14014,18 +13981,18 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ApplicationImportLedger",
-        "ImportBatch"
+        "ApplicationImportBatch"
       ],
       "aggregateTargets": [
-        "ApplicationImportLedger"
+        "ApplicationImportBatch"
       ],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
+        "test/Compliance.Tests/Testing/ApplicationImportHost.cs"
       ],
       "note": ""
     },
@@ -15011,7 +14978,7 @@
     {
       "request": "CorrelateApplicationImportRow",
       "contract": "src/Compliance.Common/Features/Applications/CorrelateApplicationImportRow.cs",
-      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest, IApplicationInventoryWriteRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -15022,34 +14989,19 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ApplicationImportLedger",
-        "ImportBatch"
+        "ApplicationImportBatch"
       ],
       "aggregateTargets": [
-        "ApplicationImportLedger"
+        "ApplicationImportBatch"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportMissingPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportFrozenPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportAcceptancePlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceClaimTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReconciliationPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPreviewCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPagingTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
+        "test/Compliance.Tests/Testing/ApplicationImportHost.cs"
       ],
       "note": ""
     },
@@ -15550,9 +15502,7 @@
       "aggregateTargets": [
         "DeclaredApplication"
       ],
-      "helperServices": [
-        "ApplicationImportWriteGuard"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Applications/PersonalAccessReviewScopeTransportTests.cs",
@@ -16090,8 +16040,8 @@
     {
       "request": "ExecuteApplicationImport",
       "contract": "src/Compliance.Common/Features/Applications/ExecuteApplicationImport.cs",
-      "interfaces": "IRequest",
-      "classification": "command",
+      "interfaces": "IRequest, IIdentifiedRequest",
+      "classification": "internal_reaction",
       "handlers": [
         {
           "name": "ExecuteApplicationImportHandler",
@@ -16101,18 +16051,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ApplicationImportLedger",
-        "ImportBatch"
+        "ApplicationImportBatch"
       ],
       "aggregateTargets": [
-        "ApplicationImportLedger"
+        "ApplicationImportBatch"
       ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
+      "helperServices": [
+        "ApplicationImportVerifier"
       ],
-      "note": ""
+      "testSymbolReferences": [],
+      "note": "System-only authorization of a sealed, source-claimed batch; its deterministic id is a source-event effect. No HTTP/MCP route."
     },
     {
       "request": "ExecuteArtifactDisposition",
@@ -16240,7 +16188,7 @@
     {
       "request": "FreezeApplicationImportOmissionProposal",
       "contract": "src/Compliance.Common/Features/Applications/FreezeApplicationImportOmissionProposal.cs",
-      "interfaces": "IRequest, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest, IApplicationInventoryWriteRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16251,14 +16199,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ApplicationImportLedger"
+        "ApplicationImportBatch"
       ],
       "aggregateTargets": [
-        "ApplicationImportLedger"
+        "ApplicationImportBatch"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportBatchTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs"
       ],
       "note": ""
     },
@@ -16730,6 +16680,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -16751,7 +16702,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -16774,8 +16725,8 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -16796,8 +16747,8 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -19782,8 +19733,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPreviewCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPagingTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -22480,7 +22430,6 @@
         "test/Compliance.Tests/Features/Applications/ApplicationReadinessImpactTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationVendorImpactTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationControlVersionReferencePreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationAccessPopulationImpactTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionFieldPresenceHttpTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationPolicyReferencePreviewTests.cs",
@@ -22506,14 +22455,13 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ApplicationImportLedger",
-        "ImportBatch"
+        "ApplicationImportBatch",
+        "ApplicationImportSource"
       ],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReconciliationPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPreviewCorrelationTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPagingTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs"
       ],
@@ -22536,7 +22484,7 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -22706,14 +22654,15 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ApplicationImportLedger",
-        "ImportBatch"
+        "ApplicationImportBatch",
+        "ApplicationImportSource"
       ],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportMissingPreviewTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPagingTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -23719,9 +23668,7 @@
       "aggregateTargets": [
         "DeclaredApplication"
       ],
-      "helperServices": [
-        "ApplicationImportWriteGuard"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationRelationshipDirectoryHandlerTests.cs"
       ],
@@ -25500,9 +25447,7 @@
       "aggregateTargets": [
         "DeclaredApplication"
       ],
-      "helperServices": [
-        "ApplicationImportWriteGuard"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationRelationshipDirectoryHandlerTests.cs"
       ],
@@ -25956,12 +25901,8 @@
       "aggregateTargets": [
         "DeclaredApplication"
       ],
-      "helperServices": [
-        "ApplicationImportWriteGuard"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs"
-      ],
+      "helperServices": [],
+      "testSymbolReferences": [],
       "note": ""
     },
     {
@@ -26590,17 +26531,13 @@
       "aggregateTargets": [
         "DeclaredApplication"
       ],
-      "helperServices": [
-        "ApplicationImportWriteGuard"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionFieldPresenceHttpTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionPreviewContractTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationRevisionGovernanceTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs"
+        "test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs"
       ],
       "note": ""
     },
@@ -27982,7 +27919,7 @@
     {
       "request": "StageApplicationImport",
       "contract": "src/Compliance.Common/Features/Applications/StageApplicationImport.cs",
-      "interfaces": "IRequest<ApplicationImportRegistration>, IApplicationInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<ApplicationImportRegistration>, IApplicationInventoryWriteRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -27993,38 +27930,23 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ApplicationImportLedger",
-        "ImportBatch"
+        "ApplicationImportBatch"
       ],
       "aggregateTargets": [
-        "ImportBatch"
+        "ApplicationImportBatch"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportBatchTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportMissingPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportFrozenPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportAcceptancePlanTests.cs",
-        "test/Compliance.Tests/Features/Applications/ImportBatchTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceClaimTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReconciliationPreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPreviewCorrelationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportPagingTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementEffectTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportLedgerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
+        "test/Compliance.Tests/Features/Applications/FitzApplicationImportDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
+        "test/Compliance.Tests/Testing/ApplicationImportHost.cs"
       ],
       "note": ""
     },
@@ -28993,6 +28915,186 @@
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs"
       ],
       "note": "System-only control occurrence fan-out receiver; materializes one selected business window once, verifying the frozen creation intent against the selecting period fact and the approved plan fact. No HTTP/MCP route."
+    },
+    {
+      "request": "ClaimApplicationImportSource",
+      "contract": "src/Compliance.Common/Features/Applications/ClaimApplicationImportSource.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IApplicationImportReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ClaimApplicationImportSourceHandler",
+          "source": "src/Compliance.Core/Features/Applications/ClaimApplicationImportSourceHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "ApplicationImportSource"
+      ],
+      "helperServices": [
+        "ApplicationImportReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportBatchTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportSourceTests.cs",
+        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
+      ],
+      "note": "System-only application import process receiver; claims the canonical source for the sealed batch. No HTTP/MCP route."
+    },
+    {
+      "request": "CommitApplicationImportBatch",
+      "contract": "src/Compliance.Common/Features/Applications/CommitApplicationImportBatch.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IApplicationImportReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CommitApplicationImportBatchHandler",
+          "source": "src/Compliance.Core/Features/Applications/CommitApplicationImportBatchHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "ApplicationImportBatch"
+      ],
+      "helperServices": [
+        "ApplicationImportReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportVisibilityReadConsistencyTests.cs"
+      ],
+      "note": "System-only application import process receiver; publishes every target together from the complete target proof manifest. No HTTP/MCP route."
+    },
+    {
+      "request": "CompleteApplicationImportCancellation",
+      "contract": "src/Compliance.Common/Features/Applications/CompleteApplicationImportCancellation.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IApplicationImportReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteApplicationImportCancellationHandler",
+          "source": "src/Compliance.Core/Features/Applications/CompleteApplicationImportCancellationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "ApplicationImportBatch"
+      ],
+      "helperServices": [
+        "ApplicationImportReceivers"
+      ],
+      "testSymbolReferences": [],
+      "note": "System-only application import process receiver; completes an accepted cancellation once every target is fenced. No HTTP/MCP route."
+    },
+    {
+      "request": "FenceApplicationImportTarget",
+      "contract": "src/Compliance.Common/Features/Applications/FenceApplicationImportTarget.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IApplicationImportReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "FenceApplicationImportTargetHandler",
+          "source": "src/Compliance.Core/Features/Applications/FenceApplicationImportTargetHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "DeclaredApplication"
+      ],
+      "helperServices": [
+        "ApplicationImportReceivers"
+      ],
+      "testSymbolReferences": [],
+      "note": "System-only application import process receiver; records the batch fence on a target even when its hold was never acquired. No HTTP/MCP route."
+    },
+    {
+      "request": "ReleaseApplicationImportSource",
+      "contract": "src/Compliance.Common/Features/Applications/ReleaseApplicationImportSource.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IApplicationImportReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ReleaseApplicationImportSourceHandler",
+          "source": "src/Compliance.Core/Features/Applications/ReleaseApplicationImportSourceHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "ApplicationImportSource"
+      ],
+      "helperServices": [
+        "ApplicationImportReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
+      ],
+      "note": "System-only application import process receiver; releases the source claim from the exact terminal batch fact. No HTTP/MCP route."
+    },
+    {
+      "request": "ReleaseApplicationImportTarget",
+      "contract": "src/Compliance.Common/Features/Applications/ReleaseApplicationImportTarget.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IApplicationImportReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ReleaseApplicationImportTargetHandler",
+          "source": "src/Compliance.Core/Features/Applications/ReleaseApplicationImportTargetHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "DeclaredApplication"
+      ],
+      "helperServices": [
+        "ApplicationImportReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs"
+      ],
+      "note": "System-only application import process receiver; settles a target hold from the exact terminal batch fact. No HTTP/MCP route."
+    },
+    {
+      "request": "ReserveApplicationImportTarget",
+      "contract": "src/Compliance.Common/Features/Applications/ReserveApplicationImportTarget.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IApplicationImportReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ReserveApplicationImportTargetHandler",
+          "source": "src/Compliance.Core/Features/Applications/ReserveApplicationImportTargetHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "DeclaredApplication"
+      ],
+      "helperServices": [
+        "ApplicationImportReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportProjectionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportRetirementTests.cs",
+        "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
+      ],
+      "note": "System-only application import process receiver; acquires the exclusive hold of one canonical target group. No HTTP/MCP route."
     }
   ],
   "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",
@@ -29023,18 +29125,6 @@
     }
   ],
   "unwiredAggregateProducers": [
-    {
-      "fact": "ApplicationImportCanceled",
-      "aggregate": "ImportBatch",
-      "method": "Cancel",
-      "source": "src/Compliance.Core/Features/Applications/ImportBatch.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 5
-    },
     {
       "fact": "ArtifactDispositionApproved",
       "aggregate": "ArtifactDisposition",

@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -33,11 +34,11 @@ public sealed partial class DeclaredApplication : Aggregate
     public Uuid? AccessOwnerPersonId { get; private set; }
     public bool IsRestricted => _isRestricted;
 
-    public DeclaredApplication(Uuid tenantId, Uuid applicationId)
-        : base(applicationId, new EventStreamAddress(tenantId.ToString(), "applications",
-            applicationId.ToString()))
+    public DeclaredApplication(Uuid tenantId, Uuid applicationId, Uuid selectedLogicalId = default)
+        : base(applicationId, new EventStreamAddress(tenantId.ToString(), Area, applicationId.ToString()))
     {
         _tenantId = tenantId;
+        Acceptance = new NativeAcceptance(selectedLogicalId);
         RegisterImportEffectEvents();
         On<ApplicationDeclared>(ev =>
         {
@@ -98,7 +99,7 @@ public sealed partial class DeclaredApplication : Aggregate
         var normalizedClassification = NormalizeOptional(classification);
         var normalizedKind = NormalizeOptional(applicationKind);
         var normalizedCriticality = NormalizeOptional(criticality);
-        if (!_created && _pendingImportEffects.Values.Any(ev => ev.Row.Decision == "create_new"))
+        if (!_created && ReservesIdentity)
             return Result<ApplicationRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The application identity is reserved by an import plan."));
         if (_created)

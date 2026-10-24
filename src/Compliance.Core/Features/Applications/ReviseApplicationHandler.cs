@@ -18,8 +18,7 @@ public sealed class ReviseApplicationHandler(IAggregateExecutor executor,
         var accessOwner = request.AccessOwnerPersonId;
         if (governed)
         {
-            var observed = await reader.HydrateAsync(await ApplicationImportWriteGuard.PrepareAsync(
-                reader, request.TenantId, request.ApplicationId, ct).ConfigureAwait(false), ct)
+            var observed = await reader.HydrateAsync(new DeclaredApplication(request.TenantId, request.ApplicationId), ct)
                 .ConfigureAwait(false);
             if (observed.CheckPendingImportChanges() is { } pendingImport)
                 return Result.Failure(pendingImport);
@@ -34,8 +33,7 @@ public sealed class ReviseApplicationHandler(IAggregateExecutor executor,
             systemOwner, accessOwner, ct).ConfigureAwait(false);
         if (owners is not null)
             return Result.Failure(owners);
-        var target = await ApplicationImportWriteGuard.PrepareAsync(reader, request.TenantId, request.ApplicationId, ct)
-            .ConfigureAwait(false);
+        var target = new DeclaredApplication(request.TenantId, request.ApplicationId);
         return await executor.ExecuteAsync(target,
             app =>
             {

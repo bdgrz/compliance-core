@@ -2,7 +2,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-/// <summary>Resolves governed application state from durable source commit proofs.</summary>
+/// <summary>
+///     Composes the governed application a reader sees. A target's own stream replays only its own facts; the
+///     published candidate of a batch is shown once that batch's own publication fact exists, and the stream is
+///     never changed by this read.
+/// </summary>
 static class ApplicationImportVisibility
 {
     public static async ValueTask<DeclaredApplication> HydrateApplicationAsync(this IAggregateReader reader,
@@ -10,13 +14,14 @@ static class ApplicationImportVisibility
     {
         var application = await reader.HydrateAsync(new DeclaredApplication(tenantId, applicationId), ct)
             .ConfigureAwait(false);
-        foreach (var source in application.GetPendingImportEffects().Select(effect =>
-                     (effect.Plan.SourceKey, effect.Plan.SourceNamespace)).Distinct())
+        foreach (var hold in application.ImportHolds.Where(hold => hold.IsActive && hold.IsApplied).ToArray())
         {
-            var ledger = await reader.HydrateAsync(new ApplicationImportLedger(tenantId,
-                source.SourceKey, source.SourceNamespace), ct).ConfigureAwait(false);
-            application.ResolveImportVisibility(ledger);
+            var batch = await reader.HydrateAsync(new ApplicationImportBatch(tenantId, hold.BatchId), ct)
+                .ConfigureAwait(false);
+            if (batch.Committed is not null)
+                application.ShowPublished(hold.BatchId);
         }
+
         return application;
     }
 }

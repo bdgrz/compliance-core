@@ -1,4 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using System.Runtime.CompilerServices;
@@ -87,8 +90,17 @@ public sealed class ApplicationImportVisibilityReadConsistencyTests
         Assert.True(Assert.IsType<RequestError>(result.Error).IsTransient);
     }
 
-    static ApplicationImportCommitted Marker(Uuid tenant) => new(tenant, "manual", "applications",
-        Uuid.CreateVersion4(), 6, new string('0', 64), [], DateTimeOffset.UtcNow);
+    static ApplicationImportCommitted Marker(Uuid tenant)
+    {
+        var stream = new EventStreamAddress(tenant.ToString(), ApplicationImportBatch.Area,
+            Uuid.CreateVersion4().ToString());
+        var content = new ImmutableContentRef(Uuid.CreateVersion4(), new string('0', 64), 2, "application/json",
+            "import-test.v1");
+        return new(tenant, "manual", "applications", Uuid.CreateVersion4(), 6, new string('0', 64), content,
+            DateTimeOffset.UtcNow, new OperationProvenance(Uuid.CreateVersion4(), Uuid.CreateVersion4(), null,
+                "CommitApplicationImportBatch", ActorReference.ForSystemProcess("test", "test"), stream, "initial",
+                null, new string('0', 64), DateTimeOffset.UtcNow, stream, stream), content, 1, content, null, null);
+    }
 
     internal sealed class EmptyListHandler : IRequestHandler<ListApplications, Page<ApplicationView>>
     {

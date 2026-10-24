@@ -1793,10 +1793,10 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Applications
 
-- [ApplicationImportLedger](../../src/Compliance.Core/Features/Applications/ApplicationImportLedger.cs#L8)
+- [ApplicationImportBatch](../../src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs#L19)
+- [ApplicationImportSource](../../src/Compliance.Core/Features/Applications/ApplicationImportSource.cs#L16)
 - [DeclaredApplication](../../src/Compliance.Core/Features/Applications/DeclaredApplication.cs#L8)
 - [DeclaredSystemInstance](../../src/Compliance.Core/Features/Applications/DeclaredSystemInstance.cs#L8)
-- [ImportBatch](../../src/Compliance.Core/Features/Applications/ImportBatch.cs#L11)
 - [SystemInstanceAccessReviewScope](../../src/Compliance.Core/Features/Applications/SystemInstanceAccessReviewScope.cs#L10)
 
 #### Boundaries
@@ -3234,18 +3234,18 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/basis` | `RecordArtifactRetentionBasis` | [registration](../../src/Compliance.App/Program.cs#L1974) |
 | POST | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds` | `PlaceArtifactLegalHold` | [registration](../../src/Compliance.App/Program.cs#L1978) |
 | POST | `/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}/releases` | `ReleaseArtifactLegalHold` | [registration](../../src/Compliance.App/Program.cs#L1982) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports` | `StageApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L1986) |
+| PUT | `/api/v1/tenants/{tenant_id}/application-imports/{submission_id}` | `StageApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L1986) |
 | GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/progress` | `GetApplicationImportProgress` | [registration](../../src/Compliance.App/Program.cs#L1990) |
 | GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rejected-report` | `GetApplicationImportRejectedReport` | [registration](../../src/Compliance.App/Program.cs#L1995) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances` | `AcceptApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2000) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations` | `CancelApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2005) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations` | `CorrelateApplicationImportRow` | [registration](../../src/Compliance.App/Program.cs#L2009) |
+| PUT | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances/{command_id}` | `AcceptApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2000) |
+| PUT | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations/{command_id}` | `CancelApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2005) |
+| PUT | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations/{command_id}` | `CorrelateApplicationImportRow` | [registration](../../src/Compliance.App/Program.cs#L2009) |
 | GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}` | `GetApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2014) |
 | GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows` | `ListApplicationImportRows` | [registration](../../src/Compliance.App/Program.cs#L2018) |
 | GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/preview` | `PreviewApplicationImport` | [registration](../../src/Compliance.App/Program.cs#L2022) |
 | GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/preview/missing` | `PreviewMissingApplicationImportRows` | [registration](../../src/Compliance.App/Program.cs#L2026) |
 | GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal/preview` | `PreviewApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L2031) |
-| POST | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal` | `FreezeApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L2035) |
+| PUT | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal/{command_id}` | `FreezeApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L2035) |
 | GET | `/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal` | `GetApplicationImportOmissionProposal` | [registration](../../src/Compliance.App/Program.cs#L2040) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/client-services` | `CreateClientService` | [registration](../../src/Compliance.App/Program.cs#L2044) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/client-services` | `ListProgramClientServices` | [registration](../../src/Compliance.App/Program.cs#L2048) |

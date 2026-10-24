@@ -80,8 +80,7 @@ public sealed class ApproveApplicationSuccessorHandler(IAggregateExecutor execut
                 "The applications or proposed relationship changed during approval."));
 
         var (memberId, display) = ApplicationActor.From(context);
-        var target = await ApplicationImportWriteGuard.PrepareAsync(reader, request.TenantId,
-            request.PredecessorApplicationId, ct).ConfigureAwait(false);
+        var target = new DeclaredApplication(request.TenantId, request.PredecessorApplicationId);
         return await executor.ExecuteAsync(target,
             application => application.CheckPendingImportChanges() is { } importError
                 ? AggregateOutcome.Discard(Result.Failure(importError))

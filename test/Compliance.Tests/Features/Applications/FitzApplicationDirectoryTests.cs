@@ -351,7 +351,8 @@ public sealed class FitzApplicationDirectoryTests
                 declaredBy, "Owner", now));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
-        var projector = new ApplicationDirectoryProjector(directory, new AggregateReader());
+        var projector = new ApplicationDirectoryProjector(directory, new AggregateReader(),
+            new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(new InMemoryKvClient()));
         var revisionHandler = Assert.IsAssignableFrom<IProjectorHandler<SystemInstanceRevised>>(
             projector);
         var revised = new SystemInstanceRevised(tenantId, applicationId, instanceId, 2,

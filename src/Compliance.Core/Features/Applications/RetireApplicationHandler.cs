@@ -61,8 +61,7 @@ public sealed class RetireApplicationHandler(IAggregateExecutor executor,
         }
         // Portia commits one aggregate stream at a time. The retirement event binds the
         // approved successor revision; it does not promise a cross-stream atomic snapshot.
-        var target = await ApplicationImportWriteGuard.PrepareAsync(reader, request.TenantId, request.ApplicationId, ct)
-            .ConfigureAwait(false);
+        var target = new DeclaredApplication(request.TenantId, request.ApplicationId);
         return await executor.ExecuteAsync(target,
             app => app.CheckPendingImportChanges() is { } importError
                 ? AggregateOutcome.Discard(Result.Failure(importError))

@@ -24,24 +24,22 @@ public sealed class ApplicationImportPersonalTransportTests
         await using var fixture = new Fixture();
         var batch = await fixture.StageAsync();
         if (operation == "accept")
-            Assert.True((await fixture.SendAsync(fixture.Correlate(batch), Fixture.Http)).IsSuccess);
-        var before = await fixture.LedgerAsync();
-        var request = fixture.Decision(operation, batch);
+            Assert.True((await fixture.RunAsync("correlate", batch, Fixture.Http)).IsSuccess);
+        var before = await fixture.BatchAsync(batch.Id);
 
         // Act
-        var result = mcp
-            ? await fixture.SendAsync(request, new McpInvocation("synthetic.import.decision"))
-            : await fixture.Bus.SendAsync(request, fixture.Actor);
-        var retained = await fixture.LedgerAsync();
+        var result = await fixture.RunAsync(operation, batch,
+            mcp ? new McpInvocation("synthetic.import.decision") : null);
+        var retained = await fixture.BatchAsync(batch.Id);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("HTTP", result.Error!.Message, StringComparison.Ordinal);
         Assert.Equal(before.CommittedStreamPosition, retained.CommittedStreamPosition);
-        Assert.Equal(before.GetRevision(batch), retained.GetRevision(batch));
-        Assert.Equal(before.GetState(batch), retained.GetState(batch));
-        Assert.Null(retained.GetFrozenPlan(batch.Id));
-        Assert.Null(retained.GetCanceledRevision(batch.Id));
+        Assert.Equal(before.Revision, retained.Revision);
+        Assert.Equal(before.State, retained.State);
+        Assert.Null(retained.Plan);
+        Assert.Null(retained.CancellationAccepted);
     }
 
     [Theory]
@@ -54,32 +52,31 @@ public sealed class ApplicationImportPersonalTransportTests
         await using var fixture = new Fixture();
         var batch = await fixture.StageAsync();
         if (operation == "accept")
-            Assert.True((await fixture.SendAsync(fixture.Correlate(batch), Fixture.Http)).IsSuccess);
-        var before = await fixture.LedgerAsync();
+            Assert.True((await fixture.RunAsync("correlate", batch, Fixture.Http)).IsSuccess);
+        var before = await fixture.BatchAsync(batch.Id);
 
         // Act
-        var result = await fixture.SendAsync(fixture.Decision(operation, batch), Fixture.Http);
-        var retained = await fixture.LedgerAsync();
+        var result = await fixture.RunAsync(operation, batch, Fixture.Http);
+        var retained = await fixture.BatchAsync(batch.Id);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.True(retained.CommittedStreamPosition > before.CommittedStreamPosition);
-        Assert.Equal(operation == "accept" ? "accepting" : operation == "cancel" ? "canceled" : "preview_ready", retained.GetState(batch));
+        Assert.Equal(operation == "accept" ? "accepting" : operation == "cancel" ? "canceling" : "preview_ready",
+            retained.State);
+        var member = RbacIds.Member(fixture.Tenant, fixture.User);
         if (operation == "accept")
-            Assert.Equal(RbacIds.Member(fixture.Tenant, fixture.User), retained.GetFrozenPlan(batch.Id)!.Start.ApproverMemberId);
+            Assert.Equal(member.ToString(), retained.Plan!.Operation.Actor.Id);
         if (operation == "cancel")
-            Assert.True(retained.IsCancellationDurable(batch.Id));
+            Assert.Equal(member.ToString(), retained.CancellationAccepted!.Operation.Actor.Id);
+        if (operation == "correlate")
+            Assert.Equal(member, retained.GetCorrelation(ApplicationImportEffects.RowId(batch.Id, 1))!.ActorMemberId);
     }
 
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
         readonly AsyncServiceScope _scope;
-        public static HttpInvocation Http => new("POST", "/synthetic/import", "/synthetic/import", "synthetic");
-        public Uuid Tenant { get; } = Uuid.CreateVersion4();
-        public Uuid User { get; } = Uuid.CreateVersion4();
-        public System.Security.Claims.ClaimsPrincipal Actor => ProgramManagementServices.Actor(User);
-        public IRequestBus Bus { get; }
         readonly IAggregateReader _reader;
 
         public Fixture()
@@ -101,27 +98,53 @@ public sealed class ApplicationImportPersonalTransportTests
             _reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         }
 
-        public async Task<ImportBatch> StageAsync()
+        public static HttpInvocation Http => new("PUT", "/synthetic/import", "/synthetic/import", "synthetic");
+
+        public Uuid Tenant { get; } = Uuid.CreateVersion4();
+
+        public Uuid User { get; } = Uuid.CreateVersion4();
+
+        public System.Security.Claims.ClaimsPrincipal Actor => ProgramManagementServices.Actor(User);
+
+        public IRequestBus Bus { get; }
+
+        public async Task<ApplicationImportBatch> StageAsync()
         {
             var staged = await Bus.SendAsync(new StageApplicationImport(Tenant, Uuid.CreateVersion4(),
                 "manual", "transport", "partial", [new("app", "Application", "Purpose", null)]), Actor);
             Assert.True(staged.IsSuccess, staged.Error?.Message);
-            return await _reader.HydrateAsync(new ImportBatch(Tenant, staged.Value!.BatchId));
+            return await _reader.HydrateAsync(new ApplicationImportBatch(Tenant, staged.Value!.BatchId));
         }
 
-        public CorrelateApplicationImportRow Correlate(ImportBatch batch) => new(Tenant, batch.Id,
-            Assert.Single(batch.GetRows()).RowId, 1, "create_new", null, null, "Reviewed source identity");
-        public IRequest Decision(string operation, ImportBatch batch) => operation switch
+        /// <summary>Runs one personal decision; a null invocation sends it with no transport intent.</summary>
+        public async Task<Result> RunAsync(string operation, ApplicationImportBatch batch, RequestInvocation? invocation)
         {
-            "correlate" => Correlate(batch),
-            "accept" => new AcceptApplicationImport(Tenant, batch.Id, 2),
-            _ => new CancelApplicationImport(Tenant, batch.Id, 1, "Personal cancellation")
-        };
-        public ValueTask<Result> SendAsync(IRequest request, RequestInvocation invocation) =>
-            Bus.DispatchAsync(request, new RequestDispatchContext(Actor, invocation), CancellationToken.None);
-        public ValueTask<ApplicationImportLedger> LedgerAsync() =>
-            _reader.HydrateAsync(new ApplicationImportLedger(Tenant, "manual", "transport"));
-        public async ValueTask DisposeAsync() { await _scope.DisposeAsync(); await _provider.DisposeAsync(); }
+            var context = new RequestDispatchContext(Actor, invocation);
+            switch (operation)
+            {
+                case "correlate":
+                    return await Bus.DispatchAsync(new CorrelateApplicationImportRow(Uuid.CreateVersion4(), Tenant,
+                        batch.Id, ApplicationImportEffects.RowId(batch.Id, 1), 1, "create_new", null, null,
+                        "Reviewed source identity"), context, CancellationToken.None);
+                case "accept":
+                    var accepted = await Bus.DispatchAsync(new AcceptApplicationImport(Uuid.CreateVersion4(), Tenant,
+                        batch.Id, 2), context, CancellationToken.None);
+                    return accepted.IsSuccess ? Result.Success : Result.Failure(accepted.Error!);
+                default:
+                    var canceled = await Bus.DispatchAsync(new CancelApplicationImport(Uuid.CreateVersion4(), Tenant,
+                        batch.Id, 1, "Personal cancellation"), context, CancellationToken.None);
+                    return canceled.IsSuccess ? Result.Success : Result.Failure(canceled.Error!);
+            }
+        }
+
+        public ValueTask<ApplicationImportBatch> BatchAsync(Uuid batchId) =>
+            _reader.HydrateAsync(new ApplicationImportBatch(Tenant, batchId));
+
+        public async ValueTask DisposeAsync()
+        {
+            await _scope.DisposeAsync();
+            await _provider.DisposeAsync();
+        }
     }
 
     sealed class Activity : ITenantActivity
@@ -140,7 +163,11 @@ public sealed class ApplicationImportPersonalTransportTests
         public ValueTask<TenantMembershipView?> GetAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
             ValueTask.FromResult<TenantMembershipView?>(tenantId == tenant.ToString() && userId == user
                 ? new TenantMembershipView(user, tenant, "client_personnel") : null);
-        public ValueTask<bool> IsMemberAsync(string tenantId, Uuid userId, CancellationToken ct = default) => ValueTask.FromResult(tenantId == tenant.ToString() && userId == user);
-        public ValueTask<Page<TenantMembershipView>> ListAsync(Uuid tenantId, int limit, string? cursor, CancellationToken ct = default) => ValueTask.FromResult(new Page<TenantMembershipView>([], null));
+
+        public ValueTask<bool> IsMemberAsync(string tenantId, Uuid userId, CancellationToken ct = default) =>
+            ValueTask.FromResult(tenantId == tenant.ToString() && userId == user);
+
+        public ValueTask<Page<TenantMembershipView>> ListAsync(Uuid tenantId, int limit, string? cursor,
+            CancellationToken ct = default) => ValueTask.FromResult(new Page<TenantMembershipView>([], null));
     }
 }

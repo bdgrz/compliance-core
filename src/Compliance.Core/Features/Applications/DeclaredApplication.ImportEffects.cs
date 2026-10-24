@@ -1,115 +1,216 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-using System.Text.Json;
-using Bdgrz.Compliance.Features.Versioning;
-using System.Collections.Frozen;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
 public sealed partial class DeclaredApplication
 {
-    readonly Dictionary<(Uuid BatchId, Uuid RowId), ApplicationImportEffectPending> _pendingImportEffects = [];
-    FrozenSet<Uuid> _settledImportBatches = FrozenSet<Uuid>.Empty;
-    readonly FrozenSet<Uuid> _committedImportEvents = FrozenSet<Uuid>.Empty;
+    /// <summary>Stream area of every declared application (the realm is the tenant).</summary>
+    public const string Area = "applications";
 
-    internal DeclaredApplication(Uuid tenantId, Uuid applicationId, IReadOnlySet<Uuid> settledImportBatches)
-        : this(tenantId, applicationId) => _settledImportBatches = settledImportBatches.ToFrozenSet();
+    readonly Dictionary<Uuid, ApplicationImportHold> _importHolds = [];
 
-    internal DeclaredApplication(Uuid tenantId, Uuid applicationId, IReadOnlySet<Uuid> settledImportBatches,
-        IReadOnlySet<Uuid> committedImportEvents) : this(tenantId, applicationId, settledImportBatches) =>
-        _committedImportEvents = committedImportEvents.ToFrozenSet();
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
 
+    /// <summary>True while a held import group reserves the identity of an application it will create.</summary>
+    public bool ReservesIdentity => !_created && _importHolds.Values.Any(hold => hold.IsActive &&
+        hold.Reserved!.InitialApplicationRevision == 0);
+
+    /// <summary>The hold or fence this application recorded for one import batch, if any.</summary>
+    public ApplicationImportHold? FindImportHold(Uuid batchId) => _importHolds.GetValueOrDefault(batchId);
+
+    /// <summary>Every import hold and fence of this application in the order its batch first touched it.</summary>
+    public IReadOnlyCollection<ApplicationImportHold> ImportHolds => _importHolds.Values;
+
+    /// <summary>The provisional effects of every batch, in stream order.</summary>
     public IReadOnlyList<ApplicationImportEffectPending> GetPendingImportEffects() =>
-        Array.AsReadOnly(_pendingImportEffects.Values.ToArray());
+        Array.AsReadOnly(_importHolds.Values.SelectMany(hold => hold.Effects).ToArray());
 
-    public RequestError? CheckPendingImportChanges() => _pendingImportEffects.Values.Any(
-        ev => !_settledImportBatches.Contains(ev.Plan.BatchId))
+    /// <summary>The provisional effect of one row of one batch, if recorded.</summary>
+    public ApplicationImportEffectPending? GetPendingImportEffect(Uuid batchId, Uuid rowId) =>
+        _importHolds.GetValueOrDefault(batchId)?.Effects.FirstOrDefault(effect => effect.Row.RowId == rowId);
+
+    /// <summary>
+    ///     A local write conflicts with any import hold that is not settled: no local create, revise, retire or
+    ///     relationship change bypasses a provisional hold.
+    /// </summary>
+    public RequestError? CheckPendingImportChanges() => _importHolds.Values.Any(hold => hold.IsActive)
         ? new RequestError(RequestErrorKind.Conflict,
             "The application has an unsettled import effect. Retry after the batch settles.", isTransient: true)
         : null;
 
-    public ApplicationImportEffectPending? GetPendingImportEffect(Uuid batchId, Uuid rowId) =>
-        _pendingImportEffects.GetValueOrDefault((batchId, rowId));
-
-    public Result RecordPendingImportEffect(ApplicationImportLedger ledger, ImportBatch batch,
-        Uuid rowId, DateTimeOffset recordedAt)
+    /// <summary>The guard of a hold: no fence, no other hold, and the frozen baseline revision.</summary>
+    public RequestError? CheckReserve(Uuid batchId, ulong initialRevision)
     {
-        ArgumentNullException.ThrowIfNull(ledger);
-        ArgumentNullException.ThrowIfNull(batch);
-        if (batch.Stream.Realm != _tenantId.ToString())
-            return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The import batch was not found."));
-        var authority = ledger.AuthorizePendingEffect(batch, rowId, Id);
-        if (!authority.IsSuccess)
-            return Result.Failure(authority.Error);
-        var plan = authority.Value;
-        var row = plan.Rows.Single(row => row.RowId == rowId);
-        var effect = new ApplicationImportEffectPending(_tenantId, Id, plan.Revision,
-            plan.PlanSha256, plan.Start, row, recordedAt);
-        if (GetPendingImportEffect(batch.Id, rowId) is { } existing)
-            return existing with { RecordedAt = recordedAt } == effect &&
-                   (ledger.GetState(batch) != "committed" || ledger.IsEffectCommitted(existing)) ? Result.Success :
-                Result.Failure(new RequestError(RequestErrorKind.Conflict, "The import effect has different content."));
-        if (ledger.GetState(batch) == "committed")
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The committed import effect is missing. Retry after its durable target is available.", isTransient: true));
-        if (row.Decision == "create_new" && (_created || _pendingImportEffects.Count > 0))
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The new import target already exists."));
-        if (row.Decision == "link_existing")
-        {
-            if (!_created)
-                return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The linked application was not found."));
-            if (_retired)
-                return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The linked application is retired."));
-            if (_revision != row.ExpectedApplicationRevision)
-                return Result.Failure(VersionedRecordRules.StaleRevision("application", _revision).ToRequestError());
-        }
-        if (row.Decision == "retire" && (!_created || _retired ||
-            row.ExpectedApplicationRevision != _revision ||
-            !ApplicationImportRetirementImpact.IsValidFrozenRow(plan.Start, row)))
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The retirement target or its frozen source proof changed."));
-        if (row.Decision == "retire" && _pendingImportEffects.Values.Any(existing =>
-                existing.Plan.BatchId != plan.Start.BatchId &&
-                !_settledImportBatches.Contains(existing.Plan.BatchId)))
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The retirement target has another unsettled import effect.", isTransient: true));
-        if (row.Decision != "retire" && _pendingImportEffects.Values.Any(existing =>
-                existing.Row.Decision == "retire" && existing.Plan.BatchId != plan.Start.BatchId &&
-                !_settledImportBatches.Contains(existing.Plan.BatchId)))
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The target has an unsettled import retirement.", isTransient: true));
-        if (JsonSerializer.SerializeToUtf8Bytes(effect, ComplianceCoreJsonContext.Default.ApplicationImportEffectPending).Length >
-            ImportBatch.MaximumStagedPayloadBytes)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The import effect exceeds its event payload bounds."));
-        RaiseEvent(effect);
+        if (_importHolds.ContainsKey(batchId))
+            return new RequestError(RequestErrorKind.Conflict, "This batch already holds or has fenced the application.");
+        if (_importHolds.Values.Any(hold => hold.IsActive))
+            return new RequestError(RequestErrorKind.Conflict,
+                "The application is held by another import batch. Retry after the batch settles.", isTransient: true);
+        if (_retired || (initialRevision == 0) == _created || (long)initialRevision != _revision)
+            return new RequestError(RequestErrorKind.Conflict,
+                "The governed import target changed after its frozen plan.");
+        return null;
+    }
+
+    /// <summary>Grants the exclusive hold of one batch group at its frozen baseline.</summary>
+    public Result Reserve(OperationProvenance operation, ImmutableContentRef intent, Uuid batchId, Uuid applicationId,
+        ulong initialRevision, ulong candidateRevision)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        var refused = CheckReserve(batchId, initialRevision);
+        if (refused is not null)
+            return Result.Failure(refused);
+        RaiseEvent(new ApplicationImportTargetAuthorized(Stream, _revision, ApplicationImportEffects.Generation,
+            intent, null, operation, null, null, batchId, applicationId, initialRevision, candidateRevision));
         return Result.Success;
     }
 
-    void RegisterImportEffectEvents() => On<ApplicationImportEffectPending>(ev =>
+    /// <summary>
+    ///     Records the whole frozen group as one preflighted native append batch: a provisional effect for every row
+    ///     in original row order, compared once against the held baseline. Nothing is published.
+    /// </summary>
+    public Result ApplyImportGroup(Uuid batchId, long planRevision, string planSha256, ImmutableContentRef frozenPlan,
+        ImmutableContentRef intent, IReadOnlyList<ApplicationImportEffectInput> rows, DateTimeOffset recordedAt)
     {
-        if (ev.TenantId != _tenantId || ev.Plan.TenantId != _tenantId || ev.ApplicationId != Id ||
-            ev.Row.ApplicationId != Id || ev.Plan.BatchId == Uuid.Empty || ev.Row.RowId == Uuid.Empty ||
-            ev.Plan.ApproverMemberId == Uuid.Empty || ev.Plan.SubmitterMemberId == Uuid.Empty ||
-            string.IsNullOrWhiteSpace(ev.Plan.ApproverDisplay) || string.IsNullOrWhiteSpace(ev.Plan.SubmitterDisplay) ||
-            ev.Plan.RowCount is < 1 or > ApplicationImportLedger.MaximumCommitEffectRows ||
-            ev.PlanRevision != ev.Plan.Revision + ev.Plan.RowCount + 1 ||
-            string.IsNullOrWhiteSpace(ev.Plan.SourceKey) || string.IsNullOrWhiteSpace(ev.Plan.SourceNamespace) ||
-            ev.PlanSha256.Length != 64 || ev.PlanSha256.Any(c => c is not (>= '0' and <= '9' or >= 'a' and <= 'f')) ||
-            ev.Row.Decision is not ("create_new" or "link_existing" or "retire") ||
-            (ev.Row.Decision == "create_new" && (_created || _pendingImportEffects.Count > 0 ||
-                ev.Row.ExpectedApplicationRevision is not null)) ||
-            (ev.Row.Decision == "link_existing" && ((!_created &&
-                !_pendingImportEffects.Values.Any(effect => effect.Row.Decision == "create_new")) || _retired ||
-                ev.Row.ExpectedApplicationRevision != (_revision == 0 ? 1 : _revision))) ||
-            (ev.Row.Decision == "retire" && (!_created || _retired ||
-                ev.Row.ExpectedApplicationRevision != _revision ||
-                !ApplicationImportRetirementImpact.IsValidFrozenRow(ev.Plan, ev.Row))) ||
-            (ev.Row.Decision != "retire" && (ev.Row.RetirementSourceClaimId is not null ||
-                ev.Row.RetirementProposalSha256 is not null || ev.Row.RetirementImpactDigest is not null ||
-                ev.Row.RetirementReason is not null)) ||
-            _pendingImportEffects.ContainsKey((ev.Plan.BatchId, ev.Row.RowId)))
-            throw new InvalidOperationException("The pending import effect does not belong to its target.");
-        _pendingImportEffects.Add((ev.Plan.BatchId, ev.Row.RowId), ev);
-        if (_committedImportEvents.Contains(ev.Metadata.EventId))
-            ApplyCommittedImportEffect(ev);
-    });
+        ArgumentNullException.ThrowIfNull(rows);
+        ArgumentNullException.ThrowIfNull(frozenPlan);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (_importHolds.GetValueOrDefault(batchId) is not { IsActive: true } hold || hold.Fence is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The batch holds no active, unfenced reservation on this application.", true));
+        if (hold.IsApplied || rows.Count == 0)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The import group is already applied or empty."));
+        var fold = ApplicationImportGroupFold.Fold(_created, _retired, _revision, rows.Select(row => row.Row).ToArray());
+        if (!fold.IsSuccess)
+            return Result.Failure(fold.Error!);
+        for (var index = 0; index < rows.Count; index++)
+            if (fold.Value![index] != rows[index].ResultingRevision)
+                return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The frozen candidate revision differs from the group's native outcome."));
+        foreach (var input in rows)
+            RaiseEvent(new ApplicationImportEffectPending(_tenantId, Id, planRevision, planSha256, frozenPlan,
+                input.Row, recordedAt, input.Operation, intent, null, null, batchId, input.ResultingRevision));
+        return Result.Success;
+    }
+
+    /// <summary>Records the batch's fence, even when its hold was never acquired.</summary>
+    public Result Fence(OperationProvenance operation, ImmutableContentRef intent, Uuid batchId, Uuid applicationId)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (_importHolds.GetValueOrDefault(batchId) is { Fence: not null } or { Settled: not null })
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The batch is already fenced or settled on this application."));
+        RaiseEvent(new ApplicationImportEffectCanceled(Stream, _revision, ApplicationImportEffects.Generation,
+            intent, null, operation, null, null, batchId, applicationId));
+        return Result.Success;
+    }
+
+    /// <summary>
+    ///     Ends the hold with the batch's exact terminal disposition. A published disposition promotes the frozen
+    ///     candidate without a second content revision increment.
+    /// </summary>
+    public Result Settle(OperationProvenance operation, ImmutableContentRef intent, Uuid batchId, Uuid applicationId,
+        ApplicationImportDisposition disposition)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        var hold = _importHolds.GetValueOrDefault(batchId);
+        if (hold is null || hold.Settled is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The batch holds no unsettled reservation or fence on this application."));
+        if (disposition == ApplicationImportDisposition.Published && (hold.Reserved is null || !hold.IsApplied))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only an applied hold can publish.", true));
+        var published = disposition == ApplicationImportDisposition.Published
+            ? (long)hold.Reserved!.CandidateContentRevision
+            : _revision;
+        RaiseEvent(new ApplicationImportTargetSettled(Stream, published, ApplicationImportEffects.Generation, intent,
+            null, operation, null, null, batchId, applicationId, disposition));
+        return Result.Success;
+    }
+
+    /// <summary>
+    ///     Read composition only: the in-memory application as a published batch shows it, before the target hold
+    ///     settles. It never raises a fact and never touches a stream.
+    /// </summary>
+    public void ShowPublished(Uuid batchId)
+    {
+        if (_importHolds.GetValueOrDefault(batchId) is { IsActive: true, IsApplied: true } hold)
+            Promote(hold);
+    }
+
+    void RegisterImportEffectEvents()
+    {
+        On<ApplicationImportTargetAuthorized>(ev =>
+        {
+            Acceptance.Observe(ev);
+            if (ev.Owner != Stream || ev.Operation.Owner != Stream || ev.Generation != ApplicationImportEffects.Generation ||
+                ev.ApplicationId != Id || ev.BatchId == Uuid.Empty || CheckReserve(ev.BatchId, ev.InitialApplicationRevision) is not null)
+                throw new InvalidOperationException("The import target hold does not belong to an available target.");
+            _importHolds.Add(ev.BatchId, new ApplicationImportHold(ev.BatchId, ev, null, [], null));
+        });
+        On<ApplicationImportEffectPending>(ev =>
+        {
+            Acceptance.Observe(ev);
+            if (ev.TenantId != _tenantId || ev.ApplicationId != Id || ev.Row.ApplicationId != Id ||
+                ev.Operation.Owner != Stream || ev.BatchId == Uuid.Empty || ev.Row.RowId == Uuid.Empty ||
+                ev.Row.Decision is not ("create_new" or "link_existing" or "retire") ||
+                _importHolds.GetValueOrDefault(ev.BatchId) is not { IsActive: true, Fence: null } hold ||
+                hold.Effects.Any(effect => effect.Row.RowId == ev.Row.RowId))
+                throw new InvalidOperationException("The pending import effect does not belong to its held target.");
+            _importHolds[ev.BatchId] = hold with { Effects = [.. hold.Effects, ev] };
+        });
+        On<ApplicationImportEffectCanceled>(ev =>
+        {
+            Acceptance.Observe(ev);
+            if (ev.Owner != Stream || ev.Operation.Owner != Stream || ev.ApplicationId != Id ||
+                _importHolds.GetValueOrDefault(ev.BatchId) is { Fence: not null } or { Settled: not null })
+                throw new InvalidOperationException("The import fence follows an unfenced, unsettled batch.");
+            _importHolds[ev.BatchId] = (_importHolds.GetValueOrDefault(ev.BatchId) ??
+                new ApplicationImportHold(ev.BatchId, null, null, [], null)) with
+            { Fence = ev };
+        });
+        On<ApplicationImportTargetSettled>(ev =>
+        {
+            Acceptance.Observe(ev);
+            if (ev.Owner != Stream || ev.Operation.Owner != Stream || ev.ApplicationId != Id ||
+                _importHolds.GetValueOrDefault(ev.BatchId) is not { Settled: null } hold)
+                throw new InvalidOperationException("The import settlement follows an unsettled hold or fence.");
+            var settled = hold with { Settled = ev };
+            _importHolds[ev.BatchId] = settled;
+            if (ev.Disposition == ApplicationImportDisposition.Published)
+            {
+                if (hold.Reserved is null || !hold.IsApplied)
+                    throw new InvalidOperationException("Only an applied hold publishes.");
+                Promote(hold);
+            }
+        });
+    }
+
+    void Promote(ApplicationImportHold hold)
+    {
+        foreach (var effect in hold.Effects)
+        {
+            switch (effect.Row.Decision)
+            {
+                case "create_new" when !_created:
+                    _created = true;
+                    _initialName = effect.Row.Name.Trim();
+                    _initialPurpose = effect.Row.Purpose.Trim();
+                    _initialOwnerReference = NormalizeOptional(effect.Row.OwnerReference);
+                    _revision = effect.ResultingRevision;
+                    break;
+                case "retire" when !_retired:
+                    _retired = true;
+                    _revision = effect.ResultingRevision;
+                    break;
+            }
+        }
+    }
 }

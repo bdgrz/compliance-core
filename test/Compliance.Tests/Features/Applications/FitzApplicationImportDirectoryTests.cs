@@ -1,4 +1,7 @@
+using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 
@@ -18,7 +21,7 @@ public sealed class FitzApplicationImportDirectoryTests
         await using (var projection = await directory.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(Staged(tenantId, batchId, 200));
+            await Stage(directory, tenantId, batchId, 200);
             await projection.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -50,14 +53,14 @@ public sealed class FitzApplicationImportDirectoryTests
         await using (var projection = await directory.BeginAsync(
                          new ProjectionBatchContext(Checkpoint(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(Staged(tenantId, batchId, 3));
+            await Stage(directory, tenantId, batchId, 3);
         }
         var missing = await directory.GetAsync(tenantId, batchId);
         var missingRows = await directory.ListRowsAsync(tenantId, batchId, 200, null);
         await using (var retry = await directory.BeginAsync(
                          new ProjectionBatchContext(Checkpoint(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(Staged(tenantId, batchId, 3));
+            await Stage(directory, tenantId, batchId, 3);
             await retry.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -71,10 +74,20 @@ public sealed class FitzApplicationImportDirectoryTests
     static CheckpointIdentity Checkpoint(Uuid tenantId) => new(
         "ApplicationImportDirectoryV1", EventStreamPattern.ForPattern(tenantId.ToString()));
 
-    static ApplicationImportStaged Staged(Uuid tenantId, Uuid batchId, int rowCount) =>
-        new(tenantId, batchId, Uuid.CreateVersion4(), "source", "primary", "partial",
-            new string('A', 64), Enumerable.Range(1, rowCount)
-                .Select(number => new ApplicationImportStagedRow(Uuid.CreateVersion4(), number,
-                    $"record-{number}", $"Application {number}", "Purpose", null, []))
-                .ToArray(), Uuid.CreateVersion4(), "Manager", DateTimeOffset.UtcNow);
+    static ValueTask Stage(FitzApplicationImportDirectory directory, Uuid tenantId, Uuid batchId, int rowCount)
+    {
+        var rows = Enumerable.Range(1, rowCount)
+            .Select(number => new ApplicationImportStagedRow(Uuid.CreateVersion4(), number,
+                $"record-{number}", $"Application {number}", "Purpose", null, []))
+            .ToArray();
+        var stream = new EventStreamAddress(tenantId.ToString(), ApplicationImportBatch.Area, batchId.ToString());
+        var content = new ImmutableContentRef(Uuid.CreateVersion4(), new string('0', 64), 2, "application/json",
+            ApplicationImportRowsManifest.Schema);
+        var staged = new ApplicationImportStaged(tenantId, batchId, Uuid.CreateVersion4(), "source", "primary",
+            "partial", new string('A', 64), content, Uuid.CreateVersion4(), "Manager", DateTimeOffset.UtcNow,
+            new OperationProvenance(Uuid.CreateVersion4(), Uuid.CreateVersion4(), null, "StageApplicationImport",
+                ActorReference.ForSystemProcess("test", "test"), stream, "initial", null, new string('0', 64),
+                DateTimeOffset.UtcNow, stream, stream), content, content, rowCount, 0);
+        return directory.ApplyStagedAsync(staged, rows);
+    }
 }

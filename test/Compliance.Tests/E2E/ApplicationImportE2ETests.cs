@@ -46,8 +46,8 @@ public sealed class ApplicationImportE2ETests(BrokerStackFixture broker)
 
         // Act
         var first = await StageWhenAuthorizedAsync(owner, path, body);
-        using var replayResponse = await owner.PostAsJsonAsync(path, body);
-        using var bodyTenantResponse = await owner.PostAsJsonAsync(path, new
+        using var replayResponse = await PutStageAsync(owner, path, body);
+        using var bodyTenantResponse = await PutStageAsync(owner, path, new
         {
             tenant_id = Guid.NewGuid(),
             body.submission_id,
@@ -56,7 +56,7 @@ public sealed class ApplicationImportE2ETests(BrokerStackFixture broker)
             body.coverage,
             body.rows,
         });
-        using var changedResponse = await owner.PostAsJsonAsync(path, new
+        using var changedResponse = await PutStageAsync(owner, path, new
         {
             body.submission_id,
             body.source_key,
@@ -77,20 +77,20 @@ public sealed class ApplicationImportE2ETests(BrokerStackFixture broker)
         var nextPage = await ReadAsync(nextResponse);
         using var invalidCursor = await owner.GetAsync($"{batchPath}/rows?cursor=not-a-cursor");
         using var invalidLimit = await owner.GetAsync($"{batchPath}/preview?limit=201");
-        using var secondStageResponse = await owner.PostAsJsonAsync(path, Body(Guid.NewGuid()));
+        using var secondStageResponse = await PutStageAsync(owner, path, Body(Guid.NewGuid()));
         Assert.Equal(HttpStatusCode.OK, secondStageResponse.StatusCode);
         var secondStage = await ReadAsync(secondStageResponse);
         var secondBatchPath = $"{path}/{secondStage.GetProperty("batch_id").GetString()}";
         _ = await WaitForBatchAsync(owner, secondBatchPath);
         using var crossBatchCursor = await owner.GetAsync(
             $"{secondBatchPath}/rows?cursor={Uri.EscapeDataString(cursor!)}");
-        using var oversized = await owner.PostAsJsonAsync(path, new
+        using var oversized = await PutStageAsync(owner, path, new
         {
             submission_id = Guid.NewGuid(),
             source_key = "tenant_list",
             source_namespace = "primary",
             coverage = "partial",
-            rows = Enumerable.Range(1, 200).Select(number => new
+            rows = Enumerable.Range(1, 1000).Select(number => new
             {
                 source_record_id = $"large-{number}",
                 name = "Application",
@@ -103,7 +103,7 @@ public sealed class ApplicationImportE2ETests(BrokerStackFixture broker)
         using var deniedBatch = await outsider.GetAsync(batchPath);
         using var deniedRows = await outsider.GetAsync($"{batchPath}/rows");
         using var deniedPreview = await outsider.GetAsync($"{batchPath}/preview");
-        using var deniedStage = await outsider.PostAsJsonAsync(path, Body(Guid.NewGuid()));
+        using var deniedStage = await PutStageAsync(outsider, path, Body(Guid.NewGuid()));
         using var alienBatch = await owner.GetAsync(
             $"/api/v1/tenants/{Guid.NewGuid()}/application-imports/{first.GetProperty("batch_id").GetString()}");
         var secondTenantId = await CreateTenantAsync(owner);
@@ -115,23 +115,23 @@ public sealed class ApplicationImportE2ETests(BrokerStackFixture broker)
             $"{secondTenantPath}/{first.GetProperty("batch_id").GetString()}/rows");
         using var crossTenantPreview = await owner.GetAsync(
             $"{secondTenantPath}/{first.GetProperty("batch_id").GetString()}/preview");
-        using var cancellation = await owner.PostAsJsonAsync(
-            $"{batchPath}/cancellations", new
+        using var cancellation = await owner.PutAsJsonAsync(
+            $"{batchPath}/cancellations/{Guid.NewGuid()}", new
             {
-                expected_batch_revision = 1,
+                expected_revision = 1,
                 reason = "The source was superseded before acceptance.",
             });
-        var canceled = await WaitForBatchRevisionAsync(owner, batchPath, 2);
-        using var futureCancellation = await owner.PostAsJsonAsync(
-            $"{batchPath}/cancellations", new
+        var canceled = await WaitForBatchRevisionAsync(owner, batchPath, 3);
+        using var futureCancellation = await owner.PutAsJsonAsync(
+            $"{batchPath}/cancellations/{Guid.NewGuid()}", new
             {
-                expected_batch_revision = 3,
+                expected_revision = 4,
                 reason = "A stale cancellation must not win.",
             });
-        using var deniedCancellation = await outsider.PostAsJsonAsync(
-            $"{batchPath}/cancellations", new
+        using var deniedCancellation = await outsider.PutAsJsonAsync(
+            $"{batchPath}/cancellations/{Guid.NewGuid()}", new
             {
-                expected_batch_revision = 2,
+                expected_revision = 3,
                 reason = "Unauthorized",
             });
         using var applications = await owner.GetAsync($"/api/v1/tenants/{tenantId}/applications");
@@ -163,7 +163,7 @@ public sealed class ApplicationImportE2ETests(BrokerStackFixture broker)
         Assert.Equal(HttpStatusCode.BadRequest, invalidCursor.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, invalidLimit.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, crossBatchCursor.StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, oversized.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, oversized.StatusCode);
         Assert.Equal("duplicate", preview.GetProperty("items")[0]
             .GetProperty("match_state").GetString());
         Assert.Contains("duplicate_source_record_id", preview.GetProperty("items")[0]
@@ -177,14 +177,14 @@ public sealed class ApplicationImportE2ETests(BrokerStackFixture broker)
         Assert.Equal(HttpStatusCode.NotFound, crossTenantBatch.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, crossTenantRows.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, crossTenantPreview.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, cancellation.StatusCode);
-        Assert.Equal(2, canceled.GetProperty("revision").GetInt64());
+        Assert.Equal(HttpStatusCode.Accepted, cancellation.StatusCode);
+        Assert.Equal(3, canceled.GetProperty("revision").GetInt64());
         Assert.Equal("canceled", canceled.GetProperty("state").GetString());
         Assert.Equal(HttpStatusCode.Conflict, futureCancellation.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, deniedCancellation.StatusCode);
         Assert.Empty(applicationsBody.GetProperty("items").EnumerateArray());
         Assert.Empty(applicationEvents);
-        Assert.Equal(3, importEvents.Count);
+        Assert.Equal(5, importEvents.Count);
         await using (var mcp = await McpScenario.ConnectAsync(owner,
                          new Uri(owner.BaseAddress!, "/mcp")))
         {
@@ -285,7 +285,7 @@ public sealed class ApplicationImportE2ETests(BrokerStackFixture broker)
         await worker.StopAsync();
 
         // Act
-        using var stageResponse = await owner.PostAsJsonAsync(path, Body(Guid.NewGuid()));
+        using var stageResponse = await PutStageAsync(owner, path, Body(Guid.NewGuid()));
         Assert.Equal(HttpStatusCode.OK, stageResponse.StatusCode);
         var staged = await ReadAsync(stageResponse);
         var batchPath = $"{path}/{staged.GetProperty("batch_id").GetString()}";
@@ -353,13 +353,21 @@ public sealed class ApplicationImportE2ETests(BrokerStackFixture broker)
         return Guid.Parse((await ReadAsync(response)).GetProperty("tenant_id").GetString()!);
     }
 
+    /// <summary>Stages through the idempotent PUT route; the submission id of the body is the route identity.</summary>
+    static async Task<HttpResponseMessage> PutStageAsync(HttpClient client, string path, object body)
+    {
+        using var document = JsonDocument.Parse(JsonSerializer.Serialize(body));
+        var submission = document.RootElement.GetProperty("submission_id").GetGuid();
+        return await client.PutAsJsonAsync($"{path}/{submission}", body);
+    }
+
     static async Task<JsonElement> StageWhenAuthorizedAsync(HttpClient owner,
         string path, object body)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(path, body);
+            using var response = await PutStageAsync(owner, path, body);
             if (response.StatusCode == HttpStatusCode.OK)
                 return await ReadAsync(response);
             Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,

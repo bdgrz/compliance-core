@@ -105,7 +105,6 @@ that do not reach a registered command or internal-reaction handler:
 | No source caller or registered request route | `MethodologyTemplate.ReviseDraftWithAcceptedContribution`, `TemplateApplication.RecordDraftCreated` | [#276](https://github.com/bdgrz/compliance-core/issues/276) |
 | No source caller or registered request route | `ProgramRollover.Revise`, `ProgramRollover.RecordNextPeriodCreated` | [#316](https://github.com/bdgrz/compliance-core/issues/316) |
 | No source caller or registered request route | `TypeIIPlan.Revise`, `ManagementAssertion.Revise` | [#303](https://github.com/bdgrz/compliance-core/issues/303) |
-| Legacy emitter with no current caller | `ImportBatch.Cancel` | [#1022](https://github.com/bdgrz/compliance-core/issues/1022); retain event replay until a verified stream migration is delivered. |
 | Direct aggregate-executor call from delivery reactor | `TenantInvitation.RecordDeliverySent`, `TenantInvitation.RecordDeliveryFailure` | [#127](https://github.com/bdgrz/compliance-core/issues/127) |
 | Direct aggregate-executor call from delivery reactor | `EmailAddress.RecordDeliverySent`, `RecordDeliveryFailure`, `RecordRecoveryDeliverySent`, `RecordRecoveryDeliveryFailure` | Needs a specific backend issue; #127's backend children are closed and no open email-challenge issue owns this route. |
 | Direct aggregate-executor call from digest processor | `WorkDigestDispatch.Schedule`, `StartAttempt`, `RecordSent`, `RecordSkipped`, `RecordPermanentRejection`, `RecordUnknown`, `RecordInterruptedAttempt`, `RecordTransientRejection`, `RecordRetryWindowExpired`, `RecordMissedWeek` | [#121](https://github.com/bdgrz/compliance-core/issues/121) |
@@ -114,10 +113,7 @@ that do not reach a registered command or internal-reaction handler:
 The direct reactor and processor paths currently execute aggregate methods and can persist their facts;
 they bypass the registered request-handler composition. They are listed because the requested wiring
 requires all fact-producing aggregate operations to have an explicit registered request path. They do
-not count as missing event construction. `ImportBatch.Cancel` is a duplicate legacy producer for
-`ApplicationImportCanceled`; the active cancellation handler executes the source ledger operation.
-Its event contract and reducer remain until the old batch-stream history has a verified migration.
-The source-linked rows, caller paths, and issue dispositions are in `unwiredAggregateProducers` in
+not count as missing event construction. The source-linked rows, caller paths, and issue dispositions are in `unwiredAggregateProducers` in
 the JSON map.
 
 ## Superseded or deferred contracts

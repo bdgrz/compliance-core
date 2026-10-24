@@ -30,8 +30,7 @@ public sealed class DeclareApplicationHandler(IAggregateExecutor executor,
             UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId) &&
             await visibility.HasRestrictedApplicationPermissionAsync(request.TenantId, userId,
                 applicationId, ct).ConfigureAwait(false);
-        var target = await ApplicationImportWriteGuard.PrepareAsync(reader, request.TenantId,
-            applicationId, ct).ConfigureAwait(false);
+        var target = new DeclaredApplication(request.TenantId, applicationId);
         return await executor.ExecuteAsync(target,
             app =>
             {

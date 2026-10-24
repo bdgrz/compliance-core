@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader reader)
+public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader reader, IImmutableContentStore content)
     : IRequestHandler<GetApplicationImportRejectedReport, ApplicationImportRejectedReport>
 {
     public async ValueTask<Result<ApplicationImportRejectedReport>> HandleAsync(IRequestContext<GetApplicationImportRejectedReport> context,
@@ -13,31 +14,35 @@ public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader r
             request.BatchId, request.MinimumRevision, ct).ConfigureAwait(false);
         if (!loaded.IsSuccess)
             return Result<ApplicationImportRejectedReport>.Failure(loaded.Error);
-        var (batch, ledger) = loaded.Value;
-        var state = ledger.GetState(batch);
+        var batch = loaded.Value;
+        var state = batch.State;
         var rejected = new List<ApplicationImportRejectedRow>();
         var batchFindings = new List<string>();
-        var missing = ledger.GetMissingSourceClaims(batch);
-        if (!missing.IsSuccess)
-            return Result<ApplicationImportRejectedReport>.Failure(missing.Error);
-        if (state == "preview_ready" && missing.Value.Count > 0)
+        var omissions = await ApplicationImportOmissionSources.LoadAsync(reader, content, request.TenantId,
+            request.BatchId, ct).ConfigureAwait(false);
+        if (!omissions.IsSuccess)
+            return Result<ApplicationImportRejectedReport>.Failure(omissions.Error);
+        var (_, source, rows) = omissions.Value;
+        var missing = source.Missing(batch, rows);
+        if (state == "preview_ready" && missing.Count > 0)
         {
             batchFindings.Add("missing_source_retirement_unavailable");
             batchFindings.Add("retirement_impact_unavailable");
         }
-        if (state == "preview_ready" && ledger.HasOtherAcceptingBatch(batch))
+
+        if (state == "preview_ready" && source.Source.ActiveBatchId is { } active && active != batch.Id)
             batchFindings.Add("source_acceptance_in_progress");
-        foreach (var row in batch.GetRows())
+        foreach (var row in rows)
         {
             var findings = row.ValidationFindings.ToList();
             if (state == "failed")
                 findings.Add("batch_execution_failed");
-            else if (state == "canceled")
+            else if (state is "canceled" or "canceling")
                 findings.Add("batch_canceled");
             else if (state == "preview_ready" && findings.Count == 0)
             {
-                var choice = ledger.GetCorrelation(batch.Id, row.RowId);
-                var claim = ledger.GetSourceClaim(row.SourceRecordId!);
+                var choice = batch.GetCorrelation(row.RowId);
+                var claim = source.Find(row.SourceRecordId!);
                 if (choice is null && claim is null)
                     findings.Add("correlation_required");
                 else if (claim is not null && choice is not null &&
@@ -59,11 +64,11 @@ public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader r
             if (findings.Count > 0)
                 rejected.Add(new(row.RowId, row.RowNumber, row.SourceRecordId, findings.AsReadOnly()));
         }
-        var fence = await ApplicationImportLifecycleRead.CheckAsync(reader, batch, ledger, ct).ConfigureAwait(false);
+        var fence = await ApplicationImportLifecycleRead.CheckAsync(reader, batch, ct).ConfigureAwait(false);
         if (!fence.IsSuccess)
             return Result<ApplicationImportRejectedReport>.Failure(fence.Error);
-        var failure = ledger.GetFailure(batch.Id);
+        var failure = batch.Failed;
         return Result<ApplicationImportRejectedReport>.Success(new(request.TenantId, batch.Id,
-            ledger.GetRevision(batch), state, rejected.AsReadOnly(), batchFindings.AsReadOnly(), failure?.FailureCode, failure?.RowId));
+            batch.Revision, state, rejected.AsReadOnly(), batchFindings.AsReadOnly(), failure?.FailureCode, failure?.RowId));
     }
 }
