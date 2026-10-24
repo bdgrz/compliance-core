@@ -10,6 +10,12 @@ public sealed class ProcessSweep(IServiceScopeFactory scopes, ProcessCatalog cat
     ILogger<ProcessSweep>? logger = null)
     : BackgroundService
 {
+    static readonly Action<ILogger, string, string, Uuid, Uuid, Exception?> RecordRecoveryFailed =
+        LoggerMessage.Define<string, string, Uuid, Uuid>(LogLevel.Warning, new EventId(1, nameof(RecordRecoveryFailed)),
+            "Process recovery failed for {ProcessKind} in {Realm} at {RootOperationId}/{SourceId}.");
+    static readonly Action<ILogger, Exception?> SweepRecoveryFailed = LoggerMessage.Define(LogLevel.Warning,
+        new EventId(2, nameof(SweepRecoveryFailed)), "Process recovery sweep failed and will retry.");
+
     /// <summary>Interval between sweeps.</summary>
     public static TimeSpan Interval { get; } = TimeSpan.FromSeconds(60);
 
@@ -43,9 +49,8 @@ public sealed class ProcessSweep(IServiceScopeFactory scopes, ProcessCatalog cat
                 catch (Exception exception) when (exception is not OperationCanceledException || !ct.IsCancellationRequested)
                 {
                     // Leave this record due for retry while allowing independent records in the batch to recover.
-                    logger?.LogWarning(exception,
-                        "Process recovery failed for {ProcessKind} in {Realm} at {RootOperationId}/{SourceId}.",
-                        key.ProcessKind, key.Realm, key.RootOperationId, key.SourceId);
+                    if (logger is not null)
+                        RecordRecoveryFailed(logger, key.ProcessKind, key.Realm, key.RootOperationId, key.SourceId, exception);
                 }
             }
         }
@@ -65,7 +70,8 @@ public sealed class ProcessSweep(IServiceScopeFactory scopes, ProcessCatalog cat
             catch (Exception exception) when (exception is not OperationCanceledException || !stoppingToken.IsCancellationRequested)
             {
                 // A failed sweep is retried on the next tick; records keep their own due times.
-                logger?.LogWarning(exception, "Process recovery sweep failed and will retry.");
+                if (logger is not null)
+                    SweepRecoveryFailed(logger, exception);
             }
         }
     }

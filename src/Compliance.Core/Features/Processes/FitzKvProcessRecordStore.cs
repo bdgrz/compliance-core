@@ -14,6 +14,8 @@ namespace Bdgrz.Compliance.Features.Processes;
 /// <c>due/{unixMs:D20}/{realm}/{root}/{source}</c>
 /// indexes non-terminal records by due time and is maintained in the same transaction. The route lock at BEGIN
 /// makes read-compare-write the CAS; a lost lock is retried from BEGIN.
+/// Payloads use verified 48 KiB chunks under a manifest, with a 16 MiB transaction budget. Payload, manifest and
+/// due-index changes commit together; a large record is never truncated to fit one frame.
 /// </summary>
 sealed class FitzKvProcessRecordStore(IKvClient client) : IProcessRecordStore
 {
