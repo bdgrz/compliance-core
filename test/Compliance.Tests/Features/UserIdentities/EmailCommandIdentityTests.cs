@@ -1,11 +1,13 @@
 using System.Security.Claims;
+using System.Text.Json;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.UserIdentities;
 
-/// <summary>The caller-chosen identities of the email address commands: challenge and command ids.</summary>
+/// <summary>The caller-chosen identities of the email address commands: challenge and command ids, and their native facts.</summary>
 public sealed class EmailCommandIdentityTests
 {
     const string Email = "owner@example.com";
@@ -18,8 +20,7 @@ public sealed class EmailCommandIdentityTests
         var owner = Uuid.CreateVersion4();
         await host.SeedAsync(new EmailAddress(Email), address => address.Reserve(owner));
         var challengeId = Uuid.CreateVersion4();
-        var handler = new IssueEmailChallengeHandler(host.Provider.GetRequiredService<IAggregateExecutor>(), host.Keys,
-            host.Clock);
+        var handler = host.IssueEmailHandler();
         var request = new IssueEmailChallenge(challengeId, owner, Email);
 
         // Act
@@ -30,7 +31,31 @@ public sealed class EmailCommandIdentityTests
         // Assert
         Assert.True(first.IsSuccess);
         Assert.True(retry.IsSuccess);
-        Assert.Equal(challengeId, Assert.Single(issued).ChallengeId);
+        var fact = Assert.Single(issued);
+        Assert.Equal(challengeId, fact.ChallengeId);
+        Assert.Equal(challengeId, fact.Operation.LogicalId);
+        Assert.NotNull(fact.FirstResponse);
+    }
+
+    [Fact]
+    public async Task ShouldConflictGivenChangedUserOnTheSameChallengeIdentity()
+    {
+        // Arrange
+        await using var host = new IdentityRecoveryHost();
+        var owner = Uuid.CreateVersion4();
+        await host.SeedAsync(new EmailAddress(Email), address => address.Reserve(owner));
+        var challengeId = Uuid.CreateVersion4();
+        var handler = host.IssueEmailHandler();
+        await handler.HandleAsync(Context(new IssueEmailChallenge(challengeId, owner, Email), owner), CancellationToken.None);
+
+        // Act
+        var changed = await handler.HandleAsync(
+            Context(new IssueEmailChallenge(challengeId, Uuid.CreateVersion4(), Email), owner), CancellationToken.None);
+
+        // Assert
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error.Kind);
+        Assert.Single((await host.FactsAsync(new EmailAddress(Email).Stream)).OfType<EmailChallengeIssued>());
     }
 
     [Fact]
@@ -40,12 +65,10 @@ public sealed class EmailCommandIdentityTests
         await using var host = new IdentityRecoveryHost();
         var owner = Uuid.CreateVersion4();
         await host.SeedAsync(new EmailAddress(Email), address => address.Reserve(owner));
-        var handler = new IssueEmailChallengeHandler(host.Provider.GetRequiredService<IAggregateExecutor>(), host.Keys,
-            host.Clock);
 
         // Act
-        var result = await handler.HandleAsync(Context(new IssueEmailChallenge(Uuid.Empty, owner, Email), owner),
-            CancellationToken.None);
+        var result = await host.IssueEmailHandler().HandleAsync(
+            Context(new IssueEmailChallenge(Uuid.Empty, owner, Email), owner), CancellationToken.None);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -60,12 +83,11 @@ public sealed class EmailCommandIdentityTests
         var owner = Uuid.CreateVersion4();
         await host.SeedAsync(new EmailAddress(Email), address => address.Reserve(owner));
         var challengeId = Uuid.CreateVersion4();
-        var executor = host.Provider.GetRequiredService<IAggregateExecutor>();
-        await new IssueEmailChallengeHandler(executor, host.Keys, host.Clock).HandleAsync(
+        await host.IssueEmailHandler().HandleAsync(
             Context(new IssueEmailChallenge(challengeId, owner, Email), owner), CancellationToken.None);
         var issued = (await host.FactsAsync(new EmailAddress(Email).Stream)).OfType<EmailChallengeIssued>().Single();
-        var token = host.Keys.Derive(issued.TokenKeyId!, challengeId, owner, Email, issued.ExpiresAt);
-        var handler = new CompleteEmailChallengeHandler(executor, host.Clock);
+        var token = host.Keys.Derive(issued.TokenKeyId, challengeId, owner, Email, issued.ExpiresAt);
+        var handler = host.VerifyEmailHandler();
 
         // Act
         var other = await handler.HandleAsync(Context(new CompleteEmailChallenge(Uuid.CreateVersion4(), owner, Email, token), owner),
@@ -81,13 +103,76 @@ public sealed class EmailCommandIdentityTests
     }
 
     [Fact]
+    public async Task ShouldReplayVerificationGivenExactRetryOnlyWithTheTokenAndNeverRetainTheToken()
+    {
+        // Arrange
+        await using var host = new IdentityRecoveryHost();
+        var owner = Uuid.CreateVersion4();
+        await host.SeedAsync(new EmailAddress(Email), address => address.Reserve(owner));
+        var challengeId = Uuid.CreateVersion4();
+        await host.IssueEmailHandler().HandleAsync(
+            Context(new IssueEmailChallenge(challengeId, owner, Email), owner), CancellationToken.None);
+        var issued = (await host.FactsAsync(new EmailAddress(Email).Stream)).OfType<EmailChallengeIssued>().Single();
+        var token = host.Keys.Derive(issued.TokenKeyId, challengeId, owner, Email, issued.ExpiresAt);
+        var handler = host.VerifyEmailHandler();
+        var request = new CompleteEmailChallenge(challengeId, owner, Email, token);
+
+        // Act
+        var first = await handler.HandleAsync(Context(request, owner), CancellationToken.None);
+        host.Clock.Advance(TimeSpan.FromHours(2));
+        var retry = await handler.HandleAsync(Context(request, owner), CancellationToken.None);
+        var wrongToken = await handler.HandleAsync(Context(request with { Token = new string('0', 64) }, owner),
+            CancellationToken.None);
+        var facts = await host.FactsAsync(new EmailAddress(Email).Stream);
+        var verified = Assert.Single(facts.OfType<EmailAddressVerified>());
+        var serialized = JsonSerializer.Serialize(verified, ComplianceCoreJsonContext.Default.EmailAddressVerified);
+
+        // Assert
+        Assert.True(first.IsSuccess);
+        Assert.True(retry.IsSuccess);
+        Assert.False(wrongToken.IsSuccess);
+        Assert.DoesNotContain(token, serialized, StringComparison.Ordinal);
+        Assert.Equal(AuthoredIntentDigest.Compute(new CompleteEmailChallengeAuthoredIntent(challengeId, owner, Email)),
+            verified.Operation.AuthoredIntentSha256);
+        Assert.NotEqual(AuthoredIntentDigest.Compute(request), verified.Operation.AuthoredIntentSha256);
+    }
+
+    [Fact]
+    public async Task ShouldReserveWithTheCallerCommandIdentityGivenExactRetryAfterLaterRevisions()
+    {
+        // Arrange
+        await using var host = new IdentityRecoveryHost();
+        var owner = Uuid.CreateVersion4();
+        var commandId = Uuid.CreateVersion4();
+        var handler = host.ReserveHandler();
+        var request = new ReserveEmail(commandId, owner, Email, 0);
+
+        // Act
+        var first = await handler.HandleAsync(Context(request, owner), CancellationToken.None);
+        await host.IssueEmailHandler().HandleAsync(
+            Context(new IssueEmailChallenge(Uuid.CreateVersion4(), owner, Email), owner), CancellationToken.None);
+        var retry = await handler.HandleAsync(Context(request, owner), CancellationToken.None);
+        var changed = await handler.HandleAsync(Context(request with { UserId = Uuid.CreateVersion4() }, owner),
+            CancellationToken.None);
+        var reserved = Assert.Single((await host.FactsAsync(new EmailAddress(Email).Stream)).OfType<EmailAddressReserved>());
+
+        // Assert
+        Assert.True(first.IsSuccess);
+        Assert.True(retry.IsSuccess);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error.Kind);
+        Assert.Equal(commandId, reserved.Operation.LogicalId);
+        Assert.Equal(0UL, reserved.Operation.OriginalExpectedRevision);
+    }
+
+    [Fact]
     public async Task ShouldRejectReserveGivenStaleExpectedRevision()
     {
         // Arrange
         await using var host = new IdentityRecoveryHost();
         var owner = Uuid.CreateVersion4();
         await host.SeedAsync(new EmailAddress(Email), address => address.Reserve(owner));
-        var handler = new ReserveEmailHandler(host.Provider.GetRequiredService<IAggregateExecutor>());
+        var handler = host.ReserveHandler();
 
         // Act
         var stale = await handler.HandleAsync(Context(new ReserveEmail(Uuid.CreateVersion4(), owner, Email, 0), owner),

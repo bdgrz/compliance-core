@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "selected target protocol; implementation pending",
-  "reactorCount": 115,
+  "reactorCount": 117,
   "reactors": [
     {
       "reactor": "ProfessionalAssertionClaimReactor",
@@ -9899,6 +9899,156 @@
       "processes": [
         "ProfessionalDutyChangeProcess"
       ]
+    },
+    {
+      "reactor": "EmailChallengeDeliveryReactor",
+      "sourceOwner": "EmailAddress",
+      "sourceEvents": [
+        "EmailChallengeIssued"
+      ],
+      "command": "DeliverEmailChallenge",
+      "targetOwner": "EmailChallengeDeliveryLedger",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "NativeFactReference",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "EmailChallengeDeliveryIntent"
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "guard": "Verify the source fact by hydrating the address: it must be the current, unverified, unexpired challenge fact named by the command. Derive the token from the protected key and compare it with the fact hash; open an attempt durably before the relay is called; close an attempt left open as an unknown outcome before any resend; record every attempt through the typed Sent and Failed outcome commands. Delivery receipts are never facts of the address stream.",
+      "eventsEmitted": [],
+      "processOnly": true,
+      "effectKind": "deliver_email_challenge",
+      "failure": "Exact replay returns the original result; a challenge replaced by a newer one on its address, verified, completed or expired is a terminal no-op; an unavailable dependency or an ambiguous or transient relay result is transient and retried within the attempt budget; a changed intent or an invalid source fact is a permanent conflict.",
+      "tests": [
+        "ShouldReconcileTheUnknownAttemptBeforeResendingTheSameMessageGivenAmbiguousSmtpResult",
+        "ShouldCloseTheOpenAttemptAsUnknownBeforeResendingGivenCrashAfterRelayAcceptance",
+        "ShouldIgnoreAnOldCallbackGivenANewerAttempt",
+        "ShouldNotRetryGivenDefinitePermanentRejection"
+      ],
+      "handler": "DeliverEmailChallengeHandler",
+      "http": false,
+      "mcp": false,
+      "principal": "trusted reactor/process principal scoped to verified source tenant and concrete command kind",
+      "commandIdRule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId.",
+      "sourceProofVariants": [
+        "EmailChallengeIssued"
+      ],
+      "intentSchema": "EmailChallengeDeliveryIntent",
+      "processes": [
+        "EmailChallengeDeliveryProcess"
+      ]
+    },
+    {
+      "reactor": "RecoveryChallengeDeliveryReactor",
+      "sourceOwner": "EmailAddress",
+      "sourceEvents": [
+        "IdentityRecoveryChallengeIssued"
+      ],
+      "command": "DeliverRecoveryChallenge",
+      "targetOwner": "EmailChallengeDeliveryLedger",
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "NativeFactReference",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "EmailChallengeDeliveryIntent"
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "guard": "Verify the source fact by hydrating the address: it must be the current, uncompleted, unexpired recovery challenge fact of the verified owner named by the command. Derive the recovery token from the protected key and compare it with the fact hash; attempts and outcomes follow the verification receiver exactly.",
+      "eventsEmitted": [],
+      "processOnly": true,
+      "effectKind": "deliver_recovery_challenge",
+      "failure": "Exact replay returns the original result; a challenge replaced by a newer one on its address, verified, completed or expired is a terminal no-op; an unavailable dependency or an ambiguous or transient relay result is transient and retried within the attempt budget; a changed intent or an invalid source fact is a permanent conflict.",
+      "tests": [
+        "ShouldReconcileTheUnknownAttemptBeforeResendingTheSameMessageGivenAmbiguousSmtpResult",
+        "ShouldCloseTheOpenAttemptAsUnknownBeforeResendingGivenCrashAfterRelayAcceptance",
+        "ShouldIgnoreAnOldCallbackGivenANewerAttempt",
+        "ShouldNotRetryGivenDefinitePermanentRejection"
+      ],
+      "handler": "DeliverRecoveryChallengeHandler",
+      "http": false,
+      "mcp": false,
+      "principal": "trusted reactor/process principal scoped to verified source tenant and concrete command kind",
+      "commandIdRule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId.",
+      "sourceProofVariants": [
+        "IdentityRecoveryChallengeIssued"
+      ],
+      "intentSchema": "EmailChallengeDeliveryIntent",
+      "processes": [
+        "EmailChallengeDeliveryProcess"
+      ]
     }
   ],
   "processes": [
@@ -10860,6 +11010,25 @@
             "ApplyPolicyParticipantResult"
           ],
           "rule": "Single receiver per admitted child; no cross-receiver ordering. Parent closure drains these before its own acquisition stage."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "EmailChallengeDeliveryProcess",
+      "rootSourceEvents": [
+        "EmailChallengeIssued",
+        "IdentityRecoveryChallengeIssued"
+      ],
+      "ordered": true,
+      "stages": [
+        {
+          "stage": "deliver",
+          "receivers": [
+            "DeliverEmailChallenge",
+            "DeliverRecoveryChallenge"
+          ],
+          "rule": "At-least-once; an unknown result is reconciled before the same message is resent."
         }
       ],
       "abort": []

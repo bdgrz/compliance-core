@@ -115,7 +115,7 @@ public sealed class EmailAddressTests
     }
 
     [Fact]
-    public void ShouldTrackDeliveryAndIgnoreSupersededOutcomeGivenReissue()
+    public void ShouldReportLedgerDeliveryStatusOfCurrentChallengeOnlyGivenReissue()
     {
         // Arrange
         var owner = Uuid.CreateVersion4();
@@ -129,22 +129,40 @@ public sealed class EmailAddressTests
 
         // Act
         Assert.True(address.IssueChallenge(owner, firstId, hash, now.AddMinutes(15), now, "key-1").IsSuccess);
-        Assert.Equal("pending", address.GetChallengeStatus(now).DeliveryStatus);
-        Assert.True(address.RecordDeliveryFailure(firstId, "delivery_failed", now).IsSuccess);
-        Assert.Equal("failed", address.GetChallengeStatus(now).DeliveryStatus);
-        var terminal = address.RecordDeliverySent(firstId, now);
-        Assert.False(terminal.IsSuccess);
-        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(terminal.Error).Kind);
-        Assert.Equal("failed", address.GetChallengeStatus(now).DeliveryStatus);
+        var pending = address.GetChallengeStatus(now);
+        var failed = address.GetChallengeStatus(now, "failed");
         Assert.True(address.IssueChallenge(owner, secondId, hash, now.AddMinutes(15), now, "key-1").IsSuccess);
-        var beforeStale = scenario.PendingEvents.Count;
-        Assert.True(address.RecordDeliverySent(firstId, now).IsSuccess);
+        var reissued = address.GetChallengeStatus(now);
 
         // Assert
-        Assert.Equal(beforeStale, scenario.PendingEvents.Count);
-        Assert.Equal("pending", address.GetChallengeStatus(now).DeliveryStatus);
+        Assert.Equal("pending", pending.DeliveryStatus);
+        Assert.Equal("failed", failed.DeliveryStatus);
+        Assert.Equal("pending", reissued.DeliveryStatus);
         Assert.Equal(secondId, address.CurrentChallengeId);
-        Assert.Equal("expired", address.GetChallengeStatus(now.AddMinutes(15)).DeliveryStatus);
+        Assert.Equal("expired", address.GetChallengeStatus(now.AddMinutes(15), "delivered").DeliveryStatus);
+        Assert.DoesNotContain(scenario.PendingEvents, fact => fact.GetType().Name.Contains("Delivery"));
+    }
+
+    [Fact]
+    public void ShouldRejectReuseOfChallengeIdentityGivenIssuedChallenge()
+    {
+        // Arrange
+        var owner = Uuid.CreateVersion4();
+        var challengeId = Uuid.CreateVersion4();
+        var now = DateTimeOffset.UtcNow;
+        var address = new EmailAddress("person@example.com");
+        var scenario = new AggregateScenario<EmailAddress>(address);
+        Assert.True(address.Reserve(owner).IsSuccess);
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("secret")));
+        Assert.True(address.IssueChallenge(owner, challengeId, hash, now.AddMinutes(15), now).IsSuccess);
+
+        // Act
+        var reuse = address.IssueChallenge(owner, challengeId, hash, now.AddMinutes(15), now);
+
+        // Assert
+        Assert.False(reuse.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, reuse.Error.Kind);
+        Assert.Equal(2, scenario.PendingEvents.Count);
     }
 
     [Fact]

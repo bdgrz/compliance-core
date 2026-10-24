@@ -94,7 +94,8 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
             ct.ThrowIfCancellationRequested();
             Attempts.Enqueue((challengeId, emailAddress, token));
             if (!AllowSuccess)
-                throw new InvalidOperationException("transient provider failure");
+                throw new EmailChallengeDeliveryException(EmailChallengeFailureCertainty.DefinitePermanent,
+                    "smtp_permanent_rejection");
             return ValueTask.CompletedTask;
         }
 

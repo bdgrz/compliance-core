@@ -2111,6 +2111,44 @@
         }
       ],
       "rules": "Freeze exact submitted completion and independent reviewer/waiver/decision. All current fulfilled evidence uses remain held through accepted native review or local cancellation. New submission needs a new operation identity."
+    },
+    {
+      "name": "EmailChallengeDeliveryIntent",
+      "schema": "email-challenge-delivery-intent.v1",
+      "location": "Compliance.Core server-created immutable content; wire references live in Common",
+      "fields": [
+        {
+          "name": "Header",
+          "type": "DurableIntentHeader",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Purpose",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "TokenKeyId",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "rules": "Frozen from the accepted challenge fact. Holds no bearer token and no recipient: the token is re-derived from the protected key and must match the hash the fact carries, and the mailbox is read from the address the source fact belongs to. One immutable payload per challenge; attempts are ledger state."
     }
   ]
 }

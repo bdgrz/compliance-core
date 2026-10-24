@@ -1414,7 +1414,6 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [TenantIdentityProviderTestRequested](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestRequested.cs#L6)
 
-- [TenantIdentityProviderTestedV2](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestedV2.cs#L6)
 
 #### Work
 
@@ -1718,8 +1717,6 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [EmailAddressReserved](../../src/Compliance.Common/Features/UserIdentities/EmailAddressReserved.cs#L6) — `bdgrz.email-address.reserved` v1
 - [EmailAddressVerified](../../src/Compliance.Common/Features/UserIdentities/EmailAddressVerified.cs#L6) — `bdgrz.email-address.verified` v1
-- [EmailChallengeDeliveryFailed](../../src/Compliance.Common/Features/UserIdentities/EmailChallengeDeliveryFailed.cs#L6) — `bdgrz.email-address.challenge-delivery-failed` v1
-- [EmailChallengeDeliverySent](../../src/Compliance.Common/Features/UserIdentities/EmailChallengeDeliverySent.cs#L6) — `bdgrz.email-address.challenge-delivery-sent` v1
 - [EmailChallengeIssued](../../src/Compliance.Common/Features/UserIdentities/EmailChallengeIssued.cs#L6) — `bdgrz.email-address.challenge-issued` v1
 - [IdentityRecoveryChallengeClaimed](../../src/Compliance.Common/Features/UserIdentities/IdentityRecoveryChallengeClaimed.cs#L7) — `bdgrz.identity-recovery.challenge-claimed` v1
 - [IdentityRecoveryChallengeCompleted](../../src/Compliance.Common/Features/UserIdentities/IdentityRecoveryChallengeCompleted.cs#L7) — `bdgrz.identity-recovery.challenge-completed` v1

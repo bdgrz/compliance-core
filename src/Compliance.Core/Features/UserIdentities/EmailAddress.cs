@@ -20,14 +20,14 @@ public sealed class EmailAddress : Aggregate
     Uuid? _owner;
     bool _isVerified;
     Uuid? _challengeId;
+    EmailChallengeIssued? _issued;
+    IdentityRecoveryChallengeIssued? _recoveryIssued;
     string? _tokenHash;
-    string _deliveryStatus = "not_issued";
     DateTimeOffset _expiresAt;
     Uuid? _recoveryChallengeId;
     string? _recoveryTokenHash;
     string? _recoveryTokenKeyId;
     DateTimeOffset _recoveryExpiresAt;
-    string _recoveryDeliveryStatus = "not_issued";
     bool _recoveryCompleted;
 
     public EmailAddress(string address)
@@ -57,8 +57,6 @@ public sealed class EmailAddress : Aggregate
         Acceptance = new NativeAcceptance(selectedLogicalId, selectedCommandKind);
         On<EmailAddressReserved>(Apply);
         On<EmailChallengeIssued>(Apply);
-        On<EmailChallengeDeliverySent>(Apply);
-        On<EmailChallengeDeliveryFailed>(Apply);
         On<EmailAddressVerified>(Apply);
         On<IdentityRecoveryChallengeIssued>(Apply);
         On<IdentityRecoveryChallengeClaimed>(Apply);
@@ -78,11 +76,15 @@ public sealed class EmailAddress : Aggregate
     public bool IsVerified => _isVerified;
     public Uuid? Owner => _owner;
     public Uuid? CurrentChallengeId => _challengeId;
+
+    /// <summary>The accepted fact of the current verification challenge; the delivery process verifies its source against it.</summary>
+    public EmailChallengeIssued? CurrentIssuedFact => _issued;
+
+    /// <summary>The accepted fact of the current recovery challenge; the delivery process verifies its source against it.</summary>
+    public IdentityRecoveryChallengeIssued? CurrentRecoveryIssuedFact => _recoveryIssued;
     public DateTimeOffset ChallengeExpiresAt => _expiresAt;
-    public string DeliveryStatus => _deliveryStatus;
     public Uuid? CurrentRecoveryChallengeId => _recoveryChallengeId;
     public DateTimeOffset RecoveryChallengeExpiresAt => _recoveryExpiresAt;
-    public string RecoveryDeliveryStatus => _recoveryDeliveryStatus;
     public string? RecoveryTokenKeyId => _recoveryTokenKeyId;
     public Uuid? RecoveryOldIdentityId => CurrentClaim?.OldIdentityId;
     public Uuid? RecoveryReplacementIdentityId => CurrentClaim?.ReplacementIdentityId;
@@ -98,35 +100,57 @@ public sealed class EmailAddress : Aggregate
     /// <summary>True when the original email challenge of the recovery was completed.</summary>
     public bool IsRecoveryChallengeCompleted(Uuid challengeId) => _completedRecoveries.Contains(challengeId);
 
-    /// <summary>True while an unexpired recovery challenge is outstanding and may not be issued again.</summary>
-    public bool HasOutstandingRecoveryChallenge(DateTimeOffset now) =>
-        _recoveryChallengeId is not null && !_recoveryCompleted && now < _recoveryExpiresAt &&
-        _recoveryDeliveryStatus != "failed";
+    /// <summary>
+    ///     True while an unexpired recovery challenge is outstanding and may not be issued again. A challenge whose
+    ///     delivery definitively failed is not outstanding: <paramref name="deliveryFailed" /> is the delivery process's
+    ///     terminal failure of that challenge, which no longer lives on this stream.
+    /// </summary>
+    public bool HasOutstandingRecoveryChallenge(DateTimeOffset now, bool deliveryFailed = false) =>
+        _recoveryChallengeId is not null && !_recoveryCompleted && now < _recoveryExpiresAt && !deliveryFailed;
 
-    public EmailChallengeStatusView GetChallengeStatus(DateTimeOffset now) =>
+    /// <summary>
+    ///     The status of the current verification challenge. <paramref name="deliveryStatus" /> is the delivery
+    ///     process's view of the challenge ("pending", "delivered" or "failed"); delivery attempts are not facts of this
+    ///     stream.
+    /// </summary>
+    public EmailChallengeStatusView GetChallengeStatus(DateTimeOffset now, string deliveryStatus = "pending") =>
         new(_isVerified ? "verified" : _challengeId is null ? "not_issued" :
-                now >= _expiresAt ? "expired" : _deliveryStatus,
+                now >= _expiresAt ? "expired" : deliveryStatus,
             _challengeId is null ? null : _expiresAt);
 
-    public Result IssueChallenge(Uuid userId, Uuid challengeId, string tokenHash, DateTimeOffset expiresAt,
-        DateTimeOffset now, string? tokenKeyId = null)
+    /// <summary>Checks a verification challenge issuance against hydrated state without raising anything.</summary>
+    public Result PrepareIssueChallenge(Uuid userId, Uuid challengeId, string tokenHash, DateTimeOffset expiresAt,
+        DateTimeOffset now, string tokenKeyId)
     {
         if (_owner != userId)
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "The email address is not owned by this user."));
-        if (_challengeId == challengeId)
-            return Result.Success;
         if (_isVerified)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The email address is already verified."));
-        if (challengeId == Uuid.Empty || tokenHash.Length != 64 || expiresAt <= now)
+        if (challengeId == Uuid.Empty || tokenHash.Length != 64 || expiresAt <= now ||
+            string.IsNullOrWhiteSpace(tokenKeyId))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "A valid future challenge is required."));
+        return challengeId == _challengeId || challengeId == _recoveryChallengeId || _claims.ContainsKey(challengeId)
+            ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The challenge identity is already used on this address."))
+            : Result.Success;
+    }
 
-        RaiseEvent(new EmailChallengeIssued(userId, Known, challengeId, tokenHash, expiresAt, tokenKeyId));
+    /// <summary>Accepts the issuance as the native fact of <paramref name="operation" />.</summary>
+    public Result IssueChallenge(OperationProvenance operation, ImmutableContentRef firstResponse, Uuid userId,
+        Uuid challengeId, string tokenHash, DateTimeOffset expiresAt, DateTimeOffset now, string tokenKeyId)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        var prepared = PrepareIssueChallenge(userId, challengeId, tokenHash, expiresAt, now, tokenKeyId);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new EmailChallengeIssued(userId, Known, challengeId, tokenHash, expiresAt, tokenKeyId, operation,
+            firstResponse, null));
         return Result.Success;
     }
 
     /// <summary>Checks a recovery challenge issuance against hydrated state without raising anything.</summary>
     public Result PrepareIssueRecoveryChallenge(Uuid userId, Uuid challengeId, string tokenHash,
-        DateTimeOffset expiresAt, DateTimeOffset now, string tokenKeyId)
+        DateTimeOffset expiresAt, DateTimeOffset now, string tokenKeyId, bool outstandingDeliveryFailed = false)
     {
         if (_owner != userId || !_isVerified)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -138,7 +162,7 @@ public sealed class EmailAddress : Aggregate
         if (challengeId == _challengeId || _claims.ContainsKey(challengeId))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The challenge identity is already used on this address."));
-        return HasOutstandingRecoveryChallenge(now)
+        return HasOutstandingRecoveryChallenge(now, outstandingDeliveryFailed)
             ? Result.Failure(OutstandingRecoveryChallenge)
             : Result.Success;
     }
@@ -146,10 +170,11 @@ public sealed class EmailAddress : Aggregate
     /// <summary>Accepts the recovery challenge issuance as the native fact of <paramref name="operation" />.</summary>
     public Result IssueRecoveryChallenge(OperationProvenance operation, ImmutableContentRef firstResponse,
         Uuid userId, Uuid challengeId, string tokenHash, DateTimeOffset expiresAt, DateTimeOffset now,
-        string tokenKeyId)
+        string tokenKeyId, bool outstandingDeliveryFailed = false)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        var prepared = PrepareIssueRecoveryChallenge(userId, challengeId, tokenHash, expiresAt, now, tokenKeyId);
+        var prepared = PrepareIssueRecoveryChallenge(userId, challengeId, tokenHash, expiresAt, now, tokenKeyId,
+            outstandingDeliveryFailed);
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new IdentityRecoveryChallengeIssued(userId, Known, challengeId, tokenHash, expiresAt, tokenKeyId,
@@ -250,92 +275,86 @@ public sealed class EmailAddress : Aggregate
         return Result.Success;
     }
 
-    public Result RecordDeliverySent(Uuid challengeId, DateTimeOffset sentAt)
-    {
-        if (_recoveryChallengeId == challengeId)
-            return RecordRecoveryDeliverySent(challengeId, sentAt);
-        if (_challengeId != challengeId || _isVerified || _deliveryStatus == "delivered")
-            return Result.Success;
-        if (_deliveryStatus == "failed")
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The failed email challenge must be reissued."));
-        RaiseEvent(new EmailChallengeDeliverySent(challengeId, sentAt));
-        return Result.Success;
-    }
-
-    public Result RecordDeliveryFailure(Uuid challengeId, string failureCode, DateTimeOffset failedAt)
-    {
-        if (_recoveryChallengeId == challengeId)
-            return RecordRecoveryDeliveryFailure(challengeId, failureCode, failedAt);
-        if (_challengeId != challengeId || _isVerified || _deliveryStatus is "failed" or "delivered")
-            return Result.Success;
-        if (failureCode is not ("delivery_failed" or "key_unavailable"))
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "An email delivery failure code is required."));
-        RaiseEvent(new EmailChallengeDeliveryFailed(challengeId, failureCode, failedAt));
-        return Result.Success;
-    }
-
-    public Result RecordRecoveryDeliverySent(Uuid challengeId, DateTimeOffset sentAt)
-    {
-        if (_recoveryChallengeId != challengeId || _recoveryDeliveryStatus == "delivered")
-            return Result.Success;
-        if (_recoveryDeliveryStatus == "failed")
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The failed identity recovery challenge must be reissued."));
-        RaiseEvent(new EmailChallengeDeliverySent(challengeId, sentAt));
-        return Result.Success;
-    }
-
-    public Result RecordRecoveryDeliveryFailure(Uuid challengeId, string failureCode, DateTimeOffset failedAt)
-    {
-        if (_recoveryChallengeId != challengeId || _recoveryDeliveryStatus is "failed" or "delivered")
-            return Result.Success;
-        if (failureCode is not ("delivery_failed" or "key_unavailable"))
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "An email delivery failure code is required."));
-        RaiseEvent(new EmailChallengeDeliveryFailed(challengeId, failureCode, failedAt));
-        return Result.Success;
-    }
-
-    public Result CompleteChallenge(Uuid userId, string token, DateTimeOffset now)
+    /// <summary>
+    ///     Checks a verification against hydrated state without raising anything: the challenge must be the current one
+    ///     of the owner, unexpired, and the token must match its hash. The token is compared and never retained.
+    /// </summary>
+    public Result PrepareCompleteChallenge(Uuid userId, Uuid challengeId, string token, DateTimeOffset now)
     {
         if (string.IsNullOrWhiteSpace(token))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "A verification challenge is required."));
-        if (_owner != userId || _challengeId is null || _tokenHash is null)
+        if (_owner != userId || _challengeId is null || _challengeId != challengeId || _tokenHash is null)
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "No verification challenge is available."));
         if (now >= _expiresAt)
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "The verification challenge has expired."));
+        return TokenMatches(token)
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Validation, "The verification challenge is invalid."));
+    }
 
-        var suppliedHash = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-        var expectedHash = Convert.FromHexString(_tokenHash);
-        if (!CryptographicOperations.FixedTimeEquals(suppliedHash, expectedHash))
-            return Result.Failure(new RequestError(RequestErrorKind.Validation, "The verification challenge is invalid."));
+    /// <summary>
+    ///     Checks the token of an exact retry of an accepted verification. Only the challenge and its token are
+    ///     compared; the original acceptance already settled expiry.
+    /// </summary>
+    public Result PrepareReplayCompleteChallenge(Uuid userId, Uuid challengeId, string token) =>
+        string.IsNullOrWhiteSpace(token)
+            ? Result.Failure(new RequestError(RequestErrorKind.Validation, "A verification challenge is required."))
+            : _owner != userId || _challengeId != challengeId || _tokenHash is null
+                ? Result.Failure(new RequestError(RequestErrorKind.Forbidden, "No verification challenge is available."))
+                : TokenMatches(token)
+                    ? Result.Success
+                    : Result.Failure(new RequestError(RequestErrorKind.Validation,
+                        "The verification challenge is invalid."));
 
-        if (!_isVerified)
-            RaiseEvent(new EmailAddressVerified(userId, Known, _challengeId.Value));
+    /// <summary>Accepts the verification as the native fact of <paramref name="operation" />.</summary>
+    public Result CompleteChallenge(OperationProvenance operation, ImmutableContentRef firstResponse, Uuid userId,
+        Uuid challengeId, string token, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        var prepared = PrepareCompleteChallenge(userId, challengeId, token, now);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new EmailAddressVerified(userId, Known, challengeId, operation, firstResponse, null));
         return Result.Success;
     }
 
     /// <summary>
-    ///     Reserves the address for the user. A non-negative <paramref name="expectedRevision" /> must equal the
-    ///     number of facts the address holds; a negative revision is unconstrained and reserved for system callers.
+    ///     Checks a reservation without raising anything. A non-negative <paramref name="expectedRevision" /> must equal
+    ///     the number of facts the address holds; a negative revision is unconstrained and reserved for system callers.
+    ///     An address already reserved for the same user is a success that appends nothing, see
+    ///     <see cref="IsReservedFor" />.
     /// </summary>
-    public Result Reserve(Uuid userId, long expectedRevision = -1)
+    public Result PrepareReserve(Uuid userId, long expectedRevision = -1)
     {
         if (userId == Uuid.Empty)
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "An email owner is required."));
         if (expectedRevision >= 0 && (ulong)expectedRevision != Version)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The email address changed since it was read."));
+        return _owner is not null && _owner != userId
+            ? Result.Failure(new RequestError(RequestErrorKind.Conflict, "The email address belongs to another user."))
+            : Result.Success;
+    }
 
+    /// <summary>True when the address is already reserved for <paramref name="userId" />; reserving it again appends nothing.</summary>
+    public bool IsReservedFor(Uuid userId) => _owner == userId;
+
+    /// <summary>Accepts the first reservation of the address as the native fact of <paramref name="operation" />.</summary>
+    public Result Reserve(OperationProvenance operation, ImmutableContentRef firstResponse, Uuid userId,
+        long expectedRevision = -1)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        var prepared = PrepareReserve(userId, expectedRevision);
+        if (!prepared.IsSuccess)
+            return prepared;
         if (_owner is null)
-            RaiseEvent(new EmailAddressReserved(userId, Known));
-        else if (_owner != userId)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The email address belongs to another user."));
-
+            RaiseEvent(new EmailAddressReserved(userId, Known, operation, firstResponse, null));
         return Result.Success;
     }
+
+    bool TokenMatches(string token) =>
+        CryptographicOperations.FixedTimeEquals(SHA256.HashData(Encoding.UTF8.GetBytes(token)),
+            Convert.FromHexString(_tokenHash!));
 
     void Learn(string address)
     {
@@ -354,6 +373,7 @@ public sealed class EmailAddress : Aggregate
 
     void Apply(EmailAddressReserved reserved)
     {
+        Acceptance.Observe(reserved);
         Learn(reserved.EmailAddress);
         if (_owner is not null || reserved.UserId == Uuid.Empty)
             throw new InvalidOperationException("The email reservation does not match its address.");
@@ -362,37 +382,19 @@ public sealed class EmailAddress : Aggregate
 
     void Apply(EmailChallengeIssued issued)
     {
+        Acceptance.Observe(issued);
         Learn(issued.EmailAddress);
         if (_owner != issued.UserId || _isVerified)
             throw new InvalidOperationException("The email challenge does not match its owner and address.");
         _challengeId = issued.ChallengeId;
+        _issued = issued;
         _tokenHash = issued.TokenHash;
         _expiresAt = issued.ExpiresAt;
-        _deliveryStatus = "pending";
-    }
-
-    void Apply(EmailChallengeDeliverySent sent)
-    {
-        if (_challengeId == sent.ChallengeId)
-            _deliveryStatus = "delivered";
-        else if (_recoveryChallengeId == sent.ChallengeId)
-            _recoveryDeliveryStatus = "delivered";
-        else
-            throw new InvalidOperationException("The email delivery outcome is stale.");
-    }
-
-    void Apply(EmailChallengeDeliveryFailed failed)
-    {
-        if (_challengeId == failed.ChallengeId)
-            _deliveryStatus = "failed";
-        else if (_recoveryChallengeId == failed.ChallengeId)
-            _recoveryDeliveryStatus = "failed";
-        else
-            throw new InvalidOperationException("The email delivery outcome is stale.");
     }
 
     void Apply(EmailAddressVerified verified)
     {
+        Acceptance.Observe(verified);
         Learn(verified.EmailAddress);
         if (_owner != verified.UserId || _challengeId != verified.ChallengeId)
             throw new InvalidOperationException("The email verification does not match its owner and address.");
@@ -411,8 +413,8 @@ public sealed class EmailAddress : Aggregate
         _recoveryChallengeId = issued.ChallengeId;
         _recoveryTokenHash = issued.TokenHash;
         _recoveryTokenKeyId = issued.TokenKeyId;
+        _recoveryIssued = issued;
         _recoveryExpiresAt = issued.ExpiresAt;
-        _recoveryDeliveryStatus = "pending";
         _recoveryCompleted = false;
     }
 

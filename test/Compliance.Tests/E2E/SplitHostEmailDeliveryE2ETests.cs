@@ -73,16 +73,17 @@ public sealed class SplitHostEmailDeliveryE2ETests(BrokerStackFixture broker)
             var firstAttempt = Assert.Single(firstDelivery.Attempts.Distinct());
             var secondAttempt = Assert.Single(retryDelivery.Attempts.Distinct());
             Assert.Equal(firstAttempt, secondAttempt);
-            ActorReference? deliveryActor = null;
-            await foreach (var record in secondWorker.Services.GetRequiredService<IEventStore>()
-                               .ReadAsync(new EmailAddress(email).Stream, 0,
-                                   CancellationToken.None))
-            {
-                if (record.Event is EmailChallengeDeliverySent)
-                    deliveryActor = ActorReference.FromSystemMetadata(record.Event.Metadata);
-            }
-            Assert.Equal(ActorReference.ForSystemProcess("reactor:EmailChallengeDeliveryV1",
-                "EmailChallengeDeliveryV1"), deliveryActor);
+            // The delivery receipt is process state, not a fact of the address stream: the unacknowledged first
+            // attempt was reconciled as unknown before the identical message was sent again.
+            var record = await secondWorker.Services.GetRequiredService<IEmailChallengeDeliveryLedger>()
+                .ReadAsync(Uuid.Parse(challengeId.ToString(), System.Globalization.CultureInfo.InvariantCulture), CancellationToken.None);
+            Assert.NotNull(record);
+            Assert.Equal(2, record.Attempts.Count);
+            Assert.Equal(EmailChallengeFailureCertainty.Unknown, record.Attempts[0].Outcome);
+            Assert.Equal(EmailChallengeDeliveryAttempt.Sent, record.Attempts[1].Outcome);
+            await foreach (var fact in secondWorker.Services.GetRequiredService<IEventStore>()
+                               .ReadAsync(new EmailAddress(email).Stream, 0, CancellationToken.None))
+                Assert.DoesNotContain("Delivery", fact.Event.GetType().Name, StringComparison.Ordinal);
             using var denied = await owner.GetAsync(
                 $"/api/v1/users/{Guid.NewGuid()}/email-addresses/{email}/challenges/status");
             Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);

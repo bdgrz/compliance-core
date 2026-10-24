@@ -45,6 +45,8 @@ sealed class IdentityRecoveryHost : IAsyncDisposable
         services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(new PersistenceKvClient(kv)));
         IProcessRecordStore records = new FitzKvProcessRecordStore(new PersistenceKvClient(kv));
         services.AddSingleton(store?.Invoke(records) ?? records);
+        Ledger = new FitzKvEmailChallengeDeliveryLedger(new PersistenceKvClient(kv));
+        services.AddSingleton<IEmailChallengeDeliveryLedger>(Ledger);
         Delivery = new RecordingDelivery();
         services.AddSingleton<IEmailChallengeDelivery>(Delivery);
         services.AddSingleton(IdentityRecoveryProcess.Definition);
@@ -74,6 +76,8 @@ sealed class IdentityRecoveryHost : IAsyncDisposable
     }
 
     public ProcessTestHost.ManualClock Clock { get; }
+
+    public IEmailChallengeDeliveryLedger Ledger { get; }
 
     public ServiceProvider Provider { get; }
 
@@ -141,9 +145,15 @@ sealed class IdentityRecoveryHost : IAsyncDisposable
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "oidc"));
     }
 
-    StartIdentityRecoveryHandler StartHandler() => new(Operations(), Reader, _keys, Content, Clock);
+    StartIdentityRecoveryHandler StartHandler() => new(Operations(), Reader, Ledger, _keys, Content, Clock);
 
     CompleteIdentityRecoveryHandler CompleteHandler() => new(Operations(), Reader, Content, Clock);
+
+    public IssueEmailChallengeHandler IssueEmailHandler() => new(Operations(), _keys, Content, Clock);
+
+    public CompleteEmailChallengeHandler VerifyEmailHandler() => new(Operations(), Reader, Content, Clock);
+
+    public ReserveEmailHandler ReserveHandler() => new(Operations(), Reader, Content, Clock);
 
     NativeOperationExecutor Operations() =>
         new(Reader, Provider.GetRequiredService<IAggregateExecutor>(), Content);

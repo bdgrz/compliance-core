@@ -41,32 +41,32 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 461,
-    "factsWithReducer": 439,
-    "factsWithAggregateEmitter": 432,
+    "domainEventContracts": 458,
+    "factsWithReducer": 436,
+    "factsWithAggregateEmitter": 430,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
-    "legacyReducerOnlyFacts": 2,
+    "legacyReducerOnlyFacts": 1,
     "aggregateTypes": 111,
     "aggregateTypesWithCommandPath": 108,
-    "requestContracts": 703,
-    "commonRequestContracts": 701,
+    "requestContracts": 707,
+    "commonRequestContracts": 705,
     "requestClassificationCounts": {
       "command": 347,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 68,
+      "internal_reaction": 72,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 644,
+    "registeredCoreHandlerRegistrations": 648,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 42,
+    "unwiredAggregateProducerOperations": 38,
     "unwiredAggregateProducerClassifications": {
       "no_registered_request_route": 17,
-      "direct_reactor_executor": 6,
       "legacy_emitter_to_prune": 9,
+      "direct_reactor_executor": 2,
       "direct_processor_executor": 10
     },
     "factReplayGuardRows": 7
@@ -3156,6 +3156,9 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/UserIdentities/EmailAddressTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeTransportTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzEmailAddressDirectoryTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -3175,42 +3178,11 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/EmailVerificationE2ETests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeTransportTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzEmailAddressDirectoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationWebTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "EmailChallengeDeliveryFailed",
-      "contract": "src/Compliance.Common/Features/UserIdentities/EmailChallengeDeliveryFailed.cs",
-      "reducers": [
-        {
-          "aggregate": "EmailAddress",
-          "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
-      ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "EmailChallengeDeliverySent",
-      "contract": "src/Compliance.Common/Features/UserIdentities/EmailChallengeDeliverySent.cs",
-      "reducers": [
-        {
-          "aggregate": "EmailAddress",
-          "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/SplitHostEmailDeliveryE2ETests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3228,8 +3200,9 @@
         "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeIssuedSerializationTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryReactorTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeTransportTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4222,7 +4195,6 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/UserIdentities/EmailAddressTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryReactorTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -7187,8 +7159,9 @@
         "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -7206,7 +7179,9 @@
         "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -7223,7 +7198,11 @@
       "emitters": [
         "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -7240,8 +7219,9 @@
         "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -7259,26 +7239,12 @@
         "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
-    },
-    {
-      "fact": "TenantIdentityProviderTestedV2",
-      "contract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestedV2.cs",
-      "reducers": [
-        {
-          "aggregate": "TenantIdentityProvider",
-          "source": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs"
-        }
-      ],
-      "emitters": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs"
-      ],
-      "disposition": "legacy_replay",
-      "note": "Reducer retained for compatibility/replay; there is no current producer."
     },
     {
       "fact": "TenantInvitationAccepted",
@@ -7559,16 +7525,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/BrowserE2EHostIntegrationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/BuiltInRoleCatalogMigrationReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ApplicationInventoryGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ComplianceRecordRestrictedAccessGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/EvidenceRedactionPermissionsReactorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/WorkforceGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/WorkforceRestrictedFieldGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TechnologyInventoryGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/WorkforcePersonalDetailsGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ApplicationImportGrantBackfillReactorTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderAuthorizationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewInfrastructureTests.cs",
         "test/Compliance.Tests/Features/Tenants/FitzTenantDirectoryReaderTests.cs",
@@ -9566,8 +9523,6 @@
       "appliedFacts": [
         "EmailAddressReserved",
         "EmailAddressVerified",
-        "EmailChallengeDeliveryFailed",
-        "EmailChallengeDeliverySent",
         "EmailChallengeIssued",
         "IdentityRecoveryChallengeClaimed",
         "IdentityRecoveryChallengeCompleted",
@@ -9596,9 +9551,10 @@
         "test/Compliance.Tests/Features/Tenants/TenantInvitationDirectoryTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantInvitationTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantPagedReadContractTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/CompleteEmailChallengeConcurrencyTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailAddressTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryReactorTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeTransportTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailReservationReactorTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzEmailAddressDirectoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
@@ -11501,7 +11457,6 @@
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementLifecycleTests.cs",
         "test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs",
         "test/Compliance.Tests/Features/AccessControl/WaiverManagementIndependenceTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
@@ -11561,7 +11516,6 @@
         "TenantIdentityProviderCredentialsRotated",
         "TenantIdentityProviderDisabled",
         "TenantIdentityProviderTested",
-        "TenantIdentityProviderTestedV2",
         "TenantIdentityProviderTestRequested"
       ],
       "commandRequests": [
@@ -11574,7 +11528,8 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -13574,15 +13529,7 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ApplicationInventoryGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ComplianceRecordRestrictedAccessGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/EvidenceRedactionPermissionsReactorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/WorkforceGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/WorkforceRestrictedFieldGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TechnologyInventoryGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/WorkforcePersonalDetailsGrantBackfillReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ApplicationImportGrantBackfillReactorTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderAuthorizationTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewInfrastructureTests.cs"
       ],
@@ -13670,7 +13617,6 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/BuiltInRoleCatalogMigrationReactorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs"
       ],
       "note": ""
@@ -14679,7 +14625,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/CompleteEmailChallengeConcurrencyTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeTransportTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs"
       ],
       "note": ""
     },
@@ -14832,7 +14779,7 @@
     {
       "request": "ConfigureTenantIdentityProvider",
       "contract": "src/Compliance.Common/Features/UserIdentities/ConfigureTenantIdentityProvider.cs",
-      "interfaces": "IRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -14850,7 +14797,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "note": ""
     },
@@ -15696,7 +15644,6 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/BuiltInRoleCatalogMigrationReactorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestClientRbacManagementWallTests.cs"
       ],
@@ -15947,7 +15894,7 @@
     {
       "request": "DisableTenantIdentityProvider",
       "contract": "src/Compliance.Common/Features/UserIdentities/DisableTenantIdentityProvider.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -15965,7 +15912,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "note": ""
     },
@@ -19383,7 +19331,10 @@
         "EmailAddress"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeTransportTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs"
+      ],
       "note": ""
     },
     {
@@ -24917,7 +24868,7 @@
     {
       "request": "RecordTenantIdentityProviderTestResult",
       "contract": "src/Compliance.Common/Features/UserIdentities/RecordTenantIdentityProviderTestResult.cs",
-      "interfaces": "IRequest",
+      "interfaces": "IRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -24935,7 +24886,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "note": ""
     },
@@ -25586,8 +25538,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/RoleCleanupReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/RemoveRolePermissionRequestScenarioTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/RemoveRolePermissionRequestScenarioTests.cs"
       ],
       "note": ""
     },
@@ -25645,8 +25596,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/RoleCleanupReactorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/RemoveTeamRoleRequestScenarioTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/TenantManagerInvariantTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/RemoveTeamRoleRequestScenarioTests.cs"
       ],
       "note": ""
     },
@@ -25671,7 +25621,6 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/BuiltInRoleCatalogMigrationReactorTests.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs"
       ],
       "note": ""
@@ -25821,6 +25770,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeTransportTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailCommandIdentityTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailReservationReactorTests.cs"
       ],
       "note": ""
@@ -27589,7 +27540,7 @@
     {
       "request": "RotateTenantIdentityProviderCredentials",
       "contract": "src/Compliance.Common/Features/UserIdentities/RotateTenantIdentityProviderCredentials.cs",
-      "interfaces": "IRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27607,7 +27558,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "note": ""
     },
@@ -28345,7 +28297,7 @@
     {
       "request": "TestTenantIdentityProvider",
       "contract": "src/Compliance.Common/Features/UserIdentities/TestTenantIdentityProvider.cs",
-      "interfaces": "IRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -28363,7 +28315,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/TenantIdentityProviderTransportTests.cs"
       ],
       "note": ""
     },
@@ -28781,6 +28734,94 @@
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
       ],
       "note": "Process receiver: settles the protection of one slot after completion or rejection. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "DeliverEmailChallenge",
+      "contract": "src/Compliance.Common/Features/UserIdentities/DeliverEmailChallenge.cs",
+      "interfaces": "IEmailChallengeDeliveryReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "DeliverEmailChallengeHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/DeliverEmailChallengeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "EmailChallengeDeliveryWorker"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs"
+      ],
+      "note": "Process receiver: delivers a verification challenge under the at-least-once challenge policy and records each attempt through the typed outcome commands; it mutates no aggregate. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "DeliverRecoveryChallenge",
+      "contract": "src/Compliance.Common/Features/UserIdentities/DeliverRecoveryChallenge.cs",
+      "interfaces": "IEmailChallengeDeliveryReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "DeliverRecoveryChallengeHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/DeliverRecoveryChallengeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "EmailChallengeDeliveryWorker"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs"
+      ],
+      "note": "Process receiver: delivers an identity recovery challenge under the at-least-once challenge policy and records each attempt through the typed outcome commands; it mutates no aggregate. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "RecordEmailChallengeDeliveryFailed",
+      "contract": "src/Compliance.Common/Features/UserIdentities/RecordEmailChallengeDeliveryFailed.cs",
+      "interfaces": "IEmailChallengeDeliveryOutcome",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RecordEmailChallengeDeliveryFailedHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/RecordEmailChallengeDeliveryFailedHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs"
+      ],
+      "note": "Typed delivery outcome: one attempt failed, definitely or with an unknown result. Technical state of the delivery ledger, not a fact of the address stream. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "RecordEmailChallengeDeliverySent",
+      "contract": "src/Compliance.Common/Features/UserIdentities/RecordEmailChallengeDeliverySent.cs",
+      "interfaces": "IEmailChallengeDeliveryOutcome",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RecordEmailChallengeDeliverySentHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/RecordEmailChallengeDeliverySentHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs"
+      ],
+      "note": "Typed delivery outcome: the relay accepted one attempt. Technical state of the delivery ledger, not a fact of the address stream; an outcome of a replaced attempt is ignored. System principal only; no HTTP/MCP route."
     }
   ],
   "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",
@@ -28936,82 +28977,6 @@
       "migrationDisposition": "retain_until_verified_stream_migration",
       "callerSources": [],
       "methodArgumentCount": 8
-    },
-    {
-      "fact": "EmailChallengeDeliveryFailed",
-      "aggregate": "EmailAddress",
-      "method": "RecordDeliveryFailure",
-      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
-      "classification": "direct_reactor_executor",
-      "ownerIssue": null,
-      "followUpIssueNeeded": true,
-      "followUpReason": "The active email challenge flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
-          "methods": [
-            "RecordDeliveryFailure"
-          ]
-        }
-      ],
-      "methodArgumentCount": 3
-    },
-    {
-      "fact": "EmailChallengeDeliveryFailed",
-      "aggregate": "EmailAddress",
-      "method": "RecordRecoveryDeliveryFailure",
-      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
-      "classification": "direct_reactor_executor",
-      "ownerIssue": null,
-      "followUpIssueNeeded": true,
-      "followUpReason": "The active email recovery flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
-          "methods": [
-            "RecordRecoveryDeliveryFailure"
-          ]
-        }
-      ],
-      "methodArgumentCount": 3
-    },
-    {
-      "fact": "EmailChallengeDeliverySent",
-      "aggregate": "EmailAddress",
-      "method": "RecordDeliverySent",
-      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
-      "classification": "direct_reactor_executor",
-      "ownerIssue": null,
-      "followUpIssueNeeded": true,
-      "followUpReason": "The active email challenge flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
-          "methods": [
-            "RecordDeliverySent"
-          ]
-        }
-      ],
-      "methodArgumentCount": 2
-    },
-    {
-      "fact": "EmailChallengeDeliverySent",
-      "aggregate": "EmailAddress",
-      "method": "RecordRecoveryDeliverySent",
-      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
-      "classification": "direct_reactor_executor",
-      "ownerIssue": null,
-      "followUpIssueNeeded": true,
-      "followUpReason": "The active email recovery flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
-          "methods": [
-            "RecordRecoveryDeliverySent"
-          ]
-        }
-      ],
-      "methodArgumentCount": 2
     },
     {
       "fact": "FindingAcceptanceLinked",

@@ -2318,8 +2318,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListMyTenants, Page<TenantMembershipSummary>>("/api/v1/tenants/mine")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapPortiaPost<DisableTenantIdentityProvider>(
-            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable")
+    app.MapPortiaPut<DisableTenantIdentityProvider>(
+            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Identity federation");
     app.MapPortiaPost<DefineTeam>("/api/v1/tenants/{tenant_id}/teams/{team_id}")
@@ -2390,16 +2390,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListAccessGrants, AccessGrantSetView>("/api/v1/tenants/{tenant_id}/access-grants")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Access grants");
-    app.MapPortiaPost<ConfigureTenantIdentityProvider>(
-            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}")
+    app.MapPortiaPut<ConfigureTenantIdentityProvider>(
+            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Identity federation");
-    app.MapPortiaPost<TestTenantIdentityProvider>(
-            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/tests")
+    app.MapPortiaPut<TestTenantIdentityProvider>(
+            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/tests/{test_key}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Identity federation");
-    app.MapPortiaPost<RotateTenantIdentityProviderCredentials>(
-            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations")
+    app.MapPortiaPut<RotateTenantIdentityProviderCredentials>(
+            "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Identity federation");
     app.MapPortiaPost<CreateAuditPackage>(

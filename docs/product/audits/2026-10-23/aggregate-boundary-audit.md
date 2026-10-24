@@ -267,7 +267,7 @@ The 21 surviving baseline reactor rows retain their original source-reviewed fai
 | TenantRegistrationReactor | CHOREO-08 | 0.60 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs) |
 | TenantSelfServiceActivationReactor | — | 0.68 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantSelfServiceActivationReactor.cs) |
 | TenantSlugReactor | CHOREO-08 | 0.42 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs) |
-| EmailChallengeDeliveryReactor | CHOREO-07 | 0.62 | [source](../../../../src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs) |
+| EmailChallengeDeliveryReactor (now the root reactor of EmailChallengeDeliveryProcess; delivery receipts are ledger state, #1022 S17) | CHOREO-07, ACCESS-13 | 0.62 | [source](../../../../src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryProcess.cs) |
 | EmailReservationReactor | — | 0.52 | [source](../../../../src/Compliance.Core/Features/UserIdentities/EmailReservationReactor.cs) |
 | IdentityRecoveryNoticeReactor (replaced by the SendIdentityRecoveryNotice receiver of IdentityRecoveryProcess, #1022 S4) | CHOREO-01, CHOREO-07 | 0.58 | [source](../../../../src/Compliance.Core/Features/UserIdentities/IdentityRecoveryProcess.cs) |
 
