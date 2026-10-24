@@ -2660,6 +2660,18 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Identity federation");
+    app.MapPortiaGet<GetAuditPackage, AuditPackageView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}", endpoint => endpoint
+                .OnBind(Program.BindAuditPackageRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("package_id", PortiaHttpParameterLocation.Route, required: true))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Audit packages");
+    app.MapPortiaGet<ListAuditPackages, Page<AuditPackageSummaryView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Audit packages");
     app.MapPortiaPut<CreateAuditPackage>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -2943,6 +2955,10 @@ static async Task RunWorkerAsync(string[] args)
 /// </summary>
 public partial class Program
 {
+    internal static GetAuditPackage BindAuditPackageRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
+        ApplicationRouteId(context, "package_id"));
+
     internal static Task PreserveApplicationHttpSchemaAsync(OpenApiOperation operation,
         OpenApiOperationTransformerContext context, CancellationToken ct)
     {
