@@ -1757,7 +1757,10 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [FirmStaffIdentityClaim](../../src/Compliance.Core/Features/AccessControl/FirmStaffIdentityClaim.cs#L11)
 - [FirmProfessionalDutyDesignation](../../src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs#L16)
 - [ProfessionalAssertionIdentityClaim](../../src/Compliance.Core/Features/AccessControl/ProfessionalAssertionIdentityClaim.cs#L15)
-- [IndependenceLedger](../../src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs#L7)
+- [ClientServiceIndependence](../../src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs#L11)
+- [ClientIndependenceDecision](../../src/Compliance.Core/Features/AccessControl/ClientIndependenceDecision.cs#L10)
+- [ServiceEngagementIndependence](../../src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs#L11)
+- [IndependenceLedger](../../src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs#L12)
 - [IndependenceRuleRatificationCatalog](../../src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs#L8)
 - [IndependenceRuleCatalog](../../src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs#L8)
 - [Member](../../src/Compliance.Core/Features/AccessControl/Member.cs#L5)
@@ -2920,22 +2923,17 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | PUT | `/api/v1/platform/firm-professional-duties/{designation_id}/assertions/{assertion_id}` | `RecordFirmProfessionalDutyDesignation` | [registration](../../src/Compliance.App/Program.cs#L632) |
 | PUT | `/api/v1/platform/firm-professional-duties/{designation_id}/assertion-revocations/{assertion_id}` | `RevokeFirmProfessionalDutyDesignation` | [registration](../../src/Compliance.App/Program.cs#L636) |
 | GET | `/api/v1/platform/firm-professional-duties` | `GetFirmProfessionalDutyCatalog` | [registration](../../src/Compliance.App/Program.cs#L640) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations` | `RecordPartnerIndependenceEvaluation` | [registration](../../src/Compliance.App/Program.cs#L644) |
-| GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-review-context` | `GetServiceEngagementPartnerReviewContext` | [registration](../../src/Compliance.App/Program.cs#L648) |
 | GET | `/api/v1/platform/firm-staff` | `GetFirmStaffDirectory` | [registration](../../src/Compliance.App/Program.cs#L652) |
 | GET | `/api/v1/tenants/{tenant_id}/firm-staff` | `ListAssignableFirmStaff` | [registration](../../src/Compliance.App/Program.cs#L656) |
-| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `CreateServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L660) |
-| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/draft` | `AmendServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L664) |
-| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}` | `ProposeServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L668) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals` | `WithdrawServiceEngagementStaffProposal` | [registration](../../src/Compliance.App/Program.cs#L672) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations` | `RevokeServiceEngagementActualStaff` | [registration](../../src/Compliance.App/Program.cs#L676) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}` | `AssignServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L680) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/create-service-engagement` | `CreateServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L660) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/amend-service-engagement/{command_id}` | `AmendServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L664) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/propose-service-engagement-staff/{command_id}` | `ProposeServiceEngagementStaff` | [registration](../../src/Compliance.App/Program.cs#L668) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals/{command_id}` | `WithdrawServiceEngagementStaffProposal` | [registration](../../src/Compliance.App/Program.cs#L672) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations/{command_id}` | `RevokeServiceEngagementActualStaff` | [registration](../../src/Compliance.App/Program.cs#L676) |
 | GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance` | `GetServiceEngagementAcceptance` | [registration](../../src/Compliance.App/Program.cs#L684) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance` | `AcceptServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L688) |
 | GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance-history` | `GetServiceEngagementAcceptanceHistory` | [registration](../../src/Compliance.App/Program.cs#L692) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}` | `AcknowledgeEngagementManagement` | [registration](../../src/Compliance.App/Program.cs#L696) |
 | GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements` | `GetEngagementManagementAcknowledgements` | [registration](../../src/Compliance.App/Program.cs#L700) |
-| POST | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure` | `CloseServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L704) |
+| PUT | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure/{command_id}` | `CloseServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L704) |
 | GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `GetServiceEngagement` | [registration](../../src/Compliance.App/Program.cs#L708) |
 | GET | `/api/v1/tenants/{tenant_id}/service-engagements` | `ListServiceEngagements` | [registration](../../src/Compliance.App/Program.cs#L712) |
 | GET | `/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/history` | `GetServiceEngagementHistory` | [registration](../../src/Compliance.App/Program.cs#L716) |
@@ -2943,8 +2941,8 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/platform/independence/rules` | `GetIndependenceRuleVersions` | [registration](../../src/Compliance.App/Program.cs#L724) |
 | PUT | `/api/v1/platform/independence/rules` | `ReviseIndependenceRules` | [registration](../../src/Compliance.App/Program.cs#L728) |
 | POST | `/api/v1/platform/independence/rules/{rule_version}/ratification` | `RatifyIndependenceRuleVersion` | [registration](../../src/Compliance.App/Program.cs#L732) |
-| PUT | `/api/v1/tenants/{tenant_id}/independence/services/{service_record_id}` | `RecordNonattestService` | [registration](../../src/Compliance.App/Program.cs#L736) |
-| PUT | `/api/v1/tenants/{tenant_id}/independence/evaluations/{evaluation_id}` | `EvaluateClientIndependence` | [registration](../../src/Compliance.App/Program.cs#L740) |
+| PUT | `/api/v1/tenants/{tenant_id}/nonattest-services/record-nonattest-service/{service_record_id}` | `RecordNonattestService` | [registration](../../src/Compliance.App/Program.cs#L736) |
+| PUT | `/api/v1/tenants/{tenant_id}/client-independence-evaluations/evaluate-client-independence/{evaluation_id}` | `EvaluateClientIndependence` | [registration](../../src/Compliance.App/Program.cs#L740) |
 | GET | `/api/v1/tenants/{tenant_id}/independence/history` | `GetClientIndependenceHistory` | [registration](../../src/Compliance.App/Program.cs#L744) |
 | PUT | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}/overlay` | `SetCriteriaTextOverlay` | [registration](../../src/Compliance.App/Program.cs#L748) |
 | PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/criteria-edition` | `SelectProgramCriteriaEdition` | [registration](../../src/Compliance.App/Program.cs#L752) |

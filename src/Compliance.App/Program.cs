@@ -681,14 +681,6 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/platform/firm-professional-duties")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
-    app.MapPortiaPost<RecordPartnerIndependenceEvaluation, PartnerIndependenceEvaluationView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Service engagements");
-    app.MapPortiaGet<GetServiceEngagementPartnerReviewContext, ServiceEngagementPartnerReviewContextView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-review-context")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Service engagements");
     app.MapPortiaGet<GetFirmStaffDirectory, FirmStaffDirectoryView>(
             "/api/v1/platform/firm-staff")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -698,34 +690,26 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
     app.MapPortiaPut<CreateServiceEngagement, ServiceEngagementView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}")
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/create-service-engagement")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
     app.MapPortiaPut<AmendServiceEngagement, ServiceEngagementView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/draft")
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/amend-service-engagement/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
     app.MapPortiaPut<ProposeServiceEngagementStaff, ServiceEngagementView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}")
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/propose-service-engagement-staff/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
-    app.MapPortiaPost<WithdrawServiceEngagementStaffProposal, ServiceEngagementView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals")
+    app.MapPortiaPut<WithdrawServiceEngagementStaffProposal, ServiceEngagementView>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
-    app.MapPortiaPost<RevokeServiceEngagementActualStaff, ServiceEngagementAcceptanceView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Service engagements");
-    app.MapPortiaPost<AssignServiceEngagementStaff, ServiceEngagementAcceptanceView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}")
+    app.MapPortiaPut<RevokeServiceEngagementActualStaff, ServiceEngagementAcceptanceView>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
     app.MapPortiaGet<GetServiceEngagementAcceptance, ServiceEngagementAcceptanceView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Service engagements");
-    app.MapPortiaPost<AcceptServiceEngagement, ServiceEngagementAcceptanceView>(
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
@@ -733,16 +717,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance-history")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
-    app.MapPortiaPost<AcknowledgeEngagementManagement, EngagementManagementAcknowledgementView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Service engagements");
     app.MapPortiaGet<GetEngagementManagementAcknowledgements, IReadOnlyList<EngagementManagementAcknowledgementView>>(
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
-    app.MapPortiaPost<CloseServiceEngagement, ServiceEngagementView>(
-            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure")
+    app.MapPortiaPut<CloseServiceEngagement, ServiceEngagementView>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
     app.MapPortiaGet<GetServiceEngagement, ServiceEngagementView>(
@@ -774,11 +754,21 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
     app.MapPortiaPut<RecordNonattestService, NonattestServiceView>(
-            "/api/v1/tenants/{tenant_id}/independence/services/{service_record_id}")
+            "/api/v1/tenants/{tenant_id}/nonattest-services/record-nonattest-service/{service_record_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
-    app.MapPortiaPut<EvaluateClientIndependence, IndependenceEvaluationView>(
-            "/api/v1/tenants/{tenant_id}/independence/evaluations/{evaluation_id}")
+    app.MapPortiaPut<EvaluateClientIndependence, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/client-independence-evaluations/evaluate-client-independence/{evaluation_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
     app.MapPortiaGet<GetClientIndependenceHistory, IndependenceHistoryView>(

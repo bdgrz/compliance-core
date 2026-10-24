@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
@@ -95,9 +96,8 @@ public sealed class FirmOperationsCompositionTests
         var other = Uuid.CreateVersion4();
         var engagement = Uuid.CreateVersion4();
         var service = Uuid.CreateVersion4();
-        var acknowledgement = Uuid.CreateVersion4();
+        var evaluation = Uuid.CreateVersion4();
         var content = new ServiceEngagementDraftContent("attest", "Synthetic scope", new DateOnly(2026, 1, 1), null, lead);
-        var http = new RequestDispatchContext(Actor, new HttpInvocation("POST", "/synthetic", "/synthetic", "synthetic"));
 
         // Act
         Assert.True((await FirmStaffFacts.RegisterThroughProcessAsync(provider, Actor,
@@ -109,16 +109,17 @@ public sealed class FirmOperationsCompositionTests
         Assert.True((await bus.SendAsync(new ReviseIndependenceRules(0, new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")], "Synthetic rule source")), Actor)).IsSuccess);
         Assert.True((await bus.SendAsync(new CreateServiceEngagement(Tenant, engagement, 0, content), Actor)).IsSuccess);
-        Assert.True((await bus.SendAsync(new AmendServiceEngagement(Tenant, engagement, 1, content with { Scope = "Revised scope" }), Actor)).IsSuccess);
-        Assert.True((await bus.SendAsync(new RecordNonattestService(Tenant, service, 2, new NonattestServiceContent(engagement,
+        Assert.True((await bus.SendAsync(new AmendServiceEngagement(Uuid.CreateVersion4(), Tenant, engagement, 1,
+            content with { Scope = "Revised scope" }), Actor)).IsSuccess);
+        Assert.True((await bus.SendAsync(new RecordNonattestService(Tenant, service, 0, new NonattestServiceContent(engagement,
             "readiness", new DateOnly(2025, 12, 1), null, [lead], false, "Synthetic client source")), Actor)).IsSuccess);
-        Assert.True((await bus.SendAsync(new EvaluateClientIndependence(Tenant, Uuid.CreateVersion4(), 3, 1, content.PeriodStart), Actor)).IsSuccess);
-        Assert.True((await bus.DispatchAsync(new AcknowledgeEngagementManagement(Tenant, engagement, acknowledgement, 4, 2,
-            [service], "I retain management responsibility."), http, CancellationToken.None)).IsSuccess);
-        Assert.True((await bus.SendAsync(new ProposeServiceEngagementStaff(Tenant, engagement, other, 5), Actor)).IsSuccess);
-        Assert.True((await bus.SendAsync(new WithdrawServiceEngagementStaffProposal(Tenant, engagement, other, 6,
+        var admitted = await bus.SendAsync(new EvaluateClientIndependence(Tenant, evaluation, 1, content.PeriodStart, 1), Actor);
+        Assert.True(admitted.IsSuccess, admitted.Error?.Message);
+        Assert.Equal(ProcessState.Completed, (await IndependenceFacts.RunPreviewProcessAsync(provider, Tenant, evaluation)).State);
+        Assert.True((await bus.SendAsync(new ProposeServiceEngagementStaff(Uuid.CreateVersion4(), Tenant, engagement, other, 2), Actor)).IsSuccess);
+        Assert.True((await bus.SendAsync(new WithdrawServiceEngagementStaffProposal(Uuid.CreateVersion4(), Tenant, engagement, other, 3,
             "Synthetic withdrawal"), Actor)).IsSuccess);
-        Assert.True((await bus.SendAsync(new CloseServiceEngagement(Tenant, engagement, 7, "Synthetic cancellation"), Actor)).IsSuccess);
+        Assert.True((await bus.SendAsync(new CloseServiceEngagement(Uuid.CreateVersion4(), Tenant, engagement, 4, "Synthetic cancellation"), Actor)).IsSuccess);
         await FirmStaffFacts.ProjectDirectoryAsync(provider);
         var directory = await bus.SendAsync(new GetFirmStaffDirectory(), Actor);
         var roster = await bus.SendAsync(new ListAssignableFirmStaff(Tenant), Actor);
@@ -128,7 +129,6 @@ public sealed class FirmOperationsCompositionTests
         var draft = await bus.SendAsync(new GetServiceEngagement(Tenant, engagement), Actor);
         var drafts = await bus.SendAsync(new ListServiceEngagements(Tenant), Actor);
         var lifecycle = await bus.SendAsync(new GetServiceEngagementHistory(Tenant, engagement), Actor);
-        var acknowledgements = await bus.SendAsync(new GetEngagementManagementAcknowledgements(Tenant, engagement), Actor);
 
         // Assert
         Assert.True(directory.IsSuccess);
@@ -137,17 +137,14 @@ public sealed class FirmOperationsCompositionTests
         Assert.Equal(2, roster.Value!.Staff.Count);
         Assert.False(Assert.Single(rules.Value!).IsRatified);
         Assert.Single(clientRules.Value!);
-        Assert.Equal(8, history.Value!.Sequence);
+        Assert.Equal(1, history.Value!.Sequence);
         Assert.Equal(service, Assert.Single(history.Value.Services).ServiceRecordId);
         Assert.True(Assert.Single(history.Value.Evaluations).ProductionAcceptanceBlocked);
         Assert.Equal("closed", draft.Value!.Status);
         Assert.False(draft.Value.ProfessionalAccessGranted);
         Assert.Single(drafts.Value!);
         Assert.Equal(5, lifecycle.Value!.Count);
-        var ack = Assert.Single(acknowledgements.Value!);
-        Assert.Equal(User, ack.UserId);
-        Assert.Equal(RbacIds.Member(Tenant, User).ToString(), ack.Actor.Id);
-        Assert.Equal(service, Assert.Single(ack.CompleteServiceRecordIds));
+        Assert.Equal(evaluation, Assert.Single(history.Value.Evaluations).EvaluationId);
     }
 
     static ServiceProvider Compose(bool member, bool permitted, string affiliation, bool platformOperator)

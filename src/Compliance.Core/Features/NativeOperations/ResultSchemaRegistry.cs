@@ -22,6 +22,10 @@ public static class ResultSchemaRegistry
             ComplianceCoreJsonContext.Default.FirmProfessionalDutyDesignationView,
         ["FirmProfessionalDutyDesignationRevoked.DesignationContent.v1"] =
             ComplianceCoreJsonContext.Default.FirmProfessionalDutyDesignationView,
+        [IndependenceContent.ServiceSchema] = ComplianceCoreJsonContext.Default.NonattestServiceView,
+        [IndependenceContent.EvaluationSchema] = ComplianceCoreJsonContext.Default.IndependenceEvaluationView,
+        [IndependenceContent.EngagementSchema] = ComplianceCoreJsonContext.Default.ServiceEngagementView,
+        [IndependenceContent.RevocationSchema] = ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceView,
     };
 
     /// <summary>Registered schema names.</summary>

@@ -7,7 +7,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Checks the existing accepted assignment path for advisory-note reads.</summary>
-sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffViews staffViews, ITenantActivity tenants,
+sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffViews staffViews,
+    ServiceEngagementViews engagements, ITenantActivity tenants,
     IProgramResourceScopeResolver programScopes, TimeProvider clock,
     ITenantMembershipDirectoryReader memberships,
     IAccessGrantPermissionAuthorizer scopedPermissions)
@@ -27,13 +28,13 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffVi
 
         var ledger = await reader.HydrateAsync(new IndependenceLedger(tenantId), ct).ConfigureAwait(false);
         var effectiveAt = clock.GetUtcNow();
-        foreach (var engagement in ledger.Engagements)
+        foreach (var acceptance in ledger.Acceptances)
         {
-            if (engagement.TenantId != tenantId || engagement.Content.Practice != "advisory" ||
-                engagement.Status != "accepted" ||
-                ledger.Acceptance(engagement.EngagementId) is not { Status: "active" } acceptance ||
+            if (await engagements.GetAsync(tenantId, acceptance.EngagementId, ct).ConfigureAwait(false)
+                    is not { } engagement || engagement.TenantId != tenantId ||
+                engagement.Content.Practice != "advisory" || acceptance.Status != "active" ||
                 acceptance.TenantId != tenantId || !acceptance.Rules.IsRatified ||
-                !ledger.IsEligibleForProfessionalAccess(engagement.EngagementId, staff.StaffMemberId,
+                !ledger.IsEligibleForProfessionalAccess(engagement, staff.StaffMemberId,
                 userId, currentRuleVersion: acceptance.Rules.Version,
                 currentDirectoryStaffRevision: staff.Revision, effectiveAt: effectiveAt))
                 continue;

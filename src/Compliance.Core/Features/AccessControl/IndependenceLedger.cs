@@ -3,142 +3,59 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-/// <summary>Serializes client-owned service facts and immutable, version-bound independence previews.</summary>
+/// <summary>
+///     The remaining legacy client ledger. Service history, previews and engagement drafts moved to
+///     <see cref="ClientServiceIndependence" />, <see cref="ClientIndependenceDecision" /> and
+///     <see cref="ServiceEngagementIndependence" />; no registered command appends to this ledger any more. It keeps
+///     only what the acceptance, actual-assignment, management-acknowledgement, partner-evaluation and directory
+///     reevaluation facts still need until their owners replace them, and it is the source of the permanent
+///     actual-assignment wall that the independence guards read.
+/// </summary>
 public sealed partial class IndependenceLedger : Aggregate
 {
     readonly Uuid _tenantId;
     readonly List<NonattestServiceView> _services = [];
-    readonly List<IndependenceEvaluationView> _evaluations = [];
     readonly Dictionary<Uuid, (string Intent, ActorReference Actor, object Response)> _decisions = [];
+    readonly Dictionary<Uuid, ServiceEngagementView> _engagements = [];
+    readonly Dictionary<Uuid, List<ServiceEngagementView>> _engagementHistory = [];
+    readonly List<EngagementAssignment> _assignmentHistory = [];
 
     public IndependenceLedger(Uuid tenantId) : base(tenantId,
         new EventStreamAddress(tenantId.ToString(), "client-independence", tenantId.ToString()))
     {
         _tenantId = tenantId;
-        InitializeEngagements();
         On<EngagementManagementAcknowledged>(Apply);
         On<ServiceEngagementAcceptanceRecorded>(Apply);
-        On<ServiceEngagementAssignmentRevoked>(Apply);
         On<ServiceEngagementStaffAssigned>(Apply);
-        On<NonattestServiceRecorded>(Apply);
-        On<ServiceIndependenceReevaluated>(Apply);
-        On<AssignmentIndependenceReevaluated>(Apply);
         On<DirectoryIndependenceReevaluated>(Apply);
-        On<ClientIndependenceEvaluated>(Apply);
         On<PartnerIndependenceEvaluationRecorded>(Apply);
     }
 
     public long Sequence { get; private set; }
 
-    public Result<NonattestServiceView> RecordService(Uuid requestId, Uuid serviceRecordId, long expectedSequence, NonattestServiceContent content,
-        ActorReference actor, DateTimeOffset recordedAt)
-    {
-        if (_tenantId == Uuid.Empty || !IndependenceRecordValidation.ValidAttribution(requestId, actor, recordedAt, "member") || serviceRecordId == Uuid.Empty || !IndependenceRecordValidation.ValidService(content))
-            return Failure<NonattestServiceView>(RequestErrorKind.Validation,
-                "A service requires an owning client, immutable identity, valid period, staff and attributed source.");
-        content = content with { FirmStaffMemberIds = Array.AsReadOnly(content.FirmStaffMemberIds.ToArray()) };
-        var request = new RecordNonattestService(_tenantId, serviceRecordId, expectedSequence, content);
-        if (Retry<NonattestServiceView>(requestId, request, actor) is { } retry)
-            return retry;
-        if (expectedSequence != Sequence || _services.Any(service => service.ServiceRecordId == serviceRecordId) ||
-            _services.Count >= 100)
-            return Failure<NonattestServiceView>(RequestErrorKind.Conflict,
-                "Reload the sequence; service identities are immutable and complete client histories are bounded to one hundred records.");
-        var service = new NonattestServiceView(_tenantId, serviceRecordId, content, actor, recordedAt);
-        var recorded = new NonattestServiceRecorded(_tenantId, requestId, expectedSequence, service);
-        if (!Fits(recorded))
-            return Failure<NonattestServiceView>(RequestErrorKind.Validation, "The service event exceeds the bounded payload.");
-        var reevaluations = PrepareSourceReevaluations(recorded);
-        if (!reevaluations.IsSuccess)
-            return Result<NonattestServiceView>.Failure(reevaluations.Error);
-        RaiseEvent(recorded);
-        foreach (var reevaluation in reevaluations.Value)
-            RaiseEvent(reevaluation);
-        return Result<NonattestServiceView>.Success(service);
-    }
+    public ServiceEngagementView? Engagement(Uuid engagementId) => _engagements.GetValueOrDefault(engagementId);
+    public IReadOnlyList<ServiceEngagementView> Engagements => Array.AsReadOnly(_engagements.Values
+        .OrderBy(engagement => engagement.EngagementId.ToString(), StringComparer.Ordinal).ToArray());
+    public IReadOnlyList<ServiceEngagementView> EngagementHistory(Uuid engagementId) =>
+        Array.AsReadOnly(_engagementHistory.GetValueOrDefault(engagementId)?.ToArray() ?? []);
 
-    public Result<IndependenceEvaluationView> Evaluate(Uuid requestId, Uuid evaluationId, long expectedSequence, IndependenceRuleVersionView version, DateOnly periodStart,
-        ActorReference actor, DateTimeOffset recordedAt)
+    public IndependenceHistoryView History() => new(_tenantId, Sequence, [], Array.AsReadOnly(_services.ToArray()), [])
     {
-        if (_tenantId == Uuid.Empty || !IndependenceRecordValidation.ValidAttribution(requestId, actor, recordedAt, "member") || evaluationId == Uuid.Empty || periodStart == DateOnly.MinValue || version is null || version.IsRatified ||
-            version.Version <= 0 || !IndependenceRecordValidation.ValidRules(version.Content))
-            return Failure<IndependenceEvaluationView>(RequestErrorKind.Validation,
-                "An evaluation requires an owning client, immutable identity, examination period and member attribution.");
-        version = IndependenceRecordValidation.Freeze(version);
-        var request = new EvaluateClientIndependence(_tenantId, evaluationId, expectedSequence, version.Version, periodStart);
-        if (Retry<IndependenceEvaluationView>(requestId, request, actor) is { } retry)
-            return retry;
-        if (expectedSequence != Sequence ||
-            _evaluations.Any(evaluation => evaluation.EvaluationId == evaluationId) || _evaluations.Count >= 100)
-            return Failure<IndependenceEvaluationView>(RequestErrorKind.Conflict,
-                "Reload the sequence; evaluations require authored rules and a bounded immutable identity.");
-        var history = _services.ToArray();
-        var source = history.Select(service => new NonattestServiceRecord(_tenantId,
-            service.Content.ServiceEngagementId, service.Content.ServiceType, service.Content.StartedOn,
-            service.Content.EndedOn, service.Content.FirmStaffMemberIds, service.Content.InvolvedManagementFunctions)).ToArray();
-        var policy = new IndependenceRuleSet(version.Version, version.Content.LookBackMonths,
-            version.Content.ServiceRules.Select(rule => new IndependenceServiceRule(rule.ServiceType,
-                Classification(rule.Classification), Classification(rule.ManagementFunctionsClassification))).ToArray());
-        var decision = IndependenceCompartments.CanAcceptAttestEngagement(_tenantId, policy,
-            source, periodStart, partnerEvaluationRecorded: false);
-        if (decision.Code is IndependenceDecisionCode.EvaluationInputInvalid or IndependenceDecisionCode.RuleSetInvalid or
-            IndependenceDecisionCode.ServiceHistoryInvalid)
-            return Failure<IndependenceEvaluationView>(RequestErrorKind.Validation,
-                "The examination date cannot be evaluated against the retained rule and service history.");
-        var considered = decision.ConsideredServices.Select(assessment => assessment.Service).ToHashSet();
-        var evaluation = new IndependenceEvaluationView(evaluationId, _tenantId, version.Version, version,
-            periodStart, WireCode(decision.Code), decision.EvaluationOutcome switch
-            {
-                IndependenceEvaluationOutcome.Compatible => "compatible",
-                IndependenceEvaluationOutcome.ConditionallyCompatible => "conditionally_compatible",
-                IndependenceEvaluationOutcome.Impaired => "impaired",
-                _ => null,
-            }, Array.AsReadOnly(history), Array.AsReadOnly(history.Where((_, index) => considered.Contains(source[index]))
-                .Select(service => service.ServiceRecordId).ToArray()), actor, recordedAt, true);
-        var evaluated = new ClientIndependenceEvaluated(_tenantId, requestId, expectedSequence, evaluation);
-        if (!Fits(evaluated))
-            return Failure<IndependenceEvaluationView>(RequestErrorKind.Validation,
-                "The complete retained evaluation exceeds the bounded event payload; history was not truncated.");
-        RaiseEvent(evaluated);
-        return Result<IndependenceEvaluationView>.Success(evaluation);
-    }
-
-    public IndependenceHistoryView History() => new(_tenantId, Sequence,
-        Array.AsReadOnly(_evaluations.Select(evaluation => evaluation.EvaluatedRules)
-            .DistinctBy(version => version.Version).OrderBy(version => version.Version).ToArray()),
-        Array.AsReadOnly(_services.ToArray()), Array.AsReadOnly(_evaluations.ToArray()))
-    {
-        SourceReevaluations = Array.AsReadOnly(_sourceReevaluations.Select(FreezeReevaluation).ToArray()),
-        AssignmentReevaluations = Array.AsReadOnly(_assignmentReevaluations.Select(FreezeAssignmentReevaluation).ToArray()),
         DirectoryReevaluations = Array.AsReadOnly(_directoryReevaluations.Select(FreezeDirectoryReevaluation).ToArray()),
         PartnerEvaluations = Array.AsReadOnly(_partnerEvaluations.ToArray())
     };
 
-    void Apply(NonattestServiceRecorded recorded)
-    {
-        Fence(recorded.TenantId, recorded.ExpectedSequence);
-        if (recorded.Service.ClientTenantId != _tenantId ||
-            _services.Any(service => service.ServiceRecordId == recorded.Service.ServiceRecordId))
-            throw new InvalidOperationException("Service identities cannot be rewritten.");
-        var service = IndependenceRecordValidation.Freeze(recorded.Service);
-        _services.Add(service);
-        _serviceSourceSequences.Add(service.ServiceRecordId, recorded.ExpectedSequence + 1);
-        Remember(recorded.RequestId, new RecordNonattestService(_tenantId, service.ServiceRecordId,
-            recorded.ExpectedSequence, service.Content), service.Actor, service);
-    }
+    static string AcceptanceDigest(ServiceEngagementAcceptanceView acceptance) =>
+        IndependenceSourceDigest.Acceptance(acceptance);
 
-    void Apply(ClientIndependenceEvaluated evaluated)
+    static ServiceEngagementAcceptanceView FreezeAcceptedSnapshot(ServiceEngagementAcceptanceView acceptance) => acceptance with
     {
-        Fence(evaluated.TenantId, evaluated.ExpectedSequence);
-        if (evaluated.Evaluation.ClientTenantId != _tenantId || !evaluated.Evaluation.ProductionAcceptanceBlocked ||
-            _evaluations.Any(evaluation => evaluation.EvaluationId == evaluated.Evaluation.EvaluationId))
-            throw new InvalidOperationException("An evaluation preview cannot grant production acceptance or rewrite history.");
-        var evaluation = IndependenceRecordValidation.Freeze(evaluated.Evaluation);
-        _evaluations.Add(evaluation);
-        Remember(evaluated.RequestId, new EvaluateClientIndependence(_tenantId, evaluation.EvaluationId,
-            evaluated.ExpectedSequence, evaluation.RuleSetVersion, evaluation.ExaminationPeriodStart),
-            evaluation.Actor, evaluation);
-    }
+        Rules = IndependenceRecordValidation.Freeze(acceptance.Rules),
+        PartnerEvaluation = FreezePartnerEvaluation(acceptance.PartnerEvaluation),
+        CompleteServiceHistory = Array.AsReadOnly(acceptance.CompleteServiceHistory.Select(IndependenceRecordValidation.Freeze).ToArray()),
+        Assignments = Array.AsReadOnly(acceptance.Assignments.ToArray()),
+        ConsideredServiceRecordIds = Array.AsReadOnly(acceptance.ConsideredServiceRecordIds.ToArray())
+    };
 
     void Fence(Uuid tenantId, long expectedSequence)
     {
@@ -163,21 +80,34 @@ public sealed partial class IndependenceLedger : Aggregate
     static bool Fits<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value,
         value!.GetType(), ComplianceCoreJsonContext.Default).Length <= 48 * 1024;
 
-    static IndependenceServiceClassification Classification(string value) => value switch
+    bool ValidMutation(Uuid requestId, Uuid engagementId, ActorReference actor, DateTimeOffset recordedAt) =>
+        _tenantId != Uuid.Empty && engagementId != Uuid.Empty &&
+        IndependenceRecordValidation.ValidAttribution(requestId, actor, recordedAt, "member");
+    static bool ValidStaff(FirmStaffMemberView staff, string practice) => ServiceEngagementRules.ValidStaff(staff, practice);
+    static bool BoundedEngagement(string value) => ServiceEngagementRules.Bounded(value);
+    static IndependenceServiceClassification Classification(string value) => IndependenceWire.Classification(value);
+
+    static EngagementPractice Practice(string value) => value switch
     {
-        "compatible" => IndependenceServiceClassification.Compatible,
-        "conditionally_compatible" => IndependenceServiceClassification.ConditionallyCompatible,
-        "impairing" => IndependenceServiceClassification.Impairing,
-        _ => throw new InvalidOperationException("An authored classification was invalid."),
+        "advisory" => EngagementPractice.Advisory,
+        "attest" => EngagementPractice.Attest,
+        _ => throw new InvalidOperationException("An engagement practice was invalid."),
     };
-    static string WireCode(IndependenceDecisionCode code) => code switch
+
+    Result<ServiceEngagementView>? AssignmentFailure(Uuid engagementId, FirmStaffMemberView staff)
     {
-        IndependenceDecisionCode.Allowed => "allowed",
-        IndependenceDecisionCode.RecentImpairingService => "recent_impairing_service",
-        IndependenceDecisionCode.PartnerEvaluationRequired => "partner_evaluation_required",
-        IndependenceDecisionCode.ServiceNotClassified => "service_not_classified",
-        _ => throw new InvalidOperationException("An invalid policy result cannot be retained as an evaluation."),
-    };
+        var decision = IndependenceCompartments.CanAssign(_assignmentHistory,
+            new EngagementAssignment(_tenantId, engagementId, staff.StaffMemberId, staff.UserId, Practice(staff.Practice)));
+        return decision.Code switch
+        {
+            IndependenceDecisionCode.Allowed => null,
+            IndependenceDecisionCode.PersonPracticeConflict => Failure<ServiceEngagementView>(RequestErrorKind.Conflict,
+                $"Rule {decision.RuleId} refuses the opposite practice. Conflicting historical engagement: {decision.ConflictingAssignment!.EngagementId}; staff: {decision.ConflictingAssignment.FirmStaffMemberId}; user: {decision.ConflictingAssignment.UserId}."),
+            _ => Failure<ServiceEngagementView>(RequestErrorKind.Validation,
+                "A draft engagement requires its valid period, practice, scope, current matching directory staff and client member attribution."),
+        };
+    }
+
     static Result<T> Failure<T>(RequestErrorKind kind, string message) =>
         Result<T>.Failure(new RequestError(kind, message));
 }

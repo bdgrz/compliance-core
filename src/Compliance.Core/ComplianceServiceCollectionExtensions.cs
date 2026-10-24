@@ -667,6 +667,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(AdministratorTransitionProcess.Definition);
         services.AddSingleton(FirmStaffRegistrationProcess.Definition());
         services.AddScoped<FirmStaffViews>();
+        services.AddSingleton(ClientIndependencePreviewProcess.Definition());
+        services.AddScoped<ServiceEngagementCommands>();
+        services.AddScoped<ServiceEngagementViews>();
         services.AddScoped<FirmStaffRegistrationReceivers>();
         services.AddSingleton(ProfessionalDutyChangeProcess.Definition());
         services.AddScoped<ProfessionalDutyAdmission>();
@@ -730,8 +733,6 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<EmailOwnershipAuthorizer>()
             .AddRequestHandler<ReviseIndependenceRulesHandler>()
             .AddRequestHandler<RatifyIndependenceRuleVersionHandler>()
-            .AddRequestHandler<RecordPartnerIndependenceEvaluationHandler>()
-            .AddRequestHandler<GetServiceEngagementPartnerReviewContextHandler>()
             .AddRequestHandler<GetIndependenceRuleVersionsHandler>()
             .AddRequestHandler<GetClientIndependenceRulesHandler>()
             .AddRequestHandler<RecordNonattestServiceHandler>()
@@ -751,22 +752,20 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<SettleFirmStaffProfessionalDutyUseHandler>()
             .AddRequestHandler<ClaimProfessionalAssertionIdentityHandler>()
             .AddRequestHandler<ApplyProfessionalDutyChangeHandler>()
+            .AddRequestHandler<MaterializeClientIndependencePreviewHandler>()
             .AddRequestHandler<RejectProfessionalDutyChangeHandler>()
             .AddRequestHandler<ListAssignableFirmStaffHandler>()
             .AddRequestHandler<CreateServiceEngagementHandler>()
             .AddRequestHandler<AmendServiceEngagementHandler>()
             .AddRequestHandler<ProposeServiceEngagementStaffHandler>()
-            .AddRequestHandler<AssignServiceEngagementStaffHandler>()
             .AddRequestHandler<WithdrawServiceEngagementStaffProposalHandler>()
             .AddRequestHandler<RevokeServiceEngagementActualStaffHandler>()
             .AddRequestHandler<CloseServiceEngagementHandler>()
             .AddRequestHandler<GetServiceEngagementAcceptanceHandler>()
-            .AddRequestHandler<AcceptServiceEngagementHandler>()
             .AddRequestHandler<GetServiceEngagementAcceptanceHistoryHandler>()
             .AddRequestHandler<GetServiceEngagementHandler>()
             .AddRequestHandler<ListServiceEngagementsHandler>()
             .AddRequestHandler<GetServiceEngagementHistoryHandler>()
-            .AddRequestHandler<AcknowledgeEngagementManagementHandler>()
             .AddRequestHandler<GetEngagementManagementAcknowledgementsHandler>()
             .AddRequestAuthorizer<IndependenceRuleAdministrationAuthorizer>()
             .AddRequestAuthorizer<IndependenceRuleRatificationAuthorizer>()
@@ -774,6 +773,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<FirmStaffAdministrationAuthorizer>()
             .AddRequestAuthorizer<FirmStaffRegistrationReceiverAuthorizer>()
             .AddRequestAuthorizer<ProfessionalDutyChangeReceiverAuthorizer>()
+            .AddRequestAuthorizer<ClientIndependencePreviewReceiverAuthorizer>()
             .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
             .AddRequestAuthorizer<ServiceEngagementAcceptanceAuthorizer>()
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
@@ -1411,6 +1411,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<FirmStaffRegistrationReactor>(FirmStaffRegistrationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<ProfessionalDutyChangeReactor>(ProfessionalDutyChangeReactor.WorkloadName, WorkloadScope.Global,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<ClientIndependencePreviewReactor>(ClientIndependencePreviewReactor.WorkloadName,
+                WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })

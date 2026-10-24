@@ -2,14 +2,13 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-public sealed class GetServiceEngagementHandler(IAggregateReader reader)
+public sealed class GetServiceEngagementHandler(ServiceEngagementViews views)
     : IRequestHandler<GetServiceEngagement, ServiceEngagementView>
 {
-    public async ValueTask<Result<ServiceEngagementView>> HandleAsync(IRequestContext<GetServiceEngagement> context, CancellationToken ct)
-    {
-        var ledger = await reader.HydrateAsync(new IndependenceLedger(context.Request.TenantId), ct).ConfigureAwait(false);
-        if (ledger.Engagement(context.Request.EngagementId) is null)
-            return Result<ServiceEngagementView>.Failure(new RequestError(RequestErrorKind.NotFound, "The client service engagement was not found."));
-        return Result<ServiceEngagementView>.Success(ledger.Engagement(context.Request.EngagementId)!);
-    }
+    public async ValueTask<Result<ServiceEngagementView>> HandleAsync(IRequestContext<GetServiceEngagement> context,
+        CancellationToken ct) => await views.GetAsync(context.Request.TenantId, context.Request.EngagementId, ct)
+            .ConfigureAwait(false) is { } engagement
+        ? Result<ServiceEngagementView>.Success(engagement)
+        : Result<ServiceEngagementView>.Failure(new RequestError(RequestErrorKind.NotFound,
+            "The client service engagement was not found."));
 }

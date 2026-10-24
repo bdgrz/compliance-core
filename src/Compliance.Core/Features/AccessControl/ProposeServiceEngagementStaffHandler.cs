@@ -2,11 +2,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-public sealed class ProposeServiceEngagementStaffHandler(IAggregateExecutor executor, FirmStaffViews staffViews, TimeProvider clock)
+/// <summary>Tentatively proposes one active staff member for the open draft of a service engagement.</summary>
+sealed class ProposeServiceEngagementStaffHandler(ServiceEngagementCommands commands)
     : IRequestHandler<ProposeServiceEngagementStaff, ServiceEngagementView>
 {
-    public ValueTask<Result<ServiceEngagementView>> HandleAsync(IRequestContext<ProposeServiceEngagementStaff> context, CancellationToken ct) =>
-        EngagementStaffBoundary.ExecuteAsync(staffViews, executor, clock, context, context.Request.StaffMemberId,
-            (ledger, staff, actor, recordedAt) => ledger.ProposeEngagementStaff(context.RequestId,
-                context.Request.EngagementId, context.Request.ExpectedSequence, staff, actor, recordedAt), ct);
+    public ValueTask<Result<ServiceEngagementView>> HandleAsync(
+        IRequestContext<ProposeServiceEngagementStaff> context, CancellationToken ct) =>
+        commands.ProposeAsync(context, ct);
 }

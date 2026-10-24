@@ -14,8 +14,6 @@ public sealed class IndependenceAssignmentBoundaryTests
     static readonly Uuid Tenant = Uuid.CreateVersion4();
     static readonly Uuid ClientUser = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 10, 10, 12, 0, 0, TimeSpan.Zero);
-    static readonly ActorReference ClientActor = ActorReference.ForMember(
-        RbacIds.Member(Tenant, ClientUser), "Synthetic client administrator");
 
     [Theory]
     [InlineData("http")]
@@ -39,25 +37,15 @@ public sealed class IndependenceAssignmentBoundaryTests
         await using var scope = provider.CreateAsyncScope();
         var actor = new ClaimsPrincipal(new ClaimsIdentity([
             new Claim("iss", "bdgrz"), new Claim("sub", ClientUser.ToString())], "BdgrzSession"));
-        var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-        FirmStaffMemberView? conflictingStaff = null;
-        Uuid? priorEngagementId = null;
-        var accepted = await executor.ExecuteAsync(new IndependenceLedger(Tenant), ledger =>
-        {
-            var (_, proof, rules) = AcceptanceFixture(ledger, "attest");
-            conflictingStaff = proof.CurrentStaff.Single();
-            priorEngagementId = proof.EngagementId;
-            return AggregateOutcome.CommitOnSuccess(ledger.AcceptEngagement(Uuid.CreateVersion4(), 2,
-                proof, rules, Now));
-        }, new RequestDispatchContext(actor), CancellationToken.None);
-        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
 
-        var operatorActor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator");
         // The retained synthetic acceptance and current directory intentionally disagree on practice.
         // This exercises the defensive history wall without asserting any firm rule-set values.
+        var (conflictingStaff, priorEngagementId) = await AttestAssignmentHistoryFixture.SeedAcceptedAsync(provider,
+            Tenant, Uuid.CreateVersion4());
+        var operatorActor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator");
         var newLead = new FirmStaffMemberView(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "advisory",
             "Synthetic current directory source", true, 1, operatorActor, Now);
-        await FirmStaffFacts.RegisterAsync(provider, conflictingStaff!.StaffMemberId, conflictingStaff.UserId,
+        await FirmStaffFacts.RegisterAsync(provider, conflictingStaff.StaffMemberId, conflictingStaff.UserId,
             "advisory", "Synthetic current directory source", operatorActor, Now);
         await FirmStaffFacts.RegisterAsync(provider, newLead.StaffMemberId, newLead.UserId, "advisory",
             "Synthetic current directory source", operatorActor, Now);
@@ -65,58 +53,36 @@ public sealed class IndependenceAssignmentBoundaryTests
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var engagementId = Uuid.CreateVersion4();
         var engagementPath = $"/api/v1/tenants/{Tenant}/service-engagements/{engagementId}";
-        var created = await bus.DispatchAsync(new CreateServiceEngagement(Tenant, engagementId, 3,
+        var created = await bus.DispatchAsync(new CreateServiceEngagement(Tenant, engagementId, 0,
             new ServiceEngagementDraftContent("advisory", "Synthetic scope", new DateOnly(2026, 1, 1), null,
                 newLead.StaffMemberId)), new RequestDispatchContext(actor,
-            new HttpInvocation("PUT", engagementPath, engagementPath, "synthetic")), CancellationToken.None);
+            new HttpInvocation("PUT", $"{engagementPath}/create-service-engagement",
+                $"{engagementPath}/create-service-engagement", "synthetic")), CancellationToken.None);
         Assert.True(created.IsSuccess, created.Error?.Message);
 
+        var command = Uuid.CreateVersion4();
         RequestInvocation invocation = transport == "http"
-            ? new HttpInvocation("PUT", $"{engagementPath}/staff-proposals/{conflictingStaff!.StaffMemberId}",
-                $"{engagementPath}/staff-proposals/{conflictingStaff.StaffMemberId}", "synthetic")
+            ? new HttpInvocation("PUT", $"{engagementPath}/propose-service-engagement-staff/{command}",
+                $"{engagementPath}/propose-service-engagement-staff/{command}", "synthetic")
             : new McpInvocation("bdgrz.service-engagement.staff.propose");
 
         // Act
-        var result = await bus.DispatchAsync(new ProposeServiceEngagementStaff(Tenant, engagementId,
-            conflictingStaff!.StaffMemberId, 4), new RequestDispatchContext(actor, invocation),
-            CancellationToken.None);
+        var result = await bus.DispatchAsync(new ProposeServiceEngagementStaff(command, Tenant, engagementId,
+            conflictingStaff.StaffMemberId, 1), new RequestDispatchContext(actor, invocation), CancellationToken.None);
         var retained = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new IndependenceLedger(Tenant), CancellationToken.None);
+            .HydrateAsync(new ServiceEngagementIndependence(Tenant, engagementId), CancellationToken.None);
+        var draft = await scope.ServiceProvider.GetRequiredService<ServiceEngagementViews>()
+            .GetAsync(Tenant, engagementId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Contains(IndependenceCompartments.PersonExclusivityRuleId, result.Error!.Message,
             StringComparison.Ordinal);
-        Assert.Contains(priorEngagementId!.Value.ToString(), result.Error.Message, StringComparison.Ordinal);
+        Assert.Contains(priorEngagementId.ToString(), result.Error.Message, StringComparison.Ordinal);
         Assert.Contains(conflictingStaff.StaffMemberId.ToString(), result.Error.Message, StringComparison.Ordinal);
         Assert.Contains(conflictingStaff.UserId.ToString(), result.Error.Message, StringComparison.Ordinal);
-        Assert.Equal(4, retained.Sequence);
-        Assert.Equal("draft", retained.Engagement(engagementId)!.Status);
-        Assert.Equal(newLead.StaffMemberId, Assert.Single(retained.Engagement(engagementId)!.Staff).StaffMemberId);
-    }
-
-    static (IndependenceLedger Ledger, VerifiedEngagementAcceptance Proof,
-        IndependenceRuleVersionView Rules) AcceptanceFixture(IndependenceLedger ledger, string practice)
-    {
-        var operatorActor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator");
-        var staff = new FirmStaffMemberView(Uuid.CreateVersion4(), Uuid.CreateVersion4(), practice,
-            "Synthetic historical directory source", true, 1, operatorActor, Now);
-        var engagement = Uuid.CreateVersion4();
-        Assert.True(ledger.CreateEngagement(Uuid.CreateVersion4(), engagement, 0,
-            new ServiceEngagementDraftContent(practice, "Synthetic scope", new DateOnly(2026, 1, 1), null,
-                staff.StaffMemberId), staff, ClientActor, Now).IsSuccess);
-        var acknowledgementId = Uuid.CreateVersion4();
-        Assert.True(ledger.AcknowledgeManagement(Uuid.CreateVersion4(),
-            new AcknowledgeEngagementManagement(Tenant, engagement, acknowledgementId, 1, 1, [],
-                "Synthetic responsibility acknowledgement"), ClientUser, ClientActor, Now).IsSuccess);
-        var partner = staff with { StaffMemberId = Uuid.CreateVersion4(), UserId = Uuid.CreateVersion4() };
-        var proof = new VerifiedEngagementAcceptance(Tenant, engagement, 1, Uuid.CreateVersion4(),
-            partner.StaffMemberId, partner.UserId, "Synthetic fixture only", null, acknowledgementId,
-            null, null, [staff], partner, 1, Now);
-        var rules = new IndependenceRuleVersionView(1,
-            new IndependenceRuleContent(12,
-                [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
-                "Synthetic fixture only"), operatorActor, Now, true);
-        return (ledger, proof, rules);
+        Assert.Equal(1UL, retained.Revision);
+        Assert.Equal("draft", draft!.Status);
+        Assert.Equal(newLead.StaffMemberId, Assert.Single(draft.Staff).StaffMemberId);
     }
 }
