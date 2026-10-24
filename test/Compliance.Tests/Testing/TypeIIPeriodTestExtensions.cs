@@ -73,6 +73,16 @@ static class TypeIIPeriodTestExtensions
             Synthetic, Synthetic, Synthetic);
     }
 
+    /// <summary>Seeds the native close fact for pure owner-rule tests; the production handler derives/publishes its sources.</summary>
+    public static CommandFailure? RecordCloseValidation(this TypeIIPeriod period, long expectedRevision,
+        TypeIIPeriodCloseValidationContent content, Uuid validatorMemberId, string validatorDisplay, DateTimeOffset at)
+    {
+        var operation = RootOperation.Provenance(Uuid.CreateVersion4(), nameof(RecordTypeIIPeriodCloseValidation), period.Stream,
+            ActorReference.ForMember(validatorMemberId, validatorDisplay), expectedRevision, new string('e', 64), at);
+        return period.RecordCloseValidation(operation, content with { RecordedThrough = at }, Synthetic with { Schema = TypeIIPeriodCloseValidationChange.Schema },
+            Synthetic with { Schema = FirstResponses.Schema }, Synthetic with { Schema = "mutation-result-content.v1" });
+    }
+
     static OperationProvenance Provenance(TypeIIPeriod period, Uuid logicalId, Uuid rootId, string kind,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset at) => new(logicalId, rootId,
         logicalId == rootId ? null : rootId, kind, ActorReference.ForMember(actorMemberId, actorDisplay),

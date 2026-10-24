@@ -1,0 +1,127 @@
+{
+  "reviewed": 37,
+  "blockedReviews": 0,
+  "signalsTriaged": 10,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributor.cs",
+      "sha256": "a30f090c350bde77d4eee3519803f65d071f0f616202e12e7d6a908f770e9588",
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.52,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.26
+      },
+      "classification": "read_only_source_cutoff_preserving_existing_source_fences",
+      "evidence": "This source contributor keeps existing native history/source checkpoint/scope and missing-content handling. The change separates server RecordedThrough from effective-date selection so closing sources can include facts recorded after period end without admitting later-than-cutoff facts. Read-only composition needs no operation receipt; its enclosing production close handler resolves original receipts before re-reading sources and returns typed unavailable/integrity failures before append. Existing TypeI source/publication tests and native TypeII source/replay tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributor.cs",
+      "sha256": "6f094077e27cde565baa9264b014e48347778e91c79bc626474db43ffeaf1a74",
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.27
+      },
+      "classification": "read_only_source_cutoff_preserving_existing_source_fences",
+      "evidence": "This source contributor keeps existing native history/source checkpoint/scope and missing-content handling. The change separates server RecordedThrough from effective-date selection so closing sources can include facts recorded after period end without admitting later-than-cutoff facts. Read-only composition needs no operation receipt; its enclosing production close handler resolves original receipts before re-reading sources and returns typed unavailable/integrity failures before append. Existing TypeI source/publication tests and native TypeII source/replay tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ApplicationTypeIBaselineSourceContributor.cs",
+      "sha256": "b61b4532726bbca596fff959938a9d4c133106c3e32e0290be4dbec62a91c5f9",
+      "signals": {
+        "authority_gap": 0.57,
+        "invariant_gap": 0.43,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.24
+      },
+      "classification": "read_only_source_cutoff_preserving_existing_source_fences",
+      "evidence": "This source contributor keeps existing native history/source checkpoint/scope and missing-content handling. The change separates server RecordedThrough from effective-date selection so closing sources can include facts recorded after period end without admitting later-than-cutoff facts. Read-only composition needs no operation receipt; its enclosing production close handler resolves original receipts before re-reading sources and returns typed unavailable/integrity failures before append. Existing TypeI source/publication tests and native TypeII source/replay tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ControlCriterionMappingTypeIBaselineSourceContributor.cs",
+      "sha256": "ac6c08f4f3eed4cb5d308d5e03a1314a6d075ecc14e2cfd94cdc645b50c25c96",
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.55,
+        "recovery_gap": 0.73,
+        "incomplete_path": 0.31
+      },
+      "classification": "read_only_source_cutoff_preserving_existing_source_fences",
+      "evidence": "This source contributor keeps existing native history/source checkpoint/scope and missing-content handling. The change separates server RecordedThrough from effective-date selection so closing sources can include facts recorded after period end without admitting later-than-cutoff facts. Read-only composition needs no operation receipt; its enclosing production close handler resolves original receipts before re-reading sources and returns typed unavailable/integrity failures before append. Existing TypeI source/publication tests and native TypeII source/replay tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/EvidenceGovernanceTypeIBaselineSourceContributor.cs",
+      "sha256": "a16975dd2c00beb44e0f41616bb0cbf8f28cba6fc958d59e64193ecb81eb9bcd",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.49,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.29
+      },
+      "classification": "read_only_source_cutoff_preserving_existing_source_fences",
+      "evidence": "This source contributor keeps existing native history/source checkpoint/scope and missing-content handling. The change separates server RecordedThrough from effective-date selection so closing sources can include facts recorded after period end without admitting later-than-cutoff facts. Read-only composition needs no operation receipt; its enclosing production close handler resolves original receipts before re-reading sources and returns typed unavailable/integrity failures before append. Existing TypeI source/publication tests and native TypeII source/replay tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/InformationAssetTypeIBaselineSourceContributor.cs",
+      "sha256": "2d9f8680d3388fa5490825bf6be36fde80ed41a294aa02079b3f513d438ff594",
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.21
+      },
+      "classification": "read_only_source_cutoff_preserving_existing_source_fences",
+      "evidence": "This source contributor keeps existing native history/source checkpoint/scope and missing-content handling. The change separates server RecordedThrough from effective-date selection so closing sources can include facts recorded after period end without admitting later-than-cutoff facts. Read-only composition needs no operation receipt; its enclosing production close handler resolves original receipts before re-reading sources and returns typed unavailable/integrity failures before append. Existing TypeI source/publication tests and native TypeII source/replay tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/PublishedTypeIBaselinePreviewReader.cs",
+      "sha256": "17227a7cdfd5132218af5b6a39df1de087daa6f77be0786fb74cb7d2346e132c",
+      "signals": {
+        "authority_gap": 0.67,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.64,
+        "incomplete_path": 0.37
+      },
+      "classification": "physical_publication_under_trusted_scoped_source_pipeline",
+      "evidence": "Reader receives scoped engagement/requester from existing source pipeline; it is not the request authorizer. It publishes only exact captured canonical bytes, verifies tenant/digest/length and verified reopen, and writes a scope-bound immutable manifest. Close handler validates exact period/root/cutoff, complete21-family coverage including empty scans, and exact physical descriptor for every selected reference before native append. Missing/corrupt source and foreign manifest regressions pass; no mutation authority is assigned to the publication helper."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/TechnologyComponentTypeIBaselineSourceContributor.cs",
+      "sha256": "f88ff0f496095d22a1b16b42aa4b1a4a360888ad645e2bee0cd4b340967e0d19",
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.49,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.22
+      },
+      "classification": "read_only_source_cutoff_preserving_existing_source_fences",
+      "evidence": "This source contributor keeps existing native history/source checkpoint/scope and missing-content handling. The change separates server RecordedThrough from effective-date selection so closing sources can include facts recorded after period end without admitting later-than-cutoff facts. Read-only composition needs no operation receipt; its enclosing production close handler resolves original receipts before re-reading sources and returns typed unavailable/integrity failures before append. Existing TypeI source/publication tests and native TypeII source/replay tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "sha256": "a3ab75cc62e524f3692becdeb41879c0405c91dc7a29c542501ddaab61e667d4",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.72,
+        "incomplete_path": 0.46
+      },
+      "classification": "native_close_receipt_and_source_lineage_verified_retained_owner_followup_explicit",
+      "evidence": "Native close preparation runs after selected receipt recovery; original actor/revision/intent/cutoff and immutable Unit response are checked. Lost-response and equal-winner-after-preparation-failure regressions pass. Real publication/archive regression found missing SourceContentManifest in reconstructed snapshot digest and fixed it. Additional RED proved opening/closing versions of one source were rejected; exact version tuples now normalize and changed-record comparison uses grouped reference sets. The retained complete period State and old approve/freeze/amend producers remain explicit next compact-owner work, not represented as finished."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseHistory.cs",
+      "sha256": "e13ed3065bb1494577974f20646f99a3c0a2f1e1ac2deb7a328a699652e556ed",
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.48,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.33
+      },
+      "classification": "read_only_native_capture_with_exact_scope_visibility_and_stable_cutoff",
+      "evidence": "Scans require exact realm/area/native event identity and program scope, bound complete population, retain full typed fact payloads through accepted cutoff, and confirm the same captured history on a second scan. Current restricted visibility is checked before content publication; a direct regression denies the historical change when current visibility is absent. The enclosing reconciliation maps unavailable content to transient Conflict and integrity failures to permanent Conflict before accepting any close."
+    }
+  ]
+}

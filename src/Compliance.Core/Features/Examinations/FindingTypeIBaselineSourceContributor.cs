@@ -36,7 +36,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 RequestErrorKind.Validation,
                 "A finding baseline read requires its engagement and source context."));
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
+        var through = context.RecordedThrough ?? new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
         var ids = new SortedSet<Uuid>(Comparer<Uuid>.Create(static (left, right) =>
             string.CompareOrdinal(left.ToString(), right.ToString())));

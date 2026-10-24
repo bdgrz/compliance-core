@@ -43,8 +43,8 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         if (await HasPendingSourceAsync(engagement.TenantId, fence, ct).ConfigureAwait(false))
             return BehindSource();
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
-            DateTimeKind.Utc));
+        var effectiveThrough = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc));
+        var through = context.RecordedThrough ?? effectiveThrough;
         var summaries = new List<AccessReviewCampaignSummaryView>();
         var seenCampaignIds = new HashSet<Uuid>();
         var seenCursors = new HashSet<string>(StringComparer.Ordinal);
@@ -76,7 +76,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         foreach (var summary in summaries.OrderBy(static summary =>
                      summary.CampaignId.ToString(), StringComparer.Ordinal))
         {
-            if (summary.LaunchedAt > through)
+            if (summary.LaunchedAt > effectiveThrough)
                 continue;
 
             var stream = new EventStreamAddress(engagement.TenantId.ToString(),

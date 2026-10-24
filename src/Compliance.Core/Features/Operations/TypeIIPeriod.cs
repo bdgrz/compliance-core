@@ -436,33 +436,32 @@ public sealed class TypeIIPeriod : Aggregate
         return Result.Success;
     }
 
-    public CommandFailure? RecordCloseValidation(long expectedRevision,
-        TypeIIPeriodCloseValidationContent content, Uuid validatorMemberId,
-        string validatorDisplay, DateTimeOffset validatedAt)
+    /// <summary>Checks the full close reconciliation without raising an event.</summary>
+    public CommandFailure? PrepareCloseValidation(long expectedRevision, TypeIIPeriodCloseValidationContent content,
+        Uuid validatorMemberId, string validatorDisplay, DateTimeOffset validatedAt, out TypeIIPeriodView? state)
     {
+        state = null;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The Type II period was not found.");
-        if (SameValidation(current.CloseValidation, content, validatorMemberId, validatorDisplay, validatedAt))
-            return null;
         if (expectedRevision != Revision)
             return StaleRevision();
         if (_pending is not null)
-            return CommandFailure.StateConflict(
-                "An opening or amendment is still being applied; validate the close after it ends.");
+            return CommandFailure.StateConflict("An opening or amendment is still being applied; validate the close after it ends.");
         if (current.Status is not ("active" or "close_blocked" or "close_ready"))
             return CommandFailure.StateConflict("Close validation is only allowed before executive approval.");
+        if (DateOnly.FromDateTime(validatedAt.UtcDateTime) <= current.PeriodEnd)
+            return CommandFailure.StateConflict("The complete observation interval must end before its close can be reconciled.");
         if (!ValidActor(validatorMemberId, validatorDisplay, validatedAt) || validatedAt < current.UpdatedAt ||
             NormalizeValidation(content, current.ExpectedOccurrences) is not { } normalized)
             return Invalid("Close validation must reconcile this period's exact expected population and source versions.");
         var ready = normalized.ExpectedOccurrenceIds.SequenceEqual(normalized.ActualOccurrenceIds) &&
-                    normalized.DuplicateOccurrenceIds.Count == 0 && normalized.MissingWorkIds.Count == 0;
+            normalized.DuplicateOccurrenceIds.Count == 0 && normalized.MissingWorkIds.Count == 0 && normalized.SourceBlockers.Count == 0;
         var validation = new TypeIIPeriodCloseValidationView(ready ? "ready" : "blocked",
-            normalized.SourceReferences, normalized.ExpectedOccurrenceIds,
-            normalized.ActualOccurrenceIds, normalized.DuplicateOccurrenceIds,
-            normalized.MissingWorkIds, normalized.UnresolvedMaterialItemIds,
+            normalized.SourceReferences, normalized.ExpectedOccurrenceIds, normalized.ActualOccurrenceIds,
+            normalized.DuplicateOccurrenceIds, normalized.MissingWorkIds, normalized.UnresolvedMaterialItemIds,
             validatorMemberId, validatorDisplay.Trim(), validatedAt)
-        { SourceContentManifest = normalized.SourceContentManifest };
-        var state = current with
+        { SourceContentManifest = normalized.SourceContentManifest, SourceBlockers = normalized.SourceBlockers, RecordedThrough = normalized.RecordedThrough, SourceDifferences = normalized.SourceDifferences };
+        state = current with
         {
             Status = ready ? "close_ready" : "close_blocked",
             Revision = Revision + 1,
@@ -472,10 +471,30 @@ public sealed class TypeIIPeriod : Aggregate
             ActorDisplay = validatorDisplay.Trim(),
             UpdatedAt = validatedAt,
         };
-        return Emit(state, validatorMemberId, validatedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new ObservationPeriodCloseProposed(tenant, subject, revision, actor, snapshot, at),
-            "validation");
+        return ValidateState(state) is not null || !ValidTransition(current, state, validatorMemberId, "validation")
+            ? Invalid("The Type II close reconciliation transition is invalid.") : null;
+    }
+
+    /// <summary>Accepts one immutable close validation at the exact expected period revision.</summary>
+    public CommandFailure? RecordCloseValidation(OperationProvenance operation, TypeIIPeriodCloseValidationContent content,
+        ImmutableContentRef change, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
+    {
+        if (operation.Owner != Stream || operation.AffectedOwner != Stream || operation.ExpectedRevisionOwner != Stream ||
+            operation.LogicalId == Uuid.Empty || operation.RootOperationId != operation.LogicalId ||
+            operation.CommandKind != nameof(RecordTypeIIPeriodCloseValidation) || operation.Actor.Kind != "member" ||
+            !Uuid.TryParse(operation.Actor.Id, System.Globalization.CultureInfo.InvariantCulture, out var actor) || actor == Uuid.Empty ||
+            operation.OriginalExpectedRevision is not { } expected || expected > long.MaxValue ||
+            content.RecordedThrough != operation.AcceptedAt || change.Schema != TypeIIPeriodCloseValidationChange.Schema || operationResult.Schema != "mutation-result-content.v1")
+            return CommandFailure.StateConflict("The close reconciliation differs from its exact native operation authority.");
+        var failure = PrepareCloseValidation((long)expected, content, actor, operation.Actor.Display, operation.AcceptedAt, out var state);
+        if (failure is not null)
+            return failure;
+        var fact = new ObservationPeriodCloseProposed(_tenantId, Id, state!.Revision, actor, Freeze(state), operation.AcceptedAt,
+            change, operation, firstResponse, operationResult);
+        if (DomainEventPayload.Size(fact) > MaximumEventBytes)
+            return Invalid("The complete Type II period state exceeds the bounded event payload.");
+        RaiseEvent(fact);
+        return null;
     }
 
     public CommandFailure? ApproveClose(long expectedRevision,
@@ -718,8 +737,18 @@ public sealed class TypeIIPeriod : Aggregate
         _facts.Add(ev);
         _current = Freeze(next);
     }
-    void Apply(ObservationPeriodCloseProposed ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "validation");
+    void Apply(ObservationPeriodCloseProposed ev)
+    {
+        if (ev.Operation.Owner != Stream || ev.Operation.AffectedOwner != Stream || ev.Operation.ExpectedRevisionOwner != Stream ||
+            ev.Operation.CommandKind != nameof(RecordTypeIIPeriodCloseValidation) || ev.Operation.LogicalId != ev.Operation.RootOperationId ||
+            ev.Operation.OriginalExpectedRevision != (ulong)Revision || ev.Operation.AcceptedAt != ev.OccurredAt ||
+            ev.Operation.Actor.Id != ev.ActorMemberId?.ToString() || ev.Change.Schema != TypeIIPeriodCloseValidationChange.Schema ||
+            ev.FirstResponse is null || ev.OperationResult is null || ev.OperationResult.Schema != "mutation-result-content.v1")
+            throw new InvalidOperationException("The native Type II close reconciliation acceptance is invalid.");
+        Acceptance.Observe(ev);
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "validation");
+        _facts.Add(ev);
+    }
     void Apply(TypeIIPeriodCloseApproved ev) => ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "approval");
     void Apply(ObservationPeriodCloseFrozen ev)
@@ -949,6 +978,8 @@ public sealed class TypeIIPeriod : Aggregate
             NormalizeIds(content.DuplicateOccurrenceIds) is not { } duplicates ||
             NormalizeIds(content.MissingWorkIds) is not { } missing ||
             NormalizeIds(content.UnresolvedMaterialItemIds) is not { } unresolved ||
+            NormalizeSourceBlockers(content.SourceBlockers) is not { } blockers ||
+            NormalizeSourceBlockers(content.SourceDifferences) is not { } differences ||
             !expected.SequenceEqual(expectedOccurrences.Select(item => item.OccurrenceId).OrderBy(IdKey, StringComparer.Ordinal)))
             return null;
         return content with
@@ -959,6 +990,8 @@ public sealed class TypeIIPeriod : Aggregate
             DuplicateOccurrenceIds = duplicates,
             MissingWorkIds = missing,
             UnresolvedMaterialItemIds = unresolved,
+            SourceBlockers = blockers,
+            SourceDifferences = differences,
         };
     }
 
@@ -986,6 +1019,10 @@ public sealed class TypeIIPeriod : Aggregate
         changed, affected, actor, role, display, at)
         { SourceContentManifest = content.SourceContentManifest };
 
+    static ReadOnlyCollection<string>? NormalizeSourceBlockers(IReadOnlyList<string>? values) => values is null || values.Count > 1000 ||
+        values.Any(value => string.IsNullOrWhiteSpace(value) || value.Length > 2000) ? null :
+        Array.AsReadOnly(values.Select(value => value.Trim()).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray());
+
     static bool ValidValidation(TypeIIPeriodCloseValidationView? validation,
         IReadOnlyList<TypeIIPeriodOccurrenceView> expected) => validation is null ||
         NormalizeReferences(validation.SourceReferences) is { } refs &&
@@ -1000,7 +1037,10 @@ public sealed class TypeIIPeriod : Aggregate
         NormalizeIds(validation.UnresolvedMaterialItemIds) is { } unresolved &&
         unresolved.SequenceEqual(validation.UnresolvedMaterialItemIds) &&
         ValidActor(validation.ValidatorMemberId, validation.ValidatorDisplay, validation.ValidatedAt) &&
-        validation.Status == (expectedIds.SequenceEqual(actual) && duplicates.Length == 0 && missing.Length == 0
+        validation.RecordedThrough == validation.ValidatedAt &&
+        NormalizeSourceBlockers(validation.SourceBlockers) is { } blockers && blockers.SequenceEqual(validation.SourceBlockers) &&
+        NormalizeSourceBlockers(validation.SourceDifferences) is { } differences && differences.SequenceEqual(validation.SourceDifferences) &&
+        validation.Status == (expectedIds.SequenceEqual(actual) && duplicates.Length == 0 && missing.Length == 0 && blockers.Count == 0
             ? "ready" : "blocked");
 
     static bool ValidApprovals(TypeIIPeriodView state) =>
@@ -1023,7 +1063,8 @@ public sealed class TypeIIPeriod : Aggregate
         {
             var item = state.CloseSnapshots[index];
             var content = new TypeIIPeriodCloseSnapshotContent(item.CloseSnapshotId,
-                item.SourceReferences, item.ExpectedOccurrenceIds, item.AcknowledgedMaterialItemIds);
+                item.SourceReferences, item.ExpectedOccurrenceIds, item.AcknowledgedMaterialItemIds)
+            { SourceContentManifest = item.SourceContentManifest };
             if (item.CloseSnapshotId == Uuid.Empty || item.Version != index + 1 ||
                 NormalizeSnapshot(content) is not { } normalized || Digest(normalized) != item.ContentSha256 ||
                 !Bounded(item.ActorRole, 1, 100) || !ExecutiveRoles.Contains(item.ActorRole) ||
@@ -1086,7 +1127,7 @@ public sealed class TypeIIPeriod : Aggregate
         NormalizeIds(content.DuplicateOccurrenceIds) is { } duplicates &&
         NormalizeIds(content.MissingWorkIds) is { } missing &&
         NormalizeIds(content.UnresolvedMaterialItemIds) is { } unresolved &&
-        existing.SourceContentManifest == content.SourceContentManifest &&
+        existing.RecordedThrough == content.RecordedThrough && existing.SourceContentManifest == content.SourceContentManifest && existing.SourceBlockers.SequenceEqual(content.SourceBlockers) && existing.SourceDifferences.SequenceEqual(content.SourceDifferences) &&
         SameReferences(existing.SourceReferences, refs) && existing.ExpectedOccurrenceIds.SequenceEqual(expected) &&
         existing.ActualOccurrenceIds.SequenceEqual(actual) && existing.DuplicateOccurrenceIds.SequenceEqual(duplicates) &&
         existing.MissingWorkIds.SequenceEqual(missing) && existing.UnresolvedMaterialItemIds.SequenceEqual(unresolved) &&
@@ -1129,6 +1170,9 @@ public sealed class TypeIIPeriod : Aggregate
         left.DuplicateOccurrenceIds.SequenceEqual(right.DuplicateOccurrenceIds) &&
         left.MissingWorkIds.SequenceEqual(right.MissingWorkIds) &&
         left.UnresolvedMaterialItemIds.SequenceEqual(right.UnresolvedMaterialItemIds) &&
+        left.SourceContentManifest == right.SourceContentManifest && left.SourceBlockers.SequenceEqual(right.SourceBlockers) &&
+        left.SourceDifferences.SequenceEqual(right.SourceDifferences) &&
+        left.RecordedThrough == right.RecordedThrough &&
         left.Status == right.Status && left.ValidatorMemberId == right.ValidatorMemberId &&
         left.ValidatorDisplay == right.ValidatorDisplay && left.ValidatedAt == right.ValidatedAt;
 
@@ -1145,7 +1189,7 @@ public sealed class TypeIIPeriod : Aggregate
         if (references is null || references.Count is < 1 or > MaximumSources || references.Any(item =>
                 item is null || !Token(item.SourceType, 80) || item.RecordId == Uuid.Empty ||
                 item.VersionId == Uuid.Empty || item.Version <= 0 || !Sha256(item.ContentSha256)) ||
-            references.Select(item => (item.SourceType, item.RecordId)).Distinct().Count() != references.Count)
+            references.Select(item => (item.SourceType, item.RecordId, item.VersionId, item.Version)).Distinct().Count() != references.Count)
             return null;
         return references.Select(item => item with
         {
@@ -1154,7 +1198,8 @@ public sealed class TypeIIPeriod : Aggregate
         })
             .OrderBy(item => item.SourceType, StringComparer.Ordinal)
             .ThenBy(item => IdKey(item.RecordId), StringComparer.Ordinal)
-            .ThenBy(item => item.Version).ToArray();
+            .ThenBy(item => item.Version)
+            .ThenBy(item => IdKey(item.VersionId), StringComparer.Ordinal).ToArray();
     }
 
     static Uuid[]? NormalizeIds(IReadOnlyList<Uuid>? values, bool allowDuplicates = false)
@@ -1168,11 +1213,13 @@ public sealed class TypeIIPeriod : Aggregate
     static Uuid[] ChangedRecordIds(IReadOnlyList<ExaminationContentReference> prior,
         IReadOnlyList<ExaminationContentReference> next)
     {
-        var oldByKey = prior.ToDictionary(item => (item.SourceType, item.RecordId));
-        var newByKey = next.ToDictionary(item => (item.SourceType, item.RecordId));
+        var oldByKey = prior.GroupBy(item => (item.SourceType, item.RecordId))
+            .ToDictionary(group => group.Key, group => group.ToHashSet());
+        var newByKey = next.GroupBy(item => (item.SourceType, item.RecordId))
+            .ToDictionary(group => group.Key, group => group.ToHashSet());
         return oldByKey.Keys.Union(newByKey.Keys).Where(key =>
             !oldByKey.TryGetValue(key, out var oldValue) || !newByKey.TryGetValue(key, out var newValue) ||
-            oldValue != newValue).Select(key => key.RecordId).Distinct()
+            !oldValue.SetEquals(newValue)).Select(key => key.RecordId).Distinct()
             .OrderBy(IdKey, StringComparer.Ordinal).ToArray();
     }
 
@@ -1213,6 +1260,8 @@ public sealed class TypeIIPeriod : Aggregate
             DuplicateOccurrenceIds = Freeze(validation.DuplicateOccurrenceIds.ToArray()),
             MissingWorkIds = Freeze(validation.MissingWorkIds.ToArray()),
             UnresolvedMaterialItemIds = Freeze(validation.UnresolvedMaterialItemIds.ToArray()),
+            SourceBlockers = Freeze(validation.SourceBlockers.ToArray()),
+            SourceDifferences = Freeze(validation.SourceDifferences.ToArray()),
         } : null,
         CloseApprovals = Freeze(state.CloseApprovals.Select(item => item with
         {

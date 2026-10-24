@@ -38,8 +38,8 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         if (!fence.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(fence.Error);
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
-            DateTimeKind.Utc));
+        var effectiveThrough = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc));
+        var through = context.RecordedThrough ?? effectiveThrough;
         var policyReferences = context.PreviouslyCapturedSources.Where(static source =>
                 source.Kind is "policy_version" or "policy_retirement")
             .GroupBy(static source => source.RecordId)
@@ -69,7 +69,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             {
                 if (!ValidSummary(item, engagement) || !seenCampaignIds.Add(item.CampaignId))
                     return InvalidDirectory();
-                if (item.LaunchedAt > through)
+                if (item.LaunchedAt > effectiveThrough)
                     continue;
 
                 Policy? policy = null;
@@ -112,7 +112,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                     return SourceConflict();
 
                 var launch = history.Value.Launch;
-                if (launch.LaunchedAt > through)
+                if (launch.LaunchedAt > effectiveThrough)
                     continue;
                 if (launch.Subject.Kind == "policy")
                 {

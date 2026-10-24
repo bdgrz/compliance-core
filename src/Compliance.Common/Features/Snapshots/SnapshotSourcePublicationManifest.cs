@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.Examinations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Snapshots;
@@ -7,4 +9,15 @@ public sealed record SnapshotSourcePublicationManifest(Uuid TenantId, Uuid Progr
     IReadOnlyList<SnapshotSourcePublicationEntry> Sources)
 {
     public const string Schema = "snapshot-source-publication-manifest.v1";
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTimeOffset? RecordedThrough { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Uuid? ClosePeriodId { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Uuid? CloseOperationId { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<TypeIBaselineSourceCoverage>? SourceCoverage { get; init; }
 }

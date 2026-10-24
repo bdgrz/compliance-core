@@ -12,8 +12,16 @@ public sealed class PublishedTypeIBaselinePreviewReader(TypeIBaselinePreviewRead
     public ValueTask<Result<TypeIBaselinePreview>> ReadAsync(ExaminationEngagementView engagement,
         CancellationToken ct = default) => ReadAsync(engagement, Uuid.Empty, ct);
 
-    public async ValueTask<Result<TypeIBaselinePreview>> ReadAsync(ExaminationEngagementView engagement,
-        Uuid requesterUserId, CancellationToken ct = default)
+    public ValueTask<Result<TypeIBaselinePreview>> ReadAsync(ExaminationEngagementView engagement,
+        Uuid requesterUserId, CancellationToken ct = default) => ReadCoreAsync(engagement, requesterUserId, null, ct);
+
+    /// <summary>Publishes effective closing sources with the separately frozen receipt cutoff.</summary>
+    public ValueTask<Result<TypeIBaselinePreview>> ReadClosingAsync(ExaminationEngagementView engagement,
+        Uuid requesterUserId, DateTimeOffset recordedThrough, CancellationToken ct = default) =>
+        ReadCoreAsync(engagement, requesterUserId, recordedThrough, ct);
+
+    async ValueTask<Result<TypeIBaselinePreview>> ReadCoreAsync(ExaminationEngagementView engagement,
+        Uuid requesterUserId, DateTimeOffset? recordedThrough, CancellationToken ct)
     {
         if (engagement is null)
             return Result<TypeIBaselinePreview>.Failure(new RequestError(RequestErrorKind.Validation,
@@ -21,7 +29,7 @@ public sealed class PublishedTypeIBaselinePreviewReader(TypeIBaselinePreviewRead
         try
         {
             using var capture = SnapshotSourceCapture.Begin(engagement.TenantId);
-            var read = await sources.ReadAsync(engagement, requesterUserId, ct).ConfigureAwait(false);
+            var read = await sources.ReadAsync(engagement, requesterUserId, recordedThrough, ct).ConfigureAwait(false);
             if (!read.IsSuccess)
                 return read;
             var published = new List<TypeIBaselineSourceReference>(read.Value.Sources.Count);
@@ -49,7 +57,8 @@ public sealed class PublishedTypeIBaselinePreviewReader(TypeIBaselinePreviewRead
                     source.Revision, source.ContentSha256, source.Content!)).ToArray();
             var manifest = await content.WriteJsonAsync(engagement.TenantId.ToString(), Uuid.CreateVersion4(),
                 SnapshotSourcePublicationManifest.Schema, new SnapshotSourcePublicationManifest(engagement.TenantId,
-                    engagement.ProgramId, engagement.ExaminationEngagementId, entries), ct).ConfigureAwait(false);
+                    engagement.ProgramId, engagement.ExaminationEngagementId, entries)
+                { RecordedThrough = recordedThrough, SourceCoverage = recordedThrough is null ? null : read.Value.SourceCoverage }, ct).ConfigureAwait(false);
             return Result<TypeIBaselinePreview>.Success(TypeIBaselinePreview.Create(read.Value.TenantId,
                 read.Value.ProgramId, read.Value.ExaminationEngagementId, published, read.Value.Blockers,
                 read.Value.ScopeDifferences, read.Value.SourceCoverage) with

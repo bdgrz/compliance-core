@@ -36,7 +36,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         if (!effectiveSources.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(effectiveSources.Error);
 
-        var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
+        var through = context.RecordedThrough ?? new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
             DateTimeKind.Utc));
         var supportPattern = EventStreamPattern.ForPattern(engagement.TenantId.ToString(), SupportArea);
         var supportHistory = await ReadPatternTwiceAsync(supportPattern, ct).ConfigureAwait(false);

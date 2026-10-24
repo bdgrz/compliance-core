@@ -2809,6 +2809,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{amendment_id}/cancellations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Observation periods");
+    app.MapPortiaPut<RecordTypeIIPeriodCloseValidation, UnitResult>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-validations/{command_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Type II periods");
     app.MapPortiaPost<ApproveTypeIIPeriodClose>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-approvals")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

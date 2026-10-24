@@ -619,6 +619,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ITypeIBaselineSourceContributor, WorkforceTypeIBaselineSourceContributor>();
         services.AddScoped<TypeIBaselinePreviewReader>();
         services.AddScoped<ITypeIBaselinePreviewReader, PublishedTypeIBaselinePreviewReader>();
+        services.AddScoped<PublishedTypeIBaselinePreviewReader>();
+        services.AddScoped<TypeIIPeriodCloseHistory>();
+        services.AddScoped<TypeIIPeriodCloseSourcePublication>();
+        services.AddScoped<ITypeIIPeriodCloseReconciliation, TypeIIPeriodCloseReconciliation>();
         services.AddScoped<ReadinessReader>();
         services.AddScoped<ReadinessVerifier>();
         services.AddScoped<ReadinessDecisionFences>();
@@ -1225,6 +1229,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ApproveTypeIIOperatingPlanHandler>()
             .AddRequestHandler<StartTypeIIObservationPeriodHandler>()
             .AddRequestHandler<ApproveTypeIIPeriodCloseHandler>()
+            .AddRequestHandler<RecordTypeIIPeriodCloseValidationHandler>()
             .AddRequestHandler<FreezeTypeIIPeriodCloseHandler>()
             .AddRequestHandler<ProposeSystemDescriptionSuccessorHandler>()
             .AddRequestHandler<RecordManagementAssertionHandler>()

@@ -20,4 +20,11 @@ public sealed record TypeIIPeriodCloseValidationView(
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ImmutableContentRef? SourceContentManifest { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTimeOffset? RecordedThrough { get; init; }
+
+    /// <summary>Complete source-family capture failures that prohibit a ready close.</summary>
+    public IReadOnlyList<string> SourceBlockers { get; init; } = [];
+    /// <summary>Retained source scope differences that do not themselves assert a blocking condition.</summary>
+    public IReadOnlyList<string> SourceDifferences { get; init; } = [];
 }

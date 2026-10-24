@@ -15,7 +15,7 @@ using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations;
 
-public sealed class TypeIIPeriodCommandHandlerTests
+public sealed partial class TypeIIPeriodCommandHandlerTests
 {
     static readonly DateTimeOffset StartedAt = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
     static readonly DateTimeOffset AmendedAt = StartedAt.AddMonths(2);

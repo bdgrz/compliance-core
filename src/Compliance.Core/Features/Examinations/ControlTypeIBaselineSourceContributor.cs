@@ -20,10 +20,14 @@ public sealed class ControlTypeIBaselineSourceContributor(
 
     public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
         ExaminationEngagementView engagement, CancellationToken ct) =>
-        ControlSourceFailures.ClassifyAsync(() => ReadCoreAsync(engagement, ct));
+        ReadAsync(engagement, new TypeIBaselineSourceReadContext(Uuid.Empty, []), ct);
+
+    public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(ExaminationEngagementView engagement,
+        TypeIBaselineSourceReadContext context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => ReadCoreAsync(engagement, context, ct));
 
     async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(
-        ExaminationEngagementView engagement, CancellationToken ct)
+        ExaminationEngagementView engagement, TypeIBaselineSourceReadContext context, CancellationToken ct)
     {
         var fence = await consistency.CaptureAsync(engagement.TenantId, ct)
             .ConfigureAwait(false);
@@ -67,6 +71,9 @@ public sealed class ControlTypeIBaselineSourceContributor(
                     continue;
                 }
 
+                if (context.RecordedThrough is { } cutoff && version.ApprovedAt > cutoff)
+                    return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "An effective control changed after the frozen close receipt cutoff.", true));
                 if (!IsValidEffectiveVersion(version, engagement, control, item.Identifier))
                     return SourceConflict();
                 try

@@ -31,6 +31,54 @@ public sealed class TypeIIPeriodTests
     static readonly DateOnly PeriodEnd = new(2027, 9, 30);
 
     [Fact]
+    public void ShouldPreserveOpeningAndClosingSourceVersionsGivenSourceChangedDuringObservationPeriod()
+    {
+        // Arrange
+        var period = StartedPeriod();
+        var opening = Reference("control");
+        var closing = opening with { Version = 2, VersionId = Uuid.CreateVersion4(), ContentSha256 = new string('e', 64) };
+        var expected = period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId).ToArray();
+        var sources = new[] { opening, closing };
+
+        // Act
+        var validation = period.RecordCloseValidation(period.Revision,
+            new TypeIIPeriodCloseValidationContent(sources, expected, expected, [], [], [GapId]),
+            ValidatorId, "Close validator", Now.AddMonths(12));
+        Assert.Null(validation);
+        Assert.Null(period.ApproveClose(period.Revision, [GapId], "Reviewed complete source lineage",
+            CEOId, "CEO", "Chief Executive", Now.AddMonths(12).AddHours(1)));
+        Assert.Null(period.FreezeClose(period.Revision, Snapshot(sources, expected), CEOId,
+            "CEO", Now.AddMonths(12).AddHours(2)));
+        var next = closing with { Version = 3, VersionId = Uuid.CreateVersion4(), ContentSha256 = new string('f', 64) };
+        var amendment = period.AmendClose(period.Revision, Snapshot([opening, next], expected),
+            "Correct the closing version", [opening.RecordId], [Uuid.CreateVersion4()], CEOId,
+            "CEO", "Chief Executive", Now.AddMonths(12).AddDays(1));
+
+        // Assert
+        Assert.Null(amendment);
+        Assert.Equal(2, period.Current.CloseSnapshots.Count);
+        Assert.Equal(new[] { opening, closing }, period.Current.CloseSnapshots[0].SourceReferences);
+        Assert.Equal(new[] { opening, next }, period.Current.CloseSnapshots[1].SourceReferences);
+        Assert.Equal(opening.RecordId, Assert.Single(period.Current.CloseSnapshots[1].ChangedRecordIds));
+    }
+
+    [Fact]
+    public void ShouldRejectPrematureCloseValidationGivenObservationPeriodStillOpen()
+    {
+        // Arrange
+        var period = StartedPeriod();
+        var expected = period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId).ToArray();
+        var content = new TypeIIPeriodCloseValidationContent(SourceReferences(), expected, expected, [], [], []);
+
+        // Act
+        var failure = period.RecordCloseValidation(period.Revision, content, ValidatorId, "Close validator", Now.AddDays(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Null(period.Current.CloseValidation);
+    }
+
+    [Fact]
     public void ShouldBindOpeningSnapshotToApprovedPlanAndExpectedPopulationGivenPeriodStart()
     {
         // Arrange
