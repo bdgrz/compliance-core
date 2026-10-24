@@ -663,6 +663,7 @@ public static class ComplianceServiceCollectionExtensions
         // ProcessSweep is hosted by the first slice that registers a ProcessDefinition.
         // ISourceFactResolver stays unregistered until Portia publishes the shared connection's IStreamClient
         // (AddStreamClient); the first consuming slice registers FitzSourceFactResolver.
+        // SeparationOfDutiesWaiverProofResolver depends on it, so the first consumer slice (S20) registers it too.
         services.AddScoped<FitzActualStaffEngagementLocator>();
         services.AddScoped<IActualStaffEngagementLocatorProjection>(provider =>
             provider.GetRequiredService<FitzActualStaffEngagementLocator>());

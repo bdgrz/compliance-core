@@ -1892,6 +1892,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(CriterionNotApplicableProposed))]
 [JsonSerializable(typeof(CriterionApplicabilityReviewed))]
 [JsonSerializable(typeof(CriterionNotApplicableWithdrawn))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.AccessControl.SeparationOfDutiesWaiverProof))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.AuthoritativeReadCut))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.ImmutableContentRef))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.ImmutableSelectionManifest))]
