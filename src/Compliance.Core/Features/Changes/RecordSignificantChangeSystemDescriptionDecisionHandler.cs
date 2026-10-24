@@ -38,6 +38,8 @@ public sealed class RecordSignificantChangeSystemDescriptionDecisionHandler(
         return await executor.ExecuteAsync(new SignificantChange(request.TenantId,
                 request.ProgramId, request.ChangeId), change =>
             {
+                if (Classify(change, request, decision) is { } outcome)
+                    return AggregateOutcome.Discard(Result.Failure(outcome));
                 if (change.Current?.CurrentAssessment is not { RequiresSystemDescriptionReview: true } assessment ||
                     assessment.ContentVersion != request.ContentVersion ||
                     SignificantChange.AssessmentSha256(assessment) != request.AssessmentSha256 ||
@@ -49,5 +51,33 @@ public sealed class RecordSignificantChangeSystemDescriptionDecisionHandler(
                     change.Revision, decision.Decision, decision.DecisionId, decision.Rationale,
                     decision.ActorMemberId, decision.ActorDisplay, decision.DecidedAt));
             }, context, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Separates a decision that can still be applied from one whose assessment is superseded or already decided
+    ///     (terminal) and one whose assessment or required review-work links are not visible yet (transient).
+    /// </summary>
+    static RequestError? Classify(SignificantChange change, RecordSignificantChangeSystemDescriptionDecision request,
+        CorrelatedSystemDescriptionDecision decision)
+    {
+        if (change.Current is not { } current)
+            return null;
+        var retained = current.Assessments.FirstOrDefault(item => item.ContentVersion == request.ContentVersion);
+        if (retained is not null && SignificantChange.AssessmentSha256(retained) != request.AssessmentSha256)
+            return null;
+        if (current.SystemDescriptionDecisions.Any(item => item.DecisionId == request.DecisionId))
+            return null;
+        var outcome = ImpactReactionOutcomes.ClassifyDecision(request.ContentVersion, current.CurrentVersionNumber,
+            retained is not null,
+            current.SystemDescriptionDecisions.Any(item => item.ContentVersion == request.ContentVersion),
+            decision.DecidedAt, retained?.AssessedAt ?? default);
+        if (outcome is not null)
+            return outcome;
+        return retained is not null && retained.RequiresSystemDescriptionReview &&
+               retained.RelatedReviewWorkIds.Concat(retained.RelatedCorrectiveActionIds).Any(id =>
+                   !current.ReviewWorkLinks.Any(link => link.ContentVersion == request.ContentVersion &&
+                                                        link.WorkId == id))
+            ? ImpactReactionOutcomes.NotReady("Required follow-up work for the description review is not linked yet.")
+            : null;
     }
 }

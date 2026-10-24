@@ -1,20 +1,39 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Incidents;
 
-public sealed class ReviseComplianceIncidentHandler(IAggregateExecutor executor, TimeProvider clock)
-    : IRequestHandler<ReviseComplianceIncident>
+public sealed class ReviseComplianceIncidentHandler(NativeOperationExecutor operations,
+    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<ReviseComplianceIncident>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<ReviseComplianceIncident> context,
+    const string CommandKind = "ReviseComplianceIncident";
+
+    public async ValueTask<Result> HandleAsync(IRequestContext<ReviseComplianceIncident> context,
         CancellationToken ct)
     {
         var request = context.Request;
-        var (actorMemberId, actorDisplay) = ClientServiceActor.Snapshot(context);
-        return executor.ExecuteAsync(new ComplianceIncident(request.TenantId, request.ProgramId,
-                request.IncidentId), incident => CommandFailureRequestAdapter.ToOutcome(
-                incident.Revise(request.ExpectedRevision, request.Content, request.ChangeReason,
-                    actorMemberId, actorDisplay, clock.GetUtcNow())), context, ct);
+        if (IncidentOperations.Validate(request.CommandId, request.TenantId, request.ProgramId, request.IncidentId,
+                request.ExpectedRevision) is { } invalid)
+            return Result.Failure(invalid);
+        var (actor, forbidden) = IncidentOperations.ActorOf(context.Actor);
+        if (forbidden is not null)
+            return Result.Failure(forbidden);
+        var (memberId, display) = ClientServiceActor.Snapshot(context);
+        var provenance = IncidentOperations.Provenance(request, CommandKind, request.CommandId, request.TenantId,
+            request.ProgramId, request.IncidentId, request.ExpectedRevision, actor!, clock.GetUtcNow());
+        var response = await IncidentOperations.UnitResponseAsync(content, request.TenantId, ct).ConfigureAwait(false);
+        var accepted = await operations.ExecuteAsync(new NativeOperation<ComplianceIncident>(
+            AcceptedOperationBinding.Of(provenance),
+            () => IncidentOperations.Owner(request.TenantId, request.ProgramId, request.IncidentId, request.CommandId),
+            incident => incident.Acceptance,
+            incident => IncidentOperations.Prepared(incident.PrepareRevise(request.ExpectedRevision, request.Content,
+                request.ChangeReason, memberId, display, provenance.AcceptedAt), response),
+            (ComplianceIncident incident, ImmutableContentRef frozen) => IncidentOperations.Applied(
+                incident.Revise(provenance, frozen, request.ExpectedRevision, request.Content, request.ChangeReason,
+                    memberId, display))), context, ct).ConfigureAwait(false);
+        return IncidentOperations.Done(accepted);
     }
 }

@@ -1,8 +1,13 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Incidents;
 
-/// <summary>Records the ComplianceIncidentRevised domain fact for one tenant-owned subject revision.</summary>
+/// <summary>
+///     The accepted incident revision. The fact is the native acceptance of the logical <paramref name="CommandId" />
+///     on the incident stream.
+/// </summary>
 [Discriminator("bdgrz.incidents.compliance-incident-revised", 2)]
 public sealed record ComplianceIncidentRevised(
     Uuid TenantId,
@@ -10,4 +15,7 @@ public sealed record ComplianceIncidentRevised(
     long Revision,
     Uuid? ActorMemberId,
     ComplianceIncidentView State,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    DateTimeOffset OccurredAt,
+    Uuid CommandId,
+    OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse) : DomainEvent, INativeOperationFact;

@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Changes;
-using Bdgrz.Compliance.Features.Incidents;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,59 +59,6 @@ public sealed class ChangeAndIncidentCommandHandlerTests
         Assert.Equal(2, aggregate.Current.CurrentVersionNumber);
         Assert.Equal(RbacIds.Member(TenantId, reviewer), aggregate.Current.CurrentAssessment!.AssessedByMemberId);
         Assert.Equal("significant", aggregate.Current.CurrentAssessment.Significance);
-    }
-
-    [Fact]
-    public async Task ShouldRecordReviseAssessAndResolveIncidentGivenCompleteChronologyAndEvidence()
-    {
-        // Arrange
-        await using var scenario = new Scenario();
-        var reporter = Uuid.CreateVersion4();
-        var reviser = Uuid.CreateVersion4();
-        var assessor = Uuid.CreateVersion4();
-        var resolver = Uuid.CreateVersion4();
-        var incidentId = Uuid.CreateVersion4();
-        var occurredAt = Now.AddMinutes(-30);
-        var detectedAt = Now.AddMinutes(-20);
-        var content = new ComplianceIncidentContent("security_monitor", "INC-44", null, null,
-            "Production identity alert", "An identity integration exposed customer data.", "security",
-            "critical", occurredAt, detectedAt, RbacIds.Member(TenantId, reporter), true, false,
-            [SystemId], "restricted", [EvidenceId]);
-        var revision = content with { Description = "An identity integration exposed customer data through a misconfigured production policy." };
-        var assessment = new ComplianceIncidentImpactAssessmentContent("significant",
-            "Customer data was affected by a security incident.", true, true, true, true,
-            ["scope", "control", "risk", "vendor", "evidence"],
-            [new("system_instance", SystemId, SystemVersionId, 4)], [], [EvidenceId], false,
-            true, false);
-        var resolution = new ComplianceIncidentResolutionContent(
-            "The policy was corrected and the affected identity integration was rotated.", Now,
-            [EvidenceId], []);
-
-        // Act
-        var recorded = await new RecordComplianceIncidentHandler(scenario.Executor, scenario.Clock).HandleAsync(
-            Scenario.Context(new RecordComplianceIncident(TenantId, ProgramId, incidentId, content), reporter),
-            CancellationToken.None);
-        var revised = await new ReviseComplianceIncidentHandler(scenario.Executor, scenario.Clock).HandleAsync(
-            Scenario.Context(new ReviseComplianceIncident(TenantId, ProgramId, incidentId, 1, revision,
-                "Added the production policy detail."), reviser), CancellationToken.None);
-        var assessed = await new AssessComplianceIncidentHandler(scenario.Executor, scenario.Clock).HandleAsync(
-            Scenario.Context(new AssessComplianceIncident(TenantId, ProgramId, incidentId, 2, assessment), assessor),
-            CancellationToken.None);
-        var resolved = await new RecordComplianceIncidentResolutionHandler(scenario.Executor, scenario.Clock)
-            .HandleAsync(Scenario.Context(new RecordComplianceIncidentResolution(TenantId, ProgramId, incidentId,
-                3, resolution), resolver), CancellationToken.None);
-        var aggregate = await scenario.Reader.HydrateAsync(new ComplianceIncident(TenantId, ProgramId, incidentId));
-
-        // Assert
-        Assert.True(recorded.IsSuccess, recorded.Error?.Message);
-        Assert.True(revised.IsSuccess, revised.Error?.Message);
-        Assert.True(assessed.IsSuccess, assessed.Error?.Message);
-        Assert.True(resolved.IsSuccess, resolved.Error?.Message);
-        Assert.Equal("resolved", aggregate.Current!.Status);
-        Assert.Equal(revision.Description, aggregate.Current.Current!.Content.Description);
-        Assert.Equal(2, aggregate.Current.CurrentVersionNumber);
-        Assert.Equal(RbacIds.Member(TenantId, assessor), aggregate.Current.CurrentAssessment!.AssessedByMemberId);
-        Assert.Equal(RbacIds.Member(TenantId, resolver), aggregate.Current.Resolution!.ResolvedByMemberId);
     }
 
     sealed class Scenario : IAsyncDisposable

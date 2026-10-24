@@ -48,7 +48,8 @@ sealed class AccountableWorkItemOwnershipReader(
         return owners.Count == expected.Count
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "One or more impact-review work items are not present in the current tenant and program work sources."));
+                "One or more impact-review work items are not present in the current tenant and program work sources.",
+                isTransient: true));
     }
 
     static Result InvalidWorkScope() => Result.Failure(new RequestError(RequestErrorKind.Conflict,

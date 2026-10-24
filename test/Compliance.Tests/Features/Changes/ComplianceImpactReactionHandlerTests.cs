@@ -1,5 +1,9 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Features.Incidents;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
@@ -44,6 +48,61 @@ public sealed class ComplianceImpactReactionHandlerTests
         Assert.Equal(2, ownership.Calls);
         Assert.Equal(3, saved.Revision);
         Assert.Equal(workItemId, Assert.Single(saved.Current!.ReviewWorkLinks).WorkId);
+    }
+
+    [Fact]
+    public async Task ShouldAnswerSupersededGivenWorkLinkForAssessmentReplacedByNewerVersion()
+    {
+        // Arrange
+        await using var scenario = new Scenario();
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var changeId = Uuid.CreateVersion4();
+        var workItemId = Uuid.CreateVersion4();
+        var assessor = RbacIds.Member(tenantId, Uuid.CreateVersion4());
+        var change = AssessedChange(tenantId, programId, changeId, assessor, Now.AddHours(-2), [workItemId]);
+        Assert.Null(change.Revise(change.Revision, change.Current!.Current!.Content with
+        {
+            Description = "The migration scope changed after the first assessment.",
+        }, "A newer version supersedes the first assessment.", assessor, "Assessor", Now.AddHours(-1)));
+        await scenario.SaveAsync(change);
+        var handler = new LinkImpactReviewWorkHandler(scenario.Executor, scenario.Reader,
+            new WorkOwnershipReader([workItemId]), new FixedTimeProvider(Now));
+
+        // Act
+        var superseded = await handler.HandleAsync(
+            SystemContext(new LinkImpactReviewWork(tenantId, programId, changeId, 1)), CancellationToken.None);
+        var notVisible = await handler.HandleAsync(
+            SystemContext(new LinkImpactReviewWork(tenantId, programId, changeId, 9)), CancellationToken.None);
+        var saved = await scenario.Reader.HydrateAsync(new SignificantChange(tenantId, programId, changeId));
+
+        // Assert
+        Assert.True(ImpactReactionOutcomes.IsSuperseded(superseded.Error!));
+        Assert.True(notVisible.Error!.IsTransient);
+        Assert.Empty(saved.Current!.ReviewWorkLinks);
+    }
+
+    [Fact]
+    public async Task ShouldAnswerTransientGivenWorkOwnershipThatHasNotCaughtUp()
+    {
+        // Arrange
+        await using var scenario = new Scenario();
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var changeId = Uuid.CreateVersion4();
+        var workItemId = Uuid.CreateVersion4();
+        await scenario.SaveAsync(AssessedChange(tenantId, programId, changeId,
+            RbacIds.Member(tenantId, Uuid.CreateVersion4()), Now.AddHours(-2), [workItemId]));
+        var handler = new LinkImpactReviewWorkHandler(scenario.Executor, scenario.Reader,
+            new LaggingOwnershipReader(), new FixedTimeProvider(Now));
+
+        // Act
+        var lagging = await handler.HandleAsync(
+            SystemContext(new LinkImpactReviewWork(tenantId, programId, changeId, 1)), CancellationToken.None);
+
+        // Assert
+        Assert.True(lagging.Error!.IsTransient);
+        Assert.Equal(RequestErrorKind.Conflict, lagging.Error.Kind);
     }
 
     [Fact]
@@ -121,15 +180,16 @@ public sealed class ComplianceImpactReactionHandlerTests
             versionId, incidentId, author, decider, assessmentSha256);
         await scenario.SaveAsync(description);
         var decisionId = SystemDescriptionDecisionCorrelationId(versionId, incidentId);
-        var request = new RecordComplianceIncidentSystemDescriptionDecision(tenantId,
-            programId, incidentId, 1, descriptionId, versionId, decisionId,
+        var request = new RecordComplianceIncidentSystemDescriptionDecision(Uuid.CreateVersion4(),
+            tenantId, programId, incidentId, 1, descriptionId, versionId, decisionId,
             assessmentSha256);
 
         // Act
         var handler = new RecordComplianceIncidentSystemDescriptionDecisionHandler(
-            scenario.Executor, scenario.Reader);
+            scenario.Operations, scenario.Reader, scenario.Content, new FixedTimeProvider(Now));
         var mismatchedAssessment = await handler.HandleAsync(SystemContext(request with
         {
+            CommandId = Uuid.CreateVersion4(),
             AssessmentSha256 = new string('a', 64),
         }), CancellationToken.None);
         var result = await handler.HandleAsync(
@@ -193,7 +253,7 @@ public sealed class ComplianceImpactReactionHandlerTests
         Assert.Null(saved.Current!.CurrentSystemDescriptionDecision);
     }
 
-    static SignificantChange AssessedChange(Uuid tenantId, Uuid programId, Uuid changeId,
+    internal static SignificantChange AssessedChange(Uuid tenantId, Uuid programId, Uuid changeId,
         Uuid assessor, DateTimeOffset assessedAt, IReadOnlyList<Uuid> workIds)
     {
         var change = new SignificantChange(tenantId, programId, changeId);
@@ -211,7 +271,7 @@ public sealed class ComplianceImpactReactionHandlerTests
         return change;
     }
 
-    static ComplianceIncident AssessedIncident(Uuid tenantId, Uuid programId, Uuid incidentId,
+    internal static ComplianceIncident AssessedIncident(Uuid tenantId, Uuid programId, Uuid incidentId,
         Uuid assessor, DateTimeOffset assessedAt)
     {
         var incident = new ComplianceIncident(tenantId, programId, incidentId);
@@ -266,7 +326,7 @@ public sealed class ComplianceImpactReactionHandlerTests
         return description;
     }
 
-    static SystemDescriptionDraftContent DescriptionContent(IReadOnlyList<Uuid> changeIds) =>
+    internal static SystemDescriptionDraftContent DescriptionContent(IReadOnlyList<Uuid> changeIds) =>
         new("The Sample System", [
             Section("services"),
             Section("commitments_requirements"),
@@ -299,7 +359,9 @@ public sealed class ComplianceImpactReactionHandlerTests
         public Scenario()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var events = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(events);
+            services.AddSingleton<IDomainEventReader>(events);
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
@@ -307,8 +369,12 @@ public sealed class ComplianceImpactReactionHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+            Content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+            Operations = new NativeOperationExecutor(Reader, Executor, Content);
         }
 
+        public IImmutableContentStore Content { get; }
+        public NativeOperationExecutor Operations { get; }
         public IAggregateExecutor Executor { get; }
         public IAggregateReader Reader { get; }
         IAggregateWriter Writer { get; }
@@ -336,6 +402,13 @@ public sealed class ComplianceImpactReactionHandlerTests
                 : Result.Failure(new RequestError(RequestErrorKind.Conflict,
                     "Work ownership did not match the fixture.")));
         }
+    }
+
+    sealed class LaggingOwnershipReader : IChangeImpactWorkOwnershipReader
+    {
+        public ValueTask<Result> ConfirmOwnedByProgramAsync(Uuid tenantId, Uuid programId,
+            IReadOnlyCollection<Uuid> workItemIds, CancellationToken ct = default) =>
+            ValueTask.FromResult(Result.Failure(ImpactReactionOutcomes.NotReady("The work sources have not caught up.")));
     }
 
     sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
