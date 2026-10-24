@@ -260,10 +260,9 @@ public sealed class MethodologyTemplateCommandHandlerTests
         var reviseTemplate = new ReviseMethodologyTemplateDraftHandler(scenario.TemplateOperations());
         var reviewTemplate = new ReviewMethodologyTemplateHandler(scenario.TemplateOperations());
         var approveTemplate = new ApproveMethodologyTemplateVersionHandler(scenario.TemplateOperations());
-        var applyTemplate = new ApplyMethodologyTemplateHandler(scenario.Executor, scenario.Reader, scenario.Templates, scenario.Clock);
-        var proposeSuccessor = new ProposeTemplateSuccessorAdoptionHandler(scenario.Executor, scenario.Reader,
-            scenario.Templates, scenario.Clock);
-        var recordDisposition = new RecordTemplateSuccessorDispositionHandler(scenario.Executor, scenario.Clock);
+        var applyTemplate = new ApplyMethodologyTemplateHandler(scenario.ApplicationOperations(), scenario.Templates);
+        var proposeSuccessor = new ProposeTemplateSuccessorAdoptionHandler(scenario.ApplicationOperations(), scenario.Templates);
+        var recordDisposition = new RecordTemplateSuccessorDispositionHandler(scenario.ApplicationOperations());
 
         // Act
         var created = await createTemplate.HandleAsync(Scenario.Context(new CreateMethodologyTemplate(
@@ -274,8 +273,7 @@ public sealed class MethodologyTemplateCommandHandlerTests
             TemplateId, 1, "Initial release approved."), approver), CancellationToken.None);
         var applied = await applyTemplate.HandleAsync(Scenario.Context(new ApplyMethodologyTemplate(tenantId,
             programId, TemplateId, 1, applicationKey), clientAdmin), CancellationToken.None);
-        var afterApply = await scenario.Reader.HydrateAsync(new TemplateApplication(tenantId, programId,
-            ApplicationIdFor(programId, applicationKey)));
+        var afterApply = await scenario.Applications.ReadAsync(tenantId, programId, ApplicationIdFor(programId, applicationKey));
         var revised = await reviseTemplate.HandleAsync(Scenario.Context(new ReviseMethodologyTemplateDraft(Uuid.CreateVersion4(),
             TemplateId, 3, Content("Updated successor procedure."), "Update annual testing steps"), author),
             CancellationToken.None);
@@ -288,8 +286,7 @@ public sealed class MethodologyTemplateCommandHandlerTests
         var recorded = await recordDisposition.HandleAsync(Scenario.Context(new RecordTemplateSuccessorDisposition(Uuid.CreateVersion4(),
             tenantId, programId, TemplateId, applicationKey, 2, 2, "adopt",
             "The updated procedure fits our existing quarterly control."), clientAdmin), CancellationToken.None);
-        var application = await scenario.Reader.HydrateAsync(new TemplateApplication(tenantId, programId,
-            ApplicationIdFor(programId, applicationKey)));
+        var application = await scenario.Applications.ReadAsync(tenantId, programId, ApplicationIdFor(programId, applicationKey));
 
         // Assert
         Assert.True(createProgram.IsSuccess, createProgram.Error?.Message);
@@ -302,15 +299,15 @@ public sealed class MethodologyTemplateCommandHandlerTests
         Assert.True(approvedSecond.IsSuccess, approvedSecond.Error?.Message);
         Assert.True(proposed.IsSuccess, proposed.Error?.Message);
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
-        Assert.Equal(1, afterApply.Current!.TemplateVersionNumber);
-        Assert.All(afterApply.Current.Drafts, draft => Assert.Equal("draft_pending", draft.Status));
-        Assert.False(afterApply.Current.IsActivated);
-        var successor = Assert.Single(application.Current!.SuccessorProposals);
+        Assert.Equal(1, afterApply.View!.TemplateVersionNumber);
+        Assert.All(afterApply.View.Drafts, draft => Assert.Equal("draft_pending", draft.Status));
+        Assert.False(afterApply.View.IsActivated);
+        var successor = Assert.Single(application.View!.SuccessorProposals);
         Assert.Equal(2, successor.Version.VersionNumber);
         Assert.Equal("adapt", successor.ProposedDisposition);
-        var decision = Assert.Single(application.Current.SuccessorDecisions);
+        var decision = Assert.Single(application.View.SuccessorDecisions);
         Assert.Equal("adopt", decision.Disposition);
-        Assert.Equal(1, application.Current.TemplateVersionNumber);
+        Assert.Equal(1, application.View.TemplateVersionNumber);
     }
 
     static MethodologyTemplateContent Content(string summary) => new(
@@ -342,6 +339,9 @@ public sealed class MethodologyTemplateCommandHandlerTests
             new PersistenceKvClient(new InMemoryKvClient()));
         public MethodologyTemplateContributionReader Contributions => new(Reader, ContentStore);
         public MethodologyTemplateReader Templates => new(Reader, _events, ContentStore);
+        public TemplateApplicationReader Applications => new(Reader, _events, ContentStore);
+        public TemplateApplicationOperations ApplicationOperations() => new(Reader, Applications,
+            new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, Clock);
         public MethodologyTemplateOperations TemplateOperations(TimeProvider? clock = null) =>
             new(new NativeOperationExecutor(Reader, Executor, ContentStore), Templates, ContentStore, clock ?? Clock);
         public MethodologyTemplateContributionOperations ContributionOperations(TimeProvider? clock = null) =>

@@ -1,7 +1,6 @@
 using Bdgrz.Compliance.Features.MethodologyTemplates;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -22,15 +21,14 @@ public sealed class TemplateApplicationTests
     public void ShouldReplayApplicationAfterDraftReceiptGivenLaterClockAndDisplay()
     {
         // Arrange
-        var application = new TemplateApplication(TenantId, ProgramId, ApplicationId);
+        var application = new TemplateApplicationRules(TenantId, ProgramId, ApplicationId);
         var version = PublishedTemplateVersion();
         Assert.Null(application.Apply(version, "apply-2026-10", ActorId, "Original display", Now));
         var draft = application.Current!.Drafts[0];
         Assert.Null(application.RecordDraftCreated(application.Revision, draft.EntryKey,
             draft.PlannedRecordId, 1, Hash('a'), "draft", ActorId, "Worker", Now.AddMinutes(1)));
-        var facts = new AggregateScenario<TemplateApplication>(application).PendingEvents.ToArray();
-        var replay = new AggregateScenario<TemplateApplication>(new TemplateApplication(TenantId, ProgramId,
-            ApplicationId)).Given(facts).Aggregate;
+        var facts = application.PendingChanges.ToArray();
+        var replay = Replay(facts, (ActorId, "Original display", Now), (ActorId, "Worker", Now.AddMinutes(1)));
 
         // Act
         var result = replay.Apply(version, "apply-2026-10", ActorId, "Renamed member", Now.AddHours(1));
@@ -39,7 +37,7 @@ public sealed class TemplateApplicationTests
         // Assert
         Assert.Null(result);
         Assert.NotNull(changedActor);
-        Assert.Empty(new AggregateScenario<TemplateApplication>(replay).PendingEvents);
+        Assert.Empty(replay.PendingChanges);
         Assert.Equal(Now, replay.Current!.RequestedAt);
     }
 
@@ -47,7 +45,7 @@ public sealed class TemplateApplicationTests
     public void ShouldPinOneApprovedVersionAndCreateOnlyDraftProvenanceGivenApplication()
     {
         // Arrange
-        var application = new TemplateApplication(TenantId, ProgramId, ApplicationId);
+        var application = new TemplateApplicationRules(TenantId, ProgramId, ApplicationId);
         var version = PublishedTemplateVersion();
 
         // Act
@@ -55,9 +53,8 @@ public sealed class TemplateApplicationTests
         var firstDraft = application.Current!.Drafts[0];
         var created = application.RecordDraftCreated(application.Revision, firstDraft.EntryKey,
             firstDraft.PlannedRecordId, 1, Hash('a'), "draft", ActorId, "Application worker", Now.AddMinutes(1));
-        var events = new AggregateScenario<TemplateApplication>(application).PendingEvents.ToArray();
-        var replay = new AggregateScenario<TemplateApplication>(
-            new TemplateApplication(TenantId, ProgramId, ApplicationId)).Given(events).Aggregate;
+        var events = application.PendingChanges.ToArray();
+        var replay = Replay(events, (ActorId, "Client administrator", Now), (ActorId, "Application worker", Now.AddMinutes(1)));
 
         // Assert
         Assert.Null(applied);
@@ -76,7 +73,7 @@ public sealed class TemplateApplicationTests
     public void ShouldRequireExactPublishedSuccessorAndRetainTenantDispositionGivenTemplateUpdate()
     {
         // Arrange
-        var application = new TemplateApplication(TenantId, ProgramId, ApplicationId);
+        var application = new TemplateApplicationRules(TenantId, ProgramId, ApplicationId);
         Assert.Null(application.Apply(PublishedTemplateVersion(), "apply-1", ActorId,
             "Client administrator", Now));
         var unpublished = PublishedTemplateVersion(2) with { Status = "draft" };
@@ -116,6 +113,61 @@ public sealed class TemplateApplicationTests
         Assert.Equal(ExpectedDispositions, application.Current.SuccessorDecisions.Select(item => item.Disposition));
         Assert.Equal("draft_pending", application.Current.Drafts[0].Status);
         Assert.False(application.Current.IsActivated);
+    }
+
+    [Fact]
+    public void ShouldContinueSuccessorDecisionsGivenMoreThanFormerLifetimeLimit()
+    {
+        // Arrange
+        var application = new TemplateApplicationRules(TenantId, ProgramId, ApplicationId);
+        Assert.Null(application.Apply(PublishedTemplateVersion(), "long-lived", ActorId, "Client administrator", Now));
+
+        // Act
+        for (var version = 2; version <= 71; version++)
+        {
+            Assert.Null(application.ProposeSuccessor(application.Revision, PublishedTemplateVersion(version),
+                "adapt", ActorId, "Client administrator", Now.AddMinutes(version * 2)));
+            Assert.Null(application.RecordSuccessorDisposition(application.Revision, "adapt", "Keep our exact local procedure.",
+                ActorId, "Client administrator", Now.AddMinutes(version * 2 + 1)));
+        }
+
+        // Assert
+        Assert.Equal(70, application.Current!.SuccessorDecisions.Count);
+        Assert.Equal(70, application.Current.SuccessorProposals.Count);
+        Assert.Equal(141, application.Revision);
+        Assert.Equal(1, application.Current.TemplateVersionNumber);
+    }
+
+    [Fact]
+    public void ShouldApplyFullLegalPublishedContentGivenBodyLargerThanNativeFrame()
+    {
+        // Arrange
+        var application = new TemplateApplicationRules(TenantId, ProgramId, ApplicationId);
+        var original = PublishedTemplateVersion();
+        var content = original.Content with
+        {
+            Records = Enumerable.Range(0, 100).Select(index => new MethodologyTemplateRecordContent(
+                $"control-{index:000}", "control", $"Control {index}", new string('x', 2000), [])).ToArray(),
+        };
+        var version = original with { Content = content, ContentSha256 = Digest(content) };
+
+        // Act
+        var applied = application.Apply(version, "complete-content", ActorId, "Client administrator", Now);
+
+        // Assert
+        Assert.Null(applied);
+        Assert.Equal(100, application.Current!.SourceVersion.Content.Records.Count);
+        Assert.Equal(version.ContentSha256, application.Current.TemplateContentSha256);
+        Assert.All(application.Current.Drafts, draft => Assert.Equal("draft_pending", draft.Status));
+    }
+
+    static TemplateApplicationRules Replay(TemplateApplicationMutationContent[] changes,
+        params (Uuid Actor, string Display, DateTimeOffset At)[] attribution)
+    {
+        var rules = new TemplateApplicationRules(TenantId, ProgramId, ApplicationId);
+        for (var index = 0; index < changes.Length; index++)
+            rules.ApplyChange(changes[index], index + 1, attribution[index].Actor, attribution[index].Display, attribution[index].At);
+        return rules;
     }
 
     static MethodologyTemplateVersionView PublishedTemplateVersion(long versionNumber = 1)

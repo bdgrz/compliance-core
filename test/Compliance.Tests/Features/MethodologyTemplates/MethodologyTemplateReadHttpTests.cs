@@ -20,6 +20,19 @@ namespace Bdgrz.Compliance.Tests.Features.MethodologyTemplates;
 public sealed class MethodologyTemplateReadHttpTests
 {
     [Fact]
+    public async Task ShouldRequireAuthenticationGivenScopedTemplateApplicationRead()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+
+        // Act
+        using var response = await fixture.GetTemplateApplicationAsync();
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
     public async Task ShouldReturnEmptyPublishedCatalogGivenAuthorizedProductionListRoute()
     {
         // Arrange
@@ -131,6 +144,8 @@ public sealed class MethodologyTemplateReadHttpTests
             _client.GetAsync($"/api/v1/tenants/{Tenant}/programs/{program ?? Program}/methodology-templates");
         public Task<HttpResponseMessage> GetAsync() => _client.GetAsync(
             $"/api/v1/tenants/{Tenant}/programs/{Program}/methodology-template-versions/{Uuid.CreateVersion4()}");
+        public Task<HttpResponseMessage> GetTemplateApplicationAsync() => _client.GetAsync(
+            $"/api/v1/tenants/{Tenant}/programs/{Program}/template-applications/{Uuid.CreateVersion4()}");
 
         public async ValueTask DisposeAsync()
         {

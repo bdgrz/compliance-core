@@ -1,54 +1,28 @@
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
-public sealed class ProposeTemplateSuccessorAdoptionHandler(IAggregateExecutor executor,
-    IAggregateReader reader, MethodologyTemplateReader templates, TimeProvider clock) : IRequestHandler<ProposeTemplateSuccessorAdoption>
+public sealed class ProposeTemplateSuccessorAdoptionHandler(TemplateApplicationOperations operations,
+    MethodologyTemplateReader templates) : IRequestHandler<ProposeTemplateSuccessorAdoption>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<ProposeTemplateSuccessorAdoption> context,
-        CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<ProposeTemplateSuccessorAdoption> context, CancellationToken ct)
     {
         var request = context.Request;
-        var actor = ClientServiceActor.Snapshot(context);
-        var operation = AuthoredCommandReplay.Create(new TemplateApplication(request.TenantId, request.ProgramId,
-                TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey), request.CommandId), request.CommandId,
-            nameof(ProposeTemplateSuccessorAdoption), actor.MemberId, request.ExpectedRevision, request, clock.GetUtcNow());
-        var replayOwner = await reader.HydrateAsync(new TemplateApplication(request.TenantId, request.ProgramId,
-                TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey), request.CommandId), ct).ConfigureAwait(false);
-        if (AuthoredCommandReplay.Unit(replayOwner.ReplayAcceptance, operation) is { } replay)
-            return replay;
-        if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
-            request.TemplateId == Uuid.Empty || request.NewTemplateVersion <= 0)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A tenant, program, template, and successor version are required."));
-
-        try
-        {
-            var successor = await templates.VersionAsync(request.TemplateId, request.NewTemplateVersion, ct)
-                .ConfigureAwait(false);
-            if (successor is null)
-                return Result.Failure(new RequestError(RequestErrorKind.NotFound,
-                    "The methodology-template successor version was not found."));
-            if (successor.Status != "published")
-                return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "Only a published methodology-template version can be proposed to an existing application."));
-
-
-            return await executor.ExecuteAsync(new TemplateApplication(request.TenantId, request.ProgramId,
-                    TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey), request.CommandId),
-                application => CommandFailureRequestAdapter.ToOutcome(application.ProposeSuccessor(
-                    request.ExpectedRevision, successor, request.Disposition, actor.MemberId, actor.Display,
-                    clock.GetUtcNow(), operation: operation)), context, ct).ConfigureAwait(false);
-        }
-        catch (ImmutableContentIntegrityException exception)
-        {
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The methodology template's immutable content cannot be verified.",
-                isTransient: exception is ImmutableContentUnavailableException));
-        }
+        if (request.NewTemplateVersion <= 0)
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "An exact published successor version is required.")));
+        return operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.TemplateId,
+            request.ApplicationKey, request.CommandId, nameof(ProposeTemplateSuccessorAdoption), request.ExpectedRevision,
+            async (rules, actor, display, at, token) =>
+            {
+                var successor = await templates.VersionAsync(request.TemplateId, request.NewTemplateVersion, token)
+                    .ConfigureAwait(false);
+                if (successor is null)
+                    return CommandFailure.MissingRecord("The methodology-template successor version was not found.");
+                if (successor.Status != "published")
+                    return CommandFailure.StateConflict("Only a published methodology-template version can be proposed to an existing application.");
+                return rules.ProposeSuccessor(request.ExpectedRevision, successor, request.Disposition, actor, display, at);
+            }, ct);
     }
 }

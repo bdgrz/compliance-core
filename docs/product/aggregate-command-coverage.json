@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "0c5a45c1fa7639bc253245b0464302ec0b48cd82",
+  "sourceCommit": "6cf9d3e25bfa85f756bf2b94a2e196e92bc204c4",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
-    "factsWithReducer": 488,
-    "factsWithAggregateEmitter": 468,
+    "factsWithReducer": 487,
+    "factsWithAggregateEmitter": 464,
     "auditFactsWithoutReducer": 2,
-    "factsWithoutReducerOrEmitter": 21,
-    "legacyReducerOnlyFacts": 20,
+    "factsWithoutReducerOrEmitter": 22,
+    "legacyReducerOnlyFacts": 23,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 123,
+    "aggregateTypesWithCommandPath": 122,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -24,13 +24,13 @@
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 729,
+    "registeredCoreHandlerRegistrations": 730,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 45,
+    "unwiredAggregateProducerOperations": 44,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 32
+      "no_registered_request_route": 31
     },
     "factReplayGuardRows": 0
   },
@@ -4891,12 +4891,12 @@
           "source": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs"
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationNativeHistoryTests.cs"
       ],
-      "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "MethodologyTemplateContributionAccepted",
@@ -7707,18 +7707,11 @@
     {
       "fact": "TemplateApplicationDraftCreated",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/TemplateApplicationDraftCreated.cs",
-      "reducers": [
-        {
-          "aggregate": "TemplateApplication",
-          "source": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs"
-      ],
+      "reducers": [],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "confirmed_gap",
+      "note": "Confirmed source gap: no current aggregate reducer or emitter. Keep unresolved in the local delivery ledger; no implemented path is claimed."
     },
     {
       "fact": "TemplateSuccessorAdoptionProposed",
@@ -7729,12 +7722,10 @@
           "source": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TemplateSuccessorDispositionRecorded",
@@ -7745,12 +7736,10 @@
           "source": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "TenantActivated",
@@ -11968,22 +11957,18 @@
       "source": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
       "appliedFacts": [
         "MethodologyTemplateApplied",
-        "TemplateApplicationDraftCreated",
         "TemplateSuccessorAdoptionProposed",
         "TemplateSuccessorDispositionRecorded"
       ],
-      "commandRequests": [
-        "ApplyMethodologyTemplate",
-        "ProposeTemplateSuccessorAdoption",
-        "RecordTemplateSuccessorDisposition"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs",
-        "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationNativeHistoryTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "Tenant",
@@ -13514,18 +13499,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ComplianceProgram",
-        "TemplateApplication"
+        "ComplianceProgram"
       ],
-      "aggregateTargets": [
-        "TemplateApplication"
-      ],
+      "aggregateTargets": [],
       "helperServices": [
         "MethodologyTemplateReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationNativeHistoryTests.cs"
       ],
       "note": ""
     },
@@ -20602,12 +20585,22 @@
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/GetTemplateApplication.cs",
       "interfaces": "IRequest<TemplateApplicationView>, IProgramReadRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [],
-      "handlerRegistration": false,
+      "handlers": [
+        {
+          "name": "GetTemplateApplicationHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/GetTemplateApplicationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "TemplateApplicationReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationNativeHistoryTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -25274,17 +25267,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "TemplateApplication"
-      ],
-      "aggregateTargets": [
-        "TemplateApplication"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [
         "MethodologyTemplateReader"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationNativeHistoryTests.cs"
       ],
       "note": ""
     },
@@ -27011,15 +27001,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "TemplateApplication"
-      ],
-      "aggregateTargets": [
-        "TemplateApplication"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationNativeHistoryTests.cs"
       ],
       "note": ""
     },
@@ -31552,17 +31539,6 @@
       "ownerIssue": 316,
       "callerSources": [],
       "methodArgumentCount": 8,
-      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
-    },
-    {
-      "fact": "TemplateApplicationDraftCreated",
-      "aggregate": "TemplateApplication",
-      "method": "RecordDraftCreated",
-      "source": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 276,
-      "callerSources": [],
-      "methodArgumentCount": 9,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

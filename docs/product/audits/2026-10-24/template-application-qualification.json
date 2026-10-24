@@ -1,0 +1,43 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "remainingContracts": [
+    {
+      "id": "S34-TEMPLATE-DRAFT-CALLBACK",
+      "status": "blocked_contract",
+      "evidence": [
+        "docs/product/audits/2026-10-23/command-handler-gaps.md:37",
+        "docs/product/audits/2026-10-23/aggregate-boundary-specification.md:2741",
+        "docs/product/domain-event-aggregate-decisions.json:15241"
+      ],
+      "reason": "No selected RecordTemplateApplicationDraft request, trusted target-source proof schema, callback identity or child acquisition/settlement/materialization protocol. No runtime caller exists in baseline. Preserve pure RecordDraftCreated domain-rule acceptance and original TemplateApplicationDraftCreated decoder; no registered producer, native callback contract or downstream execution claimed."
+    },
+    {
+      "id": "S34-TEMPLATE-CHILD-OWNER-SPLIT",
+      "status": "blocked_contract",
+      "evidence": [
+        "docs/product/domain-event-aggregate-decisions.json:5221",
+        "docs/product/domain-event-aggregate-decisions.json:15273",
+        "docs/product/audits/2026-10-23/remaining-command-identities.json:ProposeTemplateSuccessorAdoption",
+        "docs/product/audits/2026-10-23/remaining-command-identities.json:RecordTemplateSuccessorDisposition"
+      ],
+      "reason": "Older locked owner decision selects TemplateApplicationDraftReceipt and TemplateApplicationSuccessorDecision. Final selected signatures explicitly retain the three existing commands on TemplateApplication and provide no child admission/hold/cancellation/settlement schemas. Parent approved independent retained-owner compact/native history narrowing. This patch removes lifetime payload/state limits but does not claim the unselected child process split."
+    },
+    {
+      "id": "S34-TEMPLATE-PREVIEW-SELECTION",
+      "status": "blocked_contract",
+      "evidence": [
+        "src/Compliance.Common/Features/MethodologyTemplates/PreviewMethodologyTemplateApplication.cs",
+        "src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateApplicationPreview.cs"
+      ],
+      "reason": "Unused preview request has tenant/program/template but no exact TemplateVersion or ApplicationKey. Its AffectedRecordIds cannot identify planned template-entry UUIDs without application identity, and no selected semantics define existing records versus planned targets. Do not invent a version/key field, global lookup or misleading preview. Fully scoped GetTemplateApplication is delivered independently."
+    },
+    {
+      "id": "S34-TEMPLATE-PERSISTED-MIGRATION",
+      "status": "blocked_retained_store_cutover",
+      "evidence": [
+        "docs/product/domain-event-aggregate-decisions.json:12080"
+      ],
+      "reason": "Native three existing roots preserve discriminator spellings and advance versions for immutable delta payloads. This is a writer/read preparation, not persisted v1/v2 envelope migration. Original draft callback decoder is unchanged. No automatic migration, lineage parity or dual-read compatibility is claimed for existing retained application streams."
+    }
+  ]
+}

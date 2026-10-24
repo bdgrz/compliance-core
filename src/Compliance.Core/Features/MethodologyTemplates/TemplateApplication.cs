@@ -1,512 +1,147 @@
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Hosting.Persistence;
-using System.Collections.ObjectModel;
-using System.Security.Cryptography;
 using System.Text.Json;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
-/// <summary>Owns one tenant/program application, its exact template provenance, and downstream draft receipts.</summary>
+/// <summary>Owns immutable application identity and compact current successor/progress admission, never lifetime history.</summary>
 public sealed class TemplateApplication : Aggregate
 {
-    public NativeAcceptance ReplayAcceptance { get; }
-    OperationProvenance? _pendingOperation;
-
-    const int MaximumDrafts = 100;
-    const int MaximumSuccessorDecisions = 64;
-    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
-    const int MaximumTextLength = 2000;
-
+    public const string Area = "template-applications";
     readonly Uuid _tenantId;
     readonly Uuid _programId;
-    TemplateApplicationView? _current;
 
-    public long Revision => _current?.Revision ?? 0;
-    public TemplateApplicationView? Current => _current;
-
-    public TemplateApplication(Uuid tenantId, Uuid programId, Uuid applicationId, Uuid selectedCommandId = default)
-        : base(applicationId, new EventStreamAddress(tenantId.ToString(), "template-applications",
-            applicationId.ToString()))
+    public TemplateApplication(Uuid tenantId, Uuid programId, Uuid applicationId, Uuid selectedCommandId = default,
+        string? selectedCommandKind = null) : base(applicationId,
+        new EventStreamAddress(tenantId.ToString(), Area, applicationId.ToString()))
     {
-        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
         _tenantId = tenantId;
         _programId = programId;
-        On<MethodologyTemplateApplied>(Apply);
-        On<TemplateApplicationDraftCreated>(Apply);
-        On<TemplateSuccessorAdoptionProposed>(Apply);
-        On<TemplateSuccessorDispositionRecorded>(Apply);
+        Acceptance = new NativeAcceptance(selectedCommandId, selectedCommandKind);
+        On<MethodologyTemplateApplied>(ApplyFact);
+        On<TemplateSuccessorAdoptionProposed>(ApplyFact);
+        On<TemplateSuccessorDispositionRecorded>(ApplyFact);
     }
 
-    public CommandFailure? Apply(MethodologyTemplateVersionView sourceVersion, string applicationKey,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset appliedAt)
-    {
-        if (_current is { } existing)
-            return SameApplication(existing, sourceVersion, applicationKey, actorMemberId, actorDisplay, appliedAt)
-                ? null : CommandFailure.StateConflict("A template application identity cannot be reused for another version or tenant intent.");
-        if (!ValidIdentity() || !ValidActor(actorMemberId, actorDisplay, appliedAt) ||
-            !Token(applicationKey, 200) || NormalizePublishedVersion(sourceVersion) is not { } normalized ||
-            normalized.Content.Records.Count > MaximumDrafts)
-            return Invalid("A template application requires one exact published version, one tenant/program, and an attributed requester.");
-        var drafts = normalized.Content.Records.Select(record => new TemplateApplicationDraftView(
-            record.EntryKey, record.RecordKind, Uuid.CreateVersion5(Id, "template-entry:" + record.EntryKey),
-            "draft_pending", null, null, null)).ToArray();
-        var state = new TemplateApplicationView(_tenantId, _programId, Id, "applied", 1,
-            normalized.TemplateId, normalized.VersionId, normalized.VersionNumber,
-            normalized.ContentSha256, applicationKey.Trim(), string.Empty, normalized, Freeze(drafts),
-            [], [], false, actorMemberId, actorDisplay.Trim(), appliedAt, actorMemberId,
-            actorDisplay.Trim(), appliedAt);
-        state = state with { ContentSha256 = DigestState(state) };
-        return Emit(state, actorMemberId, appliedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new MethodologyTemplateApplied(tenant, subject, revision, actor, snapshot, at), "apply", true);
-    }
+    public NativeAcceptance Acceptance { get; }
+    public TemplateApplicationHeader? Header { get; private set; }
+    public long Revision => Header?.Revision ?? 0;
+    public bool IsCreated => Header is not null;
 
-    public CommandFailure? RecordDraftCreated(long expectedRevision, string entryKey,
-        Uuid createdRecordId, long createdRecordVersion, string createdRecordSha256,
-        string lifecycleStatus, Uuid actorMemberId, string actorDisplay, DateTimeOffset recordedAt)
+    public Result Append(DomainEvent value, long preparedRevision, ulong preparedPhysicalPosition,
+        TemplateApplicationMutationContent mutation, TemplateApplicationView? before, TemplateApplicationView after)
     {
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The template application was not found.");
-        entryKey = Clean(entryKey);
-        lifecycleStatus = Clean(lifecycleStatus).ToLowerInvariant();
-        var draft = current.Drafts.FirstOrDefault(item => item.EntryKey == entryKey);
-        if (draft is { Status: "draft_created" } prior)
-            return prior.CreatedRecordId == createdRecordId && prior.CreatedRecordVersion == createdRecordVersion &&
-                prior.CreatedRecordSha256 == NormalizeHash(createdRecordSha256) && lifecycleStatus == "draft"
-                ? null : CommandFailure.StateConflict("A template application entry can only retain one exact draft-creation receipt.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        if (draft is null || draft.Status != "draft_pending" || createdRecordId != draft.PlannedRecordId ||
-            createdRecordVersion <= 0 || !Sha256(createdRecordSha256) || lifecycleStatus != "draft" ||
-            !ValidActor(actorMemberId, actorDisplay, recordedAt) || recordedAt < current.UpdatedAt)
-            return Invalid("An application receipt must identify the planned record, exact content, and draft lifecycle state.");
-        var drafts = current.Drafts.Select(item => item.EntryKey == entryKey
-            ? item with
-            {
-                Status = "draft_created",
-                CreatedRecordId = createdRecordId,
-                CreatedRecordVersion = createdRecordVersion,
-                CreatedRecordSha256 = NormalizeHash(createdRecordSha256),
-            }
-            : item).ToArray();
-        var state = State(current, drafts.All(item => item.Status == "draft_created") ? "drafts_created" : "applied",
-            drafts, current.SuccessorProposals, current.SuccessorDecisions,
-            actorMemberId, actorDisplay.Trim(), recordedAt);
-        return Emit(state, actorMemberId, recordedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new TemplateApplicationDraftCreated(tenant, subject, revision, actor, snapshot, at), "draft_created");
-    }
-
-    public CommandFailure? ProposeSuccessor(long expectedRevision,
-        MethodologyTemplateVersionView successor, string proposedDisposition, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset proposedAt,
-        OperationProvenance? operation = null)
-    {
-        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure;
-        _pendingOperation = operation;
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The template application was not found.");
-        var normalized = NormalizePublishedVersion(successor);
-        proposedDisposition = Clean(proposedDisposition).ToLowerInvariant();
-        if (normalized is not null && current.SuccessorProposals.FirstOrDefault(item =>
-                item.Version.VersionId == normalized.VersionId) is { } existingProposal)
-            return Digest(existingProposal.Version) == Digest(normalized) &&
-                existingProposal.ContentSha256 == normalized.ContentSha256 &&
-                existingProposal.ProposedDisposition == proposedDisposition &&
-                existingProposal.ProposedByMemberId == actorMemberId &&
-                existingProposal.ProposedByDisplay == Clean(actorDisplay) &&
-                existingProposal.ProposedAt == proposedAt
-                ? null : CommandFailure.StateConflict("A successor proposal version cannot be reused with different details.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        var priorProposal = LastProposal(current.SuccessorProposals);
-        var pending = priorProposal is not null && !current.SuccessorDecisions.Any(item =>
-            item.TemplateVersionId == priorProposal.Version.VersionId);
-        if (current.Status is not ("applied" or "drafts_created") || pending ||
-            normalized is null || proposedDisposition is not ("adopt" or "adapt" or "decline") ||
-            normalized.TemplateId != current.TemplateId ||
-            normalized.VersionNumber <= (priorProposal?.Version.VersionNumber ?? current.TemplateVersionNumber) ||
-            current.SuccessorProposals.Any(item => item.Version.VersionId == normalized.VersionId) ||
-            !ValidActor(actorMemberId, actorDisplay, proposedAt) || proposedAt < current.UpdatedAt)
-            return CommandFailure.StateConflict("A successor proposal must be a later published version of the same platform template.");
-        var proposal = new TemplateApplicationSuccessorProposalView(normalized,
-            normalized.ContentSha256, proposedDisposition, actorDisplay.Trim(), actorMemberId, proposedAt);
-        var proposals = Append(current.SuccessorProposals, proposal);
-        var state = State(current, current.Status, current.Drafts, proposals, current.SuccessorDecisions,
-            actorMemberId, actorDisplay.Trim(), proposedAt);
-        return Emit(state, actorMemberId, proposedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new TemplateSuccessorAdoptionProposed(tenant, subject, revision, actor, snapshot, at), "successor_proposed");
-    }
-
-    public CommandFailure? RecordSuccessorDisposition(long expectedRevision, string disposition,
-        string rationale, Uuid actorMemberId, string actorDisplay, DateTimeOffset decidedAt,
-        OperationProvenance? operation = null)
-    {
-        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure;
-        _pendingOperation = operation;
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The template application was not found.");
-        disposition = Clean(disposition).ToLowerInvariant();
-        rationale = Clean(rationale);
-        var proposal = LastProposal(current.SuccessorProposals);
-        var priorDecision = proposal is null ? null : current.SuccessorDecisions.FirstOrDefault(item =>
-            item.TemplateVersionId == proposal.Version.VersionId);
-        if (priorDecision is not null)
-            return priorDecision.Disposition == disposition && priorDecision.Rationale == rationale &&
-                priorDecision.DecidedByMemberId == actorMemberId &&
-                priorDecision.DecidedByDisplay == Clean(actorDisplay) && priorDecision.DecidedAt == decidedAt
-                ? null : CommandFailure.StateConflict("A successor disposition is immutable once recorded.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        if (proposal is null || current.SuccessorDecisions.Any(item => item.TemplateVersionId == proposal.Version.VersionId) ||
-            disposition is not ("adopt" or "adapt" or "decline") || !Bounded(rationale, 1, MaximumTextLength) ||
-            !ValidActor(actorMemberId, actorDisplay, decidedAt) || decidedAt < current.UpdatedAt)
-            return CommandFailure.StateConflict("A successor disposition requires one pending proposal and an attributable rationale.");
-        var decision = new TemplateApplicationSuccessorDecisionView(proposal.Version.VersionId,
-            proposal.Version.VersionNumber, disposition, rationale, actorMemberId, actorDisplay.Trim(), decidedAt);
-        var decisions = Append(current.SuccessorDecisions, decision);
-        var state = State(current, current.Status, current.Drafts, current.SuccessorProposals, decisions,
-            actorMemberId, actorDisplay.Trim(), decidedAt);
-        return Emit(state, actorMemberId, decidedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new TemplateSuccessorDispositionRecorded(tenant, subject, revision, actor, snapshot, at), "successor_disposition");
-    }
-
-    void Apply(MethodologyTemplateApplied ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, true, "apply");
-    void Apply(TemplateApplicationDraftCreated ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, false, "draft_created");
-    void Apply(TemplateSuccessorAdoptionProposed ev)
-    {
-        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
-        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, false, "successor_proposed");
-    }
-    void Apply(TemplateSuccessorDispositionRecorded ev)
-    {
-        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
-        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, false, "successor_disposition");
-    }
-
-    void ApplyState(Uuid tenantId, Uuid subjectId, long revision, Uuid? actorMemberId,
-        TemplateApplicationView state, DateTimeOffset occurredAt, bool creating, string transition)
-    {
-        if (tenantId != _tenantId || subjectId != Id || state is null || state.TenantId != _tenantId ||
-            state.ProgramId != _programId || state.TemplateApplicationId != Id || state.Revision != revision ||
-            state.UpdatedAt != occurredAt || revision != Revision + 1 || creating != (_current is null) ||
-            actorMemberId == Uuid.Empty || state.ActorMemberId != actorMemberId || ValidateState(state) is not null ||
-            _current is null && (transition != "apply" || !ValidInitialState(state)) ||
-            _current is { } prior && !ValidTransition(prior, state, actorMemberId, transition))
-            throw new InvalidOperationException("The template-application event is invalid.");
-        _current = Freeze(state);
-    }
-
-    CommandFailure? Emit(TemplateApplicationView state, Uuid actorMemberId, DateTimeOffset occurredAt,
-        Func<Uuid, Uuid, long, Uuid?, TemplateApplicationView, DateTimeOffset, DomainEvent> createEvent,
-        string transition, bool creating = false)
-    {
-        if (ValidateState(state) is not null ||
-            (creating ? _current is not null : _current is null || !ValidTransition(_current, state, actorMemberId, transition)))
-            return Invalid("The template-application transition is invalid.");
-        var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
-        ev = ev switch
+        if (preparedRevision != Revision || preparedPhysicalPosition != CommittedStreamPosition)
+            return Conflict("The template application changed while its immutable content was prepared.");
+        if (value is not ITemplateApplicationFact fact || fact.Header is null || fact.Content is null || mutation is null || after is null ||
+            (Header is null) != (before is null))
+            return Invalid("An application append requires its exact prepared immutable change.");
+        var rules = new TemplateApplicationRules(_tenantId, _programId, Id, before);
+        if (before is not null && (!rules.HasValidCurrent || rules.Header() != Header))
+            return Conflict("The application preparation answered another exact authority cut.");
+        try
         {
-            TemplateSuccessorAdoptionProposed fact => fact with { Operation = _pendingOperation },
-            TemplateSuccessorDispositionRecorded fact => fact with { Operation = _pendingOperation },
-            _ => ev,
-        };
-        if (DomainEventPayload.Size(ev) > MaximumEventBytes)
-            return Invalid("The template-application snapshot exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    static bool ValidTransition(TemplateApplicationView prior, TemplateApplicationView next,
-        Uuid? actor, string transition)
-    {
-        if (next.Revision != prior.Revision + 1 || next.TenantId != prior.TenantId ||
-            next.ProgramId != prior.ProgramId || next.TemplateApplicationId != prior.TemplateApplicationId ||
-            next.TemplateId != prior.TemplateId || next.TemplateVersionId != prior.TemplateVersionId ||
-            next.TemplateContentSha256 != prior.TemplateContentSha256 || next.ApplicationKey != prior.ApplicationKey ||
-            next.UpdatedAt < prior.UpdatedAt ||
-            next.ContentSha256 != DigestState(next with { ContentSha256 = string.Empty }) ||
-            next.RequestedByMemberId != prior.RequestedByMemberId || next.RequestedAt != prior.RequestedAt ||
-            next.ActorMemberId != actor || next.IsActivated ||
-            !DraftsCompatible(prior.Drafts, next.Drafts, transition) ||
-            !Prefix(prior.SuccessorDecisions, next.SuccessorDecisions))
-            return false;
-        return transition switch
-        {
-            "draft_created" => Prefix(prior.SuccessorProposals, next.SuccessorProposals) &&
-                next.Drafts.Count == prior.Drafts.Count && next.Drafts.Count(item => item.Status == "draft_created") ==
-                    prior.Drafts.Count(item => item.Status == "draft_created") + 1,
-            "successor_proposed" => next.SuccessorProposals.Count == prior.SuccessorProposals.Count + 1 &&
-                Prefix(prior.SuccessorProposals, next.SuccessorProposals) &&
-                next.SuccessorProposals[^1].ProposedByMemberId == actor &&
-                next.SuccessorProposals[^1].ProposedAt == next.UpdatedAt &&
-                next.SuccessorDecisions.Count == prior.SuccessorDecisions.Count &&
-                DraftsCompatible(prior.Drafts, next.Drafts, "unchanged"),
-            "successor_disposition" => Prefix(prior.SuccessorProposals, next.SuccessorProposals) &&
-                LastProposal(next.SuccessorProposals) is { } proposal &&
-                !prior.SuccessorDecisions.Any(item => item.TemplateVersionId == proposal.Version.VersionId) &&
-                next.SuccessorDecisions.Count == prior.SuccessorDecisions.Count + 1 &&
-                next.SuccessorDecisions[^1].TemplateVersionId == proposal.Version.VersionId &&
-                next.SuccessorDecisions[^1].DecidedByMemberId == actor && next.SuccessorDecisions[^1].DecidedAt == next.UpdatedAt,
-            _ => false,
-        };
-    }
-
-    static bool DraftsCompatible(IReadOnlyList<TemplateApplicationDraftView> prior,
-        IReadOnlyList<TemplateApplicationDraftView> next, string transition)
-    {
-        if (prior.Count != next.Count)
-            return false;
-        for (var index = 0; index < prior.Count; index++)
-        {
-            var before = prior[index];
-            var after = next[index];
-            if (before.EntryKey != after.EntryKey || before.RecordKind != after.RecordKind ||
-                before.PlannedRecordId != after.PlannedRecordId)
-                return false;
-            if (transition == "draft_created" && before.Status == "draft_pending" &&
-                after.Status == "draft_created" && before.CreatedRecordId is null)
-                continue;
-            if (Digest(before) != Digest(after))
-                return false;
+            rules.ApplyChange(mutation, fact.Revision, fact.Header.ActorMemberId, fact.Header.ActorDisplay, fact.OccurredAt);
         }
-        return true;
-    }
-
-    CommandFailure? ValidateState(TemplateApplicationView state)
-    {
-        var source = NormalizePublishedVersion(state.SourceVersion);
-        if (state.TenantId != _tenantId || state.ProgramId != _programId || state.TemplateApplicationId != Id ||
-            state.Revision <= 0 || source is null || state.TemplateId != source.TemplateId ||
-            state.TemplateVersionId != source.VersionId || state.TemplateVersionNumber != source.VersionNumber ||
-            state.TemplateContentSha256 != source.ContentSha256 || state.Drafts is null ||
-            state.Drafts.Count != source.Content.Records.Count || state.Drafts.Count > MaximumDrafts ||
-            state.Drafts.Where((draft, index) => draft.EntryKey != source.Content.Records[index].EntryKey ||
-                draft.RecordKind != source.Content.Records[index].RecordKind ||
-                draft.PlannedRecordId != Uuid.CreateVersion5(Id, "template-entry:" + draft.EntryKey) ||
-                !ValidDraft(draft)).Any() || state.Drafts.Select(item => item.EntryKey).Distinct(StringComparer.Ordinal).Count() != state.Drafts.Count ||
-            !Token(state.ApplicationKey, 200) || state.IsActivated ||
-            state.Status != (state.Drafts.All(item => item.Status == "draft_created") ? "drafts_created" : "applied") ||
-            state.SuccessorProposals is null || state.SuccessorProposals.Count > MaximumSuccessorDecisions ||
-            state.SuccessorProposals.Select((proposal, index) => !ValidProposal(proposal, state) ||
-                index > 0 && proposal.Version.VersionNumber <= state.SuccessorProposals[index - 1].Version.VersionNumber)
-                .Any(item => item) ||
-            state.SuccessorProposals.Select(item => item.Version.VersionId).Distinct().Count() != state.SuccessorProposals.Count ||
-            state.SuccessorDecisions is null || state.SuccessorDecisions.Count > MaximumSuccessorDecisions ||
-            state.SuccessorDecisions.Select(item => item.TemplateVersionId).Distinct().Count() != state.SuccessorDecisions.Count ||
-            state.SuccessorDecisions.Any(item => !ValidSuccessorDecision(item, state)) ||
-            !ValidActor(state.RequestedByMemberId, state.RequestedByDisplay, state.RequestedAt) ||
-            !ValidActor(state.ActorMemberId, state.ActorDisplay, state.UpdatedAt) ||
-            state.ContentSha256 != DigestState(state with { ContentSha256 = string.Empty }))
-            return Invalid("The template-application snapshot is invalid or does not retain exact published provenance.");
-        return null;
-    }
-
-    static bool ValidProposal(TemplateApplicationSuccessorProposalView proposal,
-        TemplateApplicationView state) => proposal is not null &&
-        NormalizePublishedVersion(proposal.Version) is { } version && version.TemplateId == state.TemplateId &&
-        version.VersionNumber > state.TemplateVersionNumber && proposal.ContentSha256 == version.ContentSha256 &&
-        proposal.ProposedDisposition is "adopt" or "adapt" or "decline" &&
-        ValidActor(proposal.ProposedByMemberId, proposal.ProposedByDisplay, proposal.ProposedAt) &&
-        proposal.ProposedAt >= state.RequestedAt;
-
-    static bool ValidSuccessorDecision(TemplateApplicationSuccessorDecisionView item,
-        TemplateApplicationView state) => item is not null &&
-        state.SuccessorProposals.Any(proposal => proposal.Version.VersionId == item.TemplateVersionId &&
-            proposal.Version.VersionNumber == item.TemplateVersionNumber) &&
-        item.Disposition is "adopt" or "adapt" or "decline" && Bounded(item.Rationale, 1, MaximumTextLength) &&
-        ValidActor(item.DecidedByMemberId, item.DecidedByDisplay, item.DecidedAt);
-
-    static bool ValidDraft(TemplateApplicationDraftView item) => item is not null &&
-        item.Status is "draft_pending" or "draft_created" &&
-        (item.Status == "draft_pending"
-            ? item.CreatedRecordId is null && item.CreatedRecordVersion is null && item.CreatedRecordSha256 is null
-            : item.CreatedRecordId == item.PlannedRecordId && item.CreatedRecordVersion > 0 && Sha256(item.CreatedRecordSha256));
-
-    static bool ValidInitialState(TemplateApplicationView state) => state.Revision == 1 &&
-        state.Status == "applied" && state.Drafts.Count > 0 && state.Drafts.All(item => item.Status == "draft_pending") &&
-        state.SuccessorProposals.Count == 0 && state.SuccessorDecisions.Count == 0 && !state.IsActivated;
-
-    bool ValidIdentity() => _tenantId != Uuid.Empty && _programId != Uuid.Empty && Id != Uuid.Empty;
-
-    static bool SameApplication(TemplateApplicationView state, MethodologyTemplateVersionView? version,
-        string key, Uuid actor, string display, DateTimeOffset at) =>
-        NormalizePublishedVersion(version) is { } normalized && normalized.TemplateId == state.TemplateId &&
-        normalized.VersionId == state.TemplateVersionId && normalized.ContentSha256 == state.TemplateContentSha256 &&
-        Clean(key) == state.ApplicationKey && actor == state.RequestedByMemberId &&
-        Digest(normalized) == Digest(state.SourceVersion);
-
-    static MethodologyTemplateVersionView? NormalizePublishedVersion(MethodologyTemplateVersionView? version)
-    {
-        if (version is null || version.TemplateId == Uuid.Empty || version.VersionId == Uuid.Empty ||
-            version.VersionNumber <= 0 || version.Status != "published" || version.Content is null ||
-            !Sha256(version.ContentSha256) || version.Review is not { Outcome: "approved" } review ||
-            version.ApprovedByMemberId is not { } approver || approver == version.AuthoredByMemberId ||
-            approver == review.ReviewedByMemberId || version.ApprovedAt is not { } approvedAt ||
-            approvedAt < review.ReviewedAt || !Bounded(version.ApprovalRationale, 1, MaximumTextLength) ||
-            !ValidActor(approver, version.ApprovedByDisplay, approvedAt) ||
-            !ValidActor(version.AuthoredByMemberId, version.AuthoredByDisplay, version.AuthoredAt) ||
-            !ValidActor(review.ReviewedByMemberId, review.ReviewedByDisplay, review.ReviewedAt) ||
-            !Bounded(version.ChangeNotes, 1, MaximumTextLength))
-            return null;
-        var content = NormalizeContent(version.Content);
-        return content is not null && Digest(content) == version.ContentSha256
-            && ValidContributionProvenance(version, content)
-            ? version with
-            {
-                Content = content,
-                ContentSha256 = NormalizeHash(version.ContentSha256),
-                AcceptedContributions = Freeze((version.AcceptedContributions ?? []).ToArray()),
-            }
-            : null;
-    }
-
-    static bool ValidContributionProvenance(MethodologyTemplateVersionView version,
-        MethodologyTemplateContent content)
-    {
-        var approvals = version.AcceptedContributions ?? [];
-        return approvals.Select(item => item.AcceptanceId).Distinct().Count() == approvals.Count &&
-            approvals.All(item => item.AcceptanceId != Uuid.Empty && Sha256(item.ContentSha256) &&
-                ValidActor(item.ReviewedByMemberId, item.ReviewedByDisplay, item.ReviewedAt) &&
-                item.AcceptedByMemberId != Uuid.Empty && item.AcceptedByMemberId != item.ReviewedByMemberId &&
-                ValidActor(item.AcceptedByMemberId, item.AcceptedByDisplay, item.AcceptedAt) &&
-                Bounded(item.AcceptanceRationale, 1, MaximumTextLength) && item.AcceptedAt >= item.ReviewedAt) &&
-            content.Records.All(record => record.ContributionApprovalId is null || approvals.Any(item =>
-                item.AcceptanceId == record.ContributionApprovalId && item.ContentSha256 == Digest(record)));
-    }
-
-    static MethodologyTemplateContent? NormalizeContent(MethodologyTemplateContent? content)
-    {
-        if (content is null || !Bounded(content.Name, 1, 200) || !Bounded(content.Description, 1, MaximumTextLength) ||
-            content.Records is null || content.Records.Count is < 1 or > MaximumDrafts)
-            return null;
-        var kind = Clean(content.TemplateKind).ToLowerInvariant();
-        if (kind is not ("soc2" or "iso27001" or "custom") ||
-            content.Records.Any(item => item is null || !Token(item.EntryKey, 100) ||
-                item.RecordKind is not ("control" or "policy" or "evidence_request" or "risk") ||
-                !Bounded(item.Title, 1, 200) || !Bounded(item.Summary, 1, MaximumTextLength) ||
-                item.CriteriaReferences is null || item.CriteriaReferences.Count > 50 ||
-                item.CriteriaReferences.Any(reference => reference is null || reference.EditionId == Uuid.Empty ||
-                    !Token(reference.Identifier, 100))) ||
-            content.Records.Select(item => item.EntryKey).Distinct(StringComparer.Ordinal).Count() != content.Records.Count)
-            return null;
-        return content with
+        catch (InvalidOperationException)
         {
-            Name = content.Name.Trim(),
-            Description = content.Description.Trim(),
-            TemplateKind = kind,
-            Records = Freeze(content.Records.Select(item => item with
-            {
-                EntryKey = item.EntryKey.Trim(),
-                RecordKind = item.RecordKind.Trim().ToLowerInvariant(),
-                Title = item.Title.Trim(),
-                Summary = item.Summary.Trim(),
-                CriteriaReferences = Freeze(item.CriteriaReferences.Select(reference => reference with
-                { Identifier = reference.Identifier.Trim().ToUpperInvariant() })
-                    .OrderBy(reference => reference.EditionId.ToString(), StringComparer.Ordinal)
-                    .ThenBy(reference => reference.Identifier, StringComparer.Ordinal).ToArray()),
-            }).OrderBy(item => item.EntryKey, StringComparer.Ordinal).ToArray()),
+            return Invalid("The prepared application change violates its immutable source or current transition.");
+        }
+        var preparedAfter = new TemplateApplicationRules(_tenantId, _programId, Id, after);
+        if (!preparedAfter.HasValidCurrent || rules.Header() != fact.Header || preparedAfter.Header() != fact.Header ||
+            !Matches(fact.Content, mutation) ||
+            DomainEventPayload.Size(value) > DomainEventPayload.MaximumBytes)
+            return Invalid("The application fact differs from its complete immutable prepared body.");
+        var guard = Validate(value);
+        if (!guard.IsSuccess)
+            return guard;
+        RaiseEvent(value);
+        return Result.Success;
+    }
+
+    Result Validate(DomainEvent value)
+    {
+        var fact = (ITemplateApplicationFact)value;
+        var next = fact.Header;
+        var operation = fact.Operation;
+        if (_tenantId == Uuid.Empty || Id == Uuid.Empty || next is null ||
+            fact.TenantId != _tenantId || fact.SubjectId != Id || next.TenantId != _tenantId ||
+            next.ProgramId == Uuid.Empty || next.TemplateApplicationId != Id || fact.Revision != Revision + 1 ||
+            next.Revision != fact.Revision || next.ActorMemberId != fact.ActorMemberId || next.ActorMemberId == Uuid.Empty ||
+            next.UpdatedAt != fact.OccurredAt || next.UpdatedAt == default || Header is { } prior && next.UpdatedAt < prior.UpdatedAt ||
+            next.TemplateId == Uuid.Empty || next.TemplateVersionId == Uuid.Empty || next.TemplateVersionNumber <= 0 ||
+            next.DraftCount is < 1 or > 100 || next.CreatedDraftCount < 0 || next.CreatedDraftCount > next.DraftCount ||
+            next.Status != (next.CreatedDraftCount == next.DraftCount ? "drafts_created" : "applied") ||
+            next.RequestedByMemberId == Uuid.Empty || !Hash(next.TemplateContentSha256) || !Hash(next.ContentSha256) ||
+            string.IsNullOrWhiteSpace(next.ApplicationKey) || next.ApplicationKey.Length > 200 ||
+            next.ApplicationKey != next.ApplicationKey.Trim() || !next.ApplicationKey.All(character =>
+                char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '.') ||
+            Id != TemplateApplicationId.For(next.ProgramId, next.TemplateId, next.ApplicationKey) ||
+            string.IsNullOrWhiteSpace(next.ActorDisplay) || next.ActorDisplay.Length > 200 ||
+            fact.Content.Schema != TemplateApplicationReader.Schema || !Hash(fact.Content.Sha256) || fact.Content.Bytes <= 0 ||
+            !Reference(fact.FirstResponse, FirstResponses.Schema) || !Reference(fact.OperationResult, "mutation-result-content.v1") || operation is null ||
+            operation.LogicalId == Uuid.Empty || operation.Owner != Stream || operation.AffectedOwner != Stream ||
+            operation.ExpectedRevisionOwner != Stream || operation.RootOperationId != operation.LogicalId ||
+            operation.CausationEventId is not null || operation.Episode != Id.ToString() ||
+            operation.AcceptedAt != fact.OccurredAt || operation.Actor.Kind != "member" ||
+            operation.Actor.Id != next.ActorMemberId.ToString() || operation.Actor.Display != next.ActorDisplay ||
+            !Hash(operation.AuthoredIntentSha256))
+            return Invalid("The application fact has an invalid exact owner or native binding.");
+        if (Header is { } current && (next.TemplateId != current.TemplateId || next.TemplateVersionId != current.TemplateVersionId ||
+            next.TemplateVersionNumber != current.TemplateVersionNumber || next.TemplateContentSha256 != current.TemplateContentSha256 ||
+            next.ApplicationKey != current.ApplicationKey || next.DraftCount != current.DraftCount ||
+            next.RequestedByMemberId != current.RequestedByMemberId))
+            return Invalid("An application cannot replace its original exact intent or planned draft set.");
+        return value switch
+        {
+            MethodologyTemplateApplied when Header is null && next.Revision == 1 && next.CreatedDraftCount == 0 &&
+                next.RequestedByMemberId == next.ActorMemberId && next.LatestSuccessorVersionId == Uuid.Empty &&
+                next.LatestSuccessorVersionNumber == next.TemplateVersionNumber && !next.HasPendingSuccessor &&
+                operation.CommandKind == nameof(ApplyMethodologyTemplate) && operation.LogicalId == Id &&
+                operation.OriginalExpectedRevision is null => Result.Success,
+            TemplateSuccessorAdoptionProposed when Header is { HasPendingSuccessor: false } before &&
+                next.CreatedDraftCount == before.CreatedDraftCount && next.HasPendingSuccessor &&
+                next.LatestSuccessorVersionId != Uuid.Empty && next.LatestSuccessorVersionId != before.LatestSuccessorVersionId &&
+                next.LatestSuccessorVersionNumber > before.LatestSuccessorVersionNumber &&
+                operation.CommandKind == nameof(ProposeTemplateSuccessorAdoption) &&
+                operation.OriginalExpectedRevision == (ulong)Revision => Result.Success,
+            TemplateSuccessorDispositionRecorded when Header is { HasPendingSuccessor: true } before &&
+                next.CreatedDraftCount == before.CreatedDraftCount && !next.HasPendingSuccessor &&
+                next.LatestSuccessorVersionId == before.LatestSuccessorVersionId &&
+                next.LatestSuccessorVersionNumber == before.LatestSuccessorVersionNumber &&
+                operation.CommandKind == nameof(RecordTemplateSuccessorDisposition) &&
+                operation.OriginalExpectedRevision == (ulong)Revision => Result.Success,
+            _ => Invalid("The application fact violates its current admission or successor ordering."),
         };
     }
 
-    static TemplateApplicationView State(TemplateApplicationView current, string status,
-        IReadOnlyList<TemplateApplicationDraftView> drafts,
-        IReadOnlyList<TemplateApplicationSuccessorProposalView> proposals,
-        IReadOnlyList<TemplateApplicationSuccessorDecisionView> decisions,
-        Uuid actor, string display, DateTimeOffset at)
+    void ApplyFact(DomainEvent value)
     {
-        var state = current with
-        {
-            Status = status,
-            Revision = current.Revision + 1,
-            Drafts = Freeze(drafts.ToArray()),
-            SuccessorProposals = Freeze(proposals.Select(proposal => proposal with
-            {
-                Version = FreezeVersion(proposal.Version),
-            }).ToArray()),
-            SuccessorDecisions = Freeze(decisions.ToArray()),
-            ActorMemberId = actor,
-            ActorDisplay = display,
-            UpdatedAt = at,
-            ContentSha256 = string.Empty,
-        };
-        return state with { ContentSha256 = DigestState(state) };
+        var valid = Validate(value);
+        if (!valid.IsSuccess)
+            throw new InvalidOperationException(valid.Error!.Message);
+        var fact = (ITemplateApplicationFact)value;
+        Header = fact.Header;
+        Acceptance.Observe(value);
     }
 
-    static TemplateApplicationView Freeze(TemplateApplicationView state) => state with
-    {
-        SourceVersion = FreezeVersion(state.SourceVersion),
-        Drafts = Freeze(state.Drafts.ToArray()),
-        SuccessorProposals = Freeze(state.SuccessorProposals.Select(proposal => proposal with
-        {
-            Version = FreezeVersion(proposal.Version),
-        }).ToArray()),
-        SuccessorDecisions = Freeze(state.SuccessorDecisions.ToArray()),
-    };
+    static bool Reference(ImmutableContentRef? reference, string schema) => reference is not null &&
+        reference.ContentId != Uuid.Empty && reference.Schema == schema && reference.Bytes > 0 &&
+        reference.MediaType == ImmutableContentStoreExtensions.JsonMediaType && Hash(reference.Sha256);
 
-    static MethodologyTemplateVersionView FreezeVersion(MethodologyTemplateVersionView version) => version with
+    static bool Matches(ImmutableContentRef reference, TemplateApplicationMutationContent mutation)
     {
-        Content = version.Content with
-        {
-            Records = Freeze(version.Content.Records.Select(item => item with
-            {
-                CriteriaReferences = Freeze(item.CriteriaReferences.ToArray()),
-            }).ToArray()),
-        },
-        AcceptedContributions = Freeze((version.AcceptedContributions ?? []).ToArray()),
-    };
+        if (!Reference(reference, TemplateApplicationReader.Schema))
+            return false;
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(mutation, ComplianceCoreJsonContext.Default.TemplateApplicationMutationContent);
+        return reference.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
+    }
 
-    static string DigestState(TemplateApplicationView state) => Digest(new
-    {
-        state.TenantId,
-        state.ProgramId,
-        state.TemplateApplicationId,
-        state.Status,
-        state.Revision,
-        state.TemplateId,
-        state.TemplateVersionId,
-        state.TemplateVersionNumber,
-        state.TemplateContentSha256,
-        state.ApplicationKey,
-        state.SourceVersion,
-        state.Drafts,
-        state.SuccessorProposals,
-        state.SuccessorDecisions,
-        state.IsActivated,
-        state.RequestedByMemberId,
-        state.RequestedByDisplay,
-        state.RequestedAt,
-        state.ActorMemberId,
-        state.ActorDisplay,
-        state.UpdatedAt,
-    });
-
-    static bool Prefix<T>(IReadOnlyList<T> prior, IReadOnlyList<T> next) => prior.Count <= next.Count &&
-        prior.Zip(next).All(pair => Digest(pair.First) == Digest(pair.Second));
-    static TemplateApplicationSuccessorProposalView? LastProposal(
-        IReadOnlyList<TemplateApplicationSuccessorProposalView> proposals) =>
-        proposals.Count == 0 ? null : proposals[^1];
-    static string Digest<T>(T value) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(value))).ToLowerInvariant();
-    static bool Sha256(string? value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
-    static string NormalizeHash(string value) => value.ToLowerInvariant();
-    static string Clean(string? value) => value?.Trim() ?? string.Empty;
-    static bool Bounded(string? value, int minimum, int maximum) => value is not null &&
-        value.Trim().Length >= minimum && value.Trim().Length <= maximum && !value.Any(char.IsControl);
-    static bool Token(string? value, int max) => Bounded(value, 1, max) && value!.Trim().All(character =>
-        char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '.');
-    static bool ValidActor(Uuid id, string? display, DateTimeOffset at) => id != Uuid.Empty && Bounded(display, 1, 200) && at != default;
-    CommandFailure StaleRevision() => CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("template application", Revision));
-    static CommandFailure Invalid(string message) => CommandFailure.InvalidContent(message);
-    static ReadOnlyCollection<T> Freeze<T>(T[] values) => Array.AsReadOnly(values);
-    static ReadOnlyCollection<T> Append<T>(IReadOnlyList<T> values, T item) => Freeze(values.Append(item).ToArray());
+    static bool Hash(string? value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
+    static Result Invalid(string message) => Result.Failure(new RequestError(RequestErrorKind.Validation, message));
+    static Result Conflict(string message) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
 }

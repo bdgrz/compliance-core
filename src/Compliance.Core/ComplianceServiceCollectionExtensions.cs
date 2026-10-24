@@ -695,7 +695,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IMethodologyTemplateDirectoryReader>(provider => provider.GetRequiredService<FitzMethodologyTemplateDirectory>());
         services.AddScoped<IMethodologyTemplateDirectoryProjection>(provider => provider.GetRequiredService<FitzMethodologyTemplateDirectory>());
         services.AddScoped<MethodologyTemplateDirectoryReadConsistency>();
-        services.AddScoped<MethodologyTemplateReader>();
+        services.AddScoped<TemplateApplicationReader>()
+            .AddScoped<TemplateApplicationOperations>()
+            .AddScoped<MethodologyTemplateReader>();
         services.AddScoped<MethodologyTemplateOperations>();
         services.AddScoped<MethodologyTemplateContributionReader>();
         services.AddScoped<FollowUpCompletionVerifier>();
@@ -1535,6 +1537,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviewMethodologyTemplateHandler>()
             .AddRequestHandler<ApproveMethodologyTemplateVersionHandler>()
             .AddRequestHandler<RetireMethodologyTemplateHandler>()
+            .AddRequestHandler<GetTemplateApplicationHandler>()
             .AddRequestHandler<ApplyMethodologyTemplateHandler>()
             .AddRequestHandler<ProposeTemplateSuccessorAdoptionHandler>()
             .AddRequestHandler<RecordTemplateSuccessorDispositionHandler>()

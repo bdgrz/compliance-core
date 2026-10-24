@@ -245,6 +245,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.TemplateApplicationDraftView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.TemplateApplicationSuccessorDecisionView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.TemplateApplicationSuccessorProposalView))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.TemplateApplicationHeader))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.TemplateApplicationMutationContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.TemplateApplicationView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.ControlCalendarView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.GetControlCalendar))]
