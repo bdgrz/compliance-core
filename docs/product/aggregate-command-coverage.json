@@ -47,27 +47,27 @@
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 111,
-    "aggregateTypesWithCommandPath": 108,
-    "requestContracts": 720,
-    "commonRequestContracts": 718,
+    "aggregateTypes": 112,
+    "aggregateTypesWithCommandPath": 109,
+    "requestContracts": 723,
+    "commonRequestContracts": 721,
     "requestClassificationCounts": {
       "command": 346,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 86,
+      "internal_reaction": 89,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 661,
+    "registeredCoreHandlerRegistrations": 664,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 37,
     "unwiredAggregateProducerClassifications": {
       "no_registered_request_route": 17,
       "legacy_emitter_to_prune": 8,
-      "direct_reactor_executor": 2,
-      "direct_processor_executor": 10
+      "direct_reactor_executor": 0,
+      "direct_processor_executor": 12
     },
     "factReplayGuardRows": 7
   },
@@ -7084,49 +7084,11 @@
         "src/Compliance.Core/Features/Tenants/TenantInvitation.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "TenantInvitationDeliveryFailed",
-      "contract": "src/Compliance.Common/Features/Tenants/TenantInvitationDeliveryFailed.cs",
-      "reducers": [
-        {
-          "aggregate": "TenantInvitation",
-          "source": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Tenants/TenantInvitation.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "TenantInvitationDeliverySent",
-      "contract": "src/Compliance.Common/Features/Tenants/TenantInvitationDeliverySent.cs",
-      "reducers": [
-        {
-          "aggregate": "TenantInvitation",
-          "source": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Tenants/TenantInvitation.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/SplitHostInvitationDeliveryE2ETests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationAdmissionTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantInvitationDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryReactorTests.cs"
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -7260,11 +7222,14 @@
         "src/Compliance.Core/Features/Tenants/TenantInvitation.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationTests.cs",
         "test/Compliance.Tests/Features/Tenants/InviteGuestConsultantHandlerTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationAdmissionTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryProcessTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantInvitationDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryReactorTests.cs"
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationTransportTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs",
+        "test/Compliance.Tests/Testing/TenantInvitationHost.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8538,6 +8503,45 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationImportProcessTests.cs",
         "test/Compliance.Tests/Features/Applications/DeclaredApplicationImportHoldTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TenantInvitationMailboxClaimed",
+      "contract": "src/Compliance.Common/Features/Tenants/TenantInvitationMailboxClaimed.cs",
+      "reducers": [
+        {
+          "aggregate": "TenantInvitationMailboxClaim",
+          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxClaim.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationMailboxClaimTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TenantInvitationMailboxReleased",
+      "contract": "src/Compliance.Common/Features/Tenants/TenantInvitationMailboxReleased.cs",
+      "reducers": [
+        {
+          "aggregate": "TenantInvitationMailboxClaim",
+          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxClaim.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationAdmissionTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationMailboxClaimTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -11453,8 +11457,6 @@
       "source": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs",
       "appliedFacts": [
         "TenantInvitationAccepted",
-        "TenantInvitationDeliveryFailed",
-        "TenantInvitationDeliverySent",
         "TenantMemberInvited"
       ],
       "commandRequests": [
@@ -11465,16 +11467,17 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/SplitHostInvitationDeliveryE2ETests.cs",
         "test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs",
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
-        "test/Compliance.Tests/Features/Tenants/InviteGuestConsultantHandlerTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationConcurrencyTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryReactorTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationAdmissionTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryProcessTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantInvitationDirectoryTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantInvitationTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs"
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationTransportTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs",
+        "test/Compliance.Tests/TenantInvitationFacts.cs",
+        "test/Compliance.Tests/Testing/TenantInvitationHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11937,6 +11940,26 @@
         "test/Compliance.Tests/Testing/ApplicationImportProcessSupport.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "TenantInvitationMailboxClaim",
+      "source": "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxClaim.cs",
+      "appliedFacts": [
+        "TenantInvitationMailboxClaimed",
+        "TenantInvitationMailboxReleased"
+      ],
+      "commandRequests": [
+        "AcceptTenantInvitation"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Kernel/AggregateIdentityTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationAdmissionTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationMailboxClaimTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs",
+        "test/Compliance.Tests/Testing/TenantInvitationHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
     }
   ],
   "requests": [
@@ -12100,7 +12123,7 @@
     {
       "request": "AcceptTenantInvitation",
       "contract": "src/Compliance.Common/Features/Tenants/AcceptTenantInvitation.cs",
-      "interfaces": "IRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -12114,11 +12137,18 @@
         "TenantInvitation"
       ],
       "aggregateTargets": [
-        "TenantInvitation"
+        "TenantInvitation",
+        "TenantInvitationMailboxClaim"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "TenantInvitationMailboxes"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationConcurrencyTests.cs"
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs",
+        "test/Compliance.Tests/TenantInvitationFacts.cs",
+        "test/Compliance.Tests/Testing/TenantInvitationHost.cs"
       ],
       "note": ""
     },
@@ -19211,7 +19241,7 @@
     {
       "request": "InviteGuestConsultant",
       "contract": "src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -19226,18 +19256,19 @@
         "TenantInvitation"
       ],
       "helperServices": [
-        "TenantInvitationIssuer"
+        "TenantInvitationAdmission"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/RbacManagementAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Tenants/InviteGuestConsultantHandlerTests.cs"
+        "test/Compliance.Tests/Features/Tenants/InviteGuestConsultantHandlerTests.cs",
+        "test/Compliance.Tests/Testing/TenantInvitationHost.cs"
       ],
       "note": ""
     },
     {
       "request": "InviteOrganizationMember",
       "contract": "src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -19252,17 +19283,18 @@
         "TenantInvitation"
       ],
       "helperServices": [
-        "TenantInvitationIssuer"
+        "TenantInvitationAdmission"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationConcurrencyTests.cs"
+        "test/Compliance.Tests/TenantInvitationFacts.cs",
+        "test/Compliance.Tests/Testing/TenantInvitationHost.cs"
       ],
       "note": ""
     },
     {
       "request": "InviteTenantMember",
       "contract": "src/Compliance.Common/Features/Tenants/InviteTenantMember.cs",
-      "interfaces": "IRequest, ICallable, IPlatformOperatorRequest",
+      "interfaces": "IRequest, ICallable, IPlatformOperatorRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -19279,7 +19311,7 @@
         "TenantInvitation"
       ],
       "helperServices": [
-        "TenantInvitationIssuer"
+        "TenantInvitationAdmission"
       ],
       "testSymbolReferences": [],
       "note": ""
@@ -21775,8 +21807,8 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantPagedReadContractTests.cs",
-        "test/Compliance.Tests/Features/Tenants/TenantInvitationDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Tenants/TenantPagedReadContractTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -29144,6 +29176,75 @@
         "test/Compliance.Tests/Features/Applications/ApplicationPublicationCutTests.cs"
       ],
       "note": "System-only application import process receiver; acquires the exclusive hold of one canonical target group. No HTTP/MCP route."
+    },
+    {
+      "request": "RecordTenantInvitationDeliveryFailed",
+      "contract": "src/Compliance.Common/Features/Tenants/RecordTenantInvitationDeliveryFailed.cs",
+      "interfaces": "ITenantInvitationDeliveryReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RecordTenantInvitationDeliveryFailedHandler",
+          "source": "src/Compliance.Core/Features/Tenants/RecordTenantInvitationDeliveryFailedHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "TenantInvitationDeliverySupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryProcessTests.cs"
+      ],
+      "note": "Process receiver: records the failed outcome of the attempt that was rejected in the delivery process record. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "RecordTenantInvitationDeliverySent",
+      "contract": "src/Compliance.Common/Features/Tenants/RecordTenantInvitationDeliverySent.cs",
+      "interfaces": "ITenantInvitationDeliveryReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RecordTenantInvitationDeliverySentHandler",
+          "source": "src/Compliance.Core/Features/Tenants/RecordTenantInvitationDeliverySentHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "TenantInvitationDeliverySupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryProcessTests.cs"
+      ],
+      "note": "Process receiver: records the delivered outcome of the attempt that sent in the delivery process record. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "SendTenantInvitation",
+      "contract": "src/Compliance.Common/Features/Tenants/SendTenantInvitation.cs",
+      "interfaces": "ITenantInvitationDeliveryReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SendTenantInvitationHandler",
+          "source": "src/Compliance.Core/Features/Tenants/SendTenantInvitationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "TenantInvitationDeliverySupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryProcessTests.cs"
+      ],
+      "note": "Process receiver: performs the external send of one frozen invitation payload with a stable attempt identity and stores the provider result on the attempt. System principal only; no HTTP/MCP route."
     }
   ],
   "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",
@@ -29409,40 +29510,6 @@
       "methodArgumentCount": 9
     },
     {
-      "fact": "TenantInvitationDeliveryFailed",
-      "aggregate": "TenantInvitation",
-      "method": "RecordDeliveryFailure",
-      "source": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs",
-      "classification": "direct_reactor_executor",
-      "ownerIssue": 127,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
-          "methods": [
-            "RecordDeliveryFailure"
-          ]
-        }
-      ],
-      "methodArgumentCount": 3
-    },
-    {
-      "fact": "TenantInvitationDeliverySent",
-      "aggregate": "TenantInvitation",
-      "method": "RecordDeliverySent",
-      "source": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs",
-      "classification": "direct_reactor_executor",
-      "ownerIssue": 127,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs",
-          "methods": [
-            "RecordDeliverySent"
-          ]
-        }
-      ],
-      "methodArgumentCount": 2
-    },
-    {
       "fact": "TypeIIPeriodCloseAmended",
       "aggregate": "TypeIIPeriod",
       "method": "AmendClose",
@@ -29643,6 +29710,42 @@
       "migrationDisposition": "retain_until_verified_stream_migration",
       "callerSources": [],
       "methodArgumentCount": 2
+    },
+    {
+      "fact": "TenantInvitationMailboxClaimed",
+      "aggregate": "TenantInvitationMailboxClaim",
+      "method": "Claim",
+      "source": "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxClaim.cs",
+      "classification": "direct_processor_executor",
+      "ownerIssue": 1022,
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxes.cs",
+          "methods": [
+            "Claim"
+          ]
+        }
+      ],
+      "methodArgumentCount": 4,
+      "note": "The invitation handlers acquire the claim through TenantInvitationAdmission and TenantInvitationMailboxes (two helper hops), which the one-hop route analysis does not follow; there is no separate reactor or request for it."
+    },
+    {
+      "fact": "TenantInvitationMailboxReleased",
+      "aggregate": "TenantInvitationMailboxClaim",
+      "method": "Claim",
+      "source": "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxClaim.cs",
+      "classification": "direct_processor_executor",
+      "ownerIssue": 1022,
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Tenants/TenantInvitationMailboxes.cs",
+          "methods": [
+            "Claim"
+          ]
+        }
+      ],
+      "methodArgumentCount": 4,
+      "note": "The invitation handlers acquire the claim through TenantInvitationAdmission and TenantInvitationMailboxes (two helper hops), which the one-hop route analysis does not follow; there is no separate reactor or request for it."
     }
   ],
   "factEmissionHelpers": [

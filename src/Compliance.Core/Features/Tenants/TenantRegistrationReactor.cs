@@ -23,7 +23,9 @@ public sealed partial class TenantRegistrationReactor(
                 context.Trigger.Slug), context, ct);
         if (!context.Trigger.CreatorIsAdministrator &&
             context.Trigger.FirstAdministratorEmail is { } email)
-            await bus.SendReactionAsync(new InviteTenantMember(context.Trigger.TenantId, email,
+            // The tenant fixes the invitation id, so a replay is an exact retry of the same invitation.
+            await bus.SendReactionAsync(new InviteTenantMember(
+                TenantInvitationIds.FirstAdministratorOf(context.Trigger.TenantId), context.Trigger.TenantId, email,
                 "client_personnel", Administrator: true),
                 context, ct);
     }

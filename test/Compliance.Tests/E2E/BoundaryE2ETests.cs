@@ -296,8 +296,9 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
 
         deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         var reviewerEmail = $"boundary-reviewer-{Guid.NewGuid():N}@example.com";
-        using var invitation = await owner.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenant.TenantId}/invitations",
+        var invitationId = Uuid.CreateVersion4();
+        using var invitation = await owner.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenant.TenantId}/invitations/{invitationId}",
             new { email_address = reviewerEmail, affiliation = "client_personnel", administrator = false });
         Assert.Equal(HttpStatusCode.NoContent, invitation.StatusCode);
         var delivery = splitHosts
@@ -313,8 +314,8 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
         var reviewerId = await TenantInvitationE2ETests.LoginAsync(reviewer, reviewerEmail);
         await TenantInvitationE2ETests.VerifyEmailAsync(factory, reviewer, reviewerId, reviewerEmail,
             splitHosts ? worker!.Services.GetRequiredService<MockEmailChallengeDelivery>() : null);
-        using var accepted = await reviewer.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenant.TenantId}/invitations/acceptance",
+        using var accepted = await reviewer.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenant.TenantId}/invitations/{invitationId}/acceptance",
             new { email_address = reviewerEmail, token });
         Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
 

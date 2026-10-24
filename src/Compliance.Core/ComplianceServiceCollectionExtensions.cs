@@ -121,7 +121,11 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IUserDisplayNameReader>(
             provider => provider.GetRequiredService<FitzPlatformUserDirectory>());
         services.AddScoped<UserIdentityContinuation>();
-        services.AddScoped<TenantInvitationIssuer>();
+        services.AddScoped<TenantInvitationAdmission>();
+        services.AddScoped<TenantInvitationMailboxes>();
+        services.AddScoped<TenantInvitationDeliverySupport>();
+        services.AddSingleton<ITenantInvitationDeliveryStore>(provider =>
+            new FitzKvTenantInvitationDeliveryStore(provider.GetRequiredService<IKvClient>()));
         services.AddScoped<FitzPermissionAuthorizer>();
         services.AddScoped<IPermissionProjection>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());
         services.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());
@@ -714,6 +718,7 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzFirmStaffDirectory>());
         services.AddScoped<IFirmStaffDirectoryReader>(
             provider => provider.GetRequiredService<FitzFirmStaffDirectory>());
+        services.AddSingleton(TenantInvitationDeliveryProcess.Definition);
         // ISourceFactResolver cannot be resolved by the production container until Portia publishes the shared
         // connection's IStreamClient (AddStreamClient, Portia 0.9.1); the registration is lazy, so nothing resolves
         // it before then and the pin bump makes the receivers and the process factory work without further changes.
@@ -1449,6 +1454,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ProvisionGuestProgramAccessHandler>()
             .AddRequestAuthorizer<GuestInvitationReactionAuthorizer>()
             .AddRequestHandler<AcceptTenantInvitationHandler>()
+            .AddRequestHandler<SendTenantInvitationHandler>()
+            .AddRequestHandler<RecordTenantInvitationDeliverySentHandler>()
+            .AddRequestHandler<RecordTenantInvitationDeliveryFailedHandler>()
+            .AddRequestAuthorizer<TenantInvitationDeliveryReceiverAuthorizer>()
             .AddRequestHandler<GetTenantHandler>()
             .AddRequestAuthorizer<GetTenantAuthorizer>()
             .AddRequestHandler<GetTenantProvisioningStatusHandler>()
@@ -1485,8 +1494,8 @@ public static class ComplianceServiceCollectionExtensions
                 options.MaximumFailureDelay = TimeSpan.FromSeconds(2);
                 options.FailureAttemptLimit = TenantActivationPolicy.WorkloadFailureAttemptLimit;
             })
-            .AddReactor<TenantInvitationDeliveryReactor>("TenantInvitationDeliveryV1",
-                WorkloadScope.PerTenant)
+            .AddReactor<TenantInvitationDeliveryProcessReactor>("TenantInvitationDeliveryProcessV1",
+                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<EvidenceArtifactInspectionEffectsReactor>(
                 EvidenceArtifactInspectionEffectsReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddReactor<EmailReservationReactor>("EmailReservation", WorkloadScope.Global)

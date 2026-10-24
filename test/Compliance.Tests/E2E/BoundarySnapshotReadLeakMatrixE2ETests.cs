@@ -357,7 +357,8 @@ public sealed class BoundarySnapshotReadLeakMatrixE2ETests(BrokerStackFixture br
         string reviewerEmail, MockTenantInvitationDelivery delivery, Uuid tenantId)
     {
         var tenantPath = TenantPath(tenantId);
-        using var invitation = await owner.PostAsJsonAsync(tenantPath + "/invitations",
+        var invitationId = Uuid.CreateVersion4();
+        using var invitation = await owner.PutAsJsonAsync(tenantPath + $"/invitations/{invitationId}",
             new { email_address = reviewerEmail, affiliation = "client_personnel", administrator = false });
         Assert.Equal(HttpStatusCode.NoContent, invitation.StatusCode);
         string? token = null;
@@ -372,8 +373,8 @@ public sealed class BoundarySnapshotReadLeakMatrixE2ETests(BrokerStackFixture br
                 item.GetProperty("delivery_status").GetString() == "delivered"));
         Assert.Equal(reviewerEmail, Assert.Single(delivered.GetProperty("items")
             .EnumerateArray()).GetProperty("email_address").GetString());
-        using var accepted = await reviewer.PostAsJsonAsync(tenantPath +
-            "/invitations/acceptance", new { email_address = reviewerEmail, token });
+        using var accepted = await reviewer.PutAsJsonAsync(tenantPath +
+            $"/invitations/{invitationId}/acceptance", new { email_address = reviewerEmail, token });
         Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
         using var session = await reviewer.GetAsync("/auth/session");
         Assert.Equal(HttpStatusCode.OK, session.StatusCode);

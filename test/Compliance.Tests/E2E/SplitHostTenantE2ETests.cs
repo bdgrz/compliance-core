@@ -590,8 +590,9 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             await TenantInvitationE2ETests.VerifyEmailAsync(factory, administratorClient,
                 administratorId, administratorEmail,
                 worker.Services.GetRequiredService<MockEmailChallengeDelivery>());
-            using var administratorAccepted = await administratorClient.PostAsJsonAsync(
-                $"/api/v1/tenants/{tenantId}/invitations/acceptance",
+            var administratorInvitationId = TenantInvitationIds.FirstAdministratorOf(tenantId);
+            using var administratorAccepted = await administratorClient.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/invitations/{administratorInvitationId}/acceptance",
                 new { email_address = administratorEmail, token = administratorToken });
             Assert.Equal(HttpStatusCode.NoContent, administratorAccepted.StatusCode);
 
@@ -600,7 +601,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             var path = $"/api/v1/tenants/{tenantId}/invitations";
             var request = new { email_address = email, affiliation = "client_personnel" };
 
-            using var first = await operatorClient.PostAsJsonAsync(path, request);
+            using var first = await operatorClient.PutAsJsonAsync($"{path}/{Uuid.CreateVersion4()}", request);
             Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
             Assert.False(factory.Services.GetRequiredService<MockTenantInvitationDelivery>()
                 .TryGetLatest(tenantId, email, out _));
@@ -625,7 +626,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
 
             // The failed stream must not stall the tenant reactor's checkpoint.
             var laterEmail = $"later-{Guid.NewGuid():N}@example.com";
-            using var laterInvitation = await operatorClient.PostAsJsonAsync(path,
+            using var laterInvitation = await operatorClient.PutAsJsonAsync($"{path}/{Uuid.CreateVersion4()}",
                 new { email_address = laterEmail, affiliation = "client_personnel" });
             Assert.Equal(HttpStatusCode.NoContent, laterInvitation.StatusCode);
             string? laterToken = null;
@@ -636,7 +637,8 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             Assert.False(string.IsNullOrEmpty(laterToken));
 
             // A recorded failure is terminal for that attempt; the operator reissues it.
-            using var retry = await operatorClient.PostAsJsonAsync(path, request);
+            var retryInvitationId = Uuid.CreateVersion4();
+            using var retry = await operatorClient.PutAsJsonAsync($"{path}/{retryInvitationId}", request);
             Assert.Equal(HttpStatusCode.NoContent, retry.StatusCode);
             string? token = null;
             var retryDeadline = DateTimeOffset.UtcNow.AddSeconds(120);
@@ -667,8 +669,8 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             await TenantInvitationE2ETests.VerifyEmailAsync(factory, inviteeClient,
                 inviteeId, email,
                 worker.Services.GetRequiredService<MockEmailChallengeDelivery>());
-            using var accepted = await inviteeClient.PostAsJsonAsync(
-                $"/api/v1/tenants/{tenantId}/invitations/acceptance",
+            using var accepted = await inviteeClient.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/invitations/{retryInvitationId}/acceptance",
                 new { email_address = email, token });
             Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
             Members? members = null;
@@ -748,23 +750,22 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             Assert.NotNull(registration);
             var tenantId = Uuid.Parse(registration.TenantId, CultureInfo.InvariantCulture);
 
-            await using var scope = worker.Services.CreateAsyncScope();
-            var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             var failed = false;
             var failureDeadline = DateTimeOffset.UtcNow.AddSeconds(120);
             while (DateTimeOffset.UtcNow < failureDeadline)
             {
-                var invitation = await reader.HydrateAsync(new TenantInvitation(
-                    tenantId, administratorEmail), CancellationToken.None);
-                failed = invitation.DeliveryStatus == "failed";
+                var record = await worker.Services.GetRequiredService<ITenantInvitationDeliveryStore>().ReadAsync(
+                    tenantId, TenantInvitationIds.FirstAdministratorOf(tenantId));
+                failed = record?.Status == TenantInvitationDeliveryRecord.Failed;
                 if (failed)
                     break;
                 await Task.Delay(250);
             }
             Assert.True(failed);
             Assert.Equal(1, delivery.AttemptsFor(administratorEmail));
-            using var reissued = await operatorClient.PostAsJsonAsync(
-                $"/api/v1/tenants/{tenantId}/invitations",
+            var reissuedInvitationId = Uuid.CreateVersion4();
+            using var reissued = await operatorClient.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/invitations/{reissuedInvitationId}",
                 new
                 {
                     email_address = administratorEmail,
@@ -785,12 +786,12 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             await TenantInvitationE2ETests.VerifyEmailAsync(factory, administratorClient,
                 administratorId, administratorEmail,
                 worker.Services.GetRequiredService<MockEmailChallengeDelivery>());
-            using var accepted = await administratorClient.PostAsJsonAsync(
-                $"/api/v1/tenants/{tenantId}/invitations/acceptance",
+            using var accepted = await administratorClient.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/invitations/{reissuedInvitationId}/acceptance",
                 new { email_address = administratorEmail, token = invitationToken });
             Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
-            using var replayedAcceptance = await administratorClient.PostAsJsonAsync(
-                $"/api/v1/tenants/{tenantId}/invitations/acceptance",
+            using var replayedAcceptance = await administratorClient.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/invitations/{reissuedInvitationId}/acceptance",
                 new { email_address = administratorEmail, token = invitationToken });
             Assert.Equal(HttpStatusCode.NoContent, replayedAcceptance.StatusCode);
             var administratorsTeamId = BuiltInRbac.AdministratorsTeamId(tenantId);
@@ -925,8 +926,8 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
                         name = "Unauthorized Tenant",
                         slug = $"unauthorized-{Guid.NewGuid():N}"[..24],
                     });
-                    using var inviteDenied = await nonOperator.PostAsJsonAsync(
-                        $"/api/v1/tenants/{tenantId}/invitations",
+                    using var inviteDenied = await nonOperator.PutAsJsonAsync(
+                        $"/api/v1/tenants/{tenantId}/invitations/{Uuid.CreateVersion4()}",
                         new { email_address = "denied@example.com", affiliation = "firm_staff" });
                     using var slugDenied = await nonOperator.PutAsJsonAsync(
                         $"/api/v1/tenants/{tenantId}/slug-changes/{Guid.NewGuid()}",
@@ -956,14 +957,15 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             var administratorId = await TenantInvitationE2ETests.LoginAsync(administratorClient,
                 administratorEmail);
             activationLag.TargetUser(administratorId);
-            var acceptancePath = $"/api/v1/tenants/{tenantId}/invitations/acceptance";
-            using var unverified = await administratorClient.PostAsJsonAsync(acceptancePath,
+            var administratorInvitationId = TenantInvitationIds.FirstAdministratorOf(tenantId);
+            var acceptancePath = $"/api/v1/tenants/{tenantId}/invitations/{administratorInvitationId}/acceptance";
+            using var unverified = await administratorClient.PutAsJsonAsync(acceptancePath,
                 new { email_address = administratorEmail, token = invitationToken });
             Assert.Equal(HttpStatusCode.Forbidden, unverified.StatusCode);
             await TenantInvitationE2ETests.VerifyEmailAsync(factory, administratorClient,
                 administratorId, administratorEmail,
                 worker.Services.GetRequiredService<MockEmailChallengeDelivery>());
-            using var accepted = await administratorClient.PostAsJsonAsync(acceptancePath,
+            using var accepted = await administratorClient.PutAsJsonAsync(acceptancePath,
                 new { email_address = administratorEmail, token = invitationToken });
             Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
 
@@ -1210,8 +1212,9 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             Assert.Equal(HttpStatusCode.OK, administratorTenant.StatusCode);
 
             var staffEmail = $"staff-{Guid.NewGuid():N}@example.com";
-            using var invitedStaff = await operatorClient.PostAsJsonAsync(
-                $"/api/v1/tenants/{tenantId}/invitations",
+            var staffInvitationId = Uuid.CreateVersion4();
+            using var invitedStaff = await operatorClient.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/invitations/{staffInvitationId}",
                 new { email_address = staffEmail, affiliation = "firm_staff", administrator = false });
             Assert.Equal(HttpStatusCode.NoContent, invitedStaff.StatusCode);
             string? staffToken = null;
@@ -1227,7 +1230,8 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             var staffId = await TenantInvitationE2ETests.LoginAsync(staffClient, staffEmail);
             await TenantInvitationE2ETests.VerifyEmailAsync(factory, staffClient, staffId, staffEmail,
                 worker.Services.GetRequiredService<MockEmailChallengeDelivery>());
-            using var staffAccepted = await staffClient.PostAsJsonAsync(acceptancePath,
+            using var staffAccepted = await staffClient.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/invitations/{staffInvitationId}/acceptance",
                 new { email_address = staffEmail, token = staffToken });
             Assert.Equal(HttpStatusCode.NoContent, staffAccepted.StatusCode);
             deadline = DateTimeOffset.UtcNow.AddSeconds(120);

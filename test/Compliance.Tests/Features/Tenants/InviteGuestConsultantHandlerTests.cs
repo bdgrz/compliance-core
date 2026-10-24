@@ -1,10 +1,8 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.UserIdentities;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Tenants;
 
@@ -14,42 +12,25 @@ public sealed class InviteGuestConsultantHandlerTests
     public async Task ShouldIssueScopedGuestInvitationGivenTenantAdminSelectsCurrentPrograms()
     {
         // Arrange
-        var tenantId = Uuid.CreateVersion4();
-        var invitedBy = Uuid.CreateVersion4();
         var programIds = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
-        var store = new InMemoryEventStore();
-        var services = new ServiceCollection();
-        services.AddSingleton<IEventStore>(store);
-        services.AddPortia();
-        await using var provider = services.BuildServiceProvider();
-        await using var scope = provider.CreateAsyncScope();
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(
-            new Dictionary<string, string?>()).Build();
-        var issuer = new TenantInvitationIssuer(
-            scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
-            EmailChallengeTokenKeys.FromConfiguration(configuration, true), TimeProvider.System);
-        var handler = new InviteGuestConsultantHandler(issuer,
-            new ExistingProgramScopes(tenantId, programIds));
-        var expiresOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30);
-        var request = new RequestContext<InviteGuestConsultant>(new InviteGuestConsultant(
-            tenantId, "guest@example.com", programIds, expiresOn), Actor(invitedBy));
+        await using var host = new TenantInvitationHost(programs: programIds);
+        var invitationId = Uuid.CreateVersion4();
+        var expiresOn = DateOnly.FromDateTime(TenantInvitationHost.At.UtcDateTime).AddDays(30);
 
         // Act
-        var result = await handler.HandleAsync(request, CancellationToken.None);
-        var aggregate = new TenantInvitation(tenantId, "guest@example.com");
-        var recorded = new List<DomainEvent>();
-        await foreach (var item in store.ReadAsync(aggregate.Stream, 0))
-            recorded.Add(item.Event);
+        var result = await host.InviteGuestAsync(invitationId, "guest@example.com", programIds, expiresOn);
+        var facts = await host.InvitationFactsAsync(invitationId);
+        var scope = await host.Content.ReadJsonAsync<IReadOnlyList<Uuid>>(host.TenantId.ToString(),
+            facts.OfType<TenantMemberInvited>().Single().GuestProgramIdsManifest!);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        var invited = Assert.IsType<TenantMemberInvited>(Assert.Single(recorded));
+        var invited = Assert.IsType<TenantMemberInvited>(Assert.Single(facts));
         Assert.Equal("guest", invited.Affiliation);
-        Assert.Equal(invitedBy, invited.InvitedBy);
-        Assert.Equal(invitedBy.ToString(), invited.InvitedByDisplay);
+        Assert.Equal(host.Inviter, invited.InvitedBy);
+        Assert.Equal(host.Inviter.ToString(), invited.InvitedByDisplay);
         Assert.Equal(expiresOn, invited.GuestExpiresOn);
-        Assert.Equal(programIds.OrderBy(id => id.ToString(), StringComparer.Ordinal).ToArray(),
-            invited.GuestProgramIds);
+        Assert.Equal(programIds.OrderBy(id => id.ToString(), StringComparer.Ordinal).ToArray(), scope);
         Assert.False(invited.Administrator);
         Assert.Null(invited.BuiltInRole);
     }
@@ -60,9 +41,8 @@ public sealed class InviteGuestConsultantHandlerTests
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var handler = new InviteGuestConsultantHandler(null!,
-            new ExistingProgramScopes(tenantId, []));
-        var request = new RequestContext<InviteGuestConsultant>(new InviteGuestConsultant(
+        var handler = new InviteGuestConsultantHandler(null!, new ExistingProgramScopes(tenantId, []));
+        var request = new RequestContext<InviteGuestConsultant>(new InviteGuestConsultant(Uuid.CreateVersion4(),
             tenantId, "guest@example.com", [programId], DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30)),
             Actor(Uuid.CreateVersion4()));
 

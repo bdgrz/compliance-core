@@ -1,11 +1,12 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
 public sealed class ListTenantInvitationsHandler(ITenantInvitationDirectoryReader directory,
-    ITenantMembershipDirectoryReader memberships,
-    TimeProvider clock) : IRequestHandler<ListTenantInvitations, Page<TenantInvitationView>>
+    ITenantMembershipDirectoryReader memberships, ITenantInvitationDeliveryStore deliveries,
+    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<ListTenantInvitations, Page<TenantInvitationView>>
 {
     public async ValueTask<Result<Page<TenantInvitationView>>> HandleAsync(
         IRequestContext<ListTenantInvitations> context, CancellationToken ct)
@@ -69,12 +70,18 @@ public sealed class ListTenantInvitationsHandler(ITenantInvitationDirectoryReade
         if (entry.GuestExpiresOn is { } guestExpiresOn &&
             DateOnly.FromDateTime(now.UtcDateTime) > guestExpiresOn)
             status = "expired";
+        var delivery = await deliveries.ReadAsync(entry.TenantId, entry.InvitationId, ct).ConfigureAwait(false);
+        IReadOnlyList<Uuid>? programIds = null;
+        if (entry.GuestProgramIdsManifest is { } manifest)
+            programIds = (await content.ReadJsonAsync<IReadOnlyList<Uuid>>(entry.TenantId.ToString(), manifest, ct)
+                .ConfigureAwait(false)).ToArray();
         return new TenantInvitationView(entry.TenantId, entry.EmailAddress,
             entry.Affiliation, entry.Administrator, entry.BuiltInRole, status,
             entry.ExpiresAt, entry.InvitedBy, entry.AcceptedUserId,
-            entry.GuestProgramIds?.ToArray(), entry.GuestExpiresOn)
+            programIds, entry.GuestExpiresOn)
         {
-            DeliveryStatus = entry.DeliveryStatus,
+            InvitationId = entry.InvitationId,
+            DeliveryStatus = delivery?.Status ?? TenantInvitationDeliveryRecord.Pending,
         };
     }
 

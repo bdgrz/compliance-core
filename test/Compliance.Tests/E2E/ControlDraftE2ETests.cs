@@ -243,7 +243,8 @@ public sealed class ControlDraftE2ETests(BrokerStackFixture broker)
         async Task<(string UserId, string Email)> InvitePersonalMemberAsync(HttpClient client, string role)
         {
             var email = $"control-publication-{role}-{Guid.NewGuid():N}@example.com";
-            using var invited = await author.PostAsJsonAsync($"{tenantPath}/member-invitations", new
+            var invitationId = Uuid.CreateVersion4();
+            using var invited = await author.PutAsJsonAsync($"{tenantPath}/member-invitations/{invitationId}", new
             {
                 email_address = email,
                 built_in_role = BuiltInRbac.ComplianceManagementRole,
@@ -253,7 +254,7 @@ public sealed class ControlDraftE2ETests(BrokerStackFixture broker)
                 tenant, email);
             var userId = await TenantInvitationE2ETests.LoginAsync(client, email);
             await TenantInvitationE2ETests.VerifyEmailAsync(factory, client, userId, email);
-            using var accepted = await client.PostAsJsonAsync($"{tenantPath}/invitations/acceptance",
+            using var accepted = await client.PutAsJsonAsync($"{tenantPath}/invitations/{invitationId}/acceptance",
                 new { email_address = email, token });
             Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
             return (userId, email);
@@ -308,8 +309,9 @@ public sealed class ControlDraftE2ETests(BrokerStackFixture broker)
         await TenantInvitationE2ETests.VerifyEmailAsync(factory, author, authorUserId, authorEmail);
         var (tenantId, programId) = await CreateProgramAsync(author);
         var reviewerEmail = $"control-reviewer-{Guid.NewGuid():N}@example.com";
-        using var invited = await author.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/member-invitations", new
+        var reviewerInvitationId = Uuid.CreateVersion4();
+        using var invited = await author.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/member-invitations/{reviewerInvitationId}", new
             {
                 email_address = reviewerEmail,
                 built_in_role = BuiltInRbac.ComplianceManagementRole,
@@ -322,8 +324,8 @@ public sealed class ControlDraftE2ETests(BrokerStackFixture broker)
         await TenantInvitationE2ETests.VerifyEmailAsync(factory, reviewer, reviewerUserId,
             reviewerEmail);
         Assert.NotEqual(authorUserId, reviewerUserId);
-        using var acceptedInvitation = await reviewer.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/invitations/acceptance", new
+        using var acceptedInvitation = await reviewer.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/invitations/{reviewerInvitationId}/acceptance", new
             {
                 email_address = reviewerEmail,
                 token,

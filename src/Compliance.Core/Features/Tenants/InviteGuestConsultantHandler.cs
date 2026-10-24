@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
-public sealed class InviteGuestConsultantHandler(TenantInvitationIssuer issuer,
+public sealed class InviteGuestConsultantHandler(TenantInvitationAdmission admission,
     IProgramResourceScopeResolver programScopes) : IRequestHandler<InviteGuestConsultant>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<InviteGuestConsultant> context,
@@ -27,8 +28,9 @@ public sealed class InviteGuestConsultantHandler(TenantInvitationIssuer issuer,
                     "A guest invitation program was not found in this organization."));
         }
 
-        return await issuer.IssueGuestAsync(context, request.TenantId, request.EmailAddress,
-            programIds, request.ExpiresOn, invitedBy,
-            UserIdentityClaims.BdgrzDisplay(context.Actor, invitedBy), ct).ConfigureAwait(false);
+        return await admission.AdmitAsync(context, request.InvitationId, request.TenantId,
+            nameof(InviteGuestConsultant), AuthoredIntentDigest.Compute(request), TenantInvitationTerms.ForGuest(
+                request.EmailAddress, programIds, request.ExpiresOn, invitedBy,
+                UserIdentityClaims.BdgrzDisplay(context.Actor, invitedBy)), ct).ConfigureAwait(false);
     }
 }

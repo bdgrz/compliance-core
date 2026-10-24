@@ -697,8 +697,9 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
         HttpClient owner, Uuid tenantId, string teamId)
     {
         var email = "read-matrix-member-" + Guid.NewGuid().ToString("N") + "@example.com";
-        using (var invitation = await owner.PostAsJsonAsync(
-                   TenantPath(tenantId) + "/invitations", new
+        var invitationId = Uuid.CreateVersion4();
+        using (var invitation = await owner.PutAsJsonAsync(
+                   TenantPath(tenantId) + $"/invitations/{invitationId}", new
                    {
                        email_address = email,
                        affiliation = "client_personnel",
@@ -720,8 +721,8 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
 
         await TenantInvitationE2ETests.VerifyEmailAsync(factory, member, userId.ToString(), email,
             services.GetRequiredService<MockEmailChallengeDelivery>());
-        using (var accepted = await member.PostAsJsonAsync(
-                   TenantPath(tenantId) + "/invitations/acceptance", new
+        using (var accepted = await member.PutAsJsonAsync(
+                   TenantPath(tenantId) + $"/invitations/{invitationId}/acceptance", new
                    {
                        email_address = email,
                        token,

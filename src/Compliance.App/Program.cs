@@ -86,9 +86,9 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<RevokePlatformOperator>(tool => tool.Destructive())
         .AddMcpTool<ListPlatformOperators>(tool => tool.ReadOnly())
         .AddMcpTool<GetWorkDigestDispatchStatus>(tool => tool.ReadOnly())
-        .AddMcpTool<InviteTenantMember>()
-        .AddMcpTool<InviteOrganizationMember>()
-        .AddMcpTool<InviteGuestConsultant>()
+        .AddMcpTool<InviteTenantMember>(tool => tool.Idempotent())
+        .AddMcpTool<InviteOrganizationMember>(tool => tool.Idempotent())
+        .AddMcpTool<InviteGuestConsultant>(tool => tool.Idempotent())
         .AddMcpTool<ListTenantInvitations>(tool => tool.ReadOnly())
         .AddMcpTool<GetMemberAccess>(tool => tool.ReadOnly())
         .AddMcpTool<GetTenant>(tool => tool.ReadOnly())
@@ -549,13 +549,13 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/platform/tenants/{tenant_id}/members/{member_id}/work-digest-dispatches/{week_of}/retry-authorizations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
-    app.MapPortiaPost<InviteTenantMember>("/api/v1/tenants/{tenant_id}/invitations")
+    app.MapPortiaPut<InviteTenantMember>("/api/v1/tenants/{tenant_id}/invitations/{invitation_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapPortiaPost<InviteOrganizationMember>("/api/v1/tenants/{tenant_id}/member-invitations")
+    app.MapPortiaPut<InviteOrganizationMember>("/api/v1/tenants/{tenant_id}/member-invitations/{invitation_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapPortiaPost<InviteGuestConsultant>("/api/v1/tenants/{tenant_id}/guest-invitations")
+    app.MapPortiaPut<InviteGuestConsultant>("/api/v1/tenants/{tenant_id}/guest-invitations/{invitation_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
     app.MapPortiaGet<ListTenantInvitations, Page<TenantInvitationView>>(
@@ -589,7 +589,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/members/{user_id}/responsibilities")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Responsibilities");
-    app.MapPortiaPost<AcceptTenantInvitation>("/api/v1/tenants/{tenant_id}/invitations/acceptance")
+    app.MapPortiaPut<AcceptTenantInvitation>("/api/v1/tenants/{tenant_id}/invitations/{invitation_id}/acceptance")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
     app.MapPortiaGet<GetTenant, TenantView>("/api/v1/tenants/{tenant_id}")

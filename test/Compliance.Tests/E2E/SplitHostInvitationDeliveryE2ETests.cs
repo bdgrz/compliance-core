@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,8 +64,9 @@ public sealed class SplitHostInvitationDeliveryE2ETests(BrokerStackFixture broke
         // Act: no worker is present when the API commits the invitation.
         await firstWorker.StopAsync();
         var invitee = $"member-{Guid.NewGuid():N}@example.com";
-        using var invited = await administrator.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/member-invitations", new
+        var invitationId = Uuid.CreateVersion4();
+        using var invited = await administrator.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/member-invitations/{invitationId}", new
             {
                 email_address = invitee,
                 built_in_role = BuiltInRbac.ComplianceParticipationRole,
@@ -101,16 +103,9 @@ public sealed class SplitHostInvitationDeliveryE2ETests(BrokerStackFixture broke
                 await Task.Delay(250);
             }
             Assert.Equal("delivered", Assert.Single(page!.Items).DeliveryStatus);
-            ActorReference? deliveryActor = null;
-            await foreach (var record in restartedWorker.Services.GetRequiredService<IEventStore>()
-                               .ReadAsync(new TenantInvitation(tenantId, invitee).Stream,
-                                   0, CancellationToken.None))
-            {
-                if (record.Event is TenantInvitationDeliverySent)
-                    deliveryActor = ActorReference.FromSystemMetadata(record.Event.Metadata);
-            }
-            Assert.Equal(ActorReference.ForSystemProcess("reactor:TenantInvitationDeliveryV1",
-                "TenantInvitationDeliveryV1"), deliveryActor);
+            var process = await restartedWorker.Services.GetRequiredService<IProcessRecordStore>().ReadAsync(
+                new ProcessKey(TenantInvitationDeliveryProcess.Name, tenantId.ToString(), invitationId));
+            Assert.Equal(ProcessState.Completed, process?.State);
         }
         finally
         {

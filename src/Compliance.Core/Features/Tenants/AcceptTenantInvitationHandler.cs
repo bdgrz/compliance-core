@@ -1,38 +1,81 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
-public sealed class AcceptTenantInvitationHandler(IAggregateExecutor executor, TimeProvider clock)
+/// <summary>
+///     Accepts an invitation on the invitation owner the route's invitation id selects. An exact retry of an
+///     accepted operation replays the original acceptance even after the offer's expiry; a changed actor or recipient
+///     conflicts. The token is verified inside the owner and never enters the authored intent. After the acceptance
+///     commits or replays, the mailbox claim of exactly this invitation and generation is released; a failed
+///     release is returned so that the same retry completes it.
+/// </summary>
+public sealed class AcceptTenantInvitationHandler(NativeOperationExecutor operations, IAggregateReader reader,
+    TenantInvitationMailboxes mailboxes, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<AcceptTenantInvitation>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<AcceptTenantInvitation> context,
-        CancellationToken ct)
+    /// <summary>Schema of the complete guest program scope an acceptance freezes.</summary>
+    public const string GuestScopeSchema = "TenantInvitationAccepted.GuestProgramIdsManifest.v1";
+
+    public async ValueTask<Result> HandleAsync(IRequestContext<AcceptTenantInvitation> context, CancellationToken ct)
     {
+        var request = context.Request;
         var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
             ? subject
             : throw new InvalidOperationException("AcceptTenantInvitationAuthorizer must reject this actor.");
-        if (!EmailAddresses.TryNormalize(context.Request.EmailAddress, out var normalized))
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Enter a valid email address."));
+        if (request.InvitationId == Uuid.Empty || request.TenantId == Uuid.Empty)
+            return Failure(RequestErrorKind.Validation, "An invitation id and tenant are required.");
+        if (!EmailAddresses.TryNormalize(request.EmailAddress, out var normalized))
+            return Failure(RequestErrorKind.Validation, "Enter a valid email address.");
 
-        // The worker can record delivery on the same invitation stream while the
-        // invitee accepts. Rehydrate on a stream conflict; Accept is idempotent for
-        // the same user and still rejects a superseded or expired token.
-        for (var attempt = 0; ; attempt++)
+        var logicalId = TenantInvitationIds.AcceptanceOf(request.InvitationId);
+        var actor = RegisterMemberHandler.ActorOf(context.Actor)!;
+        var owner = new TenantInvitation(request.TenantId, request.InvitationId).Stream;
+        var now = clock.GetUtcNow();
+        var provenance = new OperationProvenance(logicalId, logicalId, null, nameof(AcceptTenantInvitation), actor,
+            owner, "initial", null, AuthoredIntentDigest.Compute(new TenantInvitationAcceptanceIntent(
+                request.InvitationId, request.TenantId, normalized)), now, owner, owner);
+        var binding = AcceptedOperationBinding.Of(provenance);
+        var realm = request.TenantId.ToString();
+
+        var current = await reader.HydrateAsync(Hydrate(request, logicalId), ct).ConfigureAwait(false);
+        ImmutableContentRef? scope = null;
+        if (current.Acceptance.Decide(binding) == NativeAcceptanceDecision.None &&
+            current.GuestProgramIdsManifest is { } offered)
         {
-            try
-            {
-                return await executor.ExecuteAsync(new TenantInvitation(context.Request.TenantId,
-                        normalized),
-                    invitation => AggregateOutcome.CommitOnSuccess(
-                        invitation.Accept(userId, context.Request.Token, clock.GetUtcNow())),
-                    context, ct).ConfigureAwait(false);
-            }
-            catch (EventStreamConcurrencyException) when (attempt < 2)
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(10 * (attempt + 1)), ct)
-                    .ConfigureAwait(false);
-            }
+            var programIds = await content.ReadJsonAsync<IReadOnlyList<Uuid>>(realm, offered, ct).ConfigureAwait(false);
+            scope = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), GuestScopeSchema, programIds, ct)
+                .ConfigureAwait(false);
         }
+
+        var response = await TenantInvitationResponses.FreezeUnitAsync(content, realm, logicalId, ct)
+            .ConfigureAwait(false);
+        var accepted = await operations.ExecuteAsync(new NativeOperation<TenantInvitation>(binding,
+            () => Hydrate(request, logicalId), invitation => invitation.Acceptance,
+            invitation =>
+            {
+                var prepared = invitation.PrepareAccept(userId, normalized, request.Token, now);
+                return prepared.IsSuccess
+                    ? Result<FirstResponseDescriptor>.Success(response)
+                    : Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+            },
+            (TenantInvitation invitation, ImmutableContentRef frozen) => invitation.Accept(provenance, frozen, userId,
+                normalized, request.Token, now, scope)), context, ct).ConfigureAwait(false);
+        var result = TenantInvitationResponses.Of(accepted);
+        if (!result.IsSuccess)
+            return result;
+
+        // The acceptance is durable; the claim of exactly this invitation and generation can now be released.
+        // The invitation's own facts, not the request, name the mailbox and generation.
+        return await mailboxes.ReleaseAsync(context, request.TenantId, current.EmailAddress!, request.InvitationId,
+            current.MailboxGeneration, TenantInvitationMailboxClaim.AcceptedReason, ct).ConfigureAwait(false);
     }
+
+    static TenantInvitation Hydrate(AcceptTenantInvitation request, Uuid logicalId) =>
+        new(request.TenantId, request.InvitationId, logicalId);
+
+    static Result Failure(RequestErrorKind kind, string message) => Result.Failure(new RequestError(kind, message));
 }

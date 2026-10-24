@@ -312,8 +312,9 @@ public sealed class ControlRiskGovernanceE2ETests(BrokerStackFixture broker)
         HttpClient owner, HttpClient reviewer, Guid tenantId)
     {
         var reviewerEmail = $"governance-reviewer-{Guid.NewGuid():N}@example.com";
-        using var invitation = await owner.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/invitations",
+        var invitationId = Uuid.CreateVersion4();
+        using var invitation = await owner.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/invitations/{invitationId}",
             new { email_address = reviewerEmail, affiliation = "client_personnel", administrator = false });
         Assert.Equal(HttpStatusCode.NoContent, invitation.StatusCode);
         var delivery = worker is not null
@@ -329,8 +330,8 @@ public sealed class ControlRiskGovernanceE2ETests(BrokerStackFixture broker)
         var reviewerId = await TenantInvitationE2ETests.LoginAsync(reviewer, reviewerEmail);
         await TenantInvitationE2ETests.VerifyEmailAsync(factory, reviewer, reviewerId,
             reviewerEmail, worker?.Services.GetRequiredService<MockEmailChallengeDelivery>());
-        using var accepted = await reviewer.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/invitations/acceptance",
+        using var accepted = await reviewer.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/invitations/{invitationId}/acceptance",
             new { email_address = reviewerEmail, token });
         Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
         var tenant = Uuid.Parse(tenantId.ToString(), CultureInfo.InvariantCulture);
