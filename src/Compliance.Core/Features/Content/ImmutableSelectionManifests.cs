@@ -39,10 +39,10 @@ public static class ImmutableSelectionManifests
         var bytes = await store.ReadVerifiedAsync(realm, manifest.Content, ct).ConfigureAwait(false);
         if (!string.Equals(ContentDigest.Sha256(bytes.Span), manifest.ItemsSha256, StringComparison.Ordinal))
             throw new ImmutableContentIntegrityException("The selection items do not match the manifest digest.");
-        T[]? items;
+        IReadOnlyList<T>? items;
         try
         {
-            items = JsonSerializer.Deserialize(bytes.Span, Info<T>());
+            items = JsonSerializer.Deserialize(bytes.Span, Info<T>()) as IReadOnlyList<T>;
         }
         catch (JsonException exception)
         {
@@ -50,12 +50,24 @@ public static class ImmutableSelectionManifests
                 $"The stored selection is not a valid {typeof(T).Name} array: {exception.Message}");
         }
 
-        if (items is null || items.Length != manifest.Count)
+        if (items is null || items.Count != manifest.Count)
             throw new ImmutableContentIntegrityException("The selection item count differs from its manifest.");
-        return Array.AsReadOnly(items);
+        return Array.AsReadOnly(items.ToArray());
     }
 
-    static JsonTypeInfo<T[]> Info<T>() =>
-        ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T[])) as JsonTypeInfo<T[]>
-        ?? throw new InvalidOperationException($"No serialization metadata is registered for {typeof(T[]).FullName}.");
+    /// <summary>Compatibility entry point for callers that write complete selections.</summary>
+    public static Task<ImmutableSelectionManifest> WriteAsync<T>(IImmutableContentStore store, string realm,
+        Uuid contentId, string itemSchema, IReadOnlyList<T> items, SelectionOrder order,
+        CancellationToken ct = default) where T : notnull =>
+        store.WriteSelectionAsync(realm, contentId, itemSchema, items, order, ct);
+
+    /// <summary>Compatibility entry point for callers that read complete selections.</summary>
+    public static Task<IReadOnlyList<T>> ReadAsync<T>(IImmutableContentStore store, string realm,
+        ImmutableSelectionManifest manifest, CancellationToken ct = default) where T : notnull =>
+        store.ReadSelectionAsync<T>(realm, manifest, ct);
+
+    static JsonTypeInfo Info<T>() =>
+        ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T[]))
+        ?? ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(IReadOnlyList<T>))
+        ?? throw new InvalidOperationException($"No serialization metadata is registered for a selection of {typeof(T).FullName}.");
 }

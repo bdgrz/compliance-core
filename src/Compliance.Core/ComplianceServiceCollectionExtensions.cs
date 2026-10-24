@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NamedRecords;
+using Bdgrz.Compliance.Features.Independence;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceFacts;
@@ -550,8 +551,7 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
         services.AddScoped<PolicyAcknowledgementRecorderGuard>();
         services.AddScoped<WorkQueueReader>();
-        services.AddScoped<FindingReadSource>();
-        services.AddScoped<FindingHistoryMigrationStatusReader>();
+        services.AddScoped<FindingReader>();
         services.AddScoped<WeeklyWorkDigestRecipientResolver>();
         services.AddScoped<IProgramResourceScopeResolver, ProgramResourceScopeResolver>();
         services.AddScoped<BoundaryResponsibilityScopeValidator>();
@@ -714,6 +714,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<AccessReviewReader>();
         services.AddScoped<AccessReviewCompletionVerifier>();
         services.AddScoped<AccessReviewCompletionFences>();
+        services.AddSingleton(FindingClosureProcess.Definition());
+        services.AddSingleton(IndependentChildMaterialization.Definition());
+        services.AddScoped<FindingClosureVerifier>();
+        services.AddScoped<FindingClosureFences>();
         services.AddScoped<ControlOperationsReader>();
         services.AddScoped<TypeIIOccurrenceCoverage>();
         services.AddScoped<TypeIIRangeVerifier>();
@@ -750,6 +754,11 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>(),
             provider.GetService<TimeProvider>()));
         services.AddScoped<ApplicationPublicationReader>();
+        // The resolver needs the stream-backed source fact resolver, which the production container cannot build
+        // until Portia publishes the shared connection's IStreamClient; it is created on first use.
+        services.AddScoped<ISeparationOfDutiesWaiverProofResolver>(provider =>
+            new DeferredSeparationOfDutiesWaiverProofResolver(() =>
+                ActivatorUtilities.CreateInstance<SeparationOfDutiesWaiverProofResolver>(provider)));
         services.AddScoped<FitzActualStaffEngagementLocator>();
         services.AddScoped<IActualStaffEngagementLocatorProjection>(provider =>
             provider.GetRequiredService<FitzActualStaffEngagementLocator>());
@@ -1255,8 +1264,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReopenFindingHandler>()
             .AddRequestHandler<GetFindingHandler>()
             .AddRequestHandler<ListFindingsHandler>()
-            .AddRequestHandler<MigrateFindingHistoryHandler>()
-            .AddRequestAuthorizer<MigrateFindingHistoryAuthorizer>()
+            .AddRequestHandler<MaterializeCorrectiveActionHandler>()
+            .AddRequestHandler<AuthorizeCorrectiveActionFindingClosureUseHandler>()
+            .AddRequestHandler<CompleteFindingClosureHandler>()
+            .AddRequestHandler<SettleCorrectiveActionFindingClosureUseHandler>()
+            .AddRequestHandler<AbortFindingClosureHandler>()
+            .AddRequestAuthorizer<FindingReceiverAuthorizer>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.OpenEvidenceRequestHandler>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.FulfilEvidenceRequestHandler>()
             .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.CancelEvidenceRequestHandler>()
@@ -1584,6 +1597,11 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<AccessReviewCompletionReactor>(AccessReviewCompletionReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AccessReviewCompletionSettlementReactor>(AccessReviewCompletionSettlementReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<FindingClosureReactor>(FindingClosureReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<CorrectiveActionMaterializationReactor>(CorrectiveActionMaterializationReactor.WorkloadName,
+                WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })

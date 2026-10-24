@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Risks;
 using Cntryl.Portia;
 
@@ -31,7 +32,7 @@ static class WorkSource
 
     /// <summary>Loads open work; <paramref name="workItemId" /> narrows the result to one item.</summary>
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, IDomainEventReader events, ControlOperationsReader? operatingReader,
+        IAggregateReader reader, FindingReader? findings, ControlOperationsReader? operatingReader,
         Uuid tenantId, Uuid programId, DateOnly today, DateOnly horizon, DateTimeOffset now,
         Uuid? workItemId, IBoundaryDirectoryReader? boundaries,
         IReadOnlySet<string> projectedKinds,
@@ -77,33 +78,31 @@ static class WorkSource
                     }
                 }
         }
-        if (!projectedKinds.Contains(FindingClosureWork.Kind))
+        if (!projectedKinds.Contains(FindingClosureWork.Kind) && findings is not null)
         {
-            var findings = await new FindingReadSource(reader, events).ReadAsync(tenantId, programId, now, ct)
-                .ConfigureAwait(false);
-            if (!findings.IsSuccess)
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(findings.Error);
-            foreach (var finding in findings.Value.Findings)
+            var closure = await findings.ReadAsync(tenantId, programId, now, ct).ConfigureAwait(false);
+            if (!closure.IsSuccess)
+                return Result<IReadOnlyList<WorkCandidate>>.Failure(closure.Error);
+            foreach (var finding in closure.Value.Findings)
                 if (FindingClosureWork.Candidate(finding) is { } candidate &&
                     (workItemId is not { } wantedClosure || candidate.WorkItemId == wantedClosure))
                     candidates.Add(candidate);
         }
-        if (!projectedKinds.Contains(CorrectiveAction))
+        if (!projectedKinds.Contains(CorrectiveAction) && findings is not null)
         {
-            var remediation = await new FindingReadSource(reader, events).ReadAsync(tenantId, programId, now, ct)
-                .ConfigureAwait(false);
+            var remediation = await findings.ReadAsync(tenantId, programId, now, ct).ConfigureAwait(false);
             if (!remediation.IsSuccess)
                 return Result<IReadOnlyList<WorkCandidate>>.Failure(remediation.Error);
             foreach (var finding in remediation.Value.Findings
-                         .Where(static finding => finding.Status != RemediationLedger.Closed))
+                         .Where(static finding => finding.Status != FindingStates.Closed))
                 foreach (var action in finding.CorrectiveActions.Where(action =>
-                             action.Status == RemediationLedger.Open &&
+                             action.Status == FindingStates.Open &&
                              Wanted(action.ActionId, CorrectiveAction)))
                     candidates.Add(new WorkCandidate(
                         WorkCandidate.IdFor(action.ActionId, CorrectiveAction), CorrectiveAction,
                         action.ActionId, null, finding.FindingId, action.Description,
                         $"Corrective action for finding \"{finding.Title}\".", action.DueOn,
-                        RemediationLedger.Materiality(finding.Severity), "complete",
+                        FindingStates.Materiality(finding.Severity), "complete",
                         $"{prefix}/findings/{finding.FindingId}/corrective-actions/{action.ActionId}/completions",
                         new OperatingHolder(OperatingAuthority.MemberHolder, action.OwnerMemberId),
                         null, new HashSet<Uuid>(), action.AddedAt));

@@ -1,21 +1,60 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Remediation;
 
-public sealed class ReopenFindingHandler(IAggregateExecutor executor, IAggregateReader reader,
-    IDomainEventReader events, TimeProvider clock)
+/// <summary>
+///     Reopens a closed finding. The finding advances to the next generation and keeps every admitted action, so an
+///     earlier closure can never close the new generation. The frozen first response is the complete finding view after
+///     the reopening.
+/// </summary>
+public sealed class ReopenFindingHandler(NativeOperationExecutor operations, IAggregateReader reader,
+    FindingReader findings, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ReopenFinding, FindingView>
 {
-    public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<ReopenFinding> context,
-        CancellationToken ct)
+    public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<ReopenFinding> context, CancellationToken ct)
     {
         var request = context.Request;
+        if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
+            return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A reopening requires a command id and a non-negative expected revision."));
         var actor = OperationsActor.From(context.Actor, request.TenantId);
+        var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        return await RemediationCommands.ExecuteAsync(executor, reader, events, context, request.TenantId,
-            request.ProgramId, request.FindingId, now, (finding, _) => finding.Reopen(context.RequestId,
-                request.ExpectedRevision, request.Reason,
-                ActorReference.ForMember(actor.MemberId, actor.Display), now), ct)
+        var snapshot = await reader.HydrateAsync(new FindingAggregate(request.TenantId, request.ProgramId,
+            request.FindingId, request.CommandId), ct).ConfigureAwait(false);
+        var provenance = FindingContent.Provenance(request.CommandId, "ReopenFinding", snapshot.Stream, actorReference,
+            (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now);
+        var binding = AcceptedOperationBinding.Of(provenance);
+
+        FirstResponseDescriptor? response = null;
+        ImmutableContentRef? result = null;
+        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        {
+            var prepared = snapshot.PrepareReopen(request.ExpectedRevision);
+            if (!prepared.IsSuccess)
+                return Result<FindingView>.Failure(prepared.Error!);
+            if (!FindingRules.IsBoundedText(request.Reason, FindingRules.MaximumTextLength))
+                return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Validation,
+                    "Reopening a finding requires a reason."));
+            var current = await findings.ComposeAsync(snapshot, now, ct).ConfigureAwait(false);
+            (response, result) = await FindingContent.FreezeAsync(content, request.TenantId, FindingContent.ViewSchema,
+                FindingViews.WithReopen(current!, request.Reason.Trim(), snapshot.Revision + 1, actorReference, now, now),
+                ct).ConfigureAwait(false);
+        }
+
+        var outcome = await operations.ExecuteAsync(new NativeOperation<FindingAggregate>(binding,
+            () => new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.CommandId),
+            finding => finding.Acceptance,
+            finding => FindingCommands.Prepared(finding.PrepareReopen(request.ExpectedRevision), response),
+            (FindingAggregate finding, ImmutableContentRef frozen) => finding.Reopen(provenance, request.Reason.Trim(),
+                actorReference, now, frozen, result!)), context, ct).ConfigureAwait(false);
+        return await FindingContent.ResponseAsync<FindingView>(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
     }
 }

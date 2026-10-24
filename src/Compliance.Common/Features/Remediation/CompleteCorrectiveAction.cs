@@ -4,9 +4,16 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Remediation;
 
-/// <summary>The action owner, or a program manager, records the completed corrective work.</summary>
-[Discriminator("bdgrz.finding.corrective_action.complete", 1)]
-public sealed record CompleteCorrectiveAction(Uuid TenantId, Uuid ProgramId, Uuid FindingId,
+/// <summary>
+///     The action owner, or a program manager, records the completed corrective work on the action's own owner.
+///     <paramref name="ExpectedRevision" /> is the revision of the corrective action, not of the finding.
+/// </summary>
+[Discriminator("bdgrz.finding.corrective_action.complete", 2)]
+public sealed record CompleteCorrectiveAction(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid FindingId,
     long ExpectedRevision, Uuid ActionId, string ResolutionNotes,
     IReadOnlyList<EvidenceReference> Evidence)
-    : IRequest<FindingView>, IControlOperationRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<FindingView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest,
+        ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

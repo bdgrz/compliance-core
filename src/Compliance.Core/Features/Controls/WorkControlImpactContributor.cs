@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     requests from their authoritative program streams. Cadence plans represent future work;
 ///     no actor visibility or queue date horizon can hide a retained relationship.
 /// </summary>
-public sealed class WorkControlImpactContributor(IAggregateReader reader, IDomainEventReader events,
+public sealed class WorkControlImpactContributor(IAggregateReader reader, FindingReader findings,
     ControlOperationsReader operatingReader)
     : IControlImpactContributor
 {
@@ -26,7 +26,7 @@ public sealed class WorkControlImpactContributor(IAggregateReader reader, IDomai
             .ConfigureAwait(false);
         var evaluations = await reader.HydrateAsync(new ControlEvaluationLedger(subject.TenantId,
             subject.ProgramId), ct).ConfigureAwait(false);
-        var remediation = await new FindingReadSource(reader, events).ReadAsync(subject.TenantId,
+        var remediation = await findings.ReadAsync(subject.TenantId,
             subject.ProgramId, DateTimeOffset.MinValue, ct).ConfigureAwait(false);
         if (!remediation.IsSuccess)
             return Result<ControlImpactContribution>.Failure(remediation.Error);

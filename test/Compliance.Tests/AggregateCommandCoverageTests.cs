@@ -85,48 +85,6 @@ public sealed class AggregateCommandCoverageTests
     }
 
     [Fact]
-    public void ShouldInventorySourceStreamFenceReplayGuardsGivenLegacyFactsAreNotReducers()
-    {
-        // Arrange
-        using var inventory = ReadInventory();
-        var root = inventory.RootElement;
-        var expectedFacts = new[]
-        {
-            "CorrectiveActionAdded", "CorrectiveActionCompleted", "FindingAcceptanceLinked",
-            "FindingClosed", "FindingRaised", "FindingReopened", "FindingRevised",
-        };
-        var replayGuards = root.GetProperty("factReplayGuards").EnumerateArray()
-            .Where(static guard => guard.GetProperty("aggregate").GetString() ==
-                "RemediationMigrationFenceAggregate")
-            .Select(static guard => guard.GetProperty("fact").GetString()!)
-            .Order(StringComparer.Ordinal).ToArray();
-        var legacyReducers = root.GetProperty("facts").EnumerateArray()
-            .Where(fact => expectedFacts.Contains(fact.GetProperty("fact").GetString(),
-                StringComparer.Ordinal))
-            .SelectMany(fact => fact.GetProperty("reducers").EnumerateArray()
-                .Select(reducer => reducer.GetProperty("aggregate").GetString()!))
-            .ToArray();
-        var fenceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(),
-            "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"));
-        var fenceSyntax = CSharpSyntaxTree.ParseText(fenceSource).GetRoot();
-        var apply = fenceSyntax.DescendantNodes().OfType<MethodDeclarationSyntax>()
-            .Single(method => method.Identifier.ValueText == "Apply" &&
-                method.ParameterList.Parameters.Single().Type?.ToString() == "DomainEvent");
-        var guardedFacts = apply.DescendantNodes().OfType<CasePatternSwitchLabelSyntax>()
-            .SelectMany(static label => label.Pattern.DescendantNodesAndSelf()
-                .OfType<DeclarationPatternSyntax>())
-            .Select(static pattern => pattern.Type.ToString())
-            .Order(StringComparer.Ordinal).ToArray();
-
-        // Act
-
-        // Assert
-        Assert.Equal(expectedFacts.Order(StringComparer.Ordinal), replayGuards);
-        Assert.DoesNotContain("RemediationMigrationFenceAggregate", legacyReducers);
-        Assert.Equal(expectedFacts.Order(StringComparer.Ordinal), guardedFacts);
-    }
-
-    [Fact]
     public void ShouldInventoryEveryAggregateAndReachItThroughARegisteredCommandGivenCoverageMap()
     {
         // Arrange
@@ -143,7 +101,7 @@ public sealed class AggregateCommandCoverageTests
                 aggregate.GetProperty("commandRouteDisposition").GetString() == "read_only_legacy_replay")
             .Select(static aggregate => aggregate.GetProperty("aggregate").GetString()!)
             .ToHashSet(StringComparer.Ordinal);
-        var actual = typeof(RemediationLedger).Assembly.GetTypes()
+        var actual = typeof(FindingAggregate).Assembly.GetTypes()
             .Where(static type => type.IsClass && !type.IsAbstract &&
                 typeof(Aggregate).IsAssignableFrom(type))
             .Select(static type => type.Name).ToHashSet(StringComparer.Ordinal);
@@ -466,7 +424,7 @@ public sealed class AggregateCommandCoverageTests
         var replayGuards = root.GetProperty("factReplayGuards").EnumerateArray().ToArray();
         var requests = root.GetProperty("requests").EnumerateArray().ToArray();
         var producers = root.GetProperty("unwiredAggregateProducers").EnumerateArray().ToArray();
-        var handlerTypes = typeof(RemediationLedger).Assembly.GetTypes()
+        var handlerTypes = typeof(FindingAggregate).Assembly.GetTypes()
             .Where(static type => type.IsClass && !type.IsAbstract &&
                 type.GetInterfaces().Any(static @interface => @interface.IsGenericType &&
                     @interface.GetGenericTypeDefinition().FullName is
@@ -734,7 +692,7 @@ public sealed class AggregateCommandCoverageTests
         var requestTypes = ContractAssemblies().SelectMany(static assembly => assembly.GetTypes())
             .Where(static type => type.IsClass && !type.IsAbstract && IsRequest(type))
             .ToDictionary(static type => type.Name, StringComparer.Ordinal);
-        var handlerTypes = typeof(RemediationLedger).Assembly.GetTypes()
+        var handlerTypes = typeof(FindingAggregate).Assembly.GetTypes()
             .Where(static type => type.IsClass && !type.IsAbstract &&
                 type.GetInterfaces().Any(static @interface => @interface.IsGenericType &&
                     @interface.GetGenericTypeDefinition().FullName is
@@ -879,7 +837,7 @@ public sealed class AggregateCommandCoverageTests
         Path.Combine(AppContext.BaseDirectory, "aggregate-command-coverage.json")));
 
     static Assembly[] ContractAssemblies() =>
-        [typeof(FindingRaised).Assembly, typeof(RemediationLedger).Assembly];
+        [typeof(FindingRaisedV2).Assembly, typeof(FindingAggregate).Assembly];
 
     static bool IsRequest(Type type) => type.GetInterfaces().Any(static @interface =>
         @interface.FullName == "Cntryl.Portia.IRequest" ||

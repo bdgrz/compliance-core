@@ -14,9 +14,9 @@ public sealed class OpenEvidenceRequestHandler(IAggregateExecutor executor, IAgg
         CancellationToken ct)
     {
         var request = context.Request;
-        if (!await RemediationCommands.IsActiveMemberAsync(reader, request.TenantId, request.OwnerMemberId, ct)
+        if (!await FindingCommands.IsActiveMemberAsync(reader, request.TenantId, request.OwnerMemberId, ct)
                 .ConfigureAwait(false))
-            return Result<EvidenceRequestView>.Failure(RemediationCommands.InactiveOwner());
+            return Result<EvidenceRequestView>.Failure(FindingCommands.InactiveOwner());
         if (request.ControlId is { } controlId)
         {
             var control = await reader.HydrateAsync(new ControlDraft(request.TenantId, controlId), ct)

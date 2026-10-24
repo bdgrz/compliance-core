@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Readiness;
@@ -61,14 +63,14 @@ public sealed class PersonalReadinessClosureTransportTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            FindingTests.Close(source, finding), Context(source.ApproverUserId, transport), CancellationToken.None);
+            source.Close(finding), Context(source.ApproverUserId, transport), CancellationToken.None);
         var after = await ProgramManagementServices.HydrateAsync(provider,
             new FindingAggregate(source.TenantId, source.ProgramId, finding.FindingId));
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
-        Assert.Null(after.Closure);
+        Assert.Null(after.Closed);
         Assert.Equal(before.Version, after.Version);
     }
 
@@ -105,18 +107,26 @@ public sealed class PersonalReadinessClosureTransportTests
         await using var provider = await ComposeAsync(source.Provider, source.TenantId, source.ProgramId);
         await using var scope = provider.CreateAsyncScope();
 
+        var request = source.Close(finding);
+
         // Act
-        var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            FindingTests.Close(source, finding), Context(source.ApproverUserId, "http"), CancellationToken.None);
+        var accepted = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
+            Context(source.ApproverUserId, "http"), CancellationToken.None);
+        var run = await FindingProcesses.RunClosureAsync(provider, source.TenantId, source.ProgramId, finding.FindingId,
+            request.CommandId);
         var retained = await ProgramManagementServices.HydrateAsync(provider,
             new FindingAggregate(source.TenantId, source.ProgramId, finding.FindingId));
+        var view = await scope.ServiceProvider.GetRequiredService<FindingReader>().ReadViewAsync(source.TenantId,
+            source.ProgramId, finding.FindingId, DateTimeOffset.UtcNow);
 
         // Assert
-        Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("closed", result.Value.Status);
-        Assert.Equal(source.ApproverMemberId, result.Value.Closure!.CloserMemberId);
-        var expectedClosure = Assert.IsType<FindingClosureView>(result.Value.Closure);
-        var retainedClosure = Assert.IsType<FindingClosureView>(retained.Closure);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+        Assert.Equal(ProcessState.Completed, run.State);
+        Assert.Equal("closed", view!.Status);
+        Assert.Equal(source.ApproverMemberId, view.Closure!.CloserMemberId);
+        var expectedClosure = Assert.IsType<FindingClosureView>(view.Closure);
+        var retainedClosure = await scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()
+            .ReadJsonAsync<FindingClosureView>(source.TenantId.ToString(), retained.Closed!.ClosureContent);
         Assert.Equal(expectedClosure.DecisionId, retainedClosure.DecisionId);
         Assert.Equal(expectedClosure.VerificationRationale,
             retainedClosure.VerificationRationale);
@@ -160,16 +170,17 @@ public sealed class PersonalReadinessClosureTransportTests
         await using var provider = await ComposeAsync(source.Provider, source.TenantId, source.ProgramId);
 
         // Act
-        var result = await CloseHttpAsync(provider, source.LeadUserId, FindingTests.Close(source, finding), RequestErrorKind.Forbidden);
+        var result = await CloseHttpAsync(provider, source.LeadUserId, source.Close(finding), RequestErrorKind.Forbidden);
         var retained = await ProgramManagementServices.HydrateAsync(provider,
             new FindingAggregate(source.TenantId, source.ProgramId, finding.FindingId));
 
         // Assert
         Assert.Contains("owner cannot verify and close their own remediation", result.Error!.Message, StringComparison.Ordinal);
-        Assert.Null(retained.Closure);
+        Assert.Null(retained.Closed);
+        Assert.Null(retained.PendingClosure);
     }
 
-    internal static async Task<Result<FindingView>> CloseHttpAsync(IServiceProvider provider, Uuid actor,
+    internal static async Task<Result<OperationAcceptedResponse>> CloseHttpAsync(IServiceProvider provider, Uuid actor,
         CloseFinding request, RequestErrorKind? expectedFailure = null)
     {
         await using var scope = provider.CreateAsyncScope();

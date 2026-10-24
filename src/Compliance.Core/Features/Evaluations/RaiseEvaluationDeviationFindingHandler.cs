@@ -1,4 +1,7 @@
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Remediation;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evaluations;
@@ -8,8 +11,8 @@ namespace Bdgrz.Compliance.Features.Evaluations;
 ///     control version's owner member (or the evaluator when the owner does not sign in) owns it,
 ///     due in 30 days at medium severity, matching the occurrence-finding product default.
 /// </summary>
-public sealed class RaiseEvaluationDeviationFindingHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IDomainEventReader events, TimeProvider clock)
+public sealed class RaiseEvaluationDeviationFindingHandler(NativeOperationExecutor operations,
+    IAggregateReader reader, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<RaiseEvaluationDeviationFinding>
 {
     public const string ProcessId = "reactor:" + ControlEvaluationDeviationFindingReactor.WorkloadName;
@@ -36,8 +39,8 @@ public sealed class RaiseEvaluationDeviationFindingHandler(IAggregateExecutor ex
         var now = clock.GetUtcNow();
         var actor = ActorReference.ForSystemProcess(ProcessId,
             ControlEvaluationDeviationFindingReactor.WorkloadName);
-        return await RoutedFinding.RaiseAsync(executor, reader, events, context, request.TenantId,
-            request.ProgramId, request.FindingId,
+        return await RoutedFinding.RaiseAsync(operations, reader, content, context, "RaiseEvaluationDeviationFinding",
+            request, request.TenantId, request.ProgramId, request.FindingId,
             new FindingSource("evaluation_deviation", deviation.DeviationId,
                 request.EvaluationId.ToString(), deviation.Description),
             "Material control evaluation deviation",

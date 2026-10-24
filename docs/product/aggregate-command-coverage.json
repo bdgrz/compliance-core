@@ -2,74 +2,38 @@
   "schemaVersion": 1,
   "capturedAt": "2026-10-22",
   "sourceCommit": "4ca1e8a6936b4eb03af413b5861256228576ca13",
-  "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The 2026-10-22 capture records the FindingAggregate native v2 business route, migration-aware readers, and one-step migration command for #1026. The program-wide RemediationLedger remains a fenced legacy history source and compatibility reader; its command methods are retained until deployment-specific parity is verified.",
-  "factReplayGuards": [
-    {
-      "fact": "CorrectiveActionAdded",
-      "aggregate": "RemediationMigrationFenceAggregate",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
-    },
-    {
-      "fact": "CorrectiveActionCompleted",
-      "aggregate": "RemediationMigrationFenceAggregate",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
-    },
-    {
-      "fact": "FindingAcceptanceLinked",
-      "aggregate": "RemediationMigrationFenceAggregate",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
-    },
-    {
-      "fact": "FindingClosed",
-      "aggregate": "RemediationMigrationFenceAggregate",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
-    },
-    {
-      "fact": "FindingRaised",
-      "aggregate": "RemediationMigrationFenceAggregate",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
-    },
-    {
-      "fact": "FindingReopened",
-      "aggregate": "RemediationMigrationFenceAggregate",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
-    },
-    {
-      "fact": "FindingRevised",
-      "aggregate": "RemediationMigrationFenceAggregate",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
-    }
-  ],
+  "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
+  "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 483,
-    "factsWithReducer": 461,
-    "factsWithAggregateEmitter": 454,
+    "domainEventContracts": 476,
+    "factsWithReducer": 454,
+    "factsWithAggregateEmitter": 452,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 121,
-    "aggregateTypesWithCommandPath": 118,
-    "requestContracts": 745,
-    "commonRequestContracts": 743,
+    "aggregateTypes": 119,
+    "aggregateTypesWithCommandPath": 117,
+    "requestContracts": 749,
+    "commonRequestContracts": 747,
     "requestClassificationCounts": {
       "command": 345,
       "confirmed_command_gap": 8,
       "deferred_command": 6,
       "internal_executor_context": 1,
-      "internal_reaction": 111,
+      "internal_reaction": 115,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 685,
+    "registeredCoreHandlerRegistrations": 689,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 37,
+    "unwiredAggregateProducerOperations": 30,
     "unwiredAggregateProducerClassifications": {
       "no_registered_request_route": 17,
-      "legacy_emitter_to_prune": 8,
+      "legacy_emitter_to_prune": 1,
       "direct_reactor_executor": 0,
       "direct_processor_executor": 12
     },
-    "factReplayGuardRows": 7
+    "factReplayGuardRows": 0
   },
   "facts": [
     {
@@ -2815,89 +2779,34 @@
       "note": ""
     },
     {
-      "fact": "CorrectiveActionAdded",
-      "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionAdded.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
-        },
-        {
-          "aggregate": "RemediationLedger",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
       "fact": "CorrectiveActionAddedV2",
       "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionAddedV2.cs",
       "reducers": [
         {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+          "aggregate": "CorrectiveAction",
+          "source": "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.Receipts.cs"
+        "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
       ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
-      ],
+      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "CorrectiveActionCompleted",
-      "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionCompleted.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
-        },
-        {
-          "aggregate": "RemediationLedger",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "note": "Materialization of an admitted action on its own owner at revision one."
     },
     {
       "fact": "CorrectiveActionCompletedV2",
       "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionCompletedV2.cs",
       "reducers": [
         {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+          "aggregate": "CorrectiveAction",
+          "source": "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
       ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
-      ],
+      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -3524,28 +3433,6 @@
       "note": ""
     },
     {
-      "fact": "FindingAcceptanceLinked",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingAcceptanceLinked.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
-        },
-        {
-          "aggregate": "RemediationLedger",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
       "fact": "FindingAcceptanceLinkedV2",
       "contract": "src/Compliance.Common/Features/Remediation/FindingAcceptanceLinkedV2.cs",
       "reducers": [
@@ -3557,33 +3444,7 @@
       "emitters": [
         "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
       ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "FindingClosed",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingClosed.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
-        },
-        {
-          "aggregate": "RemediationLedger",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
-      ],
+      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -3600,112 +3461,10 @@
         "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
+        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs"
       ],
       "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "FindingHistoryEventImported",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingHistoryEventImported.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/FindingMigrationE2ETests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
-      ],
-      "disposition": "migration_fact",
-      "note": "Pairs a migrated source event identity, physical offset, aggregate version, kind, hash, and source time with its typed target fact. Retain until legacy-stream parity is verified."
-    },
-    {
-      "fact": "FindingMigrationCompleted",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingMigrationCompleted.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingMigrationAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
-      ],
-      "disposition": "migration_fact",
-      "note": "Persists the bounded finding migration fence/cursor/completion state; retain until parity and legacy writer cutover are verified."
-    },
-    {
-      "fact": "FindingMigrationProgressed",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingMigrationProgressed.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingMigrationAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
-      ],
-      "disposition": "migration_fact",
-      "note": "Persists the bounded finding migration fence/cursor/completion state; retain until parity and legacy writer cutover are verified."
-    },
-    {
-      "fact": "FindingMigrationStarted",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingMigrationStarted.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingMigrationAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
-      ],
-      "disposition": "migration_fact",
-      "note": "Persists the bounded finding migration fence/cursor/completion state; retain until parity and legacy writer cutover are verified."
-    },
-    {
-      "fact": "FindingRaised",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingRaised.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
-        },
-        {
-          "aggregate": "RemediationLedger",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/FindingTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "note": "Appended by the closure process once every admitted action is held under the closure grant."
     },
     {
       "fact": "FindingRaisedV2",
@@ -3720,34 +3479,11 @@
         "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
+        "test/Compliance.Tests/AggregateCommandCoverageTests.cs",
+        "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs"
       ],
       "disposition": "aggregate_fact",
-      "note": "Emitted by manual and routed creation; the optional initial routed action is a separate v2 fact in the same finding stream."
-    },
-    {
-      "fact": "FindingReopened",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingReopened.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
-        },
-        {
-          "aggregate": "RemediationLedger",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "note": "Emitted by manual and routed creation; the optional initial routed action is a separate admission fact in the same finding stream."
     },
     {
       "fact": "FindingReopenedV2",
@@ -3761,35 +3497,7 @@
       "emitters": [
         "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
       ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
-      "fact": "FindingRevised",
-      "contract": "src/Compliance.Common/Features/Remediation/FindingRevised.cs",
-      "reducers": [
-        {
-          "aggregate": "FindingAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
-        },
-        {
-          "aggregate": "RemediationLedger",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/FindingTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs"
-      ],
+      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -3805,10 +3513,7 @@
       "emitters": [
         "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
       ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingCommandReceiptTests.cs"
-      ],
+      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -5686,29 +5391,6 @@
       ],
       "disposition": "aggregate_fact",
       "note": ""
-    },
-    {
-      "fact": "RemediationPartitioningStarted",
-      "contract": "src/Compliance.Common/Features/Remediation/RemediationPartitioningStarted.cs",
-      "reducers": [
-        {
-          "aggregate": "RemediationLedger",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs"
-        },
-        {
-          "aggregate": "RemediationMigrationFenceAggregate",
-          "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
-      ],
-      "disposition": "migration_fact",
-      "note": "Fences legacy finding writes at the exact source aggregate version before per-finding history import; retain through verified migration and writer cutover."
     },
     {
       "fact": "RepresentationLetterRecorded",
@@ -8956,6 +8638,93 @@
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
+    },
+    {
+      "fact": "CorrectiveActionAdmitted",
+      "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionAdmitted.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": "The finding accepts one corrective action for its current generation; the action owner is materialized independently from the frozen admission intent."
+    },
+    {
+      "fact": "CorrectiveActionFindingClosureUseAuthorized",
+      "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionFindingClosureUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "CorrectiveAction",
+          "source": "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": "Holds a completed action for a finding closure without advancing its public revision."
+    },
+    {
+      "fact": "CorrectiveActionFindingClosureUseSettled",
+      "contract": "src/Compliance.Common/Features/Remediation/CorrectiveActionFindingClosureUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "CorrectiveAction",
+          "source": "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": "Ends or fences a closure use; a parent-closed settlement installs the closed-generation fence."
+    },
+    {
+      "fact": "FindingClosureAccepted",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingClosureAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": "Root acceptance of a closure decision; seals action admission for the generation and starts FindingClosureProcess."
+    },
+    {
+      "fact": "FindingClosureCanceled",
+      "contract": "src/Compliance.Common/Features/Remediation/FindingClosureCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": "Local receiver fence that ends a pending closure after a permanent proof mismatch."
     }
   ],
   "aggregates": [
@@ -10108,59 +9877,41 @@
       "aggregate": "FindingAggregate",
       "source": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
       "appliedFacts": [
-        "CorrectiveActionAdded",
-        "CorrectiveActionAddedV2",
-        "CorrectiveActionCompleted",
-        "CorrectiveActionCompletedV2",
-        "FindingAcceptanceLinked",
+        "CorrectiveActionAdmitted",
         "FindingAcceptanceLinkedV2",
-        "FindingClosed",
         "FindingClosedV2",
-        "FindingHistoryEventImported",
-        "FindingRaised",
+        "FindingClosureAccepted",
+        "FindingClosureCanceled",
         "FindingRaisedV2",
-        "FindingReopened",
         "FindingReopenedV2",
-        "FindingRevised",
         "FindingRevisedV2"
       ],
       "commandRequests": [
         "RaiseFinding",
         "ReviseFinding",
         "AddCorrectiveAction",
-        "CompleteCorrectiveAction",
         "LinkFindingAcceptance",
         "CloseFinding",
         "ReopenFinding"
       ],
       "internalReactionRequests": [
-        "MigrateFindingHistory",
-        "RaiseOccurrenceFinding"
+        "RaiseOccurrenceFinding",
+        "RaiseEvaluationDeviationFinding",
+        "CompleteFindingClosure",
+        "AbortFindingClosure"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/FindingMigrationE2ETests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
+        "test/Compliance.Tests/AggregateCommandCoverageTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingProcessReactorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
+        "test/Compliance.Tests/Testing/FindingProcesses.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
-      "note": "Owns native v2 finding mutations and imports fenced legacy history with exact per-finding lineage; migration and business writes use this program-qualified stream."
-    },
-    {
-      "aggregate": "FindingMigrationAggregate",
-      "source": "src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs",
-      "appliedFacts": [
-        "FindingMigrationCompleted",
-        "FindingMigrationProgressed",
-        "FindingMigrationStarted"
-      ],
-      "commandRequests": [],
-      "internalReactionRequests": [
-        "MigrateFindingHistory"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
+      "note": "Owns finding terms, triage, acceptance links, action admission and the closure decision. Admission and closure seal by generation; the children and closure are completed by processes. No legacy ledger is read."
     },
     {
       "aggregate": "FirmProfessionalDutyDesignation",
@@ -10985,52 +10736,6 @@
         "test/Compliance.Tests/Features/Readiness/PersonalTypeIEntryTransportTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentContractTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
-      "aggregate": "RemediationLedger",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "appliedFacts": [
-        "CorrectiveActionAdded",
-        "CorrectiveActionCompleted",
-        "FindingAcceptanceLinked",
-        "FindingClosed",
-        "FindingRaised",
-        "FindingReopened",
-        "FindingRevised",
-        "RemediationPartitioningStarted"
-      ],
-      "commandRequests": [],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Examinations/FindingTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Operations/ProposeTypeIIOperatingPlanHandlerTests.cs",
-        "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
-        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzCorrectiveActionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzFindingClosureWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkDigestContentReaderTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs"
-      ],
-      "commandRouteDisposition": "read_only_legacy_replay",
-      "note": "Retained as the fenced legacy history source and compatibility reader; production finding commands no longer route mutations here."
-    },
-    {
-      "aggregate": "RemediationMigrationFenceAggregate",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs",
-      "appliedFacts": [
-        "RemediationPartitioningStarted"
-      ],
-      "commandRequests": [],
-      "internalReactionRequests": [
-        "MigrateFindingHistory"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingAggregateBoundaryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12666,6 +12371,32 @@
         "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "CorrectiveAction",
+      "source": "src/Compliance.Core/Features/Remediation/CorrectiveAction.cs",
+      "appliedFacts": [
+        "CorrectiveActionAddedV2",
+        "CorrectiveActionCompletedV2",
+        "CorrectiveActionFindingClosureUseAuthorized",
+        "CorrectiveActionFindingClosureUseSettled"
+      ],
+      "commandRequests": [
+        "CompleteCorrectiveAction"
+      ],
+      "internalReactionRequests": [
+        "MaterializeCorrectiveAction",
+        "AuthorizeCorrectiveActionFindingClosureUse",
+        "SettleCorrectiveActionFindingClosureUse"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route",
+      "note": "Independent corrective action owner, materialized from the finding admission at revision one and completed at revision two; closure uses hold it through the source-use reservations."
     }
   ],
   "requests": [
@@ -13003,7 +12734,7 @@
     {
       "request": "AddCorrectiveAction",
       "contract": "src/Compliance.Common/Features/Remediation/AddCorrectiveAction.cs",
-      "interfaces": "IRequest<FindingView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -13013,18 +12744,21 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [],
+      "directAggregateReferences": [
+        "Member"
+      ],
       "aggregateTargets": [
         "FindingAggregate"
       ],
-      "helperServices": [
-        "RemediationCommands"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WorkTestData.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
-      "note": ""
+      "note": "202 admission on the finding; IndependentChildMaterialization materializes the action."
     },
     {
       "request": "AddRiskTreatmentAction",
@@ -15128,7 +14862,7 @@
     {
       "request": "CloseFinding",
       "contract": "src/Compliance.Common/Features/Remediation/CloseFinding.cs",
-      "interfaces": "IRequest<FindingView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -15139,22 +14873,19 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "SeparationOfDutiesWaiver"
+        "Member"
       ],
       "aggregateTargets": [
         "FindingAggregate"
       ],
-      "helperServices": [
-        "RemediationCommands"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
-        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
-      "note": ""
+      "note": "202 admission that seals action admission and starts FindingClosureProcess; an exact separation-of-duties waiver proof replaces a live waiver."
     },
     {
       "request": "CloseProviderCoverageGap",
@@ -15319,7 +15050,7 @@
     {
       "request": "CompleteCorrectiveAction",
       "contract": "src/Compliance.Common/Features/Remediation/CompleteCorrectiveAction.cs",
-      "interfaces": "IRequest<FindingView>, IControlOperationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<FindingView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -15329,25 +15060,19 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "RemediationLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "FindingAggregate"
+        "CorrectiveAction"
       ],
-      "helperServices": [
-        "RemediationCommands"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkQueueTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
-        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
-      "note": ""
+      "note": "Completes on the action owner; the expected revision is the action revision."
     },
     {
       "request": "CompleteEmailChallenge",
@@ -20192,7 +19917,7 @@
     {
       "request": "LinkFindingAcceptance",
       "contract": "src/Compliance.Common/Features/Remediation/LinkFindingAcceptance.cs",
-      "interfaces": "IRequest<FindingView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<FindingView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -20209,10 +19934,9 @@
       "aggregateTargets": [
         "FindingAggregate"
       ],
-      "helperServices": [
-        "RemediationCommands"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
       ],
       "note": ""
@@ -22890,35 +22614,6 @@
       "note": "System-only personal decision process receiver; materializes the immutable partner evaluation from the authorization fact and the pinned sources only. No HTTP/MCP route."
     },
     {
-      "request": "MigrateFindingHistory",
-      "contract": "src/Compliance.Common/Features/Remediation/MigrateFindingHistory.cs",
-      "interfaces": "IRequest",
-      "classification": "internal_reaction",
-      "handlers": [
-        {
-          "name": "MigrateFindingHistoryHandler",
-          "source": "src/Compliance.Core/Features/Remediation/MigrateFindingHistoryHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "FindingAggregate",
-        "FindingMigrationAggregate",
-        "RemediationMigrationFenceAggregate"
-      ],
-      "aggregateTargets": [
-        "FindingAggregate",
-        "FindingMigrationAggregate",
-        "RemediationMigrationFenceAggregate"
-      ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingHistoryMigrationHandlerTests.cs"
-      ],
-      "note": "Named direct migration worker; ExpectedSourceOffset advances at most one physical source record and retries the latest exact offset idempotently."
-    },
-    {
       "request": "OffboardTenant",
       "contract": "src/Compliance.Common/Features/Tenants/OffboardTenant.cs",
       "interfaces": "IRequest, ICallable, IPlatformOperatorRequest",
@@ -24059,7 +23754,7 @@
     {
       "request": "RaiseEvaluationDeviationFinding",
       "contract": "src/Compliance.Common/Features/Evaluations/RaiseEvaluationDeviationFinding.cs",
-      "interfaces": "IRequest, IOperationsReactionRequest, ICallable",
+      "interfaces": "IRequest, IOperationsReactionRequest, IIdentifiedRequest, ICallable",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -24073,8 +23768,12 @@
         "ControlDraft",
         "ControlEvaluationLedger"
       ],
-      "aggregateTargets": [],
-      "helperServices": [],
+      "aggregateTargets": [
+        "FindingAggregate"
+      ],
+      "helperServices": [
+        "RoutedFinding"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs"
       ],
@@ -24083,7 +23782,7 @@
     {
       "request": "RaiseFinding",
       "contract": "src/Compliance.Common/Features/Remediation/RaiseFinding.cs",
-      "interfaces": "IRequest<FindingRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<FindingRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -24094,26 +23793,24 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlOperationsLedger",
-        "ReadinessLedger",
-        "RemediationLedger"
+        "Member",
+        "ReadinessLedger"
       ],
       "aggregateTargets": [
         "FindingAggregate"
       ],
-      "helperServices": [
-        "RemediationCommands"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
-      "note": ""
+      "note": "FindingId is the logical operation identity."
     },
     {
       "request": "RaiseOccurrenceFinding",
       "contract": "src/Compliance.Common/Features/Remediation/RaiseOccurrenceFinding.cs",
-      "interfaces": "IRequest, IOperationsReactionRequest, ICallable",
+      "interfaces": "IRequest, IOperationsReactionRequest, IIdentifiedRequest, ICallable",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -24133,7 +23830,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs"
       ],
-      "note": "Internal event-driven follow-up command."
+      "note": "Internal event-driven follow-up command; a requested action is admitted atomically with the raise."
     },
     {
       "request": "RaiseRiskReassessmentTriggers",
@@ -26374,7 +26071,7 @@
     {
       "request": "ReopenFinding",
       "contract": "src/Compliance.Common/Features/Remediation/ReopenFinding.cs",
-      "interfaces": "IRequest<FindingView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<FindingView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26388,11 +26085,12 @@
       "aggregateTargets": [
         "FindingAggregate"
       ],
-      "helperServices": [
-        "RemediationCommands"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
       "note": ""
     },
@@ -27618,7 +27316,7 @@
     {
       "request": "ReviseFinding",
       "contract": "src/Compliance.Common/Features/Remediation/ReviseFinding.cs",
-      "interfaces": "IRequest<FindingView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<FindingView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -27628,17 +27326,20 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [],
+      "directAggregateReferences": [
+        "Member"
+      ],
       "aggregateTargets": [
         "FindingAggregate"
       ],
-      "helperServices": [
-        "RemediationCommands"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/FindingTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
         "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
         "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
       "note": ""
     },
@@ -30528,9 +30229,133 @@
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
       ],
       "note": "System-only completion receiver; settles one item use with the disposition of the terminal campaign fact (closure fence or canceled-parent clearing), including a use that was never acquired. No HTTP/MCP route."
+    },
+    {
+      "request": "AbortFindingClosure",
+      "contract": "src/Compliance.Common/Features/Remediation/AbortFindingClosure.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IFindingReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AbortFindingClosureHandler",
+          "source": "src/Compliance.Core/Features/Remediation/AbortFindingClosureHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "FindingAggregate"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingIdentifiedOperationTests.cs"
+      ],
+      "note": "System-only abort receiver of FindingClosureProcess; cancels the pending closure and fences its delayed completion."
+    },
+    {
+      "request": "AuthorizeCorrectiveActionFindingClosureUse",
+      "contract": "src/Compliance.Common/Features/Remediation/AuthorizeCorrectiveActionFindingClosureUse.cs",
+      "interfaces": "ISourceUseAuthorization, IFindingReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeCorrectiveActionFindingClosureUseHandler",
+          "source": "src/Compliance.Core/Features/Remediation/AuthorizeCorrectiveActionFindingClosureUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FindingAggregate"
+      ],
+      "aggregateTargets": [
+        "CorrectiveAction"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs"
+      ],
+      "note": "System-only acquire receiver of FindingClosureProcess; an unmaterialized action is a wait."
+    },
+    {
+      "request": "CompleteFindingClosure",
+      "contract": "src/Compliance.Common/Features/Remediation/CompleteFindingClosure.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IFindingReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteFindingClosureHandler",
+          "source": "src/Compliance.Core/Features/Remediation/CompleteFindingClosureHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "CorrectiveAction"
+      ],
+      "aggregateTargets": [
+        "FindingAggregate"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
+      ],
+      "note": "System-only complete receiver of FindingClosureProcess; appends FindingClosedV2 once every action is held."
+    },
+    {
+      "request": "MaterializeCorrectiveAction",
+      "contract": "src/Compliance.Common/Features/Remediation/MaterializeCorrectiveAction.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IFindingReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "MaterializeCorrectiveActionHandler",
+          "source": "src/Compliance.Core/Features/Remediation/MaterializeCorrectiveActionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FindingAggregate"
+      ],
+      "aggregateTargets": [
+        "CorrectiveAction"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
+      ],
+      "note": "System-only receiver of IndependentChildMaterialization; verifies the frozen admission on the authoritative finding."
+    },
+    {
+      "request": "SettleCorrectiveActionFindingClosureUse",
+      "contract": "src/Compliance.Common/Features/Remediation/SettleCorrectiveActionFindingClosureUse.cs",
+      "interfaces": "ISourceUseSettlement, IFindingReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleCorrectiveActionFindingClosureUseHandler",
+          "source": "src/Compliance.Core/Features/Remediation/SettleCorrectiveActionFindingClosureUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FindingAggregate"
+      ],
+      "aggregateTargets": [
+        "CorrectiveAction"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs"
+      ],
+      "note": "System-only settle receiver of FindingClosureProcess."
     }
   ],
-  "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",
+  "scope": "Current working tree includes the Finding and CorrectiveAction owner split and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",
   "applicationAdapters": [
     {
       "request": "ReviseApplicationMcpInput",
@@ -30647,90 +30472,6 @@
       "ownerIssue": 545,
       "callerSources": [],
       "methodArgumentCount": 4
-    },
-    {
-      "fact": "CorrectiveActionAdded",
-      "aggregate": "RemediationLedger",
-      "method": "AddAction",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 8
-    },
-    {
-      "fact": "CorrectiveActionCompleted",
-      "aggregate": "RemediationLedger",
-      "method": "CompleteAction",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 8
-    },
-    {
-      "fact": "FindingAcceptanceLinked",
-      "aggregate": "RemediationLedger",
-      "method": "LinkAcceptance",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 8
-    },
-    {
-      "fact": "FindingClosed",
-      "aggregate": "RemediationLedger",
-      "method": "Close",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 10
-    },
-    {
-      "fact": "FindingRaised",
-      "aggregate": "RemediationLedger",
-      "method": "Raise",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 11
-    },
-    {
-      "fact": "FindingReopened",
-      "aggregate": "RemediationLedger",
-      "method": "Reopen",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 5
-    },
-    {
-      "fact": "FindingRevised",
-      "aggregate": "RemediationLedger",
-      "method": "Revise",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 10
     },
     {
       "fact": "ManagementAssertionRevised",

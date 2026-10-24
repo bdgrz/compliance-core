@@ -6,60 +6,59 @@ using Bdgrz.Compliance.Tests.Features.Readiness;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Remediation;
 
 public sealed class FindingTests
 {
     [Fact]
-    public async Task ShouldRecognizeOlderActionRequestGivenOwnerSuspendedAfterLaterRevision()
+    public async Task ShouldReturnOriginalViewGivenExactRevisionRetryAfterLaterChange()
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var registration = await fixture.AsAsync(fixture.LeadUserId, fixture.Raise(fixture.LeadMemberId));
-        var request = new AddCorrectiveAction(fixture.TenantId, fixture.ProgramId, registration.FindingId,
-            1, "Repair", fixture.OwnerMemberId, fixture.Today.AddDays(5));
-        var metadata = new RequestMetadata(Uuid.CreateVersion4(), Uuid.CreateVersion4(), null);
-        await fixture.Scenario(fixture.LeadUserId).GivenMetadata(metadata).When(request).ExpectSuccess();
-        await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(fixture.TenantId, fixture.ProgramId,
-            registration.FindingId, 2, "low", fixture.LeadMemberId, fixture.Today.AddDays(6),
-            "All", null, "Later triage"));
-        await ProgramManagementServices.SeedAsync(fixture.Provider, new Member(fixture.TenantId,
-            fixture.OwnerUserId), member => member.Suspend(fixture.LeadMemberId, "Lead",
-                DateTimeOffset.UtcNow, "Owner left"));
+        var finding = await fixture.RaiseFindingAsync(fixture.LeadMemberId);
+        var first = new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, finding.FindingId, 1,
+            "critical", fixture.LeadMemberId, fixture.Today.AddDays(6), "All", null, "First triage");
+        var original = await fixture.AsAsync(fixture.LeadUserId, first);
+        await fixture.AsAsync(fixture.LeadUserId, first with
+        {
+            CommandId = Uuid.CreateVersion4(),
+            ExpectedRevision = 2,
+            Severity = "low",
+            Reason = "Later triage",
+        });
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new Member(fixture.TenantId, fixture.OwnerUserId),
+            member => member.Suspend(fixture.LeadMemberId, "Lead", DateTimeOffset.UtcNow, "Owner left"));
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new FindingAggregate(fixture.TenantId, fixture.ProgramId, registration.FindingId));
+            new FindingAggregate(fixture.TenantId, fixture.ProgramId, finding.FindingId));
 
         // Act
-        var retry = await fixture.Scenario(fixture.LeadUserId).GivenMetadata(metadata).When(request).ExpectSuccess();
+        var retry = await fixture.AsAsync(fixture.LeadUserId, first);
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new FindingAggregate(fixture.TenantId, fixture.ProgramId, registration.FindingId));
+            new FindingAggregate(fixture.TenantId, fixture.ProgramId, finding.FindingId));
 
         // Assert
-        Assert.Equal(3, retry.Value.Revision);
+        Assert.Equal(WireJson.Of(original), WireJson.Of(retry));
+        Assert.Equal(2, retry.Revision);
         Assert.Equal(before.Version, after.Version);
     }
 
     [Fact]
-    public async Task ShouldWriteToPerFindingStreamGivenEmptyLegacySource()
+    public async Task ShouldConflictGivenRevisionRetryWithChangedIntent()
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var request = fixture.Raise(fixture.OwnerMemberId);
+        var finding = await fixture.RaiseFindingAsync(fixture.LeadMemberId);
+        var revise = new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, finding.FindingId, 1,
+            "critical", fixture.LeadMemberId, fixture.Today.AddDays(6), "All", null, "First triage");
+        await fixture.AsAsync(fixture.LeadUserId, revise);
 
         // Act
-        var registration = await fixture.AsAsync(fixture.LeadUserId, request);
+        var changed = fixture.Scenario(fixture.LeadUserId).When(revise with { Severity = "low" });
 
         // Assert
-        var migration = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new FindingMigrationAggregate(fixture.TenantId, fixture.ProgramId));
-        var target = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new FindingAggregate(fixture.TenantId, fixture.ProgramId, registration.FindingId));
-        var legacy = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new RemediationLedger(fixture.TenantId, fixture.ProgramId));
-        Assert.True(migration.IsComplete);
-        Assert.True(target.IsRecorded);
-        Assert.False(legacy.Contains(registration.FindingId));
+        await changed.ExpectFailure(RequestErrorKind.Conflict);
     }
 
     [Fact]
@@ -70,10 +69,9 @@ public sealed class FindingTests
         var finding = await RaiseWithCompletedActionAsync(fixture);
 
         // Act
-        var closed = (await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId, Close(fixture, finding))).Value;
-        var reopened = await fixture.AsAsync(fixture.LeadUserId, new ReopenFinding(
-            fixture.TenantId, fixture.ProgramId, finding.FindingId, closed.Revision,
-            "A leaver regained access."));
+        var closed = await fixture.CloseAsync(fixture.ApproverUserId, finding);
+        var reopened = await fixture.AsAsync(fixture.LeadUserId, new ReopenFinding(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.ProgramId, finding.FindingId, closed.Revision, "A leaver regained access."));
 
         // Assert
         Assert.Equal("closed", closed.Status);
@@ -82,8 +80,8 @@ public sealed class FindingTests
         Assert.All(closed.Closure.ResolutionEvidence, item => Assert.Equal("unresolved", item.Resolution));
         Assert.Equal("remediated", reopened.Status);
         Assert.Null(reopened.Closure);
-        Assert.Equal(["raised", "corrective_action_added", "corrective_action_completed", "closed",
-            "reopened"], reopened.History.Select(entry => entry.Change));
+        Assert.Equal(["raised", "corrective_action_added", "corrective_action_completed", "closed", "reopened"],
+            reopened.History.Select(entry => entry.Change));
     }
 
     [Fact]
@@ -91,15 +89,16 @@ public sealed class FindingTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var registration = await fixture.AsAsync(fixture.LeadUserId, fixture.Raise(fixture.OwnerMemberId));
+        var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
         var waiverId = await fixture.ApprovedWaiverAsync(new SeparationOfDutiesWaiverScope(
-            SeparationOfDutiesRecordTypes.Finding, registration.FindingId,
-            registration.FindingId, 1, SeparationOfDutiesActions.Approve), fixture.LeadMemberId);
-        var accepted = await fixture.AsAsync(fixture.LeadUserId, new LinkFindingAcceptance(
-            fixture.TenantId, fixture.ProgramId, registration.FindingId, 1, "waiver", waiverId));
+            SeparationOfDutiesRecordTypes.Finding, finding.FindingId, finding.FindingId, 1,
+            SeparationOfDutiesActions.Approve), fixture.LeadMemberId);
+        var accepted = await fixture.AsAsync(fixture.LeadUserId, new LinkFindingAcceptance(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.ProgramId, finding.FindingId, 1, "waiver", waiverId));
 
         // Act
-        await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId, Close(fixture, accepted), RequestErrorKind.Conflict);
+        await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId,
+            fixture.Close(accepted), RequestErrorKind.Conflict);
 
         // Assert
         Assert.Equal("accepted", accepted.ReadinessStatus);
@@ -107,29 +106,28 @@ public sealed class FindingTests
     }
 
     [Fact]
-    public void ShouldReturnToActionableStateGivenExpiredAcceptance()
+    public async Task ShouldReturnToActionableStateGivenExpiredAcceptance()
     {
         // Arrange
-        var ledger = new RemediationLedger(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var findingId = Uuid.CreateVersion4();
+        var fixture = await OperationsFixture.CreateAsync();
+        var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
+        var waiverId = await fixture.ApprovedWaiverAsync(new SeparationOfDutiesWaiverScope(
+            SeparationOfDutiesRecordTypes.Finding, finding.FindingId, finding.FindingId, 1,
+            SeparationOfDutiesActions.Approve), fixture.LeadMemberId);
+        await fixture.AsAsync(fixture.LeadUserId, new LinkFindingAcceptance(Uuid.CreateVersion4(), fixture.TenantId,
+            fixture.ProgramId, finding.FindingId, 1, "waiver", waiverId));
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<FindingReader>();
         var now = DateTimeOffset.UtcNow;
-        var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
-        Assert.Null(ledger.Raise(findingId, new FindingSource("manual", null, null, "Gap."),
-            "Gap", "Gap found.", "medium", "All", Uuid.CreateVersion4(),
-            DateOnly.FromDateTime(now.UtcDateTime).AddDays(10), [], actor, now));
-        Assert.Null(ledger.LinkAcceptance(findingId, 1, "waiver", Uuid.CreateVersion4(), null,
-            now.AddDays(30), actor, now));
 
         // Act
-        var during = ledger.Read(findingId, now.AddDays(1))!;
-        var after = ledger.Read(findingId, now.AddDays(31))!;
+        var during = await reader.ReadViewAsync(fixture.TenantId, fixture.ProgramId, finding.FindingId, now.AddDays(1));
+        var after = await reader.ReadViewAsync(fixture.TenantId, fixture.ProgramId, finding.FindingId, now.AddDays(31));
 
         // Assert
-        Assert.Equal("accepted", during.ReadinessStatus);
-        Assert.Equal("overdue", after.ReadinessStatus);
+        Assert.Equal("accepted", during!.ReadinessStatus);
+        Assert.Equal("overdue", after!.ReadinessStatus);
         Assert.Equal("expired", after.Acceptances[0].State);
-        Assert.NotNull(ledger.LinkAcceptance(findingId, 2, "waiver", Uuid.CreateVersion4(), null,
-            now.AddDays(-1), actor, now));
     }
 
     [Fact]
@@ -140,8 +138,10 @@ public sealed class FindingTests
         var finding = await RaiseWithCompletedActionAsync(fixture, fixture.LeadMemberId);
 
         // Act
-        var owner = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.LeadUserId, Close(fixture, finding), RequestErrorKind.Forbidden);
-        var performer = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.OwnerUserId, Close(fixture, finding), RequestErrorKind.Forbidden);
+        var owner = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.LeadUserId,
+            fixture.Close(finding), RequestErrorKind.Forbidden);
+        var performer = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider,
+            fixture.OwnerUserId, fixture.Close(finding), RequestErrorKind.Forbidden);
 
         // Assert
         Assert.False(owner.IsSuccess);
@@ -156,7 +156,8 @@ public sealed class FindingTests
         var finding = await RaiseWithCompletedActionAsync(fixture);
 
         // Act
-        var result = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId, Close(fixture, finding) with { ResolutionEvidence = [] }, RequestErrorKind.Validation);
+        var result = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider,
+            fixture.ApproverUserId, fixture.Close(finding) with { ResolutionEvidence = [] }, RequestErrorKind.Validation);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -167,13 +168,12 @@ public sealed class FindingTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var registration = await fixture.AsAsync(fixture.LeadUserId, fixture.Raise(fixture.OwnerMemberId));
+        var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
 
         // Act
-        var revised = await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(
-            fixture.TenantId, fixture.ProgramId, registration.FindingId, 1, "critical",
-            fixture.BackupMemberId, fixture.Today.AddDays(3), "VPN and SSO", "Manual offboarding",
-            "Scope widened after triage."));
+        var revised = await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.ProgramId, finding.FindingId, 1, "critical", fixture.BackupMemberId,
+            fixture.Today.AddDays(3), "VPN and SSO", "Manual offboarding", "Scope widened after triage."));
 
         // Assert
         Assert.Equal("Terminated users kept VPN access.", revised.Source.SourceText);
@@ -183,9 +183,9 @@ public sealed class FindingTests
         Assert.Equal("revised", change.Change);
         Assert.Equal(fixture.LeadMemberId.ToString(), change.Actor.Id);
         Assert.Contains("Scope widened after triage.", change.Summary, StringComparison.Ordinal);
-        await fixture.Scenario(fixture.OwnerUserId).When(new ReviseFinding(fixture.TenantId,
-                fixture.ProgramId, registration.FindingId, 2, "low", fixture.OwnerMemberId,
-                fixture.Today, "VPN", null, "Downgrade."))
+        await fixture.Scenario(fixture.OwnerUserId).When(new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
+                fixture.ProgramId, finding.FindingId, 2, "low", fixture.OwnerMemberId, fixture.Today, "VPN", null,
+                "Downgrade."))
             .ExpectFailure(RequestErrorKind.Forbidden);
     }
 
@@ -207,8 +207,7 @@ public sealed class FindingTests
         await fixture.Scenario(fixture.LeadUserId)
             .When(fixture.Raise(fixture.OwnerMemberId) with
             {
-                Source = new FindingSource("control_occurrence", Uuid.CreateVersion4(), null,
-                    "Failed."),
+                Source = new FindingSource("control_occurrence", Uuid.CreateVersion4(), null, "Failed."),
             })
             .ExpectFailure(RequestErrorKind.Validation);
     }
@@ -218,24 +217,23 @@ public sealed class FindingTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var registration = await fixture.AsAsync(fixture.LeadUserId, fixture.Raise(fixture.LeadMemberId));
+        var raised = await fixture.RaiseFindingAsync(fixture.LeadMemberId);
 
         // Act
-        var finding = await fixture.AsAsync(fixture.LeadUserId, new AddCorrectiveAction(
-            fixture.TenantId, fixture.ProgramId, registration.FindingId, 1,
-            "Remove stale VPN accounts.", fixture.OwnerMemberId, fixture.Today.AddDays(-1)));
+        var finding = await fixture.AddActionAsync(raised, fixture.OwnerMemberId, fixture.Today.AddDays(-1),
+            "Remove stale VPN accounts.");
 
         // Assert
-        var work = await fixture.AsAsync(fixture.OwnerUserId, new ListMyControlWork(
-            fixture.TenantId, fixture.ProgramId));
+        var work = await fixture.AsAsync(fixture.OwnerUserId, new ListMyControlWork(fixture.TenantId, fixture.ProgramId));
         var item = Assert.Single(work.Items);
         Assert.Equal("corrective_action", item.Kind);
         Assert.Equal(finding.FindingId, item.FindingId);
         Assert.Equal("high", item.Materiality);
         Assert.True(item.Overdue);
-        await fixture.Scenario(fixture.OutsiderUserId).When(new CompleteCorrectiveAction(
-                fixture.TenantId, fixture.ProgramId, finding.FindingId, 2,
-                finding.CorrectiveActions[0].ActionId, "Done.",
+        var action = Assert.Single(finding.CorrectiveActions);
+        Assert.Equal(1, action.Revision);
+        await fixture.Scenario(fixture.OutsiderUserId).When(new CompleteCorrectiveAction(Uuid.CreateVersion4(),
+                fixture.TenantId, fixture.ProgramId, finding.FindingId, 1, action.ActionId, "Done.",
                 [new EvidenceReference(null, "record", "VPN-EXPORT")]))
             .ExpectFailure(RequestErrorKind.Forbidden);
     }
@@ -245,21 +243,20 @@ public sealed class FindingTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        await fixture.AsAsync(fixture.LeadUserId, fixture.Raise(fixture.OwnerMemberId,
-            fixture.Today.AddDays(-3)));
+        await fixture.RaiseFindingAsync(fixture.OwnerMemberId, fixture.Today.AddDays(-3));
         await RaiseWithCompletedActionAsync(fixture);
 
         // Act
-        var overdue = await fixture.AsAsync(fixture.OutsiderUserId, new ListFindings(
-            fixture.TenantId, fixture.ProgramId, "overdue"));
-        var remediated = await fixture.AsAsync(fixture.OutsiderUserId, new ListFindings(
-            fixture.TenantId, fixture.ProgramId, "remediated"));
+        var overdue = await fixture.AsAsync(fixture.OutsiderUserId, new ListFindings(fixture.TenantId,
+            fixture.ProgramId, "overdue"));
+        var remediated = await fixture.AsAsync(fixture.OutsiderUserId, new ListFindings(fixture.TenantId,
+            fixture.ProgramId, "remediated"));
 
         // Assert
         Assert.Single(overdue.Items);
         Assert.Single(remediated.Items);
-        await fixture.Scenario(fixture.OutsiderUserId).When(new ListFindings(fixture.TenantId,
-                fixture.ProgramId, "maybe"))
+        await fixture.Scenario(fixture.OutsiderUserId).When(new ListFindings(fixture.TenantId, fixture.ProgramId,
+                "maybe"))
             .ExpectFailure(RequestErrorKind.Validation);
     }
 
@@ -268,16 +265,13 @@ public sealed class FindingTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var registration = await fixture.AsAsync(fixture.LeadUserId, fixture.Raise(fixture.OwnerMemberId));
-        await fixture.AsAsync(fixture.LeadUserId, new AddCorrectiveAction(fixture.TenantId,
-            fixture.ProgramId, registration.FindingId, 1, "Fix.", fixture.OwnerMemberId,
-            fixture.Today.AddDays(5)));
+        var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
+        await fixture.AddActionAsync(finding, fixture.OwnerMemberId, fixture.Today.AddDays(5), "Fix.");
 
         await fixture.Scenario(fixture.ApproverUserId)
             // Act
-            .When(new AddCorrectiveAction(fixture.TenantId, fixture.ProgramId,
-                registration.FindingId, 1, "Fix again.", fixture.OwnerMemberId,
-                fixture.Today.AddDays(5)))
+            .When(new AddCorrectiveAction(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, finding.FindingId,
+                1, "Fix again.", fixture.OwnerMemberId, fixture.Today.AddDays(5)))
             // Assert
             .ExpectFailure(RequestErrorKind.Conflict);
     }
@@ -285,20 +279,10 @@ public sealed class FindingTests
     internal static async Task<FindingView> RaiseWithCompletedActionAsync(OperationsFixture fixture,
         Uuid? findingOwner = null)
     {
-        var registration = await fixture.AsAsync(fixture.LeadUserId,
-            fixture.Raise(findingOwner ?? fixture.OwnerMemberId));
-        var finding = await fixture.AsAsync(fixture.LeadUserId, new AddCorrectiveAction(
-            fixture.TenantId, fixture.ProgramId, registration.FindingId, 1,
-            "Remove stale VPN accounts.", fixture.OwnerMemberId, fixture.Today.AddDays(7)));
-        return await fixture.AsAsync(fixture.OwnerUserId, new CompleteCorrectiveAction(
-            fixture.TenantId, fixture.ProgramId, finding.FindingId, finding.Revision,
-            finding.CorrectiveActions[0].ActionId, "Removed both accounts.",
-            [new EvidenceReference(null, "record", "VPN-EXPORT-2026-09")]));
+        var raised = await fixture.RaiseFindingAsync(findingOwner ?? fixture.OwnerMemberId);
+        var finding = await fixture.AddActionAsync(raised, fixture.OwnerMemberId, fixture.Today.AddDays(7),
+            "Remove stale VPN accounts.");
+        return await fixture.CompleteActionAsync(fixture.OwnerUserId, finding, finding.CorrectiveActions[0].ActionId,
+            "Removed both accounts.");
     }
-
-    internal static CloseFinding Close(OperationsFixture fixture, FindingView finding) => new(
-        fixture.TenantId, fixture.ProgramId, finding.FindingId, finding.Revision,
-        "Re-ran the VPN export; no leavers remain.",
-        [new EvidenceReference(null, "external", "https://vpn.example/export")],
-        "Remediation verified.");
 }

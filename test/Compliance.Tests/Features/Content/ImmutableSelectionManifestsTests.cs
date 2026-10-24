@@ -1,3 +1,6 @@
+using System.Text;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Remediation;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Hosting.Persistence;
@@ -69,4 +72,46 @@ public sealed class ImmutableSelectionManifestsTests
     }
 
     static FitzKvImmutableContentStore Create() => new(new PersistenceKvClient(new InMemoryKvClient()));
+
+    [Fact]
+    public async Task ShouldReadEveryItemInOrderGivenManifestOfMoreThanAThousandItems()
+    {
+        // Arrange
+        var store = Store();
+        var items = Enumerable.Range(0, 1500).Select(index => new AdmittedChild(Uuid.CreateVersion4(),
+            new NativeFactReference(new EventStreamAddress(Realm, "findings", "f"), Uuid.CreateVersion4(),
+                (ulong)index + 1))).ToArray();
+
+        // Act
+        var manifest = await ImmutableSelectionManifests.WriteAsync<AdmittedChild>(store, Realm, Uuid.CreateVersion4(),
+            "admitted-child.v1", items, SelectionOrder.Authored);
+        var read = await ImmutableSelectionManifests.ReadAsync<AdmittedChild>(store, Realm, manifest);
+
+        // Assert
+        Assert.Equal(1500, manifest.Count);
+        Assert.Equal(items.Select(item => item.ChildId), read.Select(item => item.ChildId));
+        Assert.Equal(items.Select(item => item.Admission.AggregateVersion), read.Select(item => item.Admission.AggregateVersion));
+    }
+
+    [Fact]
+    public async Task ShouldRejectManifestGivenDigestOrCountThatDoesNotCoverTheStoredItems()
+    {
+        // Arrange
+        var store = Store();
+        var manifest = await ImmutableSelectionManifests.WriteAsync<AdmittedChild>(store, Realm, Uuid.CreateVersion4(),
+            "admitted-child.v1", [new AdmittedChild(Uuid.CreateVersion4(), new NativeFactReference(
+                new EventStreamAddress(Realm, "findings", "f"), Uuid.CreateVersion4(), 1))], SelectionOrder.CanonicalKey);
+
+        // Act
+        var wrongDigest = await Record.ExceptionAsync(() => ImmutableSelectionManifests.ReadAsync<AdmittedChild>(store, Realm,
+            manifest with { ItemsSha256 = new string("0"[0], 64) }));
+        var wrongCount = await Record.ExceptionAsync(() => ImmutableSelectionManifests.ReadAsync<AdmittedChild>(store, Realm,
+            manifest with { Count = 2 }));
+
+        // Assert
+        Assert.IsType<ImmutableContentIntegrityException>(wrongDigest);
+        Assert.IsType<ImmutableContentIntegrityException>(wrongCount);
+    }
+
+    static FitzKvImmutableContentStore Store() => new(new PersistenceKvClient(new InMemoryKvClient()));
 }

@@ -98,7 +98,7 @@ public sealed class WorkQueueReadConsistencyTests
             fixture.Today.AddDays(5));
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var correctiveActions = new ProjectedWorkItems(ProjectionCheckpoint.Start,
-            area: "remediation", kind: WorkSource.CorrectiveAction,
+            area: "findings", kind: WorkSource.CorrectiveAction,
             projectorName: "TestCorrectiveActionWorkItems");
         var consistency = new WorkQueueReadConsistency(events,
             [correctiveActions]);
@@ -243,7 +243,7 @@ public sealed class WorkQueueReadConsistencyTests
         var fixture = await OperationsFixture.CreateAsync();
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var correctiveActions = new ProjectedWorkItems(ProjectionCheckpoint.Start,
-            area: "remediation", kind: WorkSource.CorrectiveAction,
+            area: "findings", kind: WorkSource.CorrectiveAction,
             projectorName: "TestCorrectiveActionWorkItems");
         var consistency = new WorkQueueReadConsistency(events,
             [correctiveActions]);
@@ -308,17 +308,17 @@ public sealed class WorkQueueReadConsistencyTests
             fixture.Today.AddDays(5));
         var action = Assert.Single(finding.CorrectiveActions);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
-        var checkpoint = await ReadCheckpointAsync(events, fixture.TenantId, "remediation");
+        var checkpoint = await ReadCheckpointAsync(events, fixture.TenantId, "findings");
         var candidate = new WorkCandidate(WorkCandidate.IdFor(action.ActionId,
                 WorkSource.CorrectiveAction), WorkSource.CorrectiveAction, action.ActionId,
             null, finding.FindingId, action.Description,
             $"Corrective action for finding \"{finding.Title}\".", action.DueOn,
-            RemediationLedger.Materiality(finding.Severity), "complete",
+            FindingStates.Materiality(finding.Severity), "complete",
             $"/api/v1/tenants/{fixture.TenantId}/programs/{fixture.ProgramId}/" +
             $"findings/{finding.FindingId}/corrective-actions/{action.ActionId}/completions",
             new OperatingHolder(OperatingAuthority.MemberHolder, action.OwnerMemberId), null,
             new HashSet<Uuid>(), action.AddedAt);
-        var correctiveActions = new ProjectedWorkItems(checkpoint, [candidate], "remediation",
+        var correctiveActions = new ProjectedWorkItems(checkpoint, [candidate], "findings",
             WorkSource.CorrectiveAction, "TestCorrectiveActionWorkItems");
         var consistency = new WorkQueueReadConsistency(events,
             [correctiveActions]);

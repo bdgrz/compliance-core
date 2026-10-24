@@ -14,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 static class TypeIIPlanSourceValidator
 {
     public static async ValueTask<Result<TypeIIPlanSourceValidation>> ValidateAsync(
-        IAggregateReader reader, IDomainEventReader events, ControlOperationsReader operating, Uuid tenantId,
+        IAggregateReader reader, FindingReader findings, ControlOperationsReader operating, Uuid tenantId,
         Uuid programId, Uuid examinationId, TypeIIPlanContent content, DateTimeOffset proposedAt, CancellationToken ct)
     {
         if (content is null || content.ExaminationId != examinationId ||
@@ -64,10 +64,10 @@ static class TypeIIPlanSourceValidator
                 source.Kind == "change" && source.RecordId == change.ChangeId)))
             return Failure(RequestErrorKind.Conflict,
                 "Every carried-forward source, gap, and required change must belong to the exact frozen baseline.");
-        var findings = await ValidateCarriedForwardFindingsAsync(reader, events, tenantId, programId,
+        var carried = await ValidateCarriedForwardFindingsAsync(reader, findings, tenantId, programId,
             content, proposedAt, ct).ConfigureAwait(false);
-        if (!findings.IsSuccess)
-            return Result<TypeIIPlanSourceValidation>.Failure(findings.Error!);
+        if (!carried.IsSuccess)
+            return Result<TypeIIPlanSourceValidation>.Failure(carried.Error!);
         if (!await ControlPlansMatchAsync(reader, operating, tenantId, programId, content, baseline,
                 proposedAt, ct).ConfigureAwait(false))
             return Failure(RequestErrorKind.Conflict,
@@ -132,17 +132,17 @@ static class TypeIIPlanSourceValidator
             source.Revision == reference.Version &&
             HashEquals(source.ContentSha256, reference.ContentSha256)));
 
-    static async ValueTask<Result> ValidateCarriedForwardFindingsAsync(IAggregateReader reader, IDomainEventReader events,
+    static async ValueTask<Result> ValidateCarriedForwardFindingsAsync(IAggregateReader reader, FindingReader findings,
         Uuid tenantId, Uuid programId, TypeIIPlanContent content, DateTimeOffset asOf,
         CancellationToken ct)
     {
-        var source = await new FindingReadSource(reader, events).ReadAsync(tenantId, programId, asOf, ct)
+        var source = await findings.ReadAsync(tenantId, programId, asOf, ct)
             .ConfigureAwait(false);
         if (!source.IsSuccess)
             return Result.Failure(source.Error);
         var current = source.Value.Findings;
-        var required = current.Where(finding => finding.Status is RemediationLedger.Open or
-            RemediationLedger.Remediated).ToArray();
+        var required = current.Where(finding => finding.Status is FindingStates.Open or
+            FindingStates.Remediated).ToArray();
         var planned = content.CarriedForwardGaps.Where(gap => gap.SourceKind == "finding")
             .ToArray();
         if (required.Length != planned.Length ||
@@ -156,12 +156,12 @@ static class TypeIIPlanSourceValidator
                 return Conflict("A current finding is missing from the Type II opening plan.");
             var identity = FindingContentIdentityFactory.Create(finding,
                 source.Value.ReadClosures(finding.FindingId));
-            var accepted = finding.ReadinessStatus == RemediationLedger.Accepted;
+            var accepted = finding.ReadinessStatus == FindingStates.Accepted;
             if (gap.SourceVersionId != identity.VersionId || gap.SourceVersion != identity.Revision ||
                 !HashEquals(gap.SourceSha256, identity.ContentSha256) ||
                 gap.OwnerMemberId != finding.OwnerMemberId ||
-                finding.Status == RemediationLedger.Open && gap.Disposition == "remediated" ||
-                finding.Status == RemediationLedger.Remediated && gap.Disposition != "remediated" ||
+                finding.Status == FindingStates.Open && gap.Disposition == "remediated" ||
+                finding.Status == FindingStates.Remediated && gap.Disposition != "remediated" ||
                 accepted && gap.Disposition != "accepted" || !accepted && gap.Disposition == "accepted")
                 return Conflict("A carried-forward finding must retain its exact current revision, owner, and disposition.");
 

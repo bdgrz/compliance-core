@@ -5,10 +5,14 @@ namespace Bdgrz.Compliance.Features.Remediation;
 
 /// <summary>
 ///     Converts a failed or skipped attestation or a reviewer's requested action into a finding.
-///     Dispatched only by the operations reactor; the finding ID is derived from the source.
+///     Dispatched only by the operations reactor; the finding ID is derived from the source and is the logical
+///     identity. A requested action is admitted atomically with the finding under a deterministic action id.
 /// </summary>
-[Discriminator("bdgrz.finding.raise_from_occurrence", 1)]
+[Discriminator("bdgrz.finding.raise_from_occurrence", 2)]
 public sealed record RaiseOccurrenceFinding(Uuid TenantId, Uuid ProgramId, Uuid FindingId,
     Uuid ControlId, Uuid OccurrenceId, string SourceVersion, string SourceKind,
     string SourceText)
-    : IRequest, IOperationsReactionRequest, ICallable;
+    : IRequest, IOperationsReactionRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => FindingId;
+}

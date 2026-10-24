@@ -1902,7 +1902,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Remediation
 
-- [RemediationLedger](../../src/Compliance.Core/Features/Remediation/RemediationLedger.cs#L13)
+- [CorrectiveAction](../../src/Compliance.Core/Features/Remediation/CorrectiveAction.cs)
 
 #### Retention
 
@@ -3098,15 +3098,15 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}` | `GetEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1359) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/fulfilments` | `FulfilEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1363) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/cancellations` | `CancelEvidenceRequest` | [registration](../../src/Compliance.App/Program.cs#L1367) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings` | `RaiseFinding` | [registration](../../src/Compliance.App/Program.cs#L1371) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}` | `RaiseFinding` | [registration](../../src/Compliance.App/Program.cs#L1371) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings` | `ListFindings` | [registration](../../src/Compliance.App/Program.cs#L1375) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}` | `GetFinding` | [registration](../../src/Compliance.App/Program.cs#L1379) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions` | `ReviseFinding` | [registration](../../src/Compliance.App/Program.cs#L1383) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions` | `AddCorrectiveAction` | [registration](../../src/Compliance.App/Program.cs#L1387) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions` | `CompleteCorrectiveAction` | [registration](../../src/Compliance.App/Program.cs#L1391) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances` | `LinkFindingAcceptance` | [registration](../../src/Compliance.App/Program.cs#L1395) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures` | `CloseFinding` | [registration](../../src/Compliance.App/Program.cs#L1399) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings` | `ReopenFinding` | [registration](../../src/Compliance.App/Program.cs#L1403) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions/{command_id}` | `ReviseFinding` | [registration](../../src/Compliance.App/Program.cs#L1383) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}` | `AddCorrectiveAction` | [registration](../../src/Compliance.App/Program.cs#L1387) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions/{command_id}` | `CompleteCorrectiveAction` | [registration](../../src/Compliance.App/Program.cs#L1391) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances/{command_id}` | `LinkFindingAcceptance` | [registration](../../src/Compliance.App/Program.cs#L1395) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures/{command_id}` | `CloseFinding` | [registration](../../src/Compliance.App/Program.cs#L1399) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings/{command_id}` | `ReopenFinding` | [registration](../../src/Compliance.App/Program.cs#L1403) |
 | PUT | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}` | `OpenAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1407) |
 | PUT | `/api/v1/tenants/{tenant_id}/access-populations/record-access-population-facts/{command_id}` | `RecordAccessPopulationFacts` | [registration](../../src/Compliance.App/Program.cs#L1411) |
 | GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/preview` | `PreviewAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1415) |

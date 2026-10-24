@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     authoritative program streams. Unresolved textual support remains represented by its
 ///     canonical owning record; this preview does not verify artifact existence or content.
 /// </summary>
-public sealed class EvidenceControlImpactContributor(IAggregateReader reader, IDomainEventReader events,
+public sealed class EvidenceControlImpactContributor(IAggregateReader reader, FindingReader findings,
     ControlOperationsReader operatingReader)
     : IControlImpactContributor
 {
@@ -64,7 +64,7 @@ public sealed class EvidenceControlImpactContributor(IAggregateReader reader, ID
                 AddArtifact(item.Reference,
                     $"Evaluation {evaluation.EvaluationId} inspected artifact version {item.Version}.");
         }
-        var remediation = await new FindingReadSource(reader, events).ReadAsync(subject.TenantId,
+        var remediation = await findings.ReadAsync(subject.TenantId,
             subject.ProgramId, DateTimeOffset.MinValue, ct).ConfigureAwait(false);
         if (!remediation.IsSuccess)
             return Result<ControlImpactContribution>.Failure(remediation.Error);

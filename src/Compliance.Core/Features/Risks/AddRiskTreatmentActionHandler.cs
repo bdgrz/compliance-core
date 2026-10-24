@@ -23,10 +23,10 @@ public sealed class AddRiskTreatmentActionHandler(IAggregateExecutor executor,
             request.ProgramId, request.RiskId, ct).ConfigureAwait(false);
         if (!risk.IsSuccess)
             return Result<RiskTreatmentActionRegistration>.Failure(risk.Error);
-        if (!await RemediationCommands.IsActiveMemberAsync(reader, request.TenantId,
+        if (!await FindingCommands.IsActiveMemberAsync(reader, request.TenantId,
                 request.AccountableMemberId, ct).ConfigureAwait(false))
             return Result<RiskTreatmentActionRegistration>.Failure(
-                RemediationCommands.InactiveOwner());
+                FindingCommands.InactiveOwner());
         var evidence = await reader.HydrateAsync(new EvidenceRequestLedger(request.TenantId,
             request.ProgramId), ct).ConfigureAwait(false);
         foreach (var id in request.EvidenceRequestIds ?? [])

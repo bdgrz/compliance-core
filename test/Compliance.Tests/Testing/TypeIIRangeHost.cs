@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.Remediation;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -84,8 +85,9 @@ sealed class TypeIIRangeHost : IAsyncDisposable
         .Get(TypeIIRangeEffects.ProcessName);
 
     public StartTypeIIObservationPeriodHandler StartHandler(TimeProvider clock) => new(
-        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Events,
-        Services.GetRequiredService<ControlOperationsReader>(), Content, clock);
+        Services.GetRequiredService<NativeOperationExecutor>(), Reader,
+        Services.GetRequiredService<FindingReader>(), Services.GetRequiredService<ControlOperationsReader>(), Content,
+        clock);
 
     public AmendTypeIIObservationPeriodHandler AmendHandler(TimeProvider clock) => new(
         Services.GetRequiredService<NativeOperationExecutor>(), Reader, Content, clock);

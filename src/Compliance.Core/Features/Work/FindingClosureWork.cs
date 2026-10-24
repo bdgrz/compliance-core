@@ -12,7 +12,7 @@ static class FindingClosureWork
     public static WorkCandidate? Candidate(FindingClosureWorkState finding)
     {
         if (finding.Closed || finding.Actions.Length == 0 ||
-            finding.Actions.Any(static action => action.Status != RemediationLedger.Completed))
+            finding.Actions.Any(static action => action.Status != FindingStates.Completed))
             return null;
         var excluded = finding.Actions.Select(static action => action.OwnerMemberId).ToHashSet();
         excluded.Add(finding.OwnerMemberId);
@@ -24,7 +24,7 @@ static class FindingClosureWork
         return new WorkCandidate(WorkCandidate.IdFor(identity, Kind), Kind, finding.FindingId,
             null, finding.FindingId, $"Verify and close finding: {finding.Title}",
             $"Completed corrective work at finding revision {finding.Revision} awaits independent verification.",
-            finding.DueOn, RemediationLedger.Materiality(finding.Severity), "close",
+            finding.DueOn, FindingStates.Materiality(finding.Severity), "close",
             $"/api/v1/tenants/{finding.TenantId}/programs/{finding.ProgramId}/findings/{finding.FindingId}/closures",
             new OperatingHolder(OperatingAuthority.ProgramManagerHolder, finding.ProgramId),
             null, excluded, finding.ChangedAt);
@@ -35,5 +35,5 @@ static class FindingClosureWork
         finding.Severity, finding.OwnerMemberId, finding.DueOn,
         finding.CorrectiveActions.Select(static action => new FindingClosureActionState(action.ActionId,
             action.OwnerMemberId, action.Status, action.CompletedByMemberId)).ToArray(),
-        finding.Closure is not null, finding.History[^1].At));
+        finding.Closure is not null, finding.History.Max(static entry => entry.At)));
 }

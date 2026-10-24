@@ -1,129 +1,91 @@
-using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Remediation;
-using Cntryl.Fitz.Extensions;
+using Bdgrz.Compliance.Tests.Features.Operations;
+using Bdgrz.Compliance.Tests.Features.Remediation;
 using Cntryl.Portia;
-using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 
 public sealed class FindingTypeIBaselineSourceContributorTests
 {
-    static readonly Uuid TenantId = Uuid.CreateVersion4();
-    static readonly Uuid ProgramId = Uuid.CreateVersion4();
-    static readonly Uuid FindingId = Uuid.CreateVersion4();
-    static readonly Uuid ExaminationItemId = Uuid.CreateVersion4();
-    static readonly Uuid OwnerId = Uuid.CreateVersion4();
-    static readonly Uuid MemberId = Uuid.CreateVersion4();
-    static readonly DateOnly TypeIDate = new(2026, 1, 31);
-    static readonly DateTimeOffset RaisedAt = new(2026, 1, 30, 12, 0, 0, TimeSpan.Zero);
-    static readonly DateTimeOffset AfterTypeIDate = new(2026, 2, 1, 0, 0, 0, TimeSpan.Zero);
-
     [Fact]
-    public async Task ShouldCaptureRecordedFindingGivenDifferentBusinessAndEnvelopeTimes()
+    public async Task ShouldCaptureFindingWithItsActionHistoryGivenFactsInsideCutoff()
     {
         // Arrange
-        var fixture = await Fixture(includeLaterRevision: false, recordedAt: RaisedAt.AddSeconds(1));
+        var fixture = await OperationsFixture.CreateAsync();
+        var finding = await FindingTests.RaiseWithCompletedActionAsync(fixture);
+        var contributor = Contributor(fixture);
 
         // Act
-        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+        var result = await contributor.ReadAsync(Engagement(fixture, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1)),
+            new TypeIBaselineSourceReadContext(fixture.LeadMemberId, []), CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(1, Assert.Single(result.Value.Sources).Revision);
+        Assert.Equal("findings", result.Value.Family);
+        var source = Assert.Single(result.Value.Sources);
+        Assert.Equal("finding", source.Kind);
+        Assert.Equal(finding.FindingId, source.RecordId);
+        Assert.Equal(2, source.Revision);
+        Assert.Equal(Uuid.CreateVersion5(finding.FindingId, "finding_v1:2"), source.VersionId);
+        Assert.Matches("^[0-9a-f]{64}$", source.ContentSha256);
     }
 
     [Fact]
-    public async Task ShouldExcludeBackdatedFindingGivenEnvelopeRecordedAfterCutoff()
+    public async Task ShouldChangeDigestGivenLaterFactInsideCutoff()
     {
         // Arrange
-        var fixture = await Fixture(includeLaterRevision: false, recordedAt: AfterTypeIDate);
+        var fixture = await OperationsFixture.CreateAsync();
+        var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
+        var contributor = Contributor(fixture);
+        var engagement = Engagement(fixture, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1));
+        var before = await contributor.ReadAsync(engagement, new TypeIBaselineSourceReadContext(fixture.LeadMemberId, []),
+            CancellationToken.None);
 
         // Act
-        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+        await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
+            fixture.ProgramId, finding.FindingId, 1, "critical", fixture.OwnerMemberId, fixture.Today.AddDays(3), "All",
+            null, "Escalated."));
+        var after = await contributor.ReadAsync(engagement, new TypeIBaselineSourceReadContext(fixture.LeadMemberId, []),
+            CancellationToken.None);
+        var again = await contributor.ReadAsync(engagement, new TypeIBaselineSourceReadContext(fixture.LeadMemberId, []),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(1, Assert.Single(before.Value.Sources).Revision);
+        var revised = Assert.Single(after.Value.Sources);
+        Assert.Equal(2, revised.Revision);
+        Assert.NotEqual(Assert.Single(before.Value.Sources).ContentSha256, revised.ContentSha256);
+        Assert.Equal(revised.ContentSha256, Assert.Single(again.Value.Sources).ContentSha256);
+    }
+
+    [Fact]
+    public async Task ShouldExcludeFindingGivenEnvelopeRecordedAfterCutoff()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
+        var contributor = Contributor(fixture);
+
+        // Act
+        var result = await contributor.ReadAsync(Engagement(fixture, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-2)),
+            new TypeIBaselineSourceReadContext(fixture.LeadMemberId, []), CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Empty(result.Value.Sources);
     }
 
-    [Fact]
-    public async Task ShouldCaptureAuditorFindingAsOfTypeIDateGivenLaterRevision()
+    static FindingTypeIBaselineSourceContributor Contributor(OperationsFixture fixture)
     {
-        // Arrange
-        var withLaterRevision = await Fixture(includeLaterRevision: true);
-        var atRaise = await Fixture(includeLaterRevision: false);
-
-        // Act
-        var laterResult = await withLaterRevision.Contributor.ReadAsync(Engagement(),
-            withLaterRevision.Context, CancellationToken.None);
-        var earlierResult = await atRaise.Contributor.ReadAsync(Engagement(), atRaise.Context,
-            CancellationToken.None);
-
-        // Assert
-        Assert.True(laterResult.IsSuccess, laterResult.Error?.Message);
-        Assert.True(earlierResult.IsSuccess, earlierResult.Error?.Message);
-        Assert.Equal("findings", laterResult.Value.Family);
-        var laterFinding = Assert.Single(laterResult.Value.Sources);
-        var earlierFinding = Assert.Single(earlierResult.Value.Sources);
-        Assert.Equal("finding", laterFinding.Kind);
-        Assert.Equal(FindingId, laterFinding.RecordId);
-        Assert.Equal(1, laterFinding.Revision);
-        Assert.Equal(Uuid.CreateVersion5(FindingId, "finding_v1:1"), laterFinding.VersionId);
-        Assert.Equal(earlierFinding.ContentSha256, laterFinding.ContentSha256);
-        Assert.Matches("^[0-9a-f]{64}$", laterFinding.ContentSha256);
+        var scope = fixture.Provider.CreateScope();
+        return new FindingTypeIBaselineSourceContributor(scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            scope.ServiceProvider.GetRequiredService<IAggregateReader>());
     }
 
-    static async Task<FixtureState> Fixture(bool includeLaterRevision, DateTimeOffset? recordedAt = null)
-    {
-        var raised = new FindingRaised(TenantId, ProgramId, FindingId, 1,
-            new FindingSource("examination_item", ExaminationItemId, "item-v1",
-                "The auditor's original wording is preserved."),
-            "Auditor finding", "Original finding description.", "high", "Production controls",
-            OwnerId, new DateOnly(2026, 2, 15), [],
-            ActorReference.ForMember(MemberId, "Engagement lead"), RaisedAt);
-        var sourceEvents = new List<DomainEvent>
-        {
-            DomainEventSeed.Attach(raised, ProgramId, 1,
-                eventId: Uuid.CreateVersion5(FindingId, "finding_raised_v1"),
-                occurredOn: recordedAt ?? RaisedAt),
-        };
-        if (includeLaterRevision)
-            sourceEvents.Add(DomainEventSeed.Attach(new FindingRevised(TenantId, ProgramId,
-                FindingId, 2, "critical", OwnerId, new DateOnly(2026, 3, 1),
-                "Expanded after the cutoff", "Root cause", "Auditor supplied additional evidence.",
-                ActorReference.ForMember(MemberId, "Engagement lead"), AfterTypeIDate), ProgramId,
-                2, eventId: Uuid.CreateVersion5(FindingId, "finding_revised_v2"),
-                occurredOn: AfterTypeIDate));
-
-        var store = new InMemoryEventStore();
-        var stream = new EventStreamAddress(TenantId.ToString(), "remediation",
-            ProgramId.ToString());
-        var attachedEvents = sourceEvents.ToArray();
-        await store.AppendAsync(stream, 0, attachedEvents);
-        var ledger = new AggregateScenario<RemediationLedger>(new RemediationLedger(TenantId,
-            ProgramId)).Given(attachedEvents).Aggregate;
-        var contributor = new FindingTypeIBaselineSourceContributor(store,
-            new AggregateReader(ledger));
-        return new FixtureState(contributor,
-            new TypeIBaselineSourceReadContext(MemberId, []));
-    }
-
-    static ExaminationEngagementView Engagement() => new(TenantId, ProgramId,
-        Uuid.CreateVersion4(), "type_i", "Audit Firm", TypeIDate, null, ["security"],
+    static ExaminationEngagementView Engagement(OperationsFixture fixture, DateOnly typeIDate) => new(fixture.TenantId,
+        fixture.ProgramId, Uuid.CreateVersion4(), "type_i", "Audit Firm", typeIDate, null, ["security"],
         Uuid.CreateVersion4(), [], "draft", 1,
-        new DateTimeOffset(TypeIDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc)),
-        MemberId, "Examiner");
-
-    sealed record FixtureState(FindingTypeIBaselineSourceContributor Contributor,
-        TypeIBaselineSourceReadContext Context);
-
-    sealed class AggregateReader(RemediationLedger source) : IAggregateReader
-    {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(source.Id == aggregate.Id && source.GetType() == typeof(TAggregate)
-                ? (TAggregate)(Aggregate)source
-                : aggregate);
-    }
+        new DateTimeOffset(typeIDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc)), fixture.LeadMemberId, "Examiner");
 }
