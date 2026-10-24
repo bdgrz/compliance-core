@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
@@ -34,9 +35,9 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
 
         // Act
         var designated = await bus.DispatchAsync(new RecordFirmProfessionalDutyDesignation(
-            Uuid.CreateVersion4(), "synthetic invalid assertion", 0), http, CancellationToken.None);
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), "synthetic invalid assertion", 0), http, CancellationToken.None);
         var deniedTransport = await bus.SendAsync(new RecordFirmProfessionalDutyDesignation(
-            Uuid.CreateVersion4(), "synthetic invalid assertion", 0), Actor);
+            Uuid.CreateVersion4(), Uuid.CreateVersion4(), "synthetic invalid assertion", 0), Actor);
         var rules = new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
             "Synthetic authored rules");
@@ -76,28 +77,27 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var active = ProfessionalDutyAssertionTestIssuer.Issue(designationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 1, "active", null, issuedAt, issuedAt.AddMinutes(30));
         var directDenied = await bus.SendAsync(new RecordFirmProfessionalDutyDesignation(designationId,
-            active.Token, 0), Actor);
+            active.Evidence.AssertionId, active.Token, 0), Actor);
         var mcpDenied = await bus.DispatchAsync(new RecordFirmProfessionalDutyDesignation(designationId,
-            active.Token, 0), new RequestDispatchContext(Actor, new McpInvocation("synthetic.duty.record")),
+            active.Evidence.AssertionId, active.Token, 0), new RequestDispatchContext(Actor, new McpInvocation("synthetic.duty.record")),
             CancellationToken.None);
 
         // Act
-        var recorded = await bus.DispatchAsync(new RecordFirmProfessionalDutyDesignation(designationId,
-            active.Token, 0), http, CancellationToken.None);
-        var catalogAfterRecord = await bus.DispatchAsync(new GetFirmProfessionalDutyCatalog(), http,
-            CancellationToken.None);
+        var recorded = await ProfessionalDutyFacts.AdmitThroughProcessAsync(provider, Actor,
+            new RecordFirmProfessionalDutyDesignation(designationId, active.Evidence.AssertionId, active.Token, 0),
+            active);
         var currentBefore = await duties.ReadCurrentAsync(User, FirmProfessionalDuty.RuleRatifier, null,
             CancellationToken.None);
         var revokedAt = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         var revokedAssertion = ProfessionalDutyAssertionTestIssuer.Issue(designationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 2, "revoked", active.Evidence.AssertionId,
             revokedAt, revokedAt.AddMinutes(30));
-        var revoked = await bus.DispatchAsync(new RevokeFirmProfessionalDutyDesignation(designationId,
-            revokedAssertion.Token, 1), new RequestDispatchContext(Actor,
-                new HttpInvocation("POST", "/synthetic/duty/revocation", "/synthetic/duty/revocation", "synthetic")),
-            CancellationToken.None);
+        var revoked = await ProfessionalDutyFacts.AdmitThroughProcessAsync(provider, Actor,
+            new RevokeFirmProfessionalDutyDesignation(designationId, revokedAssertion.Evidence.AssertionId,
+                revokedAssertion.Token, 1), revokedAssertion);
         var currentAfter = await duties.ReadCurrentAsync(User, FirmProfessionalDuty.RuleRatifier, null,
             CancellationToken.None);
+        await ProfessionalDutyFacts.ProjectDirectoryAsync(provider);
         var catalogAfterRevoke = await bus.DispatchAsync(new GetFirmProfessionalDutyCatalog(), http,
             CancellationToken.None);
 
@@ -105,7 +105,6 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         Assert.Equal(RequestErrorKind.Forbidden, directDenied.Error?.Kind);
         Assert.Equal(RequestErrorKind.Forbidden, mcpDenied.Error?.Kind);
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
-        Assert.Equal(active.Evidence.AssertionId, Assert.Single(catalogAfterRecord.Value!.Designations).AssertionId);
         Assert.NotNull(currentBefore);
         Assert.True(revoked.IsSuccess, revoked.Error?.Message);
         Assert.Null(currentAfter);
@@ -130,10 +129,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var revocation = ProfessionalDutyAssertionTestIssuer.Issue(source.DesignationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 2, "revoked", source.InitialAssertion.Evidence.AssertionId,
             revokedAt.AddMinutes(-1), revokedAt.AddMinutes(29));
-        var revoked = await source.Executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Revoke(Uuid.CreateVersion4(), revocation.Evidence,
-                revocation.Token, catalog.Sequence, source.OperatorActor, revokedAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var revoked = await ProfessionalDutyFacts.RevokeAsync(source.Services, revocation, source.OperatorActor, revokedAt);
 
         // Assert: neither reactivation of the same designation nor a replacement designation restores it.
         Assert.True(revoked.IsSuccess, revoked.Error?.Message);
@@ -142,10 +138,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var reactivation = ProfessionalDutyAssertionTestIssuer.Issue(source.DesignationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 3, "active", revocation.Evidence.AssertionId,
             reactivatedAt.AddMinutes(-1), reactivatedAt.AddMinutes(59));
-        var reactivated = await source.Executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Designate(Uuid.CreateVersion4(), reactivation.Evidence,
-                reactivation.Token, source.Staff, catalog.Sequence, source.OperatorActor, reactivatedAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var reactivated = await ProfessionalDutyFacts.RecordAsync(source.Services, reactivation, source.Staff, source.OperatorActor, reactivatedAt);
         Assert.True(reactivated.IsSuccess, reactivated.Error?.Message);
         var currentReactivatedDuty = await scope.ServiceProvider.GetRequiredService<ProfessionalDutyAuthorityReader>()
             .ReadCurrentAsync(User, FirmProfessionalDuty.RuleRatifier, null, CancellationToken.None);
@@ -158,20 +151,14 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var reRevocation = ProfessionalDutyAssertionTestIssuer.Issue(source.DesignationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 4, "revoked", reactivation.Evidence.AssertionId,
             reRevokedAt.AddMinutes(-1), reRevokedAt.AddMinutes(29));
-        var revokedAgain = await source.Executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Revoke(Uuid.CreateVersion4(), reRevocation.Evidence,
-                reRevocation.Token, catalog.Sequence, source.OperatorActor, reRevokedAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var revokedAgain = await ProfessionalDutyFacts.RevokeAsync(source.Services, reRevocation, source.OperatorActor, reRevokedAt);
         Assert.True(revokedAgain.IsSuccess, revokedAgain.Error?.Message);
         var replacementId = Uuid.CreateVersion4();
         var replacementAt = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         var replacement = ProfessionalDutyAssertionTestIssuer.Issue(replacementId, User,
             FirmProfessionalDuty.RuleRatifier, null, 1, "active", null,
             replacementAt.AddMinutes(-1), replacementAt.AddMinutes(59));
-        var replacementRecorded = await source.Executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Designate(Uuid.CreateVersion4(), replacement.Evidence,
-                replacement.Token, source.Staff, catalog.Sequence, source.OperatorActor, replacementAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var replacementRecorded = await ProfessionalDutyFacts.RecordAsync(source.Services, replacement, source.Staff, source.OperatorActor, replacementAt);
 
         // Assert
         Assert.True(replacementRecorded.IsSuccess, replacementRecorded.Error?.Message);
@@ -202,10 +189,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var renewal = ProfessionalDutyAssertionTestIssuer.Issue(source.DesignationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 2, "active", source.InitialAssertion.Evidence.AssertionId,
             renewedAt.AddMinutes(-1), renewedAt.AddMinutes(59));
-        var renewed = await source.Executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Designate(Uuid.CreateVersion4(), renewal.Evidence,
-                renewal.Token, source.Staff, catalog.Sequence, source.OperatorActor, renewedAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var renewed = await ProfessionalDutyFacts.RecordAsync(source.Services, renewal, source.Staff, source.OperatorActor, renewedAt);
 
         // Assert
         Assert.Null(expiredDuty);
@@ -240,10 +224,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var renewedAssertion = ProfessionalDutyAssertionTestIssuer.Issue(source.DesignationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 2, "active", source.InitialAssertion.Evidence.AssertionId,
             reactivatedAt.AddMinutes(-1), reactivatedAt.AddMinutes(59));
-        var renewed = await source.Executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Designate(Uuid.CreateVersion4(), renewedAssertion.Evidence,
-                renewedAssertion.Token, updatedStaff, catalog.Sequence, source.OperatorActor, reactivatedAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var renewed = await ProfessionalDutyFacts.RecordAsync(source.Services, renewedAssertion, updatedStaff, source.OperatorActor, reactivatedAt);
 
         // Assert
         Assert.Null(dutyBeforeRenewal);
@@ -270,10 +251,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var designationId = Uuid.CreateVersion4();
         var assertion = ProfessionalDutyAssertionTestIssuer.Issue(designationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 1, "active", null, Now, Now.AddHours(1));
-        var seededDuty = await executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Designate(Uuid.CreateVersion4(), assertion.Evidence,
-                assertion.Token, staff, catalog.Sequence, operatorActor, Now)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var seededDuty = await ProfessionalDutyFacts.RecordAsync(scope.ServiceProvider, assertion, staff, operatorActor, Now);
         Assert.True(seededDuty.IsSuccess, seededDuty.Error?.Message);
         var content = new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
@@ -296,19 +274,17 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
             renewedAt.AddMinutes(-1), renewedAt.AddMinutes(59));
 
         // Act
-        var renewal = await executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Designate(Uuid.CreateVersion4(), renewedAssertion.Evidence,
-                renewedAssertion.Token, staff, catalog.Sequence, operatorActor, renewedAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var renewal = await ProfessionalDutyFacts.RecordAsync(scope.ServiceProvider, renewedAssertion, staff, operatorActor, renewedAt);
 
         // Assert
         Assert.True(renewal.IsSuccess, renewal.Error?.Message);
-        var currentCatalog = await reader.HydrateAsync(new FirmProfessionalDutyCatalog(), CancellationToken.None);
-        var currentDesignation = Assert.IsType<FirmProfessionalDutyDesignationView>(currentCatalog.ActiveDesignation(
-            User, FirmProfessionalDuty.RuleRatifier, null, DateTimeOffset.UtcNow));
+        var currentOwner = await reader.HydrateAsync(
+            new FirmProfessionalDutyDesignation(User, FirmProfessionalDuty.RuleRatifier, null), CancellationToken.None);
+        var currentDesignation = await scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()
+            .ReadJsonAsync<FirmProfessionalDutyDesignationView>("bdgrz", currentOwner.LatestContent!);
         Assert.Equal(2, currentDesignation.Revision);
         Assert.True(scope.ServiceProvider.GetRequiredService<IFirmProfessionalDutyAssertionVerifier>()
-            .TryVerify(currentCatalog.SignedAssertion(designationId), DateTimeOffset.UtcNow, out _));
+            .TryVerify(currentOwner.LatestSignedAssertion, DateTimeOffset.UtcNow, out _));
         var currentDuty = await scope.ServiceProvider.GetRequiredService<ProfessionalDutyAuthorityReader>()
             .ReadCurrentAsync(User, FirmProfessionalDuty.RuleRatifier, null, CancellationToken.None);
         Assert.NotNull(currentDuty);
@@ -333,10 +309,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var designationId = Uuid.CreateVersion4();
         var assertion = ProfessionalDutyAssertionTestIssuer.Issue(designationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 1, "active", null, at, expiresAt);
-        var seededDuty = await executor.ExecuteAsync(new FirmProfessionalDutyCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Designate(Uuid.CreateVersion4(), assertion.Evidence,
-                assertion.Token, staff, catalog.Sequence, operatorActor, at)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var seededDuty = await ProfessionalDutyFacts.RecordAsync(services, assertion, staff, operatorActor, at);
         Assert.True(seededDuty.IsSuccess, seededDuty.Error?.Message);
         var content = new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
@@ -351,7 +324,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
                 staff, seededDuty.Value!, ActorReference.ForFirmStaff(User, "Synthetic ratifier"), at)),
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         Assert.True(seededRatification.IsSuccess, seededRatification.Error?.Message);
-        return new SeededRuleSource(executor,
+        return new SeededRuleSource(services, executor,
             services.GetRequiredService<CurrentRatifiedIndependenceRulesReader>(), operatorActor,
             staff, designationId, assertion);
     }
@@ -376,7 +349,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 
-    sealed record SeededRuleSource(IAggregateExecutor Executor,
+    sealed record SeededRuleSource(IServiceProvider Services, IAggregateExecutor Executor,
         CurrentRatifiedIndependenceRulesReader RulesReader, ActorReference OperatorActor,
         FirmStaffMemberView Staff, Uuid DesignationId,
         ProfessionalDutyAssertionTestIssuer.SignedAssertion InitialAssertion);

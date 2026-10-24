@@ -668,6 +668,16 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(FirmStaffRegistrationProcess.Definition());
         services.AddScoped<FirmStaffViews>();
         services.AddScoped<FirmStaffRegistrationReceivers>();
+        services.AddSingleton(ProfessionalDutyChangeProcess.Definition());
+        services.AddScoped<ProfessionalDutyAdmission>();
+        services.AddScoped<ProfessionalDutyChangeVerifier>();
+        services.AddScoped<ProfessionalDutyFences>();
+        services.AddScoped<ProfessionalDutyChangeReceivers>();
+        services.AddScoped<FitzFirmProfessionalDutyDirectory>();
+        services.AddScoped<IFirmProfessionalDutyDirectoryProjection>(
+            provider => provider.GetRequiredService<FitzFirmProfessionalDutyDirectory>());
+        services.AddScoped<IFirmProfessionalDutyDirectoryReader>(
+            provider => provider.GetRequiredService<FitzFirmProfessionalDutyDirectory>());
         services.AddScoped<FitzFirmStaffDirectory>();
         services.AddScoped<IFirmStaffDirectoryProjection>(
             provider => provider.GetRequiredService<FitzFirmStaffDirectory>());
@@ -737,6 +747,11 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordFirmProfessionalDutyDesignationHandler>()
             .AddRequestHandler<RevokeFirmProfessionalDutyDesignationHandler>()
             .AddRequestHandler<GetFirmProfessionalDutyCatalogHandler>()
+            .AddRequestHandler<AuthorizeFirmStaffProfessionalDutyUseHandler>()
+            .AddRequestHandler<SettleFirmStaffProfessionalDutyUseHandler>()
+            .AddRequestHandler<ClaimProfessionalAssertionIdentityHandler>()
+            .AddRequestHandler<ApplyProfessionalDutyChangeHandler>()
+            .AddRequestHandler<RejectProfessionalDutyChangeHandler>()
             .AddRequestHandler<ListAssignableFirmStaffHandler>()
             .AddRequestHandler<CreateServiceEngagementHandler>()
             .AddRequestHandler<AmendServiceEngagementHandler>()
@@ -758,6 +773,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<ProfessionalEngagementPartnerAuthorizer>()
             .AddRequestAuthorizer<FirmStaffAdministrationAuthorizer>()
             .AddRequestAuthorizer<FirmStaffRegistrationReceiverAuthorizer>()
+            .AddRequestAuthorizer<ProfessionalDutyChangeReceiverAuthorizer>()
             .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
             .AddRequestAuthorizer<ServiceEngagementAcceptanceAuthorizer>()
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
@@ -1394,6 +1410,8 @@ public static class ComplianceServiceCollectionExtensions
                 })
             .AddReactor<FirmStaffRegistrationReactor>(FirmStaffRegistrationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<ProfessionalDutyChangeReactor>(ProfessionalDutyChangeReactor.WorkloadName, WorkloadScope.Global,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AcceptedStaffDirectoryReconciliationReactor>(AcceptedStaffDirectoryReconciliationReactor.WorkloadName, WorkloadScope.PerTenant,
@@ -1442,6 +1460,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<RoleTeamDirectoryProjector>("RoleTeamDirectory", WorkloadScope.PerTenant)
             .AddProjector<TeamRoleDirectoryProjector>("TeamRoleDirectory", WorkloadScope.PerTenant)
             .AddProjector<FirmStaffDirectoryProjector>(FitzFirmStaffDirectory.ProjectorName, WorkloadScope.Global)
+            .AddProjector<FirmProfessionalDutyDirectoryProjector>(FitzFirmProfessionalDutyDirectory.ProjectorName,
+                WorkloadScope.Global)
             .AddProjector<TenantDirectoryProjector>("TenantDirectory", WorkloadScope.Global)
             .AddProjector<TenantMembershipProjector>("TenantMembership", WorkloadScope.PerTenant)
             .AddProjector<TenantInvitationDirectoryProjector>("TenantInvitationDirectory",

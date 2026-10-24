@@ -41,26 +41,26 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 425,
-    "factsWithReducer": 405,
-    "factsWithAggregateEmitter": 398,
+    "domainEventContracts": 430,
+    "factsWithReducer": 410,
+    "factsWithAggregateEmitter": 403,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 18,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 104,
-    "aggregateTypesWithCommandPath": 101,
-    "requestContracts": 662,
-    "commonRequestContracts": 660,
+    "aggregateTypes": 105,
+    "aggregateTypesWithCommandPath": 102,
+    "requestContracts": 667,
+    "commonRequestContracts": 665,
     "requestClassificationCounts": {
       "command": 347,
       "deferred_command": 5,
       "confirmed_command_gap": 8,
-      "internal_reaction": 27,
+      "internal_reaction": 32,
       "query_or_reconstruction": 274,
       "internal_executor_context": 1
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 604,
+    "registeredCoreHandlerRegistrations": 609,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 41,
     "unwiredAggregateProducerClassifications": {
@@ -3768,14 +3768,16 @@
       "contract": "src/Compliance.Common/Features/AccessControl/FirmProfessionalDutyDesignationRecorded.cs",
       "reducers": [
         {
-          "aggregate": "FirmProfessionalDutyCatalog",
-          "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs"
+          "aggregate": "FirmProfessionalDutyDesignation",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs"
+        "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -3784,14 +3786,16 @@
       "contract": "src/Compliance.Common/Features/AccessControl/FirmProfessionalDutyDesignationRevoked.cs",
       "reducers": [
         {
-          "aggregate": "FirmProfessionalDutyCatalog",
-          "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs"
+          "aggregate": "FirmProfessionalDutyDesignation",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs"
+        "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -3829,6 +3833,42 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FirmStaffProfessionalDutyUseAuthorized",
+      "contract": "src/Compliance.Common/Features/AccessControl/FirmStaffProfessionalDutyUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmStaffRecord",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FirmStaffProfessionalDutyUseSettled",
+      "contract": "src/Compliance.Common/Features/AccessControl/FirmStaffProfessionalDutyUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmStaffRecord",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5068,6 +5108,58 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
       ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProfessionalAssertionIdentityClaimed",
+      "contract": "src/Compliance.Common/Features/AccessControl/ProfessionalAssertionIdentityClaimed.cs",
+      "reducers": [
+        {
+          "aggregate": "ProfessionalAssertionIdentityClaim",
+          "source": "src/Compliance.Core/Features/AccessControl/ProfessionalAssertionIdentityClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/ProfessionalAssertionIdentityClaim.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProfessionalDutyChangeAccepted",
+      "contract": "src/Compliance.Common/Features/AccessControl/ProfessionalDutyChangeAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmProfessionalDutyDesignation",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProfessionalDutyChangeRejected",
+      "contract": "src/Compliance.Common/Features/AccessControl/ProfessionalDutyChangeRejected.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmProfessionalDutyDesignation",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
+      ],
+      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -9150,21 +9242,26 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "FirmProfessionalDutyCatalog",
-      "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs",
+      "aggregate": "FirmProfessionalDutyDesignation",
+      "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs",
       "appliedFacts": [
         "FirmProfessionalDutyDesignationRecorded",
-        "FirmProfessionalDutyDesignationRevoked"
+        "FirmProfessionalDutyDesignationRevoked",
+        "ProfessionalDutyChangeAccepted",
+        "ProfessionalDutyChangeRejected"
       ],
       "commandRequests": [
         "RecordFirmProfessionalDutyDesignation",
         "RevokeFirmProfessionalDutyDesignation"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "ApplyProfessionalDutyChange",
+        "RejectProfessionalDutyChange"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/FirmProfessionalDutyCatalogTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs"
+        "test/Compliance.Tests/Testing/ProfessionalDutyFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9188,6 +9285,8 @@
       "source": "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs",
       "appliedFacts": [
         "FirmStaffChangeRecorded",
+        "FirmStaffProfessionalDutyUseAuthorized",
+        "FirmStaffProfessionalDutyUseSettled",
         "FirmStaffRegistrationAccepted",
         "FirmStaffRegistrationRejected"
       ],
@@ -9196,21 +9295,18 @@
         "SetFirmStaffStatus"
       ],
       "internalReactionRequests": [
+        "AuthorizeFirmStaffProfessionalDutyUse",
         "ClaimFirmStaffIdentity",
         "CompleteFirmStaffRegistration",
-        "RejectFirmStaffRegistration"
+        "RejectFirmStaffRegistration",
+        "SettleFirmStaffProfessionalDutyUse"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ActualStaffEngagementLocatorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRetainedStatusTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementHandlerTests.cs",
-        "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
+        "test/Compliance.Tests/Testing/FirmStaffFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9958,6 +10054,21 @@
         "test/Compliance.Tests/Features/Snapshots/PopulationSnapshotChunkingTests.cs"
       ],
       "helperOnlyConstruction": "PopulationSnapshotFreezer",
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ProfessionalAssertionIdentityClaim",
+      "source": "src/Compliance.Core/Features/AccessControl/ProfessionalAssertionIdentityClaim.cs",
+      "appliedFacts": [
+        "ProfessionalAssertionIdentityClaimed"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "ClaimProfessionalAssertionIdentity"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
       "commandRouteDisposition": "registered_command_route"
     },
     {
@@ -11893,6 +12004,32 @@
       "note": ""
     },
     {
+      "request": "ApplyProfessionalDutyChange",
+      "contract": "src/Compliance.Common/Features/AccessControl/ApplyProfessionalDutyChange.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IProfessionalDutyChangeReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyProfessionalDutyChangeHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ApplyProfessionalDutyChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "FirmProfessionalDutyDesignation"
+      ],
+      "helperServices": [
+        "ProfessionalDutyChangeReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
+        "test/Compliance.Tests/Testing/ProfessionalDutyFacts.cs"
+      ],
+      "note": "System-only professional-duty process receiver; records or revokes the designation only after the exact permanent claim (and, for recording, the granted staff use). No HTTP/MCP route."
+    },
+    {
       "request": "ApplyNeutralAdministratorAssignmentMutation",
       "contract": "src/Compliance.Common/Features/AccessControl/ApplyNeutralAdministratorAssignmentMutation.cs",
       "interfaces": "IAdministratorTransitionReceiver",
@@ -12849,6 +12986,34 @@
       "note": ""
     },
     {
+      "request": "AuthorizeFirmStaffProfessionalDutyUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/AuthorizeFirmStaffProfessionalDutyUse.cs",
+      "interfaces": "ISourceUseAuthorization, IProfessionalDutyChangeReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeFirmStaffProfessionalDutyUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/AuthorizeFirmStaffProfessionalDutyUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FirmStaffRecord"
+      ],
+      "aggregateTargets": [
+        "FirmStaffRecord"
+      ],
+      "helperServices": [
+        "ProfessionalDutyChangeVerifier",
+        "ProfessionalDutyFences"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
+      "note": "System-only professional-duty process receiver on the generic acquire base; holds the exact active staff content a recording pinned at admission, or rejects the change and fences the key. No HTTP/MCP route."
+    },
+    {
       "request": "AuthorizeWorkDigestUnknownRetry",
       "contract": "src/Compliance.Common/Features/Work/AuthorizeWorkDigestUnknownRetry.cs",
       "interfaces": "IRequest<WorkDigestDispatchStatusView>, ICallable, IPlatformOperatorRequest",
@@ -13120,6 +13285,31 @@
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
       ],
       "note": "System-only registration process receiver; permanently claims the canonical user and, when another staff record owns it, rejects the pending registration. No HTTP/MCP route."
+    },
+    {
+      "request": "ClaimProfessionalAssertionIdentity",
+      "contract": "src/Compliance.Common/Features/AccessControl/ClaimProfessionalAssertionIdentity.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IProfessionalDutyChangeReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ClaimProfessionalAssertionIdentityHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ClaimProfessionalAssertionIdentityHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "ProfessionalAssertionIdentityClaim"
+      ],
+      "helperServices": [
+        "ProfessionalDutyChangeReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
+      "note": "System-only professional-duty process receiver; permanently claims the verified assertion tuple and, when another change owns it, rejects the pending change and fences the staff use. No HTTP/MCP route."
     },
     {
       "request": "ClaimWorkItem",
@@ -16676,9 +16866,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "FirmProfessionalDutyCatalog"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -23022,7 +23210,7 @@
     {
       "request": "RecordFirmProfessionalDutyDesignation",
       "contract": "src/Compliance.Common/Features/AccessControl/RecordFirmProfessionalDutyDesignation.cs",
-      "interfaces": "IRequest<FirmProfessionalDutyDesignationView>, IProfessionalDutyAdministrationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProfessionalDutyAdministrationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -23032,15 +23220,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "FirmProfessionalDutyCatalog"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "FirmProfessionalDutyCatalog"
+        "FirmProfessionalDutyDesignation"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ProfessionalDutyAdmission"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
+        "test/Compliance.Tests/Testing/ProfessionalDutyFacts.cs"
       ],
       "note": ""
     },
@@ -23980,6 +24170,31 @@
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs"
       ],
       "note": "System-only registration process abort receiver; rejects only a pending registration whose canonical user another staff record claimed. No HTTP/MCP route."
+    },
+    {
+      "request": "RejectProfessionalDutyChange",
+      "contract": "src/Compliance.Common/Features/AccessControl/RejectProfessionalDutyChange.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IProfessionalDutyChangeReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RejectProfessionalDutyChangeHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/RejectProfessionalDutyChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "FirmProfessionalDutyDesignation"
+      ],
+      "helperServices": [
+        "ProfessionalDutyChangeReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
+      "note": "System-only professional-duty process abort receiver; rejects only a pending change and never an applied one. No HTTP/MCP route."
     },
     {
       "request": "RejectTenantSlug",
@@ -26047,7 +26262,7 @@
     {
       "request": "RevokeFirmProfessionalDutyDesignation",
       "contract": "src/Compliance.Common/Features/AccessControl/RevokeFirmProfessionalDutyDesignation.cs",
-      "interfaces": "IRequest<FirmProfessionalDutyDesignationView>, IProfessionalDutyAdministrationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProfessionalDutyAdministrationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26057,14 +26272,15 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "FirmProfessionalDutyCatalog"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "FirmProfessionalDutyCatalog"
+        "FirmProfessionalDutyDesignation"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ProfessionalDutyAdmission"
+      ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs"
       ],
       "note": ""
@@ -26354,6 +26570,33 @@
         "test/Compliance.Tests/Features/Work/WorkReminderTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "SettleFirmStaffProfessionalDutyUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/SettleFirmStaffProfessionalDutyUse.cs",
+      "interfaces": "ISourceUseSettlement, IProfessionalDutyChangeReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleFirmStaffProfessionalDutyUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/SettleFirmStaffProfessionalDutyUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FirmStaffRecord"
+      ],
+      "aggregateTargets": [
+        "FirmStaffRecord"
+      ],
+      "helperServices": [
+        "ProfessionalDutyChangeVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
+      "note": "System-only professional-duty process receiver on the generic settle base; settles the exact staff use, or fences a key never acquired, with the disposition the terminal source fact requires. No HTTP/MCP route."
     },
     {
       "request": "SignManagementRepresentationLetter",
