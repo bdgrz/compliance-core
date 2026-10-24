@@ -470,7 +470,7 @@ public sealed class ReviewerWorkAuthorityTests
             else if (kind == "commitment")
             {
                 await PersonalCommitmentDecisionTransportTests.HttpAsync(Provider, GuestUserId,
-                    new ReviewCommitmentDraft(Operations.TenantId, Operations.ProgramId,
+                    new ReviewCommitmentDraft(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                         pending.Id, pending.Revision, "accept", "Reviewed independently.", "Security lead", "applicable",
                         "supported", SourceVerifiedReference: "MSA 4.1", SourceEvidence: "Signed MSA section 4.1"), error);
                 await RefreshCommitmentAsync(pending.Id);
@@ -485,13 +485,13 @@ public sealed class ReviewerWorkAuthorityTests
             else if (kind == "policy")
             {
                 await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, GuestUserId,
-                    new ReviewPolicyDraft(Operations.TenantId, Operations.ProgramId,
+                    new ReviewPolicyDraft(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                         pending.Id, pending.Revision, "accept", "Reviewed independently."), error);
             }
             else if (kind is "control" or "control_assigned")
             {
                 await PersonalControlDecisionTransportTests.HttpAsync(Provider, GuestUserId,
-                    new ReviewControl(Operations.TenantId, Operations.ProgramId,
+                    new ReviewControl(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId,
                         pending.ResourceId!.Value, pending.Revision, "accept", "Reviewed independently."), error);
             }
             else if (kind == "finding_closure")

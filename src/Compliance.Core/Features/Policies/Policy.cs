@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
@@ -12,6 +13,10 @@ namespace Bdgrz.Compliance.Features.Policies;
 /// </summary>
 public sealed class Policy : Aggregate
 {
+    public NativeAcceptance ReplayAcceptance { get; }
+    OperationProvenance? _pendingOperation;
+    public PolicyVersionView? ReplayedApproval { get; private set; }
+
     // Fitz stream frames are u16; leave room for the Portia envelope and metadata.
     public const int MaximumEventPayloadBytes = 48 * 1024;
     public const int MaximumBodyLength = 20000;
@@ -51,10 +56,11 @@ public sealed class Policy : Aggregate
     public IReadOnlyList<PolicyVersionView> ReadVersions() => _versions.ToArray();
     public IReadOnlyList<PolicyDecisionView> ReadDecisions() => _decisions.ToArray();
 
-    public Policy(Uuid tenantId, Uuid policyId)
+    public Policy(Uuid tenantId, Uuid policyId, Uuid selectedCommandId = default)
         : base(policyId, new EventStreamAddress(tenantId.ToString(), "policies",
             policyId.ToString()))
     {
+        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
         _tenantId = tenantId;
         On<PolicyDraftCreated>(ev =>
         {
@@ -88,6 +94,7 @@ public sealed class Policy : Aggregate
         });
         On<PolicyReviewed>(ev =>
         {
+            AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
             _everReviewed = true;
             _latestReviewOutcome = ev.Outcome;
             _acceptedReview = ev.Outcome == "accept"
@@ -102,6 +109,7 @@ public sealed class Policy : Aggregate
         });
         On<PolicyApproved>(ev =>
         {
+            AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
             if (ev.PredecessorVersion is { } predecessor)
             {
                 var index = _versions.FindIndex(version => version.Version == predecessor);
@@ -117,6 +125,8 @@ public sealed class Policy : Aggregate
                 ev.ContentSha256, ev.EffectiveFrom, null, ev.PredecessorVersion, ev.DecisionId,
                 ev.AcceptedReviewDecisionId, ev.Actor, ev.DecidedAt, ev.ImpactDigest,
                 ev.SeparationOfDutiesWaiverId));
+            if (ev.Operation?.LogicalId == ReplayAcceptance.SelectedLogicalId)
+                ReplayedApproval = _versions[^1];
             _decisions.Add(new PolicyDecisionView(ev.TenantId, ev.ProgramId, ev.PolicyId,
                 ev.DecisionId, "approval", "approve", ev.Revision, ev.Version, ev.Rationale,
                 ev.Actor, ev.DecidedAt, ev.SeparationOfDutiesWaiverId));
@@ -357,8 +367,12 @@ public sealed class Policy : Aggregate
 
     public CommandFailure? Review(Uuid programId, long expectedRevision, Uuid decisionId,
         string outcome, string rationale, ActorReference actor, Uuid reviewerMemberId,
-        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? waiver = null)
+        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? waiver = null,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (CheckPendingTarget(programId, expectedRevision) is { } target)
             return target;
         if (CheckIndependence(reviewerMemberId, _pendingAuthors.Contains(reviewerMemberId),
@@ -370,7 +384,8 @@ public sealed class Policy : Aggregate
             return CommandFailure.InvalidContent(
                 "A policy review requires an outcome of accept or request_changes and a rationale of at most 4000 characters.");
         RaiseEvent(new PolicyReviewed(_tenantId, programId, Id, expectedRevision, decisionId,
-            outcome, rationale.Trim(), actor, reviewerMemberId, decidedAt, waiver?.Id));
+            outcome, rationale.Trim(), actor, reviewerMemberId, decidedAt, waiver?.Id)
+        { Operation = _pendingOperation });
         return null;
     }
 
@@ -381,8 +396,13 @@ public sealed class Policy : Aggregate
     public CommandFailure? Approve(Uuid programId, long expectedRevision, Uuid decisionId,
         Uuid acceptedReviewDecisionId, DateOnly effectiveFrom, bool major, string rationale,
         string? impactDigest, ActorReference actor, Uuid approverMemberId,
-        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? waiver = null)
+        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? waiver = null,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
+
         if (CheckPendingTarget(programId, expectedRevision) is { } target)
             return target;
         if (!_draftOpen)
@@ -419,7 +439,8 @@ public sealed class Policy : Aggregate
             _versions.Count + 1, predecessor is null || major, decisionId,
             acceptedReviewDecisionId, _draftSha!, effectiveFrom, predecessor?.Version,
             predecessor is null ? null : impactDigest!.Trim(), rationale.Trim(), actor,
-            approverMemberId, decidedAt, waiver?.Id));
+            approverMemberId, decidedAt, waiver?.Id)
+        { Operation = _pendingOperation });
         return null;
     }
 
@@ -428,6 +449,7 @@ public sealed class Policy : Aggregate
         Uuid decisionId, string rationale, ActorReference actor, Uuid reviewerMemberId,
         DateTimeOffset decidedAt)
     {
+
         if (!IsVisible || ProgramId != programId)
             return CommandFailure.MissingRecord("The policy was not found.");
         if (_retired)

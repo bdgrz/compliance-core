@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
@@ -11,6 +12,14 @@ public sealed class ProposeTemplateSuccessorAdoptionHandler(IAggregateExecutor e
         CancellationToken ct)
     {
         var request = context.Request;
+        var actor = ClientServiceActor.Snapshot(context);
+        var operation = AuthoredCommandReplay.Create(new TemplateApplication(request.TenantId, request.ProgramId,
+                TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey), request.CommandId), request.CommandId,
+            nameof(ProposeTemplateSuccessorAdoption), actor.MemberId, request.ExpectedRevision, request, clock.GetUtcNow());
+        var replayOwner = await reader.HydrateAsync(new TemplateApplication(request.TenantId, request.ProgramId,
+                TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey), request.CommandId), ct).ConfigureAwait(false);
+        if (AuthoredCommandReplay.Unit(replayOwner.ReplayAcceptance, operation) is { } replay)
+            return replay;
         if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
             request.TemplateId == Uuid.Empty || request.NewTemplateVersion <= 0)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
@@ -27,11 +36,11 @@ public sealed class ProposeTemplateSuccessorAdoptionHandler(IAggregateExecutor e
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a published methodology-template version can be proposed to an existing application."));
 
-        var actor = ClientServiceActor.Snapshot(context);
+
         return await executor.ExecuteAsync(new TemplateApplication(request.TenantId, request.ProgramId,
-                TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey)),
+                TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey), request.CommandId),
             application => CommandFailureRequestAdapter.ToOutcome(application.ProposeSuccessor(
                 request.ExpectedRevision, successor, request.Disposition, actor.MemberId, actor.Display,
-                clock.GetUtcNow())), context, ct).ConfigureAwait(false);
+                clock.GetUtcNow(), operation: operation)), context, ct).ConfigureAwait(false);
     }
 }

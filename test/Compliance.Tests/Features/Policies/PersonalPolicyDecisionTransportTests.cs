@@ -14,6 +14,74 @@ namespace Bdgrz.Compliance.Tests.Features.Policies;
 
 public sealed class PersonalPolicyDecisionTransportTests
 {
+    [Fact]
+    public async Task ShouldReturnFirstApprovalBodyGivenExactRetryAfterPolicyRetirement()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync("approval");
+        var source = await fixture.ReadAsync();
+        var request = new ApprovePolicy(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program,
+            fixture.PolicyId, 1, source.ReadDecisions()[0].DecisionId, new DateOnly(2026, 9, 1), true, "Approved");
+        var first = await SendHttpAsync(fixture.Provider, fixture.Approver, request);
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.Tenant, fixture.PolicyId), policy =>
+        {
+            var author = RbacIds.Member(fixture.Tenant, fixture.Author);
+            var reviewer = RbacIds.Member(fixture.Tenant, fixture.Reviewer);
+            var approver = RbacIds.Member(fixture.Tenant, fixture.Approver);
+            var now = DateTimeOffset.UtcNow;
+            Assert.Null(policy.ProposeRetirement(fixture.Program, 1, new DateOnly(2027, 9, 1), "Retire",
+                ActorReference.ForMember(author, "Author"), author, now));
+            var reviewId = Uuid.CreateVersion4();
+            Assert.Null(policy.Review(fixture.Program, policy.Revision, reviewId, "accept", "Reviewed retirement",
+                ActorReference.ForMember(reviewer, "Reviewer"), reviewer, now));
+            Assert.Null(policy.ApproveRetirement(fixture.Program, policy.Revision, Uuid.CreateVersion4(), reviewId,
+                "Retired", ActorReference.ForMember(approver, "Approver"), approver, now));
+            return Result.Success;
+        });
+        var before = await fixture.ReadAsync();
+
+        // Act
+        var replay = await SendHttpAsync(fixture.Provider, fixture.Approver, request);
+        await SendHttpAsync(fixture.Provider, fixture.Approver, request with { ExpectedRevision = 2 },
+            RequestErrorKind.Conflict);
+        var after = await fixture.ReadAsync();
+
+        // Assert
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(first.Value),
+            System.Text.Json.JsonSerializer.Serialize(replay.Value));
+        Assert.Equal("approved", replay.Value.Status);
+        Assert.True(after.IsRetired);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+    }
+
+    [Fact]
+    public async Task ShouldReturnOriginalReviewGivenSameCommandAfterLaterDraftRevision()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync("review");
+        var request = new ReviewPolicyDraft(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program,
+            fixture.PolicyId, 1, "accept", "Reviewed");
+        var first = await SendHttpAsync(fixture.Provider, fixture.Reviewer, request);
+        await ProgramManagementServices.SeedAsync(fixture.Provider, new Policy(fixture.Tenant, fixture.PolicyId), policy =>
+        {
+            Assert.Null(policy.Revise(fixture.Program, 1, policy.DraftContent! with { Body = "Later body" },
+                ActorReference.ForMember(RbacIds.Member(fixture.Tenant, fixture.Author), "Renamed author"),
+                RbacIds.Member(fixture.Tenant, fixture.Author), DateTimeOffset.UtcNow));
+            return Result.Success;
+        });
+        var before = await fixture.ReadAsync();
+
+        // Act
+        var replay = await SendHttpAsync(fixture.Provider, fixture.Reviewer, request);
+        await SendHttpAsync(fixture.Provider, fixture.Reviewer, request with { Rationale = "Changed" },
+            RequestErrorKind.Conflict);
+        var after = await fixture.ReadAsync();
+
+        // Assert
+        Assert.Equal(first.Value, replay.Value);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+    }
+
     [Theory]
     [InlineData("review", "direct")]
     [InlineData("review", "mcp")]
@@ -113,6 +181,7 @@ public sealed class PersonalPolicyDecisionTransportTests
         public Uuid Reviewer { get; } = Uuid.CreateVersion4();
         public Uuid Approver { get; } = Uuid.CreateVersion4();
         readonly ServiceProvider _provider;
+        public ServiceProvider Provider => _provider;
         Uuid _review;
         static readonly DateOnly Effective = new(2026, 9, 1);
         static readonly DateTimeOffset At = new(2026, 9, 1, 12, 0, 0, TimeSpan.Zero);
@@ -184,8 +253,8 @@ public sealed class PersonalPolicyDecisionTransportTests
             var policy = await ReadAsync();
             return action switch
             {
-                "review" or "retirement_review" => await SendAsync(new ReviewPolicyDraft(Tenant, Program, PolicyId, policy.Revision, "accept", "Reviewed"), transport, actor ?? Decider(action)),
-                "approval" => await SendAsync(new ApprovePolicy(Tenant, Program, PolicyId, policy.Revision, _review, Effective, true, "Approved"), transport, actor ?? Decider(action)),
+                "review" or "retirement_review" => await SendAsync(new ReviewPolicyDraft(Uuid.CreateVersion4(), Tenant, Program, PolicyId, policy.Revision, "accept", "Reviewed"), transport, actor ?? Decider(action)),
+                "approval" => await SendAsync(new ApprovePolicy(Uuid.CreateVersion4(), Tenant, Program, PolicyId, policy.Revision, _review, Effective, true, "Approved"), transport, actor ?? Decider(action)),
                 "retirement" => await SendAsync(new ApprovePolicyRetirement(Tenant, Program, PolicyId, policy.Revision, _review, "Retired"), transport, actor ?? Decider(action)),
                 _ => await SendAsync(new ConfirmPolicyReview(Tenant, Program, PolicyId, policy.CurrentVersion!.Version, "Confirmed"), transport, actor ?? Decider(action))
             };

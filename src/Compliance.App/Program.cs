@@ -152,7 +152,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<PreviewControlImpact>(tool => tool.ReadOnly())
         .AddMcpTool<GetCriterionApplicability>(tool => tool.ReadOnly())
         .AddMcpTool<ListCriterionApplicability>(tool => tool.ReadOnly())
-        .AddMcpTool<CreateCommitmentDraft>()
+        .AddMcpTool<CreateCommitmentDraft>(tool => tool.Idempotent())
         .AddMcpTool<ReviseCommitmentDraft>()
         .AddMcpTool<GetCommitmentDraft>(tool => tool.ReadOnly())
         .AddMcpTool<ListCommitmentDrafts>(tool => tool.ReadOnly())
@@ -889,12 +889,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     // Review and approval are human decisions and stay HTTP-only; no MCP tools are registered.
-    app.MapPortiaPost<ReviewControl>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/reviews")
+    app.MapPortiaPut<ReviewControl>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/reviews/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
-    app.MapPortiaPost<ApproveControl>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/approvals")
+    app.MapPortiaPut<ApproveControl>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/approvals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<GetCurrentControlVersion, ControlVersionView>(
@@ -997,8 +997,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control mappings");
-    app.MapPortiaPost<CreateCommitmentDraft, CommitmentDraftRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts")
+    app.MapPortiaPut<CreateCommitmentDraft, CommitmentDraftRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Commitments");
     app.MapPortiaPut<ReviseCommitmentDraft>(
@@ -1025,13 +1025,13 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/impact-preview")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Commitments");
-    app.MapPortiaPost<ReviewCommitmentDraft>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/reviews")
+    app.MapPortiaPut<ReviewCommitmentDraft>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/reviews/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Commitments");
     // Approval is a separate human decision after review and stays HTTP-only.
-    app.MapPortiaPost<ApproveCommitmentDraft>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/approvals")
+    app.MapPortiaPut<ApproveCommitmentDraft>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/approvals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Commitments");
     app.MapPortiaGet<ListCommitmentDecisions, Page<CommitmentDecisionView>>(
@@ -1079,12 +1079,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
     // Reviews, approvals, periodic reviews, and retirement approvals are personal decisions and stay HTTP-only.
-    app.MapPortiaPost<ReviewPolicyDraft, PolicyDecisionView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/reviews")
+    app.MapPortiaPut<ReviewPolicyDraft, PolicyDecisionView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/reviews/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
-    app.MapPortiaPost<ApprovePolicy, PolicyVersionView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/approvals")
+    app.MapPortiaPut<ApprovePolicy, PolicyVersionView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/approvals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
     app.MapPortiaPost<ConfirmPolicyReview, PolicyDecisionView>(

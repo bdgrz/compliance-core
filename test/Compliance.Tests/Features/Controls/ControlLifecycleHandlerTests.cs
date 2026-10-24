@@ -611,7 +611,7 @@ public sealed class ControlLifecycleHandlerTests
                 new Member(fixture.TenantId, fixture.OwnerUserId), member => member.Register());
             await fixture.AssignOwnerAsync(fixture.InitialVersionId, 1);
             var reviewId = await fixture.ReviewAsync(1);
-            await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new ApproveControl(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new ApproveControl(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                     1, reviewId, EffectiveFrom, "Ready to operate."));
             return fixture;
         }
@@ -624,7 +624,7 @@ public sealed class ControlLifecycleHandlerTests
             .GivenActor(ProgramManagementServices.Actor(userId));
 
         public ApproveControl Approve(long revision, Uuid reviewId, DateOnly effectiveFrom,
-            string digest) => new(TenantId, ProgramId, ControlId, revision, reviewId,
+            string digest) => new(Uuid.CreateVersion4(), TenantId, ProgramId, ControlId, revision, reviewId,
             effectiveFrom, "Successor ready.", ImpactDigest: digest);
 
         public async Task<ControlSuccessorRegistration> ProposeSuccessorAsync()
@@ -816,7 +816,7 @@ public sealed class ControlLifecycleHandlerTests
         {
             var requestId = Uuid.CreateVersion4();
             await PersonalControlDecisionTransportTests.HttpAsync(Provider, ReviewerUserId,
-                new ReviewControl(TenantId, ProgramId, ControlId, revision, "accept", "Reviewed"),
+                new ReviewControl(requestId, TenantId, ProgramId, ControlId, revision, "accept", "Reviewed"),
                 metadata: new RequestMetadata(requestId, requestId, null));
             return requestId;
         }

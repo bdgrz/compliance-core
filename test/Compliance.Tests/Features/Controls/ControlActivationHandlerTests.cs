@@ -14,6 +14,87 @@ public sealed class ControlActivationHandlerTests
 {
     static readonly DateOnly EffectiveFrom = new(2026, 10, 1);
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldReplayOnePersonalControlDecisionGivenSameCommandAndChangedIntent(bool approval)
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync(activationEnabled: true);
+        var commandId = Uuid.CreateVersion4();
+        var reviewId = approval ? await fixture.ReviewAsync() : Uuid.Empty;
+        IRequest request = approval
+            ? new ApproveControl(commandId, fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+                1, reviewId, EffectiveFrom, "Approved")
+            : new ReviewControl(commandId, fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+                1, "accept", "Reviewed");
+        var user = approval ? fixture.ApproverUserId : fixture.ReviewerUserId;
+        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, user, request);
+        var before = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new ControlDraft(fixture.TenantId, fixture.ControlId));
+        IRequest changed = request switch
+        {
+            ApproveControl command => command with { Rationale = "Changed" },
+            ReviewControl command => command with { Rationale = "Changed" },
+            _ => throw new InvalidOperationException(),
+        };
+
+        // Act
+        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, user, request);
+        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, user, changed, RequestErrorKind.Conflict);
+        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, user,
+            new ReviewControl(fixture.ControlId, fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+                1, "accept", "Creation identity reused"), RequestErrorKind.Conflict);
+        var after = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new ControlDraft(fixture.TenantId, fixture.ControlId));
+
+        // Assert
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.ReadDecisions(), after.ReadDecisions());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldReplayAcceptedDecisionGivenEmissionGateLaterDisabled(bool approval)
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync(activationEnabled: true);
+        var commandId = Uuid.CreateVersion4();
+        var reviewId = approval ? await fixture.ReviewAsync() : Uuid.Empty;
+        var user = approval ? fixture.ApproverUserId : fixture.ReviewerUserId;
+        IRequest request = approval
+            ? new ApproveControl(commandId, fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+                1, reviewId, EffectiveFrom, "Approved")
+            : new ReviewControl(commandId, fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+                1, "accept", "Reviewed");
+        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, user, request);
+        var before = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new ControlDraft(fixture.TenantId, fixture.ControlId));
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var dispatch = new RequestDispatchContext(ProgramManagementServices.Actor(user),
+            new HttpInvocation("PUT", "/synthetic/control-decision", null, "gate-replay"));
+        var disabled = new ControlActivationReleaseGate(false);
+
+        // Act
+        var replay = request switch
+        {
+            ApproveControl command => await ActivatorUtilities.CreateInstance<ApproveControlHandler>(
+                scope.ServiceProvider, disabled).HandleAsync(new Cntryl.Portia.RequestContext<ApproveControl>(
+                command, dispatch), CancellationToken.None),
+            ReviewControl command => await ActivatorUtilities.CreateInstance<ReviewControlHandler>(
+                scope.ServiceProvider, disabled).HandleAsync(new Cntryl.Portia.RequestContext<ReviewControl>(
+                command, dispatch), CancellationToken.None),
+            _ => throw new InvalidOperationException(),
+        };
+        var after = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new ControlDraft(fixture.TenantId, fixture.ControlId));
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+    }
+
     [Fact]
     public async Task ShouldRejectActivationGivenSuspendedOwnerThenActivateGivenReinstatedOwner()
     {
@@ -52,7 +133,7 @@ public sealed class ControlActivationHandlerTests
         var fixture = await Fixture.CreateAsync(activationEnabled: false);
 
         // Act
-        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new ReviewControl(fixture.TenantId, fixture.ProgramId, fixture.ControlId, 1,
+        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new ReviewControl(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId, 1,
                 "accept", "Reviewed"), RequestErrorKind.Conflict);
         // Assert
         var source = await ProgramManagementServices.HydrateAsync(fixture.Provider,
@@ -125,14 +206,14 @@ public sealed class ControlActivationHandlerTests
         public RequestScenario Scenario(Uuid userId) => RequestScenario.For(Provider)
             .GivenActor(ProgramManagementServices.Actor(userId));
 
-        public ApproveControl Approve(Uuid reviewId) => new(TenantId, ProgramId, ControlId, 1,
+        public ApproveControl Approve(Uuid reviewId) => new(Uuid.CreateVersion4(), TenantId, ProgramId, ControlId, 1,
             reviewId, EffectiveFrom, "Ready to operate.");
 
         public async Task<Uuid> ReviewAsync()
         {
             var requestId = Uuid.CreateVersion4();
             await PersonalControlDecisionTransportTests.HttpAsync(Provider, ReviewerUserId,
-                new ReviewControl(TenantId, ProgramId, ControlId, 1, "accept", "Reviewed"),
+                new ReviewControl(requestId, TenantId, ProgramId, ControlId, 1, "accept", "Reviewed"),
                 metadata: new RequestMetadata(requestId, requestId, null));
             return requestId;
         }

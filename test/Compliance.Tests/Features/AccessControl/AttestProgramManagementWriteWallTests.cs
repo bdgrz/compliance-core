@@ -62,7 +62,7 @@ public sealed class AttestProgramManagementWriteWallTests
                 "Client service purpose", "Client owner"), context, CancellationToken.None)).Error,
             "boundary" => (await bus.DispatchAsync(new CreateBoundary(Tenant, Program,
                 new BoundaryContent("Client boundary", "readiness", ["security"], [])), context, CancellationToken.None)).Error,
-            "commitment" => (await bus.DispatchAsync(new CreateCommitmentDraft(Tenant, Program,
+            "commitment" => (await bus.DispatchAsync(new CreateCommitmentDraft(Bdgrz.Compliance.Features.Commitments.CommitmentDraft.IdFor(Tenant, Program, "commitment", "COM-1"), Tenant, Program,
                 Uuid.CreateVersion4(), "commitment", "COM-1", "Commitment statement", "Context", "Source"), context, CancellationToken.None)).Error,
             "mapping" => (await bus.DispatchAsync(new ProposeCriterionNotApplicable(Uuid.CreateVersion4(), Tenant, Program,
                 Uuid.CreateVersion4(), "CC1.1", 0, "Client applicability decision"), context, CancellationToken.None)).Error,

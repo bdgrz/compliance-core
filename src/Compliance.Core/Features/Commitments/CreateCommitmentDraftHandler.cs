@@ -16,6 +16,9 @@ public sealed class CreateCommitmentDraftHandler(IAggregateExecutor executor,
         var identifier = CommitmentDraft.NormalizeIdentifier(request.Identifier);
         var draftId = CommitmentDraft.IdFor(request.TenantId, request.ProgramId,
             kind, identifier);
+        if (request.DraftId == Uuid.Empty || request.DraftId != draftId)
+            return Result<CommitmentDraftRegistration>.Failure(new RequestError(
+                RequestErrorKind.Validation, "DraftId must match the commitment kind and identifier."));
         if (request.ProviderId == Uuid.Empty)
             return Result<CommitmentDraftRegistration>.Failure(new RequestError(
                 RequestErrorKind.Validation, "A provider reference must be nonempty."));
@@ -48,7 +51,7 @@ public sealed class CreateCommitmentDraftHandler(IAggregateExecutor executor,
                         Result<CommitmentDraftRegistration>.Failure(new RequestError(
                             RequestErrorKind.NotFound, "The program service was not found.")));
                 return AggregateOutcome.CommitOnSuccess(draft.Create(request.ProgramId,
-                    context.RequestId, request.ServiceId, kind, identifier, request.Statement,
+                    request.DraftId, request.ServiceId, kind, identifier, request.Statement,
                     request.Context, request.SourceReference,
                     RbacIds.Member(request.TenantId, userId),
                     UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow(),

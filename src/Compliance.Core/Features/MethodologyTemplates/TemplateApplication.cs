@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
@@ -10,6 +11,9 @@ namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 /// <summary>Owns one tenant/program application, its exact template provenance, and downstream draft receipts.</summary>
 public sealed class TemplateApplication : Aggregate
 {
+    public NativeAcceptance ReplayAcceptance { get; }
+    OperationProvenance? _pendingOperation;
+
     const int MaximumDrafts = 100;
     const int MaximumSuccessorDecisions = 64;
     const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
@@ -22,10 +26,11 @@ public sealed class TemplateApplication : Aggregate
     public long Revision => _current?.Revision ?? 0;
     public TemplateApplicationView? Current => _current;
 
-    public TemplateApplication(Uuid tenantId, Uuid programId, Uuid applicationId)
+    public TemplateApplication(Uuid tenantId, Uuid programId, Uuid applicationId, Uuid selectedCommandId = default)
         : base(applicationId, new EventStreamAddress(tenantId.ToString(), "template-applications",
             applicationId.ToString()))
     {
+        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
         _tenantId = tenantId;
         _programId = programId;
         On<MethodologyTemplateApplied>(Apply);
@@ -96,8 +101,12 @@ public sealed class TemplateApplication : Aggregate
 
     public CommandFailure? ProposeSuccessor(long expectedRevision,
         MethodologyTemplateVersionView successor, string proposedDisposition, Uuid actorMemberId,
-        string actorDisplay, DateTimeOffset proposedAt)
+        string actorDisplay, DateTimeOffset proposedAt,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The template application was not found.");
         var normalized = NormalizePublishedVersion(successor);
@@ -134,8 +143,12 @@ public sealed class TemplateApplication : Aggregate
     }
 
     public CommandFailure? RecordSuccessorDisposition(long expectedRevision, string disposition,
-        string rationale, Uuid actorMemberId, string actorDisplay, DateTimeOffset decidedAt)
+        string rationale, Uuid actorMemberId, string actorDisplay, DateTimeOffset decidedAt,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The template application was not found.");
         disposition = Clean(disposition).ToLowerInvariant();
@@ -168,10 +181,18 @@ public sealed class TemplateApplication : Aggregate
         ev.ActorMemberId, ev.State, ev.OccurredAt, true, "apply");
     void Apply(TemplateApplicationDraftCreated ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
         ev.ActorMemberId, ev.State, ev.OccurredAt, false, "draft_created");
-    void Apply(TemplateSuccessorAdoptionProposed ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
+    void Apply(TemplateSuccessorAdoptionProposed ev)
+    {
+        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
         ev.ActorMemberId, ev.State, ev.OccurredAt, false, "successor_proposed");
-    void Apply(TemplateSuccessorDispositionRecorded ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
+    }
+    void Apply(TemplateSuccessorDispositionRecorded ev)
+    {
+        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
         ev.ActorMemberId, ev.State, ev.OccurredAt, false, "successor_disposition");
+    }
 
     void ApplyState(Uuid tenantId, Uuid subjectId, long revision, Uuid? actorMemberId,
         TemplateApplicationView state, DateTimeOffset occurredAt, bool creating, string transition)
@@ -194,6 +215,12 @@ public sealed class TemplateApplication : Aggregate
             (creating ? _current is not null : _current is null || !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The template-application transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
+        ev = ev switch
+        {
+            TemplateSuccessorAdoptionProposed fact => fact with { Operation = _pendingOperation },
+            TemplateSuccessorDispositionRecorded fact => fact with { Operation = _pendingOperation },
+            _ => ev,
+        };
         if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The template-application snapshot exceeds the bounded event payload.");
         RaiseEvent(ev);
@@ -317,7 +344,7 @@ public sealed class TemplateApplication : Aggregate
         NormalizePublishedVersion(version) is { } normalized && normalized.TemplateId == state.TemplateId &&
         normalized.VersionId == state.TemplateVersionId && normalized.ContentSha256 == state.TemplateContentSha256 &&
         Clean(key) == state.ApplicationKey && actor == state.RequestedByMemberId &&
-        Clean(display) == state.RequestedByDisplay && at == state.RequestedAt;
+        Digest(normalized) == Digest(state.SourceVersion);
 
     static MethodologyTemplateVersionView? NormalizePublishedVersion(MethodologyTemplateVersionView? version)
     {

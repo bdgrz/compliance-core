@@ -30,7 +30,7 @@ public sealed class PolicyCampaignHandlerTests
             .When(new ProposePolicySuccessor(fixture.TenantId, fixture.ProgramId,
                 predecessor.PolicyId, 1, predecessor.Content with { Title = "Successor" }))
             .ExpectSuccess();
-        var review = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ReviewerUserId, new ReviewPolicyDraft(fixture.TenantId, fixture.ProgramId,
+        var review = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ReviewerUserId, new ReviewPolicyDraft(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 predecessor.PolicyId, successor.Value.Revision, "accept", "Reviewed"));
         var preview = await fixture.Scenario(fixture.ManagerUserId)
             .When(new PreviewPolicyImpact(fixture.TenantId, fixture.ProgramId,
@@ -38,7 +38,7 @@ public sealed class PolicyCampaignHandlerTests
         var campaign = await fixture.LaunchAsync(predecessor);
 
         // Act
-        var approval = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId, new ApprovePolicy(fixture.TenantId, fixture.ProgramId, predecessor.PolicyId,
+        var approval = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId, new ApprovePolicy(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, predecessor.PolicyId,
                 successor.Value.Revision, review.Value.DecisionId,
                 new DateOnly(2026, 11, 1), true, "Approved", preview.Value.Digest), RequestErrorKind.Conflict);
         var retained = await ProgramManagementServices.HydrateAsync(fixture.Provider,
@@ -51,13 +51,13 @@ public sealed class PolicyCampaignHandlerTests
 
         // Act: the projector catches up; an old digest still cannot acknowledge the new impact.
         await fixture.ProjectCampaignsAsync();
-        await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId, new ApprovePolicy(fixture.TenantId, fixture.ProgramId, predecessor.PolicyId,
+        await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId, new ApprovePolicy(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, predecessor.PolicyId,
                 successor.Value.Revision, review.Value.DecisionId,
                 new DateOnly(2026, 11, 1), true, "Approved", preview.Value.Digest), RequestErrorKind.Conflict);
         var refreshed = await fixture.Scenario(fixture.ManagerUserId)
             .When(new PreviewPolicyImpact(fixture.TenantId, fixture.ProgramId,
                 predecessor.PolicyId, successor.Value.Revision)).ExpectSuccess();
-        var approved = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId, new ApprovePolicy(fixture.TenantId, fixture.ProgramId, predecessor.PolicyId,
+        var approved = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId, new ApprovePolicy(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, predecessor.PolicyId,
                 successor.Value.Revision, review.Value.DecisionId,
                 new DateOnly(2026, 11, 1), true, "Approved", refreshed.Value.Digest));
 
@@ -324,12 +324,12 @@ public sealed class PolicyCampaignHandlerTests
                 ProgramId, "POL-AC", new PolicyContent("Access Control Policy", "Govern access",
                     PolicyAudience.CoreSecurity, null, 12, "All access is reviewed.", null,
                     "Security lead", []))).ExpectSuccess();
-            var review = await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, ReviewerUserId, new ReviewPolicyDraft(TenantId,
+            var review = await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, ReviewerUserId, new ReviewPolicyDraft(Uuid.CreateVersion4(), TenantId,
                 ProgramId, registration.Value.PolicyId, 1, "accept", "Accurate"));
-            await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, AuthorUserId, new ApprovePolicy(TenantId, ProgramId,
+            await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, AuthorUserId, new ApprovePolicy(Uuid.CreateVersion4(), TenantId, ProgramId,
                     registration.Value.PolicyId, 1, review.Value.DecisionId,
                     new DateOnly(2026, 10, 1), true, "Self approval"), RequestErrorKind.Forbidden);
-            var approved = await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, ManagerUserId, new ApprovePolicy(TenantId,
+            var approved = await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, ManagerUserId, new ApprovePolicy(Uuid.CreateVersion4(), TenantId,
                 ProgramId, registration.Value.PolicyId, 1, review.Value.DecisionId,
                 new DateOnly(2026, 10, 1), true, "Approved"));
             return approved.Value;

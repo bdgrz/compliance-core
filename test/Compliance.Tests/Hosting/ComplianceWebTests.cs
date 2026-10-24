@@ -433,9 +433,9 @@ public sealed class ComplianceWebTests
         // Arrange
         await using var factory = CreateBrokerFreeFactory("Development");
         using var client = factory.CreateClient();
-        const string closeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures";
-        const string revokeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations";
-        const string responseRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses";
+        const string closeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures/{command_id}";
+        const string revokeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations/{command_id}";
+        const string responseRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses/{command_id}";
 
         // Act
         using var response = await client.GetAsync("/openapi/v1.json", CancellationToken.None);
@@ -447,13 +447,14 @@ public sealed class ComplianceWebTests
         var paths = document.RootElement.GetProperty("paths");
         foreach (var route in new[] { closeRoute, revokeRoute, responseRoute })
         {
-            var operation = paths.GetProperty(route).GetProperty("post");
+            var operation = paths.GetProperty(route).GetProperty("put");
             Assert.True(operation.TryGetProperty("requestBody", out _));
             var parameters = operation.GetProperty("parameters").EnumerateArray()
                 .Select(parameter => parameter.GetProperty("name").GetString()).ToArray();
             Assert.Contains("tenant_id", parameters);
             Assert.Contains("program_id", parameters);
             Assert.Contains("handoff_id", parameters);
+            Assert.Contains("command_id", parameters);
             if (route == responseRoute)
                 Assert.Contains("feedback_id", parameters);
         }
@@ -710,7 +711,8 @@ public sealed class ComplianceWebTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var paths = document.RootElement.GetProperty("paths");
         var applications = paths.GetProperty("/api/v1/tenants/{tenant_id}/applications");
-        var declare = applications.GetProperty("post");
+        var declare = paths.GetProperty("/api/v1/tenants/{tenant_id}/applications/{application_id}")
+            .GetProperty("put");
         var declareSchema = declare.GetProperty("requestBody").GetProperty("content")
             .GetProperty("application/json").GetProperty("schema");
         foreach (var name in new[] { "name", "purpose" })
@@ -761,7 +763,9 @@ public sealed class ComplianceWebTests
         Assert.True(exactSchema.GetProperty("properties").TryGetProperty("system_instance", out _));
         var instances = paths.GetProperty(
             "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances");
-        var instanceSchema = instances.GetProperty("post").GetProperty("requestBody")
+        var instanceSchema = paths.GetProperty(
+                "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}")
+            .GetProperty("put").GetProperty("requestBody")
             .GetProperty("content").GetProperty("application/json").GetProperty("schema");
         foreach (var name in new[] { "expected_application_revision", "name", "kind" })
             Assert.Contains(instanceSchema.GetProperty("required").EnumerateArray(),
@@ -944,7 +948,8 @@ public sealed class ComplianceWebTests
             {
                 if (!operation.Value.TryGetProperty("parameters", out var parameters))
                     continue;
-                foreach (var parameter in parameters.EnumerateArray())
+                foreach (var parameter in parameters.EnumerateArray().Where(parameter =>
+                             parameter.GetProperty("in").GetString() is "path" or "query"))
                     Assert.Matches("^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$",
                         parameter.GetProperty("name").GetString()!);
             }
@@ -1102,6 +1107,9 @@ public sealed class ComplianceWebTests
             builder.UseSetting("BDGRZ_SESSION_SIGNING_KEY", "bdgrz-test-session-signing-key-000001");
             builder.UseSetting("Fitz:Endpoint", "ws://127.0.0.1:4090/ws");
             builder.UseSetting("Fitz:ApplicationName", "compliance-tests");
+            builder.UseSetting("Compliance:WorkDigest:ApplicationOrigin", "https://compliance.example/");
+            builder.UseSetting("Compliance:WorkDigest:ClientWorkItemRouteTemplate",
+                "/tenants/{tenant_id}/{tenant_slug}/programs/{program_id}/work/{work_item_id}");
             builder.ConfigureServices(services =>
             {
                 var brokerHostedServices = services

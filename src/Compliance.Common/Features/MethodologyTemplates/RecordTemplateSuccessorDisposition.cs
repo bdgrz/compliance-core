@@ -5,7 +5,10 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 
 /// <summary>Records the reviewed final disposition for one proposed template successor.</summary>
-[Discriminator("bdgrz.methodology-templates.record-template-successor-disposition", 1)]
-public sealed record RecordTemplateSuccessorDisposition(Uuid TenantId, Uuid ProgramId, Uuid TemplateId,
+[Discriminator("bdgrz.methodology-templates.record-template-successor-disposition", 2)]
+public sealed record RecordTemplateSuccessorDisposition(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid TemplateId,
     string ApplicationKey, long ExpectedRevision, long NewTemplateVersion, string Disposition, string Rationale)
-    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

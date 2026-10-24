@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Responsibilities;
@@ -12,6 +13,9 @@ namespace Bdgrz.Compliance.Features.Controls;
 /// </summary>
 public sealed class ControlDraft : Aggregate
 {
+    public NativeAcceptance ReplayAcceptance { get; }
+    OperationProvenance? _pendingOperation;
+
     // Fitz stream events use a u16 frame. Reserve room for the Portia envelope,
     // stream address, metadata, and framing after the serialized domain event.
     public const int MaximumDraftEventPayloadBytes = 48 * 1024;
@@ -90,9 +94,10 @@ public sealed class ControlDraft : Aggregate
         version => new EffectiveInterval(version.EffectiveFrom, version.EffectiveUntil)
             .Contains(date));
 
-    public ControlDraft(Uuid tenantId, Uuid controlId)
+    public ControlDraft(Uuid tenantId, Uuid controlId, Uuid selectedCommandId = default)
         : base(controlId, new EventStreamAddress(tenantId.ToString(), "controls", controlId.ToString()))
     {
+        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
         _tenantId = tenantId;
         On<ControlDraftCreated>(ev =>
         {
@@ -130,6 +135,7 @@ public sealed class ControlDraft : Aggregate
         });
         On<ControlReviewed>(ev =>
         {
+            AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
             _everReviewed = true;
             _acceptedReviewDecisionId = ev.Outcome == "accept" ? ev.DecisionId : Uuid.Empty;
             _acceptedReviewerMemberId = ev.Outcome == "accept" ? ev.ActorMemberId : null;
@@ -144,6 +150,7 @@ public sealed class ControlDraft : Aggregate
         });
         On<ControlApproved>(ev =>
         {
+            AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
             _decisions.Add(new ControlDecisionView(ev.TenantId, ev.ProgramId, ev.ControlId,
                 ev.ApprovalDecisionId, ev.VersionId, ev.Revision, "approval", "approve",
                 ev.Actor, ev.Rationale, ev.DecidedAt, null, ev.AcceptedReviewDecisionId,
@@ -670,8 +677,12 @@ public sealed class ControlDraft : Aggregate
 
     public CommandFailure? Review(Uuid programId, long expectedRevision, Uuid decisionId,
         string outcome, string rationale, Uuid reviewerMemberId, string reviewerDisplay,
-        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? separationOfDutiesWaiver = null)
+        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? separationOfDutiesWaiver = null,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (CheckDecisionTarget(programId, expectedRevision) is { } target)
             return target;
         var targetId = PendingTargetId!.Value;
@@ -687,6 +698,7 @@ public sealed class ControlDraft : Aggregate
             expectedRevision, decisionId, outcome, reviewerMemberId, reviewerDisplay,
             rationale.Trim(), decidedAt, _latestReviewDecisionId, separationOfDutiesWaiver?.Id)
         {
+            Operation = _pendingOperation,
             StoredActor = ActorReference.ForMember(reviewerMemberId, reviewerDisplay),
         });
         return null;
@@ -703,8 +715,12 @@ public sealed class ControlDraft : Aggregate
         IReadOnlySet<Uuid> verifiedActiveOwnerMemberIds, Uuid approverMemberId,
         string approverDisplay, DateTimeOffset decidedAt,
         SeparationOfDutiesWaiver? separationOfDutiesWaiver = null, string? impactDigest = null,
-        ControlPersonOwner? verifiedPersonOwner = null)
+        ControlPersonOwner? verifiedPersonOwner = null,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         ArgumentNullException.ThrowIfNull(verifiedActiveOwnerMemberIds);
         if (CheckDecisionTarget(programId, expectedRevision) is { } target)
             return target;
@@ -761,6 +777,7 @@ public sealed class ControlDraft : Aggregate
             separationOfDutiesWaiver?.Id, predecessor?.VersionId,
             predecessor is null ? null : impactDigest, owner is null ? personOwner!.PersonId : null)
         {
+            Operation = _pendingOperation,
             StoredActor = ActorReference.ForMember(approverMemberId, approverDisplay),
         };
         if (JsonSerializer.SerializeToUtf8Bytes(approved,

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
@@ -20,6 +21,13 @@ public sealed class ApprovePolicyHandler(IAggregateExecutor executor, IAggregate
             return Result<PolicyVersionView>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Policy sign-off requires personal HTTP submission."));
         var request = context.Request;
+        var actor = PolicyActor.From(context, request.TenantId);
+        var operation = AuthoredCommandReplay.Create(new Policy(request.TenantId, request.PolicyId, request.CommandId), request.CommandId,
+            nameof(ApprovePolicy), actor.MemberId, request.ExpectedRevision, request, clock.GetUtcNow());
+        var replayOwner = await reader.HydrateAsync(new Policy(request.TenantId, request.PolicyId, request.CommandId), ct).ConfigureAwait(false);
+        if (AuthoredCommandReplay.TryReplay(replayOwner.ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure is null ? Result<PolicyVersionView>.Success(replayOwner.ReplayedApproval!)
+                : Result<PolicyVersionView>.Failure(replayFailure.ToRequestError());
         var current = await PolicySource.ReadAsync(reader, request.TenantId, request.ProgramId,
             request.PolicyId, ct).ConfigureAwait(false);
         if (!current.IsSuccess)
@@ -34,17 +42,17 @@ public sealed class ApprovePolicyHandler(IAggregateExecutor executor, IAggregate
                 return Result<PolicyVersionView>.Failure(new RequestError(
                     RequestErrorKind.Conflict, "The impact preview changed. Reload it before approving."));
         }
-        var actor = PolicyActor.From(context, request.TenantId);
+
         var waiver = await PolicySource.WaiverAsync(reader, request.TenantId,
             request.SeparationOfDutiesWaiverId, ct).ConfigureAwait(false);
-        return await executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId),
+        return await executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId, request.CommandId),
             policy =>
             {
                 var failure = policy.Approve(request.ProgramId, request.ExpectedRevision,
-                    context.RequestId, request.AcceptedReviewDecisionId, request.EffectiveFrom,
+                    request.CommandId, request.AcceptedReviewDecisionId, request.EffectiveFrom,
                     request.Major, request.Rationale, request.ImpactDigest, actor.Reference,
-                    actor.MemberId, clock.GetUtcNow(), waiver);
-                return CommandFailureRequestAdapter.ToOutcome(failure, policy.CurrentVersion!);
+                    actor.MemberId, clock.GetUtcNow(), waiver, operation: operation);
+                return CommandFailureRequestAdapter.ToOutcome(failure, policy.ReplayedApproval ?? policy.CurrentVersion!);
             }, context, ct).ConfigureAwait(false);
     }
 }

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
@@ -10,6 +11,9 @@ namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 /// <summary>Owns one tenant's de-identified contribution, independent review, and explicit platform acceptance.</summary>
 public sealed class MethodologyTemplateContribution : Aggregate
 {
+    public NativeAcceptance ReplayAcceptance { get; }
+    OperationProvenance? _pendingOperation;
+
     const int MaximumTextLength = 2000;
     const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     static readonly HashSet<string> RecordKinds = new(StringComparer.Ordinal)
@@ -34,10 +38,11 @@ public sealed class MethodologyTemplateContribution : Aggregate
                 review, acceptedBy, acceptedDisplay, rationale, acceptedAt)
             : null;
 
-    public MethodologyTemplateContribution(Uuid tenantId, Uuid contributionId)
+    public MethodologyTemplateContribution(Uuid tenantId, Uuid contributionId, Uuid selectedCommandId = default)
         : base(contributionId, new EventStreamAddress(tenantId.ToString(), "methodology-template-contributions",
             contributionId.ToString()))
     {
+        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
         _tenantId = tenantId;
         On<MethodologyTemplateContributionProposed>(Apply);
         On<MethodologyTemplateContributionReviewed>(Apply);
@@ -71,8 +76,12 @@ public sealed class MethodologyTemplateContribution : Aggregate
     }
 
     public CommandFailure? Review(long expectedRevision, string outcome, string comments,
-        Uuid reviewerMemberId, string reviewerDisplay, DateTimeOffset reviewedAt)
+        Uuid reviewerMemberId, string reviewerDisplay, DateTimeOffset reviewedAt,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The template contribution was not found.");
         outcome = Clean(outcome).ToLowerInvariant();
@@ -100,8 +109,12 @@ public sealed class MethodologyTemplateContribution : Aggregate
     }
 
     public CommandFailure? Accept(long expectedRevision, string acceptanceRationale,
-        Uuid platformOperatorId, string operatorDisplay, DateTimeOffset acceptedAt)
+        Uuid platformOperatorId, string operatorDisplay, DateTimeOffset acceptedAt,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The template contribution was not found.");
         acceptanceRationale = Clean(acceptanceRationale);
@@ -126,10 +139,18 @@ public sealed class MethodologyTemplateContribution : Aggregate
 
     void Apply(MethodologyTemplateContributionProposed ev) => ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, true, "propose");
-    void Apply(MethodologyTemplateContributionReviewed ev) => ApplyState(ev.TenantId, ev.SubjectId,
+    void Apply(MethodologyTemplateContributionReviewed ev)
+    {
+        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
+        ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "review");
-    void Apply(MethodologyTemplateContributionAccepted ev) => ApplyState(ev.TenantId, ev.SubjectId,
+    }
+    void Apply(MethodologyTemplateContributionAccepted ev)
+    {
+        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
+        ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "accept");
+    }
 
     void ApplyState(Uuid tenantId, Uuid subjectId, long revision, Uuid? actorMemberId,
         MethodologyTemplateContributionView state, DateTimeOffset occurredAt, bool creating, string transition)
@@ -153,6 +174,12 @@ public sealed class MethodologyTemplateContribution : Aggregate
             (creating ? _current is not null : _current is null || !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The methodology-template contribution transition is invalid.");
         var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
+        ev = ev switch
+        {
+            MethodologyTemplateContributionReviewed fact => fact with { Operation = _pendingOperation },
+            MethodologyTemplateContributionAccepted fact => fact with { Operation = _pendingOperation },
+            _ => ev,
+        };
         if (!Fits(ev))
             return Invalid("The methodology-template contribution event exceeds the bounded payload.");
         RaiseEvent(ev);
@@ -224,11 +251,10 @@ public sealed class MethodologyTemplateContribution : Aggregate
 
     static bool SameProposal(MethodologyTemplateContributionView state, Uuid sourceRecordId,
         long sourceRecordVersion, MethodologyTemplateRecordContent content, string rationale,
-        Uuid actor, string display, DateTimeOffset at) => state.Revision == 1 &&
+        Uuid actor, string display, DateTimeOffset at) =>
         NormalizeContent(content) is { } normalized && state.SourceRecordId == sourceRecordId &&
         state.SourceRecordVersion == sourceRecordVersion && Digest(state.ProposedContent) == Digest(normalized) &&
-        state.DeidentificationRationale == rationale && state.ProposedByMemberId == actor &&
-        state.ProposedByDisplay == Clean(display) && state.ProposedAt == at;
+        state.DeidentificationRationale == rationale && state.ProposedByMemberId == actor;
 
     static bool ContainsSourceIdentity(MethodologyTemplateRecordContent content, Uuid tenantId, Uuid sourceRecordId)
     {

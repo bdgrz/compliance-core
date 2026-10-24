@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.MethodologyTemplates;
@@ -10,4 +12,8 @@ public sealed record MethodologyTemplateDraftRevised(
     long Revision,
     Uuid? ActorMemberId,
     MethodologyTemplateView State,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    DateTimeOffset OccurredAt) : DomainEvent
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public OperationProvenance? Operation { get; init; }
+}

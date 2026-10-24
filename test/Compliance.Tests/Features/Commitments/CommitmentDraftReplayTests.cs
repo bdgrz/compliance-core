@@ -25,7 +25,7 @@ public sealed class CommitmentDraftReplayTests
         await ProgramManagementServices.SeedAsync(provider, new ClientService(tenantId, serviceId),
             service => service.Create(programId, "Client service", "Purpose", "Operations",
                 actorId, "Author", DateTimeOffset.UtcNow));
-        var original = new CreateCommitmentDraft(tenantId, programId, serviceId,
+        var original = new CreateCommitmentDraft(Bdgrz.Compliance.Features.Commitments.CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-01"), tenantId, programId, serviceId,
             "service_commitment", "SC-01", "Statement", "Context", "Source A");
         var registration = new CommitmentDraftRegistration(CommitmentDraft.IdFor(tenantId,
             programId, "service_commitment", "SC-01"), "service_commitment", "SC-01", 1);
@@ -40,8 +40,10 @@ public sealed class CommitmentDraftReplayTests
 
         // Act
         // Assert
-        await Dispatch(provider, actor, original, requestId).ExpectSuccess(registration);
-        await Dispatch(provider, actor, original with { Identifier = "SC-02" },
+        await Dispatch(provider, actor, original, Uuid.CreateVersion4()).ExpectSuccess(registration);
+        await Dispatch(provider, ProgramManagementServices.Actor(Uuid.CreateVersion4()), original, Uuid.CreateVersion4())
+            .ExpectFailure(RequestErrorKind.Conflict);
+        await Dispatch(provider, actor, original with { Identifier = "SC-02", DraftId = CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-02") },
             Uuid.CreateVersion4()).ExpectFailure(RequestErrorKind.NotFound);
         await Dispatch(provider, actor, original with { Statement = "Changed statement" },
             requestId).ExpectFailure(RequestErrorKind.Conflict);
@@ -58,7 +60,7 @@ public sealed class CommitmentDraftReplayTests
         ClaimsPrincipal actor, CreateCommitmentDraft request,
         Uuid requestId) => RequestScenario.For(provider)
         .GivenActor(actor)
-        .GivenMetadata(new RequestMetadata(requestId, requestId, null))
+        .GivenMetadata(new RequestMetadata(request.DraftId, requestId, null))
         .When(request)
         .ExpectAuthorized()
         .ExpectHandled();

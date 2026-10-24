@@ -19,6 +19,31 @@ public sealed class TemplateApplicationTests
     static readonly string[] ExpectedProposedDispositions = ["adapt", "decline"];
 
     [Fact]
+    public void ShouldReplayApplicationAfterDraftReceiptGivenLaterClockAndDisplay()
+    {
+        // Arrange
+        var application = new TemplateApplication(TenantId, ProgramId, ApplicationId);
+        var version = PublishedTemplateVersion();
+        Assert.Null(application.Apply(version, "apply-2026-10", ActorId, "Original display", Now));
+        var draft = application.Current!.Drafts[0];
+        Assert.Null(application.RecordDraftCreated(application.Revision, draft.EntryKey,
+            draft.PlannedRecordId, 1, Hash('a'), "draft", ActorId, "Worker", Now.AddMinutes(1)));
+        var facts = new AggregateScenario<TemplateApplication>(application).PendingEvents.ToArray();
+        var replay = new AggregateScenario<TemplateApplication>(new TemplateApplication(TenantId, ProgramId,
+            ApplicationId)).Given(facts).Aggregate;
+
+        // Act
+        var result = replay.Apply(version, "apply-2026-10", ActorId, "Renamed member", Now.AddHours(1));
+        var changedActor = replay.Apply(version, "apply-2026-10", Uuid.CreateVersion4(), "Other", Now.AddHours(1));
+
+        // Assert
+        Assert.Null(result);
+        Assert.NotNull(changedActor);
+        Assert.Empty(new AggregateScenario<TemplateApplication>(replay).PendingEvents);
+        Assert.Equal(Now, replay.Current!.RequestedAt);
+    }
+
+    [Fact]
     public void ShouldPinOneApprovedVersionAndCreateOnlyDraftProvenanceGivenApplication()
     {
         // Arrange

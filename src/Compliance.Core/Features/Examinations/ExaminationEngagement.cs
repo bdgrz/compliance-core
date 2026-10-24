@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Collections.ObjectModel;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +13,9 @@ namespace Bdgrz.Compliance.Features.Examinations;
 /// </summary>
 public sealed class ExaminationEngagement : Aggregate
 {
+    public NativeAcceptance ReplayAcceptance { get; }
+    OperationProvenance? _pendingOperation;
+
     const int MaximumSources = 256;
     const int MaximumAmendmentDepth = 8;
     const int MaximumEventBytes = 48 * 1024;
@@ -28,6 +32,7 @@ public sealed class ExaminationEngagement : Aggregate
     readonly Uuid _programId;
     readonly List<TypeIBaselineView> _baselineHistory = [];
     ExaminationEngagementView? _current;
+    ExaminationEngagementView? _initial;
     TypeIBaselineView? _baseline;
 
     public long Revision => _current?.Revision ?? 0;
@@ -39,10 +44,11 @@ public sealed class ExaminationEngagement : Aggregate
     public IReadOnlyList<TypeIBaselineView> BaselineHistory =>
         Array.AsReadOnly(_baselineHistory.ToArray());
 
-    public ExaminationEngagement(Uuid tenantId, Uuid programId, Uuid engagementId)
+    public ExaminationEngagement(Uuid tenantId, Uuid programId, Uuid engagementId, Uuid selectedCommandId = default)
         : base(engagementId, new EventStreamAddress(tenantId.ToString(), "examinations",
             engagementId.ToString()))
     {
+        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
         _tenantId = tenantId;
         _programId = programId;
         On<ExaminationEngagementOpened>(Apply);
@@ -55,7 +61,7 @@ public sealed class ExaminationEngagement : Aggregate
         string actorDisplay, DateTimeOffset occurredAt)
     {
         if (_current is not null)
-            return SameContent(_current, content)
+            return SameContent(_initial!, content) && _initial!.ActorMemberId == actorMemberId
                 ? null
                 : CommandFailure.StateConflict(
                     "The examination engagement already exists with different terms.");
@@ -77,8 +83,12 @@ public sealed class ExaminationEngagement : Aggregate
     }
 
     public CommandFailure? Revise(long expectedRevision, ExaminationEngagementContent content,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset occurredAt)
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset occurredAt,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (_current is null)
             return CommandFailure.MissingRecord("The examination engagement was not found.");
         if (expectedRevision != Revision)
@@ -96,7 +106,7 @@ public sealed class ExaminationEngagement : Aggregate
 
         var engagement = View(normalized, "draft", Revision + 1, actorMemberId,
             actorDisplay.Trim(), occurredAt);
-        var revised = new ExaminationEngagementRevised(_tenantId, engagement, occurredAt);
+        var revised = new ExaminationEngagementRevised(_tenantId, engagement, occurredAt) { Operation = _pendingOperation };
         if (!Fits(revised))
             return CommandFailure.InvalidContent(
                 "The revised examination engagement exceeds the bounded event payload.");
@@ -108,6 +118,7 @@ public sealed class ExaminationEngagement : Aggregate
         TypeIBaselinePreview preview, string confirmationRationale, Uuid actorMemberId,
         string actorDisplay, DateTimeOffset frozenAt)
     {
+
         confirmationRationale = confirmationRationale?.Trim() ?? string.Empty;
         if (preview is null)
             return CommandFailure.InvalidContent("A complete baseline preview is required.");
@@ -251,10 +262,12 @@ public sealed class ExaminationEngagement : Aggregate
             !SameContent(ev.Engagement, content))
             throw new InvalidOperationException("The examination engagement opening event is invalid.");
         _current = FreezeView(ev.Engagement);
+        _initial = _current;
     }
 
     void Apply(ExaminationEngagementRevised ev)
     {
+        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
         if (_current is null || _baseline is not null || ev.TenantId != _tenantId ||
             ev.Engagement.TenantId != _tenantId || ev.Engagement.ProgramId != _programId ||
             ev.Engagement.ExaminationEngagementId != Id || ev.Engagement.Status != "draft" ||

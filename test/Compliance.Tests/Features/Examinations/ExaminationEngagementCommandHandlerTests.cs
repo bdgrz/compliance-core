@@ -17,6 +17,39 @@ public sealed class ExaminationEngagementCommandHandlerTests
     static readonly DateTimeOffset Now = new(2026, 10, 17, 17, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public async Task ShouldReplayOriginalCreateAndRevisionGivenLaterEngagementTerms()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedEngagementAsync();
+        var request = new ReviseExaminationEngagement(Uuid.CreateVersion4(), fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId, 1, "Revised LLP", new DateOnly(2026, 9, 30),
+            null, ["security"]);
+        Assert.True((await fixture.ReviseHandler().HandleAsync(fixture.Context(request), CancellationToken.None)).IsSuccess);
+        var next = request with { CommandId = Uuid.CreateVersion4(), ExpectedRevision = 2, AuditFirm = "Latest LLP" };
+        Assert.True((await fixture.ReviseHandler().HandleAsync(fixture.Context(next), CancellationToken.None)).IsSuccess);
+        var before = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId));
+
+        // Act
+        var replay = await fixture.ReviseHandler().HandleAsync(fixture.Context(request), CancellationToken.None);
+        var changed = await fixture.ReviseHandler().HandleAsync(fixture.Context(request with { ExpectedRevision = 2 }),
+            CancellationToken.None);
+        var after = await fixture.Reader.HydrateAsync(new ExaminationEngagement(fixture.TenantId,
+            fixture.ProgramId, fixture.EngagementId));
+        var originalCreate = after.Create(new ExaminationEngagementContent("type_i", "Original LLP",
+            new DateOnly(2026, 9, 30), null, ["security"], fixture.BoundaryId, []),
+            RbacIds.Member(fixture.TenantId, fixture.UserId), "Renamed member", Now.AddHours(1));
+
+        // Assert
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Null(originalCreate);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal("Latest LLP", after.Current!.AuditFirm);
+    }
+
+    [Fact]
     public async Task ShouldRejectCreateGivenNoApprovedTypeIEntryDecision()
     {
         // Arrange
@@ -161,7 +194,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         await fixture.SeedEngagementAsync();
-        var request = new ReviseExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+        var request = new ReviseExaminationEngagement(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.EngagementId, 1, "Updated Independent Audit LLP",
             new DateOnly(2026, 9, 30), null, ["security"]);
 
@@ -190,7 +223,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
         await fixture.SeedMemberAsync(previousUserId, "client_personnel");
         await fixture.SeedMemberAsync(replacementUserId, "client_personnel");
         await fixture.SeedEngagementAsync([previousMemberId]);
-        var request = new ReviseExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+        var request = new ReviseExaminationEngagement(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.EngagementId, 1, "Updated Independent Audit LLP",
             new DateOnly(2026, 9, 30), null, ["security"],
             ManagementContactMemberIds: [replacementMemberId]);
@@ -215,7 +248,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
         var contactMemberId = RbacIds.Member(fixture.TenantId, contactUserId);
         await fixture.SeedMemberAsync(contactUserId, "client_personnel");
         await fixture.SeedEngagementAsync([contactMemberId]);
-        var request = new ReviseExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+        var request = new ReviseExaminationEngagement(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.EngagementId, 1, "Updated Independent Audit LLP",
             new DateOnly(2026, 9, 30), null, ["security"]);
 
@@ -331,7 +364,7 @@ public sealed class ExaminationEngagementCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         await fixture.SeedEngagementAsync();
-        var request = new ReviseExaminationEngagement(fixture.TenantId, fixture.ProgramId,
+        var request = new ReviseExaminationEngagement(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.EngagementId, 0, "Stale change", new DateOnly(2026, 9, 30), null,
             ["security"]);
 

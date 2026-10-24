@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
@@ -14,6 +15,9 @@ public sealed record ControlApproved(Uuid TenantId, Uuid ProgramId, Uuid Control
     Uuid? PredecessorVersionId = null, string? ImpactDigest = null,
     Uuid? OwnerPersonId = null) : DomainEvent
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public OperationProvenance? Operation { get; init; }
+
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }
 
