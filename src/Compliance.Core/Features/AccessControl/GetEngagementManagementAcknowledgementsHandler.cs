@@ -2,14 +2,13 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-public sealed class GetEngagementManagementAcknowledgementsHandler(IAggregateReader reader)
+/// <summary>Reads the materialized management acknowledgements of one engagement from their own owners.</summary>
+public sealed class GetEngagementManagementAcknowledgementsHandler(EngagementPersonalDecisionViews views)
     : IRequestHandler<GetEngagementManagementAcknowledgements, IReadOnlyList<EngagementManagementAcknowledgementView>>
 {
     public async ValueTask<Result<IReadOnlyList<EngagementManagementAcknowledgementView>>> HandleAsync(
-        IRequestContext<GetEngagementManagementAcknowledgements> context, CancellationToken ct)
-    {
-        var ledger = await reader.HydrateAsync(new IndependenceLedger(context.Request.TenantId), ct).ConfigureAwait(false);
-        return Result<IReadOnlyList<EngagementManagementAcknowledgementView>>.Success(
-            ledger.ManagementAcknowledgements(context.Request.EngagementId));
-    }
+        IRequestContext<GetEngagementManagementAcknowledgements> context, CancellationToken ct) =>
+        Result<IReadOnlyList<EngagementManagementAcknowledgementView>>.Success(
+            await views.ManagementAcknowledgementsAsync(context.Request.TenantId, context.Request.EngagementId, ct)
+                .ConfigureAwait(false));
 }

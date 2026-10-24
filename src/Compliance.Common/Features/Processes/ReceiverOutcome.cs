@@ -13,6 +13,7 @@ namespace Bdgrz.Compliance.Features.Processes;
 [JsonDerivedType(typeof(Applied), "applied")]
 [JsonDerivedType(typeof(Replayed), "replayed")]
 [JsonDerivedType(typeof(Superseded), "superseded")]
+[JsonDerivedType(typeof(Rejected), "rejected")]
 public abstract record ReceiverOutcome
 {
     private protected ReceiverOutcome()
@@ -27,4 +28,11 @@ public abstract record ReceiverOutcome
 
     /// <summary>A proven later generation makes this receiver a terminal no-op.</summary>
     public sealed record Superseded(string Reason, NativeFactReference? Evidence) : ReceiverOutcome;
+
+    /// <summary>
+    /// The receiver proved that its source operation can never proceed. The process driver aborts the process: abort
+    /// receivers fence first, then only settle and release stages run. Unlike <see cref="Superseded" /> it does not end
+    /// the process, so uses already held are still settled.
+    /// </summary>
+    public sealed record Rejected(string Reason, NativeFactReference? Evidence) : ReceiverOutcome;
 }

@@ -130,7 +130,7 @@ public sealed class ComplianceWebTests
     }
 
     [Fact]
-    public async Task ShouldKeepAcceptanceAndPersonalDecisionRoutesUnmappedGivenIndependenceSplit()
+    public async Task ShouldKeepAcceptanceRoutesUnmappedGivenIndependenceSplit()
     {
         // Arrange
         await using var factory = CreateBrokerFreeFactory("Development");
@@ -143,8 +143,7 @@ public sealed class ComplianceWebTests
                 "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance" or
                 "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations" or
                 "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-review-context" or
-                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}" or
-                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}")
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}")
             .Where(endpoint => endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Any(method =>
                 method is "POST" or "PUT") == true || endpoint.RoutePattern.RawText!.EndsWith("partner-review-context",
                 StringComparison.Ordinal))
@@ -153,6 +152,28 @@ public sealed class ComplianceWebTests
 
         // Assert
         Assert.Empty(unmapped);
+    }
+
+    [Fact]
+    public async Task ShouldMapPersonalDecisionRoutesAsPutOnlyGivenEngagementPersonalDecisions()
+    {
+        // Arrange
+        await using var factory = CreateBrokerFreeFactory("Development");
+        using var client = factory.CreateClient();
+
+        // Act
+        var mapped = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>()
+            .Where(endpoint => endpoint.RoutePattern.RawText is
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}" or
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations/{evaluation_id}")
+            .Select(endpoint => (endpoint.RoutePattern.RawText, Methods: endpoint.Metadata
+                .GetMetadata<HttpMethodMetadata>()?.HttpMethods.Order(StringComparer.Ordinal).ToArray() ?? []))
+            .ToArray();
+
+        // Assert
+        Assert.Equal(2, mapped.Length);
+        Assert.All(mapped, route => Assert.Equal(["PUT"], route.Methods));
     }
 
     [Fact]

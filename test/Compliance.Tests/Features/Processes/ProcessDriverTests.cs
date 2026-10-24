@@ -268,4 +268,26 @@ public sealed class ProcessDriverTests
                 CancellationToken ct = default) => inner.ScanPendingAsync(processKind, dueBefore, limit, ct);
         }
     }
+
+    [Fact]
+    public async Task ShouldAbortThroughFenceAndSettleEveryTargetGivenRejectedOutcome()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1", "t2");
+        host.Recorder.Script("AcquireX", command => command.Target == "t2"
+            ? Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("stale source", null))
+            : Result<ReceiverOutcome>.Success(new ReceiverOutcome.Applied(new(
+                new EventStreamAddress("tenant-a", "targets", "t1"), command.CommandId, 1))));
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Aborted, record.State);
+        Assert.Equal(["AcquireX", "AcquireX", "RejectX", "SettleX", "SettleX"],
+            host.Recorder.Calls.Select(c => c.Receiver).ToArray());
+        Assert.DoesNotContain(host.Recorder.Calls, c => c.Receiver is "ApplyA" or "ApplyB");
+        Assert.Contains("stale source", record.Note ?? "stale source", StringComparison.Ordinal);
+    }
 }

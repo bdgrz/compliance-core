@@ -20,15 +20,19 @@ public sealed partial class IndependenceLedger : Aggregate
     readonly Dictionary<Uuid, List<ServiceEngagementView>> _engagementHistory = [];
     readonly List<EngagementAssignment> _assignmentHistory = [];
 
+    // Personal decisions are owned by PartnerIndependenceDecision and EngagementManagementAcknowledgement now; this
+    // ledger no longer reduces them. The acceptance code below still reads these empty views until the acceptance
+    // slice replaces it with source-use verified reads.
+    readonly List<EngagementManagementAcknowledgementView> _managementAcknowledgements = [];
+    readonly List<PartnerIndependenceEvaluationView> _partnerEvaluations = [];
+
     public IndependenceLedger(Uuid tenantId) : base(tenantId,
         new EventStreamAddress(tenantId.ToString(), "client-independence", tenantId.ToString()))
     {
         _tenantId = tenantId;
-        On<EngagementManagementAcknowledged>(Apply);
         On<ServiceEngagementAcceptanceRecorded>(Apply);
         On<ServiceEngagementStaffAssigned>(Apply);
         On<DirectoryIndependenceReevaluated>(Apply);
-        On<PartnerIndependenceEvaluationRecorded>(Apply);
     }
 
     public long Sequence { get; private set; }
@@ -56,6 +60,9 @@ public sealed partial class IndependenceLedger : Aggregate
         Assignments = Array.AsReadOnly(acceptance.Assignments.ToArray()),
         ConsideredServiceRecordIds = Array.AsReadOnly(acceptance.ConsideredServiceRecordIds.ToArray())
     };
+
+    bool CompleteFacts(IReadOnlyList<Uuid> ids) => ids.Distinct().Count() == ids.Count &&
+        ids.Count == _services.Count && ids.ToHashSet().SetEquals(_services.Select(service => service.ServiceRecordId));
 
     void Fence(Uuid tenantId, long expectedSequence)
     {
