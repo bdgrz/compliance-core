@@ -285,6 +285,36 @@ public sealed class TypeIIPeriodCommandHandlerTests
     }
 
     [Fact]
+    public async Task ShouldConflictWithoutAppendingGivenFreezeRetryWithChangedOriginalRevision()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.RegisterActorAsync();
+        await fixture.SeedCoveredCloseReadyPeriodAsync();
+        var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
+                fixture.ProgramId, fixture.PeriodId, 3,
+                "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
+        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId, Uuid.CreateVersion4(), 4);
+        var handler = fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso);
+        var context = fixture.Context(request);
+        Assert.True((await handler.HandleAsync(context, CancellationToken.None)).IsSuccess);
+        fixture.CloseClock.Set(fixture.CloseClock.GetUtcNow().AddDays(1));
+
+        // Act
+        var retry = await handler.HandleAsync(fixture.Context(request with { ExpectedRevision = request.ExpectedRevision + 1 }), CancellationToken.None);
+        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, retry.Error?.Kind);
+        Assert.Equal(5, period.Revision);
+        Assert.Single(period.Current!.CloseSnapshots);
+    }
+
+    [Fact]
     public async Task ShouldBlockCloseGivenSelectedRecurringOccurrenceNotMaterialized()
     {
         // Arrange

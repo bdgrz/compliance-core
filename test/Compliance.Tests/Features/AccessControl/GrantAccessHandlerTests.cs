@@ -21,7 +21,7 @@ public sealed class GrantAccessHandlerTests
         await using var provider = CreateProvider();
         var episodeId = Uuid.CreateVersion4();
         var handler = new GrantAccessHandler(provider.GetRequiredService<IAggregateExecutor>(),
-            new ValidProposalValidator(), new TestMemberAccessEligibility(episodeId, episodeId));
+            new ValidProposalValidator(), new TestMemberAccessEligibility(episodeId, episodeId), provider.GetRequiredService<IAggregateReader>());
         var request = Request();
 
         // Act
@@ -46,7 +46,7 @@ public sealed class GrantAccessHandlerTests
         var firstEpisodeId = Uuid.CreateVersion4();
         var secondEpisodeId = Uuid.CreateVersion4();
         var handler = new GrantAccessHandler(provider.GetRequiredService<IAggregateExecutor>(),
-            new ValidProposalValidator(), new TestMemberAccessEligibility(firstEpisodeId, secondEpisodeId));
+            new ValidProposalValidator(), new TestMemberAccessEligibility(firstEpisodeId, secondEpisodeId), provider.GetRequiredService<IAggregateReader>());
 
         // Act
         var result = await handler.HandleAsync(new RequestContext<GrantAccess>(Request(), Actor()),

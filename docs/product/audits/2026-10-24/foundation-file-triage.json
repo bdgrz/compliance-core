@@ -1,0 +1,55 @@
+{
+  "reviewed": 5,
+  "blockedReviews": 0,
+  "signalsTriaged": 4,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/AccessGrant.cs",
+      "sha256": "7f5becbfafd74eb935f83304b7834db8ca7be56f0dfd96c4572c9c34359f3c08",
+      "signals": {
+        "authority_gap": 0.64,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.29
+      },
+      "classification": "fixed_with_current_authority_fence",
+      "evidence": "Original proposal + stable actor kind/id defines exact issuance; generated membership episode is retained from the accepted fact, never rebound on retry. Revocation remains in force. A grant against an old/retired episode cannot create current membership authority; registered role/member authorization still resolves current authority."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/GrantAccessHandler.cs",
+      "sha256": "c69614f259873333cd3c806b49e8f19733b17f98cff5501f34de07308b5c498a",
+      "signals": {
+        "authority_gap": 0.49,
+        "invariant_gap": 0.75,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.3
+      },
+      "classification": "fixed",
+      "evidence": "Accepted original issuance resolves before mutable member/role eligibility, and receipt rechecks cover failed preparation/OCC. New issuance still validates proposal, role/source and member episode twice. Behavioral handler/owner RED tests prove exact replay after retirement/revocation without restoring authority or changing epoch. Current caller authorization remains in the request pipeline."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/FreezeTypeIIPeriodCloseHandler.cs",
+      "sha256": "73cf583c85bb0cd88c4b4a040ce98dd90c4bc51a866fe0415d402d3b130423d4",
+      "signals": {
+        "authority_gap": 0.52,
+        "invariant_gap": 0.76,
+        "recovery_gap": 0.8,
+        "incomplete_path": 0.56
+      },
+      "classification": "bounded_fix_and_remaining_native_migration",
+      "evidence": "All handler replay/post-append reconciliation branches compare immutable original ExpectedRevision. Existing personal HTTP/current executive authority, exact approval and source/coverage/actor checks remain. Broader typed CommandId/native response migration is explicitly still outstanding; the full native family is not marked complete."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "sha256": "387c88472c5a6acc2da2bfcbc19b6cb188d99b678396e2bf1ee2637ba80bc6d7",
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.62,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.43
+      },
+      "classification": "fixed_with_remaining_owner_work",
+      "evidence": "Original freeze revision is stored on the immutable snapshot and checked before replay. Additional direct-owner RED proved generated server RecordedAt must not be authored identity; exact retry now keeps the original snapshot/time/revision with no append. Unchanged wider period snapshot/history/native migration is separate accepted work."
+    }
+  ]
+}

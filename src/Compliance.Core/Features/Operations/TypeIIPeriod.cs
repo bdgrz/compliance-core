@@ -530,7 +530,8 @@ public sealed class TypeIIPeriod : Aggregate
         actorRole = Clean(actorRole);
         if (content is not null && current.CloseSnapshots.FirstOrDefault(item =>
                 item.CloseSnapshotId == content.CloseSnapshotId) is { } prior)
-            return SameSnapshot(prior, content, actorMemberId, actorRole, frozenAt) ? null :
+            return prior.OriginalExpectedRevision == expectedRevision &&
+                   SameSnapshot(prior, content, actorMemberId, actorRole) ? null :
                 CommandFailure.StateConflict("A close snapshot identity cannot be reused with different content.");
         if (expectedRevision != Revision)
             return StaleRevision();
@@ -552,7 +553,8 @@ public sealed class TypeIIPeriod : Aggregate
             return CommandFailure.StateConflict("A close snapshot requires a new immutable identity.");
 
         var snapshot = NewSnapshot(normalized, 1, actorMemberId, actorRole, actorRole,
-            frozenAt, null, null, [], []);
+            frozenAt, null, null, [], []) with
+        { OriginalExpectedRevision = expectedRevision };
         var state = current with
         {
             Status = "closed",
@@ -1083,9 +1085,9 @@ public sealed class TypeIIPeriod : Aggregate
         existing.ValidatorMemberId == actor && existing.ValidatorDisplay == display.Trim() && existing.ValidatedAt == at;
 
     static bool SameSnapshot(TypeIIPeriodCloseSnapshotView existing,
-        TypeIIPeriodCloseSnapshotContent content, Uuid actor, string role, DateTimeOffset at) =>
+        TypeIIPeriodCloseSnapshotContent content, Uuid actor, string role) =>
         NormalizeSnapshot(content) is { } normalized && existing.ContentSha256 == Digest(normalized) &&
-        existing.ActorMemberId == actor && existing.ActorRole == role && existing.RecordedAt == at;
+        existing.ActorMemberId == actor && existing.ActorRole == role;
 
     static bool SameAmendment(TypeIIPeriodCloseSnapshotView existing,
         TypeIIPeriodCloseSnapshotContent content, string reason, IReadOnlyList<Uuid> changed,

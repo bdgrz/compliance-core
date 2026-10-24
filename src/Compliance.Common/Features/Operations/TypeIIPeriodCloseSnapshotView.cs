@@ -18,4 +18,8 @@ public sealed record TypeIIPeriodCloseSnapshotView(
     Uuid ActorMemberId,
     string ActorRole,
     string ActorDisplay,
-    DateTimeOffset RecordedAt);
+    DateTimeOffset RecordedAt)
+{
+    /// <summary>The authored period revision accepted by an original close freeze; absent on historical unbound snapshots.</summary>
+    public long? OriginalExpectedRevision { get; init; }
+}
