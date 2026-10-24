@@ -4,8 +4,15 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.PolicyDistribution;
 
-/// <summary>Defines an immutable successor version; launched campaigns keep their version.</summary>
-[Discriminator("bdgrz.training_requirement.revise", 1)]
-public sealed record ReviseTrainingRequirement(Uuid TenantId, Uuid ProgramId,
+/// <summary>
+///     Defines an immutable successor version; launched campaigns keep their version.
+///     <paramref name="ExpectedVersion" /> is the sole logical concurrency counter.
+/// </summary>
+[Discriminator("bdgrz.training_requirement.revise", 2)]
+public sealed record ReviseTrainingRequirement(Uuid CommandId, Uuid TenantId, Uuid ProgramId,
     Uuid RequirementId, long ExpectedVersion, TrainingRequirementContent Content)
-    : IRequest<TrainingRequirementRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<TrainingRequirementRegistration>, IProgramScopedRequest, IClientManagementMutationRequest,
+        IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

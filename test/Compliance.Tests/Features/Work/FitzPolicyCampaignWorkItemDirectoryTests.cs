@@ -1,10 +1,12 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Tests.Features.Operations;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,19 +29,19 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var writer = sourceScope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
         var person = new Person(fixture.TenantId, personId);
         var actor = ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead");
         Assert.True(person.Record("Ada Lovelace", null, actor, Now).IsSuccess);
         Assert.Null(person.CorrelateMembership(1, userId, actor, Now));
         await writer.SaveAsync(person, new RequestDispatchContext(RequestActor.System),
             CancellationToken.None);
-        var launched = Launched(fixture, campaignId, 1);
-        var audience = new PolicyCampaignAudienceFrozen(fixture.TenantId, campaignId, 1,
-        [
+        var launched = await Launched(fixture, content, campaignId, 1);
+        var audience = await CampaignFacts.FrozenAsync(content, fixture.TenantId, campaignId,
             new CampaignAudienceEntry(personId, "Ada Lovelace", "employee", "Engineering",
-                Today.AddYears(-1), Today.AddDays(7)),
-        ]);
+                Today.AddYears(-1), Today.AddDays(7)));
 
         // Act
         await ProjectAsync(directory, fixture.TenantId, launched, audience);
@@ -83,13 +85,13 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
         var campaignId = Uuid.CreateVersion4();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
-        var launched = Launched(fixture, campaignId, 1);
-        var audience = Audience(fixture.TenantId, campaignId, personId);
-        var waiver = new CampaignWaiverApproved(fixture.TenantId, campaignId,
-            Uuid.CreateVersion4(), personId, "Leave", Today.AddDays(10),
-            ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"),
-            fixture.LeadMemberId, Now);
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var launched = await Launched(fixture, content, campaignId, 1);
+        var audience = await Audience(content, fixture.TenantId, campaignId, personId);
+        var waiver = CampaignFacts.Waived(fixture.TenantId, campaignId, personId, "Leave", Today.AddDays(10),
+            ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"), fixture.LeadMemberId, Now);
         await ProjectAsync(directory, fixture.TenantId, launched, audience, waiver);
 
         // Act
@@ -113,21 +115,19 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
         var campaignId = Uuid.CreateVersion4();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
-        var launched = Launched(fixture, campaignId, 1);
-        var audience = Audience(fixture.TenantId, campaignId, personId);
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var launched = await Launched(fixture, content, campaignId, 1);
+        var audience = await Audience(content, fixture.TenantId, campaignId, personId);
         var actor = ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead");
-        var acknowledgement = new PolicyAcknowledgementRecorded(fixture.TenantId, campaignId,
-            Uuid.CreateVersion4(), personId, launched.Subject.RecordId, launched.Subject.Version,
-            launched.Subject.ContentSha256, PolicyDistributionCampaign.DefaultAcknowledgementText,
+        var acknowledgement = CampaignFacts.Acknowledged(fixture.TenantId, campaignId, personId, launched.Subject,
             new ActorReference("workforce_person", personId.ToString(), "Ada"), actor, true, Now);
-        var removal = new PolicyCampaignAudienceAmended(fixture.TenantId, campaignId, 1, 1,
-            Uuid.CreateVersion4(), "roster-next", Today, [new CampaignAudienceAmendment(personId,
-                "Ada Lovelace", "leaver", null, null, null)], actor, Now.AddDays(1));
-        var rejoin = new PolicyCampaignAudienceAmended(fixture.TenantId, campaignId, 2, 1,
-            Uuid.CreateVersion4(), "roster-later", Today.AddDays(2),
-            [new CampaignAudienceAmendment(personId, "Ada Lovelace", "joiner", "employee",
-                "Engineering", Today.AddDays(20))], actor, Now.AddDays(2));
+        var removal = await CampaignFacts.AmendedAsync(content, fixture.TenantId, campaignId, 1, Today, actor,
+            Now.AddDays(1), new CampaignAudienceAmendment(personId, "Ada Lovelace", "leaver", null, null, null));
+        var rejoin = await CampaignFacts.AmendedAsync(content, fixture.TenantId, campaignId, 2, Today.AddDays(2),
+            actor, Now.AddDays(2), new CampaignAudienceAmendment(personId, "Ada Lovelace", "joiner", "employee",
+                "Engineering", Today.AddDays(20)));
         await ProjectAsync(directory, fixture.TenantId, launched, audience, acknowledgement,
             removal, rejoin);
 
@@ -148,18 +148,18 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
         var campaignId = Uuid.CreateVersion4();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
-        var launched = Launched(fixture, campaignId, 1) with
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var launched = (await Launched(fixture, content, campaignId, 1)) with
         {
             Subject = new CampaignSubject("training", Uuid.CreateVersion4(), "TR-SEC",
                 "Security Awareness", 1, "training-hash"),
             AcknowledgementText = null,
         };
-        var audience = Audience(fixture.TenantId, campaignId, personId);
-        var completed = new TrainingCompletionRecorded(fixture.TenantId, campaignId,
-            Uuid.CreateVersion4(), personId, launched.Subject.RecordId, 1, Today,
-            "manual", "evidence:completion", ActorReference.ForMember(fixture.LeadMemberId,
-                "Compliance Lead"), Now);
+        var audience = await Audience(content, fixture.TenantId, campaignId, personId);
+        var completed = CampaignFacts.Completed(fixture.TenantId, campaignId, personId, launched.Subject, Today,
+            ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"), Now);
         await ProjectAsync(directory, fixture.TenantId, launched, audience, completed);
 
         // Act
@@ -179,11 +179,12 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
         var campaignId = Uuid.CreateVersion4();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
-        var launched = Launched(fixture, campaignId, 1);
-        var audience = Audience(fixture.TenantId, campaignId, personId);
-        var closed = new PolicyCampaignClosed(fixture.TenantId, campaignId, Today,
-            "Period ended", new CampaignTotalsView(1, 1, 0, 0, 1, 0, 0, 0),
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var launched = await Launched(fixture, content, campaignId, 1);
+        var audience = await Audience(content, fixture.TenantId, campaignId, personId);
+        var closed = CampaignFacts.Closed(fixture.TenantId, campaignId, Today, "Period ended",
             ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"), Now);
         await ProjectAsync(directory, fixture.TenantId, launched, audience, closed);
 
@@ -228,25 +229,23 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
             entry => entry.Candidate.Kind == PolicyCampaignWork.Acknowledgement);
     }
 
-    static PolicyCampaignLaunched Launched(OperationsFixture fixture, Uuid campaignId,
-        int audienceCount) => new(fixture.TenantId, fixture.ProgramId, campaignId,
-        new CampaignSubject("policy", Uuid.CreateVersion4(), "POL-AC", "Access Control Policy",
-            2, "content-hash"), PolicyAudience.CoreSecurity, [], Uuid.CreateVersion4(),
-        "roster-hash", Today, Today.AddDays(7), "Read and acknowledge",
-        PolicyDistributionCampaign.DefaultAcknowledgementText, audienceCount,
-        ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"),
-        fixture.LeadMemberId, Now);
+    static Task<PolicyCampaignLaunched> Launched(OperationsFixture fixture, IImmutableContentStore content,
+        Uuid campaignId, int audienceCount) => CampaignFacts.LaunchedAsync(content, fixture.TenantId,
+        fixture.ProgramId, campaignId, new CampaignSubject("policy", Uuid.CreateVersion4(), "POL-AC",
+            "Access Control Policy", 2, "content-hash"), PolicyAudience.CoreSecurity, [], Today, Today.AddDays(7),
+        "Read and acknowledge", audienceCount,
+        ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"), fixture.LeadMemberId, Now);
 
-    static PolicyCampaignAudienceFrozen Audience(Uuid tenantId, Uuid campaignId, Uuid personId) =>
-        new(tenantId, campaignId, 1,
-        [new CampaignAudienceEntry(personId, "Ada Lovelace", "employee", "Engineering",
-            Today.AddYears(-1), Today.AddDays(7))]);
+    static Task<PolicyCampaignAudienceFrozen> Audience(IImmutableContentStore content, Uuid tenantId,
+        Uuid campaignId, Uuid personId) => CampaignFacts.FrozenAsync(content, tenantId, campaignId,
+        new CampaignAudienceEntry(personId, "Ada Lovelace", "employee", "Engineering", Today.AddYears(-1),
+            Today.AddDays(7)));
 
     static async Task ProjectAsync(FitzPolicyCampaignWorkItemDirectory directory,
         Uuid tenantId, params DomainEvent[] events)
     {
         var identity = new CheckpointIdentity(FitzPolicyCampaignWorkItemDirectory.ProjectorName,
-            EventStreamPattern.ForPattern(tenantId.ToString(), "policy-distribution-campaigns"));
+            EventStreamPattern.ForPattern(tenantId.ToString()));
         var cursor = new ProjectionCheckpoint(new EventCursor("campaign-work-cursor"));
         await using var batch = await directory.BeginAsync(
             new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));

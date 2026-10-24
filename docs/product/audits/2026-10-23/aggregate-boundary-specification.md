@@ -2988,7 +2988,7 @@ Generated from current source inventory at `b7a2bd02cc90c6734c94391399a55c0da162
   - Boundary test: Nothing in Define/Revise reads another requirement. Existing IdFor derives unique tuple; split per training requirement and make program catalog/list a projection. Preserve original creation receipt even after revisions.
   - Proof/authorization test: Audience/delivery validation is local value validation; no live aggregate.
   - Growth test: {"retained": "Every requirement and full version content plus original define request IDs.", "lifetimeReplay": "Program catalog and all versions grow indefinitely despite comment that program has few requirements."}
-- **Existing test references:** [PolicyCommunicationTypeIBaselineSourceContributorTests.cs](../../../../test/Compliance.Tests/Features/Examinations/PolicyCommunicationTypeIBaselineSourceContributorTests.cs), [TrainingCatalogTests.cs](../../../../test/Compliance.Tests/Features/PolicyDistribution/TrainingCatalogTests.cs)
+- **Existing test references:** [PolicyCommunicationTypeIBaselineSourceContributorTests.cs](../../../../test/Compliance.Tests/Features/Examinations/PolicyCommunicationTypeIBaselineSourceContributorTests.cs), [TrainingRequirementTests.cs](../../../../test/Compliance.Tests/Features/PolicyDistribution/TrainingRequirementTests.cs)
 
 ## 93. TypeIIObservationCalendar
 

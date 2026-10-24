@@ -192,7 +192,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | TypeIIPeriod | Operations | narrow | OPS-09 (pending), OPS-10 (pending), OPS-12 (pending), OPS-17 (pending), CORE-01 (complete) | 0.91 | [source](../../../../src/Compliance.Core/Features/Operations/TypeIIPeriod.cs) |
 | Policy | Policies | narrow | OPS-11 (pending), OPS-13 (pending), OPS-15 (pending) | 0.78 | [source](../../../../src/Compliance.Core/Features/Policies/Policy.cs) |
 | PolicyDistributionCampaign | PolicyDistribution | split | OPS-07 (pending), OPS-16 (pending) | 0.91 | [source](../../../../src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs) |
-| TrainingCatalog | PolicyDistribution | split | OPS-05 (pending), OPS-15 (pending) | 0.88 | [source](../../../../src/Compliance.Core/Features/PolicyDistribution/TrainingCatalog.cs) |
+| TrainingCatalog | PolicyDistribution | split | OPS-05 (pending), OPS-15 (pending) | 0.88 | retired by the training requirement split (#1022) |
 | ClientService | Programs | retain | ASSURE-11 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/Programs/ClientService.cs) |
 | ComplianceProgram | Programs | narrow | ASSURE-16 (pending), ASSURE-11 (pending) | 0.79 | [source](../../../../src/Compliance.Core/Features/Programs/ComplianceProgram.cs) |
 | ProgramRollover | Programs | process | ASSURE-15 (pending), ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.78 | [source](../../../../src/Compliance.Core/Features/Programs/ProgramRollover.cs) |

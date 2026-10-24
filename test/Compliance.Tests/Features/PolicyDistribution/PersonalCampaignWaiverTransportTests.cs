@@ -1,4 +1,7 @@
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Programs;
@@ -35,12 +38,15 @@ public sealed class PersonalCampaignWaiverTransportTests
         if (transport == "http")
         {
             Assert.True(result.IsSuccess, result.Error?.Message);
-            Assert.Equal(RbacIds.Member(fixture.Tenant, fixture.Manager).ToString(), result.Value.Approver.Id);
-            Assert.Equal(fixture.PersonId, result.Value.PersonId);
-            Assert.Equal(result.Value, retained.FindWaiver(fixture.PersonId));
             Assert.Equal(before.CommittedStreamPosition + 1, retained.CommittedStreamPosition);
-            Assert.Equal(0, retained.Totals(fixture.Today).Satisfied);
-            Assert.Equal(1, retained.Totals(fixture.Today).Excepted);
+            var applied = await fixture.ApplyAsync(result.Value.OperationId);
+            Assert.True(applied.IsSuccess, applied.Error?.Message);
+            var waiver = Assert.Single((await fixture.ParticipantAsync()).Waivers);
+            Assert.Equal(RbacIds.Member(fixture.Tenant, fixture.Manager).ToString(), waiver.Approver.Id);
+            Assert.Equal(fixture.PersonId, waiver.PersonId);
+            var state = await fixture.StateAsync();
+            Assert.Equal(0, state.Totals(fixture.Today).Satisfied);
+            Assert.Equal(1, state.Totals(fixture.Today).Excepted);
         }
         else
         {
@@ -48,10 +54,10 @@ public sealed class PersonalCampaignWaiverTransportTests
             Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
             Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
             Assert.Equal(before.CommittedStreamPosition, retained.CommittedStreamPosition);
-            Assert.Null(retained.FindWaiver(fixture.PersonId));
+            Assert.Empty((await fixture.ParticipantAsync()).Waivers);
         }
-        Assert.Equal(before.ToView(fixture.Today).Subject, retained.ToView(fixture.Today).Subject);
-        Assert.Equal(before.ToView(fixture.Today).RosterSnapshotId, retained.ToView(fixture.Today).RosterSnapshotId);
+        Assert.Equal(before.Subject, retained.Subject);
+        Assert.Equal(before.Launch!.RosterSnapshotId, retained.Launch!.RosterSnapshotId);
     }
 
     [Theory]
@@ -83,7 +89,7 @@ public sealed class PersonalCampaignWaiverTransportTests
         Assert.Equal(kind, result.Error?.Kind);
         Assert.Equal(message, result.Error?.Message);
         Assert.Equal(before.CommittedStreamPosition, retained.CommittedStreamPosition);
-        Assert.Null(retained.FindWaiver(fixture.PersonId));
+        Assert.Empty((await fixture.ParticipantAsync()).Waivers);
     }
 
     [Fact]
@@ -91,8 +97,8 @@ public sealed class PersonalCampaignWaiverTransportTests
     {
         // Arrange
         await using var fixture = await Fixture.CreateAsync();
-        var metadata = RequestMetadata.Create();
         var request = fixture.Request();
+        var metadata = new RequestMetadata(request.CommandId, request.CommandId, null);
 
         // Act
         var first = await fixture.SendAsync(request, "http", metadata);
@@ -184,17 +190,14 @@ public sealed class PersonalCampaignWaiverTransportTests
                 snapshot.Freeze(rosterId, null, WorkforceRosterSnapshotContent.Kind, rows, hash, null, actor, fixture._at));
             await using (var scope = fixture._provider.CreateAsyncScope())
             {
-                var launched = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(new LaunchPolicyCampaign(fixture.Tenant, fixture.Program, policyId, 1, rosterId, fixture.Today.AddDays(30)),
+                var launched = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(new LaunchPolicyCampaign(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program, policyId, 1, rosterId, fixture.Today.AddDays(30)),
                     new RequestDispatchContext(ProgramManagementServices.Actor(fixture.Manager), new DirectInvocation()), CancellationToken.None);
                 Assert.True(launched.IsSuccess, launched.Error?.Message);
                 fixture._campaign = launched.Value.CampaignId;
             }
             if (refusal == "closed")
-                await ProgramManagementServices.SeedAsync(fixture._provider, new PolicyDistributionCampaign(fixture.Tenant, fixture._campaign), campaign =>
-                {
-                    Assert.Null(campaign.Close(fixture.Program, "Closed", actor, fixture._at));
-                    return Result.Success;
-                });
+                await CampaignSeed.CloseAsync(fixture._provider, fixture.Tenant, fixture._campaign, "Closed", actor,
+                    fixture._at);
             if (refusal == "history")
                 await AttestAssignmentHistoryFixture.SeedAsync(fixture._provider, fixture.Tenant, fixture.Manager, revoked: true);
             if (refusal == "grant")
@@ -206,12 +209,19 @@ public sealed class PersonalCampaignWaiverTransportTests
             return fixture;
         }
 
-        public ApproveCampaignWaiver Request() => new(Tenant, Program, _campaign, PersonId, "Extended leave", Today.AddMonths(3));
+        public ApproveCampaignWaiver Request() => new(Uuid.CreateVersion4(), Tenant, Program, _campaign, PersonId, "Extended leave", Today.AddMonths(3), 1);
         public Task<PolicyDistributionCampaign> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new PolicyDistributionCampaign(Tenant, _campaign));
-        public async Task<Result<CampaignWaiverView>> SendAsync(ApproveCampaignWaiver request, string transport, RequestMetadata? metadata = null)
+        public Task<PolicyCampaignParticipant> ParticipantAsync() => CampaignSeed.ParticipantAsync(_provider, Tenant, _campaign, PersonId);
+        public Task<Result<ReceiverOutcome>> ApplyAsync(Uuid commandId) => CampaignSeed.ApplyAdmittedAsync(_provider, Tenant, _campaign, PersonId, commandId, CampaignParticipantResultKind.Waiver);
+        public async Task<CampaignState> StateAsync()
         {
             await using var scope = _provider.CreateAsyncScope();
-            RequestInvocation invocation = transport == "http" ? new HttpInvocation("POST", "/synthetic/campaign/waiver", "/synthetic/campaign/waiver", "synthetic") : transport == "mcp" ? new McpInvocation("synthetic.campaign.waiver") : new DirectInvocation();
+            return (await new CampaignSource(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()).ReadAsync(Tenant, Program, _campaign, CancellationToken.None)).Value;
+        }
+        public async Task<Result<OperationAcceptedResponse>> SendAsync(ApproveCampaignWaiver request, string transport, RequestMetadata? metadata = null)
+        {
+            await using var scope = _provider.CreateAsyncScope();
+            RequestInvocation invocation = transport == "http" ? new HttpInvocation("PUT", "/synthetic/campaign/waiver", "/synthetic/campaign/waiver", "synthetic") : transport == "mcp" ? new McpInvocation("synthetic.campaign.waiver") : new DirectInvocation();
             return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
                 new RequestDispatchContext(ProgramManagementServices.Actor(Manager), invocation, metadata), CancellationToken.None);
         }

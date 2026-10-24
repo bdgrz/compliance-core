@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Bdgrz.Compliance;
+using Bdgrz.Compliance.Features.PolicyDistribution;
+using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.Hosting;
 
@@ -67,6 +69,8 @@ public sealed class PolicyDistributionE2ETests(BrokerStackFixture broker)
             {
                 ["tenant_id"] = tenantId,
                 ["program_id"] = programId,
+                ["requirement_id"] = TrainingRequirementIdentity.IdFor(Uuid.Parse(tenantId.ToString(), CultureInfo.InvariantCulture),
+                    Uuid.Parse(programId.ToString(), CultureInfo.InvariantCulture), "SAT"),
                 ["identifier"] = "SAT",
                 ["content"] = new Dictionary<string, object?>
                 {
@@ -77,7 +81,8 @@ public sealed class PolicyDistributionE2ETests(BrokerStackFixture broker)
             }).ExpectSuccess();
         var requirementId = Assert.IsType<JsonElement>(requirement.StructuredJson)
             .GetProperty("result").GetProperty("requirement_id").GetString();
-        using var launched = await owner.PostAsJsonAsync($"{program}/training-campaigns", new
+        var campaignId = Guid.NewGuid().ToString();
+        using var launched = await owner.PutAsJsonAsync($"{program}/training-campaigns/{campaignId}", new
         {
             requirement_id = requirementId,
             requirement_version = 1,
@@ -86,21 +91,23 @@ public sealed class PolicyDistributionE2ETests(BrokerStackFixture broker)
                 CultureInfo.InvariantCulture),
         });
         var launchBody = await ReadAsync(launched);
-        var campaignId = launchBody.GetProperty("campaign_id").GetString();
         var campaignPath = $"{program}/campaigns/{campaignId}";
         _ = await mcp.When("bdgrz.training_completion.record", new Dictionary<string, object?>
         {
             ["tenant_id"] = tenantId,
             ["program_id"] = programId,
             ["campaign_id"] = campaignId,
+            ["command_id"] = Guid.NewGuid(),
+            ["expected_campaign_revision"] = 1,
             ["person_id"] = ada,
             ["requirement_version"] = 1,
             ["completed_on"] = Today,
             ["source"] = "lms_export",
             ["evidence_reference"] = "lms-export.csv#2",
         }).ExpectSuccess();
-        using var wrongVersion = await owner.PostAsJsonAsync($"{campaignPath}/completions", new
+        using var wrongVersion = await owner.PutAsJsonAsync($"{campaignPath}/completions/{Guid.NewGuid()}", new
         {
+            expected_campaign_revision = 2,
             person_id = ada,
             requirement_version = 2,
             completed_on = Today,
@@ -110,9 +117,11 @@ public sealed class PolicyDistributionE2ETests(BrokerStackFixture broker)
         var cy = await RecordWorkerAsync(owner, root, "Cy Joiner", "E-2", "employee",
             "Engineering");
         var secondRoster = await FreezeRosterAsync(owner, root);
-        using var reconciled = await owner.PostAsJsonAsync($"{campaignPath}/reconciliations",
-            new { roster_snapshot_id = secondRoster });
-        using var campaign = await owner.GetAsync(campaignPath);
+        using var reconciled = await owner.PutAsJsonAsync(
+            $"{campaignPath}/reconciliations/{Guid.NewGuid()}",
+            new { roster_snapshot_id = secondRoster, expected_revision = 2 });
+        var campaign = await WaitForAsync(owner, campaignPath,
+            static body => body.GetProperty("totals").GetProperty("satisfied").GetInt32() == 1);
         var campaigns = await WaitForAsync(owner, $"{program}/campaigns",
             static body => Items(body).Any());
         using var outsiderCampaign = await outsider.GetAsync(campaignPath);
@@ -133,7 +142,7 @@ public sealed class PolicyDistributionE2ETests(BrokerStackFixture broker)
         var amendment = Assert.Single(reconciliation.GetProperty("amendments").EnumerateArray());
         Assert.Equal(cy, amendment.GetProperty("person_id").GetString());
         Assert.Equal("joiner", amendment.GetProperty("reason").GetString());
-        var totals = (await ReadAsync(campaign)).GetProperty("totals");
+        var totals = campaign.GetProperty("totals");
         Assert.Equal(3, totals.GetProperty("population").GetInt32());
         Assert.Equal(1, totals.GetProperty("satisfied").GetInt32());
         Assert.Equal(campaignId, Items(campaigns).Single().GetProperty("campaign_id").GetString());

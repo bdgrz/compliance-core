@@ -718,6 +718,17 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(IndependentChildMaterialization.Definition());
         services.AddScoped<FindingClosureVerifier>();
         services.AddScoped<FindingClosureFences>();
+        services.AddSingleton(PolicyCampaignClosureProcess.Definition());
+        services.AddScoped<CampaignSource>();
+        services.AddScoped<CampaignLaunch>();
+        services.AddScoped<PolicyParticipantAdmission>();
+        services.AddScoped<PolicyCampaignClosureVerifier>();
+        services.AddScoped<PolicyCampaignClosureFences>();
+        services.AddScoped<FitzTrainingRequirementDirectory>();
+        services.AddScoped<ITrainingRequirementDirectoryProjection>(provider =>
+            provider.GetRequiredService<FitzTrainingRequirementDirectory>());
+        services.AddScoped<ITrainingRequirementDirectoryReader>(provider =>
+            provider.GetRequiredService<FitzTrainingRequirementDirectory>());
         services.AddScoped<ControlOperationsReader>();
         services.AddScoped<TypeIIOccurrenceCoverage>();
         services.AddScoped<TypeIIRangeVerifier>();
@@ -891,6 +902,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<EngagementPersonalDecisionReceiverAuthorizer>()
             .AddRequestAuthorizer<EngagementAcceptanceReceiverAuthorizer>()
             .AddRequestAuthorizer<TypeIIRangeReceiverAuthorizer>()
+            .AddRequestAuthorizer<PolicyCampaignReceiverAuthorizer>()
             .AddRequestAuthorizer<ControlOccurrenceReceiverAuthorizer>()
             .AddRequestAuthorizer<AccessReviewReceiverAuthorizer>()
             .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
@@ -1401,6 +1413,11 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListCampaignsHandler>()
             .AddRequestHandler<ListCampaignParticipantsHandler>()
             .AddRequestHandler<ListCampaignAmendmentsHandler>()
+            .AddRequestHandler<ApplyPolicyParticipantResultHandler>()
+            .AddRequestHandler<AuthorizePolicyCampaignParticipantCampaignClosureUseHandler>()
+            .AddRequestHandler<SettlePolicyCampaignParticipantCampaignClosureUseHandler>()
+            .AddRequestHandler<CompletePolicyCampaignClosureHandler>()
+            .AddRequestHandler<AbortPolicyCampaignClosureHandler>()
             .AddRequestHandler<CreateRiskDraftHandler>()
             .AddRequestHandler<ReviseRiskDraftHandler>()
             .AddRequestHandler<GetRiskDraftHandler>()
@@ -1603,6 +1620,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<CorrectiveActionMaterializationReactor>(CorrectiveActionMaterializationReactor.WorkloadName,
                 WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<PolicyParticipantResultReactor>(PolicyParticipantResultReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<PolicyCampaignClosureReactor>(PolicyCampaignClosureReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AcceptedStaffDirectoryReconciliationReactor>(AcceptedStaffDirectoryReconciliationReactor.WorkloadName, WorkloadScope.PerTenant,
@@ -1694,6 +1715,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<PolicyCampaignWorkItemProjector>(
                 FitzPolicyCampaignWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<CampaignDirectoryProjector>(FitzCampaignDirectory.ProjectorName,
+                WorkloadScope.PerTenant)
+            .AddProjector<TrainingRequirementDirectoryProjector>(FitzTrainingRequirementDirectory.ProjectorName,
                 WorkloadScope.PerTenant)
             .AddProjector<CommitmentDraftHistoryDirectoryProjectorV1>(
                 "CommitmentDraftHistoryDirectoryV1", WorkloadScope.PerTenant)

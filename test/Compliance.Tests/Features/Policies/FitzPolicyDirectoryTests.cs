@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -199,9 +200,8 @@ public sealed class FitzPolicyDirectoryTests
         {
             await directory.ApplyAsync(first);
             await directory.ApplyAsync(second);
-            await directory.ApplyAsync(new PolicyCampaignClosed(TenantId, first.CampaignId,
-                new DateOnly(2026, 11, 1), "Done", new CampaignTotalsView(0, 0, 0, 0, 0, 0, 0, 0),
-                Actor(AuthorId), Now.AddDays(30)));
+            await directory.ApplyAsync(CampaignFacts.Closed(TenantId, first.CampaignId,
+                new DateOnly(2026, 11, 1), "Done", Actor(AuthorId), Now.AddDays(30)));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var page = await directory.ListProgramAsync(TenantId, ProgramId, 50, null);
@@ -215,13 +215,18 @@ public sealed class FitzPolicyDirectoryTests
         Assert.Equal([first.CampaignId], boundToFirst);
     }
 
-    static PolicyCampaignLaunched Launched(Uuid policyId, long version, DateTimeOffset at) =>
-        new(TenantId, ProgramId, Uuid.CreateVersion4(),
+    static PolicyCampaignLaunched Launched(Uuid policyId, long version, DateTimeOffset at)
+    {
+        var campaignId = Uuid.CreateVersion4();
+        var stream = new PolicyDistributionCampaign(TenantId, campaignId).Stream;
+        return new PolicyCampaignLaunched(TenantId, ProgramId, campaignId,
             new CampaignSubject("policy", policyId, "POL-B", "Policy", version, "sha"),
-            PolicyAudience.CoreSecurity, [], Uuid.CreateVersion4(), "roster",
+            PolicyAudience.CoreSecurity, CampaignFacts.Opaque(), Uuid.CreateVersion4(), "roster",
             DateOnly.FromDateTime(at.UtcDateTime), DateOnly.FromDateTime(at.UtcDateTime).AddDays(30),
             null, PolicyDistributionCampaign.DefaultAcknowledgementText, 3, Actor(AuthorId),
-            AuthorId, at);
+            AuthorId, at, CampaignFacts.Provenance(campaignId, "LaunchPolicyCampaign", stream, Actor(AuthorId), at),
+            CampaignFacts.Opaque(), CampaignFacts.Opaque());
+    }
 
     static CheckpointIdentity Identity(Uuid tenantId) => new(FitzPolicyDirectory.ProjectorName,
         EventStreamPattern.ForPattern(tenantId.ToString(), "policies"));

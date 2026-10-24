@@ -1,0 +1,20 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.SourceUse;
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.PolicyDistribution;
+
+/// <summary>
+///     Settles one participant's closure use after the campaign's terminal fact. <paramref name="Source" /> is the
+///     terminal <see cref="PolicyCampaignClosed" /> or <see cref="PolicyCampaignClosureCanceled" /> fact; the
+///     disposition must match its kind. A settlement before any grant fences the key against late acquisition.
+/// </summary>
+[Discriminator("bdgrz.policy-campaign-participant.settle-campaign-closure-use", 1)]
+public sealed record SettlePolicyCampaignParticipantCampaignClosureUse(Uuid CommandId, NativeFactReference Source,
+    EventStreamAddress Target, Uuid OperationId, long Generation, long? ExpectedRevision, ImmutableContentRef Intent,
+    Uuid SourceOwnerId, Uuid CampaignId, Uuid PersonId, SourceUseSettlementDisposition Disposition)
+    : ISourceUseSettlement, IPolicyCampaignReceiver
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

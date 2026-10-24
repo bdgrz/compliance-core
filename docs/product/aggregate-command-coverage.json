@@ -5,26 +5,26 @@
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 476,
-    "factsWithReducer": 454,
-    "factsWithAggregateEmitter": 452,
+    "domainEventContracts": 481,
+    "factsWithReducer": 459,
+    "factsWithAggregateEmitter": 457,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 119,
-    "aggregateTypesWithCommandPath": 117,
-    "requestContracts": 749,
-    "commonRequestContracts": 747,
+    "aggregateTypes": 120,
+    "aggregateTypesWithCommandPath": 118,
+    "requestContracts": 754,
+    "commonRequestContracts": 752,
     "requestClassificationCounts": {
       "command": 345,
       "confirmed_command_gap": 8,
       "deferred_command": 6,
       "internal_executor_context": 1,
-      "internal_reaction": 115,
+      "internal_reaction": 120,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 689,
+    "registeredCoreHandlerRegistrations": 694,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 30,
     "unwiredAggregateProducerClassifications": {
@@ -1888,15 +1888,15 @@
       "contract": "src/Compliance.Common/Features/PolicyDistribution/CampaignWaiverApproved.cs",
       "reducers": [
         {
-          "aggregate": "PolicyDistributionCampaign",
-          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+          "aggregate": "PolicyCampaignParticipant",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+        "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4663,15 +4663,18 @@
       "contract": "src/Compliance.Common/Features/PolicyDistribution/PolicyAcknowledgementRecorded.cs",
       "reducers": [
         {
-          "aggregate": "PolicyDistributionCampaign",
-          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+          "aggregate": "PolicyCampaignParticipant",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+        "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs",
+        "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4709,7 +4712,7 @@
         "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4727,8 +4730,8 @@
         "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyDistributionCampaignTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4746,8 +4749,8 @@
         "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4766,7 +4769,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -7253,15 +7257,15 @@
       "contract": "src/Compliance.Common/Features/PolicyDistribution/TrainingCompletionRecorded.cs",
       "reducers": [
         {
-          "aggregate": "PolicyDistributionCampaign",
-          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+          "aggregate": "PolicyCampaignParticipant",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+        "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Testing/CampaignFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -7271,12 +7275,12 @@
       "contract": "src/Compliance.Common/Features/PolicyDistribution/TrainingRequirementDefined.cs",
       "reducers": [
         {
-          "aggregate": "TrainingCatalog",
-          "source": "src/Compliance.Core/Features/PolicyDistribution/TrainingCatalog.cs"
+          "aggregate": "TrainingRequirement",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/TrainingRequirement.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/PolicyDistribution/TrainingCatalog.cs"
+        "src/Compliance.Core/Features/PolicyDistribution/TrainingRequirement.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -8725,6 +8729,95 @@
       ],
       "disposition": "aggregate_fact",
       "note": "Local receiver fence that ends a pending closure after a permanent proof mismatch."
+    },
+    {
+      "fact": "PolicyCampaignClosureAccepted",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignClosureAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "PolicyDistributionCampaign",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/CampaignHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "PolicyCampaignClosureCanceled",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignClosureCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "PolicyDistributionCampaign",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "PolicyCampaignParticipantCampaignClosureUseAuthorized",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignParticipantCampaignClosureUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "PolicyCampaignParticipant",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "PolicyCampaignParticipantCampaignClosureUseSettled",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignParticipantCampaignClosureUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "PolicyCampaignParticipant",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "PolicyParticipantResultAdmitted",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/PolicyParticipantResultAdmitted.cs",
+      "reducers": [
+        {
+          "aggregate": "PolicyDistributionCampaign",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs",
+        "test/Compliance.Tests/Testing/CampaignHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     }
   ],
   "aggregates": [
@@ -10569,13 +10662,13 @@
       "aggregate": "PolicyDistributionCampaign",
       "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs",
       "appliedFacts": [
-        "CampaignWaiverApproved",
-        "PolicyAcknowledgementRecorded",
         "PolicyCampaignAudienceAmended",
         "PolicyCampaignAudienceFrozen",
         "PolicyCampaignClosed",
+        "PolicyCampaignClosureAccepted",
+        "PolicyCampaignClosureCanceled",
         "PolicyCampaignLaunched",
-        "TrainingCompletionRecorded"
+        "PolicyParticipantResultAdmitted"
       ],
       "commandRequests": [
         "AcknowledgePolicy",
@@ -10586,19 +10679,25 @@
         "ReconcileCampaignAudience",
         "RecordTrainingCompletion"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "AbortPolicyCampaignClosure",
+        "CompletePolicyCampaignClosure"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Examinations/PolicyCommunicationTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignTransportTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyDistributionCampaignTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/PolicyCampaignWorkTests.cs",
         "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Testing/CampaignFacts.cs",
+        "test/Compliance.Tests/Testing/CampaignHost.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11524,23 +11623,6 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "TrainingCatalog",
-      "source": "src/Compliance.Core/Features/PolicyDistribution/TrainingCatalog.cs",
-      "appliedFacts": [
-        "TrainingRequirementDefined"
-      ],
-      "commandRequests": [
-        "DefineTrainingRequirement",
-        "ReviseTrainingRequirement"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Examinations/PolicyCommunicationTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/TrainingCatalogTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "TypeIIObservationCalendar",
       "source": "src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs",
       "appliedFacts": [
@@ -12397,6 +12479,50 @@
       ],
       "commandRouteDisposition": "registered_command_route",
       "note": "Independent corrective action owner, materialized from the finding admission at revision one and completed at revision two; closure uses hold it through the source-use reservations."
+    },
+    {
+      "aggregate": "PolicyCampaignParticipant",
+      "source": "src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs",
+      "appliedFacts": [
+        "CampaignWaiverApproved",
+        "PolicyAcknowledgementRecorded",
+        "PolicyCampaignParticipantCampaignClosureUseAuthorized",
+        "PolicyCampaignParticipantCampaignClosureUseSettled",
+        "TrainingCompletionRecorded"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "ApplyPolicyParticipantResult",
+        "AuthorizePolicyCampaignParticipantCampaignClosureUse",
+        "SettlePolicyCampaignParticipantCampaignClosureUse"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Testing/CampaignFacts.cs",
+        "test/Compliance.Tests/Testing/CampaignHost.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "TrainingRequirement",
+      "source": "src/Compliance.Core/Features/PolicyDistribution/TrainingRequirement.cs",
+      "appliedFacts": [
+        "TrainingRequirementDefined"
+      ],
+      "commandRequests": [
+        "DefineTrainingRequirement",
+        "ReviseTrainingRequirement"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/TrainingRequirementTests.cs",
+        "test/Compliance.Tests/Testing/TrainingSeed.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
     }
   ],
   "requests": [
@@ -12621,7 +12747,7 @@
     {
       "request": "AcknowledgePolicy",
       "contract": "src/Compliance.Common/Features/PolicyDistribution/AcknowledgePolicy.cs",
-      "interfaces": "IRequest<CampaignAcknowledgementView>, IProgramReadRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramReadRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -12637,14 +12763,20 @@
       "aggregateTargets": [
         "PolicyDistributionCampaign"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "PolicyParticipantAdmission"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyDistributionCampaignTests.cs",
+        "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
-        "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Testing/CampaignHost.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
-      "note": "Command; records a policy acknowledgement on PolicyDistributionCampaign."
+      "note": "Command; admits a complete policy acknowledgement on PolicyDistributionCampaign at its logical revision; PolicyCampaignParticipant applies it afterwards."
     },
     {
       "request": "AcquireEngagementServiceEpoch",
@@ -13427,7 +13559,7 @@
     {
       "request": "ApproveCampaignWaiver",
       "contract": "src/Compliance.Common/Features/PolicyDistribution/ApproveCampaignWaiver.cs",
-      "interfaces": "IRequest<CampaignWaiverView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -13438,18 +13570,23 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "Person",
         "PolicyDistributionCampaign"
       ],
       "aggregateTargets": [
         "PolicyDistributionCampaign"
       ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs"
+      "helperServices": [
+        "PolicyParticipantAdmission"
       ],
-      "note": ""
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyDistributionCampaignTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
+      ],
+      "note": "Command; admits a complete campaign exception on PolicyDistributionCampaign; PolicyCampaignParticipant applies it afterwards."
     },
     {
       "request": "ApproveCommitmentDraft",
@@ -14839,7 +14976,7 @@
     {
       "request": "CloseCampaign",
       "contract": "src/Compliance.Common/Features/PolicyDistribution/CloseCampaign.cs",
-      "interfaces": "IRequest<CampaignView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14856,8 +14993,12 @@
         "PolicyDistributionCampaign"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
-      "note": ""
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
+      ],
+      "note": "Command; accepts the closure and seals result admission; PolicyCampaignClosureProcess drains and completes it."
     },
     {
       "request": "CloseFinding",
@@ -16144,7 +16285,7 @@
     {
       "request": "DefineTrainingRequirement",
       "contract": "src/Compliance.Common/Features/PolicyDistribution/DefineTrainingRequirement.cs",
-      "interfaces": "IRequest<TrainingRequirementRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<TrainingRequirementRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16155,14 +16296,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "TrainingCatalog"
+        "TrainingRequirement"
       ],
       "aggregateTargets": [
-        "TrainingCatalog"
+        "TrainingRequirement"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/TrainingRequirementTests.cs",
+        "test/Compliance.Tests/Testing/TrainingSeed.cs"
       ],
       "note": ""
     },
@@ -19840,7 +19983,7 @@
     {
       "request": "LaunchPolicyCampaign",
       "contract": "src/Compliance.Common/Features/PolicyDistribution/LaunchPolicyCampaign.cs",
-      "interfaces": "IRequest<CampaignRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<CampaignRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -19856,17 +19999,22 @@
       "aggregateTargets": [
         "PolicyDistributionCampaign"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "CampaignLaunch"
+      ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs"
+        "test/Compliance.Tests/Testing/CampaignFacts.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
       ],
       "note": ""
     },
     {
       "request": "LaunchTrainingCampaign",
       "contract": "src/Compliance.Common/Features/PolicyDistribution/LaunchTrainingCampaign.cs",
-      "interfaces": "IRequest<CampaignRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<CampaignRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -19877,14 +20025,17 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "PolicyDistributionCampaign",
-        "TrainingCatalog"
+        "PolicyDistributionCampaign"
       ],
       "aggregateTargets": [
         "PolicyDistributionCampaign"
       ],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "CampaignLaunch"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
+      ],
       "note": ""
     },
     {
@@ -23961,7 +24112,7 @@
     {
       "request": "ReconcileCampaignAudience",
       "contract": "src/Compliance.Common/Features/PolicyDistribution/ReconcileCampaignAudience.cs",
-      "interfaces": "IRequest<CampaignReconciliationView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<CampaignReconciliationView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -23978,7 +24129,11 @@
         "PolicyDistributionCampaign"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
+        "test/Compliance.Tests/Testing/CampaignFacts.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
+      ],
       "note": ""
     },
     {
@@ -25339,7 +25494,7 @@
     {
       "request": "RecordTrainingCompletion",
       "contract": "src/Compliance.Common/Features/PolicyDistribution/RecordTrainingCompletion.cs",
-      "interfaces": "IRequest<CampaignCompletionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -25355,11 +25510,17 @@
       "aggregateTargets": [
         "PolicyDistributionCampaign"
       ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs"
+      "helperServices": [
+        "PolicyParticipantAdmission"
       ],
-      "note": ""
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyDistributionCampaignTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs",
+        "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
+      ],
+      "note": "Command; admits a complete training completion on PolicyDistributionCampaign; PolicyCampaignParticipant applies it afterwards."
     },
     {
       "request": "RecordWorkDigestDelivery",
@@ -27752,7 +27913,7 @@
     {
       "request": "ReviseTrainingRequirement",
       "contract": "src/Compliance.Common/Features/PolicyDistribution/ReviseTrainingRequirement.cs",
-      "interfaces": "IRequest<TrainingRequirementRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<TrainingRequirementRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -27763,13 +27924,16 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "TrainingCatalog"
+        "TrainingRequirement"
       ],
       "aggregateTargets": [
-        "TrainingCatalog"
+        "TrainingRequirement"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/TrainingRequirementTests.cs",
+        "test/Compliance.Tests/Testing/TrainingSeed.cs"
+      ],
       "note": ""
     },
     {
@@ -30353,6 +30517,144 @@
         "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs"
       ],
       "note": "System-only settle receiver of FindingClosureProcess."
+    },
+    {
+      "request": "AbortPolicyCampaignClosure",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/AbortPolicyCampaignClosure.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IPolicyCampaignReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AbortPolicyCampaignClosureHandler",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/AbortPolicyCampaignClosureHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "PolicyDistributionCampaign"
+      ],
+      "aggregateTargets": [
+        "PolicyDistributionCampaign"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs"
+      ],
+      "note": "System-only campaign closure receiver; cancels the exact pending closure and fences its delayed finalization. No HTTP/MCP route."
+    },
+    {
+      "request": "ApplyPolicyParticipantResult",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/ApplyPolicyParticipantResult.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IPolicyCampaignReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyPolicyParticipantResultHandler",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/ApplyPolicyParticipantResultHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "PolicyCampaignParticipant",
+        "PolicyDistributionCampaign"
+      ],
+      "aggregateTargets": [
+        "PolicyCampaignParticipant"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyParticipantResultProcessTests.cs",
+        "test/Compliance.Tests/Testing/CampaignFacts.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
+      ],
+      "note": "System-only receiver of IndependentChildMaterialization; applies one admitted participant result exactly as its frozen ChildAdmissionIntent says. No HTTP/MCP route."
+    },
+    {
+      "request": "AuthorizePolicyCampaignParticipantCampaignClosureUse",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/AuthorizePolicyCampaignParticipantCampaignClosureUse.cs",
+      "interfaces": "ISourceUseAuthorization, IPolicyCampaignReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizePolicyCampaignParticipantCampaignClosureUseHandler",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/AuthorizePolicyCampaignParticipantCampaignClosureUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "PolicyCampaignParticipant"
+      ],
+      "aggregateTargets": [
+        "PolicyCampaignParticipant"
+      ],
+      "helperServices": [
+        "PolicyCampaignClosureVerifier",
+        "PolicyCampaignClosureFences"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs"
+      ],
+      "note": "System-only campaign closure receiver on the generic acquire base; holds the participant's exact applied results or aborts the closure and fences the key. No HTTP/MCP route."
+    },
+    {
+      "request": "CompletePolicyCampaignClosure",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/CompletePolicyCampaignClosure.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IPolicyCampaignReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompletePolicyCampaignClosureHandler",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/CompletePolicyCampaignClosureHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "PolicyCampaignParticipant",
+        "PolicyDistributionCampaign"
+      ],
+      "aggregateTargets": [
+        "PolicyDistributionCampaign"
+      ],
+      "helperServices": [
+        "PolicyCampaignClosureVerifier",
+        "CampaignSource"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+        "test/Compliance.Tests/Testing/CampaignFacts.cs",
+        "test/Compliance.Tests/Testing/CampaignSeed.cs"
+      ],
+      "note": "System-only campaign closure receiver; appends the closed campaign once every participant use is held. No HTTP/MCP route."
+    },
+    {
+      "request": "SettlePolicyCampaignParticipantCampaignClosureUse",
+      "contract": "src/Compliance.Common/Features/PolicyDistribution/SettlePolicyCampaignParticipantCampaignClosureUse.cs",
+      "interfaces": "ISourceUseSettlement, IPolicyCampaignReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettlePolicyCampaignParticipantCampaignClosureUseHandler",
+          "source": "src/Compliance.Core/Features/PolicyDistribution/SettlePolicyCampaignParticipantCampaignClosureUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "PolicyCampaignParticipant"
+      ],
+      "aggregateTargets": [
+        "PolicyCampaignParticipant"
+      ],
+      "helperServices": [
+        "PolicyCampaignClosureVerifier"
+      ],
+      "testSymbolReferences": [],
+      "note": "System-only campaign closure receiver on the generic settle base; settles by the campaign's terminal fact and fences a never-granted key. No HTTP/MCP route."
     }
   ],
   "scope": "Current working tree includes the Finding and CorrectiveAction owner split and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",

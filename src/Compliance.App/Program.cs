@@ -1115,8 +1115,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/decisions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policies");
-    app.MapPortiaPost<DefineTrainingRequirement, TrainingRequirementRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements")
+    app.MapPortiaPut<DefineTrainingRequirement, TrainingRequirementRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
     app.MapPortiaGet<ListTrainingRequirements, Page<TrainingRequirementView>>(
@@ -1128,15 +1128,15 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
     app.MapPortiaPut<ReviseTrainingRequirement, TrainingRequirementRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id}")
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/revise-training-requirement/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
-    app.MapPortiaPost<LaunchPolicyCampaign, CampaignRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policy-campaigns")
+    app.MapPortiaPut<LaunchPolicyCampaign, CampaignRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/policy-campaigns/{campaign_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
-    app.MapPortiaPost<LaunchTrainingCampaign, CampaignRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/training-campaigns")
+    app.MapPortiaPut<LaunchTrainingCampaign, CampaignRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/training-campaigns/{campaign_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
     app.MapPortiaGet<ListCampaigns, Page<CampaignSummaryView>>(
@@ -1155,25 +1155,65 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/amendments")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
-    app.MapPortiaPost<ReconcileCampaignAudience, CampaignReconciliationView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/reconciliations")
+    app.MapPortiaPut<ReconcileCampaignAudience, CampaignReconciliationView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/reconciliations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
-    app.MapPortiaPost<RecordTrainingCompletion, CampaignCompletionView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/completions")
+    app.MapPortiaPut<RecordTrainingCompletion, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/completions/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
-    app.MapPortiaPost<CloseCampaign, CampaignView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/closure")
+    app.MapPortiaPut<CloseCampaign, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/closure/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
     // Personal acknowledgements and exception approvals stay HTTP-only.
-    app.MapPortiaPost<AcknowledgePolicy, CampaignAcknowledgementView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/acknowledgements")
+    app.MapPortiaPut<AcknowledgePolicy, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/acknowledgements/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
-    app.MapPortiaPost<ApproveCampaignWaiver, CampaignWaiverView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/waivers")
+    app.MapPortiaPut<ApproveCampaignWaiver, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/waivers/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
     app.MapPortiaPost<CreateRiskDraft, RiskRegistration>(

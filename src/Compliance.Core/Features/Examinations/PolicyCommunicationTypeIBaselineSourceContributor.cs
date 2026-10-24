@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.PolicyDistribution;
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -11,7 +12,8 @@ namespace Bdgrz.Compliance.Features.Examinations;
 /// <summary>Captures point-in-time policy and training campaign audiences and results.</summary>
 public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
     ICampaignDirectoryReader directory, IAggregateReader reader, IDomainEventReader events,
-    CampaignDirectoryReadConsistency consistency) : ITypeIBaselineSourceContributor
+    CampaignDirectoryReadConsistency consistency, CampaignSource campaigns, IImmutableContentStore store)
+    : ITypeIBaselineSourceContributor
 {
     const int PageSize = 200;
 
@@ -42,10 +44,8 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             .GroupBy(static source => source.RecordId)
             .ToDictionary(static group => group.Key, static group => group
                 .OrderBy(source => source.Kind, StringComparer.Ordinal).ToArray());
-        var trainingCatalog = await reader.HydrateAsync(new TrainingCatalog(engagement.TenantId,
-            engagement.ProgramId), ct).ConfigureAwait(false);
-        var trainingSnapshot = CaptureTrainingCatalog(engagement.TenantId,
-            engagement.ProgramId, trainingCatalog, through);
+        var trainingSnapshot = await CaptureTrainingCatalogAsync(engagement.TenantId,
+            engagement.ProgramId, through, ct).ConfigureAwait(false);
         if (!trainingSnapshot.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(trainingSnapshot.Error);
 
@@ -102,9 +102,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                     return InvalidDirectory();
                 }
 
-                var stream = new EventStreamAddress(engagement.TenantId.ToString(),
-                    "policy-distribution-campaigns", item.CampaignId.ToString());
-                var history = await ReadCampaignHistoryAsync(stream, engagement.TenantId,
+                var history = await ReadCampaignHistoryAsync(engagement.TenantId,
                     engagement.ProgramId, item.CampaignId, ct).ConfigureAwait(false);
                 if (!history.IsSuccess)
                     return Result<TypeIBaselineSourceContribution>.Failure(history.Error);
@@ -117,10 +115,10 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                     continue;
                 if (launch.Subject.Kind == "policy")
                 {
-                    if (policy is null || !MatchesPolicySubject(policy, launch))
+                    if (policy is null || !MatchesPolicySubject(policy, launch, history.Value.Teams))
                         return SourceConflict();
                 }
-                else if (!MatchesTrainingSubject(trainingCatalog, launch))
+                else if (!MatchesTrainingSubject(trainingSnapshot.Value, launch, history.Value.Teams))
                 {
                     return SourceConflict();
                 }
@@ -136,15 +134,16 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                     var waivers = history.Value.Waivers.Where(item => item.ApprovedAt <= through)
                         .ToArray();
                     var amendments = history.Value.Amendments.Where(item =>
-                            item.AmendedAt <= through && item.ObservedOn <= engagement.PeriodStart)
+                            item.Fact.AmendedAt <= through && item.Fact.ObservedOn <= engagement.PeriodStart)
                         .ToArray();
                     var closure = history.Value.Closure is { } closed && closed.ClosedAt <= through
                         ? closed
                         : null;
                     var content = new PolicyCommunicationCampaignSourceContent(
-                        engagement.PeriodStart, launch, history.Value.FrozenBatchCount,
-                        history.Value.InitialAudience, amendments, acknowledgements, completions,
-                        waivers, closure);
+                        engagement.PeriodStart, launch, history.Value.Teams, history.Value.FrozenBatchCount,
+                        history.Value.InitialAudience, amendments,
+                        acknowledgements, completions, waivers, closure,
+                        closure is null ? null : history.Value.ClosingTotals);
                     var capturedEvents = 1 + history.Value.FrozenBatchCount + amendments.Length +
                                          acknowledgements.Length + completions.Length + waivers.Length +
                                          (closure is null ? 0 : 1);
@@ -172,14 +171,11 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             cursor = next;
         } while (cursor is not null);
 
-        var currentCatalog = await reader.HydrateAsync(new TrainingCatalog(engagement.TenantId,
-            engagement.ProgramId), ct).ConfigureAwait(false);
-        var confirmedCatalog = CaptureTrainingCatalog(engagement.TenantId,
-            engagement.ProgramId, currentCatalog, through);
+        var confirmedCatalog = await CaptureTrainingCatalogAsync(engagement.TenantId,
+            engagement.ProgramId, through, ct).ConfigureAwait(false);
         if (!confirmedCatalog.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(confirmedCatalog.Error);
-        if (CatalogFingerprint(trainingSnapshot.Value.Catalog.Latest()) !=
-            CatalogFingerprint(confirmedCatalog.Value.Catalog.Latest()))
+        if (CatalogFingerprint(trainingSnapshot.Value.Latest) != CatalogFingerprint(confirmedCatalog.Value.Latest))
             return SourceConflict();
 
         var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(
@@ -212,7 +208,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         summary.DueOn == launch.DueOn && summary.Status == (isClosed ? "closed" : "open") &&
         summary.LaunchAudience == audienceCount && summary.LaunchedAt == launch.LaunchedAt;
 
-    static bool MatchesPolicySubject(Policy policy, PolicyCampaignLaunched launch)
+    static bool MatchesPolicySubject(Policy policy, PolicyCampaignLaunched launch, IReadOnlyList<string> teams)
     {
         var subject = launch.Subject;
         var version = policy.FindVersion(subject.Version);
@@ -220,7 +216,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             version.Content.Title != subject.Title ||
             version.ContentSha256 != subject.ContentSha256 ||
             launch.AudienceKind != version.Content.AudienceKind ||
-            !launch.AudienceTeams.SequenceEqual(
+            !teams.SequenceEqual(
                 PolicyAudience.CleanTeams(version.Content.AudienceTeams), StringComparer.Ordinal) ||
             version.ApprovedAt > launch.LaunchedAt || version.EffectiveFrom > launch.LaunchedOn)
             return false;
@@ -236,7 +232,8 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             until > launch.LaunchedOn;
     }
 
-    static bool MatchesTrainingSubject(TrainingCatalog catalog, PolicyCampaignLaunched launch)
+    static bool MatchesTrainingSubject(TrainingCatalogSnapshot catalog, PolicyCampaignLaunched launch,
+        IReadOnlyList<string> teams)
     {
         var subject = launch.Subject;
         var requirement = catalog.Find(subject.RecordId, subject.Version);
@@ -244,8 +241,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
                requirement.Content.CourseName == subject.Title &&
                requirement.ContentSha256 == subject.ContentSha256 &&
                launch.AudienceKind == requirement.Content.AudienceKind &&
-               launch.AudienceTeams.SequenceEqual(
-                   PolicyAudience.CleanTeams(requirement.Content.AudienceTeams),
+               teams.SequenceEqual(PolicyAudience.CleanTeams(requirement.Content.AudienceTeams),
                    StringComparer.Ordinal) &&
                requirement.ChangedAt <= launch.LaunchedAt;
     }
@@ -254,153 +250,132 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         new RequestError(RequestErrorKind.Conflict,
             "A policy campaign source stream is invalid or inconsistent."));
 
-    async ValueTask<Result<CampaignHistory>> ReadCampaignHistoryAsync(EventStreamAddress stream,
-        Uuid tenantId, Uuid programId, Uuid campaignId, CancellationToken ct)
+    /// <summary>
+    ///     Reads the campaign owner, its complete audience and amendments from verified immutable content, and the
+    ///     results applied to its participant owners. Every fact was validated by its owner's reducers when it was
+    ///     replayed; the checks here bind the facts to each other and to the launch.
+    /// </summary>
+    async ValueTask<Result<CampaignHistory>> ReadCampaignHistoryAsync(Uuid tenantId, Uuid programId, Uuid campaignId,
+        CancellationToken ct)
     {
-        var history = new List<DomainEvent>();
-        var seenEventIds = new HashSet<Uuid>();
-        ulong expectedVersion = 1;
-        await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
-        {
-            var metadata = record.Event?.Metadata;
-            if (record.Stream != stream || record.Event is null || metadata is null ||
-                metadata.EventId == Uuid.Empty || !seenEventIds.Add(metadata.EventId) ||
-                metadata.AggregateId != campaignId || metadata.AggregateVersion != expectedVersion ||
-                metadata.OccurredOn == default)
-                return InvalidHistory();
-            history.Add(record.Event);
-            expectedVersion++;
-        }
-
-        if (history.Count == 0 || history[0] is not PolicyCampaignLaunched launch ||
-            !IsValidLaunch(launch, tenantId, programId, campaignId))
+        var loaded = await campaigns.ReadAsync(tenantId, programId, campaignId, ct).ConfigureAwait(false);
+        if (!loaded.IsSuccess)
+            return Result<CampaignHistory>.Failure(loaded.Error);
+        var state = loaded.Value;
+        var campaign = state.Campaign;
+        var launch = campaign.Launch!;
+        var frozen = campaign.Frozen!;
+        var realm = tenantId.ToString();
+        if (!IsValidLaunch(launch, tenantId, programId, campaignId, state.Teams))
             return InvalidHistory();
 
-        var index = 1;
-        var initialAudience = new List<CampaignAudienceEntry>();
-        var audienceIds = new HashSet<Uuid>();
-        var batch = 0;
-        while (index < history.Count && history[index] is PolicyCampaignAudienceFrozen frozen)
+        IReadOnlyList<CampaignAudienceEntry> entries;
+        var amendments = new List<PolicyCommunicationAudienceAmendment>();
+        var closure = campaign.Closing;
+        CampaignTotalsView? closingTotals = null;
+        try
         {
-            batch++;
-            if (frozen.TenantId != tenantId || frozen.CampaignId != campaignId ||
-                frozen.Batch != batch || frozen.Entries is null || frozen.Entries.Count is < 1 or
-                > PolicyDistributionCampaign.BatchSize)
-                return InvalidHistory();
-            foreach (var entry in frozen.Entries)
-            {
-                if (entry is null || entry.PersonId == Uuid.Empty ||
-                    string.IsNullOrWhiteSpace(entry.DisplayName) ||
-                    string.IsNullOrWhiteSpace(entry.WorkerType) || entry.StartDate == default ||
-                    entry.StartDate > DateOnly.MaxValue.AddDays(-30) ||
-                    entry.DueOn != (launch.DueOn > entry.StartDate.AddDays(30)
-                        ? launch.DueOn
-                        : entry.StartDate.AddDays(30)) || !audienceIds.Add(entry.PersonId))
-                    return InvalidHistory();
-                initialAudience.Add(entry);
-            }
-            index++;
+            entries = await store.ReadJsonAsync<IReadOnlyList<CampaignAudienceEntry>>(realm, frozen.EntriesManifest, ct)
+                .ConfigureAwait(false);
+            foreach (var amended in campaign.Amendments)
+                amendments.Add(new PolicyCommunicationAudienceAmendment(amended, await store
+                    .ReadJsonAsync<IReadOnlyList<CampaignAudienceAmendment>>(realm, amended.AmendmentsManifest, ct)
+                    .ConfigureAwait(false)));
+            if (closure is not null)
+                closingTotals = await store.ReadJsonAsync<CampaignTotalsView>(realm, closure.TotalsContent, ct)
+                    .ConfigureAwait(false);
         }
-        if (initialAudience.Count != launch.AudienceCount ||
-            (launch.AudienceCount == 0) != (batch == 0))
+        catch (ImmutableContentIntegrityException)
+        {
+            return InvalidHistory();
+        }
+
+        var audienceIds = new HashSet<Uuid>();
+        foreach (var entry in entries)
+        {
+            if (entry is null || entry.PersonId == Uuid.Empty ||
+                string.IsNullOrWhiteSpace(entry.DisplayName) ||
+                string.IsNullOrWhiteSpace(entry.WorkerType) || entry.StartDate == default ||
+                entry.StartDate > DateOnly.MaxValue.AddDays(-30) ||
+                entry.DueOn != (launch.DueOn > entry.StartDate.AddDays(30)
+                    ? launch.DueOn
+                    : entry.StartDate.AddDays(30)) || !audienceIds.Add(entry.PersonId))
+                return InvalidHistory();
+        }
+
+        if (entries.Count != launch.AudienceCount || frozen.Batch != 1)
             return InvalidHistory();
 
         var activePeople = new HashSet<Uuid>(audienceIds);
-        var acknowledgementPeople = new HashSet<Uuid>();
-        var completionPeople = new HashSet<Uuid>();
-        var acknowledgementIds = new HashSet<Uuid>();
-        var completionIds = new HashSet<Uuid>();
-        var waiversByPerson = new Dictionary<Uuid, CampaignWaiverApproved>();
-        var amendments = new List<PolicyCampaignAudienceAmended>();
-        var acknowledgements = new List<PolicyAcknowledgementRecorded>();
-        var completions = new List<TrainingCompletionRecorded>();
-        var waivers = new List<CampaignWaiverApproved>();
-        PolicyCampaignClosed? closure = null;
+        var everIncluded = new HashSet<Uuid>(audienceIds);
         long reconciliation = 0;
-        var amendmentBatch = 0;
-        PolicyCampaignAudienceAmended? priorAmendment = null;
-
-        while (index < history.Count)
+        foreach (var expanded in amendments)
         {
-            var domainEvent = history[index++];
-            switch (domainEvent)
+            var amended = expanded.Fact;
+            if (amended.Reconciliation != reconciliation + 1 || !IsValidAmendment(amended, expanded.Items,
+                    tenantId, campaignId, launch))
+                return InvalidHistory();
+            reconciliation = amended.Reconciliation;
+            foreach (var amendment in expanded.Items)
             {
-                case PolicyCampaignAudienceAmended amended:
-                    if (closure is not null ||
-                        !IsValidAmendment(amended, tenantId, campaignId, launch))
+                if (amendment.Reason is "joiner" or "mover_in")
+                {
+                    if (!activePeople.Add(amendment.PersonId))
                         return InvalidHistory();
-                    if (amended.Reconciliation == reconciliation)
-                    {
-                        if (priorAmendment is null || amended.Batch != amendmentBatch + 1 ||
-                            !SameAmendmentBatch(priorAmendment, amended))
-                            return InvalidHistory();
-                    }
-                    else
-                    {
-                        if (amended.Reconciliation != reconciliation + 1 || amended.Batch != 1)
-                            return InvalidHistory();
-                        reconciliation = amended.Reconciliation;
-                    }
-                    amendmentBatch = amended.Batch;
-                    priorAmendment = amended;
-                    foreach (var amendment in amended.Amendments)
-                    {
-                        if (amendment.Reason is "joiner" or "mover_in")
-                        {
-                            if (!activePeople.Add(amendment.PersonId))
-                                return InvalidHistory();
-                        }
-                        else if (!activePeople.Remove(amendment.PersonId))
-                        {
-                            return InvalidHistory();
-                        }
-                    }
-                    amendments.Add(amended);
-                    break;
-                case PolicyAcknowledgementRecorded acknowledgement:
-                    priorAmendment = null;
-                    if (closure is not null || !IsValidAcknowledgement(acknowledgement, launch,
-                            activePeople, acknowledgementPeople, acknowledgementIds))
-                        return InvalidHistory();
-                    acknowledgements.Add(acknowledgement);
-                    break;
-                case TrainingCompletionRecorded completion:
-                    priorAmendment = null;
-                    if (closure is not null || !IsValidCompletion(completion, launch,
-                            activePeople, completionPeople, completionIds))
-                        return InvalidHistory();
-                    completions.Add(completion);
-                    break;
-                case CampaignWaiverApproved waiver:
-                    priorAmendment = null;
-                    if (closure is not null || !IsValidWaiver(waiver, tenantId, campaignId,
-                            launch, activePeople, acknowledgementPeople, completionPeople,
-                            waiversByPerson))
-                        return InvalidHistory();
-                    waiversByPerson[waiver.PersonId] = waiver;
-                    waivers.Add(waiver);
-                    break;
-                case PolicyCampaignClosed closed:
-                    priorAmendment = null;
-                    if (closure is not null || !IsValidClosure(closed, tenantId, campaignId,
-                            launch))
-                        return InvalidHistory();
-                    closure = closed;
-                    break;
-                default:
+                    everIncluded.Add(amendment.PersonId);
+                }
+                else if (!activePeople.Remove(amendment.PersonId))
+                {
                     return InvalidHistory();
+                }
             }
         }
 
-        var campaign = await reader.HydrateAsync(new PolicyDistributionCampaign(tenantId,
-            campaignId), ct).ConfigureAwait(false);
-        if (!campaign.IsLaunched || campaign.ProgramId != programId ||
-            campaign.Subject != launch.Subject || campaign.Id != campaignId)
+        var acknowledgements = new List<PolicyAcknowledgementRecorded>();
+        var completions = new List<TrainingCompletionRecorded>();
+        var waivers = new List<CampaignWaiverApproved>();
+        var acknowledgementIds = new HashSet<Uuid>();
+        var completionIds = new HashSet<Uuid>();
+        foreach (var (personId, participant) in state.Participants.OrderBy(pair => pair.Key.ToString(),
+                     StringComparer.Ordinal))
+        {
+            if (!everIncluded.Contains(personId))
+                return InvalidHistory();
+            var priorWaivers = new Dictionary<Uuid, CampaignWaiverApproved>();
+            foreach (var result in participant.Results.OrderBy(static result => TimeOf(result)))
+            {
+                switch (result)
+                {
+                    case PolicyAcknowledgementRecorded acknowledgement:
+                        if (closure is not null && acknowledgement.AcknowledgedAt > closure.ClosedAt ||
+                            !IsValidAcknowledgement(acknowledgement, launch, acknowledgementIds))
+                            return InvalidHistory();
+                        acknowledgements.Add(acknowledgement);
+                        break;
+                    case TrainingCompletionRecorded completion:
+                        if (closure is not null && completion.RecordedAt > closure.ClosedAt ||
+                            !IsValidCompletion(completion, launch, completionIds))
+                            return InvalidHistory();
+                        completions.Add(completion);
+                        break;
+                    case CampaignWaiverApproved waiver:
+                        if (closure is not null && waiver.ApprovedAt > closure.ClosedAt ||
+                            !IsValidWaiver(waiver, tenantId, campaignId, launch, priorWaivers))
+                            return InvalidHistory();
+                        priorWaivers[waiver.PersonId] = waiver;
+                        waivers.Add(waiver);
+                        break;
+                    default:
+                        return InvalidHistory();
+                }
+            }
+        }
+
+        if (closure is { } closedEvent && (!IsValidClosure(closedEvent, tenantId, campaignId, launch) ||
+                                           state.Totals(closedEvent.ClosedOn) != closingTotals))
             return InvalidHistory();
-        if (closure is { } closedEvent && campaign.Totals(closedEvent.ClosedOn) != closedEvent.Totals)
-            return InvalidHistory();
-        var view = campaign.ToView(launch.LaunchedOn);
-        var expectedStatus = closure is null ? "open" : "closed";
+        var view = state.ToView(launch.LaunchedOn);
+        var expectedStatus = closure is null ? campaign.IsSealed ? "closing" : "open" : "closed";
         if (view.TenantId != tenantId || view.ProgramId != programId ||
             view.CampaignId != campaignId || view.AudienceKind != launch.AudienceKind ||
             view.RosterSnapshotId != launch.RosterSnapshotId ||
@@ -412,25 +387,35 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             view.Status != expectedStatus || view.Totals.LaunchAudience != launch.AudienceCount)
             return InvalidHistory();
 
-        return Result<CampaignHistory>.Success(new CampaignHistory(launch, batch,
-            initialAudience.AsReadOnly(), amendments.AsReadOnly(), acknowledgements.AsReadOnly(),
-            completions.AsReadOnly(), waivers.AsReadOnly(), closure));
+        return Result<CampaignHistory>.Success(new CampaignHistory(launch, state.Teams, 1,
+            entries, amendments.AsReadOnly(),
+            acknowledgements.OrderBy(static item => item.AcknowledgedAt).ToArray(),
+            completions.OrderBy(static item => item.RecordedAt).ToArray(),
+            waivers.OrderBy(static item => item.ApprovedAt).ToArray(), closure, closingTotals));
     }
 
+    static DateTimeOffset TimeOf(DomainEvent result) => result switch
+    {
+        PolicyAcknowledgementRecorded acknowledgement => acknowledgement.AcknowledgedAt,
+        TrainingCompletionRecorded completion => completion.RecordedAt,
+        CampaignWaiverApproved waiver => waiver.ApprovedAt,
+        _ => DateTimeOffset.MinValue,
+    };
+
     static bool IsValidLaunch(PolicyCampaignLaunched launch, Uuid tenantId, Uuid programId,
-        Uuid campaignId) => launch.TenantId == tenantId && launch.ProgramId == programId &&
+        Uuid campaignId, IReadOnlyList<string> teams) => launch.TenantId == tenantId &&
+        launch.ProgramId == programId &&
         launch.CampaignId == campaignId && launch.Subject is { } subject &&
         subject.Kind is "policy" or "training" && subject.RecordId != Uuid.Empty &&
         !string.IsNullOrWhiteSpace(subject.Identifier) &&
         !string.IsNullOrWhiteSpace(subject.Title) && subject.Version >= 1 &&
         IsSha256(subject.ContentSha256) && launch.AudienceKind is not null &&
-        launch.AudienceTeams is not null && launch.RosterSnapshotId != Uuid.Empty &&
+        teams is not null && launch.RosterSnapshotId != Uuid.Empty &&
         IsSha256(launch.RosterContentSha256) && launch.LaunchedOn != default &&
-        launch.DueOn >= launch.LaunchedOn && launch.AudienceCount is >= 0 and
-        <= PolicyDistributionCampaign.MaximumAudience && launch.ActorMemberId != Uuid.Empty &&
+        launch.DueOn >= launch.LaunchedOn && launch.AudienceCount >= 0 && launch.ActorMemberId != Uuid.Empty &&
         launch.Actor is not null && launch.LaunchedAt != default &&
-        PolicyAudience.Validate(launch.AudienceKind, launch.AudienceTeams) is null &&
-        launch.AudienceTeams.SequenceEqual(PolicyAudience.CleanTeams(launch.AudienceTeams),
+        PolicyAudience.Validate(launch.AudienceKind, teams) is null &&
+        teams.SequenceEqual(PolicyAudience.CleanTeams(teams),
             StringComparer.Ordinal) && launch.Instructions?.Length <= 4000 &&
         (launch.Instructions is null || launch.Instructions == launch.Instructions.Trim()) &&
         launch.LaunchedOn == DateOnly.FromDateTime(launch.LaunchedAt.UtcDateTime) &&
@@ -438,19 +423,19 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             ? launch.AcknowledgementText == PolicyDistributionCampaign.DefaultAcknowledgementText
             : launch.AcknowledgementText is null);
 
-    static bool IsValidAmendment(PolicyCampaignAudienceAmended amendment, Uuid tenantId,
-        Uuid campaignId, PolicyCampaignLaunched launch)
+    static bool IsValidAmendment(PolicyCampaignAudienceAmended amendment,
+        IReadOnlyList<CampaignAudienceAmendment> items, Uuid tenantId, Uuid campaignId,
+        PolicyCampaignLaunched launch)
     {
         if (amendment.TenantId != tenantId || amendment.CampaignId != campaignId ||
-            amendment.Reconciliation < 1 || amendment.Batch < 1 ||
+            amendment.Reconciliation < 1 || amendment.Batch != 1 ||
             amendment.RosterSnapshotId == Uuid.Empty || !IsSha256(amendment.RosterContentSha256) ||
             amendment.ObservedOn == default || amendment.AmendedAt < launch.LaunchedAt ||
             amendment.ObservedOn != DateOnly.FromDateTime(amendment.AmendedAt.UtcDateTime) ||
-            amendment.Actor is null || amendment.Amendments is null ||
-            amendment.Amendments.Count > PolicyDistributionCampaign.BatchSize)
+            amendment.Actor is null)
             return false;
         var seenPeople = new HashSet<Uuid>();
-        foreach (var item in amendment.Amendments)
+        foreach (var item in items)
         {
             if (item is null || item.PersonId == Uuid.Empty ||
                 string.IsNullOrWhiteSpace(item.DisplayName) || !seenPeople.Add(item.PersonId))
@@ -474,16 +459,8 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         return true;
     }
 
-    static bool SameAmendmentBatch(PolicyCampaignAudienceAmended left,
-        PolicyCampaignAudienceAmended right) =>
-        left.Reconciliation == right.Reconciliation && left.RosterSnapshotId == right.RosterSnapshotId &&
-        left.RosterContentSha256 == right.RosterContentSha256 &&
-        left.ObservedOn == right.ObservedOn && left.Actor == right.Actor &&
-        left.AmendedAt == right.AmendedAt;
-
     static bool IsValidAcknowledgement(PolicyAcknowledgementRecorded acknowledgement,
-        PolicyCampaignLaunched launch, HashSet<Uuid> activePeople,
-        HashSet<Uuid> acknowledgementPeople, HashSet<Uuid> acknowledgementIds) =>
+        PolicyCampaignLaunched launch, HashSet<Uuid> acknowledgementIds) =>
         launch.Subject.Kind == "policy" && acknowledgement.TenantId == launch.TenantId &&
         acknowledgement.CampaignId == launch.CampaignId &&
         acknowledgement.AcknowledgementId != Uuid.Empty && acknowledgement.PersonId != Uuid.Empty &&
@@ -493,13 +470,10 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         acknowledgement.AcknowledgementText == launch.AcknowledgementText &&
         acknowledgement.AcknowledgedAt >= launch.LaunchedAt &&
         acknowledgement.Performer is not null && acknowledgement.Recorder is not null &&
-        activePeople.Contains(acknowledgement.PersonId) &&
-        acknowledgementPeople.Add(acknowledgement.PersonId) &&
         acknowledgementIds.Add(acknowledgement.AcknowledgementId);
 
     static bool IsValidCompletion(TrainingCompletionRecorded completion,
-        PolicyCampaignLaunched launch, HashSet<Uuid> activePeople,
-        HashSet<Uuid> completionPeople, HashSet<Uuid> completionIds) =>
+        PolicyCampaignLaunched launch, HashSet<Uuid> completionIds) =>
         launch.Subject.Kind == "training" && completion.TenantId == launch.TenantId &&
         completion.CampaignId == launch.CampaignId && completion.CompletionId != Uuid.Empty &&
         completion.PersonId != Uuid.Empty && completion.RequirementId == launch.Subject.RecordId &&
@@ -509,23 +483,17 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         !string.IsNullOrWhiteSpace(completion.EvidenceReference) &&
         completion.EvidenceReference == completion.EvidenceReference.Trim() &&
         completion.EvidenceReference.Length <= 1024 && completion.Recorder is not null &&
-        completion.RecordedAt >= launch.LaunchedAt && activePeople.Contains(completion.PersonId) &&
-        completionPeople.Add(completion.PersonId) && completionIds.Add(completion.CompletionId);
+        completion.RecordedAt >= launch.LaunchedAt && completionIds.Add(completion.CompletionId);
 
     static bool IsValidWaiver(CampaignWaiverApproved waiver, Uuid tenantId, Uuid campaignId,
-        PolicyCampaignLaunched launch, HashSet<Uuid> activePeople,
-        HashSet<Uuid> acknowledgementPeople,
-        HashSet<Uuid> completionPeople, Dictionary<Uuid, CampaignWaiverApproved> priorWaivers)
+        PolicyCampaignLaunched launch, Dictionary<Uuid, CampaignWaiverApproved> priorWaivers)
     {
         if (waiver.TenantId != tenantId || waiver.CampaignId != campaignId ||
             waiver.WaiverId == Uuid.Empty || waiver.PersonId == Uuid.Empty ||
             string.IsNullOrWhiteSpace(waiver.Reason) || waiver.Reason.Length > 4000 ||
             waiver.Reason != waiver.Reason.Trim() || waiver.ApprovedAt < launch.LaunchedAt ||
             waiver.ExpiresOn == default || waiver.Approver is null ||
-            waiver.ApproverMemberId == Uuid.Empty || waiver.ApprovedAt == default ||
-            !activePeople.Contains(waiver.PersonId) ||
-            acknowledgementPeople.Contains(waiver.PersonId) ||
-            completionPeople.Contains(waiver.PersonId))
+            waiver.ApproverMemberId == Uuid.Empty || waiver.ApprovedAt == default)
             return false;
         var approvedOn = DateOnly.FromDateTime(waiver.ApprovedAt.UtcDateTime);
         if (waiver.ExpiresOn <= approvedOn || waiver.ExpiresOn > approvedOn.AddMonths(12))
@@ -540,40 +508,63 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
         !string.IsNullOrWhiteSpace(closure.Rationale) && closure.Rationale.Length <= 4000 &&
         closure.Rationale == closure.Rationale.Trim() &&
         closure.Actor is not null && closure.ClosedAt >= launch.LaunchedAt &&
-        closure.ClosedOn == DateOnly.FromDateTime(closure.ClosedAt.UtcDateTime) &&
-        closure.Totals is not null;
+        closure.ClosedOn == DateOnly.FromDateTime(closure.ClosedAt.UtcDateTime);
 
-    static Result<TrainingCatalogSnapshot> CaptureTrainingCatalog(
-        Uuid tenantId, Uuid programId, TrainingCatalog catalog, DateTimeOffset through)
+    /// <summary>
+    ///     Captures every training requirement of the program from the requirement owners' own facts, so a lagging
+    ///     catalog projection can never hide a requirement or a version.
+    /// </summary>
+    async ValueTask<Result<TrainingCatalogSnapshot>> CaptureTrainingCatalogAsync(Uuid tenantId, Uuid programId,
+        DateTimeOffset through, CancellationToken ct)
     {
+        var byRequirement = new Dictionary<Uuid, List<TrainingRequirementDefined>>();
+        await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(),
+                           TrainingRequirement.Area), EventCursor.Start, ct).ConfigureAwait(false))
+        {
+            if (record.Event is not TrainingRequirementDefined defined || defined.TenantId != tenantId)
+                return Result<TrainingCatalogSnapshot>.Failure(InvalidTrainingCatalogError());
+            if (defined.ProgramId != programId)
+                continue;
+            if (!byRequirement.TryGetValue(defined.RequirementId, out var versions))
+                byRequirement.Add(defined.RequirementId, versions = []);
+            versions.Add(defined);
+        }
+
         var sources = new List<TypeIBaselineSourceReference>();
         var selectedIds = new HashSet<Uuid>();
-        var latest = catalog.Latest();
-        var requirementIds = new HashSet<Uuid>();
-        foreach (var item in latest)
+        var latest = new List<TrainingRequirementView>();
+        var versionsById = new Dictionary<(Uuid, long), TrainingRequirementView>();
+        foreach (var (requirementId, versions) in byRequirement.OrderBy(pair => pair.Key.ToString(),
+                     StringComparer.Ordinal))
         {
-            if (item is null || item.TenantId != tenantId || item.ProgramId != programId ||
-                item.RequirementId == Uuid.Empty ||
-                TrainingCatalog.NormalizeIdentifier(item.Identifier) != item.Identifier ||
-                item.Version < 1 || item.Version != item.LatestVersion ||
-                !requirementIds.Add(item.RequirementId))
-                return Result<TrainingCatalogSnapshot>.Failure(InvalidTrainingCatalogError());
-
             TrainingRequirementView? asOf = null;
-            for (var versionNumber = 1L; versionNumber <= item.LatestVersion; versionNumber++)
+            var number = 0L;
+            foreach (var fact in versions.OrderBy(static fact => fact.Version))
             {
-                var version = catalog.Find(item.RequirementId, versionNumber);
-                if (version is null || version.TenantId != tenantId ||
-                    version.ProgramId != programId || version.RequirementId != item.RequirementId ||
-                    version.Identifier != item.Identifier || version.Version != versionNumber ||
-                    version.LatestVersion != item.LatestVersion ||
-                    version.Content is null ||
-                    version.ContentSha256 != TrainingContentHash(version.Content) ||
-                    version.Cadence != TrainingCatalog.Cadence || version.ChangedBy is null ||
+                TrainingRequirementView version;
+                try
+                {
+                    version = await TrainingRequirementRules.ViewAsync(store, fact, versions.Count, ct)
+                        .ConfigureAwait(false);
+                }
+                catch (ImmutableContentIntegrityException)
+                {
+                    return Result<TrainingCatalogSnapshot>.Failure(InvalidTrainingCatalogError());
+                }
+
+                if (++number != fact.Version || version.RequirementId != requirementId ||
+                    version.ProgramId != programId || version.TenantId != tenantId ||
+                    TrainingRequirementIdentity.IdFor(tenantId, programId, version.Identifier) != requirementId ||
+                    TrainingRequirementIdentity.NormalizeIdentifier(version.Identifier) != version.Identifier ||
+                    version.Content is null || version.ContentSha256 != TrainingContentHash(version.Content) ||
+                    version.Cadence != TrainingRequirement.Cadence || version.ChangedBy is null ||
                     version.ChangedAt == default)
                     return Result<TrainingCatalogSnapshot>.Failure(InvalidTrainingCatalogError());
+                versionsById[(requirementId, version.Version)] = version;
                 if (version.ChangedAt <= through)
                     asOf = version;
+                if (number == versions.Count)
+                    latest.Add(version);
             }
 
             if (asOf is null)
@@ -590,7 +581,7 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             selectedIds.Add(asOf.RequirementId);
         }
 
-        return Result<TrainingCatalogSnapshot>.Success(new TrainingCatalogSnapshot(catalog,
+        return Result<TrainingCatalogSnapshot>.Success(new TrainingCatalogSnapshot(versionsById, latest,
             sources.AsReadOnly(), selectedIds));
     }
 
@@ -701,16 +692,22 @@ public sealed class PolicyCommunicationTypeIBaselineSourceContributor(
             "A policy communication source changed or did not match its source directory. Retry the preview.",
             isTransient: true));
 
-    sealed record TrainingCatalogSnapshot(TrainingCatalog Catalog,
+    sealed record TrainingCatalogSnapshot(IReadOnlyDictionary<(Uuid, long), TrainingRequirementView> Versions,
+        IReadOnlyList<TrainingRequirementView> Latest,
         IReadOnlyList<TypeIBaselineSourceReference> Sources,
-        IReadOnlySet<Uuid> AsOfRequirementIds);
+        IReadOnlySet<Uuid> AsOfRequirementIds)
+    {
+        public TrainingRequirementView? Find(Uuid requirementId, long version) =>
+            Versions.GetValueOrDefault((requirementId, version));
+    }
 
-    sealed record CampaignHistory(PolicyCampaignLaunched Launch, int FrozenBatchCount,
+    sealed record CampaignHistory(PolicyCampaignLaunched Launch, IReadOnlyList<string> Teams, int FrozenBatchCount,
         IReadOnlyList<CampaignAudienceEntry> InitialAudience,
-        IReadOnlyList<PolicyCampaignAudienceAmended> Amendments,
+        IReadOnlyList<PolicyCommunicationAudienceAmendment> Amendments,
         IReadOnlyList<PolicyAcknowledgementRecorded> Acknowledgements,
         IReadOnlyList<TrainingCompletionRecorded> Completions,
-        IReadOnlyList<CampaignWaiverApproved> Waivers, PolicyCampaignClosed? Closure)
+        IReadOnlyList<CampaignWaiverApproved> Waivers, PolicyCampaignClosed? Closure,
+        CampaignTotalsView? ClosingTotals)
     {
         public DateTimeOffset? ClosedAt => Closure?.ClosedAt;
     }

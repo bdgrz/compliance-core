@@ -1,7 +1,14 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.PolicyDistribution;
 
-[Discriminator("bdgrz.policy_campaign.audience.frozen", 1)]
+/// <summary>
+///     The complete frozen launch audience. <paramref name="EntriesManifest" /> holds every
+///     <see cref="CampaignAudienceEntry" /> in canonical person order, with no count cap.
+/// </summary>
+[Discriminator("bdgrz.policy_campaign.audience.frozen", 2)]
 public sealed record PolicyCampaignAudienceFrozen(Uuid TenantId, Uuid CampaignId, int Batch,
-    IReadOnlyList<CampaignAudienceEntry> Entries) : DomainEvent;
+    ImmutableContentRef EntriesManifest, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

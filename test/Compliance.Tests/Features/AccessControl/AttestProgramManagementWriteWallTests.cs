@@ -76,7 +76,7 @@ public sealed class AttestProgramManagementWriteWallTests
                 "Client scope", RbacIds.Member(Tenant, User), new DateOnly(2027, 1, 1)), context, CancellationToken.None)).Error,
             "readiness" => (await bus.DispatchAsync(new RunReadinessAssessment(Tenant, Program, 0,
                 Now), context, CancellationToken.None)).Error,
-            "training" => (await bus.DispatchAsync(new DefineTrainingRequirement(Tenant, Program, "TR-1",
+            "training" => (await bus.DispatchAsync(new DefineTrainingRequirement(TrainingRequirementIdentity.IdFor(Tenant, Program, "TR-1"), Tenant, Program, "TR-1",
                 new TrainingRequirementContent("Security training", "Training description", "core_security", null,
                     "manual")), context, CancellationToken.None)).Error,
             _ => throw new InvalidOperationException()
@@ -103,31 +103,35 @@ public sealed class AttestProgramManagementWriteWallTests
             Assert.Null(person.CorrelateMembership(1, User, actor, Now));
             return Result.Success;
         });
-        await ProgramManagementServices.SeedAsync(provider, new PolicyDistributionCampaign(Tenant, campaignId),
-            campaign => campaign.Launch(Program,
-                new CampaignSubject("policy", Uuid.CreateVersion4(), "POL-1", "Synthetic frozen policy", 1,
-                    "synthetic-pinned-policy-hash"), PolicyAudience.CoreSecurity, [], Uuid.CreateVersion4(),
-                "synthetic-frozen-roster-hash", new RosterAudience(
-                    new Dictionary<Uuid, RosterMatch>
-                    {
-                        [personId] = new(personId, "Client participant", "employee", "Engineering", new DateOnly(2025, 1, 1)),
-                    }, new HashSet<Uuid> { personId }), new DateOnly(2027, 1, 1), null, actor, memberId, Now));
+        await CampaignSeed.LaunchAsync(provider, Tenant, Program, campaignId,
+            new CampaignSubject("policy", Uuid.CreateVersion4(), "POL-1", "Synthetic frozen policy", 1,
+                "synthetic-pinned-policy-hash"), PolicyAudience.CoreSecurity, [], Uuid.CreateVersion4(),
+            "synthetic-frozen-roster-hash", new RosterAudience(
+                new Dictionary<Uuid, RosterMatch>
+                {
+                    [personId] = new(personId, "Client participant", "employee", "Engineering", new DateOnly(2025, 1, 1)),
+                }, new HashSet<Uuid> { personId }), new DateOnly(2027, 1, 1), null, actor, memberId, Now);
         await AttestAssignmentHistoryFixture.SeedAsync(provider, Tenant, User, revoked: true);
         await using var scope = provider.CreateAsyncScope();
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new AcknowledgePolicy(Tenant, Program, campaignId, personId, 1, "synthetic-pinned-policy-hash",
-                PolicyDistributionCampaign.DefaultAcknowledgementText),
+            new AcknowledgePolicy(Uuid.CreateVersion4(), Tenant, Program, campaignId, personId, 1,
+                "synthetic-pinned-policy-hash", PolicyDistributionCampaign.DefaultAcknowledgementText, 1),
             new RequestDispatchContext(ProgramManagementServices.Actor(User),
                 new HttpInvocation("POST", "/synthetic/policy-acknowledgement", "/synthetic/policy-acknowledgement", "synthetic")),
             CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.False(result.Value!.RecordedOnBehalf);
-        Assert.Equal(personId.ToString(), result.Value.Performer.Id);
-        Assert.Equal(memberId.ToString(), result.Value.Recorder.Id);
+        var applied = await CampaignSeed.ApplyAdmittedAsync(provider, Tenant, campaignId, personId,
+            result.Value!.OperationId, CampaignParticipantResultKind.PolicyAcknowledgement);
+        Assert.True(applied.IsSuccess, applied.Error?.Message);
+        var acknowledgement = (await CampaignSeed.ParticipantAsync(provider, Tenant, campaignId, personId))
+            .Acknowledgement!;
+        Assert.False(acknowledgement.RecordedOnBehalf);
+        Assert.Equal(personId.ToString(), acknowledgement.Performer.Id);
+        Assert.Equal(memberId.ToString(), acknowledgement.Recorder.Id);
     }
 
     [Theory]

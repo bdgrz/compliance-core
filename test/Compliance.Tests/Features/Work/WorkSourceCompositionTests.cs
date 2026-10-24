@@ -299,14 +299,10 @@ public sealed class WorkSourceCompositionTests
         {
             [personId] = match,
         }, new HashSet<Uuid> { personId });
-        await ProgramManagementServices.SeedAsync<PolicyDistributionCampaign,
-            CampaignRegistration>(fixture.Provider,
-            new PolicyDistributionCampaign(fixture.TenantId, campaignId), campaign =>
-                campaign.Launch(fixture.ProgramId, subject, "core_security", [],
-                    Uuid.CreateVersion4(), new string('a', 64), audience, dueOn,
-                    "Read and acknowledge this policy.",
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"),
-                    fixture.LeadMemberId, launchedAt));
+        await CampaignSeed.LaunchAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, campaignId, subject,
+            "core_security", [], Uuid.CreateVersion4(), new string('a', 64), audience, dueOn,
+            "Read and acknowledge this policy.", ActorReference.ForMember(fixture.LeadMemberId, "Lead"),
+            fixture.LeadMemberId, launchedAt);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.ApproverUserId));
         var request = new ListWork(fixture.TenantId, fixture.ProgramId, "all");
@@ -317,17 +313,11 @@ public sealed class WorkSourceCompositionTests
         var pending = await Scenario().When(request).ExpectSuccess();
         var campaignWork = Assert.Single(pending.Value.Items,
             item => item.Kind == PolicyCampaignWork.Acknowledgement);
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new PolicyDistributionCampaign(fixture.TenantId, campaignId), campaign =>
-            {
-                Assert.Null(campaign.Acknowledge(fixture.ProgramId, Uuid.CreateVersion4(), personId,
-                    subject.Version, subject.ContentSha256,
-                    PolicyDistributionCampaign.DefaultAcknowledgementText,
-                    new ActorReference("workforce_person", personId.ToString(), "Pat Offline"),
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), true,
-                    DateTimeOffset.UtcNow));
-                return Result.Success;
-            });
+        var acknowledged = await CampaignSeed.AcknowledgeAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId,
+            campaignId, personId, subject.Version, subject.ContentSha256,
+            ActorReference.ForMember(fixture.LeadMemberId, "Lead"),
+            new ActorReference("workforce_person", personId.ToString(), "Pat Offline"), true, DateTimeOffset.UtcNow);
+        Assert.True(acknowledged.IsSuccess, acknowledged.Error?.Message);
         var acknowledgementLag = await Scenario().When(request)
             .ExpectFailure(RequestErrorKind.Conflict);
         await CatchUpAccountableProjectorsAsync(provider, fixture.TenantId);
@@ -583,14 +573,10 @@ public sealed class WorkSourceCompositionTests
         {
             [fixture.PersonId] = match,
         }, new HashSet<Uuid> { fixture.PersonId });
-        await ProgramManagementServices.SeedAsync<PolicyDistributionCampaign,
-            CampaignRegistration>(fixture.Provider,
-            new PolicyDistributionCampaign(fixture.TenantId, campaignId), campaign =>
-                campaign.Launch(fixture.ProgramId, subject, "core_security", [],
-                    Uuid.CreateVersion4(), new string('c', 64), audience,
-                    launchedOn.AddDays(10), "Read the material and record completion.",
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"),
-                    fixture.LeadMemberId, launchedAt));
+        await CampaignSeed.LaunchAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, campaignId, subject,
+            "core_security", [], Uuid.CreateVersion4(), new string('c', 64), audience, launchedOn.AddDays(10),
+            "Read the material and record completion.", ActorReference.ForMember(fixture.LeadMemberId, "Lead"),
+            fixture.LeadMemberId, launchedAt);
     }
 
     static async Task SeedControlDecisionWorkAsync(OperationsFixture fixture)
