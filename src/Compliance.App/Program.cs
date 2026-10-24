@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.MethodologyTemplates;
 using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.AuditorRequests;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Retention;
@@ -2810,7 +2811,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
                 }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Observation periods");
-    app.MapPortiaPut<CancelTypeIIPeriodAmendment>(
+    app.MapPortiaPut<CancelTypeIIPeriodAmendment, UnitResult>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{amendment_id}/cancellations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Observation periods");
@@ -2818,11 +2819,47 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-validations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Type II periods");
-    app.MapPortiaPost<ApproveTypeIIPeriodClose>(
+    app.MapPortiaPut<GenerateDueControlOccurrences, UnitResult>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/occurrence-generations/{generation_key}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Observation periods");
+    app.MapPortiaGet<GetObservationPeriod, ObservationPeriodView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}", endpoint => endpoint
+                .OnBind(Program.BindObservationPeriodRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("period_id", PortiaHttpParameterLocation.Route, required: true))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Observation periods");
+    app.MapPortiaGet<ListObservationPeriods, Page<ObservationPeriodSummaryView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Observation periods");
+    app.MapPortiaGet<PreviewObservationPeriodClose, ObservationPeriodClosePreview>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-preview", endpoint => endpoint
+                .OnBind(Program.BindObservationPeriodClosePreview)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("period_id", PortiaHttpParameterLocation.Route, required: true))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Observation periods");
+    app.MapPortiaGet<GetObservationPeriodClose, ObservationPeriodCloseView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-period-closes/{close_id}", endpoint => endpoint
+                .OnBind(Program.BindObservationPeriodCloseRead)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("program_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("close_id", PortiaHttpParameterLocation.Route, required: true))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Observation periods");
+    app.MapPortiaPut<AmendTypeIIPeriodClose, UnitResult>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/amendments/{command_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Observation periods");
+    app.MapPortiaPost<ApproveTypeIIPeriodClose, UnitResult>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-approvals")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Observation periods");
-    app.MapPortiaPost<FreezeTypeIIPeriodClose>(
+    app.MapPortiaPost<FreezeTypeIIPeriodClose, UnitResult>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/freezes")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Observation periods");
@@ -2973,6 +3010,15 @@ static async Task RunWorkerAsync(string[] args)
 /// </summary>
 public partial class Program
 {
+    internal static GetObservationPeriod BindObservationPeriodRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"), ApplicationRouteId(context, "period_id"));
+
+    internal static PreviewObservationPeriodClose BindObservationPeriodClosePreview(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"), ApplicationRouteId(context, "period_id"));
+
+    internal static GetObservationPeriodClose BindObservationPeriodCloseRead(HttpContext context) => new(
+        ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"), ApplicationRouteId(context, "close_id"));
+
     internal static GetAuditPackage BindAuditPackageRead(HttpContext context) => new(
         ApplicationRouteId(context, "tenant_id"), ApplicationRouteId(context, "program_id"),
         ApplicationRouteId(context, "package_id"));

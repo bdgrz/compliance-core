@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Bdgrz.Compliance.Features.Operations;
 using System.IO.Compression;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -130,7 +132,7 @@ public sealed class SnapshotSourcePublicationTests
         var packages = new AuditPackageReader(fixture.Reader, fixture.Content);
         var root = new AuditPackageRootOperation(fixture.Reader, packages,
             new NativeOperationExecutor(fixture.Reader, fixture.Executor, fixture.Content), fixture.Content, fixture.Clock);
-        var created = await new CreateAuditPackageHandler(root, new AuditPackageSourceBuilder(fixture.Reader,
+        var created = await new CreateAuditPackageHandler(root, new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods,
             fixture.Content), fixture.Content).HandleAsync(fixture.Context(create), CancellationToken.None);
         Assert.True(created.IsSuccess, created.Error?.Message);
         var requested = await new RequestAuditPackageBuildHandler(root, fixture.Content).HandleAsync(fixture.Context(
@@ -193,7 +195,7 @@ public sealed class SnapshotSourcePublicationTests
             baseline.ContentSha256, "Exact sources", [selected]);
 
         // Act
-        var result = await new AuditPackageSourceBuilder(fixture.Reader, fixture.Content).ResolveAsync(fixture.TenantId,
+        var result = await new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods, fixture.Content).ResolveAsync(fixture.TenantId,
             fixture.ProgramId, content, CancellationToken.None);
 
         // Assert
@@ -220,6 +222,8 @@ public sealed class SnapshotSourcePublicationTests
         public PersistenceKvClient Kv { get; } = new(new InMemoryKvClient());
         public IImmutableContentStore Content { get; }
         public LocalArtifactContentStore Artifacts { get; }
+        public InMemoryEventStore PeriodEvents { get; } = new();
+        public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, Content);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -233,7 +237,7 @@ public sealed class SnapshotSourcePublicationTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
             _kernel = services.BuildServiceProvider();
             _scope = _kernel.CreateAsyncScope();

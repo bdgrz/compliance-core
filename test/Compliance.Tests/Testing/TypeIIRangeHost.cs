@@ -78,6 +78,10 @@ sealed class TypeIIRangeHost : IAsyncDisposable
 
     public IImmutableContentStore Content => Services.GetRequiredService<IImmutableContentStore>();
 
+    public TypeIIPeriodReader Periods => new(Reader, Events, Content);
+    public TypeIIPeriodOperations PeriodOperations(TimeProvider clock) => new(
+        Services.GetRequiredService<NativeOperationExecutor>(), Periods, Content, clock);
+
     public IRequestBus Bus => Services.GetRequiredService<IRequestBus>();
 
     public IProcessRecordStore Records => Services.GetRequiredService<IProcessRecordStore>();
@@ -91,14 +95,13 @@ sealed class TypeIIRangeHost : IAsyncDisposable
         clock);
 
     public AmendTypeIIObservationPeriodHandler AmendHandler(TimeProvider clock) => new(
-        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Content, clock);
+        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Periods, Content, clock);
 
     public CancelTypeIIPeriodAmendmentHandler CancelHandler(TimeProvider clock) => new(
         Services.GetRequiredService<NativeOperationExecutor>(), Content, clock);
 
     public GenerateDueControlOccurrencesHandler GenerateHandler(TimeProvider clock) => new(
-        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Services.GetRequiredService<ControlOperationsReader>(),
-        Content, clock);
+        PeriodOperations(clock), Services.GetRequiredService<ControlOperationsReader>(), Content);
 
     public Task<ProcessKey> FanOutKeyOf(Uuid tenantId, Uuid operationId) =>
         ProcessKeys.FindAsync(Provider, ControlOccurrenceFanOut.ProcessName, tenantId.ToString(), operationId);

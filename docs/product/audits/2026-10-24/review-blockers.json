@@ -154,10 +154,13 @@
     "template-application-file-reviews.json",
     "template-application-file-triage.json",
     "template-application-qualification.json",
-    "template-application-integration-jev.json"
+    "template-application-integration-jev.json",
+    "typeii-period-file-reviews.json",
+    "typeii-period-file-triage.json",
+    "typeii-period-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
-  "reviewSignalsTriaged": 88,
+  "reviewSignalsTriaged": 91,
   "findingArtifacts": [
     "implementation-file-triage-versioned.json",
     "implementation-file-triage-foundations.json",
@@ -346,12 +349,31 @@
     {
       "id": "native-template-application-history-and-scoped-read",
       "slice": "S34",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "behavioralRed": "2oldAPIframebudgetfailures;1nativeoriginalactorlabelfailure",
       "focusedGreen": "95passed/0failed includingactualHTTPauthenticationandcontracts",
       "fullUnitGreen": "5687passed/0failed",
       "jev": "17currentfiles;1signaltriaged;directintegrationmerge.60",
-      "remaining": "Selected callback/childsplit/preview semantics and persistedmigration tracked locally; plain Unit HTTP adapter remains next independent work."
+      "remaining": "Selected callback/childsplit/preview semantics and persistedmigration tracked locally; plain Unit HTTP adapter remains next independent work.",
+      "pullRequest": 1105,
+      "mergeCommit": "a65f5f64e33b2d6b08e6c5465462bcec9ad63a88"
+    },
+    {
+      "id": "native-typeii-period-owner-and-scoped-reads",
+      "slice": "S35",
+      "status": "validated_awaiting_merge",
+      "behavioralRed": "2failed/0passed:1000sourceopeningframebudget;productionGET404",
+      "focusedGreen": "189passed/0failed;additional13generation/fanoutpassed",
+      "fullUnitGreen": "5725passed/0failed",
+      "jev": "78currentfiles;3signalstriaged;directintegrationmerge.81",
+      "persistenceQualification": "Compact native state/history on fresh streams; no automatic retained full-State migration, reset or deployment."
+    },
+    {
+      "id": "typeii-calendar-compact-authority",
+      "status": "queued_unblocked",
+      "externalDependency": false,
+      "evidence": "The independent program non-overlap calendar still retains reservation/fence history; period owner cutover does not claim to compact that separate authority.",
+      "nextWork": "Preserve atomic active range non-overlap and exact selected reservation/fence proof while moving terminal history outside runtime command state."
     }
   ],
   "resolved": [

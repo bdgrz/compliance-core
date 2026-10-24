@@ -13,7 +13,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 sealed class TypeIIRangeVerifier(IAggregateReader reader, IImmutableContentStore content)
 {
     public async ValueTask<TypeIIRangeChange> VerifyAsync(string realm, ImmutableContentRef intentReference,
-        Uuid operationId, Uuid periodId, Uuid selectedCommandId, CancellationToken ct)
+        Uuid operationId, Uuid periodId, Uuid selectedCommandId, CancellationToken ct, Uuid selectedSourceId = default)
     {
         ArgumentNullException.ThrowIfNull(intentReference);
         Uuid tenantId;
@@ -34,7 +34,7 @@ sealed class TypeIIRangeVerifier(IAggregateReader reader, IImmutableContentStore
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return TypeIIRangeChange.Failed(Permanent($"The frozen range intent cannot be verified: {exception.Message}"));
+            return TypeIIRangeChange.Failed(new RequestError(RequestErrorKind.Conflict, "The frozen range intent cannot be verified.", exception is ImmutableContentUnavailableException));
         }
 
         if (operationId == Uuid.Empty || periodId == Uuid.Empty || intent.Header.RootOperationId != operationId ||
@@ -46,7 +46,9 @@ sealed class TypeIIRangeVerifier(IAggregateReader reader, IImmutableContentStore
             return TypeIIRangeChange.Failed(Permanent("The command differs from the frozen range intent."));
 
         var period = await reader.HydrateAsync(new TypeIIPeriod(tenantId, intent.ProgramId, intent.PeriodId,
-            selectedCommandId), ct).ConfigureAwait(false);
+            selectedCommandId, operationId, selectedSourceId), ct).ConfigureAwait(false);
+        if (period.ProgramId != intent.ProgramId)
+            return TypeIIRangeChange.Failed(Permanent("The frozen range intent belongs to another program owner."));
         if (period.AcceptedFor(operationId) is not { } accepted)
             return TypeIIRangeChange.Failed(Transient("The accepted opening or amendment is not visible yet."));
         if (TypeIIPeriod.IntentOf(accepted) != intentReference ||

@@ -7,7 +7,6 @@ using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Portia;
-using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
 
 namespace Bdgrz.Compliance.Features.Examinations;
 
@@ -31,7 +30,7 @@ static class ExaminationSignOffSourceValidator
     }
 
     public static async ValueTask<Result<DateTimeOffset>> ValidateAsync(IAggregateReader reader,
-        AuditPackageReader packages,
+        AuditPackageReader packages, TypeIIPeriodReader periods,
         Uuid tenantId, Uuid programId, ExaminationSignOffContent content, CancellationToken ct)
     {
         if (tenantId == Uuid.Empty || programId == Uuid.Empty || content is null ||
@@ -66,7 +65,7 @@ static class ExaminationSignOffSourceValidator
             !HashEquals(packageVersion.SourceSnapshotSha256, content.SourceSnapshotSha256))
             return Conflict("The management review must use the exact delivered package version and manifest.");
 
-        var snapshot = await ReadSnapshotAsync(reader, tenantId, programId, content,
+        var snapshot = await ReadSnapshotAsync(reader, periods, tenantId, programId, content,
             packageVersion.SourcePeriodId, ct).ConfigureAwait(false);
         if (!snapshot.IsSuccess)
             return Result<DateTimeOffset>.Failure(snapshot.Error!);
@@ -172,7 +171,7 @@ static class ExaminationSignOffSourceValidator
         return Result<DateTimeOffset>.Success(sourceTime);
     }
 
-    static async ValueTask<Result<SnapshotSources>> ReadSnapshotAsync(IAggregateReader reader,
+    static async ValueTask<Result<SnapshotSources>> ReadSnapshotAsync(IAggregateReader reader, TypeIIPeriodReader periods,
         Uuid tenantId, Uuid programId, ExaminationSignOffContent content, Uuid sourcePeriodId,
         CancellationToken ct)
     {
@@ -196,11 +195,13 @@ static class ExaminationSignOffSourceValidator
         if (sourcePeriodId == Uuid.Empty)
             return Failure<SnapshotSources>(RequestErrorKind.Conflict,
                 "A Type II package must retain its source period identity.");
-        var period = await reader.HydrateAsync(new TypeIIPeriodAggregate(tenantId, programId,
-            sourcePeriodId), ct).ConfigureAwait(false);
-        var closeSnapshot = period.Current?.CloseSnapshots.SingleOrDefault(item =>
+        var periodRead = await periods.TryReadAsync(tenantId, programId, sourcePeriodId, ct).ConfigureAwait(false);
+        if (!periodRead.IsSuccess)
+            return Result<SnapshotSources>.Failure(periodRead.Error!);
+        var period = periodRead.Value;
+        var closeSnapshot = period.View?.CloseSnapshots.SingleOrDefault(item =>
             item.CloseSnapshotId == content.SourceSnapshotId);
-        if (period.Current is not { } periodView || periodView.TenantId != tenantId ||
+        if (period.View is not { } periodView || periodView.TenantId != tenantId ||
             periodView.ProgramId != programId || periodView.ExaminationId != content.ExaminationId ||
             closeSnapshot is null || !HashEquals(closeSnapshot.ContentSha256,
                 content.SourceSnapshotSha256) ||

@@ -39,13 +39,13 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
 
         // Act
         var admitted = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
-        var accepted = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId));
+        var accepted = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId);
         var calendarBefore = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(fixture.TenantId,
             fixture.ProgramId));
         var run = await fixture.RunProcessAsync();
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId);
         var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(fixture.TenantId,
             fixture.ProgramId));
 
@@ -57,11 +57,11 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         Assert.Equal(0, calendarBefore.Revision);
         Assert.Equal(ProcessState.Completed, run.State);
         Assert.Equal(1, saved.Revision);
-        Assert.Equal(fixture.ExaminationId, saved.Current!.ExaminationId);
-        Assert.Equal(fixture.PlanId, saved.Current.TypeIIPlanId);
-        Assert.Equal(fixture.BaselineSources.Select(fixture.ToReference), saved.Current.OpeningSourceReferences);
-        Assert.Equal(fixture.PeriodId, saved.Current.OpeningSnapshotId);
-        Assert.Equal(64, saved.Current.OpeningSnapshotSha256.Length);
+        Assert.Equal(fixture.ExaminationId, saved.View!.ExaminationId);
+        Assert.Equal(fixture.PlanId, saved.View.TypeIIPlanId);
+        Assert.Equal(fixture.BaselineSources.Select(fixture.ToReference), saved.View.OpeningSourceReferences);
+        Assert.Equal(fixture.PeriodId, saved.View.OpeningSnapshotId);
+        Assert.Equal(64, saved.View.OpeningSnapshotSha256.Length);
         var reservation = calendar.Find(fixture.PeriodId)!;
         Assert.Equal(TypeIIRangeReservationState.Active, reservation.State);
         Assert.Equal(new ObservationRange(fixture.PeriodStart, fixture.PeriodEnd), reservation.Range);
@@ -79,8 +79,8 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         // Act
         var result = await fixture.Handler.HandleAsync(fixture.Context(fixture.Request()), CancellationToken.None);
         await fixture.RunProcessAsync();
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -89,8 +89,8 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
             new DateOnly(2027, 4, 5),
             new DateOnly(2027, 7, 5),
             new DateOnly(2027, 10, 5),
-        ], saved.Current!.ExpectedOccurrences.Select(item => item.DueOn));
-        Assert.All(saved.Current.ExpectedOccurrences, item =>
+        ], saved.View!.ExpectedOccurrences.Select(item => item.DueOn));
+        Assert.All(saved.View.ExpectedOccurrences, item =>
             Assert.Equal(["Dated review record"], item.ExpectedEvidenceDescriptions));
     }
 
@@ -104,8 +104,8 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         // Act
         var result = await fixture.Handler.HandleAsync(fixture.Context(fixture.Request()),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -123,8 +123,8 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         // Act
         var result = await fixture.Handler.HandleAsync(fixture.Context(fixture.Request()),
             CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
@@ -147,14 +147,14 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
 
         // Act
         var retry = await fixture.Handler.HandleAsync(context, CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(retry.IsSuccess, retry.Error?.Message);
         Assert.Equal(first.Value, retry.Value);
         Assert.Equal(1, saved.Revision);
-        Assert.Equal(Now, saved.Current!.UpdatedAt);
+        Assert.Equal(Now, saved.View!.UpdatedAt);
         Assert.Equal(before, (await fixture.Host.EventsAsync<DomainEvent>(stream)).Count);
     }
 
@@ -195,8 +195,8 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         // Act
         var admitted = await fixture.Handler.HandleAsync(fixture.Context(secondRequest), CancellationToken.None);
         var run = await fixture.RunProcessAsync(secondPeriodId);
-        var second = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId,
-            secondPeriodId));
+        var second = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId,
+            secondPeriodId);
         var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(fixture.TenantId,
             fixture.ProgramId));
 
@@ -228,8 +228,8 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
             PeriodId = blockedId,
         }), CancellationToken.None);
         await fixture.RunProcessAsync(blockedId);
-        var stillBlocked = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId,
-            blockedId));
+        var stillBlocked = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId,
+            blockedId);
         var reopenedId = Uuid.CreateVersion4();
 
         // Act
@@ -263,8 +263,8 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
 
         // Act
         var result = await fixture.Handler.HandleAsync(context, CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
@@ -301,6 +301,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         public TypeIIRangeHost Host { get; }
         public IAggregateReader Reader => Host.Reader;
         public IAggregateWriter Writer => Host.Writer;
+        public TypeIIPeriodReader Periods => Host.Periods;
         public StartTypeIIObservationPeriodHandler Handler { get; }
         public IReadOnlyList<TypeIBaselineSourceReference> BaselineSources { get; private set; } = [];
 
@@ -320,7 +321,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
         /// <summary>Approves and freezes the close of the started period, as the executive handlers leave it.</summary>
         public async Task FreezeCloseAsync()
         {
-            var period = await Reader.HydrateAsync(new TypeIIPeriod(TenantId, ProgramId, PeriodId));
+            var period = (await Periods.ReadAsync(TenantId, ProgramId, PeriodId)).Rules;
             var sourceReferences = BaselineSources.Select(ToReference).ToArray();
             var expected = period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId).ToArray();
             var validatedAt = Now.AddMonths(12);
@@ -332,7 +333,7 @@ public sealed class StartTypeIIObservationPeriodHandlerTests
             Assert.Null(period.FreezeClose(period.Revision, new TypeIIPeriodCloseSnapshotContent(
                 Uuid.CreateVersion4(), sourceReferences, expected, []), ExecutiveId, "Chief Executive",
                 validatedAt.AddHours(2)));
-            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+            await TypeIIPeriodSeeds.AppendAsync(Reader, Writer, Host.Content, period);
         }
 
         public StartTypeIIObservationPeriod Request() => new(TenantId, ProgramId, PeriodId,

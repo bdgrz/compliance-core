@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -7,7 +9,7 @@ using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
-using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
+using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriodRules;
 using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations;
@@ -60,6 +62,39 @@ public sealed class TypeIIPeriodTests
         Assert.Equal(new[] { opening, closing }, period.Current.CloseSnapshots[0].SourceReferences);
         Assert.Equal(new[] { opening, next }, period.Current.CloseSnapshots[1].SourceReferences);
         Assert.Equal(opening.RecordId, Assert.Single(period.Current.CloseSnapshots[1].ChangedRecordIds));
+    }
+
+    [Fact]
+    public async Task ShouldOpenCompleteSourcePopulationGivenImmutableBodyExceedsEventBudget()
+    {
+        // Arrange
+        var period = NewPeriod();
+        var opening = Opening() with
+        {
+            SourceReferences = Enumerable.Range(0, 1000).Select(index => new ExaminationContentReference(
+                "evidence", Uuid.CreateVersion5(PeriodId, "source:" + index),
+                Uuid.CreateVersion5(PeriodId, "version:" + index), 1, new string('a', 64))).ToArray(),
+        };
+
+        // Act
+        var result = period.Start(ApprovedPlan().Current!, opening, ProposerId, "Compliance lead", Now);
+
+        // Assert
+        Assert.Null(result);
+        Assert.Equal(1000, period.Current!.OpeningSourceReferences.Count);
+        var events = new InMemoryEventStore();
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventStore>(events);
+        services.AddPortia();
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var content = TypeIIPeriodSeeds.NewContentStore();
+        await TypeIIPeriodSeeds.WriteAsync(scope.ServiceProvider.GetRequiredService<IAggregateWriter>(), content, period);
+        var saved = await new TypeIIPeriodReader(reader, events, content).ReadAsync(TenantId, ProgramId, PeriodId);
+        Assert.Equal(1000, saved.View!.OpeningSourceReferences.Count);
+        await foreach (var record in events.ReadAsync(saved.Stream, 0))
+            Assert.True(DomainEventPayload.Size(record.Event) <= DomainEventPayload.MaximumBytes);
     }
 
     [Fact]
@@ -182,8 +217,8 @@ public sealed class TypeIIPeriodTests
         Assert.All(period.OccurrenceGenerations, generation => Assert.Equal(throughDate, generation.ThroughDate));
         Assert.Equal(Now.AddMonths(1), period.OccurrenceGenerations[0].OccurredAt);
 
-        var events = new AggregateScenario<TypeIIPeriodAggregate>(period).PendingEvents.ToArray();
-        var replay = new AggregateScenario<TypeIIPeriodAggregate>(NewPeriod()).Given(events).Aggregate;
+        var events = new TypeIIPeriodRuleScenario(period).PendingEvents.ToArray();
+        var replay = new TypeIIPeriodRuleScenario(NewPeriod()).Given(events).Aggregate;
         Assert.Equal(period.OccurrenceGenerations.Select(generation => generation.GenerationKey),
             replay.OccurrenceGenerations.Select(generation => generation.GenerationKey));
         Assert.Equal(period.Revision, replay.Revision);
@@ -360,10 +395,10 @@ public sealed class TypeIIPeriodTests
             CEOId, "CEO", "Chief Executive", Now.AddMonths(12).AddHours(1)));
         Assert.Null(period.FreezeClose(period.Revision,
             Snapshot(SourceReferences(), expected), CEOId, "Chief Executive", Now.AddMonths(12).AddHours(2)));
-        var events = new AggregateScenario<TypeIIPeriodAggregate>(period).PendingEvents.ToArray();
+        var events = new TypeIIPeriodRuleScenario(period).PendingEvents.ToArray();
 
         // Act
-        var replay = new AggregateScenario<TypeIIPeriodAggregate>(NewPeriod()).Given(events).Aggregate;
+        var replay = new TypeIIPeriodRuleScenario(NewPeriod()).Given(events).Aggregate;
 
         // Assert
         Assert.Equal("closed", replay.Current!.Status);

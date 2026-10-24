@@ -30,23 +30,23 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Act
         var result = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
-        var pending = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var pending = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
         await fixture.RunProcessAsync(request.CommandId);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         Assert.Equal(request.CommandId, result.Value!.OperationId);
         Assert.Equal(1, pending.Revision);
-        Assert.Equal(fixture.PeriodEnd, pending.Current!.PeriodEnd);
+        Assert.Equal(fixture.PeriodEnd, pending.View!.PeriodEnd);
         Assert.Equal(request.CommandId, pending.PendingOperationId);
         Assert.Equal(2, saved.Revision);
-        Assert.Equal(fixture.PeriodStart, saved.Current!.PeriodStart);
-        Assert.Equal(fixture.PeriodEnd.AddDays(7), saved.Current.PeriodEnd);
-        Assert.Equal("Extend for the delayed sample window.", Assert.Single(saved.Current.Amendments).Reason);
-        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.ActorUserId), saved.Current.ActorMemberId);
+        Assert.Equal(fixture.PeriodStart, saved.View!.PeriodStart);
+        Assert.Equal(fixture.PeriodEnd.AddDays(7), saved.View.PeriodEnd);
+        Assert.Equal("Extend for the delayed sample window.", Assert.Single(saved.View.Amendments).Reason);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.ActorUserId), saved.View.ActorMemberId);
     }
 
     [Fact]
@@ -65,8 +65,8 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         var replayed = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
         var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
             fixture.TenantId, fixture.ProgramId));
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -96,15 +96,15 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Act
         var result = await fixture.Handler.HandleAsync(fixture.Context(stale), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Equal(2, saved.Revision);
-        Assert.Equal(fixture.PeriodStart, saved.Current!.PeriodStart);
-        Assert.Equal(fixture.PeriodEnd.AddDays(7), saved.Current.PeriodEnd);
-        Assert.Single(saved.Current.Amendments);
+        Assert.Equal(fixture.PeriodStart, saved.View!.PeriodStart);
+        Assert.Equal(fixture.PeriodEnd.AddDays(7), saved.View.PeriodEnd);
+        Assert.Single(saved.View.Amendments);
         Assert.Null(saved.Pending);
     }
 
@@ -141,20 +141,20 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         await using var fixture = new Fixture();
         await fixture.RegisterActorAsync();
         await fixture.SeedCloseReadyPeriodAsync();
-        var request = new ApproveTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+        var request = new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.PeriodId, 2, "Reviewed the reconciled period and unresolved material item.",
             [fixture.GapId]);
 
         // Act
         var result = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("close_approved", saved.Current!.Status);
-        var approval = Assert.Single(saved.Current.CloseApprovals);
+        Assert.Equal("close_approved", saved.View!.Status);
+        var approval = Assert.Single(saved.View.CloseApprovals);
         Assert.Equal(fixture.ActorMemberId, approval.ApprovedByMemberId);
         Assert.Equal("ciso", approval.ApproverRole);
         Assert.Equal(fixture.GapId, Assert.Single(approval.AcknowledgedMaterialItemIds));
@@ -167,18 +167,18 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         await using var fixture = new Fixture();
         await fixture.RegisterActorAsync();
         await fixture.SeedCloseReadyPeriodAsync();
-        var request = new ApproveTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+        var request = new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.PeriodId, 2, "A token claim cannot authorize period close.", [fixture.GapId]);
 
         // Act
         var result = await fixture.ApproveHandler().HandleAsync(
             fixture.Context(request, "ceo"), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
-        Assert.Empty(saved.Current!.CloseApprovals);
+        Assert.Empty(saved.View!.CloseApprovals);
         Assert.Equal(2, saved.Revision);
     }
 
@@ -190,7 +190,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         await fixture.RegisterActorAsync();
         await fixture.SeedCloseReadyPeriodAsync();
         var handler = fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso);
-        var request = new ApproveTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+        var request = new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.PeriodId, 2, "Reviewed the reconciled period and unresolved material item.",
             [fixture.GapId]);
         var context = fixture.Context(request);
@@ -199,13 +199,13 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Act
         var retry = await handler.HandleAsync(context, CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var saved = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(retry.IsSuccess, retry.Error?.Message);
         Assert.Equal(3, saved.Revision);
-        var approval = Assert.Single(saved.Current!.CloseApprovals);
+        var approval = Assert.Single(saved.View!.CloseApprovals);
         Assert.Equal(fixture.CloseValidationAt.AddHours(1), approval.ApprovedAt);
     }
 
@@ -217,19 +217,19 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         await fixture.RegisterActorAsync();
         await fixture.SeedCoveredCloseReadyPeriodAsync();
         var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
-            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, fixture.PeriodId, 3,
                 "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
         Assert.True(approved.IsSuccess, approved.Error?.Message);
         var closeSnapshotId = Uuid.CreateVersion4();
-        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+        var request = new FreezeTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.PeriodId, closeSnapshotId, 4);
 
         // Act
         var result = await fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
         var calendarBefore = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
             fixture.TenantId, fixture.ProgramId));
         await fixture.Host.ReleaseAsync<ObservationPeriodCloseFrozen>(period.Stream);
@@ -241,9 +241,9 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        var snapshot = Assert.Single(period.Current!.CloseSnapshots);
+        var snapshot = Assert.Single(period.View!.CloseSnapshots);
         Assert.Equal(closeSnapshotId, snapshot.CloseSnapshotId);
-        Assert.Equal("closed", period.Current.Status);
+        Assert.Equal("closed", period.View.Status);
         Assert.Equal(fixture.PeriodId, frozen.CalendarAuthorizationId);
         Assert.Equal(1, frozen.CalendarGeneration);
         Assert.Equal(TypeIIRangeReservationState.Active, calendarBefore.Find(fixture.PeriodId)!.State);
@@ -262,11 +262,11 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         await fixture.RegisterActorAsync();
         await fixture.SeedCoveredCloseReadyPeriodAsync();
         var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
-            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, fixture.PeriodId, 3,
                 "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
         Assert.True(approved.IsSuccess, approved.Error?.Message);
-        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+        var request = new FreezeTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.PeriodId, Uuid.CreateVersion4(), 4);
         var handler = fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso);
         var context = fixture.Context(request);
@@ -275,13 +275,13 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Act
         var retry = await handler.HandleAsync(context, CancellationToken.None);
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.True(retry.IsSuccess, retry.Error?.Message);
         Assert.Equal(5, period.Revision);
-        Assert.Single(period.Current!.CloseSnapshots);
+        Assert.Single(period.View!.CloseSnapshots);
     }
 
     [Fact]
@@ -292,11 +292,11 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         await fixture.RegisterActorAsync();
         await fixture.SeedCoveredCloseReadyPeriodAsync();
         var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
-            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, fixture.PeriodId, 3,
                 "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
         Assert.True(approved.IsSuccess, approved.Error?.Message);
-        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+        var request = new FreezeTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.PeriodId, Uuid.CreateVersion4(), 4);
         var handler = fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso);
         var context = fixture.Context(request);
@@ -305,13 +305,13 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
         // Act
         var retry = await handler.HandleAsync(fixture.Context(request with { ExpectedRevision = request.ExpectedRevision + 1 }), CancellationToken.None);
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, retry.Error?.Kind);
         Assert.Equal(5, period.Revision);
-        Assert.Single(period.Current!.CloseSnapshots);
+        Assert.Single(period.View!.CloseSnapshots);
     }
 
     [Fact]
@@ -330,10 +330,10 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         }
         await fixture.RecordCloseValidationAsync();
         var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
-            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.PeriodId, 3, "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
         Assert.True(approved.IsSuccess, approved.Error?.Message);
-        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId, fixture.PeriodId,
+        var request = new FreezeTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.PeriodId,
             Uuid.CreateVersion4(), 4);
 
         // Act: all but one occurrence materialized, so the close is blocked.
@@ -347,8 +347,8 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         var complete = await CoverageAsync(fixture);
         var closed = await fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso)
             .HandleAsync(fixture.Context(request), CancellationToken.None);
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, blocked.Error?.Kind);
@@ -363,7 +363,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         Assert.True(complete.IsComplete);
         Assert.Equal(4, complete.Materialized.Count);
         Assert.True(closed.IsSuccess, closed.Error?.Message);
-        Assert.Equal("closed", period.Current!.Status);
+        Assert.Equal("closed", period.View!.Status);
         Assert.Single(await fixture.Host.EventsAsync<ObservationPeriodCloseFrozen>(period.Stream));
     }
 
@@ -375,13 +375,13 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         await fixture.RegisterActorAsync();
         await fixture.SeedCloseReadyPeriodAsync();
         var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
-            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.PeriodId, 2, "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
         Assert.True(approved.IsSuccess, approved.Error?.Message);
 
         // Act
         var result = await fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso).HandleAsync(
-            fixture.Context(new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId, fixture.PeriodId,
+            fixture.Context(new FreezeTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.PeriodId,
                 Uuid.CreateVersion4(), 3)), CancellationToken.None);
         var coverage = await CoverageAsync(fixture);
 
@@ -394,8 +394,8 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
     static async Task<TypeIIOccurrenceCoverageProof> CoverageAsync(Fixture fixture)
     {
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId,
+            fixture.PeriodId);
         return await new TypeIIOccurrenceCoverage(fixture.Reader, fixture.Host.Content).ProveAsync(period,
             CancellationToken.None);
     }
@@ -408,23 +408,23 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         await fixture.RegisterActorAsync();
         await fixture.SeedCoveredCloseReadyPeriodAsync();
         var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso)
-            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(fixture.TenantId,
+            .HandleAsync(fixture.Context(new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId,
                 fixture.ProgramId, fixture.PeriodId, 3,
                 "Approved the reconciled period.", [fixture.GapId])), CancellationToken.None);
         Assert.True(approved.IsSuccess, approved.Error?.Message);
-        var request = new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId,
+        var request = new FreezeTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             fixture.PeriodId, Uuid.CreateVersion4(), 4);
 
         // Act
         var result = await fixture.FreezeHandler().HandleAsync(fixture.Context(request),
             CancellationToken.None);
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
-        Assert.Equal("close_approved", period.Current!.Status);
-        Assert.Empty(period.Current.CloseSnapshots);
+        Assert.Equal("close_approved", period.View!.Status);
+        Assert.Empty(period.View.CloseSnapshots);
     }
 
     sealed class Fixture : IAsyncDisposable
@@ -455,6 +455,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         public IAggregateWriter Writer => Host.Writer;
         public IAggregateReader Reader => Host.Reader;
         public IDomainEventReader Events => Host.Events;
+        public TypeIIPeriodReader Periods => Host.Periods;
         public AmendTypeIIObservationPeriodHandler Handler { get; }
         public TimeProvider Clock { get; } = new FixedTimeProvider(AmendedAt);
 
@@ -485,13 +486,12 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         }
 
         public ApproveTypeIIPeriodCloseHandler ApproveHandler(params string[] permissions) =>
-            new(Executor, new ManagementExecutiveAuthority(Reader,
-                new ExecutivePermissions(permissions)), CloseClock);
+            new(Host.PeriodOperations(CloseClock), new ManagementExecutiveAuthority(Reader,
+                new ExecutivePermissions(permissions)));
 
         public FreezeTypeIIPeriodCloseHandler FreezeHandler(params string[] permissions) =>
-            new(Executor, Reader, new ManagementExecutiveAuthority(Reader,
-                new ExecutivePermissions(permissions)), new TypeIIOccurrenceCoverage(Reader, Host.Content),
-                CloseClock);
+            new(Host.PeriodOperations(CloseClock), new ManagementExecutiveAuthority(Reader,
+                new ExecutivePermissions(permissions)), new TypeIIOccurrenceCoverage(Reader, Host.Content));
 
         public AmendTypeIIObservationPeriod Amendment(long expectedRevision, DateOnly? start, DateOnly? end,
             string reason) => new(Uuid.CreateVersion4(), TenantId, ProgramId, PeriodId, expectedRevision, start, end,
@@ -518,20 +518,12 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
                 "CISO", "Executive approver", StartedAt.AddDays(-1)));
             await Writer.SaveAsync(plan, new RequestDispatchContext(RequestActor.System));
 
-            var period = new TypeIIPeriod(TenantId, ProgramId, PeriodId);
+            var period = new TypeIIPeriodRules(TenantId, ProgramId, PeriodId);
+            Assert.Null(period.Start(plan.Current!, Opening(), ProposerMemberId, "Compliance lead", StartedAt));
+            await TypeIIPeriodSeeds.WriteAsync(Writer, Host.Content, period);
+            var persisted = await Reader.HydrateAsync(new TypeIIPeriod(TenantId, ProgramId, PeriodId));
+            var intent = persisted.CalendarIntent!;
             var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
-            var header = new DurableIntentHeader(PeriodId, period.Stream, period.Stream, period.Stream,
-                ActorReference.ForMember(ProposerMemberId, "Compliance lead"), "initial", null, new string('b', 64),
-                StartedAt);
-            var intent = await Host.Content.WriteJsonAsync(TenantId.ToString(), Uuid.CreateVersion4(),
-                TypeIIRangeIntent.Schema, new TypeIIRangeIntent(header, ProgramId, PeriodId,
-                    TypeIIRangeOperationKind.Opening, null, null, new ObservationRange(PeriodStart, PeriodEnd),
-                    new ImmutableContentRef(Uuid.CreateVersion4(), new string('a', 64), 2, "application/json",
-                        TypeIIPeriodOpeningChange.Schema),
-                    TypeIIRangeEffects.KeyOf(PeriodId, period.Stream, calendar.Stream)));
-            Assert.Null(period.Start(plan.Current!, Opening(), ProposerMemberId, "Compliance lead", StartedAt,
-                intent));
-            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
 
             // The calendar holds the range the opening was applied with, exactly as the range process leaves it.
             var provenance = new OperationProvenance(Uuid.CreateVersion4(), PeriodId, null, "SeedRange",
@@ -569,14 +561,14 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         /// <summary>Records the close validation of the period as the validator handler leaves it.</summary>
         public async Task RecordCloseValidationAsync()
         {
-            var period = await Reader.HydrateAsync(new TypeIIPeriod(TenantId, ProgramId, PeriodId));
+            var period = (await Periods.ReadAsync(TenantId, ProgramId, PeriodId)).Rules;
             var occurrenceIds = period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId)
                 .ToArray();
             Assert.Null(period.RecordCloseValidation(period.Revision,
                 new TypeIIPeriodCloseValidationContent(ValidationReferences(), occurrenceIds,
                     occurrenceIds, [], [], [GapId]), ValidatorMemberId, "Close validator",
                 CloseValidationAt));
-            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+            await TypeIIPeriodSeeds.AppendAsync(Reader, Writer, Host.Content, period);
         }
 
         /// <summary>A close-ready period whose recurring occurrences are all selected and materialized.</summary>
@@ -591,14 +583,14 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         public async Task SeedCloseReadyPeriodAsync()
         {
             await SeedStartedPeriodAsync();
-            var period = await Reader.HydrateAsync(new TypeIIPeriod(TenantId, ProgramId, PeriodId));
+            var period = (await Periods.ReadAsync(TenantId, ProgramId, PeriodId)).Rules;
             var occurrenceIds = period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId)
                 .ToArray();
             Assert.Null(period.RecordCloseValidation(period.Revision,
                 new TypeIIPeriodCloseValidationContent(ValidationReferences(), occurrenceIds,
                     occurrenceIds, [], [], [GapId]), ValidatorMemberId, "Close validator",
                 CloseValidationAt));
-            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+            await TypeIIPeriodSeeds.AppendAsync(Reader, Writer, Host.Content, period);
         }
 
         TypeIIPlanContent PlanContent() => new(ExaminationId, Uuid.CreateVersion4(), new string('a', 64),

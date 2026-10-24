@@ -36,25 +36,25 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
                 new RequestDispatchContext(actor, new HttpInvocation("PUT", "/close-validations", "/close-validations", "close-source-test")));
             var validated = await CloseHandler(fixture, sources).HandleAsync(context, CancellationToken.None);
             Assert.True(validated.IsSuccess, validated.Error?.Message);
-            var current = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+            var current = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
             var approved = await fixture.ApproveHandler(RbacPermissions.ManagementExecutiveCiso).HandleAsync(fixture.Context(
-                new ApproveTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId, fixture.PeriodId, current.Revision,
+                new ApproveTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.PeriodId, current.Revision,
                     "Reviewed exact published close source.", [])), CancellationToken.None);
             Assert.True(approved.IsSuccess, approved.Error?.Message);
-            current = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+            current = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
             var frozen = await fixture.FreezeHandler(RbacPermissions.ManagementExecutiveCiso).HandleAsync(fixture.Context(
-                new FreezeTypeIIPeriodClose(fixture.TenantId, fixture.ProgramId, fixture.PeriodId, Uuid.CreateVersion4(), current.Revision)), CancellationToken.None);
+                new FreezeTypeIIPeriodClose(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.PeriodId, Uuid.CreateVersion4(), current.Revision)), CancellationToken.None);
             Assert.True(frozen.IsSuccess, frozen.Error?.Message);
-            current = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
-            var snapshot = Assert.Single(current.Current!.CloseSnapshots);
+            current = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
+            var snapshot = Assert.Single(current.View!.CloseSnapshots);
             var reference = Assert.Single(snapshot.SourceReferences);
-            var manifest = await publisher.ReadAsync(current.Current, snapshot.SourceContentManifest!, CancellationToken.None);
+            var manifest = await publisher.ReadAsync(current.View, snapshot.SourceContentManifest!, CancellationToken.None);
             var physical = Assert.Single(manifest.Sources).Content;
             var selected = new AuditPackageSelectionEntry("period", "native_history", reference.SourceType, reference.RecordId,
                 reference.Version, physical.FileExtension, reference.ContentSha256, physical.Bytes, "product_calculated", reference.VersionId);
             var input = new AuditPackageContent(fixture.ExaminationId, "type_ii", "type_ii_close_snapshot", snapshot.CloseSnapshotId,
                 snapshot.ContentSha256, "Verified period close", [selected], fixture.PeriodId);
-            var resolved = await new AuditPackageSourceBuilder(fixture.Reader, fixture.Host.Content).ResolveAsync(fixture.TenantId, fixture.ProgramId,
+            var resolved = await new AuditPackageSourceBuilder(fixture.Reader, fixture.Periods, fixture.Host.Content).ResolveAsync(fixture.TenantId, fixture.ProgramId,
                 input, CancellationToken.None);
             Assert.True(resolved.IsSuccess, resolved.Error?.Message);
             var rules = new AuditPackageRules(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4());
@@ -96,10 +96,10 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
 
     sealed class PublishingCloseSources(TypeIIPeriodCloseSourcePublication publication) : ITypeIIPeriodCloseReconciliation
     {
-        public async ValueTask<Result<TypeIIPeriodCloseValidationContent>> ReadAsync(TypeIIPeriod period, ClaimsPrincipal actor,
+        public async ValueTask<Result<TypeIIPeriodCloseValidationContent>> ReadAsync(TypeIIPeriodReadSnapshot period, ClaimsPrincipal actor,
             Uuid requesterUserId, OperationProvenance operation, CancellationToken ct)
         {
-            var current = period.Current!;
+            var current = period.View!;
             var facts = period.OccurrenceGenerations.Select(fact => TypeIIPeriodCloseHistory.Capture(period.Stream, fact)).ToArray();
             var published = await publication.PublishAsync(current, operation, "type_ii_native_history", facts, [], ct);
             var manifest = await publication.SealAsync(current, operation, [published.Published], ct,

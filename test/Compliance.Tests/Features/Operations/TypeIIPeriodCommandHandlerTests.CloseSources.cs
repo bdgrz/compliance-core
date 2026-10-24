@@ -40,7 +40,7 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
                 fixture.Host.Services.GetRequiredService<ControlOperationsReader>(), fixture.Host.Services.GetRequiredService<FindingReader>(), published,
                 new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events, new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true))),
                 new TypeIIPeriodCloseSourcePublication(artifacts, fixture.Host.Content));
-            var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+            var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
             var request = await CloseRequestAsync(fixture);
             var operation = RootOperation.Provenance(request.CommandId, nameof(RecordTypeIIPeriodCloseValidation), period.Stream,
                 ActorReference.ForMember(fixture.ActorMemberId, "Close validator"), period.Revision, new string('a', 64), fixture.CloseClock.GetUtcNow());
@@ -82,18 +82,18 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             fixture.PeriodStart, null, fixture.ProposerMemberId, [Uuid.CreateVersion4()], "high", "restricted", []),
             fixture.ProposerMemberId, "Recorder", StartedAt));
         await fixture.Writer.SaveAsync(change, new RequestDispatchContext(RequestActor.System));
-        var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId, fixture.ProgramId, fixture.PeriodId));
+        var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
         var reader = new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events,
             new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(false)));
         var request = await CloseRequestAsync(fixture);
 
         // Act
-        var failure = await Record.ExceptionAsync(() => reader.ReadAsync(period.Current!, fixture.Context(request).Actor,
+        var failure = await Record.ExceptionAsync(() => reader.ReadAsync(period.View!, fixture.Context(request).Actor,
             fixture.CloseClock.GetUtcNow(), CancellationToken.None));
 
         // Assert
         Assert.IsType<CloseSourceAccessException>(failure);
-        Assert.Null(period.Current!.CloseValidation);
+        Assert.Null(period.View!.CloseValidation);
     }
 
     static async Task SeedCloseEngagementAsync(Fixture fixture, Uuid boundaryId)

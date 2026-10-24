@@ -14,10 +14,10 @@ namespace Bdgrz.Compliance.Features.Operations;
 public sealed class TypeIIOccurrenceCoverage(IAggregateReader reader, IImmutableContentStore content)
 {
     /// <summary>Proves the coverage of the period as hydrated at its admitted revision.</summary>
-    public async ValueTask<TypeIIOccurrenceCoverageProof> ProveAsync(TypeIIPeriod period, CancellationToken ct)
+    public async ValueTask<TypeIIOccurrenceCoverageProof> ProveAsync(TypeIIPeriodReadSnapshot period, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(period);
-        var current = period.Current ?? throw new InvalidOperationException("Coverage requires an opened period.");
+        var current = period.View ?? throw new InvalidOperationException("Coverage requires an opened period.");
         var tenantId = current.TenantId;
         var expected = current.ExpectedOccurrences.Where(static item => item.DueOn is not null)
             .Select(static item => item.OccurrenceId).ToHashSet();

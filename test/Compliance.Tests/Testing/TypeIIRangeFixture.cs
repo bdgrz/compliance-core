@@ -70,8 +70,8 @@ sealed class TypeIIRangeFixture : IAsyncDisposable
 
     public EventStreamAddress StreamOf(Uuid periodId) => new TypeIIPeriod(TenantId, ProgramId, periodId).Stream;
 
-    public Task<TypeIIPeriod> PeriodAsync(Uuid periodId) =>
-        Host.HydrateAsync(new TypeIIPeriod(TenantId, ProgramId, periodId));
+    public Task<TypeIIPeriodReadSnapshot> PeriodAsync(Uuid periodId) =>
+        Host.Periods.ReadAsync(TenantId, ProgramId, periodId).AsTask();
 
     public Task<TypeIIObservationCalendar> CalendarAsync() =>
         Host.HydrateAsync(new TypeIIObservationCalendar(TenantId, ProgramId));
@@ -90,7 +90,7 @@ sealed class TypeIIRangeFixture : IAsyncDisposable
     public Task<Result<OperationAcceptedResponse>> AmendAsync(AmendTypeIIObservationPeriod request) =>
         Host.AmendHandler(Clock).HandleAsync(Context(request), CancellationToken.None).AsTask();
 
-    public Task<Result> CancelAsync(CancelTypeIIPeriodAmendment request) =>
+    public Task<Result<UnitResult>> CancelAsync(CancelTypeIIPeriodAmendment request) =>
         Host.CancelHandler(Clock).HandleAsync(Context(request), CancellationToken.None).AsTask();
 
     public CancelTypeIIPeriodAmendment Cancellation(Uuid periodId, Uuid amendmentId, long expectedRevision,
@@ -113,7 +113,7 @@ sealed class TypeIIRangeFixture : IAsyncDisposable
         await Host.Writer.SaveAsync(plan, new RequestDispatchContext(RequestActor.System));
 
         var period = new TypeIIPeriod(TenantId, ProgramId, id, id);
-        Assert.Null(period.PrepareOpening(plan.Current!, Opening(gap), ActorMemberId, "Compliance lead", StartedAt,
+        Assert.Null(new TypeIIPeriodRules(TenantId, ProgramId, id).PrepareOpening(plan.Current!, Opening(gap), ActorMemberId, "Compliance lead", StartedAt,
             out var initial));
         var realm = TenantId.ToString();
         var change = await Host.Content.WriteJsonAsync(realm, Uuid.CreateVersion4(), TypeIIPeriodOpeningChange.Schema,
@@ -158,7 +158,7 @@ sealed class TypeIIRangeFixture : IAsyncDisposable
     /// <summary>Records, approves and freezes the close of a period, as the executive handlers leave it.</summary>
     public async Task FreezeCloseAsync(Uuid periodId)
     {
-        var period = await PeriodAsync(periodId);
+        var period = (await PeriodAsync(periodId)).Rules;
         var references = period.Current!.OpeningSourceReferences.ToArray();
         var expected = period.Current.ExpectedOccurrences.Select(item => item.OccurrenceId).ToArray();
         var at = StartedAt.AddMonths(30);
@@ -170,7 +170,7 @@ sealed class TypeIIRangeFixture : IAsyncDisposable
         var approver = period.Current!.CloseApprovals[^1].ApprovedByMemberId;
         Assert.Null(period.FreezeClose(period.Revision, new TypeIIPeriodCloseSnapshotContent(Uuid.CreateVersion4(),
             references, expected, []), approver, "Chief Executive", at.AddHours(2)));
-        await Host.Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+        await TypeIIPeriodSeeds.AppendAsync(Host.Reader, Host.Writer, Host.Content, period);
     }
 
     public ValueTask DisposeAsync() => Host.DisposeAsync();

@@ -193,13 +193,13 @@ public sealed class TypeIIRangeProcessTests
         var rejection = Assert.IsType<TypeIIPeriodAmendmentCanceled>(rejected.TerminalFor(intoThird.CommandId));
         Assert.Equal(nameof(RejectTypeIIPeriodAmendment), rejection.Operation.CommandKind);
         Assert.Equal(1, rejected.Revision);
-        Assert.Equal(fixture.FirstEnd, rejected.Current!.PeriodEnd);
+        Assert.Equal(fixture.FirstEnd, rejected.View!.PeriodEnd);
         Assert.Equal(TypeIIRangeReservationState.Fenced, calendar.Find(intoThird.CommandId)!.State);
         Assert.Equal(TypeIIRangeReservationState.Active, calendar.Find(first)!.State);
         Assert.Equal(TypeIIRangeReservationState.Active, calendar.Find(third)!.State);
         Assert.Equal(ProcessState.Completed, earlierRun.State);
         Assert.Equal(2, amended.Revision);
-        Assert.Equal(fixture.FirstStart.AddDays(-7), amended.Current!.PeriodStart);
+        Assert.Equal(fixture.FirstStart.AddDays(-7), amended.View!.PeriodStart);
         Assert.Equal(TypeIIRangeReservationState.Released, after.Find(first)!.State);
         Assert.Equal(TypeIIRangeReservationState.Active, after.Find(earlier.CommandId)!.State);
         Assert.Equal(TypeIIRangeReservationState.Active, after.Find(third)!.State);
@@ -247,7 +247,7 @@ public sealed class TypeIIRangeProcessTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, canceled.Error?.Kind);
         Assert.IsType<ObservationPeriodAmended>(saved.TerminalFor(request.CommandId));
-        Assert.Equal(fixture.FirstEnd.AddDays(7), saved.Current!.PeriodEnd);
+        Assert.Equal(fixture.FirstEnd.AddDays(7), saved.View!.PeriodEnd);
     }
 
     [Fact]

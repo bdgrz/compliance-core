@@ -20,7 +20,7 @@ static class TypeIIPeriodTestExtensions
         "synthetic-content.v1");
 
     /// <summary>Opens the period; returns the same failure the aggregate reports for an invalid opening.</summary>
-    public static CommandFailure? Start(this TypeIIPeriod period, TypeIIPlanView plan,
+    public static CommandFailure? Start(this TypeIIPeriodRules period, TypeIIPlanView plan,
         TypeIIPeriodOpeningContent opening, Uuid actorMemberId, string actorDisplay, DateTimeOffset at,
         ImmutableContentRef? intent = null)
     {
@@ -40,7 +40,7 @@ static class TypeIIPeriodTestExtensions
     }
 
     /// <summary>Amends the period range; returns the same failure the aggregate reports for an invalid amendment.</summary>
-    public static CommandFailure? Amend(this TypeIIPeriod period, long expectedRevision, DateOnly periodStart,
+    public static CommandFailure? Amend(this TypeIIPeriodRules period, long expectedRevision, DateOnly periodStart,
         DateOnly periodEnd, string reason, Uuid actorMemberId, string actorDisplay, DateTimeOffset at)
     {
         ArgumentNullException.ThrowIfNull(period);
@@ -63,7 +63,7 @@ static class TypeIIPeriodTestExtensions
     }
 
     /// <summary>Selects the due occurrences of a generation key as the native operation of the period.</summary>
-    public static Result Generate(this TypeIIPeriod period, string generationKey, DateOnly throughDate,
+    public static Result Generate(this TypeIIPeriodRules period, string generationKey, DateOnly throughDate,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset at)
     {
         ArgumentNullException.ThrowIfNull(period);
@@ -74,7 +74,7 @@ static class TypeIIPeriodTestExtensions
     }
 
     /// <summary>Seeds the native close fact for pure owner-rule tests; the production handler derives/publishes its sources.</summary>
-    public static CommandFailure? RecordCloseValidation(this TypeIIPeriod period, long expectedRevision,
+    public static CommandFailure? RecordCloseValidation(this TypeIIPeriodRules period, long expectedRevision,
         TypeIIPeriodCloseValidationContent content, Uuid validatorMemberId, string validatorDisplay, DateTimeOffset at)
     {
         var operation = RootOperation.Provenance(Uuid.CreateVersion4(), nameof(RecordTypeIIPeriodCloseValidation), period.Stream,
@@ -83,7 +83,7 @@ static class TypeIIPeriodTestExtensions
             Synthetic with { Schema = FirstResponses.Schema }, Synthetic with { Schema = "mutation-result-content.v1" });
     }
 
-    static OperationProvenance Provenance(TypeIIPeriod period, Uuid logicalId, Uuid rootId, string kind,
+    static OperationProvenance Provenance(TypeIIPeriodRules period, Uuid logicalId, Uuid rootId, string kind,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset at) => new(logicalId, rootId,
         logicalId == rootId ? null : rootId, kind, ActorReference.ForMember(actorMemberId, actorDisplay),
         period.Stream, "initial", null, new string('e', 64), at, period.Stream, period.Stream);

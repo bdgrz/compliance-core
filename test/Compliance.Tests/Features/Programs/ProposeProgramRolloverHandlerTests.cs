@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Examinations;
@@ -143,6 +144,9 @@ public sealed class ProposeProgramRolloverHandlerTests
         public Uuid ControlId { get; } = Uuid.CreateVersion4();
         public Uuid ControlVersionId { get; } = Uuid.CreateVersion4();
         public MutableTimeProvider Clock { get; } = new(Now);
+        public InMemoryEventStore PeriodEvents { get; } = new();
+        public IImmutableContentStore PeriodContent { get; } = TypeIIPeriodSeeds.NewContentStore();
+        public TypeIIPeriodReader Periods => new(Reader, PeriodEvents, PeriodContent);
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
@@ -150,7 +154,7 @@ public sealed class ProposeProgramRolloverHandlerTests
         public Fixture()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            services.AddSingleton<IEventStore>(PeriodEvents);
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             { ValidateScopes = true });
@@ -160,7 +164,7 @@ public sealed class ProposeProgramRolloverHandlerTests
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         }
 
-        public ProposeProgramRolloverHandler Handler() => new(Executor, Reader, Clock);
+        public ProposeProgramRolloverHandler Handler() => new(Executor, Reader, Periods, Clock);
 
         public async Task<SourceSet> SeedSourcesAsync(bool closePeriod = true)
         {
@@ -185,7 +189,7 @@ public sealed class ProposeProgramRolloverHandlerTests
                 ceoMemberId, "CISO", "Chief Information Security Officer", SetupAt.AddHours(2)));
             await Writer.SaveAsync(plan, new RequestDispatchContext(RequestActor.System));
 
-            var period = new TypeIIPeriod(TenantId, ProgramId, PeriodId);
+            var period = new TypeIIPeriodRules(TenantId, ProgramId, PeriodId);
             Assert.Null(period.Start(plan.Current!, Opening(sourceReferences), proposalMemberId,
                 "Compliance lead", SetupAt.AddHours(3)));
             if (closePeriod)
@@ -205,7 +209,7 @@ public sealed class ProposeProgramRolloverHandlerTests
                     new TypeIIPeriodCloseSnapshotContent(Uuid.CreateVersion4(), sourceReferences,
                         expectedOccurrences, [GapId]), ceoMemberId, "CEO", closeAt.AddHours(2)));
             }
-            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+            await TypeIIPeriodSeeds.WriteAsync(Writer, PeriodContent, period);
 
             AuditOutcomeView? outcomeView = null;
             if (closePeriod)

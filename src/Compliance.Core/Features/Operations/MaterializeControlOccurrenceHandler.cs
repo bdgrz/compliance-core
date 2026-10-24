@@ -132,7 +132,7 @@ sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IAggre
         if (source.Stream.Realm != command.Target.Realm || source.Stream.Area != TypeIIPeriod.Area ||
             !Uuid.TryParse(source.Stream.Resource, CultureInfo.InvariantCulture, out var periodId))
             return SourceUseReceiverSupport.Permanent("The source is not a Type II period selection.");
-        var period = await reader.HydrateAsync(new TypeIIPeriod(tenant, command.ProgramId, periodId), ct)
+        var period = await reader.HydrateAsync(new TypeIIPeriod(tenant, command.ProgramId, periodId, selectedEventId: source.EventId), ct)
             .ConfigureAwait(false);
         if (period.FactById(source.EventId) is not DueControlOccurrencesGenerated selected)
             return SourceUseReceiverSupport.Transient("The occurrence selection is not visible on its period yet.");

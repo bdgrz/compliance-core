@@ -15,7 +15,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     attributed amendment are frozen on the period owner before the calendar is touched, so the calendar holds both
 ///     ranges until the period applies the amendment. An exact retry replays the original acknowledgment.
 /// </summary>
-public sealed class AmendTypeIIObservationPeriodHandler(NativeOperationExecutor operations, IAggregateReader reader,
+public sealed class AmendTypeIIObservationPeriodHandler(NativeOperationExecutor operations, IAggregateReader reader, TypeIIPeriodReader periods,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<AmendTypeIIObservationPeriod, OperationAcceptedResponse>
 {
@@ -39,56 +39,64 @@ public sealed class AmendTypeIIObservationPeriodHandler(NativeOperationExecutor 
 
         var realm = request.TenantId.ToString();
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId, request.ProgramId,
-            request.PeriodId, request.CommandId), ct).ConfigureAwait(false);
+        var snapshot = new TypeIIPeriod(request.TenantId, request.ProgramId, request.PeriodId);
         var provenance = new OperationProvenance(request.CommandId, request.CommandId, null, CommandKind,
             ActorReference.ForMember(actorMemberId, actorDisplay), snapshot.Stream, InitialEpisode,
             (ulong)request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now, snapshot.Stream,
             snapshot.Stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        // A logical id that was already accepted resolves from the owner's facts before any guard is evaluated.
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        TypeIIPeriodCalendarAuthorization? held = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(request, snapshot, provenance, actorMemberId, actorDisplay, now, ct)
-                .ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response, held) = frozen.Value;
-        }
-
+        var sequence = 0L;
+        var position = 0UL;
         var outcome = await operations.ExecuteAsync(new NativeOperation<TypeIIPeriod>(binding,
             () => new TypeIIPeriod(request.TenantId, request.ProgramId, request.PeriodId, request.CommandId),
             period => period.Acceptance,
-            period => Prepare(period, request, held, response),
-            (TypeIIPeriod period, ImmutableContentRef acknowledgment) =>
-                period.AcceptAmendment(request.ExpectedRevision, provenance, intent!, acknowledgment)), context, ct)
-            .ConfigureAwait(false);
+            async (period, token) =>
+            {
+                try
+                {
+                    if (period.ProgramId != request.ProgramId)
+                        return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound, "The period was not found in this program."));
+                    var read = await periods.ReadAsync(period, token).ConfigureAwait(false);
+                    var frozen = await FreezeAsync(request, read, provenance, actorMemberId, actorDisplay, now, token).ConfigureAwait(false);
+                    if (!frozen.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                    intent = frozen.Value.Intent;
+                    sequence = period.NativeSequence;
+                    position = period.CommittedStreamPosition;
+                    return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
+                }
+                catch (ImmutableContentIntegrityException exception)
+                {
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The period's exact immutable preparation cannot be verified.", exception is ImmutableContentUnavailableException));
+                }
+            }, (TypeIIPeriod period, ImmutableContentRef acknowledgment) =>
+                period.AtCut(sequence, position) is { IsSuccess: false } changed ? changed :
+                period.AcceptAmendment(request.ExpectedRevision, provenance, intent!, acknowledgment)), context, ct).ConfigureAwait(false);
         return await TypeIIRangeContent.AcknowledgmentAsync(content, realm, outcome, ct).ConfigureAwait(false);
     }
 
     async ValueTask<Result<(ImmutableContentRef Intent, FirstResponseDescriptor Response,
         TypeIIPeriodCalendarAuthorization Held)>> FreezeAsync(AmendTypeIIObservationPeriod request,
-        TypeIIPeriod period, OperationProvenance provenance, Uuid actorMemberId, string actorDisplay,
+        TypeIIPeriodReadSnapshot period, OperationProvenance provenance, Uuid actorMemberId, string actorDisplay,
         DateTimeOffset now, CancellationToken ct)
     {
-        if (period.Current is not { } current)
+        if (period.View is not { } current)
             return Fail(RequestErrorKind.NotFound, "The Type II observation period was not found.");
-        if (period.PendingOperationId is not null)
+        if (period.Owner.PendingOperationId is not null)
             return Fail(RequestErrorKind.Conflict,
                 "Another opening or amendment is still being applied; retry after it ends.", true);
         var start = request.PeriodStart ?? current.PeriodStart;
         var end = request.PeriodEnd ?? current.PeriodEnd;
         var reason = request.AmendmentReason?.Trim() ?? string.Empty;
-        var failure = period.PrepareAmendment(request.ExpectedRevision, start, end, reason, actorMemberId,
+        var failure = period.Rules.PrepareAmendment(request.ExpectedRevision, start, end, reason, actorMemberId,
             actorDisplay, now, out _);
         if (failure is not null)
             return Result<(ImmutableContentRef, FirstResponseDescriptor, TypeIIPeriodCalendarAuthorization)>.Failure(
                 failure.ToRequestError());
-        if (period.CalendarAuthorization is not { } held)
+        if (period.Owner.CalendarAuthorization is not { } held)
             return Fail(RequestErrorKind.Conflict, "The period holds no live calendar range to amend.");
 
         var calendar = await reader.HydrateAsync(new TypeIIObservationCalendar(request.TenantId, request.ProgramId),
@@ -101,42 +109,23 @@ public sealed class AmendTypeIIObservationPeriodHandler(NativeOperationExecutor 
             return Fail(RequestErrorKind.Conflict, "The period and the program calendar disagree about the held range.");
 
         var realm = request.TenantId.ToString();
-        var prior = new ReservationGrant(TypeIIRangeEffects.KeyOf(held.AuthorizationId, period.Stream, calendar.Stream),
+        var prior = new ReservationGrant(TypeIIRangeEffects.KeyOf(held.AuthorizationId, period.Owner.Stream, calendar.Stream),
             (ulong)reservation.Generation, NativeFactReference.Of(calendar.Stream, grantFact));
         var change = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), TypeIIPeriodAmendmentChange.Schema,
             new TypeIIPeriodAmendmentChange(start, end, reason, actorMemberId, actorDisplay.Trim(), now), ct)
             .ConfigureAwait(false);
-        var header = new DurableIntentHeader(request.CommandId, period.Stream, period.Stream, period.Stream,
+        var header = new DurableIntentHeader(request.CommandId, period.Owner.Stream, period.Owner.Stream, period.Owner.Stream,
             provenance.Actor, InitialEpisode, provenance.OriginalExpectedRevision, provenance.AuthoredIntentSha256,
             now);
         var intent = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), TypeIIRangeIntent.Schema,
             new TypeIIRangeIntent(header, request.ProgramId, request.PeriodId, TypeIIRangeOperationKind.Amendment,
                 prior, oldRange, new ObservationRange(start, end), change,
-                TypeIIRangeEffects.KeyOf(request.CommandId, period.Stream, calendar.Stream)), ct)
+                TypeIIRangeEffects.KeyOf(request.CommandId, period.Owner.Stream, calendar.Stream)), ct)
             .ConfigureAwait(false);
         var accepted = await TypeIIRangeContent.AcceptedResponseAsync(content, realm, request.CommandId, now, ct)
             .ConfigureAwait(false);
         return Result<(ImmutableContentRef, FirstResponseDescriptor, TypeIIPeriodCalendarAuthorization)>.Success(
             (intent, accepted, held));
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(TypeIIPeriod period, AmendTypeIIObservationPeriod request,
-        TypeIIPeriodCalendarAuthorization? held, FirstResponseDescriptor? response)
-    {
-        if (period.Current is not { } current)
-            return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The Type II observation period was not found."));
-        var start = request.PeriodStart ?? current.PeriodStart;
-        var end = request.PeriodEnd ?? current.PeriodEnd;
-        var failure = period.PrepareAmendment(request.ExpectedRevision, start, end,
-            request.AmendmentReason?.Trim() ?? string.Empty, current.ActorMemberId, current.ActorDisplay,
-            current.UpdatedAt, out _);
-        if (failure is not null)
-            return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
-        return response is null || period.CalendarAuthorization != held
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The period changed while the amendment was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static Result<(ImmutableContentRef, FirstResponseDescriptor, TypeIIPeriodCalendarAuthorization)> Fail(

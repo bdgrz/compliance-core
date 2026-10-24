@@ -80,7 +80,7 @@ sealed class EvidenceSupportTargetSource(IAggregateReader reader, ControlReader 
     {
         var period = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId,
             request.ProgramId, request.SupportedRecordId), ct).ConfigureAwait(false);
-        if (period.Current is not { } current || current.TenantId != request.TenantId ||
+        if (period.Header is not { } current || current.TenantId != request.TenantId ||
             current.ProgramId != request.ProgramId)
             return Missing();
         if (period.Revision != request.SupportedRecordRevision)

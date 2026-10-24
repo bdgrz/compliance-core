@@ -1,0 +1,43 @@
+{
+  "reviewed": 78,
+  "blockedReviews": 0,
+  "signalsTriaged": 3,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "sha256": "1a37f171fc967b98ad3bd563c2954087dff840e7afad58634d9e52bc961910e0",
+      "signals": {
+        "authority_gap": 0.47,
+        "invariant_gap": 0.52,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.44
+      },
+      "classification": "verified_native_authority_and_exact_source_recovery",
+      "evidence": "Runtime owner now retains only compact authority/current-body reference/native sequence, one pending admission/calendar permit and selected root/source evidence. No view/population/history arrays remain. Native body append verifies exact before/after immutable fold, original provenance/actor/gate and logical/native/physical preparation cuts. All immediate producers return original typed Unit envelopes; equal-winner preparation-failure, unknown append, retry after source/time changes, generation/cancellation fencing, 1,000-source persistence and scoped read cases pass. Range receiver preserves selected root separately from child logical ID; calendar uses its actual three-argument selector constructor. Current executive/program authorization precedes native retry."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodCloseMaterialReader.cs",
+      "sha256": "37fbab8647afa6c792932ed596307324e7297084fef8b5f7566a89f15185f236",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.53,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.26
+      },
+      "classification": "verified_native_authority_and_exact_source_recovery",
+      "evidence": "This is complete scoped read-only source capture, not a mutation receipt or authority directory. All nine material families scan verified native fact IDs/versions/payload hashes under exact tenant/program and accepted cutoff, enforce a supported complete-source bound and repeat the source scan before sealing. Native package manifests, population/export lineage, exact sample population versions, request children and transitive management/rollover references produce actual dependent IDs; no absence/global lookup fabricates material. Proof binds original close/digest, period/root/cutoff and new source publication. Missing source is transient; integrity is permanent before native append. Scoped native amendment/material tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriodRules.cs",
+      "sha256": "f48d93445330dbfb168a62cdb05881cb2536b727a35c9febf5adddc2801d9904",
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.58,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.47
+      },
+      "classification": "verified_native_authority_and_exact_source_recovery",
+      "evidence": "Pure transient rule/read composition only, never a durable aggregate State. Native owner re-executes exact transitions against verified before/after bodies at captured OCC cuts; replay resolves before this full mutable preparation. Existing lifecycle, date/plan/population, executive independence, exact approval/freeze, cancellation and amendment history tests remain. The full opening/closing source-version tuple and grouped changed-record comparison from stage1 are retained. This fold keeps complete histories outside runtime authority and does not claim to shorten full framework event replay."
+    }
+  ]
+}

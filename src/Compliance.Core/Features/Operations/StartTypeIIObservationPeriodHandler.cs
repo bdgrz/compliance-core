@@ -45,36 +45,47 @@ public sealed class StartTypeIIObservationPeriodHandler(NativeOperationExecutor 
 
         var realm = request.TenantId.ToString();
         var now = clock.GetUtcNow();
-        var snapshot = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId, request.ProgramId,
-            request.PeriodId, request.PeriodId), ct).ConfigureAwait(false);
+        var snapshot = new TypeIIPeriod(request.TenantId, request.ProgramId, request.PeriodId);
         var provenance = new OperationProvenance(request.PeriodId, request.PeriodId, null, CommandKind,
             ActorReference.ForMember(actorMemberId, actorDisplay), snapshot.Stream, InitialEpisode, null,
             AuthoredIntentDigest.Compute(request), now, snapshot.Stream, snapshot.Stream);
         var binding = AcceptedOperationBinding.Of(provenance);
 
-        // A logical id that was already accepted resolves from the owner's facts before any guard is evaluated.
         ImmutableContentRef? intent = null;
-        FirstResponseDescriptor? response = null;
-        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
-        {
-            var frozen = await FreezeAsync(request, snapshot, provenance, actorMemberId, actorDisplay, now, ct)
-                .ConfigureAwait(false);
-            if (!frozen.IsSuccess)
-                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
-            (intent, response) = frozen.Value;
-        }
-
+        var sequence = 0L;
+        var position = 0UL;
         var outcome = await operations.ExecuteAsync(new NativeOperation<TypeIIPeriod>(binding,
             () => new TypeIIPeriod(request.TenantId, request.ProgramId, request.PeriodId, request.PeriodId),
             period => period.Acceptance,
-            period => Prepare(period, response),
-            (TypeIIPeriod period, ImmutableContentRef acknowledgment) =>
+            async (period, token) =>
+            {
+                try
+                {
+                    var guard = period.PrepareOpeningAcceptance();
+                    if (!guard.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(guard.Error!);
+                    var rules = new TypeIIPeriodRules(request.TenantId, request.ProgramId, request.PeriodId);
+                    var frozen = await FreezeAsync(request, rules, provenance, actorMemberId, actorDisplay, now, token).ConfigureAwait(false);
+                    if (!frozen.IsSuccess)
+                        return Result<FirstResponseDescriptor>.Failure(frozen.Error!);
+                    intent = frozen.Value.Intent;
+                    sequence = period.NativeSequence;
+                    position = period.CommittedStreamPosition;
+                    return Result<FirstResponseDescriptor>.Success(frozen.Value.Response);
+                }
+                catch (ImmutableContentIntegrityException exception)
+                {
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The period's exact immutable preparation cannot be verified.", exception is ImmutableContentUnavailableException));
+                }
+            }, (TypeIIPeriod period, ImmutableContentRef acknowledgment) =>
+                period.AtCut(sequence, position) is { IsSuccess: false } changed ? changed :
                 period.AcceptOpening(provenance, intent!, acknowledgment)), context, ct).ConfigureAwait(false);
         return await TypeIIRangeContent.AcknowledgmentAsync(content, realm, outcome, ct).ConfigureAwait(false);
     }
 
     async ValueTask<Result<(ImmutableContentRef Intent, FirstResponseDescriptor Response)>> FreezeAsync(
-        StartTypeIIObservationPeriod request, TypeIIPeriod period, OperationProvenance provenance, Uuid actorMemberId,
+        StartTypeIIObservationPeriod request, TypeIIPeriodRules period, OperationProvenance provenance, Uuid actorMemberId,
         string actorDisplay, DateTimeOffset now, CancellationToken ct)
     {
         var plan = await reader.HydrateAsync(new TypeIIPlanAggregate(request.TenantId,
@@ -145,17 +156,6 @@ public sealed class StartTypeIIObservationPeriodHandler(NativeOperationExecutor 
         var accepted = await TypeIIRangeContent.AcceptedResponseAsync(content, realm, request.PeriodId, now, ct)
             .ConfigureAwait(false);
         return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Success((intent, accepted));
-    }
-
-    static Result<FirstResponseDescriptor> Prepare(TypeIIPeriod period, FirstResponseDescriptor? response)
-    {
-        var prepared = period.PrepareOpeningAcceptance();
-        if (!prepared.IsSuccess)
-            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
-        return response is null
-            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The period changed while the opening was prepared; reload and retry.", true))
-            : Result<FirstResponseDescriptor>.Success(response);
     }
 
     static bool Approved(TypeIIPlanView plan)

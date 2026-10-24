@@ -6,7 +6,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.SystemDescription;
 
 public sealed class BindSystemDescriptionSourcesHandler(IAggregateReader reader,
-    IAggregateExecutor executor, TimeProvider clock) : IRequestHandler<BindSystemDescriptionSources>
+    IAggregateExecutor executor, TypeIIPeriodReader periods, TimeProvider clock) : IRequestHandler<BindSystemDescriptionSources>
 {
     public async ValueTask<Result> HandleAsync(
         IRequestContext<BindSystemDescriptionSources> context, CancellationToken ct)
@@ -50,9 +50,10 @@ public sealed class BindSystemDescriptionSourcesHandler(IAggregateReader reader,
                  current.Scope.TypeIIPeriodId is { } periodId &&
                  current.Scope.CloseSnapshotId is { } closeSnapshotId)
         {
-            var periodAggregate = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId,
-                request.ProgramId, periodId), ct);
-            var period = periodAggregate.Current;
+            var periodRead = await periods.TryReadAsync(request.TenantId, request.ProgramId, periodId, ct).ConfigureAwait(false);
+            if (!periodRead.IsSuccess)
+                return Result.Failure(periodRead.Error!);
+            var period = periodRead.Value.View;
             if (period is not { Status: "closed" } || period.TenantId != request.TenantId ||
                 period.ProgramId != request.ProgramId || period.ExaminationId != current.Scope.ExaminationId ||
                 period.CloseSnapshots.Count == 0 ||

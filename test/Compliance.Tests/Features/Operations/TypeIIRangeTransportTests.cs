@@ -118,8 +118,9 @@ public sealed class TypeIIRangeTransportTests
         var saved = await fixture.PeriodAsync(period);
 
         // Assert
-        Assert.True(canceled.IsSuccessStatusCode, await canceled.Content.ReadAsStringAsync());
-        Assert.True(retried.IsSuccessStatusCode);
+        Assert.Equal(HttpStatusCode.OK, canceled.StatusCode);
+        Assert.Equal("{}", await canceled.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.OK, retried.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, changed.StatusCode);
         Assert.IsType<TypeIIPeriodAmendmentCanceled>(saved.TerminalFor(amendment));
     }

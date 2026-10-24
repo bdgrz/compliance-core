@@ -782,6 +782,14 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ApplicabilityReader>();
         services.AddScoped<ControlEvaluationReader>();
         services.AddScoped<TypeIIOccurrenceCoverage>();
+        services.AddScoped<TypeIIPeriodReader>();
+        services.AddScoped<TypeIIPeriodOperations>();
+        services.AddScoped<TypeIIPeriodCloseMaterialReader>();
+        services.AddScoped<FitzObservationPeriodDirectory>();
+        services.AddScoped<IObservationPeriodDirectoryReader>(provider => provider.GetRequiredService<FitzObservationPeriodDirectory>());
+        services.AddScoped<IObservationPeriodCloseDirectoryReader>(provider => provider.GetRequiredService<FitzObservationPeriodDirectory>());
+        services.AddScoped<IObservationPeriodDirectoryProjection>(provider => provider.GetRequiredService<FitzObservationPeriodDirectory>());
+        services.AddScoped<ObservationPeriodDirectoryReadConsistency>();
         services.AddScoped<TypeIIRangeVerifier>();
         services.AddScoped<TypeIIRangeReceivers>();
         services.AddScoped<ProfessionalDutyAdmission>();
@@ -1235,6 +1243,11 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ApproveTypeIIPeriodCloseHandler>()
             .AddRequestHandler<RecordTypeIIPeriodCloseValidationHandler>()
             .AddRequestHandler<FreezeTypeIIPeriodCloseHandler>()
+            .AddRequestHandler<AmendTypeIIPeriodCloseHandler>()
+            .AddRequestHandler<GetObservationPeriodHandler>()
+            .AddRequestHandler<ListObservationPeriodsHandler>()
+            .AddRequestHandler<GetObservationPeriodCloseHandler>()
+            .AddRequestHandler<PreviewObservationPeriodCloseHandler>()
             .AddRequestHandler<ProposeSystemDescriptionSuccessorHandler>()
             .AddRequestHandler<RecordManagementAssertionHandler>()
             .AddRequestHandler<ApproveManagementAssertionHandler>()
@@ -1668,6 +1681,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<IdentityRecoveryAcceptanceReactor>("IdentityRecoveryAcceptanceV1", WorkloadScope.Global,
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddProjector<MethodologyTemplateDirectoryProjector>(FitzMethodologyTemplateDirectory.ProjectorName, WorkloadScope.Global)
+            .AddProjector<ObservationPeriodDirectoryProjector>(FitzObservationPeriodDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AuditPackageDirectoryProjector>(FitzAuditPackageDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<PlatformUserDirectoryProjector>("PlatformUserDirectoryV2", WorkloadScope.Global)
             .AddProjector<IdentityDirectoryProjector>("UserIdentityDirectory", WorkloadScope.Global)

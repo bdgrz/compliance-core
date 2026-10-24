@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.Programs;
 
 /// <summary>Proposes carry-forward choices against a closed Type II period and its auditor outcome.</summary>
 public sealed class ProposeProgramRolloverHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock) : IRequestHandler<ProposeProgramRollover>
+    IAggregateReader reader, TypeIIPeriodReader periods, TimeProvider clock) : IRequestHandler<ProposeProgramRollover>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<ProposeProgramRollover> context,
         CancellationToken ct)
@@ -22,9 +22,11 @@ public sealed class ProposeProgramRolloverHandler(IAggregateExecutor executor,
             request.Content.SourcePeriodId == Uuid.Empty || request.Content.AuditOutcomeId == Uuid.Empty)
             return Invalid("A rollover proposal requires exact completed-period and auditor-outcome identities.");
 
-        var sourcePeriod = await reader.HydrateAsync(new TypeIIPeriod(request.TenantId,
-            request.ProgramId, request.Content.SourcePeriodId), ct).ConfigureAwait(false);
-        if (sourcePeriod.Current is not { } periodView)
+        var periodRead = await periods.TryReadAsync(request.TenantId, request.ProgramId, request.Content.SourcePeriodId, ct).ConfigureAwait(false);
+        if (!periodRead.IsSuccess)
+            return Result.Failure(periodRead.Error!);
+        var sourcePeriod = periodRead.Value;
+        if (sourcePeriod.View is not { } periodView)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The source Type II period was not found in this program."));
         if (periodView.Status != "closed" || periodView.CloseSnapshots.Count == 0)
