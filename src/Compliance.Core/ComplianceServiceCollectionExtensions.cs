@@ -332,6 +332,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IAssuranceProjection>(provider => provider.GetRequiredService<FitzAssuranceDirectory>());
         services.AddScoped<IAssuranceReader>(provider => provider.GetRequiredService<FitzAssuranceDirectory>());
         services.AddScoped<AssuranceReadConsistency>();
+        services.AddScoped<AssuranceHistoryReader>();
         services.AddScoped<TechnologyInventoryReadConsistency>();
         services.AddScoped<FitzInventoryRegisterDirectory>();
         services.AddScoped<IInventoryRegisterProjection>(provider =>
@@ -728,6 +729,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(ProviderNameChangeProcess.Definition);
         services.AddSingleton(LocationNameChangeProcess.Definition);
         services.AddSingleton(OperationalProcessNameChangeProcess.Definition);
+        services.AddSingleton(ProviderReviewProcess.Definition());
+        services.AddSingleton(IndependentChildMaterializationProcess.Definition());
+        services.AddSingleton<IChildMaterializationReceiver, ProviderRiskAcceptanceLinkMaterializer>();
+        services.AddScoped<ProviderReviewVerifier>();
         // ISourceFactResolver cannot be resolved by the production container until Portia publishes the shared
         // connection's IStreamClient (AddStreamClient, Portia 0.9.1); the registration is lazy, so nothing resolves
         // it before then and the pin bump makes the receivers and the process factory work without further changes.
@@ -1014,6 +1019,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordProviderCoverageGapHandler>()
             .AddRequestHandler<CloseProviderCoverageGapHandler>()
             .AddRequestHandler<LinkProviderCoverageGapRiskAcceptanceHandler>()
+            .AddRequestHandler<AuthorizeProviderAssuranceReportProviderReviewUseHandler>()
+            .AddRequestHandler<SettleProviderAssuranceReportProviderReviewUseHandler>()
+            .AddRequestHandler<CompleteProviderAssuranceReviewHandler>()
+            .AddRequestHandler<AbortProviderReviewHandler>()
+            .AddRequestHandler<MaterializeProviderRiskAcceptanceLinkHandler>()
+            .AddRequestAuthorizer<ProviderAssuranceReceiverAuthorizer>()
             .AddRequestHandler<GetProviderCoverageGapHandler>()
             .AddRequestHandler<ListProviderCoverageGapsHandler>()
             .AddRequestHandler<GetProviderAssuranceCoverageHandler>()
@@ -1575,6 +1586,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<LocationChangeAcceptedReactor>("LocationChangeAcceptedV1", WorkloadScope.PerTenant,
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<OperationalProcessChangeAcceptedReactor>("OperationalProcessChangeAcceptedV1",
+                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<ProviderReviewReactor>(ProviderReviewReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<ProviderRiskAcceptanceLinkReactor>(ProviderRiskAcceptanceLinkReactor.WorkloadName,
                 WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<AdministratorWithdrawalReactor>("AdministratorWithdrawalV1", WorkloadScope.PerTenant,
                 options => options.FailureAttemptLimit = int.MaxValue)

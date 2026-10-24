@@ -18,7 +18,7 @@ public sealed class GetProviderCoverageGapHandler(IAssuranceReader directory,
         var fence = await consistency.CaptureFenceAsync(request.TenantId, ct).ConfigureAwait(false);
         if (!fence.IsSuccess)
             return Result<ProviderCoverageGapView>.Failure(fence.Error);
-        var gap = await directory.GetCoverageGapAsync(request.TenantId, request.GapId, ct)
+        var gap = await directory.GetCoverageGapAsync(request.TenantId, request.ProviderId, request.GapId, ct)
             .ConfigureAwait(false);
         if (gap is null || gap.ProviderId != request.ProviderId || gap.TenantId != request.TenantId)
             return Result<ProviderCoverageGapView>.Failure(new RequestError(RequestErrorKind.NotFound,

@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.Providers;
 sealed class FitzAssuranceDirectory(IKvClient client)
     : FitzKvProjectionStore(client, "kv://bdgrz/provider-assurance-v1/projection", ProjectorName), IAssuranceReader, IAssuranceProjection
 {
-    public const string ProjectorName = "ProviderAssuranceV2";
+    public const string ProjectorName = "ProviderAssuranceV3";
     Uuid? _batchTenantId;
 
     public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context,
@@ -18,7 +18,7 @@ sealed class FitzAssuranceDirectory(IKvClient client)
 
     async ValueTask<IProjectionBatch> BeginAssuranceBatchAsync(ProjectionBatchContext context, CancellationToken ct)
     {
-        if (context.Identity.Pattern.Area != ProviderAssuranceRegister.Area ||
+        if (context.Identity.Pattern.Area != ProviderAssuranceStreams.Area ||
             context.Identity.Pattern.Resource is not null ||
             !Uuid.TryParse(context.Identity.Pattern.Realm, null, out var tenantId) || tenantId == Uuid.Empty)
             throw new InvalidOperationException("An assurance projection batch requires its tenant's assurance area.");
@@ -29,26 +29,35 @@ sealed class FitzAssuranceDirectory(IKvClient client)
 
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default) =>
         base.LoadCheckpointAsync(new CheckpointIdentity(ProjectorName,
-            EventStreamPattern.ForPattern(tenantId.ToString(), ProviderAssuranceRegister.Area)), ct);
+            EventStreamPattern.ForPattern(tenantId.ToString(), ProviderAssuranceStreams.Area)), ct);
 
-    public async ValueTask<AssuranceReportView?> GetReportRevisionAsync(Uuid tenantId,
+    public async ValueTask<AssuranceReportView?> GetReportRevisionAsync(Uuid tenantId, Uuid providerId,
         Uuid reportId, long revision, CancellationToken ct = default)
     {
         await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
         var view = await AssuranceDirectorySchema.ReportRevisions.GetAsync(tx,
-            AssuranceDirectorySchema.ReportRevisionKey(reportId, revision), ct).ConfigureAwait(false);
-        return view?.TenantId == tenantId && view.ReportId == reportId && view.Revision == revision
+            AssuranceDirectorySchema.ReportRevisionKey(providerId, reportId, revision), ct).ConfigureAwait(false);
+        return view?.TenantId == tenantId && view.ProviderId == providerId && view.ReportId == reportId &&
+               view.Revision == revision
             ? view
             : null;
     }
 
-    public async ValueTask<ProviderCoverageGapView?> GetCoverageGapAsync(Uuid tenantId,
+    public async ValueTask<ProviderReviewView?> GetReviewAsync(Uuid tenantId, Uuid reviewId,
+        CancellationToken ct = default)
+    {
+        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        var review = await AssuranceDirectorySchema.Reviews.GetAsync(tx, reviewId, ct).ConfigureAwait(false);
+        return review?.TenantId == tenantId && review.ReviewId == reviewId ? review : null;
+    }
+
+    public async ValueTask<ProviderCoverageGapView?> GetCoverageGapAsync(Uuid tenantId, Uuid providerId,
         Uuid gapId, CancellationToken ct = default)
     {
         await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        var gap = await AssuranceDirectorySchema.CoverageGaps.GetAsync(tx, gapId, ct)
-            .ConfigureAwait(false);
-        return gap?.TenantId == tenantId && gap.GapId == gapId ? gap : null;
+        var gap = await AssuranceDirectorySchema.CoverageGaps.GetAsync(tx,
+            AssuranceDirectorySchema.RecordKey(providerId, gapId), ct).ConfigureAwait(false);
+        return gap?.TenantId == tenantId && gap.ProviderId == providerId && gap.GapId == gapId ? gap : null;
     }
 
     public async ValueTask<Page<ProviderCoverageGapView>> ListCoverageGapsAsync(Uuid tenantId,
@@ -59,43 +68,6 @@ sealed class FitzAssuranceDirectory(IKvClient client)
             AssuranceDirectorySchema.CoverageGapsByProvider.Query()
                 .WithPrefix(providerId.ToString()).Take(limit).After(cursor), ct)
             .ConfigureAwait(false);
-    }
-
-    public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
-    {
-        switch (domainEvent)
-        {
-            case AssuranceReportRecorded ev:
-                await ApplyReportAsync(View(ev.TenantId, ev.ReportId, ev.ProviderId, 1, ev.Content, ev.ProviderRevision,
-                    ev.Actor, ev.RecordedAt), ct).ConfigureAwait(false);
-                break;
-            case AssuranceReportRevised { Revision: >= 2 } ev:
-                await ApplyReportAsync(View(ev.TenantId, ev.ReportId, ev.ProviderId, ev.Revision, ev.Content,
-                    ev.ProviderRevision, ev.Actor, ev.RecordedAt), ct).ConfigureAwait(false);
-                break;
-            case ProviderReviewRecorded ev:
-                await ApplyReviewAsync(new ProviderReviewView(ev.TenantId, ev.ReviewId, ev.ProviderId,
-                    AssuranceRules.Normalize(ev.Content), ev.ProviderRevision, ev.AssuranceReportRevision, ev.Actor,
-                    ev.RecordedAt), ct).ConfigureAwait(false);
-                break;
-            case ProviderCoverageGapRecorded ev:
-                if (ProviderCoverageGapRules.InputError(ev.Content) is not null ||
-                    ev.RequestId == Uuid.Empty)
-                    throw new InvalidOperationException("A provider coverage gap event must have valid facts and a request identity.");
-                await ApplyCoverageGapAsync(new ProviderCoverageGapView(ev.TenantId, ev.GapId,
-                    ev.ProviderId, ev.ProviderRevision, 1,
-                    ProviderCoverageGapRules.Normalize(ev.Content), "open", ev.Actor,
-                    ev.RecordedAt, null, []), ct).ConfigureAwait(false);
-                break;
-            case ProviderCoverageGapClosed ev:
-                await ApplyCoverageGapClosureAsync(ev, ct).ConfigureAwait(false);
-                break;
-            case ProviderCoverageGapRiskAcceptanceLinked ev:
-                await ApplyCoverageGapRiskAcceptanceAsync(ev, ct).ConfigureAwait(false);
-                break;
-            default:
-                throw new InvalidOperationException("The assurance event is not supported.");
-        }
     }
 
     public async ValueTask<Page<AssuranceReportView>> ListReportsAsync(Uuid tenantId, Uuid providerId, int limit,
@@ -116,16 +88,16 @@ sealed class FitzAssuranceDirectory(IKvClient client)
             .ConfigureAwait(false);
     }
 
-    async ValueTask ApplyReportAsync(AssuranceReportView view, CancellationToken ct)
+    public async ValueTask ApplyReportAsync(AssuranceReportView view, CancellationToken ct = default)
     {
         RequireBatchTenant(view.TenantId, view.ProviderId, view.ReportId);
-        var revisionKey = AssuranceDirectorySchema.ReportRevisionKey(view.ReportId,
-            view.Revision);
+        var revisionKey = AssuranceDirectorySchema.ReportRevisionKey(view.ProviderId, view.ReportId, view.Revision);
         var retainedRevision = await AssuranceDirectorySchema.ReportRevisions.GetAsync(
             Transaction, revisionKey, ct).ConfigureAwait(false);
         if (retainedRevision is not null && !Same(retainedRevision, view))
             throw new InvalidOperationException("An assurance report revision cannot replace retained content.");
-        var current = await AssuranceDirectorySchema.Reports.GetAsync(Transaction, view.ReportId, ct).ConfigureAwait(false);
+        var current = await AssuranceDirectorySchema.Reports.GetAsync(Transaction,
+            AssuranceDirectorySchema.RecordKey(view.ProviderId, view.ReportId), ct).ConfigureAwait(false);
         if (current is not null && current.Revision >= view.Revision)
         {
             // A replayed revision is idempotent only when it matches the retained current or a superseded fact.
@@ -138,7 +110,7 @@ sealed class FitzAssuranceDirectory(IKvClient client)
         }
         if (current is null ? view.Revision != 1 : current.TenantId != view.TenantId ||
                 current.ProviderId != view.ProviderId || current.Revision + 1 != view.Revision)
-            throw new InvalidOperationException("An assurance report revision requires its tenant's immediate predecessor.");
+            throw new InvalidOperationException("An assurance report revision requires its provider's immediate predecessor.");
         if (current is null)
             await AssuranceDirectorySchema.Reports.InsertAsync(Transaction, view, ct).ConfigureAwait(false);
         else
@@ -148,7 +120,7 @@ sealed class FitzAssuranceDirectory(IKvClient client)
                 .ConfigureAwait(false);
     }
 
-    async ValueTask ApplyReviewAsync(ProviderReviewView view, CancellationToken ct)
+    public async ValueTask ApplyReviewAsync(ProviderReviewView view, CancellationToken ct = default)
     {
         RequireBatchTenant(view.TenantId, view.ProviderId, view.ReviewId);
         var retained = await AssuranceDirectorySchema.Reviews.GetAsync(Transaction, view.ReviewId, ct).ConfigureAwait(false);
@@ -161,104 +133,94 @@ sealed class FitzAssuranceDirectory(IKvClient client)
         await AssuranceDirectorySchema.Reviews.InsertAsync(Transaction, view, ct).ConfigureAwait(false);
     }
 
-    async ValueTask ApplyCoverageGapAsync(ProviderCoverageGapView view, CancellationToken ct)
+    public async ValueTask ApplyGapRecordedAsync(ProviderCoverageGapView view, CancellationToken ct = default)
     {
         RequireBatchTenant(view.TenantId, view.ProviderId, view.GapId);
-        if (view.ProviderRevision < 1 || view.Revision != 1 || view.Status != "open" ||
-            view.Closure is not null)
+        if (view.ProviderRevision < 1 || view.Revision != 1 || view.Status != "open" || view.Closure is not null)
             throw new InvalidOperationException("A new provider coverage gap must start open at revision one.");
         var retained = await AssuranceDirectorySchema.CoverageGaps.GetAsync(Transaction,
-            view.GapId, ct).ConfigureAwait(false);
+            AssuranceDirectorySchema.RecordKey(view.ProviderId, view.GapId), ct).ConfigureAwait(false);
         if (retained is not null)
         {
             if (!SameCoverageGapRecord(retained, view))
                 throw new InvalidOperationException("A provider coverage gap cannot replace retained content.");
             return;
         }
-        await AssuranceDirectorySchema.CoverageGaps.InsertAsync(Transaction, view, ct)
-            .ConfigureAwait(false);
+        await AssuranceDirectorySchema.CoverageGaps.InsertAsync(Transaction, view, ct).ConfigureAwait(false);
     }
 
-    async ValueTask ApplyCoverageGapClosureAsync(ProviderCoverageGapClosed ev,
-        CancellationToken ct)
+    public async ValueTask ApplyGapAdmissionAsync(Uuid tenantId, Uuid providerId, Uuid gapId, long revision,
+        CancellationToken ct = default)
     {
-        RequireBatchTenant(ev.TenantId, ev.ProviderId, ev.GapId);
-        if (ProviderCoverageGapRules.ClosureInputError(ev.Content) is not null)
+        RequireBatchTenant(tenantId, providerId, gapId);
+        var current = await RetainedGapAsync(tenantId, providerId, gapId, ct).ConfigureAwait(false);
+        if (current.Revision >= revision)
+            return;
+        if (current.Status != "open" || current.Revision + 1 != revision)
+            throw new InvalidOperationException("A link admission must immediately follow an open gap revision.");
+        await AssuranceDirectorySchema.CoverageGaps.ReplaceAsync(Transaction, current,
+            current with { Revision = revision }, ct).ConfigureAwait(false);
+    }
+
+    public async ValueTask ApplyGapClosedAsync(Uuid tenantId, Uuid providerId, Uuid gapId, long revision,
+        ProviderCoverageGapClosureView closure, CancellationToken ct = default)
+    {
+        RequireBatchTenant(tenantId, providerId, gapId);
+        if (ProviderCoverageGapRules.ClosureInputError(closure.Content) is not null)
             throw new InvalidOperationException("A provider coverage gap closure requires valid resolution evidence.");
-        var current = await AssuranceDirectorySchema.CoverageGaps.GetAsync(Transaction,
-            ev.GapId, ct).ConfigureAwait(false);
-        if (current is null || current.TenantId != ev.TenantId ||
-            current.ProviderId != ev.ProviderId)
-            throw new InvalidOperationException("A provider coverage gap closure requires its retained gap.");
+        var current = await RetainedGapAsync(tenantId, providerId, gapId, ct).ConfigureAwait(false);
         var closed = current with
         {
-            Revision = ev.Revision,
+            Revision = revision,
             Status = "closed",
-            Closure = new ProviderCoverageGapClosureView(
-                ProviderCoverageGapRules.Normalize(ev.Content), ev.Actor, ev.ClosedAt)
-            {
-                Revision = ev.Revision,
-            },
+            Closure = closure with { Content = ProviderCoverageGapRules.Normalize(closure.Content), Revision = revision },
         };
-        if (current.Revision >= ev.Revision)
+        if (current.Revision >= revision)
         {
-            if (current.Revision == ev.Revision && !Same(current, closed))
+            if (current.Revision == revision && !Same(current, closed))
                 throw new InvalidOperationException("A provider coverage gap closure cannot replace retained content.");
             return;
         }
-        if (current.Status != "open" || current.Revision + 1 != ev.Revision)
+        if (current.Status != "open" || current.Revision + 1 != revision)
             throw new InvalidOperationException("A provider coverage gap closure must immediately follow an open revision.");
         await AssuranceDirectorySchema.CoverageGaps.ReplaceAsync(Transaction, current, closed, ct)
             .ConfigureAwait(false);
     }
 
-    async ValueTask ApplyCoverageGapRiskAcceptanceAsync(
-        ProviderCoverageGapRiskAcceptanceLinked ev, CancellationToken ct)
+    public async ValueTask ApplyGapLinkAsync(Uuid tenantId, Uuid providerId, Uuid gapId,
+        ProviderCoverageGapRiskAcceptanceView link, CancellationToken ct = default)
     {
-        RequireBatchTenant(ev.TenantId, ev.ProviderId, ev.GapId);
-        if (ev.Acceptance is null)
-            throw new InvalidOperationException("A provider coverage gap acceptance link requires an acceptance.");
-        var current = await AssuranceDirectorySchema.CoverageGaps.GetAsync(Transaction,
-            ev.GapId, ct).ConfigureAwait(false);
-        if (current is null || current.TenantId != ev.TenantId || current.ProviderId != ev.ProviderId)
-            throw new InvalidOperationException("A provider coverage gap acceptance link requires its gap.");
-        if (current.Revision >= ev.Revision)
+        RequireBatchTenant(tenantId, providerId, gapId);
+        if (link.ProgramId == Uuid.Empty || link.RiskId == Uuid.Empty || link.AcceptanceId == Uuid.Empty ||
+            link.ExpiresAt <= link.LinkedAt)
+            throw new InvalidOperationException("A provider coverage gap link must be a time-bounded decision.");
+        var current = await RetainedGapAsync(tenantId, providerId, gapId, ct).ConfigureAwait(false);
+        var links = current.RiskAcceptances ?? [];
+        if (links.Any(item => item.RiskId == link.RiskId && item.AcceptanceId == link.AcceptanceId))
         {
-            if ((current.RiskAcceptances ?? []).Any(link => link == ev.Acceptance))
+            if (links.Any(item => item == link))
                 return;
-            throw new InvalidOperationException("A provider coverage gap acceptance link cannot replace retained content.");
+            throw new InvalidOperationException("A provider coverage gap link cannot replace retained content.");
         }
-        if (current.Status != "open" || current.Revision + 1 != ev.Revision ||
-            ev.Acceptance.ProgramId == Uuid.Empty ||
-            ev.Acceptance.RiskId == Uuid.Empty || ev.Acceptance.AcceptanceId == Uuid.Empty ||
-            ev.Acceptance.Revision != ev.Revision ||
-            ev.Acceptance.ExpiresAt <= ev.Acceptance.LinkedAt ||
-            (current.RiskAcceptances ?? []).Count >= ProviderAssuranceRegister.MaximumRiskAcceptanceLinksPerGap ||
-            (current.RiskAcceptances ?? []).Any(link => link.RiskId == ev.Acceptance.RiskId &&
-                                                        link.AcceptanceId == ev.Acceptance.AcceptanceId))
-            throw new InvalidOperationException("A provider coverage gap acceptance link must be a new, time-bounded decision at the next revision.");
-        var linked = current with
-        {
-            Revision = ev.Revision,
-            RiskAcceptances = [.. (current.RiskAcceptances ?? []), ev.Acceptance],
-        };
-        await AssuranceDirectorySchema.CoverageGaps.ReplaceAsync(Transaction, current, linked, ct)
-            .ConfigureAwait(false);
+        // The admission already produced the gap revision; a link neither advances it nor changes the status.
+        await AssuranceDirectorySchema.CoverageGaps.ReplaceAsync(Transaction, current,
+            current with { RiskAcceptances = [.. links, link] }, ct).ConfigureAwait(false);
+    }
+
+    async ValueTask<ProviderCoverageGapView> RetainedGapAsync(Uuid tenantId, Uuid providerId, Uuid gapId,
+        CancellationToken ct)
+    {
+        var current = await AssuranceDirectorySchema.CoverageGaps.GetAsync(Transaction,
+            AssuranceDirectorySchema.RecordKey(providerId, gapId), ct).ConfigureAwait(false);
+        return current is null || current.TenantId != tenantId || current.ProviderId != providerId
+            ? throw new InvalidOperationException("A provider coverage gap fact requires its retained gap.")
+            : current;
     }
 
     void RequireBatchTenant(Uuid tenantId, Uuid providerId, Uuid recordId)
     {
         if (tenantId == Uuid.Empty || providerId == Uuid.Empty || recordId == Uuid.Empty || tenantId != _batchTenantId)
             throw new InvalidOperationException("An assurance event must belong to its tenant projection batch.");
-    }
-
-    static AssuranceReportView View(Uuid tenantId, Uuid reportId, Uuid providerId, long revision,
-        AssuranceReportContent content, long providerRevision, Bdgrz.Compliance.Features.AccessControl.ActorReference actor,
-        DateTimeOffset recordedAt)
-    {
-        content = AssuranceRules.Normalize(content);
-        return new AssuranceReportView(tenantId, reportId, providerId, revision, content, providerRevision,
-            content.Exceptions!.Count, content.ComplementaryControls!.Count, content.CoverageGaps!.Count, actor, recordedAt);
     }
 
     static bool Same(AssuranceReportView left, AssuranceReportView right) =>

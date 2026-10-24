@@ -76,18 +76,20 @@ public sealed class ProviderAssuranceDisclosureTests
             await NamedRecordFacts.SeedProviderAsync(fixture.Source, fixture.TenantId, fixture.ProviderId, MaterialProvider());
             var exception = new[] { new AssuranceExceptionNote("CC6.1", "Exception text") };
             await using var batch = await fixture.Directory.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(
-                FitzAssuranceDirectory.ProjectorName, EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ProviderAssuranceRegister.Area)),
+                FitzAssuranceDirectory.ProjectorName, EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ProviderAssuranceStreams.Area)),
                 ProjectionCheckpoint.Start));
-            await fixture.Directory.ApplyAsync(new AssuranceReportRecorded(fixture.TenantId, Uuid.CreateVersion4(), fixture.ProviderId, Uuid.CreateVersion4(),
-                Report("restricted") with { Issuer = "Restricted LLP", Exceptions = exception }, 1, Author, Now));
-            await fixture.Directory.ApplyAsync(new AssuranceReportRecorded(fixture.TenantId, Uuid.CreateVersion4(), fixture.ProviderId, Uuid.CreateVersion4(),
-                Report("internal") with { Issuer = "Internal LLP", Exceptions = exception }, 1, Author, Now));
-            await fixture.Directory.ApplyAsync(new AssuranceReportRecorded(fixture.TenantId, Uuid.CreateVersion4(), fixture.ProviderId, Uuid.CreateVersion4(),
-                Report() with { Issuer = "Unclassified LLP", Citation = null }, 1, Author, Now));
-            await fixture.Directory.ApplyAsync(new ProviderReviewRecorded(fixture.TenantId, Uuid.CreateVersion4(), fixture.ProviderId, Uuid.CreateVersion4(),
-                Review() with { Rationale = "restricted evidence", Evidence = Citation("restricted") }, 1, "material", null, Author, Now));
-            await fixture.Directory.ApplyAsync(new ProviderReviewRecorded(fixture.TenantId, Uuid.CreateVersion4(), fixture.ProviderId, Uuid.CreateVersion4(),
-                Review() with { Rationale = "internal evidence", Evidence = Citation("internal") }, 1, "material", null, Author, Now));
+            var tenant = fixture.TenantId;
+            var provider = fixture.ProviderId;
+            await fixture.Directory.ApplyReportAsync(ReportView(tenant, provider, Uuid.CreateVersion4(), 1,
+                Report("restricted") with { Issuer = "Restricted LLP", Exceptions = exception }));
+            await fixture.Directory.ApplyReportAsync(ReportView(tenant, provider, Uuid.CreateVersion4(), 1,
+                Report("internal") with { Issuer = "Internal LLP", Exceptions = exception }));
+            await fixture.Directory.ApplyReportAsync(ReportView(tenant, provider, Uuid.CreateVersion4(), 1,
+                Report() with { Issuer = "Unclassified LLP", Citation = null }));
+            await fixture.Directory.ApplyReviewAsync(ReviewView(tenant, provider, Uuid.CreateVersion4(),
+                Review() with { Rationale = "restricted evidence", Evidence = Citation("restricted") }));
+            await fixture.Directory.ApplyReviewAsync(ReviewView(tenant, provider, Uuid.CreateVersion4(),
+                Review() with { Rationale = "internal evidence", Evidence = Citation("internal") }));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
             return fixture;
         }

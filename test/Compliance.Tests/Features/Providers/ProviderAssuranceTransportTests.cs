@@ -6,48 +6,61 @@ using Bdgrz.Compliance.Features.Providers;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using static Bdgrz.Compliance.Tests.Features.Providers.AssuranceSamples;
 
 namespace Bdgrz.Compliance.Tests.Features.Providers;
 
-public sealed class ProviderAssuranceHttpMcpTests
+[Trait("Category", "WebIntegration")]
+public sealed class ProviderAssuranceTransportTests
 {
     [Fact]
-    public async Task ShouldRecordReviewAndReadCoverageGivenAuthorizedHttpCaller()
+    public async Task ShouldRecordReviseAndReadCoverageGivenAuthorizedHttpCaller()
     {
         // Arrange
         await using var factory = ProviderHttpMcpTests.CreateFactory();
         using var client = factory.CreateClient();
-        using var login = await client.PostAsJsonAsync("/api/v1/developer-user-sessions", new { email_address = "assurance-http@example.com" });
-        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        await LoginAsync(client, "assurance-http@example.com");
         var tenantId = Uuid.CreateVersion4();
         var otherTenant = Uuid.CreateVersion4();
         var providerId = await RecordProviderAsync(factory.Services, tenantId);
         var otherProviderId = await RecordProviderAsync(factory.Services, otherTenant);
+        var reportId = Uuid.CreateVersion4();
+        var reviewId = Uuid.CreateVersion4();
 
         // Act
-        using var recorded = await client.PostAsync($"{Path(tenantId, providerId)}/assurance-reports", Json("content", Report()));
-        var report = JsonSerializer.Deserialize(await recorded.Content.ReadAsStringAsync(), ComplianceCoreJsonContext.Default.AssuranceReportRegistration)!;
-        using var revised = await client.PutAsync($"{Path(tenantId, providerId)}/assurance-reports/{report.ReportId}",
-            new StringContent("{\"expected_revision\":1,\"content\":" + JsonSerializer.Serialize(Report() with { Issuer = "Renamed LLP" },
-                ComplianceCoreJsonContext.Default.AssuranceReportContent) + "}", Encoding.UTF8, "application/json"));
-        using var review = await client.PostAsync($"{Path(tenantId, providerId)}/reviews", Json("content", Review(report.ReportId)));
-        using var invalid = await client.PostAsync($"{Path(tenantId, providerId)}/reviews",
-            Json("content", Review(report.ReportId) with { Conclusion = "approved" }));
-        await CatchUpAsync(factory.Services, tenantId);
+        using var recorded = await client.PutAsync($"{Path(tenantId, providerId)}/assurance-reports/{reportId}", Json("content", Report()));
+        using var recordedRetry = await client.PutAsync($"{Path(tenantId, providerId)}/assurance-reports/{reportId}", Json("content", Report()));
+        using var changed = await client.PutAsync($"{Path(tenantId, providerId)}/assurance-reports/{reportId}",
+            Json("content", Report() with { Issuer = "Other LLP" }));
+        var revisionId = Uuid.CreateVersion4();
+        var revisionBody = new StringContent("{\"report_id\":\"" + reportId + "\",\"expected_revision\":1,\"content\":" +
+            JsonSerializer.Serialize(Report() with { Issuer = "Renamed LLP" }, ComplianceCoreJsonContext.Default.AssuranceReportContent) + "}",
+            Encoding.UTF8, "application/json");
+        using var revised = await client.PutAsync($"{Path(tenantId, providerId)}/assurance-reports/revise-assurance-report/{revisionId}", revisionBody);
+        using var review = await client.PutAsync($"{Path(tenantId, providerId)}/reviews/{reviewId}", Json("content", Review(reportId)));
+        using var reviewRetry = await client.PutAsync($"{Path(tenantId, providerId)}/reviews/{reviewId}", Json("content", Review(reportId)));
+        using var invalid = await client.PutAsync($"{Path(tenantId, providerId)}/reviews/{Uuid.CreateVersion4()}",
+            Json("content", Review(reportId) with { Conclusion = "approved" }));
+        await AssuranceProjectionCatchUp.RunAsync(factory.Services, tenantId);
         using var reports = await client.GetAsync($"{Path(tenantId, providerId)}/assurance-reports?limit=10");
-        using var reviews = await client.GetAsync($"{Path(tenantId, providerId)}/reviews");
         using var coverage = await client.GetAsync($"{Path(tenantId, providerId)}/assurance-coverage?as_of=2026-12-31");
         using var foreignProvider = await client.GetAsync($"{Path(otherTenant, providerId)}/assurance-reports");
         using var foreignCoverage = await client.GetAsync($"{Path(tenantId, otherProviderId)}/assurance-coverage");
-        using var foreignRecord = await client.PostAsync($"{Path(otherTenant, providerId)}/assurance-reports", Json("content", Report()));
+        using var foreignRecord = await client.PutAsync($"{Path(otherTenant, providerId)}/assurance-reports/{Uuid.CreateVersion4()}", Json("content", Report()));
         using var otherReports = await client.GetAsync($"{Path(otherTenant, otherProviderId)}/assurance-reports");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, recorded.StatusCode);
+        Assert.Equal(await recorded.Content.ReadAsStringAsync(), await recordedRetry.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.Conflict, changed.StatusCode);
         Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, review.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, review.StatusCode);
+        using var accepted = JsonDocument.Parse(await review.Content.ReadAsStringAsync());
+        Assert.Equal(reviewId.ToString(), accepted.RootElement.GetProperty("operation_id").GetString());
+        Assert.Equal($"/api/v1/tenants/{tenantId}/operations/{reviewId}", accepted.RootElement.GetProperty("status_url").GetString());
+        Assert.True(review.Headers.Contains("Location"));
+        Assert.Equal(HttpStatusCode.Accepted, reviewRetry.StatusCode);
+        Assert.Equal(await review.Content.ReadAsStringAsync(), await reviewRetry.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
         Assert.Equal(HttpStatusCode.OK, reports.StatusCode);
         using var reportPage = JsonDocument.Parse(await reports.Content.ReadAsStringAsync());
@@ -57,12 +70,11 @@ public sealed class ProviderAssuranceHttpMcpTests
         Assert.Equal("Renamed LLP", item.GetProperty("content").GetProperty("issuer").GetString());
         Assert.Equal("2026-06-30", item.GetProperty("content").GetProperty("period_end").GetString());
         Assert.Equal(0, item.GetProperty("exception_count").GetInt32());
-        using var reviewPage = JsonDocument.Parse(await reviews.Content.ReadAsStringAsync());
-        Assert.Equal("acceptable", Assert.Single(reviewPage.RootElement.GetProperty("items").EnumerateArray()).GetProperty("content").GetProperty("conclusion").GetString());
         using var view = JsonDocument.Parse(await coverage.Content.ReadAsStringAsync());
-        Assert.Equal("current", view.RootElement.GetProperty("status").GetString());
+        Assert.Equal("no_review", view.RootElement.GetProperty("status").GetString());
         Assert.Equal("2026-12-31", view.RootElement.GetProperty("as_of").GetString());
-        Assert.Equal("uncovered_after_period", view.RootElement.GetProperty("reasons")[0].GetString());
+        Assert.Equal("uncovered_after_period", Assert.Single(view.RootElement.GetProperty("reports").EnumerateArray())
+            .GetProperty("period_coverage").GetString());
         Assert.Equal(HttpStatusCode.NotFound, foreignProvider.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, foreignCoverage.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, foreignRecord.StatusCode);
@@ -71,40 +83,66 @@ public sealed class ProviderAssuranceHttpMcpTests
     }
 
     [Fact]
+    public async Task ShouldRecordCloseAndLinkGapGivenAuthorizedHttpCaller()
+    {
+        // Arrange
+        await using var factory = ProviderHttpMcpTests.CreateFactory();
+        using var client = factory.CreateClient();
+        await LoginAsync(client, "assurance-gap@example.com");
+        var tenantId = Uuid.CreateVersion4();
+        var providerId = await RecordProviderAsync(factory.Services, tenantId);
+        var gapId = Uuid.CreateVersion4();
+
+        // Act
+        using var link = await client.PutAsync(
+            $"{Path(tenantId, providerId)}/coverage-gaps/{gapId}/risk-acceptances/link-provider-coverage-gap-risk-acceptance/{Uuid.CreateVersion4()}",
+            new StringContent("{\"program_id\":\"" + Uuid.CreateVersion4() + "\",\"expected_gap_revision\":1,\"risk_id\":\"" +
+                Uuid.CreateVersion4() + "\",\"acceptance_id\":\"" + Uuid.CreateVersion4() + "\"}", Encoding.UTF8, "application/json"));
+        using var close = await client.PutAsync(
+            $"{Path(tenantId, providerId)}/coverage-gaps/close-provider-coverage-gap/{Uuid.CreateVersion4()}",
+            new StringContent("{\"gap_id\":\"" + gapId + "\",\"expected_revision\":1,\"content\":" +
+                JsonSerializer.Serialize(new ProviderCoverageGapClosureContent("coverage_restored", "assurance_report",
+                    Uuid.CreateVersion4(), 2, "Covered."), ComplianceCoreJsonContext.Default.ProviderCoverageGapClosureContent) + "}",
+                Encoding.UTF8, "application/json"));
+        using var missing = await client.GetAsync($"{Path(tenantId, providerId)}/coverage-gaps/{gapId}");
+
+        // Assert: both routes bind their command id and reach the gap owner, which does not know the gap.
+        Assert.Equal(HttpStatusCode.NotFound, link.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, close.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+    }
+
+    [Fact]
     public async Task ShouldRecordReportAndReadCoverageGivenAuthorizedMcpCaller()
     {
         // Arrange
         await using var factory = ProviderHttpMcpTests.CreateFactory();
         using var client = factory.CreateClient();
-        using var login = await client.PostAsJsonAsync("/api/v1/developer-user-sessions", new { email_address = "assurance-mcp@example.com" });
-        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        await LoginAsync(client, "assurance-mcp@example.com");
         var tenantId = Uuid.CreateVersion4();
         var providerId = await RecordProviderAsync(factory.Services, tenantId);
+        var reportId = Uuid.CreateVersion4();
         await using var scenario = await McpScenario.ConnectAsync(client, new Uri(client.BaseAddress!, "/mcp"));
 
         // Act
         var recorded = await scenario.When("bdgrz.provider.assurance_report.record", new Dictionary<string, object?>
         {
+            ["report_id"] = reportId.ToString(),
             ["tenant_id"] = tenantId.ToString(),
             ["provider_id"] = providerId.ToString(),
             ["content"] = JsonSerializer.SerializeToElement(Report(), ComplianceCoreJsonContext.Default.AssuranceReportContent),
         }).ExpectSuccess();
-        var report = Result(recorded).Deserialize(ComplianceCoreJsonContext.Default.AssuranceReportRegistration)!;
         var revised = await scenario.When("bdgrz.provider.assurance_report.revise", new Dictionary<string, object?>
         {
+            ["command_id"] = Uuid.CreateVersion4().ToString(),
             ["tenant_id"] = tenantId.ToString(),
             ["provider_id"] = providerId.ToString(),
-            ["report_id"] = report.ReportId.ToString(),
+            ["report_id"] = reportId.ToString(),
             ["expected_revision"] = 1,
             ["content"] = JsonSerializer.SerializeToElement(Report() with { Issuer = "Renamed LLP" }, ComplianceCoreJsonContext.Default.AssuranceReportContent),
         }).ExpectSuccess();
-        await CatchUpAsync(factory.Services, tenantId);
+        await AssuranceProjectionCatchUp.RunAsync(factory.Services, tenantId);
         var reports = await scenario.When("bdgrz.provider.assurance_reports.list", new Dictionary<string, object?>
-        {
-            ["tenant_id"] = tenantId.ToString(),
-            ["provider_id"] = providerId.ToString(),
-        }).ExpectSuccess();
-        var reviews = await scenario.When("bdgrz.provider.reviews.list", new Dictionary<string, object?>
         {
             ["tenant_id"] = tenantId.ToString(),
             ["provider_id"] = providerId.ToString(),
@@ -117,10 +155,10 @@ public sealed class ProviderAssuranceHttpMcpTests
         }).ExpectSuccess();
 
         // Assert
+        Assert.Equal(1, Result(recorded).GetProperty("revision").GetInt64());
         Assert.Equal(2, Result(revised).GetProperty("revision").GetInt64());
         var item = Assert.Single(Result(reports).GetProperty("items").EnumerateArray());
         Assert.Equal("Renamed LLP", item.GetProperty("content").GetProperty("issuer").GetString());
-        Assert.Equal(0, Result(reviews).GetProperty("items").GetArrayLength());
         Assert.Equal("no_review", Result(coverage).GetProperty("status").GetString());
         Assert.Equal("covers_as_of", Assert.Single(Result(coverage).GetProperty("reports").EnumerateArray()).GetProperty("period_coverage").GetString());
     }
@@ -128,6 +166,12 @@ public sealed class ProviderAssuranceHttpMcpTests
     static JsonElement Result(McpCallSnapshot snapshot) => Assert.IsType<JsonElement>(snapshot.StructuredJson).GetProperty("result");
 
     static string Path(Uuid tenant, Uuid provider) => $"/api/v1/tenants/{tenant}/providers/{provider}";
+
+    static async Task LoginAsync(HttpClient client, string email)
+    {
+        using var login = await client.PostAsJsonAsync("/api/v1/developer-user-sessions", new { email_address = email });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+    }
 
     static StringContent Json(string name, AssuranceReportContent content) => new("{\"" + name + "\":" +
         JsonSerializer.Serialize(content, ComplianceCoreJsonContext.Default.AssuranceReportContent) + "}", Encoding.UTF8, "application/json");
@@ -140,22 +184,5 @@ public sealed class ProviderAssuranceHttpMcpTests
         var providerId = Uuid.CreateVersion4();
         await NamedRecordFacts.SeedProviderAsync(services, tenantId, providerId, MaterialProvider());
         return providerId;
-    }
-
-    static async Task CatchUpAsync(IServiceProvider provider, Uuid tenant)
-    {
-        using var scope = provider.CreateScope();
-        var directory = scope.ServiceProvider.GetRequiredService<FitzAssuranceDirectory>();
-        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
-        var checkpoint = await directory.LoadCheckpointAsync(tenant);
-        var pattern = EventStreamPattern.ForPattern(tenant.ToString(), ProviderAssuranceRegister.Area);
-        await using var batch = await directory.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(FitzAssuranceDirectory.ProjectorName, pattern), checkpoint));
-        var cursor = checkpoint.Cursor;
-        await foreach (var record in events.ReadAsync(pattern, checkpoint.Cursor, CancellationToken.None))
-        {
-            await directory.ApplyAsync(record.Event);
-            cursor = record.NextCursor;
-        }
-        await batch.CommitAsync(new ProjectionCheckpoint(cursor));
     }
 }

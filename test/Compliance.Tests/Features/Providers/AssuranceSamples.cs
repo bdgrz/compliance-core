@@ -24,4 +24,18 @@ static class AssuranceSamples
 
     public static ProviderContent MaterialProvider(string name = "Example Provider") => new(name, "Supplier",
         "material", ["customer_data"], "Processes customer data");
+
+    /// <summary>The complete view of one report revision, as the projector builds it from the fact and its content.</summary>
+    public static AssuranceReportView ReportView(Uuid tenantId, Uuid providerId, Uuid reportId, long revision,
+        AssuranceReportContent content, long providerRevision = 1)
+    {
+        content = AssuranceRules.Normalize(content);
+        return new AssuranceReportView(tenantId, reportId, providerId, revision, content, providerRevision,
+            content.Exceptions!.Count, content.ComplementaryControls!.Count, content.CoverageGaps!.Count, Author, Now);
+    }
+
+    /// <summary>The complete view of one recorded review, as the projector builds it from the fact and its content.</summary>
+    public static ProviderReviewView ReviewView(Uuid tenantId, Uuid providerId, Uuid reviewId,
+        ProviderReviewContent content, long providerRevision = 1, long? reportRevision = null) =>
+        new(tenantId, reviewId, providerId, AssuranceRules.Normalize(content), providerRevision, reportRevision, Author, Now);
 }

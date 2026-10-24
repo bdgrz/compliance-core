@@ -22,7 +22,7 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader, Provide
     TechnologyInventoryRestrictedVisibility inventoryVisibility,
     IControlDraftDirectoryReader controls, ControlDraftListReadConsistency controlConsistency,
     IBoundaryDirectoryReader boundaries, IProgramDirectoryReader programs,
-    ProgramSetupWorkReadConsistency programConsistency)
+    ProgramSetupWorkReadConsistency programConsistency, AssuranceHistoryReader assuranceHistory)
 {
     const int PageSize = 200;
     const int MaximumScannedRecords = 1000;
@@ -563,10 +563,11 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader, Provide
         List<ProviderChangeAffectedRecord> records,
         Dictionary<string, string?> incomplete, CancellationToken ct)
     {
-        var assurance = await reader.HydrateAsync(new ProviderAssuranceRegister(tenantId), ct)
-            .ConfigureAwait(false);
-        var reportSnapshot = assurance.Reports(providerId);
-        var reviewSnapshot = assurance.Reviews(providerId);
+        var assurance = await assuranceHistory.ReadAsync(tenantId, providerId, ct).ConfigureAwait(false);
+        if (!assurance.IsSuccess)
+            throw new ProviderImpactReadException(assurance.Error);
+        var reportSnapshot = assurance.Value.Reports;
+        var reviewSnapshot = assurance.Value.Reviews;
         foreach (var report in reportSnapshot)
         {
             Add("assurance_report", report.ReportId, null, report.Revision,
@@ -622,10 +623,12 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader, Provide
             }
         }
 
-        var currentAssurance = await reader.HydrateAsync(new ProviderAssuranceRegister(tenantId), ct)
-            .ConfigureAwait(false);
-        if (!reportSnapshot.SequenceEqual(currentAssurance.Reports(providerId)) ||
-            !reviewSnapshot.SequenceEqual(currentAssurance.Reviews(providerId)))
+        var currentAssurance = await assuranceHistory.ReadAsync(tenantId, providerId, ct).ConfigureAwait(false);
+        if (!currentAssurance.IsSuccess ||
+            !reportSnapshot.Select(static report => (report.ReportId, report.Revision))
+                .SequenceEqual(currentAssurance.Value.Reports.Select(static report => (report.ReportId, report.Revision))) ||
+            !reviewSnapshot.Select(static review => review.ReviewId)
+                .SequenceEqual(currentAssurance.Value.Reviews.Select(static review => review.ReviewId)))
             throw new ProviderImpactReadException(SourceChangedError("provider assurance evidence"));
         foreach (var (programId, snapshot) in ledgerSnapshots)
         {

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
@@ -155,6 +156,9 @@ public sealed class ProviderHttpMcpTests
             services.AddSingleton<IDomainEventReader>(store);
             services.RemoveAll<IKvClient>();
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
+            services.RemoveAll<ISourceFactResolver>();
+            services.AddScoped<ISourceFactResolver>(provider =>
+                new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
             services.RemoveAll<ITenantMembershipDirectoryReader>();
             services.AddSingleton<ITenantMembershipDirectoryReader>(new FixedMembershipDirectory(true));
             services.RemoveAll<ITenantActivity>();

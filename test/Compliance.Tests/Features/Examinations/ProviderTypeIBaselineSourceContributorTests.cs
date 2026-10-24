@@ -1,8 +1,10 @@
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
-using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,8 +38,10 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
         var provider = await new ProviderSource(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<IImmutableContentStore>()).GetAsync(TenantId, ProviderId, CancellationToken.None);
         var contentStore = services.GetRequiredService<IImmutableContentStore>();
-        var assuranceRegister = new ProviderAssuranceRegister(TenantId);
+        var content = contentStore;
         var reportId = Uuid.CreateVersion4();
+        var reviewId = Uuid.CreateVersion4();
+        var gapId = Uuid.CreateVersion4();
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer");
         var assuranceRecordedAt = new DateTimeOffset(TypeIDate.ToDateTime(
             new TimeOnly(18, 0), DateTimeKind.Utc));
@@ -46,43 +50,48 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
             "Independent report, section I", ["Payroll"], [], [], [], null,
             new ProviderSourceCitation("soc2_report", "Payroll report", "v1", "report/1",
                 "internal"));
-        Assert.True(assuranceRegister.RecordReport(reportId, ProviderId,
-            Uuid.CreateVersion4(), reportContent, 1, actor, assuranceRecordedAt).IsSuccess);
         var reviewContent = new ProviderReviewContent(TypeIDate, TypeIDate.AddYears(1),
             "soc2_type2", "acceptable", "The report supports the due-diligence conclusion.",
             reportId, [], null);
-        Assert.True(assuranceRegister.RecordReview(Uuid.CreateVersion4(), ProviderId,
-            Uuid.CreateVersion4(), reviewContent, 1, "material", actor,
-            assuranceRecordedAt.AddHours(1)).IsSuccess);
-        var gapId = Uuid.CreateVersion4();
         var gapContent = new ProviderCoverageGapContent(ServiceId, "Payroll processing",
             "Availability coverage", TypeIDate, TypeIDate, "assurance_report", reportId, 1,
             "A separate payroll service remains uncovered.");
-        Assert.True(assuranceRegister.RecordCoverageGap(gapId, ProviderId,
-            Uuid.CreateVersion4(), 1, gapContent, actor,
-            assuranceRecordedAt.AddHours(2)).IsSuccess);
+        var report = new ProviderAssuranceReport(TenantId, ProviderId, reportId);
+        var review = new ProviderAssuranceReview(TenantId, reviewId);
+        var gap = new ProviderAssuranceGap(TenantId, ProviderId, gapId);
+        Assert.True(report.Record(Provenance(report.Stream, reportId, reportId), await WriteAsync(content, reportContent), 1,
+            actor, assuranceRecordedAt, await WriteAsync(content, reportContent), await WriteAsync(content, reportContent)).IsSuccess);
+        Assert.True(review.Admit(Provenance(review.Stream, reviewId, reviewId), await WriteAsync(content, reviewContent),
+            await WriteAsync(content, reviewContent)).IsSuccess);
+        Assert.True(review.Complete(Provenance(review.Stream, Uuid.CreateVersion4(), reviewId),
+            await WriteAsync(content, reviewContent), 1, "material", 1, actor, assuranceRecordedAt.AddHours(1), ProviderId,
+            await WriteAsync(content, reviewContent)).IsSuccess);
+        Assert.True(gap.Record(Provenance(gap.Stream, gapId, gapId), 1, await WriteAsync(content, gapContent), actor,
+            assuranceRecordedAt.AddHours(2), await WriteAsync(content, gapContent), await WriteAsync(content, gapContent)).IsSuccess);
 
-        var assuranceStream = new EventStreamAddress(TenantId.ToString(),
-            ProviderAssuranceRegister.Area, TenantId.ToString());
-        var assuranceEvents = new AggregateScenario<ProviderAssuranceRegister>(assuranceRegister)
-            .PendingEvents.ToArray();
-        await store.AppendAsync(assuranceStream, 0, assuranceEvents);
+        await AppendAsync(store, report, 0);
+        await AppendAsync(store, review, 0);
+        await AppendAsync(store, gap, 0);
         var providerDirectory = new ProviderDirectory(provider!,
             await CheckpointAfterAsync(store, EventStreamPattern.ForPattern(TenantId.ToString(),
                 Provider.Area)));
         var assuranceDirectory = new AssuranceDirectory(
             await CheckpointAfterAsync(store, EventStreamPattern.ForPattern(TenantId.ToString(),
-                ProviderAssuranceRegister.Area)));
-        var firstReport = assuranceRegister.Reports(ProviderId).Single();
-        assuranceDirectory.SetCurrent(assuranceRegister, ProviderId, [firstReport]);
+                ProviderAssuranceStreams.Area)));
+        var firstReport = ReportView(reportId, 1, reportContent, 1, actor, assuranceRecordedAt);
+        var reviewView = new ProviderReviewView(TenantId, reviewId, ProviderId, reviewContent, 1, 1, actor,
+            assuranceRecordedAt.AddHours(1));
+        var openGap = new ProviderCoverageGapView(TenantId, gapId, ProviderId, 1, 1, gapContent, "open", actor,
+            assuranceRecordedAt.AddHours(2), null, []);
+        assuranceDirectory.SetCurrent([firstReport], [firstReport], [reviewView], [openGap]);
         var contributor = new ProviderTypeIBaselineSourceContributor(providerDirectory,
             assuranceDirectory, new AggregateReader(services.GetRequiredService<IAggregateReader>(),
-                assuranceRegister), store, new ProviderCsocReader(), contentStore);
+                report, review, gap), store, new ProviderCsocReader(), contentStore);
 
         var staleProviderContributor = new ProviderTypeIBaselineSourceContributor(
             new ProviderDirectory(provider!,
                 new ProjectionCheckpoint(EventCursor.Start)), assuranceDirectory,
-            new AggregateReader(services.GetRequiredService<IAggregateReader>(), assuranceRegister), store,
+            new AggregateReader(services.GetRequiredService<IAggregateReader>(), report, review, gap), store,
             new ProviderCsocReader(), contentStore);
         var staleProviderResult = await staleProviderContributor.ReadAsync(Engagement(),
             CancellationToken.None);
@@ -92,10 +101,10 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
 
         var staleAssuranceDirectory = new AssuranceDirectory(
             new ProjectionCheckpoint(EventCursor.Start));
-        staleAssuranceDirectory.SetCurrent(assuranceRegister, ProviderId, [firstReport]);
+        staleAssuranceDirectory.SetCurrent([firstReport], [firstReport], [reviewView], [openGap]);
         var staleAssuranceContributor = new ProviderTypeIBaselineSourceContributor(
             providerDirectory, staleAssuranceDirectory,
-            new AggregateReader(services.GetRequiredService<IAggregateReader>(), assuranceRegister), store,
+            new AggregateReader(services.GetRequiredService<IAggregateReader>(), report, review, gap), store,
             new ProviderCsocReader(), contentStore);
         var staleAssuranceResult = await staleAssuranceContributor.ReadAsync(Engagement(),
             CancellationToken.None);
@@ -118,24 +127,28 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
             blocker.Contains("open coverage gap", StringComparison.Ordinal));
 
         var revisedReport = reportContent with { Issuer = "Updated Assurance LLP" };
-        Assert.True(assuranceRegister.ReviseReport(reportId, ProviderId,
-            Uuid.CreateVersion4(), 1, revisedReport, 2, actor,
-            RevisedAfterTypeI).IsSuccess);
+        Assert.True(report.Revise(Provenance(report.Stream, Uuid.CreateVersion4(), Uuid.CreateVersion4()), 1,
+            await WriteAsync(content, revisedReport), 2, actor, RevisedAfterTypeI,
+            await WriteAsync(content, revisedReport), await WriteAsync(content, revisedReport)).IsSuccess);
         var closure = new ProviderCoverageGapClosureContent("coverage_restored",
             "assurance_report", reportId, 2,
             "The updated report now supports the missing service interval.");
-        Assert.True(assuranceRegister.CloseCoverageGap(gapId, ProviderId,
-            Uuid.CreateVersion4(), 1, closure, actor, RevisedAfterTypeI.AddHours(1)).IsSuccess);
-        var allAssuranceEvents = new AggregateScenario<ProviderAssuranceRegister>(assuranceRegister)
-            .PendingEvents.ToArray();
-        await store.AppendAsync(assuranceStream, (ulong)assuranceEvents.Length,
-            allAssuranceEvents.Skip(assuranceEvents.Length).ToArray());
-        var currentReport = assuranceRegister.Reports(ProviderId).Single();
+        Assert.True(gap.Close(Provenance(gap.Stream, Uuid.CreateVersion4(), Uuid.CreateVersion4()), 1, gapContent,
+            closure, await WriteAsync(content, closure), actor, RevisedAfterTypeI.AddHours(1),
+            await WriteAsync(content, closure), await WriteAsync(content, closure)).IsSuccess);
+        await AppendAsync(store, report, 1);
+        await AppendAsync(store, gap, 1);
+        var currentReport = ReportView(reportId, 2, revisedReport, 2, actor, RevisedAfterTypeI);
+        var closedGap = openGap with
+        {
+            Revision = 2,
+            Status = "closed",
+            Closure = new ProviderCoverageGapClosureView(closure, actor, RevisedAfterTypeI.AddHours(1)) { Revision = 2 },
+        };
         assuranceDirectory.SetCheckpoint(await CheckpointAfterAsync(store,
             EventStreamPattern.ForPattern(TenantId.ToString(),
-                ProviderAssuranceRegister.Area)));
-        assuranceDirectory.SetCurrent(assuranceRegister, ProviderId,
-            [firstReport, currentReport]);
+                ProviderAssuranceStreams.Area)));
+        assuranceDirectory.SetCurrent([currentReport], [firstReport, currentReport], [reviewView], [closedGap]);
 
         var laterResult = await contributor.ReadAsync(Engagement(), CancellationToken.None);
         Assert.True(laterResult.IsSuccess, laterResult.Error?.Message);
@@ -159,8 +172,7 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
             await CheckpointAfterAsync(store, EventStreamPattern.ForPattern(TenantId.ToString(),
                 Provider.Area)));
         var assuranceDirectory = new AssuranceDirectory(new ProjectionCheckpoint(EventCursor.Start));
-        var assuranceRegister = new ProviderAssuranceRegister(TenantId);
-        var aggregateReader = new AggregateReader(services.GetRequiredService<IAggregateReader>(), assuranceRegister);
+        var aggregateReader = new AggregateReader(services.GetRequiredService<IAggregateReader>());
 
         // Act
         var missingCsoc = await new ProviderTypeIBaselineSourceContributor(providerDirectory,
@@ -181,6 +193,30 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
             blocker.Contains("unresolved facts", StringComparison.Ordinal) &&
             blocker.Contains("csocs", StringComparison.Ordinal));
     }
+
+    static OperationProvenance Provenance(EventStreamAddress owner, Uuid logicalId, Uuid rootId) => new(logicalId, rootId, null,
+        "TestCommand", ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder"), owner, "initial", null,
+        new string('a', 64), CreatedAt, owner, owner);
+
+    static Task<ImmutableContentRef> WriteAsync<T>(IImmutableContentStore content, T value) where T : notnull =>
+        content.WriteJsonAsync(TenantId.ToString(), Uuid.CreateVersion4(), "test-content.v1", value);
+
+    static async Task AppendAsync(InMemoryEventStore store, Aggregate owner, int alreadyAppended)
+    {
+        var pending = owner switch
+        {
+            ProviderAssuranceReport report => new AggregateScenario<ProviderAssuranceReport>(report).PendingEvents,
+            ProviderAssuranceReview review => new AggregateScenario<ProviderAssuranceReview>(review).PendingEvents,
+            ProviderAssuranceGap gap => new AggregateScenario<ProviderAssuranceGap>(gap).PendingEvents,
+            _ => throw new ArgumentException("Unsupported owner.", nameof(owner)),
+        };
+        await store.AppendAsync(owner.Stream, (ulong)alreadyAppended, pending.Skip(alreadyAppended).ToArray());
+    }
+
+    static AssuranceReportView ReportView(Uuid reportId, long revision, AssuranceReportContent content,
+        long providerRevision, ActorReference actor, DateTimeOffset recordedAt) => new(TenantId, reportId, ProviderId,
+        revision, content, providerRevision, content.Exceptions?.Count ?? 0, content.ComplementaryControls?.Count ?? 0,
+        content.CoverageGaps?.Count ?? 0, actor, recordedAt);
 
     static ProviderContent Content(string name, bool subservice = false)
     {
@@ -280,22 +316,22 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
 
         public void SetCheckpoint(ProjectionCheckpoint value) => _checkpoint = value;
 
-        public void SetCurrent(ProviderAssuranceRegister register, Uuid providerId,
-            AssuranceReportView[] reportRevisions)
+        public void SetCurrent(AssuranceReportView[] reports, AssuranceReportView[] reportRevisions,
+            ProviderReviewView[] reviews, ProviderCoverageGapView[] gaps)
         {
-            _reports = register.Reports(providerId).ToArray();
+            _reports = reports;
             _reportRevisions = reportRevisions;
-            _reviews = register.Reviews(providerId).ToArray();
-            _gaps = register.CoverageGaps(providerId).ToArray();
+            _reviews = reviews;
+            _gaps = gaps;
         }
 
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
             CancellationToken ct = default) => ValueTask.FromResult(_checkpoint);
 
-        public ValueTask<AssuranceReportView?> GetReportRevisionAsync(Uuid tenantId,
+        public ValueTask<AssuranceReportView?> GetReportRevisionAsync(Uuid tenantId, Uuid providerId,
             Uuid reportId, long revision, CancellationToken ct = default) =>
             ValueTask.FromResult(_reportRevisions.SingleOrDefault(view =>
-                view.TenantId == tenantId && view.ReportId == reportId &&
+                view.TenantId == tenantId && view.ProviderId == providerId && view.ReportId == reportId &&
                 view.Revision == revision));
 
         public ValueTask<Page<AssuranceReportView>> ListReportsAsync(Uuid tenantId,
@@ -303,14 +339,19 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
             ValueTask.FromResult(new Page<AssuranceReportView>(_reports.Where(view =>
                 view.TenantId == tenantId && view.ProviderId == providerId).ToArray(), null));
 
+        public ValueTask<ProviderReviewView?> GetReviewAsync(Uuid tenantId, Uuid reviewId,
+            CancellationToken ct = default) => ValueTask.FromResult(_reviews
+            .SingleOrDefault(view => view.TenantId == tenantId && view.ReviewId == reviewId));
+
         public ValueTask<Page<ProviderReviewView>> ListReviewsAsync(Uuid tenantId,
             Uuid providerId, int limit, string? cursor, CancellationToken ct = default) =>
             ValueTask.FromResult(new Page<ProviderReviewView>(_reviews.Where(view =>
                 view.TenantId == tenantId && view.ProviderId == providerId).ToArray(), null));
 
-        public ValueTask<ProviderCoverageGapView?> GetCoverageGapAsync(Uuid tenantId,
+        public ValueTask<ProviderCoverageGapView?> GetCoverageGapAsync(Uuid tenantId, Uuid providerId,
             Uuid gapId, CancellationToken ct = default) => ValueTask.FromResult(_gaps
-            .SingleOrDefault(view => view.TenantId == tenantId && view.GapId == gapId));
+            .SingleOrDefault(view => view.TenantId == tenantId && view.ProviderId == providerId &&
+                view.GapId == gapId));
 
         public ValueTask<Page<ProviderCoverageGapView>> ListCoverageGapsAsync(Uuid tenantId,
             Uuid providerId, int limit, string? cursor, CancellationToken ct = default) =>
