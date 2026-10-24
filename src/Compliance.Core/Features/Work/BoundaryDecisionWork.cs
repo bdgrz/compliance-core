@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Cntryl.Portia;
@@ -13,55 +14,61 @@ static class BoundaryDecisionWork
         [Review, Approval]);
 
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, IBoundaryDirectoryReader directory, Uuid tenantId,
+        BoundaryReader sources, IBoundaryDirectoryReader directory, Uuid tenantId,
         Uuid programId, DateTimeOffset now, Uuid? workItemId, CancellationToken ct)
     {
-        var candidates = new List<WorkCandidate>();
-        string? cursor = null;
-        do
+        try
         {
-            var page = await directory.ListProgramAsync(tenantId, programId, 200, cursor, ct)
-                .ConfigureAwait(false);
-            foreach (var boundary in page.Items.Where(boundary => boundary.TenantId == tenantId &&
-                         boundary.ProgramId == programId))
+            var candidates = new List<WorkCandidate>();
+            string? cursor = null;
+            do
             {
-                var aggregate = await reader.HydrateAsync(new SystemBoundary(tenantId,
-                    boundary.BoundaryId), ct).ConfigureAwait(false);
-                if (!aggregate.IsCreated || aggregate.ProgramId != programId)
-                    continue;
-                if (aggregate.Revision != boundary.Revision)
-                    return Result<IReadOnlyList<WorkCandidate>>.Failure(new RequestError(
-                        RequestErrorKind.Conflict,
-                        "The boundary source and work projection revisions differ. Retry the query.",
-                        isTransient: true));
+                var page = await directory.ListProgramAsync(tenantId, programId, 200, cursor, ct)
+                    .ConfigureAwait(false);
+                foreach (var boundary in page.Items.Where(boundary => boundary.TenantId == tenantId &&
+                             boundary.ProgramId == programId))
+                {
+                    var aggregate = await sources.ReadAsync(tenantId, programId, boundary.BoundaryId, ct).ConfigureAwait(false);
+                    if (!aggregate.IsCreated || aggregate.ProgramId != programId)
+                        continue;
+                    if (aggregate.Revision != boundary.Revision)
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(new RequestError(
+                            RequestErrorKind.Conflict,
+                            "The boundary source and work projection revisions differ. Retry the query.",
+                            isTransient: true));
 
-                var draft = boundary.Draft;
-                if (draft is null || draft.TenantId != tenantId ||
-                    draft.BoundaryId != boundary.BoundaryId || draft.ProgramId != programId ||
-                    draft.Status != "draft" || aggregate.DraftVersionId != draft.VersionId ||
-                    aggregate.DraftRevision != draft.Revision)
-                    continue;
+                    var draft = boundary.Draft;
+                    if (draft is null || draft.TenantId != tenantId ||
+                        draft.BoundaryId != boundary.BoundaryId || draft.ProgramId != programId ||
+                        draft.Status != "draft" || aggregate.DraftVersionId != draft.VersionId ||
+                        aggregate.DraftRevision != draft.Revision)
+                        continue;
 
-                var decision = boundary.LatestDecision;
-                if (decision is not null && (decision.TenantId != tenantId ||
-                    decision.BoundaryId != boundary.BoundaryId || decision.VersionId != draft.VersionId ||
-                    decision.Revision != draft.Revision))
-                    continue;
-                var scope = new ResponsibilityScope("boundary", boundary.BoundaryId,
-                    draft.VersionId, draft.Revision);
-                var state = new BoundaryDecisionWorkState(tenantId, programId,
-                    boundary.BoundaryId, aggregate.Revision, draft.VersionId, draft.Revision,
-                    draft.AuthorMemberId, draft.ChangedAt, decision?.Outcome,
-                    aggregate.GetResponsibilitySet(scope).ReadAssignments().ToArray());
-                var work = Candidates(state, now, workItemId);
-                if (!work.IsSuccess)
-                    return Result<IReadOnlyList<WorkCandidate>>.Failure(work.Error);
-                candidates.AddRange(work.Value);
-            }
-            cursor = page.NextCursor;
-        } while (cursor is not null);
+                    var decision = boundary.LatestDecision;
+                    if (decision is not null && (decision.TenantId != tenantId ||
+                        decision.BoundaryId != boundary.BoundaryId || decision.VersionId != draft.VersionId ||
+                        decision.Revision != draft.Revision))
+                        continue;
+                    var scope = new ResponsibilityScope("boundary", boundary.BoundaryId,
+                        draft.VersionId, draft.Revision);
+                    var state = new BoundaryDecisionWorkState(tenantId, programId,
+                        boundary.BoundaryId, aggregate.Revision, draft.VersionId, draft.Revision,
+                        aggregate.DraftAuthorMemberId, aggregate.DraftChangedAt!.Value, aggregate.LatestReviewOutcome,
+                        aggregate.GetResponsibilitySet(scope).ReadAssignments().ToArray());
+                    var work = Candidates(state, now, workItemId);
+                    if (!work.IsSuccess)
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(work.Error);
+                    candidates.AddRange(work.Value);
+                }
+                cursor = page.NextCursor;
+            } while (cursor is not null);
 
-        return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
+            return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<IReadOnlyList<WorkCandidate>>.Failure(BoundaryReadFailure.Of(failure));
+        }
     }
 
     internal static Result<IReadOnlyList<WorkCandidate>> Candidates(

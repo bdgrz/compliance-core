@@ -35,7 +35,7 @@ public sealed class ScopeResponsibilityIndependenceTests
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("Attest", result.Error!.Message, StringComparison.Ordinal);
         Assert.Equal(before, await fixture.ManagementEventsAsync());
-        var boundary = await ProgramManagementServices.HydrateAsync(fixture.Provider, new SystemBoundary(fixture.Tenant, fixture.DraftBoundary));
+        var boundary = await ProgramManagementServices.HydrateAsync(fixture.Provider, new BoundaryRules(fixture.Tenant, fixture.DraftBoundary));
         Assert.Null(Assert.Single(boundary.GetResponsibilitySet(fixture.Scope).ReadAssignments()).RevokedAt);
     }
 
@@ -126,9 +126,9 @@ public sealed class ScopeResponsibilityIndependenceTests
         Uuid Replacement { get; } = Uuid.CreateVersion4();
         Uuid Program { get; } = Uuid.CreateVersion4();
         public Uuid DraftBoundary { get; } = Uuid.CreateVersion4();
-        Uuid DraftVersion { get; } = Uuid.CreateVersion4();
+        Uuid DraftVersion => Uuid.CreateVersion5(DraftBoundary, "draft-1");
         Uuid ApprovedBoundary { get; } = Uuid.CreateVersion4();
-        Uuid ApprovedVersion { get; } = Uuid.CreateVersion4();
+        Uuid ApprovedVersion => Uuid.CreateVersion5(ApprovedBoundary, "draft-1");
         Uuid Assignment { get; set; }
         public Uuid Snapshot { get; private set; }
         public ServiceProvider Provider { get; private set; } = null!;
@@ -161,9 +161,9 @@ public sealed class ScopeResponsibilityIndependenceTests
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), author, "Client author", now));
                 return Result.Success;
             });
-            await ProgramManagementServices.SeedAsync(fixture.Provider, new SystemBoundary(fixture.Tenant, fixture.DraftBoundary), boundary =>
+            await ProgramManagementServices.SeedAsync(fixture.Provider, new BoundaryRules(fixture.Tenant, fixture.DraftBoundary), boundary =>
                 boundary.Create(fixture.Program, fixture.DraftVersion, new BoundaryContent("Draft source", "readiness", ["security"], []), author, "Client author", now));
-            await ProgramManagementServices.SeedAsync(fixture.Provider, new SystemBoundary(fixture.Tenant, fixture.ApprovedBoundary), boundary =>
+            await ProgramManagementServices.SeedAsync(fixture.Provider, new BoundaryRules(fixture.Tenant, fixture.ApprovedBoundary), boundary =>
             {
                 Assert.True(boundary.Create(fixture.Program, fixture.ApprovedVersion,
                     new BoundaryContent("Approved source", "readiness", ["security"], []), author, "Client author", now).IsSuccess);
@@ -178,7 +178,7 @@ public sealed class ScopeResponsibilityIndependenceTests
             await fixture.CatchUpAsync();
             var assigned = await fixture.AssignAsync(fixture.Assignee);
             Assert.True(assigned.IsSuccess, assigned.Error?.Message);
-            var source = await ProgramManagementServices.HydrateAsync(fixture.Provider, new SystemBoundary(fixture.Tenant, fixture.DraftBoundary));
+            var source = await ProgramManagementServices.HydrateAsync(fixture.Provider, new BoundaryRules(fixture.Tenant, fixture.DraftBoundary));
             fixture.Assignment = Assert.Single(source.GetResponsibilitySet(fixture.Scope).ReadAssignments()).AssignmentId;
             var frozen = await fixture.SendAsync(new FreezeProgramScopeSnapshot(fixture.Tenant, fixture.Program, 1,
                 fixture.ApprovedBoundary, fixture.ApprovedVersion));
@@ -242,7 +242,7 @@ public sealed class ScopeResponsibilityIndependenceTests
             var responsibilities = services.GetRequiredService<IResponsibilitySetProjection>();
             await ProjectAsync("ProgramDirectory", null, programs, programs.ApplyAsync,
                 await services.GetRequiredService<IProgramDirectoryReader>().LoadCheckpointAsync(Tenant));
-            await ProjectAsync("BoundaryDirectoryV2", null, boundaries, boundaries.ApplyAsync,
+            await ProjectAsync("BoundaryDirectoryV3", null, boundaries, boundaries.ApplyAsync,
                 await services.GetRequiredService<IBoundaryDirectoryReader>().LoadCheckpointAsync(Tenant));
             await ProjectAsync("SnapshotDirectory", "snapshots", snapshots, snapshots.ApplyAsync,
                 await services.GetRequiredService<ISnapshotDirectoryReader>().LoadCheckpointAsync(Tenant));

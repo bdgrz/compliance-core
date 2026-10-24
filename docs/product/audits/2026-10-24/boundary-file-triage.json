@@ -1,0 +1,79 @@
+{
+  "reviewed": 79,
+  "blockedReviews": 0,
+  "signalsTriaged": 6,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Applications/FitzApplicationBoundaryReferenceDirectory.cs",
+      "sha256": "5a7c0a9ff78c3e9c303ed1d8326100b4f1f99a7ca8f69e9b2d67056848d1fe51",
+      "signals": {
+        "authority_gap": 0.33,
+        "invariant_gap": 0.31,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.33
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Fresh V3 reverse-index rows consume verified native mutation references, exact fact/header scope and source content. Ordered version/revision/status transitions stay in the same transactional projector batch, so unavailable or corrupt content cannot advance checkpoint state. Existing application reference/preview, historical/approved transitions and forged-discovery-body cases pass. Review/empty mutation facts do not rewrite unrelated references."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Boundaries/BoundaryOperations.Responsibilities.cs",
+      "sha256": "37eca0453a84e9291d65964db6b0448340d79a329fcc54408231553529ab6eca",
+      "signals": {
+        "authority_gap": 0.64,
+        "invariant_gap": 0.8,
+        "recovery_gap": 0.6,
+        "incomplete_path": 0.45
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Current caller authorization remains in the request pipeline. Fresh assignment uses exact current draft scope, target membership projection, resolved native exact-scope waivers and authoritative Member recheck after preparation; deprovisioning clears IsRegistered. Native owner repeats before/after local authority under captured native sequence and physical OCC. Current suspension-during-preparation, assignment race, forbidden independence and waiver cases pass; accepted retry appends nothing."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Boundaries/BoundaryRules.cs",
+      "sha256": "d5a8679ffca8068ea022154248be41062c9aca55658d33f4c588edcf0362070a",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.69,
+        "recovery_gap": 0.72,
+        "incomplete_path": 0.75
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Pure transient business/read composition, never durable aggregate State. Native SystemBoundary holds compact header/current authority reference/native sequence and selected acceptance. Complete historical version/decision/responsibility data lives in verified immutable read composition; no lifetime count cap. Explicit draft revision gates are distinct from owner revision/native sequence/physical OCC, preserving selected existing review/approval semantics. Original review/approval retry RED plus full native, independence and 201-version read cases pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Boundaries/FitzBoundaryDirectory.cs",
+      "sha256": "88bcd832c5bb538402759474257e3cada61144234f69a575ead1ac8a2da16e55",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.6,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.33
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Discovery rows remain scoped compact identities; exact version/decision body is reconstructed from verified native source, with current projection lag distinguished from corruption. Added two-owner native RED2: duplicate locally valid decision UUID or derived successor-version UUID previously caused key-already-exists. Primary keys now bind boundary owner plus local identity in the tenant realm; both original owners remain queryable, full 201-version history/cursor tests pass. Transactional projector batches and exact native predecessors remain required. This does not claim realm-wide operation binding."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Snapshots/ScopeSnapshotFreezer.cs",
+      "sha256": "60f53659ff9f582018cc612426e24842a8a8c875fb4260e9e2eba1940bdb218b",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.56,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.33
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Canonical native BoundaryReader checks owner/program/visibility/approval history, while production FitzBoundaryDirectory.GetVersionAsync returns the exact verified source.FindVersion body behind compact discovery identities. Existing program source revision, snapshot lineage and canonical manifest digest guards remain. Complete source is required; immutable availability/integrity become typed conflicts. This preserves the existing verified-read join and does not fabricate a held source-use protocol."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/FitzBoundaryDecisionWorkItemDirectory.cs",
+      "sha256": "817b4270b3fe5e57f7bc4ffbb7ce92327c3426dc448b0ff7ee81cd64f0619700",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.64,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.52
+      },
+      "classification": "verified_native_authority_and_consumer_boundary",
+      "evidence": "Fresh work projection keys and existing checkpoint/revision fences are retained. Native source composition supplies current exact boundary authority and active decision candidates; discovery author/body is not trusted. Native no-change acceptance facts do not create duplicate work. Existing full work/assigned-decision/read-consistency tests plus forged directory author exclusion pass."
+    }
+  ]
+}

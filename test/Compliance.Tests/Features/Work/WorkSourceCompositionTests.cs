@@ -721,12 +721,12 @@ public sealed class WorkSourceCompositionTests
         DateTimeOffset now)
     {
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var scope = new ResponsibilityScope("boundary", boundaryId, draftVersionId, 1);
         var content = new BoundaryContent("SOC 2 system boundary", "readiness",
             ["security"], []);
         return ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now).IsSuccess);

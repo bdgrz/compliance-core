@@ -142,7 +142,10 @@ public sealed class ControlBoundaryImpactContributorTests
             Uuid.CreateVersion4(), 1, new BoundaryContent("Successor", "readiness", ["security"],
                 []), "draft", null, Uuid.CreateVersion4(), "Author", now);
         var boundary = new BoundaryView(tenantId, boundaryId, programId, draft, approved, null, 2);
-        var impact = new BoundaryImpactService(new BoundaryDirectory(boundary),
+        await using var native = new BoundaryProjectionScenario();
+        boundary = await SeedBoundaryAsync(native, approved, draft);
+        draft = boundary.Draft!;
+        var impact = new BoundaryImpactService(new BoundaryDirectory(boundary), native.Boundaries,
             [new ProgramBoundaryImpactContributor(), contributor]);
 
         // Act
@@ -208,7 +211,10 @@ public sealed class ControlBoundaryImpactContributorTests
             Uuid.CreateVersion4(), 1, new BoundaryContent("Successor", "readiness", ["security"],
                 []), "draft", null, Uuid.CreateVersion4(), "Author", now);
         var boundary = new BoundaryView(tenantId, boundaryId, programId, draft, approved, null, 2);
-        var impact = new BoundaryImpactService(new BoundaryDirectory(boundary),
+        await using var native = new BoundaryProjectionScenario();
+        boundary = await SeedBoundaryAsync(native, approved, draft);
+        draft = boundary.Draft!;
+        var impact = new BoundaryImpactService(new BoundaryDirectory(boundary), native.Boundaries,
             [new ProgramBoundaryImpactContributor(), contributor]);
 
         // Act
@@ -265,6 +271,26 @@ public sealed class ControlBoundaryImpactContributorTests
         var error = Assert.IsType<RequestError>(result.Error);
         Assert.Equal(RequestErrorKind.Conflict, error.Kind);
         Assert.True(error.IsTransient);
+    }
+
+    static async Task<BoundaryView> SeedBoundaryAsync(BoundaryProjectionScenario native,
+        BoundaryVersionView approved, BoundaryVersionView draft)
+    {
+        var rules = new BoundaryRules(approved.TenantId, approved.BoundaryId);
+        var firstVersion = Uuid.CreateVersion5(approved.BoundaryId, "draft-1");
+        Assert.True(rules.Create(approved.ProgramId, firstVersion, approved.Content,
+            approved.AuthorMemberId, approved.AuthorDisplay, approved.ChangedAt).IsSuccess);
+        var reviewer = Uuid.CreateVersion4();
+        var decision = Uuid.CreateVersion4();
+        Assert.Null(rules.Review(firstVersion, 1, decision, "accept", "Reviewed", reviewer, "Reviewer", approved.ChangedAt));
+        Assert.Null(rules.Approve(firstVersion, 1, Uuid.CreateVersion4(), decision,
+            approved.EffectiveFrom!.Value, "Approved", "impact", reviewer, "Reviewer", approved.ChangedAt));
+        var successor = native.NewSuccessorVersion();
+        Assert.Null(rules.ProposeSuccessor(firstVersion, successor, draft.Content,
+            draft.AuthorMemberId, draft.AuthorDisplay, draft.ChangedAt,
+            commandId: native.SuccessorCommand(successor)));
+        await native.PublishAsync(rules);
+        return (await native.Boundaries.ReadAsync(approved.TenantId, approved.BoundaryId)).ToView()!;
     }
 
     static BoundaryScopeEntry ResolvedEntry(Uuid entryId, string subjectType, Uuid recordId) =>

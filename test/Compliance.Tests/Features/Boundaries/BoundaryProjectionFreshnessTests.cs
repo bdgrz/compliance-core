@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Boundaries;
@@ -13,15 +14,16 @@ public sealed class BoundaryProjectionFreshnessTests
     public async Task ShouldReportProjectionLagGivenApprovedBoundaryHistoryRead(string read)
     {
         // Arrange
+        await using var native = new BoundaryProjectionScenario();
         var tenantId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var versionId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var authorId = Uuid.CreateVersion4();
         var reviewerId = Uuid.CreateVersion4();
         var reviewId = Uuid.CreateVersion4();
         var content = new BoundaryContent("System boundary", "readiness", ["security"], []);
-        var source = new SystemBoundary(tenantId, boundaryId);
+        var source = new BoundaryRules(tenantId, boundaryId);
         Assert.True(source.Create(programId, versionId, content, authorId, "Author",
             DateTimeOffset.UtcNow).IsSuccess);
         Assert.Null(source.Review(versionId, 1, reviewId, "accept", "Reviewed",
@@ -36,7 +38,8 @@ public sealed class BoundaryProjectionFreshnessTests
                     content, "draft", null, authorId, "Author", DateTimeOffset.UtcNow),
                 null, null, 2),
         };
-        var consistency = new BoundaryHistoryReadConsistency(directory, new SourceReader(source));
+        await native.PublishAsync(source);
+        var consistency = new BoundaryHistoryReadConsistency(directory, native.Boundaries);
 
         // Act
         var lagged = await ReadErrorAsync(read, tenantId, boundaryId, versionId, 3,
@@ -86,14 +89,15 @@ public sealed class BoundaryProjectionFreshnessTests
     public async Task ShouldReportProjectionLagGivenBoundaryEventBeforeProjection()
     {
         // Arrange
+        await using var native = new BoundaryProjectionScenario();
         var tenantId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
-        var boundary = new SystemBoundary(tenantId, boundaryId);
-        Assert.True(boundary.Create(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+        var boundary = new BoundaryRules(tenantId, boundaryId);
+        Assert.True(boundary.Create(Uuid.CreateVersion4(), Uuid.CreateVersion5(boundaryId, "draft-1"),
             new BoundaryContent("System boundary", "readiness", ["security"], []),
             Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow).IsSuccess);
-        var handler = new GetBoundaryHandler(new EmptyBoundaryDirectory(),
-            new SourceReader(boundary));
+        await native.PublishAsync(boundary);
+        var handler = new GetBoundaryHandler(new EmptyBoundaryDirectory(), native.Boundaries);
 
         // Act
         var result = await handler.HandleAsync(new RequestContext<GetBoundary>(
@@ -104,13 +108,6 @@ public sealed class BoundaryProjectionFreshnessTests
         var error = Assert.IsType<RequestError>(result.Error);
         Assert.Equal(RequestErrorKind.Conflict, error.Kind);
         Assert.Contains("projection", error.Message, StringComparison.Ordinal);
-    }
-
-    sealed class SourceReader(Aggregate source) : IAggregateReader
-    {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult((TAggregate)source);
     }
 
     sealed class EmptyBoundaryDirectory : IBoundaryDirectoryReader

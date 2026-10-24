@@ -39,8 +39,8 @@ static class WorkSource
         Uuid tenantId, Uuid programId, DateOnly today, DateOnly horizon, DateTimeOffset now,
         Uuid? workItemId, IBoundaryDirectoryReader? boundaries,
         IReadOnlySet<string> projectedKinds,
-        CancellationToken ct) =>
-        ControlSourceFailures.ClassifyAsync(() => LoadCoreAsync(reader, controlSources, findings, riskGovernance, evidenceRequests, operatingReader, mappingReader, applicabilityReader, evaluationReader, tenantId, programId, today, horizon, now, workItemId, boundaries, projectedKinds, ct));
+        CancellationToken ct, BoundaryReader? boundarySources = null) =>
+        ControlSourceFailures.ClassifyAsync(() => LoadCoreAsync(reader, controlSources, findings, riskGovernance, evidenceRequests, operatingReader, mappingReader, applicabilityReader, evaluationReader, tenantId, programId, today, horizon, now, workItemId, boundaries, projectedKinds, boundarySources, ct));
 
     static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadCoreAsync(
         IAggregateReader reader, ControlReader controlSources, FindingReader? findings, RiskGovernanceReader? riskGovernance,
@@ -50,7 +50,7 @@ static class WorkSource
         Uuid tenantId, Uuid programId, DateOnly today, DateOnly horizon, DateTimeOffset now,
         Uuid? workItemId, IBoundaryDirectoryReader? boundaries,
         IReadOnlySet<string> projectedKinds,
-        CancellationToken ct)
+        BoundaryReader? boundarySources, CancellationToken ct)
     {
         bool Wanted(Uuid sourceId, string kind) =>
             workItemId is not { } wanted || WorkCandidate.IdFor(sourceId, kind) == wanted;
@@ -286,7 +286,10 @@ static class WorkSource
         if (boundaries is not null &&
             BoundaryDecisionWork.ProjectedKinds.Any(kind => !projectedKinds.Contains(kind)))
         {
-            var boundaryWork = await BoundaryDecisionWork.LoadAsync(reader, boundaries,
+            if (boundarySources is null)
+                return Result<IReadOnlyList<WorkCandidate>>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The authoritative boundary source reader is unavailable.", true));
+            var boundaryWork = await BoundaryDecisionWork.LoadAsync(boundarySources, boundaries,
                 tenantId, programId, now, workItemId, ct).ConfigureAwait(false);
             if (!boundaryWork.IsSuccess)
                 return Result<IReadOnlyList<WorkCandidate>>.Failure(boundaryWork.Error);

@@ -1,0 +1,37 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Native narrow SystemBoundary authority and all existing owning/scoped consumers.",
+  "validation": {
+    "originalApiRedFailed": 2,
+    "consumerAndWireRedFailed": 6,
+    "consumerRedPositiveControls": 1,
+    "ownerScopedIdentityRedFailed": 2,
+    "strictBuildWarnings": 0,
+    "focusedPassed": 527,
+    "backendUnitPassed": 5784,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 79,
+    "signalsTriaged": 6,
+    "mergeProbability": 0.88,
+    "adopted": "merge scoped repair; continue other owners"
+  },
+  "parentRefinements": [
+    "Source-first native Boundary metadata resolves current program authorization before lagging body projection; accepted approval retry remains reachable under current caller checks.",
+    "Versions and decisions use owner+local ID primary keys inside tenant realm. Native two-owner reused IDs previously produced duplicate-key errors; both identities now remain queryable without a realm-wide operation registry.",
+    "Explicit production-host identified create/revise/discard plus original Unit replay after later discard.",
+    "Strict imports, command IDs, token-last/private helper order, native immutable body assertions, no duplicate source metadata attachment, current V3 projector fixtures and OpenAPI expectations."
+  ],
+  "qualification": [
+    "Six Boundary facts advance to v2 immutable payloads; shared responsibility v1facts retain nullable family-specific envelope additions.",
+    "Native source values, current visibility, scope, projection freshness and canonical digest checks remain; no new cross-owner held source-use protocol is manufactured.",
+    "No implicit retained legacy stream converter, reset or deployment qualification.",
+    "Public draft mutation ExpectedRevision is DraftRevision with exact DraftVersionId; owner revision, native sequence and physical position are separate."
+  ]
+}

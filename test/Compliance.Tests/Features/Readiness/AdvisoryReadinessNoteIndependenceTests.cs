@@ -717,7 +717,7 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             var author = Uuid.CreateVersion4();
             var reviewer = Uuid.CreateVersion4();
             var boundaryId = Uuid.CreateVersion4();
-            var versionId = Uuid.CreateVersion4();
+            var versionId = Uuid.CreateVersion5(boundaryId, "draft-1");
             var reviewId = Uuid.CreateVersion4();
             var approvalId = Uuid.CreateVersion4();
             var sourceTenant = sourceTenantId ?? Tenant;
@@ -729,7 +729,7 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
                         author, "Synthetic author", at));
                     return Result.Success;
                 });
-            await ProgramManagementServices.SeedAsync(Provider, new SystemBoundary(sourceTenant, boundaryId), boundary =>
+            await ProgramManagementServices.SeedAsync(Provider, new BoundaryRules(sourceTenant, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(programId, versionId, content, author, "Synthetic author", at).IsSuccess);
                 Assert.Null(boundary.Review(versionId, 1, reviewId, "accept", "Synthetic review", reviewer,
@@ -748,14 +748,15 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         public async Task SeedBoundarySuccessorAsync(BoundaryVersionView original)
         {
             var at = original.ChangedAt.AddDays(1);
-            var successor = Uuid.CreateVersion4();
+            var successorCommand = Uuid.CreateVersion4();
+            var successor = Uuid.CreateVersion5(successorCommand, "draft");
             var review = Uuid.CreateVersion4();
             var reviewer = Uuid.CreateVersion4();
-            await ProgramManagementServices.SeedAsync(Provider, new SystemBoundary(Tenant, original.BoundaryId), boundary =>
+            await ProgramManagementServices.SeedAsync(Provider, new BoundaryRules(Tenant, original.BoundaryId), boundary =>
             {
                 Assert.Null(boundary.ProposeSuccessor(original.VersionId, successor,
                     original.Content with { Statement = "Synthetic successor scope" }, original.AuthorMemberId,
-                    original.AuthorDisplay, at));
+                    original.AuthorDisplay, at, commandId: successorCommand));
                 Assert.Null(boundary.Review(successor, 1, review, "accept", "Synthetic successor review",
                     reviewer, "Synthetic reviewer", at));
                 Assert.Null(boundary.Approve(successor, 1, Uuid.CreateVersion4(), review, new DateOnly(2026, 1, 2),

@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Boundaries;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -37,8 +38,9 @@ public sealed class ProgramSetupWorkReadConsistencyTests
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
-        var directory = new FitzBoundaryDirectory(new InMemoryKvClient());
-        var identity = new CheckpointIdentity("BoundaryDirectoryV2",
+        await using var native = new BoundaryProjectionScenario();
+        var directory = new FitzBoundaryDirectory(native.Kv, native.Boundaries);
+        var identity = new CheckpointIdentity("BoundaryDirectoryV3",
             EventStreamPattern.ForPattern(tenantId.ToString()));
         var checkpoint = new ProjectionCheckpoint(new EventCursor("1"));
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
@@ -48,7 +50,7 @@ public sealed class ProgramSetupWorkReadConsistencyTests
         // Act
         var actual = await directory.LoadCheckpointAsync(tenantId);
         var wrongArea = await ((IProjectionStore)directory).LoadCheckpointAsync(
-            new CheckpointIdentity("BoundaryDirectoryV2", EventStreamPattern.ForPattern(
+            new CheckpointIdentity("BoundaryDirectoryV3", EventStreamPattern.ForPattern(
                 tenantId.ToString(), "boundaries")));
 
         // Assert
@@ -248,11 +250,11 @@ public sealed class ProgramSetupWorkReadConsistencyTests
     static async Task AppendBoundaryCreatedAsync(InMemoryEventStore events, Uuid tenantId)
     {
         var boundaryId = Uuid.CreateVersion4();
-        DomainEvent created = new BoundaryDraftCreated(tenantId, boundaryId, Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), new BoundaryContent("Scope", "readiness", ["security"], []),
-            Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow);
-        created.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), boundaryId, 1,
-            DateTimeOffset.UtcNow));
+        await using var native = new BoundaryProjectionScenario();
+        var rules = new BoundaryRules(tenantId, boundaryId);
+        Assert.True(rules.Create(Uuid.CreateVersion4(), Uuid.CreateVersion5(boundaryId, "draft-1"),
+            new BoundaryContent("Scope", "readiness", ["security"], []), Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow).IsSuccess);
+        var created = Assert.Single(await native.PublishAsync(rules));
         await events.AppendAsync(new EventStreamAddress(tenantId.ToString(), "boundaries",
             boundaryId.ToString()), 0, [created]);
     }

@@ -2429,8 +2429,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/client-services/{service_id}/revisions/{revision}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Client services");
-    app.MapPortiaPost<CreateBoundary, BoundaryRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/boundaries", config => config.OnNativeResult()).WithNativeFirstResponse<CreateBoundary>()
+    app.MapPortiaPut<CreateBoundary, BoundaryRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/boundaries/{boundary_id}", config => config.OnNativeResult()).WithNativeFirstResponse<CreateBoundary>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaGet<ListProgramBoundaries, Page<BoundaryView>>(
@@ -2438,11 +2438,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaPut<ReviseBoundaryDraft>(
-            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseBoundaryDraft>()
+            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/revisions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseBoundaryDraft>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
-    app.MapPortiaPost<DiscardBoundaryDraft>(
-            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/discards", config => config.OnNativeResult()).WithNativeFirstResponse<DiscardBoundaryDraft>()
+    app.MapPortiaPut<DiscardBoundaryDraft>(
+            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/discards/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<DiscardBoundaryDraft>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaGet<GetBoundary, BoundaryView>(
@@ -2543,12 +2543,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/impact-preview")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
-    app.MapPortiaPost<ReviewBoundary>(
-            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/reviews", config => config.OnNativeResult()).WithNativeFirstResponse<ReviewBoundary>()
+    app.MapPortiaPut<ReviewBoundary>(
+            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/reviews/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviewBoundary>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
-    app.MapPortiaPost<ApproveBoundary>(
-            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/approvals", config => config.OnNativeResult()).WithNativeFirstResponse<ApproveBoundary>()
+    app.MapPortiaPut<ApproveBoundary>(
+            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/drafts/{draft_version_id}/approvals/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ApproveBoundary>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaPost<RecordSeparationOfDutiesWaiver, SeparationOfDutiesWaiverView>(
@@ -2559,8 +2559,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/separation-of-duties-waivers/{waiver_id}/approvals", config => config.OnNativeResult()).WithNativeFirstResponse<ApproveSeparationOfDutiesWaiver>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Access control");
-    app.MapPortiaPost<ProposeBoundarySuccessor, BoundaryRegistration>(
-            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/successors", config => config.OnNativeResult()).WithNativeFirstResponse<ProposeBoundarySuccessor>()
+    app.MapPortiaPut<ProposeBoundarySuccessor, BoundaryRegistration>(
+            "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/successors/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ProposeBoundarySuccessor>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
     app.MapPortiaPut<ReserveEmail>("/api/v1/users/{user_id}/email-addresses/{email_address}/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReserveEmail>()

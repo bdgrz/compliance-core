@@ -24,12 +24,12 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var changedAt = now.AddMinutes(-5);
         var content = Content();
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", changedAt).IsSuccess);
@@ -50,13 +50,13 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var directory = new FitzBoundaryDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceReader);
+            sourceScope.ServiceProvider.GetRequiredService<BoundaryReader>());
 
         // Act
-        var live = await BoundaryDecisionWork.LoadAsync(sourceReader, fixture.Boundaries,
+        var live = await BoundaryDecisionWork.LoadAsync(sourceScope.ServiceProvider.GetRequiredService<BoundaryReader>(), fixture.Boundaries,
             fixture.TenantId, fixture.ProgramId, now, null, CancellationToken.None);
         await ProjectAsync(directory, events, fixture.TenantId,
-            new BoundaryDraftCreated(fixture.TenantId, boundaryId, fixture.ProgramId,
+            new BoundaryDraftCreatedContent(fixture.TenantId, boundaryId, fixture.ProgramId,
                 draftVersionId, content, fixture.LeadMemberId, "Lead", changedAt));
         var projected = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
             now, DateOnly.MaxValue, null);
@@ -75,14 +75,14 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         var fixture = await OperationsFixture.CreateAsync();
         fixture.Permissions.Managers.Add(fixture.ReviewerMemberId);
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var reviewerAssignmentId = Uuid.CreateVersion4();
         var approverAssignmentId = Uuid.CreateVersion4();
         var reviewDecisionId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow.AddHours(-2);
         var content = Content();
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now).IsSuccess);
@@ -105,13 +105,13 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzBoundaryDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<BoundaryReader>());
         var consistency = new WorkQueueReadConsistency(events, [directory]);
         var behind = await consistency.CaptureAsync(fixture.TenantId, CancellationToken.None);
 
         // Act
         await ProjectAsync(directory, events, fixture.TenantId,
-            new BoundaryDraftCreated(fixture.TenantId, boundaryId, fixture.ProgramId,
+            new BoundaryDraftCreatedContent(fixture.TenantId, boundaryId, fixture.ProgramId,
                 draftVersionId, content, fixture.LeadMemberId, "Lead", now));
         var caughtUp = await consistency.CaptureAsync(fixture.TenantId, CancellationToken.None);
         var beforeReviewer = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
@@ -138,7 +138,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
             CancellationToken.None);
 
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.Null(boundary.Review(draftVersionId, 1, reviewDecisionId, "accept",
                     "Reviewed independently.", fixture.ReviewerMemberId, "Reviewer",
@@ -146,7 +146,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
                 return Result.Success;
             });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new BoundaryReviewed(fixture.TenantId, boundaryId, draftVersionId, 1,
+            new BoundaryReviewedContent(fixture.TenantId, boundaryId, draftVersionId, 1,
                 reviewDecisionId, "accept", fixture.ReviewerMemberId, "Reviewer",
                 "Reviewed independently.", now.AddHours(2)));
         var approval = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
@@ -154,7 +154,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
 
         var approvalDecisionId = Uuid.CreateVersion4();
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.Null(boundary.Approve(draftVersionId, 1, approvalDecisionId,
                     reviewDecisionId, fixture.Today.AddDays(1), "Approved.", "impact-digest",
@@ -162,20 +162,21 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
                 return Result.Success;
             });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new BoundaryApproved(fixture.TenantId, boundaryId, draftVersionId, 1,
+            new BoundaryApprovedContent(fixture.TenantId, boundaryId, draftVersionId, 1,
                 approvalDecisionId, reviewDecisionId, fixture.ApproverMemberId, "Approver",
                 "Approved.", fixture.Today.AddDays(1), now.AddHours(3), "impact-digest"));
         var completed = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
             now.AddHours(3), DateOnly.MaxValue, null);
 
-        var successorDraftVersionId = Uuid.CreateVersion4();
+        var successorCommandId = Uuid.CreateVersion4();
+        var successorDraftVersionId = Uuid.CreateVersion5(successorCommandId, "draft");
         var successorAt = now.AddHours(4);
         var successorContent = Content("Successor SOC 2 system boundary");
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.Null(boundary.ProposeSuccessor(draftVersionId, successorDraftVersionId,
-                    successorContent, fixture.LeadMemberId, "Lead", successorAt));
+                    successorContent, fixture.LeadMemberId, "Lead", successorAt, successorCommandId));
                 Assert.Null(boundary.AssignResponsibility(new ResponsibilityScope("boundary",
                         boundaryId, successorDraftVersionId, 1), Uuid.CreateVersion4(),
                     fixture.ReviewerMemberId, ResponsibilityType.AssignedReviewer,
@@ -183,7 +184,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
                 return Result.Success;
             });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new BoundarySuccessorProposed(fixture.TenantId, boundaryId,
+            new BoundarySuccessorProposedContent(fixture.TenantId, boundaryId,
                 successorDraftVersionId, draftVersionId, successorContent,
                 fixture.LeadMemberId, "Lead", successorAt));
         var successor = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
@@ -221,11 +222,11 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow.AddMinutes(-5);
         var content = Content();
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now).IsSuccess);
@@ -239,9 +240,9 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzBoundaryDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<BoundaryReader>());
         await ProjectAsync(directory, events, fixture.TenantId,
-            new BoundaryDraftCreated(fixture.TenantId, boundaryId, fixture.ProgramId,
+            new BoundaryDraftCreatedContent(fixture.TenantId, boundaryId, fixture.ProgramId,
                 draftVersionId, content, fixture.LeadMemberId, "Lead", now));
         var original = Assert.Single((await directory.LoadProgramAsync(fixture.TenantId,
             fixture.ProgramId, now, DateOnly.MaxValue, null)).Value);
@@ -250,7 +251,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         var reviewDecisionId = Uuid.CreateVersion4();
         var requestedAt = now.AddMinutes(1);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.Null(boundary.Review(draftVersionId, 1, reviewDecisionId,
                     "request_changes", "Clarify the service boundary.", fixture.ReviewerMemberId,
@@ -258,7 +259,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
                 return Result.Success;
             });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new BoundaryReviewed(fixture.TenantId, boundaryId, draftVersionId, 1,
+            new BoundaryReviewedContent(fixture.TenantId, boundaryId, draftVersionId, 1,
                 reviewDecisionId, "request_changes", fixture.ReviewerMemberId, "Reviewer",
                 "Clarify the service boundary.", requestedAt));
         var afterChangesRequested = await directory.LoadProgramAsync(fixture.TenantId,
@@ -268,7 +269,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         var revisedAt = requestedAt.AddMinutes(1);
         var revisedVersionRevision = 2L;
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.Null(boundary.Revise(draftVersionId, 1, revisedContent,
                     fixture.LeadMemberId, "Lead", revisedAt));
@@ -279,7 +280,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
                 return Result.Success;
             });
         await ProjectAsync(directory, events, fixture.TenantId,
-            new BoundaryDraftRevised(fixture.TenantId, boundaryId, draftVersionId,
+            new BoundaryDraftRevisedContent(fixture.TenantId, boundaryId, draftVersionId,
                 revisedVersionRevision, revisedContent, fixture.LeadMemberId, "Lead", revisedAt));
         var revised = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
             revisedAt, DateOnly.MaxValue, null);
@@ -299,14 +300,14 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var assignmentId = Uuid.CreateVersion4();
         var now = At(fixture.Today).AddHours(8);
         var effectiveFrom = now.AddHours(1);
         var revokedAt = now.AddHours(3);
         var content = Content();
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now).IsSuccess);
@@ -320,18 +321,18 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzBoundaryDecisionWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>());
+            sourceScope.ServiceProvider.GetRequiredService<BoundaryReader>());
 
         // Act
         await ProjectAsync(directory, events, fixture.TenantId,
-            new BoundaryDraftCreated(fixture.TenantId, boundaryId, fixture.ProgramId,
+            new BoundaryDraftCreatedContent(fixture.TenantId, boundaryId, fixture.ProgramId,
                 draftVersionId, content, fixture.LeadMemberId, "Lead", now));
         var beforeStart = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
             effectiveFrom.AddTicks(-1), DateOnly.MaxValue, null);
         var atStart = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
             effectiveFrom, DateOnly.MaxValue, null);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.Null(boundary.RevokeResponsibility(new ResponsibilityScope("boundary",
                         boundaryId, draftVersionId, 1), assignmentId, fixture.LeadMemberId,
@@ -356,7 +357,7 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
     }
 
     static async Task ProjectAsync(FitzBoundaryDecisionWorkItemDirectory directory,
-        IDomainEventReader events, Uuid tenantId, DomainEvent domainEvent)
+        IDomainEventReader events, Uuid tenantId, IBoundaryMutationContent requested)
     {
         var pattern = EventStreamPattern.ForPattern(tenantId.ToString(), "boundaries");
         var identity = new CheckpointIdentity(FitzBoundaryDecisionWorkItemDirectory.ProjectorName,
@@ -365,7 +366,25 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         var source = await ReadBoundaryCheckpointAsync(events, tenantId);
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
             current));
-        await directory.ApplyAsync(domainEvent);
+        var matches = new List<DomainEvent>();
+        await foreach (var record in events.ReadAsync(pattern, EventCursor.Start, CancellationToken.None))
+        {
+            var selected = (requested, record.Event) switch
+            {
+                (BoundaryDraftCreatedContent expected, BoundaryDraftCreated actual) => expected.BoundaryId == actual.BoundaryId,
+                (BoundaryDraftRevisedContent expected, BoundaryDraftRevised actual) => expected.BoundaryId == actual.BoundaryId && expected.DraftVersionId == actual.DraftVersionId && expected.Revision == actual.Revision,
+                (BoundaryDraftDiscardedContent expected, BoundaryDraftDiscarded actual) => expected.BoundaryId == actual.BoundaryId && expected.DraftVersionId == actual.DraftVersionId,
+                (BoundaryReviewedContent expected, BoundaryReviewed actual) => expected.DecisionId == actual.DecisionId,
+                (BoundaryApprovedContent expected, BoundaryApproved actual) => expected.ApprovalDecisionId == actual.ApprovalDecisionId,
+                (BoundarySuccessorProposedContent expected, BoundarySuccessorProposed actual) => expected.DraftVersionId == actual.DraftVersionId,
+                (ResponsibilityAssigned expected, ResponsibilityAssigned actual) => expected.AssignmentId == actual.AssignmentId,
+                (ResponsibilityRevoked expected, ResponsibilityRevoked actual) => expected.AssignmentId == actual.AssignmentId,
+                _ => false,
+            };
+            if (selected)
+                matches.Add(record.Event);
+        }
+        await directory.ApplyAsync(Assert.Single(matches));
         await batch.CommitAsync(source);
     }
 

@@ -20,12 +20,12 @@ public sealed class AssignedDecisionAuthorityTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var versionId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var reviewId = Uuid.CreateVersion4();
         var content = new BoundaryContent("System boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, versionId, content,
                     fixture.LeadMemberId, "Lead", now.AddMinutes(-5)).IsSuccess);
@@ -52,9 +52,9 @@ public sealed class AssignedDecisionAuthorityTests
             fixture.Provider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
             ProgramManagementServices.ResourceScopes(fixture.ProgramId));
         IProgramManagementRequest request = approval
-            ? new ApproveBoundary(fixture.TenantId, boundaryId, versionId, 1, reviewId,
+            ? new ApproveBoundary(Uuid.CreateVersion4(), fixture.TenantId, boundaryId, versionId, 1, reviewId,
                 fixture.Today, "Approved.", "impact")
-            : new ReviewBoundary(fixture.TenantId, boundaryId, versionId, 1, "accept", "Reviewed.");
+            : new ReviewBoundary(Uuid.CreateVersion4(), fixture.TenantId, boundaryId, versionId, 1, "accept", "Reviewed.");
         var context = new RequestContext<IProgramManagementRequest>(request,
             ProgramManagementServices.Actor(fixture.ReviewerUserId));
 

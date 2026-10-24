@@ -1,71 +1,48 @@
 using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Boundaries;
 
-public sealed class ApproveBoundaryHandler(IAggregateExecutor executor,
-    IAggregateReader reader, BoundaryImpactService impact, IBoundaryDirectoryReader boundaries,
-    IBoundaryReferenceValidator references, TimeProvider clock)
+public sealed class ApproveBoundaryHandler(BoundaryOperations operations, BoundaryImpactService impact, IBoundaryReferenceValidator references)
     : IRequestHandler<ApproveBoundary>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<ApproveBoundary> context,
-        CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<ApproveBoundary> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Boundary decision requires personal HTTP submission."));
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Boundary decision requires personal HTTP submission.")));
         var request = context.Request;
-        var preview = await impact.PreviewAsync(new PreviewBoundaryImpact(request.TenantId,
-                request.BoundaryId, request.DraftVersionId, request.ExpectedRevision), ct)
-            .ConfigureAwait(false);
-        if (!preview.IsSuccess)
-            return Result.Failure(preview.Error);
-        if (!preview.Value.Complete)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The impact preview is incomplete. Pending or incomplete contexts: " +
-                string.Join(", ", preview.Value.PendingContexts)));
-        if (!StringComparer.Ordinal.Equals(request.ImpactDigest, preview.Value.Digest))
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The impact preview changed. Reload it before approval."));
-        var boundaryView = await boundaries.GetAsync(request.TenantId, request.BoundaryId, ct)
-            .ConfigureAwait(false);
-        if (boundaryView?.Draft is not { } draft ||
-            draft.VersionId != request.DraftVersionId || draft.Revision != request.ExpectedRevision)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The boundary draft changed. Reload it before approval."));
-        var referenceValidation = await references.ValidateAsync(request.TenantId,
-                boundaryView.ProgramId, draft.Content, ct)
-            .ConfigureAwait(false);
-        if (!referenceValidation.IsSuccess)
-            return referenceValidation;
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
-        var memberId = RbacIds.Member(request.TenantId, userId);
-        var waiverId = request.SeparationOfDutiesWaiverId;
-        SeparationOfDutiesWaiver? waiver = null;
-        if (waiverId is not null)
-        {
-            waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId,
-                waiverId.Value), ct).ConfigureAwait(false);
-        }
-        return await executor.ExecuteAsync(new SystemBoundary(request.TenantId, request.BoundaryId),
-            boundary =>
+        var proofs = new List<SeparationOfDutiesWaiverProof>();
+        return operations.ExecuteUnitAsync(context, request.TenantId, null, request.BoundaryId, request.CommandId,
+            nameof(ApproveBoundary), request.ExpectedRevision,
+            async (snapshot, actor, at, token) =>
             {
-                if (boundary.DraftVersionId != request.DraftVersionId ||
-                    boundary.DraftRevision != request.ExpectedRevision)
-                    return AggregateOutcome.Discard(Result.Failure(new RequestError(
-                        RequestErrorKind.Conflict,
-                        "The boundary draft changed. Reload it before approval.")));
-                return CommandFailureRequestAdapter.ToOutcome(boundary.Approve(request.DraftVersionId,
-                    request.ExpectedRevision, context.RequestId, request.AcceptedReviewDecisionId,
-                    request.EffectiveFrom, request.Rationale, request.ImpactDigest,
-                    memberId, UserIdentityClaims.BdgrzDisplay(context.Actor, userId),
-                    clock.GetUtcNow(),
-                    waiver));
+                var preview = await impact.PreviewAsync(new PreviewBoundaryImpact(request.TenantId, request.BoundaryId,
+                    request.DraftVersionId, request.ExpectedRevision), token).ConfigureAwait(false);
+                if (!preview.IsSuccess)
+                    return Result.Failure(preview.Error!);
+                if (!preview.Value.Complete)
+                    return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The impact preview is incomplete. Pending or incomplete contexts: " + string.Join(", ", preview.Value.PendingContexts)));
+                if (!StringComparer.Ordinal.Equals(request.ImpactDigest, preview.Value.Digest))
+                    return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The impact preview changed. Reload it before approval."));
+                if (snapshot.Draft is not { } draft || draft.VersionId != request.DraftVersionId || draft.Revision != request.ExpectedRevision)
+                    return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The boundary draft changed. Reload it before approval."));
+                var valid = await references.ValidateAsync(request.TenantId, snapshot.ProgramId, draft.Content, token).ConfigureAwait(false);
+                if (!valid.IsSuccess)
+                    return valid;
+                var proof = await operations.ResolveWaiverAsync(request.TenantId, request.SeparationOfDutiesWaiverId,
+                    actor.MemberId, request.BoundaryId, request.DraftVersionId, request.ExpectedRevision, SeparationOfDutiesActions.Approve, at, token).ConfigureAwait(false);
+                if (!proof.IsSuccess)
+                    return Result.Failure(proof.Error!);
+                proofs.Clear();
+                if (proof.Value is { } accepted)
+                    proofs.Add(accepted);
+                return Result.Success;
             },
-            context, ct).ConfigureAwait(false);
+            (rules, actor, at) => BoundaryOperations.Outcome(rules.Approve(request.DraftVersionId, request.ExpectedRevision,
+                request.CommandId, request.AcceptedReviewDecisionId, request.EffectiveFrom, request.Rationale, request.ImpactDigest,
+                actor.MemberId, actor.Display, at, proofs.SingleOrDefault())), null, () => proofs, ct);
     }
 }

@@ -430,6 +430,8 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzClientServiceDirectory>());
         services.AddScoped<ClientServiceHistoryReadConsistency>();
         services.AddScoped<IClientServiceActivity, EventSourcedClientServiceActivity>();
+        services.AddScoped<BoundaryReader>();
+        services.AddScoped<BoundaryOperations>();
         services.AddScoped<FitzBoundaryDirectory>();
         services.AddScoped<IBoundaryDirectoryProjection>(
             provider => provider.GetRequiredService<FitzBoundaryDirectory>());
@@ -1893,7 +1895,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<AccessReviewScopeDirectoryProjector>(
                 AccessReviewScopeStreams.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ApplicationBoundaryReferenceProjector>(
-                "ApplicationBoundaryReferencesV2", WorkloadScope.PerTenant)
+                "ApplicationBoundaryReferencesV3", WorkloadScope.PerTenant)
             .AddProjector<ApplicationRelationshipProjector>(
                 "ApplicationRelationshipsV1", WorkloadScope.PerTenant)
             .AddProjector<ApplicationIncomingRelationshipProjector>(
@@ -1911,7 +1913,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<ProviderProjector>(FitzProviderDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AssuranceProjector>(FitzAssuranceDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ClientServiceDirectoryProjector>("ClientServiceDirectory", WorkloadScope.PerTenant)
-            .AddProjector<BoundaryDirectoryProjector>("BoundaryDirectoryV2", WorkloadScope.PerTenant)
+            .AddProjector<BoundaryDirectoryProjector>("BoundaryDirectoryV3", WorkloadScope.PerTenant)
             .AddProjector<BoundaryDecisionWorkItemProjector>(
                 FitzBoundaryDecisionWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<CommitmentDecisionWorkItemProjector>(

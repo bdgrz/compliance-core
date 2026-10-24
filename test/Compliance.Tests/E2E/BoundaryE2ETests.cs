@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Bdgrz.Compliance.Features.Content;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
@@ -1064,14 +1066,14 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
         var tenantId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var versionId = Uuid.CreateVersion4();
+        var versionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var authorId = Uuid.CreateVersion4();
         var reviewerId = Uuid.CreateVersion4();
         var reviewId = Uuid.CreateVersion4();
         var approvalId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("System boundary", "readiness", ["security"], []);
-        var source = new SystemBoundary(tenantId, boundaryId);
+        var source = new BoundaryRules(tenantId, boundaryId);
         Assert.True(source.Create(programId, versionId, content, authorId,
             "Author", now).IsSuccess);
         Assert.Null(source.Review(versionId, 1, reviewId, "accept", "Reviewed",
@@ -1079,20 +1081,26 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
         Assert.Null(source.Approve(versionId, 1, approvalId, reviewId,
             new DateOnly(2027, 1, 1), "Approved", "digest", reviewerId,
             "Reviewer", now.AddMinutes(2)));
-        var identity = new CheckpointIdentity("BoundaryDirectoryV2",
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var boundarySources = scope.ServiceProvider.GetRequiredService<BoundaryReader>();
+        await BoundarySeeds.AppendAsync(reader, scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+            scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), source);
+        var facts = new List<DomainEvent>();
+        await foreach (var record in scope.ServiceProvider.GetRequiredService<IDomainEventReader>().ReadAsync(
+            EventStreamPattern.ForPattern(tenantId.ToString(), SystemBoundary.Area, boundaryId.ToString()), EventCursor.Start, CancellationToken.None))
+            if (!record.Event.Metadata.IsAudit)
+                facts.Add(record.Event);
+        var identity = new CheckpointIdentity("BoundaryDirectoryV3",
             EventStreamPattern.ForPattern(tenantId.ToString()));
         await using (var batch = await directory.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new BoundaryDraftCreated(tenantId, boundaryId,
-                programId, versionId, content, authorId, "Author", now));
-            await directory.ApplyAsync(new BoundaryReviewed(tenantId, boundaryId,
-                versionId, 1, reviewId, "accept", reviewerId, "Reviewer", "Reviewed",
-                now.AddMinutes(1)));
+            await directory.ApplyAsync(facts[0]);
+            await directory.ApplyAsync(facts[1]);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var handler = new GetBoundaryVersionHandler(directory,
-            new BoundaryHistoryReadConsistency(directory, new SourceReader(source)));
+            new BoundaryHistoryReadConsistency(directory, boundarySources));
         var request = new RequestContext<GetBoundaryVersion>(new GetBoundaryVersion(
             tenantId, boundaryId, versionId, 3), new ClaimsPrincipal());
 
@@ -1101,9 +1109,7 @@ public sealed class BoundaryE2ETests(BrokerStackFixture broker)
         await using (var batch = await directory.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new BoundaryApproved(tenantId, boundaryId,
-                versionId, 1, approvalId, reviewId, reviewerId, "Reviewer", "Approved",
-                new DateOnly(2027, 1, 1), now.AddMinutes(2), "digest"));
+            await directory.ApplyAsync(facts[2]);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var caughtUp = await handler.HandleAsync(request, CancellationToken.None);

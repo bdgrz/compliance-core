@@ -35,14 +35,14 @@ public sealed class PersonalBoundaryDecisionTransportTests
         if (transport == "http")
         {
             Assert.True(result.IsSuccess, result.Error?.Message);
-            Assert.Equal(before.CommittedStreamPosition + 1, after.CommittedStreamPosition);
+            Assert.Equal(before.SourcePhysicalPosition + 1, after.SourcePhysicalPosition);
             await fixture.AssertAttributionAsync(action);
         }
         else
         {
             Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
             Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
-            Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+            Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
         }
     }
 
@@ -65,7 +65,27 @@ public sealed class PersonalBoundaryDecisionTransportTests
         // Assert
         Assert.Equal(kind, result.Error?.Kind);
         Assert.Equal(message, result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition, (await fixture.ReadAsync()).CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, (await fixture.ReadAsync()).SourcePhysicalPosition);
+    }
+
+    [Theory]
+    [InlineData("review")]
+    [InlineData("approval")]
+    public async Task ShouldReturnOriginalDecisionGivenExactPersonalHttpRetry(string action)
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync(action);
+        var first = await fixture.DecideAsync(action, "http");
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        var accepted = await fixture.ReadAsync();
+
+        // Act
+        var retry = await fixture.DecideAsync(action, "http");
+        var retained = await fixture.ReadAsync();
+
+        // Assert
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(accepted.SourcePhysicalPosition, retained.SourcePhysicalPosition);
     }
 
     sealed class Fixture : IAsyncDisposable
@@ -77,12 +97,14 @@ public sealed class PersonalBoundaryDecisionTransportTests
         readonly Uuid _reviewer = Uuid.CreateVersion4();
         readonly Uuid _approver = Uuid.CreateVersion4();
         readonly Uuid _boundary = Uuid.CreateVersion4();
-        readonly Uuid _version = Uuid.CreateVersion4();
+        readonly Uuid _version;
         readonly Uuid _review = Uuid.CreateVersion4();
+        readonly Uuid _approval = Uuid.CreateVersion4();
         string _digest = string.Empty;
 
         Fixture()
         {
+            _version = Uuid.CreateVersion5(_boundary, "draft-1");
             var services = new ServiceCollection();
             services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -109,14 +131,14 @@ public sealed class PersonalBoundaryDecisionTransportTests
                 Assert.Null(program.Create("Security", new ProgramPlan(null, null, null, null, null, null), author, "Author", now));
                 return Result.Success;
             });
-            await ProgramManagementServices.SeedAsync(fixture._provider, new SystemBoundary(fixture._tenant, fixture._boundary), boundary =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new BoundaryRules(fixture._tenant, fixture._boundary), boundary =>
                 boundary.Create(fixture._program, fixture._version, new BoundaryContent("Service scope", "readiness", ["security"], []), author, "Author", now));
             if (action == "approval")
             {
                 Assert.True((await fixture.DecideAsync("review", "http")).IsSuccess);
                 await using var scope = fixture._provider.CreateAsyncScope();
                 var directory = (FitzBoundaryDirectory)scope.ServiceProvider.GetRequiredService<IBoundaryDirectoryProjection>();
-                var identity = new CheckpointIdentity("BoundaryDirectoryV2", EventStreamPattern.ForPattern(fixture._tenant.ToString()));
+                var identity = new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName, EventStreamPattern.ForPattern(fixture._tenant.ToString()));
                 await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
                 {
                     await foreach (var record in fixture._provider.GetRequiredService<IDomainEventReader>().ReadAsync(EventStreamPattern.ForPattern(fixture._tenant.ToString()), EventCursor.Start, CancellationToken.None))
@@ -133,14 +155,14 @@ public sealed class PersonalBoundaryDecisionTransportTests
 
         public async Task<Result> DecideAsync(string action, string transport, bool author = false, bool stale = false, bool wrongReview = false, bool wrongDigest = false)
         {
-            IRequest request = action == "review" ? new ReviewBoundary(_tenant, _boundary, _version, stale ? 2 : 1, "accept", "Independent review") :
-                new ApproveBoundary(_tenant, _boundary, _version, stale ? 2 : 1, wrongReview ? Uuid.CreateVersion4() : _review, new DateOnly(2026, 10, 1), "Approved", wrongDigest ? "STALE" : _digest);
+            IRequest request = action == "review" ? new ReviewBoundary(_review, _tenant, _boundary, _version, stale ? 2 : 1, "accept", "Independent review") :
+                new ApproveBoundary(_approval, _tenant, _boundary, _version, stale ? 2 : 1, wrongReview ? Uuid.CreateVersion4() : _review, new DateOnly(2026, 10, 1), "Approved", wrongDigest ? "STALE" : _digest);
             RequestInvocation invocation = transport == "http" ? new HttpInvocation("POST", "/synthetic/boundary/decision", "/synthetic/boundary/decision", "synthetic") :
                 transport == "mcp" ? new McpInvocation("synthetic.boundary.decision") : new DirectInvocation();
             await using var scope = _provider.CreateAsyncScope();
             return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
                 new RequestDispatchContext(ProgramManagementServices.Actor(author ? _author : action == "review" ? _reviewer : _approver), invocation,
-                    new RequestMetadata(action == "review" ? _review : Uuid.CreateVersion4(), _review, null)), CancellationToken.None);
+                    new RequestMetadata(action == "review" ? _review : _approval, _review, null)), CancellationToken.None);
         }
 
         public async Task AssertAttributionAsync(string action)
@@ -164,12 +186,13 @@ public sealed class PersonalBoundaryDecisionTransportTests
                 Assert.Equal(_version, approval.DraftVersionId);
                 Assert.Equal(1, approval.Revision);
                 Assert.Equal(_review, approval.AcceptedReviewDecisionId);
-                Assert.Equal(_digest, approval.ImpactDigest);
+                var change = await BoundaryFactContent.ReadChangeAsync(_provider.GetRequiredService<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(), approval);
+                Assert.Equal(_digest, Assert.IsType<BoundaryApprovedContent>(Assert.Single(change.Changes)).ImpactDigest);
                 Assert.True((await ReadAsync()).IsVersionApproved(_version));
             }
         }
 
-        public Task<SystemBoundary> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new SystemBoundary(_tenant, _boundary));
+        public Task<BoundaryRules> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new BoundaryRules(_tenant, _boundary));
         public ValueTask DisposeAsync() => _provider.DisposeAsync();
     }
 }

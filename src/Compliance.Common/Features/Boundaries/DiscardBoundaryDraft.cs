@@ -4,6 +4,9 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Boundaries;
 
 [Discriminator("bdgrz.boundary.draft.discard", 1)]
-public sealed record DiscardBoundaryDraft(Uuid TenantId, Uuid BoundaryId,
+public sealed record DiscardBoundaryDraft(Uuid CommandId, Uuid TenantId, Uuid BoundaryId,
     Uuid DraftVersionId, long ExpectedRevision, string Rationale)
-    : IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

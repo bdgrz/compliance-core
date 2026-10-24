@@ -78,11 +78,11 @@ public sealed class WorkQueueTests
         var fixture = await OperationsFixture.CreateAsync();
         fixture.Permissions.Managers.Add(fixture.ReviewerMemberId);
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now.AddMinutes(-5)).IsSuccess);
@@ -200,11 +200,11 @@ public sealed class WorkQueueTests
         fixture.Permissions.Managers.Add(fixture.ReviewerMemberId);
         fixture.Permissions.Managers.Add(fixture.BackupMemberId);
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now.AddMinutes(-5)).IsSuccess);
@@ -253,12 +253,12 @@ public sealed class WorkQueueTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var reviewDecisionId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now.AddMinutes(-10)).IsSuccess);
@@ -273,7 +273,7 @@ public sealed class WorkQueueTests
                 return Result.Success;
             });
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.Null(boundary.Review(draftVersionId, 1, reviewDecisionId, "accept",
                     "Reviewed independently.", fixture.ReviewerMemberId, "Reviewer",
@@ -309,7 +309,7 @@ public sealed class WorkQueueTests
         var approvalDecisionId = Uuid.CreateVersion4();
         var approvedEffectiveFrom = DateOnly.FromDateTime(now.UtcDateTime).AddDays(1);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.Null(boundary.Approve(draftVersionId, 1, approvalDecisionId,
                     reviewDecisionId, approvedEffectiveFrom, "Approved.", "impact-digest",
@@ -333,12 +333,12 @@ public sealed class WorkQueueTests
         var fixture = await OperationsFixture.CreateAsync();
         fixture.Permissions.Managers.Add(fixture.ReviewerMemberId);
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var changedAt = now.AddMinutes(-5);
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", changedAt).IsSuccess);
@@ -357,7 +357,7 @@ public sealed class WorkQueueTests
 
         await using var scope = fixture.Provider.CreateAsyncScope();
         var sourceReader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var live = await BoundaryDecisionWork.LoadAsync(sourceReader, fixture.Boundaries,
+        var live = await BoundaryDecisionWork.LoadAsync(scope.ServiceProvider.GetRequiredService<BoundaryReader>(), fixture.Boundaries,
             fixture.TenantId, fixture.ProgramId, now, null, CancellationToken.None);
         var candidate = Assert.Single(live.Value);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
@@ -391,11 +391,11 @@ public sealed class WorkQueueTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now.AddMinutes(-5)).IsSuccess);
@@ -425,11 +425,11 @@ public sealed class WorkQueueTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now.AddMinutes(-5)).IsSuccess);
@@ -440,7 +440,7 @@ public sealed class WorkQueueTests
                 return Result.Success;
             });
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.Null(boundary.Review(draftVersionId, 1, Uuid.CreateVersion4(), "accept",
                     "Reviewed independently.", fixture.ReviewerMemberId, "Reviewer",
@@ -467,11 +467,11 @@ public sealed class WorkQueueTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now.AddMinutes(-5)).IsSuccess);
@@ -497,11 +497,11 @@ public sealed class WorkQueueTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now.AddMinutes(-5)).IsSuccess);
@@ -544,14 +544,14 @@ public sealed class WorkQueueTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         var projection = new ProjectedBoundaryWorkItemDirectory(null, ProjectionCheckpoint.Start,
             async _ =>
         {
             await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+                new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
                 {
                     Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                         fixture.LeadMemberId, "Lead", now.AddMinutes(-5)).IsSuccess);
@@ -627,11 +627,11 @@ public sealed class WorkQueueTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var boundaryId = Uuid.CreateVersion4();
-        var draftVersionId = Uuid.CreateVersion4();
+        var draftVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
         var now = DateTimeOffset.UtcNow;
         var content = new BoundaryContent("SOC 2 system boundary", "readiness", ["security"], []);
         await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new SystemBoundary(fixture.TenantId, boundaryId), boundary =>
+            new BoundaryRules(fixture.TenantId, boundaryId), boundary =>
             {
                 Assert.True(boundary.Create(fixture.ProgramId, draftVersionId, content,
                     fixture.LeadMemberId, "Lead", now.AddMinutes(-5)).IsSuccess);
@@ -821,7 +821,7 @@ public sealed class WorkQueueTests
     {
         static readonly string[] Kinds = ["boundary_review", "boundary_approval"];
 
-        public string ProjectorName => "AccountableWorkItemBoundaryDecisionV1";
+        public string ProjectorName => "AccountableWorkItemBoundaryDecisionV2";
 
         public IReadOnlyCollection<string> ProjectedKinds => Kinds;
 

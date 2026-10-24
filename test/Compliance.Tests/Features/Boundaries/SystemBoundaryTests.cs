@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Responsibilities;
@@ -21,7 +22,7 @@ public sealed class SystemBoundaryTests
     public void ShouldReturnDomainFailureGivenBoundaryRevisionPrecedence()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var invalid = Content() with { Statement = "" };
 
         // Act
@@ -39,14 +40,14 @@ public sealed class SystemBoundaryTests
         Assert.Equal(1, staleDraft.Version?.CurrentRevision);
         Assert.Contains("statement", AssertFailure(invalidCurrent,
             CommandFailureCode.InvalidContent).Message, StringComparison.Ordinal);
-        Assert.Single(new AggregateScenario<SystemBoundary>(boundary).PendingEvents);
+        Assert.Single(boundary.PendingChanges);
     }
 
     [Fact]
     public void ShouldRequireExactVersionAndRevisionGivenDraftChange()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
 
         // Act
         var first = Content();
@@ -65,15 +66,15 @@ public sealed class SystemBoundaryTests
         Assert.Equal(2, staleDraft.Version?.CurrentRevision);
         Assert.Equal(VersionId.ToGuid(), staleDraft.Version?.CurrentVersionId);
         AssertFailure(wrongVersion, CommandFailureCode.VersionConflict);
-        Assert.Collection(new AggregateScenario<SystemBoundary>(boundary).PendingEvents,
+        Assert.Collection(boundary.PendingChanges,
             ev =>
             {
-                Assert.Equal(typeof(BoundaryDraftCreated), ev.GetType());
+                Assert.Equal(typeof(BoundaryDraftCreatedContent), ev.GetType());
                 Assert.Equal(VersionId, ev.GetType().GetProperty("DraftVersionId")?.GetValue(ev));
             },
             ev =>
             {
-                Assert.Equal(typeof(BoundaryDraftRevised), ev.GetType());
+                Assert.Equal(typeof(BoundaryDraftRevisedContent), ev.GetType());
                 Assert.Equal(2L, ev.GetType().GetProperty("Revision")?.GetValue(ev));
                 Assert.Equal("Lead B", ev.GetType().GetProperty("AuthorDisplay")?.GetValue(ev));
             });
@@ -83,7 +84,7 @@ public sealed class SystemBoundaryTests
     public void ShouldRequireOwnerAndRationaleGivenScopeEntries()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var invalid = Content() with
         {
             Entries = [new BoundaryScopeEntry(Uuid.CreateVersion4(), "inclusion", "service",
@@ -97,14 +98,14 @@ public sealed class SystemBoundaryTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(result.Error).Kind);
-        Assert.Empty(new AggregateScenario<SystemBoundary>(boundary).PendingEvents);
+        Assert.Empty(boundary.PendingChanges);
     }
 
     [Fact]
     public void ShouldRequireSecurityCategoryGivenOptionalCategoriesOnly()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var invalid = Content() with { TrustServicesCategories = ["availability", "privacy"] };
 
 
@@ -116,14 +117,14 @@ public sealed class SystemBoundaryTests
         var error = Assert.IsType<RequestError>(result.Error);
         Assert.Equal(RequestErrorKind.Validation, error.Kind);
         Assert.Contains("security", error.Message);
-        Assert.Empty(new AggregateScenario<SystemBoundary>(boundary).PendingEvents);
+        Assert.Empty(boundary.PendingChanges);
     }
 
     [Fact]
     public void ShouldRequireSecurityCategoryGivenRevisionOrSuccessor()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var reviewer = Uuid.CreateVersion4();
         var decisionId = Uuid.CreateVersion4();
         var withoutSecurity = Content() with { TrustServicesCategories = ["confidentiality"] };
@@ -143,22 +144,23 @@ public sealed class SystemBoundaryTests
         // Assert
         AssertFailure(revision, CommandFailureCode.InvalidContent);
         AssertFailure(successor, CommandFailureCode.InvalidContent);
-        Assert.Equal(3, new AggregateScenario<SystemBoundary>(boundary).PendingEvents.Count);
+        Assert.Equal(3, boundary.PendingChanges.Count);
     }
 
     [Fact]
     public void ShouldRejectApprovalGivenLegacyDraftWithoutSecurityCategory()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var reviewer = Uuid.CreateVersion4();
         var decisionId = Uuid.CreateVersion4();
         var legacy = Content() with { TrustServicesCategories = ["availability"] };
-        new AggregateScenario<SystemBoundary>(boundary).Given(
-            DomainEventSeed.Attach(new BoundaryDraftCreated(TenantId, BoundaryId, ProgramId,
-                VersionId, legacy, AuthorId, "Author", Now), BoundaryId, 1),
-            DomainEventSeed.Attach(new BoundaryReviewed(TenantId, BoundaryId, VersionId, 1,
-                decisionId, "accept", reviewer, "Reviewer", "Reviewed", Now), BoundaryId, 2));
+        // Legacy immutable content is read into the transient business fold only.
+        boundary.Apply(new BoundaryDraftCreatedContent(TenantId, BoundaryId, ProgramId,
+            VersionId, legacy, AuthorId, "Author", Now));
+        boundary.Apply(new BoundaryReviewedContent(TenantId, BoundaryId, VersionId, 1,
+            decisionId, "accept", reviewer, "Reviewer", "Reviewed", Now));
+        boundary.ClearPendingChanges();
 
 
         // Act
@@ -169,14 +171,14 @@ public sealed class SystemBoundaryTests
         // Assert
         var error = AssertFailure(result, CommandFailureCode.InvalidContent);
         Assert.Contains("security", error.Message);
-        Assert.Empty(new AggregateScenario<SystemBoundary>(boundary).PendingEvents);
+        Assert.Empty(boundary.PendingChanges);
     }
 
     [Fact]
     public void ShouldReturnExistingIdentityGivenReplayedCreate()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
 
         // Act
         var content = Content();
@@ -192,14 +194,14 @@ public sealed class SystemBoundaryTests
 
         Assert.Equal(VersionId, replay.Value.DraftVersionId);
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changed.Error).Kind);
-        Assert.Single(new AggregateScenario<SystemBoundary>(boundary).PendingEvents);
+        Assert.Single(boundary.PendingChanges);
     }
 
     [Fact]
     public void ShouldPreserveCreateReplayGivenRevisedDraft()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var original = Content();
         Assert.True(boundary.Create(ProgramId, VersionId, original, AuthorId,
             "Lead", Now).IsSuccess);
@@ -215,14 +217,14 @@ public sealed class SystemBoundaryTests
         // Assert
         Assert.Equal(VersionId, replay.Value.DraftVersionId);
         Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(changed.Error).Kind);
-        Assert.Equal(2, new AggregateScenario<SystemBoundary>(boundary).PendingEvents.Count);
+        Assert.Equal(2, boundary.PendingChanges.Count);
     }
 
     [Fact]
     public void ShouldBindRevisionAndDenyAuthorApprovalGivenReview()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId,
             "Author", Now).IsSuccess);
         var reviewer = Uuid.CreateVersion4();
@@ -250,14 +252,14 @@ public sealed class SystemBoundaryTests
             new DateOnly(2027, 1, 1), "Approved", "digest", reviewer, "Reviewer", Now);
         AssertFailure(staleApproval, CommandFailureCode.StateConflict,
             "Approval requires the latest accepted review of this draft revision.");
-        Assert.Equal(3, new AggregateScenario<SystemBoundary>(boundary).PendingEvents.Count);
+        Assert.Equal(3, boundary.PendingChanges.Count);
     }
 
     [Fact]
     public void ShouldSnapshotActorsGivenReviewAndApprovalDecisions()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var reviewerId = Uuid.CreateVersion4();
         var approverId = Uuid.CreateVersion4();
         var reviewId = Uuid.CreateVersion4();
@@ -272,9 +274,9 @@ public sealed class SystemBoundaryTests
             "Approver at approval time", Now));
 
         // Assert
-        var events = new AggregateScenario<SystemBoundary>(boundary).PendingEvents;
-        var review = Assert.IsType<BoundaryReviewed>(events[1]);
-        var approval = Assert.IsType<BoundaryApproved>(events[2]);
+        var events = boundary.PendingChanges;
+        var review = Assert.IsType<BoundaryReviewedContent>(events[1]);
+        var approval = Assert.IsType<BoundaryApprovedContent>(events[2]);
         Assert.Equal(ActorReference.ForMember(reviewerId, "Reviewer at review time"),
             review.StoredActor);
         Assert.Equal(ActorReference.ForMember(reviewerId, "Reviewer at review time"), review.Actor);
@@ -288,7 +290,7 @@ public sealed class SystemBoundaryTests
     public void ShouldRequireApprovedExactWaiverGivenAuthorSelfReview()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId, "Author", Now).IsSuccess);
         var decisionId = Uuid.CreateVersion4();
         var scope = new SeparationOfDutiesWaiverScope(SeparationOfDutiesRecordTypes.Boundary,
@@ -309,16 +311,16 @@ public sealed class SystemBoundaryTests
         AssertFailure(denied, CommandFailureCode.ActorProhibited);
         AssertFailure(deniedForeign, CommandFailureCode.ActorProhibited);
         Assert.Null(accepted);
-        var decision = Assert.IsType<BoundaryReviewed>(
-            new AggregateScenario<SystemBoundary>(boundary).PendingEvents[^1]);
-        Assert.Equal(valid.Id, decision.SeparationOfDutiesWaiverId);
+        var decision = Assert.IsType<BoundaryReviewedContent>(
+            boundary.PendingChanges[^1]);
+        Assert.Equal(valid.WaiverId, decision.SeparationOfDutiesWaiverId);
     }
 
     [Fact]
     public void ShouldRequireApprovedExactWaiverGivenAuthorSelfApproval()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId, "Author", Now).IsSuccess);
         var reviewer = Uuid.CreateVersion4();
         var reviewId = Uuid.CreateVersion4();
@@ -340,16 +342,16 @@ public sealed class SystemBoundaryTests
         // Assert
         AssertFailure(denied, CommandFailureCode.ActorProhibited);
         Assert.Null(approved);
-        var decision = Assert.IsType<BoundaryApproved>(
-            new AggregateScenario<SystemBoundary>(boundary).PendingEvents[^1]);
-        Assert.Equal(valid.Id, decision.SeparationOfDutiesWaiverId);
+        var decision = Assert.IsType<BoundaryApprovedContent>(
+            boundary.PendingChanges[^1]);
+        Assert.Equal(valid.WaiverId, decision.SeparationOfDutiesWaiverId);
     }
 
     [Fact]
     public void ShouldDenyReviewerWithOverlappingWorkResponsibilityGivenNoWaiver()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId, "Author", Now).IsSuccess);
         var reviewer = Uuid.CreateVersion4();
         var scope = new ResponsibilityScope("boundary", BoundaryId, VersionId, 1);
@@ -362,15 +364,15 @@ public sealed class SystemBoundaryTests
 
         // Assert
         AssertFailure(result, CommandFailureCode.ActorProhibited);
-        Assert.DoesNotContain(new AggregateScenario<SystemBoundary>(boundary).PendingEvents,
-            ev => ev is BoundaryReviewed);
+        Assert.DoesNotContain(boundary.PendingChanges,
+            ev => ev is BoundaryReviewedContent);
     }
 
     [Fact]
     public void ShouldApproveSelfReviewResponsibilityGivenExactActiveWaiver()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId, "Author", Now).IsSuccess);
         var approver = Uuid.CreateVersion4();
         var reviewId = Uuid.CreateVersion4();
@@ -395,16 +397,16 @@ public sealed class SystemBoundaryTests
         // Assert
         AssertFailure(denied, CommandFailureCode.ActorProhibited);
         Assert.Null(allowed);
-        var approval = Assert.IsType<BoundaryApproved>(
-            new AggregateScenario<SystemBoundary>(boundary).PendingEvents[^1]);
-        Assert.Equal(waiver.Id, approval.SeparationOfDutiesWaiverId);
+        var approval = Assert.IsType<BoundaryApprovedContent>(
+            boundary.PendingChanges[^1]);
+        Assert.Equal(waiver.WaiverId, approval.SeparationOfDutiesWaiverId);
     }
 
     [Fact]
     public void ShouldRejectRetroactiveConflictGivenUnwaivedReviewFact()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId, "Author", Now).IsSuccess);
         var reviewer = Uuid.CreateVersion4();
         var reviewedAt = Now.AddMinutes(2);
@@ -429,7 +431,7 @@ public sealed class SystemBoundaryTests
     public void ShouldAllowRetroactiveConflictGivenReviewFactWithAcceptedExactWaiver()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId, "Author", Now).IsSuccess);
         var scope = new ResponsibilityScope("boundary", BoundaryId, VersionId, 1);
         var waiverScope = new SeparationOfDutiesWaiverScope(
@@ -449,21 +451,21 @@ public sealed class SystemBoundaryTests
         Assert.Null(assignment);
     }
 
-    static SeparationOfDutiesWaiver CreateWaiver(SeparationOfDutiesWaiverScope scope,
+    static SeparationOfDutiesWaiverProof CreateWaiver(SeparationOfDutiesWaiverScope scope,
         Uuid beneficiary, Uuid? tenantId = null)
     {
         var waiver = new SeparationOfDutiesWaiver(tenantId ?? TenantId, Uuid.CreateVersion4());
         Assert.Null(waiver.Record(scope, beneficiary, Uuid.CreateVersion4(), "Requester",
             "No other qualified reviewer is available.", Now, Now.AddDays(1)));
         Assert.Null(waiver.Approve(Uuid.CreateVersion4(), "Approver", Now.AddMinutes(1)));
-        return waiver;
+        return ControlTestWaivers.Proof(waiver);
     }
 
     [Fact]
     public void ShouldSnapshotActorGivenDraftDiscard()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var discarderId = Uuid.CreateVersion4();
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId,
             "Author", Now).IsSuccess);
@@ -473,8 +475,8 @@ public sealed class SystemBoundaryTests
             discarderId, "Discarder at discard time", Now));
 
         // Assert
-        var discarded = Assert.IsType<BoundaryDraftDiscarded>(
-            new AggregateScenario<SystemBoundary>(boundary).PendingEvents[1]);
+        var discarded = Assert.IsType<BoundaryDraftDiscardedContent>(
+            boundary.PendingChanges[1]);
         Assert.Equal(ActorReference.ForMember(discarderId, "Discarder at discard time"),
             discarded.Actor);
     }
@@ -483,7 +485,7 @@ public sealed class SystemBoundaryTests
     public void ShouldPreserveApprovedVersionAndRequireLaterDateGivenSuccessor()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var reviewer = Uuid.CreateVersion4();
 
         // Act
@@ -524,7 +526,7 @@ public sealed class SystemBoundaryTests
     public void ShouldAllowDiscardOnlyGivenNeverReviewedDraft()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId,
             "Author", Now).IsSuccess);
         var reviewedBy = Uuid.CreateVersion4();
@@ -538,15 +540,15 @@ public sealed class SystemBoundaryTests
         // Assert
         var referenced = AssertFailure(denied, CommandFailureCode.VersionConflict);
         Assert.Equal(VersionConflictCode.ReferencedDraft, referenced.Version?.Code);
-        Assert.Equal(2, new AggregateScenario<SystemBoundary>(boundary).PendingEvents.Count);
+        Assert.Equal(2, boundary.PendingChanges.Count);
 
-        var unused = new SystemBoundary(TenantId, Uuid.CreateVersion4());
+        var unused = new BoundaryRules(TenantId, Uuid.CreateVersion4());
         var unusedVersion = Uuid.CreateVersion4();
         Assert.True(unused.Create(ProgramId, unusedVersion, Content(),
             AuthorId, "Author", Now).IsSuccess);
         Assert.Null(unused.DiscardDraft(unusedVersion, 1, "Not the right scope",
             AuthorId, "Author", Now));
-        Assert.Equal(2, new AggregateScenario<SystemBoundary>(unused).PendingEvents.Count);
+        Assert.Equal(2, unused.PendingChanges.Count);
         AssertFailure(unused.Revise(unusedVersion, 1, Content(), AuthorId, "Author", Now),
             CommandFailureCode.StateConflict,
             "The approved boundary is immutable. Propose a successor draft.");
@@ -556,7 +558,7 @@ public sealed class SystemBoundaryTests
     public void ShouldPrioritizeVersionConflictGivenReviewedDraftAndOpenSuccessor()
     {
         // Arrange
-        var boundary = new SystemBoundary(TenantId, BoundaryId);
+        var boundary = new BoundaryRules(TenantId, BoundaryId);
         var reviewerId = Uuid.CreateVersion4();
         var reviewId = Uuid.CreateVersion4();
         Assert.True(boundary.Create(ProgramId, VersionId, Content(), AuthorId,
@@ -584,7 +586,7 @@ public sealed class SystemBoundaryTests
         var staleVersion = AssertFailure(staleSuccessor,
             CommandFailureCode.VersionConflict);
         Assert.Equal(VersionId.ToGuid(), staleVersion.Version?.CurrentVersionId);
-        Assert.Equal(4, new AggregateScenario<SystemBoundary>(boundary).PendingEvents.Count);
+        Assert.Equal(4, boundary.PendingChanges.Count);
     }
 
     static CommandFailure AssertFailure(CommandFailure? actual, CommandFailureCode expected,

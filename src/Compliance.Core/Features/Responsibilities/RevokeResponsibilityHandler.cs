@@ -1,38 +1,18 @@
-using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Controls;
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Responsibilities;
 
-public sealed class RevokeResponsibilityHandler(IAggregateExecutor executor,
-    IResponsibilityScopeValidator scopeValidator, ControlOperations controls, CommitmentOperations commitments, TimeProvider clock)
-    : IRequestHandler<RevokeResponsibility>
+public sealed class RevokeResponsibilityHandler(IResponsibilityScopeValidator scopeValidator,
+    ControlOperations controls, CommitmentOperations commitments, BoundaryOperations boundaries) : IRequestHandler<RevokeResponsibility>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<RevokeResponsibility> context,
-        CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<RevokeResponsibility> context, CancellationToken ct) => context.Request.RecordType switch
     {
-        var request = context.Request;
-        if (request.RecordType == SeparationOfDutiesRecordTypes.Control)
-            return await controls.RevokeResponsibilityAsync(context, scopeValidator, ct).ConfigureAwait(false);
-        if (request.RecordType == SeparationOfDutiesRecordTypes.Commitment)
-            return await commitments.RevokeResponsibilityAsync(context, scopeValidator, ct).ConfigureAwait(false);
-        var scopeResult = await scopeValidator.ValidateAsync(request.TenantId, request.Scope, ct)
-            .ConfigureAwait(false);
-        if (!scopeResult.IsSuccess)
-            return scopeResult;
-        if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var actorUserId))
-            return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
-                "Responsibility management requires a Bdgrz user identity."));
-        var actorMemberId = RbacIds.Member(request.TenantId, actorUserId);
-        return await executor.ExecuteAsync(new SystemBoundary(request.TenantId, request.Scope.RecordId), boundary =>
-        {
-            var failure = boundary.RevokeResponsibility(request.Scope, request.AssignmentId,
-                actorMemberId, UserIdentityClaims.BdgrzDisplay(context.Actor, actorUserId),
-                clock.GetUtcNow(), request.Reason);
-            return CommandFailureRequestAdapter.ToOutcome(failure);
-        }, context, ct).ConfigureAwait(false);
-    }
+        SeparationOfDutiesRecordTypes.Control => controls.RevokeResponsibilityAsync(context, scopeValidator, ct),
+        SeparationOfDutiesRecordTypes.Commitment => commitments.RevokeResponsibilityAsync(context, scopeValidator, ct),
+        SeparationOfDutiesRecordTypes.Boundary => boundaries.RevokeResponsibilityAsync(context, scopeValidator, ct),
+        _ => ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation, "The responsibility record type is not supported."))),
+    };
 }

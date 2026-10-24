@@ -451,7 +451,7 @@ public sealed class ProgramRecoveryE2ETests(RestartableBrokerStackFixture broker
         builder.Services.AddPortia()
             .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant,
                 options => options.PollInterval = TimeSpan.FromMilliseconds(10))
-            .AddProjector<BoundaryDirectoryProjector>("BoundaryDirectoryV2",
+            .AddProjector<BoundaryDirectoryProjector>("BoundaryDirectoryV3",
                 WorkloadScope.PerTenant, options => options.PollInterval = TimeSpan.FromMilliseconds(10))
             .UseSingleProcessWorkloads()
             .AddWorkers();

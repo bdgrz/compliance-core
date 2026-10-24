@@ -64,10 +64,13 @@ public sealed class ProgramResourceScopeResolverTests
         var serviceId = Uuid.CreateVersion4();
         var snapshotId = Uuid.CreateVersion4();
         var program = CreatedProgram(tenantId, programId);
-        var boundary = new SystemBoundary(tenantId, boundaryId);
-        Assert.True(boundary.Create(programId, Uuid.CreateVersion4(),
+        await using var native = new BoundaryProjectionScenario();
+        var boundaryRules = new BoundaryRules(tenantId, boundaryId);
+        Assert.True(boundaryRules.Create(programId, Uuid.CreateVersion5(boundaryId, "draft-1"),
             new BoundaryContent("System boundary", "readiness", ["security"], []), actorId,
             "Admin", DateTimeOffset.UtcNow).IsSuccess);
+        await native.PublishAsync(boundaryRules);
+        var boundary = await native.Reader.HydrateAsync(new SystemBoundary(tenantId, boundaryId));
         var service = new ClientService(tenantId, serviceId);
         Assert.True(service.Create(programId, "Service", "Purpose", "Owner", actorId,
             "Admin", DateTimeOffset.UtcNow).IsSuccess);
@@ -105,10 +108,13 @@ public sealed class ProgramResourceScopeResolverTests
         var programId = Uuid.CreateVersion4();
         var boundaryId = Uuid.CreateVersion4();
         var foreignProgram = CreatedProgram(foreignTenantId, programId);
-        var foreignBoundary = new SystemBoundary(foreignTenantId, boundaryId);
-        Assert.True(foreignBoundary.Create(programId, Uuid.CreateVersion4(),
+        await using var native = new BoundaryProjectionScenario();
+        var foreignBoundaryRules = new BoundaryRules(foreignTenantId, boundaryId);
+        Assert.True(foreignBoundaryRules.Create(programId, Uuid.CreateVersion5(boundaryId, "draft-1"),
             new BoundaryContent("System boundary", "readiness", ["security"], []),
             Uuid.CreateVersion4(), "Admin", DateTimeOffset.UtcNow).IsSuccess);
+        await native.PublishAsync(foreignBoundaryRules);
+        var foreignBoundary = await native.Reader.HydrateAsync(new SystemBoundary(foreignTenantId, boundaryId));
         var resolver = new ProgramResourceScopeResolver(new MissingProgramDirectory(),
             new BoundaryDirectory(null), null!, null!,
             new SourceReader(foreignProgram, foreignBoundary));

@@ -18,7 +18,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 /// </summary>
 sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader reader, IAggregateExecutor executor,
     IImmutableContentStore content, TimeProvider clock, EngagementAcceptanceVerifier verifier,
-    IPlatformUserDirectoryReader platformUsers)
+    IPlatformUserDirectoryReader platformUsers, BoundaryReader boundarySources)
     : IRequestHandler<AuthorizeEngagementPracticeCommitments, ReceiverOutcome>
 {
     const int MaximumAttempts = 4;
@@ -63,8 +63,16 @@ sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader read
         var held = await VerifyHoldsAsync(loaded, command, tenantId, ct).ConfigureAwait(false);
         if (held is not null)
             return Result<ReceiverOutcome>.Failure(held);
-        if (await ValidAtAsync(loaded, tenantId, now, ct).ConfigureAwait(false) is { } invalid)
-            return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected(invalid, null));
+        try
+        {
+            if (await ValidAtAsync(loaded, tenantId, now, ct).ConfigureAwait(false) is { } invalid)
+                return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected(invalid, null));
+        }
+        catch (ImmutableContentUnavailableException exception)
+        {
+            return Result<ReceiverOutcome>.Failure(EngagementAcceptanceVerifier.Transient(
+                $"The pinned source content is not visible yet: {exception.Message}"));
+        }
 
         var proofs = await content.WriteJsonAsync(IndependenceContent.Realm(tenantId),
             Uuid.CreateVersion5(command.Source.EventId, "engagement-independence-authorization-proofs"),
@@ -133,7 +141,9 @@ sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader read
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            return EngagementAcceptanceVerifier.Permanent($"The grant proofs cannot be verified: {exception.Message}");
+            return exception is ImmutableContentUnavailableException
+                ? EngagementAcceptanceVerifier.Transient($"The grant proofs are not visible yet: {exception.Message}")
+                : EngagementAcceptanceVerifier.Permanent($"The grant proofs cannot be verified: {exception.Message}");
         }
 
         if (uses.Length != loaded.Requirements!.Count || reservations.Length != loaded.Subjects!.Count)
@@ -215,13 +225,12 @@ sealed class AuthorizeEngagementPracticeCommitmentsHandler(IAggregateReader read
                 loaded.Intent!.Evidence, ct).ConfigureAwait(false);
             if (evidence.Proof?.Boundary is { } boundary)
             {
-                var source = await reader.HydrateAsync(new SystemBoundary(tenantId, boundary.BoundaryId), ct)
-                    .ConfigureAwait(false);
+                var source = await boundarySources.ReadAsync(tenantId, boundary.BoundaryId, ct).ConfigureAwait(false);
                 if (!source.IsCreated || !source.IsVisible || !source.IsVersionApproved(boundary.VersionId))
                     return "The selected boundary version is no longer a currently retained approved version.";
             }
         }
-        catch (ImmutableContentIntegrityException exception)
+        catch (ImmutableContentIntegrityException exception) when (exception is not ImmutableContentUnavailableException)
         {
             return $"The pinned source content cannot be verified: {exception.Message}";
         }

@@ -149,7 +149,7 @@ public sealed class AttestProviderManagementWriteWallTests
         await using var programBatch = await programs.BeginAsync(new ProjectionBatchContext(
             new CheckpointIdentity("ProgramDirectory", pattern), ProjectionCheckpoint.Start));
         await using var boundaryBatch = await boundaries.BeginAsync(new ProjectionBatchContext(
-            new CheckpointIdentity("BoundaryDirectoryV2", pattern), ProjectionCheckpoint.Start));
+            new CheckpointIdentity(FitzBoundaryDirectory.ProjectorName, pattern), ProjectionCheckpoint.Start));
         var cursor = ProjectionCheckpoint.Start.Cursor;
         await foreach (var record in events.ReadAsync(pattern, cursor, CancellationToken.None))
         {

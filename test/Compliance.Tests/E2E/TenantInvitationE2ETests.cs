@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Content;
 using System.Globalization;
 using System.Net;
@@ -248,15 +249,16 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
         _ = await memberMcp.When("bdgrz.rbac.team.get", teamArguments).ExpectSuccess();
 
         var boundaryId = Uuid.CreateVersion4();
-        var boundaryVersionId = Uuid.CreateVersion4();
-        var boundary = new SystemBoundary(tenantId, boundaryId);
+        var boundaryVersionId = Uuid.CreateVersion5(boundaryId, "draft-1");
+        var boundary = new BoundaryRules(tenantId, boundaryId);
         Assert.True(boundary.Create(Uuid.CreateVersion4(), boundaryVersionId,
             new BoundaryContent("Member responsibility", "readiness", ["security"], []),
             Uuid.Parse(administratorId, CultureInfo.InvariantCulture), "Administrator",
             DateTimeOffset.UtcNow).IsSuccess);
         using (var scope = factory.Services.CreateScope())
-            await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(
-                boundary, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+            await BoundarySeeds.AppendAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                scope.ServiceProvider.GetRequiredService<IAggregateWriter>(),
+                scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), boundary);
         using var assignedResponsibility = await administratorClient.PostAsJsonAsync(
             $"/api/v1/tenants/{tenantId}/responsibilities", new
             {

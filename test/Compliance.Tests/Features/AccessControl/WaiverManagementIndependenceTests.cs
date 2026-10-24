@@ -150,7 +150,7 @@ public sealed class WaiverManagementIndependenceTests
         public Uuid Approver { get; } = Uuid.CreateVersion4();
         public Uuid Beneficiary { get; } = Uuid.CreateVersion4();
         Uuid Boundary { get; } = Uuid.CreateVersion4();
-        Uuid Version { get; } = Uuid.CreateVersion4();
+        Uuid Version => Uuid.CreateVersion5(Boundary, "draft-1");
         public SeparationOfDutiesWaiverScope Scope => new("boundary", Boundary, Version, 1, "review");
         public ServiceProvider Provider { get; private set; } = null!;
         public Permissions Permissions { get; } = new();
@@ -174,8 +174,9 @@ public sealed class WaiverManagementIndependenceTests
                 new HashSet<Uuid> { fixture.Requester, fixture.Approver, fixture.Beneficiary });
             services.AddSingleton<ITenantMembershipDirectoryReader>(fixture.Memberships);
             services.AddSingleton<IPermissionAuthorizer>(fixture.Permissions);
+            services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(fixture.Permissions));
             fixture.Provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-            await ProgramManagementServices.SeedAsync(fixture.Provider, new SystemBoundary(fixture.Tenant, fixture.Boundary), boundary =>
+            await ProgramManagementServices.SeedAsync(fixture.Provider, new BoundaryRules(fixture.Tenant, fixture.Boundary), boundary =>
                 boundary.Create(Uuid.CreateVersion4(), fixture.Version,
                     new BoundaryContent("Scoped management record", "readiness", ["security"], []),
                     RbacIds.Member(fixture.Tenant, fixture.Beneficiary), "Client author", DateTimeOffset.UtcNow));

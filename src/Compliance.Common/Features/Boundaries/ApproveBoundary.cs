@@ -4,7 +4,10 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Boundaries;
 
 [Discriminator("bdgrz.boundary.approve", 1)]
-public sealed record ApproveBoundary(Uuid TenantId, Uuid BoundaryId, Uuid DraftVersionId,
+public sealed record ApproveBoundary(Uuid CommandId, Uuid TenantId, Uuid BoundaryId, Uuid DraftVersionId,
     long ExpectedRevision, Uuid AcceptedReviewDecisionId, DateOnly EffectiveFrom,
     string Rationale, string ImpactDigest, Uuid? SeparationOfDutiesWaiverId = null)
-    : IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest, IBoundaryAuthoringRequest, IBoundaryProgramResourceRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}
