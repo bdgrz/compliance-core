@@ -83,7 +83,10 @@
     "source-publication-file-triage.json",
     "source-publication-integration-jev.json",
     "protected-store-file-reviews.json",
-    "protected-store-integration-jev.json"
+    "protected-store-integration-jev.json",
+    "tenant-lifecycle-file-reviews.json",
+    "tenant-lifecycle-file-triage.json",
+    "tenant-lifecycle-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -213,10 +216,27 @@
     {
       "id": "configured-protected-response-store",
       "slice": "S31",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "focusedGreen": "41passed/0failed including13crypto/actualDI",
       "fullUnitGreen": "5587passed/0failed",
-      "jev": "5currentfiles;0highsignals;directintegrationmerge.74"
+      "jev": "5currentfiles;0highsignals;directintegrationmerge.74",
+      "pullRequest": 1100,
+      "mergeCommit": "942a0e08a9cff546d3ea3cc63eaab1561c99a638"
+    },
+    {
+      "id": "native-tenant-lifecycle",
+      "status": "validated_awaiting_merge",
+      "behavioralRed": "8owner/handler failures +1productionHTTP204vs200 failure",
+      "focusedGreen": "419passed/0failed",
+      "fullUnitGreen": "5605passed/0failed",
+      "jev": "16currentfiles;1signaltriaged;directintegrationmerge.86"
+    },
+    {
+      "id": "native-first-response-http-transport",
+      "status": "queued_unblocked",
+      "externalDependency": false,
+      "evidence": "Installed plain Portia Result HTTP mapper returns204; native frozen FirstResponseDescriptor200/202 does not alone control HTTP. Confirmed by production lifecycle test. Three tenant lifecycle commands repaired with typed UnitResult; other immediateUnit and pending202 producers need correct descriptor-aware transport adaptation and actual wire proof.",
+      "nextWork": "Implement scoped native-first-response observer/filter or equivalent typed transport adapters; preserve actual first status/body, current auth, errors, unavailable/corrupt body classification and internal-child isolation. No global operation lookup required."
     }
   ],
   "resolved": [

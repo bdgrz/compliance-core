@@ -14,10 +14,10 @@ static class TenantDirectoryStatus
         return domainEvent switch
         {
             TenantSlugConfirmed when current.RequiresActivation => "provisioning",
-            TenantSlugConfirmed or TenantReactivated or TenantActivated or TenantActivatedV2 => "active",
+            TenantSlugConfirmed or TenantReactivated or TenantReactivatedV2 or TenantActivated or TenantActivatedV2 => "active",
             TenantSlugRejected => "rejected",
-            TenantSuspended => "suspended",
-            TenantOffboardingStarted => "offboarding",
+            TenantSuspended or TenantSuspendedV2 => "suspended",
+            TenantOffboardingStarted or TenantOffboardingStartedV2 => "offboarding",
             _ => null,
         };
     }

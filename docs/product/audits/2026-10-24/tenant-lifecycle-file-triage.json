@@ -1,0 +1,19 @@
+{
+  "reviewed": 16,
+  "blockedReviews": 0,
+  "signalsTriaged": 1,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+      "sha256": "d4c0e369ac1943f11a5a26125e7739af1a374e702b51bc4e1d4039cb7433b67c",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.6,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.46
+      },
+      "classification": "native_lifecycle_recovery_verified",
+      "evidence": "Compact scalar tenant state and selected NativeAcceptance retained. Three actual producers now resolve native original actor/intent/revision before state checks and async Unit preparation. Eight actual-handler baseline RED cases prove original replay does not restore old state and changed actor/reason conflicts. Additional tests cover original revision, durable no-change decisions, exact result envelopes, native directory projection, malformed tenant/actor/revision facts and missing/corrupt original response recovery without duplicate append. Trusted platform authorizer remains required; native reducer independently validates exact owner, platform actor, original revision, lifecycle, result schema and attribution. Other existing slug/bootstrap behavior stays covered."
+    }
+  ]
+}

@@ -1,16 +1,15 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
-public sealed class ReactivateTenantHandler(IAggregateExecutor executor, TimeProvider clock) : IRequestHandler<ReactivateTenant>
+public sealed class ReactivateTenantHandler(TenantLifecycleOperations operations) : IRequestHandler<ReactivateTenant, UnitResult>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<ReactivateTenant> context, CancellationToken ct)
+    public async ValueTask<Result<UnitResult>> HandleAsync(IRequestContext<ReactivateTenant> context, CancellationToken ct)
     {
-        var operatorUserId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId)
-            ? userId
-            : throw new InvalidOperationException("PlatformOperatorAuthorizer must reject this actor.");
-        return executor.ExecuteAsync(new Tenant(context.Request.TenantId),
-            tenant => AggregateOutcome.CommitOnSuccess(
-                tenant.Reactivate(operatorUserId, context.Request.Reason, clock.GetUtcNow())), context, ct);
+        var request = context.Request;
+        var result = await operations.ExecuteAsync(context, request.TenantId, request.CommandId, nameof(ReactivateTenant),
+            request.Reason, null, ct).ConfigureAwait(false);
+        return result.IsSuccess ? Result<UnitResult>.Success(new UnitResult()) : Result<UnitResult>.Failure(result.Error!);
     }
 }

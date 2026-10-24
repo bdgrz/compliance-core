@@ -8,8 +8,11 @@ public sealed partial class TenantDirectoryProjector(ITenantDirectoryProjection 
       IProjectorHandler<TenantSlugConfirmed>,
       IProjectorHandler<TenantSlugRejected>,
       IProjectorHandler<TenantSuspended>,
+      IProjectorHandler<TenantSuspendedV2>,
       IProjectorHandler<TenantReactivated>,
+      IProjectorHandler<TenantReactivatedV2>,
       IProjectorHandler<TenantOffboardingStarted>,
+      IProjectorHandler<TenantOffboardingStartedV2>,
       IProjectorHandler<TenantActivated>,
       IProjectorHandler<TenantActivatedV2>,
       IProjectorHandler<TenantSlugChanged>
@@ -26,10 +29,19 @@ public sealed partial class TenantDirectoryProjector(ITenantDirectoryProjection 
     public ValueTask HandleAsync(TenantSuspended ev, IProjectorContext context, CancellationToken ct) =>
         projection.ApplyAsync(ev, ct);
 
+    public ValueTask HandleAsync(TenantSuspendedV2 ev, IProjectorContext context, CancellationToken ct) =>
+        projection.ApplyAsync(ev, ct);
+
     public ValueTask HandleAsync(TenantReactivated ev, IProjectorContext context, CancellationToken ct) =>
         projection.ApplyAsync(ev, ct);
 
+    public ValueTask HandleAsync(TenantReactivatedV2 ev, IProjectorContext context, CancellationToken ct) =>
+        projection.ApplyAsync(ev, ct);
+
     public ValueTask HandleAsync(TenantOffboardingStarted ev, IProjectorContext context, CancellationToken ct) =>
+        projection.ApplyAsync(ev, ct);
+
+    public ValueTask HandleAsync(TenantOffboardingStartedV2 ev, IProjectorContext context, CancellationToken ct) =>
         projection.ApplyAsync(ev, ct);
 
     public ValueTask HandleAsync(TenantActivated ev, IProjectorContext context, CancellationToken ct) =>

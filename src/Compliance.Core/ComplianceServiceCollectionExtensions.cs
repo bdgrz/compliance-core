@@ -681,6 +681,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(ProtectedResponseKeyRing.FromConfiguration(configuration));
         services.AddSingleton<IProtectedResponseContentStore, AesProtectedResponseContentStore>();
         services.AddScoped<NativeOperationExecutor>();
+        services.AddScoped<TenantLifecycleOperations>();
         services.AddScoped<MethodologyTemplateContributionOperations>();
         services.AddScoped<FitzMethodologyTemplateDirectory>();
         services.AddScoped<IMethodologyTemplateDirectoryReader>(provider => provider.GetRequiredService<FitzMethodologyTemplateDirectory>());

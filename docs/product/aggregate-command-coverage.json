@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "dd3ea0fc3d6f7d5eff8d10d65fc96abb8221e07f",
+  "sourceCommit": "942a0e08a9cff546d3ea3cc63eaab1561c99a638",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 508,
-    "factsWithReducer": 485,
-    "factsWithAggregateEmitter": 483,
+    "domainEventContracts": 511,
+    "factsWithReducer": 488,
+    "factsWithAggregateEmitter": 486,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 21,
     "legacyReducerOnlyFacts": 2,
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 728,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 39,
+    "unwiredAggregateProducerOperations": 45,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 26
+      "no_registered_request_route": 32
     },
     "factReplayGuardRows": 0
   },
@@ -8175,6 +8175,24 @@
       "note": ""
     },
     {
+      "fact": "TenantOffboardingStartedV2",
+      "contract": "src/Compliance.Common/Features/Tenants/TenantOffboardingStartedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "Tenant",
+          "source": "src/Compliance.Core/Features/Tenants/Tenant.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Tenants/Tenant.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantLifecycleIdentityTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "TenantReactivated",
       "contract": "src/Compliance.Common/Features/Tenants/TenantReactivated.cs",
       "reducers": [
@@ -8191,6 +8209,24 @@
         "test/Compliance.Tests/Features/Tenants/TenantContractCompatibilityTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantDirectoryStatusTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TenantReactivatedV2",
+      "contract": "src/Compliance.Common/Features/Tenants/TenantReactivatedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "Tenant",
+          "source": "src/Compliance.Core/Features/Tenants/Tenant.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Tenants/Tenant.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantLifecycleIdentityTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8460,6 +8496,24 @@
         "test/Compliance.Tests/Features/Tenants/FitzTenantDirectoryReaderTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantContractCompatibilityTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TenantSuspendedV2",
+      "contract": "src/Compliance.Common/Features/Tenants/TenantSuspendedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "Tenant",
+          "source": "src/Compliance.Core/Features/Tenants/Tenant.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Tenants/Tenant.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantLifecycleIdentityTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -12018,7 +12072,9 @@
         "TenantActivated",
         "TenantActivatedV2",
         "TenantOffboardingStarted",
+        "TenantOffboardingStartedV2",
         "TenantReactivated",
+        "TenantReactivatedV2",
         "TenantRegistered",
         "TenantSlugChangeRejected",
         "TenantSlugChangeRequested",
@@ -12028,16 +12084,14 @@
         "TenantSlugSurrenderConfirmed",
         "TenantSlugSurrenderFailed",
         "TenantSlugSurrenderRequested",
-        "TenantSuspended"
+        "TenantSuspended",
+        "TenantSuspendedV2"
       ],
       "commandRequests": [
         "ActivateTenant",
         "ChangeTenantSlug",
-        "OffboardTenant",
-        "ReactivateTenant",
         "RegisterTenant",
-        "RequestTenantSlugSurrender",
-        "SuspendTenant"
+        "RequestTenantSlugSurrender"
       ],
       "internalReactionRequests": [
         "ConfirmTenantSlug",
@@ -24257,7 +24311,7 @@
     {
       "request": "OffboardTenant",
       "contract": "src/Compliance.Common/Features/Tenants/OffboardTenant.cs",
-      "interfaces": "IRequest, ICallable, IPlatformOperatorRequest",
+      "interfaces": "IRequest<UnitResult>, ICallable, IPlatformOperatorRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -24267,14 +24321,11 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Tenant"
-      ],
-      "aggregateTargets": [
-        "Tenant"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantLifecycleIdentityTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantTests.cs"
       ],
       "note": ""
@@ -25584,7 +25635,7 @@
     {
       "request": "ReactivateTenant",
       "contract": "src/Compliance.Common/Features/Tenants/ReactivateTenant.cs",
-      "interfaces": "IRequest, ICallable, IPlatformOperatorRequest",
+      "interfaces": "IRequest<UnitResult>, ICallable, IPlatformOperatorRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25594,14 +25645,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Tenant"
-      ],
-      "aggregateTargets": [
-        "Tenant"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantLifecycleIdentityTests.cs"
+      ],
       "note": ""
     },
     {
@@ -31098,7 +31147,7 @@
     {
       "request": "SuspendTenant",
       "contract": "src/Compliance.Common/Features/Tenants/SuspendTenant.cs",
-      "interfaces": "IRequest, ICallable, IPlatformOperatorRequest",
+      "interfaces": "IRequest<UnitResult>, ICallable, IPlatformOperatorRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -31108,14 +31157,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "Tenant"
-      ],
-      "aggregateTargets": [
-        "Tenant"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Tenants/TenantLifecycleIdentityTests.cs"
+      ],
       "note": ""
     },
     {
@@ -31587,6 +31634,72 @@
       "aggregate": "Tenant",
       "method": "Activate",
       "methodArgumentCount": 2,
+      "source": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "TenantOffboardingStartedV2",
+      "aggregate": "Tenant",
+      "method": "ApplyLifecycle",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "TenantReactivatedV2",
+      "aggregate": "Tenant",
+      "method": "ApplyLifecycle",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "TenantSuspendedV2",
+      "aggregate": "Tenant",
+      "method": "ApplyLifecycle",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "TenantReactivated",
+      "aggregate": "Tenant",
+      "method": "Reactivate",
+      "methodArgumentCount": 3,
+      "source": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "TenantOffboardingStarted",
+      "aggregate": "Tenant",
+      "method": "StartOffboarding",
+      "methodArgumentCount": 3,
+      "source": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "TenantSuspended",
+      "aggregate": "Tenant",
+      "method": "Suspend",
+      "methodArgumentCount": 3,
       "source": "src/Compliance.Core/Features/Tenants/Tenant.cs",
       "callerSources": [],
       "classification": "no_registered_request_route",

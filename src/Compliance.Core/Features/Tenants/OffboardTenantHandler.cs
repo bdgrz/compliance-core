@@ -1,17 +1,15 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
-public sealed class OffboardTenantHandler(IAggregateExecutor executor, TimeProvider clock)
-    : IRequestHandler<OffboardTenant>
+public sealed class OffboardTenantHandler(TenantLifecycleOperations operations) : IRequestHandler<OffboardTenant, UnitResult>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<OffboardTenant> context, CancellationToken ct)
+    public async ValueTask<Result<UnitResult>> HandleAsync(IRequestContext<OffboardTenant> context, CancellationToken ct)
     {
-        var operatorUserId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId)
-            ? userId
-            : throw new InvalidOperationException("PlatformOperatorAuthorizer must reject this actor.");
-        return executor.ExecuteAsync(new Tenant(context.Request.TenantId),
-            tenant => AggregateOutcome.CommitOnSuccess(
-                tenant.StartOffboarding(operatorUserId, context.Request.Reason, clock.GetUtcNow())), context, ct);
+        var request = context.Request;
+        var result = await operations.ExecuteAsync(context, request.TenantId, request.CommandId, nameof(OffboardTenant),
+            request.Reason, request.ExpectedRevision, ct).ConfigureAwait(false);
+        return result.IsSuccess ? Result<UnitResult>.Success(new UnitResult()) : Result<UnitResult>.Failure(result.Error!);
     }
 }

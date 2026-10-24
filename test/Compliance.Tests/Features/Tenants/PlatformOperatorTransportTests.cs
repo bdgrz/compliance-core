@@ -181,6 +181,41 @@ public sealed class PlatformOperatorTransportTests
         Assert.Throws<InvalidOperationException>(() => serializer.DeserializeEnvelope(Encoding.UTF8.GetBytes(tampered.ToJsonString())));
     }
 
+    [Fact]
+    public async Task ShouldReturnOriginalUnitBodyGivenNativeLifecycleHttpRetry()
+    {
+        // Arrange
+        await using var factory = Factory();
+        using var client = factory.CreateClient();
+        var actor = await LoginAndSeedAsync(factory, client);
+        var tenantId = Uuid.CreateVersion4();
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var tenant = new Tenant(tenantId);
+            Assert.True(tenant.Register(actor, "Company", "lifecycle-company").IsSuccess);
+            Assert.True(tenant.ConfirmSlug("lifecycle-company").IsSuccess);
+            await scope.ServiceProvider.GetRequiredService<IAggregateWriter>().SaveAsync(tenant,
+                new RequestDispatchContext(RequestActor.System));
+        }
+        var id = Uuid.CreateVersion4();
+        var body = new Dictionary<string, object> { ["reason"] = "Platform decision", ["expected_revision"] = 2 };
+        var path = $"/api/v1/tenants/{tenantId}/suspensions/{id}";
+
+        // Act
+        using var first = await client.PutAsJsonAsync(path, body);
+        using var replay = await client.PutAsJsonAsync(path, body);
+        await using var verification = factory.Services.CreateAsyncScope();
+        var current = await verification.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new Tenant(tenantId));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
+        Assert.Equal("{}", await first.Content.ReadAsStringAsync());
+        Assert.Equal("{}", await replay.Content.ReadAsStringAsync());
+        Assert.True(current.IsSuspended);
+        Assert.Equal(3UL, current.Version);
+    }
+
     static void AssertAccepted(Uuid commandId, Uuid actor, PlatformOperatorGranted fact)
     {
         Assert.Equal(commandId, fact.CommandId);
