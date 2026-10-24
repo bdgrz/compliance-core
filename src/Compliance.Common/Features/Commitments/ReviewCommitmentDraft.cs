@@ -9,10 +9,13 @@ namespace Bdgrz.Compliance.Features.Commitments;
 ///     provenance. Acceptance does not make the commitment effective; a separate approval does.
 ///     HTTP-only: it is deliberately not an MCP tool.
 /// </summary>
-[Discriminator("bdgrz.commitment.draft.review", 1)]
-public sealed record ReviewCommitmentDraft(Uuid TenantId, Uuid ProgramId, Uuid DraftId,
+[Discriminator("bdgrz.commitment.draft.review", 2)]
+public sealed record ReviewCommitmentDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid DraftId,
     long ExpectedRevision, string Outcome, string Rationale, string? OwnerReference = null,
     string? Applicability = null, string? Interpretation = null,
     string? InterpretationNote = null, string? SourceVerifiedReference = null,
     string? SourceEvidence = null, Uuid? SeparationOfDutiesWaiverId = null)
-    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
@@ -18,16 +19,23 @@ public sealed class ReviewPolicyDraftHandler(IAggregateExecutor executor,
                 "Policy sign-off requires personal HTTP submission."));
         var request = context.Request;
         var actor = PolicyActor.From(context, request.TenantId);
+        var operation = AuthoredCommandReplay.Create(new Policy(request.TenantId, request.PolicyId, request.CommandId), request.CommandId,
+            nameof(ReviewPolicyDraft), actor.MemberId, request.ExpectedRevision, request, clock.GetUtcNow());
+        var replayOwner = await reader.HydrateAsync(new Policy(request.TenantId, request.PolicyId, request.CommandId), ct).ConfigureAwait(false);
+        if (AuthoredCommandReplay.TryReplay(replayOwner.ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure is null ? Result<PolicyDecisionView>.Success(replayOwner.FindDecision(request.CommandId)!)
+                : Result<PolicyDecisionView>.Failure(replayFailure.ToRequestError());
+
         var waiver = await PolicySource.WaiverAsync(reader, request.TenantId,
             request.SeparationOfDutiesWaiverId, ct).ConfigureAwait(false);
-        return await executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId),
+        return await executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId, request.CommandId),
             policy =>
             {
                 var failure = policy.Review(request.ProgramId, request.ExpectedRevision,
-                    context.RequestId, request.Outcome, request.Rationale, actor.Reference,
-                    actor.MemberId, clock.GetUtcNow(), waiver);
+                    request.CommandId, request.Outcome, request.Rationale, actor.Reference,
+                    actor.MemberId, clock.GetUtcNow(), waiver, operation: operation);
                 return CommandFailureRequestAdapter.ToOutcome(failure,
-                    policy.FindDecision(context.RequestId)!);
+                    policy.FindDecision(request.CommandId)!);
             }, context, ct).ConfigureAwait(false);
     }
 }

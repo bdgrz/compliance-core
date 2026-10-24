@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -11,9 +12,13 @@ public sealed class ReviewTemplateContributionHandler(IAggregateExecutor executo
     {
         var request = context.Request;
         var actor = MethodologyTemplateCommandActor.For(context, Uuid.Empty);
+        var operation = AuthoredCommandReplay.Create(new MethodologyTemplateContribution(request.TenantId,
+                request.ContributionId, request.CommandId), request.CommandId,
+            nameof(ReviewTemplateContribution), actor.MemberId, null, request, clock.GetUtcNow(), "platform_operator");
+
         return executor.ExecuteAsync(new MethodologyTemplateContribution(request.TenantId,
-                request.ContributionId), contribution => CommandFailureRequestAdapter.ToOutcome(
+                request.ContributionId, request.CommandId), contribution => CommandFailureRequestAdapter.ToOutcome(
                 contribution.Review(contribution.Revision, request.Outcome, request.ReviewNotes,
-                    actor.MemberId, actor.Display, clock.GetUtcNow())), context, ct);
+                    actor.MemberId, actor.Display, clock.GetUtcNow(), operation: operation)), context, ct);
     }
 }

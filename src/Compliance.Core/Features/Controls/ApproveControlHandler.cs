@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Bdgrz.Compliance.Features.Workforce;
@@ -23,11 +24,19 @@ public sealed class ApproveControlHandler(IAggregateExecutor executor, IAggregat
             !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Control decision requires a personal HTTP invocation."));
+        var request = context.Request;
+        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
+            ? subject
+            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
+        var operation = AuthoredCommandReplay.Create(new ControlDraft(request.TenantId, request.ControlId, request.CommandId), request.CommandId,
+            nameof(ApproveControl), RbacIds.Member(request.TenantId, userId), request.ExpectedRevision, request, clock.GetUtcNow());
+        var replayOwner = await reader.HydrateAsync(new ControlDraft(request.TenantId, request.ControlId, request.CommandId), ct).ConfigureAwait(false);
+        if (AuthoredCommandReplay.Unit(replayOwner.ReplayAcceptance, operation) is { } replay)
+            return replay;
         if (!releaseGate.IsEnabled)
             return Result.Failure(ControlActivationReleaseGate.Unavailable);
-        var request = context.Request;
         var current = await reader.HydrateAsync(new ControlDraft(request.TenantId,
-            request.ControlId), ct).ConfigureAwait(false);
+            request.ControlId, request.CommandId), ct).ConfigureAwait(false);
         if (!current.IsVisible || current.ProgramId != request.ProgramId)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The control draft was not found."));
@@ -72,27 +81,27 @@ public sealed class ApproveControlHandler(IAggregateExecutor executor, IAggregat
                         ? RbacIds.Member(request.TenantId, correlated)
                         : null, designated.DesignationId);
         }
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
+
         SeparationOfDutiesWaiver? waiver = null;
         if (request.SeparationOfDutiesWaiverId is { } waiverId)
             waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId,
                 waiverId), ct).ConfigureAwait(false);
-        return await executor.ExecuteAsync(new ControlDraft(request.TenantId, request.ControlId),
+        return await executor.ExecuteAsync(new ControlDraft(request.TenantId, request.ControlId, request.CommandId),
             control =>
             {
+                if (AuthoredCommandReplay.Unit(control.ReplayAcceptance, operation) is { } replay)
+                    return AggregateOutcome.Discard(replay);
                 // Applicability and ownership were verified at this revision; an interleaved
                 // content change invalidates them.
                 if (control.Revision != request.ExpectedRevision)
                     return AggregateOutcome.Discard(Result.Failure(VersionedRecordRules
                         .StaleRevision("control draft", control.Revision).ToRequestError()));
                 return CommandFailureRequestAdapter.ToOutcome(control.Approve(request.ProgramId,
-                    request.ExpectedRevision, context.RequestId, request.AcceptedReviewDecisionId,
+                    request.ExpectedRevision, request.CommandId, request.AcceptedReviewDecisionId,
                     request.EffectiveFrom, request.Rationale, verifiedOwners,
                     RbacIds.Member(request.TenantId, userId),
                     UserIdentityClaims.BdgrzDisplay(context.Actor, userId), now, waiver,
-                    request.ImpactDigest, verifiedPerson));
+                    request.ImpactDigest, verifiedPerson, operation: operation));
             },
             context, ct).ConfigureAwait(false);
     }

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
@@ -12,6 +13,9 @@ public sealed record CommitmentApproved(Uuid TenantId, Uuid ProgramId, Uuid Draf
     string ActorDisplay, DateTimeOffset DecidedAt, Uuid? SeparationOfDutiesWaiverId = null)
     : DomainEvent
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public OperationProvenance? Operation { get; init; }
+
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }
 

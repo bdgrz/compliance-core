@@ -259,7 +259,7 @@ public sealed class PersonalControlDecisionTransportTests
         async Task ReviewHttpAsync()
         {
             AcceptedReview = Uuid.CreateVersion4();
-            await HttpAsync(_provider, Reviewer, new ReviewControl(Tenant, Program, Control, _revision, "accept", "Independent review."),
+            await HttpAsync(_provider, Reviewer, new ReviewControl(AcceptedReview, Tenant, Program, Control, _revision, "accept", "Independent review."),
                 metadata: new RequestMetadata(AcceptedReview, AcceptedReview, null));
         }
 
@@ -267,8 +267,8 @@ public sealed class PersonalControlDecisionTransportTests
         {
             IRequest request = action switch
             {
-                "review" => new ReviewControl(Tenant, Program, Control, _revision, "accept", "Independent review."),
-                "approval" => new ApproveControl(Tenant, Program, Control, revision ?? _revision, review ?? AcceptedReview, new DateOnly(2026, 10, 1), "Ready to operate."),
+                "review" => new ReviewControl(Uuid.CreateVersion4(), Tenant, Program, Control, _revision, "accept", "Independent review."),
+                "approval" => new ApproveControl(Uuid.CreateVersion4(), Tenant, Program, Control, revision ?? _revision, review ?? AcceptedReview, new DateOnly(2026, 10, 1), "Ready to operate."),
                 _ => new RetireControl(Tenant, Program, Control, _revision, review ?? AcceptedReview, digest ?? _digest, "Retire at quarter end.")
             };
             await using var scope = _provider.CreateAsyncScope();

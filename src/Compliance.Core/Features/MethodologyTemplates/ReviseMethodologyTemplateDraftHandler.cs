@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -9,11 +10,14 @@ public sealed class ReviseMethodologyTemplateDraftHandler(IAggregateExecutor exe
     public ValueTask<Result> HandleAsync(IRequestContext<ReviseMethodologyTemplateDraft> context,
         CancellationToken ct)
     {
-        var actor = MethodologyTemplateCommandActor.For(context, Uuid.Empty);
+
         var request = context.Request;
-        return executor.ExecuteAsync(new MethodologyTemplate(request.TemplateId), template =>
+        var actor = MethodologyTemplateCommandActor.For(context, Uuid.Empty);
+        var operation = AuthoredCommandReplay.Create(new MethodologyTemplate(request.TemplateId, request.CommandId), request.CommandId,
+            nameof(ReviseMethodologyTemplateDraft), actor.MemberId, request.ExpectedRevision, request, clock.GetUtcNow(), "platform_operator");
+        return executor.ExecuteAsync(new MethodologyTemplate(request.TemplateId, request.CommandId), template =>
                 CommandFailureRequestAdapter.ToOutcome(template.ReviseDraft(request.ExpectedRevision,
-                    request.Content, request.ChangeNotes, actor.MemberId, actor.Display, clock.GetUtcNow())),
+                    request.Content, request.ChangeNotes, actor.MemberId, actor.Display, clock.GetUtcNow(), operation: operation)),
             context, ct);
     }
 }

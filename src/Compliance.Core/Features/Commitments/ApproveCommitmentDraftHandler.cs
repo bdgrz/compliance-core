@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
@@ -16,6 +17,14 @@ public sealed class ApproveCommitmentDraftHandler(IAggregateExecutor executor,
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Commitment sign-off requires personal HTTP submission."));
         var request = context.Request;
+        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
+            ? subject
+            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
+        var operation = AuthoredCommandReplay.Create(new CommitmentDraft(request.TenantId, request.DraftId, request.CommandId), request.CommandId,
+            nameof(ApproveCommitmentDraft), RbacIds.Member(request.TenantId, userId), request.ExpectedRevision, request, clock.GetUtcNow());
+        var replayOwner = await reader.HydrateAsync(new CommitmentDraft(request.TenantId, request.DraftId, request.CommandId), ct).ConfigureAwait(false);
+        if (AuthoredCommandReplay.Unit(replayOwner.ReplayAcceptance, operation) is { } replay)
+            return replay;
         var preview = await impact.PreviewAsync(new PreviewCommitmentImpact(request.TenantId,
             request.ProgramId, request.DraftId, request.ExpectedRevision), ct)
             .ConfigureAwait(false);
@@ -27,20 +36,18 @@ public sealed class ApproveCommitmentDraftHandler(IAggregateExecutor executor,
         if (!StringComparer.Ordinal.Equals(request.ImpactDigest, preview.Value.Digest))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The impact preview changed. Reload it before approval."));
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
+
         SeparationOfDutiesWaiver? waiver = null;
         if (request.SeparationOfDutiesWaiverId is { } waiverId)
             waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId,
                 waiverId), ct).ConfigureAwait(false);
-        return await executor.ExecuteAsync(new CommitmentDraft(request.TenantId, request.DraftId),
+        return await executor.ExecuteAsync(new CommitmentDraft(request.TenantId, request.DraftId, request.CommandId),
             draft => CommandFailureRequestAdapter.ToOutcome(draft.Approve(request.ProgramId,
-                request.ExpectedRevision, context.RequestId, request.AcceptedReviewDecisionId,
+                request.ExpectedRevision, request.CommandId, request.AcceptedReviewDecisionId,
                 request.EffectiveFrom, request.Rationale, request.ImpactDigest,
                 RbacIds.Member(request.TenantId, userId),
                 UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow(),
-                waiver)),
+                waiver, operation: operation)),
             context, ct).ConfigureAwait(false);
     }
 }

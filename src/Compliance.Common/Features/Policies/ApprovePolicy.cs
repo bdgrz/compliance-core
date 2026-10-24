@@ -8,8 +8,11 @@ namespace Bdgrz.Compliance.Features.Policies;
 ///     The personal approval that makes the exact reviewed revision an immutable effective
 ///     version. HTTP-only. A successor requires the acknowledged impact preview digest.
 /// </summary>
-[Discriminator("bdgrz.policy.approve", 1)]
-public sealed record ApprovePolicy(Uuid TenantId, Uuid ProgramId, Uuid PolicyId,
+[Discriminator("bdgrz.policy.approve", 2)]
+public sealed record ApprovePolicy(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid PolicyId,
     long ExpectedRevision, Uuid AcceptedReviewDecisionId, DateOnly EffectiveFrom, bool Major,
     string Rationale, string? ImpactDigest = null, Uuid? SeparationOfDutiesWaiverId = null)
-    : IRequest<PolicyVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<PolicyVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Examinations;
@@ -7,4 +9,8 @@ namespace Bdgrz.Compliance.Features.Examinations;
 public sealed record ExaminationEngagementRevised(
     Uuid TenantId,
     ExaminationEngagementView Engagement,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    DateTimeOffset OccurredAt) : DomainEvent
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public OperationProvenance? Operation { get; init; }
+}

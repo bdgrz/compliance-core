@@ -1,0 +1,80 @@
+{
+  "reviewed": 58,
+  "blockedReviews": 0,
+  "signalsTriaged": 6,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Commitments/CreateCommitmentDraftHandler.cs",
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.68,
+        "recovery_gap": 0.51,
+        "incomplete_path": 0.42
+      },
+      "sha256": "bc7d5637538d1d6831cd0ad7c4bb8fac05ed0134c0b026dd34d02ecafead3362",
+      "classification": "context_resolved",
+      "evidence": "Derived IdFor remains the unique normalized tenant/program/kind/identifier boundary. Required DraftId must equal it. Current provider/service checks apply to new creation; owner compares stable original creation identity, authored source/content and actor on replay. The existing duplicate-ID regression remains green in focused520."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Controls/ApproveControlHandler.cs",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.65,
+        "recovery_gap": 0.63,
+        "incomplete_path": 0.53
+      },
+      "sha256": "6df8057e1ef4260e46e80239d8feb98654c3db7670569ee38fe9a3c1371ac1eb",
+      "classification": "fixed_and_remaining_migration",
+      "evidence": "Selected CommandId binding runs before current applicability/owner/waiver/lifecycle guards and again inside the executor. An event-emission gate was incorrectly ahead of receipt lookup;2 new behavioral RED cases prove the repair and pass. Full content/reference/permit conversion belongs to remaining S33; current slice does not claim that completion."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Controls/ReviewControlHandler.cs",
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.49,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.63
+      },
+      "sha256": "c362522109f77bd44f2d3c1f7958768c34b5a797eeb5fae7aac65a0e0175593b",
+      "classification": "fixed_and_remaining_migration",
+      "evidence": "Personal HTTP/current authorization remains required. Selected original request, actor and revision bind the fact before mutable waiver selection. Event-emission gate now blocks only a new operation, with2 RED/GREEN regression rows. Full native first-response descriptor conversion remains outstanding."
+    },
+    {
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.27
+      },
+      "sha256": "ddfc2b1afd01daa86e53ad50cda5783c368a5b458e6b4ceb529b0ca752637763",
+      "classification": "fixed_and_remaining_migration",
+      "evidence": "Review found creation replay still depended on latest revision/overwritten first draft. The original Created snapshot is retained immutably and the existing new handler regression now passes after later revision/publication/retirement. Selected mutation facts bind original IDs/intent/revisions/actors. S34 still must externalize version/change/review manifests and remove legacy history caps."
+    },
+    {
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.74,
+        "incomplete_path": 0.41
+      },
+      "sha256": "8d4b1ff79386120babd18006424e567bdf4b7dd70708d04b7f8d7be945e75487",
+      "classification": "known_s34_gap",
+      "evidence": "Creation retry now compares immutable source version/key/requester and ignores clock/display after downstream receipts. Selected successor operations bind their facts. Inline snapshots/history caps and the missing exact created-draft callback producer remain accepted S34 work; they are not declared complete by this recovery patch."
+    },
+    {
+      "path": "src/Compliance.Core/Features/NativeOperations/AuthoredCommandReplay.cs",
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.51,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.32
+      },
+      "sha256": "de87d5e4cf51dc6d589e21948ad043664be6481ff27743107f54bb7428f28fd3",
+      "classification": "bounded_bridge",
+      "evidence": "Helper constructs an owner-scoped authored digest, canonical actor and original revision, observes one selected business fact, reserves resource creation identity and rejects changed intent under the same mutation ID. It is a retained-owner recovery bridge; optional fact provenance is not full native response/result admission and remaining owner cutovers must replace it. Existing new11 replay rows and2 gate rows cover this slice."
+    }
+  ],
+  "scope": "Bounded replay repair; S32/S33/S34 remain incomplete."
+}

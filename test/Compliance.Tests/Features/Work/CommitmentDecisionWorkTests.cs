@@ -360,9 +360,9 @@ public sealed class CommitmentDecisionWorkTests
             fixture.Provider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
             ProgramManagementServices.ResourceScopes(fixture.ProgramId));
         IProgramManagementRequest request = approval
-            ? new ApproveCommitmentDraft(fixture.TenantId, fixture.ProgramId, draftId, 1,
+            ? new ApproveCommitmentDraft(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, draftId, 1,
                 reviewId, fixture.Today, "Approved.", "impact")
-            : new ReviewCommitmentDraft(fixture.TenantId, fixture.ProgramId, draftId, 1,
+            : new ReviewCommitmentDraft(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, draftId, 1,
                 "accept", "Reviewed.");
         var context = new RequestContext<IProgramManagementRequest>(request,
             ProgramManagementServices.Actor(fixture.OwnerUserId));

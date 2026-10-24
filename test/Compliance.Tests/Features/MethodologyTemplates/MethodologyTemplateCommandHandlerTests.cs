@@ -13,6 +13,109 @@ public sealed class MethodologyTemplateCommandHandlerTests
     static readonly Uuid TemplateId = Uuid.CreateVersion4();
 
     [Fact]
+    public async Task ShouldReplayOriginalTemplateCommandsGivenLaterPublicationAndClock()
+    {
+        // Arrange
+        await using var scenario = new Scenario();
+        var author = Uuid.CreateVersion4();
+        var reviewer = Uuid.CreateVersion4();
+        var approver = Uuid.CreateVersion4();
+        var create = new CreateMethodologyTemplate(TemplateId, Content("Original procedure"), "Initial");
+        var revise = new ReviseMethodologyTemplateDraft(Uuid.CreateVersion4(), TemplateId, 1,
+            Content("Revised procedure"), "Revise");
+        var review = new ReviewMethodologyTemplate(Uuid.CreateVersion4(), TemplateId, 2, "approved", "Reviewed");
+        var approve = new ApproveMethodologyTemplateVersion(Uuid.CreateVersion4(), TemplateId, 2, "Publish");
+        var retire = new RetireMethodologyTemplate(Uuid.CreateVersion4(), TemplateId, 4,
+            new DateOnly(2026, 10, 31), "Retire");
+        Assert.True((await new CreateMethodologyTemplateHandler(scenario.Executor, scenario.Clock)
+            .HandleAsync(Scenario.Context(create, author), CancellationToken.None)).IsSuccess);
+        Assert.True((await new ReviseMethodologyTemplateDraftHandler(scenario.Executor, scenario.Clock)
+            .HandleAsync(Scenario.Context(revise, author), CancellationToken.None)).IsSuccess);
+        Assert.True((await new ReviewMethodologyTemplateHandler(scenario.Executor, scenario.Clock)
+            .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None)).IsSuccess);
+        Assert.True((await new ApproveMethodologyTemplateVersionHandler(scenario.Executor, scenario.Clock)
+            .HandleAsync(Scenario.Context(approve, approver), CancellationToken.None)).IsSuccess);
+        Assert.True((await new RetireMethodologyTemplateHandler(scenario.Executor, scenario.Clock)
+            .HandleAsync(Scenario.Context(retire, approver), CancellationToken.None)).IsSuccess);
+        var before = await scenario.Reader.HydrateAsync(new MethodologyTemplate(TemplateId));
+        var later = new FixedTimeProvider(Now.AddHours(1));
+
+        // Act
+        var creationReplay = await new CreateMethodologyTemplateHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(create, author), CancellationToken.None);
+        var revisionReplay = await new ReviseMethodologyTemplateDraftHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(revise, author), CancellationToken.None);
+        var reviewReplay = await new ReviewMethodologyTemplateHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None);
+        var approvalReplay = await new ApproveMethodologyTemplateVersionHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(approve, approver), CancellationToken.None);
+        var retirementReplay = await new RetireMethodologyTemplateHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(retire, approver), CancellationToken.None);
+        var changedRevision = await new ReviseMethodologyTemplateDraftHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(revise with { ExpectedRevision = 2 }, author), CancellationToken.None);
+        var changedActor = await new ReviewMethodologyTemplateHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(review, approver), CancellationToken.None);
+        var after = await scenario.Reader.HydrateAsync(new MethodologyTemplate(TemplateId));
+
+        // Assert
+        Assert.True(creationReplay.IsSuccess, creationReplay.Error?.Message);
+        Assert.True(revisionReplay.IsSuccess, revisionReplay.Error?.Message);
+        Assert.True(reviewReplay.IsSuccess, reviewReplay.Error?.Message);
+        Assert.True(approvalReplay.IsSuccess, approvalReplay.Error?.Message);
+        Assert.True(retirementReplay.IsSuccess, retirementReplay.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, changedRevision.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, changedActor.Error?.Kind);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+    }
+
+    [Fact]
+    public async Task ShouldReplayContributionProposalAndDecisionsGivenAcceptedContributionAndLaterClock()
+    {
+        // Arrange
+        await using var scenario = new Scenario();
+        var tenant = Uuid.CreateVersion4();
+        var contributor = Uuid.CreateVersion4();
+        var reviewer = Uuid.CreateVersion4();
+        var approver = Uuid.CreateVersion4();
+        var propose = new ProposeDeidentifiedTemplateContribution(tenant, Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), 3, new MethodologyTemplateRecordContent("quarterly-review", "control",
+                "Review access", "Review access quarterly", []), "Removed client identifiers");
+        var review = new ReviewTemplateContribution(Uuid.CreateVersion4(), tenant, propose.ContributionId,
+            "approved", "Deidentified");
+        var accept = new AcceptTemplateContribution(Uuid.CreateVersion4(), tenant, propose.ContributionId, "Accept");
+        Assert.True((await new ProposeDeidentifiedTemplateContributionHandler(scenario.Executor, scenario.Clock)
+            .HandleAsync(Scenario.Context(propose, contributor), CancellationToken.None)).IsSuccess);
+        Assert.True((await new ReviewTemplateContributionHandler(scenario.Executor, scenario.Clock)
+            .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None)).IsSuccess);
+        Assert.True((await new AcceptTemplateContributionHandler(scenario.Executor, scenario.Clock)
+            .HandleAsync(Scenario.Context(accept, approver), CancellationToken.None)).IsSuccess);
+        var before = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
+            propose.ContributionId));
+        var later = new FixedTimeProvider(Now.AddHours(1));
+
+        // Act
+        var proposalReplay = await new ProposeDeidentifiedTemplateContributionHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(propose, contributor), CancellationToken.None);
+        var reviewReplay = await new ReviewTemplateContributionHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None);
+        var acceptanceReplay = await new AcceptTemplateContributionHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(accept, approver), CancellationToken.None);
+        var changed = await new AcceptTemplateContributionHandler(scenario.Executor, later)
+            .HandleAsync(Scenario.Context(accept with { AcceptanceRationale = "Different" }, approver), CancellationToken.None);
+        var after = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
+            propose.ContributionId));
+
+        // Assert
+        Assert.True(proposalReplay.IsSuccess, proposalReplay.Error?.Message);
+        Assert.True(reviewReplay.IsSuccess, reviewReplay.Error?.Message);
+        Assert.True(acceptanceReplay.IsSuccess, acceptanceReplay.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.ShareableContent!.AcceptanceId, after.ShareableContent!.AcceptanceId);
+        Assert.Equal(before.ShareableContent.ContentSha256, after.ShareableContent.ContentSha256);
+    }
+
+    [Fact]
     public async Task ShouldCreateReviewAndPublishVersionGivenIndependentTemplateActors()
     {
         // Arrange
@@ -31,15 +134,15 @@ public sealed class MethodologyTemplateCommandHandlerTests
             new CreateMethodologyTemplate(TemplateId, Content("Initial procedure."), "Initial draft"), author),
             CancellationToken.None);
         var revised = await revise.HandleAsync(Scenario.Context(
-            new ReviseMethodologyTemplateDraft(TemplateId, 1, Content("Revised procedure."), "Clarify control steps"), author),
+            new ReviseMethodologyTemplateDraft(Uuid.CreateVersion4(), TemplateId, 1, Content("Revised procedure."), "Clarify control steps"), author),
             CancellationToken.None);
         var reviewed = await review.HandleAsync(Scenario.Context(
-            new ReviewMethodologyTemplate(TemplateId, 2, "approved", "The procedure is clear and testable."), reviewer),
+            new ReviewMethodologyTemplate(Uuid.CreateVersion4(), TemplateId, 2, "approved", "The procedure is clear and testable."), reviewer),
             CancellationToken.None);
         var published = await approve.HandleAsync(Scenario.Context(
-            new ApproveMethodologyTemplateVersion(TemplateId, 2, "Approved for firm-wide use."), approver),
+            new ApproveMethodologyTemplateVersion(Uuid.CreateVersion4(), TemplateId, 2, "Approved for firm-wide use."), approver),
             CancellationToken.None);
-        var retired = await retire.HandleAsync(Scenario.Context(new RetireMethodologyTemplate(
+        var retired = await retire.HandleAsync(Scenario.Context(new RetireMethodologyTemplate(Uuid.CreateVersion4(),
             TemplateId, 4, new DateOnly(2026, 10, 31), "Replaced by the current methodology."), approver),
             CancellationToken.None);
         var aggregate = await scenario.Reader.HydrateAsync(new MethodologyTemplate(TemplateId));
@@ -83,9 +186,9 @@ public sealed class MethodologyTemplateCommandHandlerTests
         var proposed = await propose.HandleAsync(Scenario.Context(new ProposeDeidentifiedTemplateContribution(
             tenantId, contributionId, sourceRecordId, 3, content, "Removed client names and system identifiers."), contributor),
             CancellationToken.None);
-        var reviewed = await review.HandleAsync(Scenario.Context(new ReviewTemplateContribution(
+        var reviewed = await review.HandleAsync(Scenario.Context(new ReviewTemplateContribution(Uuid.CreateVersion4(),
             tenantId, contributionId, "approved", "No tenant identifiers remain."), reviewer), CancellationToken.None);
-        var accepted = await accept.HandleAsync(Scenario.Context(new AcceptTemplateContribution(
+        var accepted = await accept.HandleAsync(Scenario.Context(new AcceptTemplateContribution(Uuid.CreateVersion4(),
             tenantId, contributionId, "Approved for firm methodology reuse."), platformOperator), CancellationToken.None);
         var aggregate = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenantId, contributionId));
 
@@ -128,24 +231,24 @@ public sealed class MethodologyTemplateCommandHandlerTests
         // Act
         var created = await createTemplate.HandleAsync(Scenario.Context(new CreateMethodologyTemplate(
             TemplateId, Content("Initial published procedure."), "Initial release"), author), CancellationToken.None);
-        var reviewedFirst = await reviewTemplate.HandleAsync(Scenario.Context(new ReviewMethodologyTemplate(
+        var reviewedFirst = await reviewTemplate.HandleAsync(Scenario.Context(new ReviewMethodologyTemplate(Uuid.CreateVersion4(),
             TemplateId, 1, "approved", "Initial draft is ready."), reviewer), CancellationToken.None);
-        var approvedFirst = await approveTemplate.HandleAsync(Scenario.Context(new ApproveMethodologyTemplateVersion(
+        var approvedFirst = await approveTemplate.HandleAsync(Scenario.Context(new ApproveMethodologyTemplateVersion(Uuid.CreateVersion4(),
             TemplateId, 1, "Initial release approved."), approver), CancellationToken.None);
         var applied = await applyTemplate.HandleAsync(Scenario.Context(new ApplyMethodologyTemplate(tenantId,
             programId, TemplateId, 1, applicationKey), clientAdmin), CancellationToken.None);
         var afterApply = await scenario.Reader.HydrateAsync(new TemplateApplication(tenantId, programId,
             ApplicationIdFor(programId, applicationKey)));
-        var revised = await reviseTemplate.HandleAsync(Scenario.Context(new ReviseMethodologyTemplateDraft(
+        var revised = await reviseTemplate.HandleAsync(Scenario.Context(new ReviseMethodologyTemplateDraft(Uuid.CreateVersion4(),
             TemplateId, 3, Content("Updated successor procedure."), "Update annual testing steps"), author),
             CancellationToken.None);
-        var reviewedSecond = await reviewTemplate.HandleAsync(Scenario.Context(new ReviewMethodologyTemplate(
+        var reviewedSecond = await reviewTemplate.HandleAsync(Scenario.Context(new ReviewMethodologyTemplate(Uuid.CreateVersion4(),
             TemplateId, 2, "approved", "Updated steps are clear."), reviewer), CancellationToken.None);
-        var approvedSecond = await approveTemplate.HandleAsync(Scenario.Context(new ApproveMethodologyTemplateVersion(
+        var approvedSecond = await approveTemplate.HandleAsync(Scenario.Context(new ApproveMethodologyTemplateVersion(Uuid.CreateVersion4(),
             TemplateId, 2, "Successor approved for reuse."), approver), CancellationToken.None);
-        var proposed = await proposeSuccessor.HandleAsync(Scenario.Context(new ProposeTemplateSuccessorAdoption(
+        var proposed = await proposeSuccessor.HandleAsync(Scenario.Context(new ProposeTemplateSuccessorAdoption(Uuid.CreateVersion4(),
             tenantId, programId, TemplateId, applicationKey, 1, 2, "adapt"), clientAdmin), CancellationToken.None);
-        var recorded = await recordDisposition.HandleAsync(Scenario.Context(new RecordTemplateSuccessorDisposition(
+        var recorded = await recordDisposition.HandleAsync(Scenario.Context(new RecordTemplateSuccessorDisposition(Uuid.CreateVersion4(),
             tenantId, programId, TemplateId, applicationKey, 2, 2, "adopt",
             "The updated procedure fits our existing quarterly control."), clientAdmin), CancellationToken.None);
         var application = await scenario.Reader.HydrateAsync(new TemplateApplication(tenantId, programId,

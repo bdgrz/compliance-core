@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Responsibilities;
@@ -8,6 +9,9 @@ namespace Bdgrz.Compliance.Features.Commitments;
 
 public sealed class CommitmentDraft : Aggregate
 {
+    public NativeAcceptance ReplayAcceptance { get; }
+    OperationProvenance? _pendingOperation;
+
     // Fitz stream frames are u16; leave room for the Portia envelope and metadata.
     public const int MaximumDraftEventPayloadBytes = 48 * 1024;
     static readonly HashSet<string> AllowedKinds = new(StringComparer.Ordinal)
@@ -20,6 +24,7 @@ public sealed class CommitmentDraft : Aggregate
     bool _created;
     long _revision;
     Uuid _createRequestId;
+    Uuid _createActorMemberId;
     Uuid? _providerId;
     bool _retired;
     Uuid? _retiredByMemberId;
@@ -64,21 +69,23 @@ public sealed class CommitmentDraft : Aggregate
         return null;
     }
 
-    public CommitmentDraft(Uuid tenantId, Uuid draftId)
+    public CommitmentDraft(Uuid tenantId, Uuid draftId, Uuid selectedCommandId = default)
         : base(draftId, new EventStreamAddress(tenantId.ToString(), "commitment-drafts",
             draftId.ToString()))
     {
+        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
         _tenantId = tenantId;
         On<CommitmentDraftCreated>(ev =>
         {
             _created = true;
             _revision = 1;
+            _createRequestId = ev.CreateRequestId;
             ProgramId = ev.ProgramId;
             ServiceId = ev.ServiceId;
             _providerId = ev.ProviderId;
             Kind = ev.Kind;
             Identifier = ev.Identifier;
-            _createRequestId = ev.CreateRequestId;
+            _createActorMemberId = ev.ActorMemberId;
             _initialStatement = ev.Statement;
             _initialContext = ev.Context;
             _initialSourceReference = ev.SourceReference;
@@ -87,6 +94,7 @@ public sealed class CommitmentDraft : Aggregate
         });
         On<CommitmentDraftRevised>(ev =>
         {
+            AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
             _revision = ev.Revision;
             _sourceReference = ev.SourceReference;
             _acceptedReview = null;
@@ -96,6 +104,7 @@ public sealed class CommitmentDraft : Aggregate
         });
         On<CommitmentReviewed>(ev =>
         {
+            AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
             RecordResponsibilityDecision(Scope(ev.Revision), ev.ActorMemberId,
                 ResponsibilityType.AssignedReviewer, ev.DecidedAt, ev.SeparationOfDutiesWaiverId);
             // Legacy reviews created the version directly; newer accepted reviews await approval.
@@ -111,6 +120,7 @@ public sealed class CommitmentDraft : Aggregate
         });
         On<CommitmentApproved>(ev =>
         {
+            AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
             RecordResponsibilityDecision(Scope(ev.Revision), ev.ActorMemberId,
                 ResponsibilityType.PolicyApprover, ev.DecidedAt, ev.SeparationOfDutiesWaiverId);
             _versions.Add((ev.Version, ev.Revision, ev.EffectiveFrom));
@@ -163,8 +173,8 @@ public sealed class CommitmentDraft : Aggregate
         var cleanContext = context.Trim();
         var cleanSourceReference = sourceReference.Trim();
         if (_created)
-            return ProgramId == programId && ServiceId == serviceId &&
-                   _createRequestId == createRequestId &&
+            return _createRequestId == createRequestId && ProgramId == programId && ServiceId == serviceId &&
+                   _createActorMemberId == actorMemberId &&
                    StringComparer.Ordinal.Equals(Kind, normalizedKind) &&
                    StringComparer.Ordinal.Equals(Identifier, normalizedIdentifier) &&
                    StringComparer.Ordinal.Equals(_initialStatement, cleanStatement) &&
@@ -194,8 +204,12 @@ public sealed class CommitmentDraft : Aggregate
 
     public CommandFailure? Revise(Uuid programId, long expectedRevision, string statement,
         string context, string sourceReference, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset changedAt)
+        DateTimeOffset changedAt,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (!_created || ProgramId != programId)
             return CommandFailure.MissingRecord("The draft was not found.");
         if (_retired)
@@ -210,6 +224,7 @@ public sealed class CommitmentDraft : Aggregate
             statement.Trim(), context.Trim(), sourceReference.Trim(), actorMemberId,
             actorDisplay, changedAt)
         {
+            Operation = _pendingOperation,
             StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
         };
         if (JsonSerializer.SerializeToUtf8Bytes(revised,
@@ -237,8 +252,12 @@ public sealed class CommitmentDraft : Aggregate
         string? interpretationNote, string rationale, Uuid reviewerMemberId,
         string reviewerDisplay, DateTimeOffset decidedAt,
         SeparationOfDutiesWaiver? separationOfDutiesWaiver = null,
-        string? sourceVerifiedReference = null, string? sourceEvidence = null)
+        string? sourceVerifiedReference = null, string? sourceEvidence = null,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (CheckTarget(programId, expectedRevision) is { } target)
             return target;
         if (CheckSeparationOfDuties(expectedRevision, reviewerMemberId,
@@ -287,6 +306,7 @@ public sealed class CommitmentDraft : Aggregate
             accepted ? sourceVerifiedReference!.Trim() : null,
             accepted ? sourceEvidence!.Trim() : null)
         {
+            Operation = _pendingOperation,
             StoredActor = ActorReference.ForMember(reviewerMemberId, reviewerDisplay),
         });
         return null;
@@ -296,8 +316,12 @@ public sealed class CommitmentDraft : Aggregate
     public CommandFailure? Approve(Uuid programId, long expectedRevision, Uuid decisionId,
         Uuid acceptedReviewDecisionId, DateOnly effectiveFrom, string rationale,
         string impactDigest, Uuid approverMemberId, string approverDisplay,
-        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? separationOfDutiesWaiver = null)
+        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? separationOfDutiesWaiver = null,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (CheckTarget(programId, expectedRevision) is { } target)
             return target;
         if (_acceptedReview is not { } review || review.Revision != _revision ||
@@ -323,6 +347,7 @@ public sealed class CommitmentDraft : Aggregate
             rationale.Trim(), approverMemberId, approverDisplay, decidedAt,
             separationOfDutiesWaiver?.Id)
         {
+            Operation = _pendingOperation,
             StoredActor = ActorReference.ForMember(approverMemberId, approverDisplay),
         });
         return null;

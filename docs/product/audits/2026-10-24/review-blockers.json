@@ -22,13 +22,6 @@
       "implementedFence": "ArtifactRetentionLegacyGuard refuses affected reads and new native decisions; no data is removed and disposition remains disabled.",
       "requiredNextWork": "Select and implement a verified migration preserving every original hold placement/release, attribution, exact content/source position and basis period before a persisted-data rollout; quiesce legacy writers and prove complete migration.",
       "independentWorkContinued": "Prepared native retention basis/legal-hold owners, handlers, readers and focused tests on fresh owner streams. Protected download/crypto remains a separate next slice."
-    },
-    {
-      "id": "web-smoke-qualification",
-      "status": "qualification_failed",
-      "externalDependency": false,
-      "evidence": "ComplianceWebTests:17passed/11failed. Eight failures require configured HTTPS digest origin/scoped client route in test factory; remaining failures reference old manual-application/advisor-handoff routes and apply snake_case query validation to X-Bdgrz-Upload header. TRX /tmp/compliance-s31-web-results/web.trx. Backend acceptance full5453passed.",
-      "nextWork": "Repair web test host configuration and stale contract assertions after current backend owner slices; no new GitHub issue."
     }
   ],
   "remainingSlices": [
@@ -44,7 +37,9 @@
     "retention-file-reviews.json",
     "retention-file-triage.json",
     "finding-content-file-reviews.json",
-    "finding-content-readback.md"
+    "finding-content-readback.md",
+    "versioned-replay-file-reviews.json",
+    "versioned-replay-file-triage.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -64,7 +59,11 @@
     },
     {
       "id": "versioned-replay",
-      "status": "patch_preparation"
+      "status": "validated_awaiting_merge",
+      "focusedGreen": "520passed/0failed",
+      "webGreen": "28passed/0failed",
+      "jev": "58/58current source/dependency hashes;6signals triaged",
+      "fullUnitGreen": "5471passed/0failed"
     },
     {
       "id": "audit-package-split",
@@ -73,11 +72,13 @@
     },
     {
       "id": "finding-content-recovery",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "behavioralRed": "6failed/0passed; each failed permanent classification assertion",
       "focusedGreen": "18passed/0failed",
       "jev": "2/2current files; incomplete-path signal0.75 reviewed against explicit superseded terminal path",
-      "fullUnitGreen": "5459passed/0failed"
+      "fullUnitGreen": "5459passed/0failed",
+      "pullRequest": 1091,
+      "mergeCommit": "0b7e316d7772ef4a7532e5cbbef34ab7f78ff1a9"
     }
   ],
   "resolved": [
@@ -85,6 +86,14 @@
       "id": "native-actor-label",
       "evidence": "Behavioral RED1failed/2passed; GREEN39native tests; full5433passed/0failed. Binding compares actor kind/id and retains original display in fact.",
       "status": "validated"
+    },
+    {
+      "id": "web-smoke-qualification",
+      "status": "resolved",
+      "externalDependency": false,
+      "evidence": "ComplianceWebTests:17passed/11failed. Eight failures require configured HTTPS digest origin/scoped client route in test factory; remaining failures reference old manual-application/advisor-handoff routes and apply snake_case query validation to X-Bdgrz-Upload header. TRX /tmp/compliance-s31-web-results/web.trx. Backend acceptance full5453passed.",
+      "nextWork": "Repair web test host configuration and stale contract assertions after current backend owner slices; no new GitHub issue.",
+      "resolution": "Test host supplies required scoped HTTPS digest links, route assertions consume selected identified PUT paths, and snake_case validation applies to query/path values. All28websmoke tests pass."
     }
   ]
 }

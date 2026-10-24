@@ -135,6 +135,50 @@ public sealed class PersonalCommitmentDecisionTransportTests
         Assert.False(after.IsRetired);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldReplayOneCommitmentDecisionGivenSameCommandAndOriginalRevision(bool approval)
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync(approval);
+        var commandId = Uuid.CreateVersion4();
+        var digest = "unused";
+        if (approval)
+        {
+            await using var scope = fixture.Provider.CreateAsyncScope();
+            var preview = await scope.ServiceProvider.GetRequiredService<CommitmentImpactService>()
+                .PreviewAsync(new PreviewCommitmentImpact(fixture.Tenant, fixture.Program, fixture.DraftId, 1),
+                    CancellationToken.None);
+            Assert.True(preview.IsSuccess, preview.Error?.Message);
+            digest = preview.Value.Digest;
+        }
+        IRequest request = approval
+            ? new ApproveCommitmentDraft(commandId, fixture.Tenant, fixture.Program, fixture.DraftId,
+                1, fixture.ReviewId, new DateOnly(2026, 9, 1), "Approved", digest)
+            : new ReviewCommitmentDraft(commandId, fixture.Tenant, fixture.Program, fixture.DraftId,
+                1, "accept", "Reviewed", "Security owner", "applicable", "supported",
+                SourceVerifiedReference: "MSA 4.1", SourceEvidence: "Signed MSA section 4.1");
+        var user = approval ? fixture.Approver : fixture.Reviewer;
+        await HttpAsync(fixture.Provider, user, request);
+        var before = await fixture.ReadAsync();
+        IRequest changed = request switch
+        {
+            ApproveCommitmentDraft command => command with { ExpectedRevision = 2 },
+            ReviewCommitmentDraft command => command with { Rationale = "Changed" },
+            _ => throw new InvalidOperationException(),
+        };
+
+        // Act
+        await HttpAsync(fixture.Provider, user, request);
+        await HttpAsync(fixture.Provider, user, changed, RequestErrorKind.Conflict);
+        var after = await fixture.ReadAsync();
+
+        // Assert
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.EffectiveVersionCount, after.EffectiveVersionCount);
+    }
+
     [Fact]
     public async Task ShouldRetainAttributedCommitmentRetirementGivenNativeHttp()
     {
@@ -186,6 +230,7 @@ public sealed class PersonalCommitmentDecisionTransportTests
         public Uuid Other { get; } = Uuid.CreateVersion4();
         public Uuid ReviewId { get; } = Uuid.CreateVersion4();
         readonly ServiceProvider _provider;
+        public ServiceProvider Provider => _provider;
         readonly FitzCommitmentDraftDirectory _directory;
         static readonly DateTimeOffset At = new(2026, 9, 1, 12, 0, 0, TimeSpan.Zero);
 
@@ -271,11 +316,11 @@ public sealed class PersonalCommitmentDecisionTransportTests
                     new PreviewCommitmentImpact(Tenant, Program, DraftId, draft.Revision), CancellationToken.None);
                 Assert.True(impact.IsSuccess, impact.Error?.Message);
                 Assert.True(impact.Value.Complete);
-                request = new ApproveCommitmentDraft(Tenant, Program, DraftId, draft.Revision, ReviewId,
+                request = new ApproveCommitmentDraft(Uuid.CreateVersion4(), Tenant, Program, DraftId, draft.Revision, ReviewId,
                     new DateOnly(2026, 9, 1), "Approved independently", impact.Value.Digest);
             }
             else
-                request = new ReviewCommitmentDraft(Tenant, Program, DraftId, draft.Revision, "accept", "Reviewed independently",
+                request = new ReviewCommitmentDraft(Uuid.CreateVersion4(), Tenant, Program, DraftId, draft.Revision, "accept", "Reviewed independently",
                     "Security owner", "applicable", "supported", SourceVerifiedReference: "MSA 4.1", SourceEvidence: "Signed MSA section 4.1");
             return await services.GetRequiredService<IRequestBus>().DispatchAsync(request,
                 Context(user ?? (approval ? Approver : Reviewer), transport), CancellationToken.None);

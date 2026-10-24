@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -11,13 +12,21 @@ sealed class ReviseExaminationEngagementHandler(IAggregateReader reader,
         CancellationToken ct)
     {
         var request = context.Request;
+
         if (!ExaminationManagementActor.TryGet(context.Actor, context.Invocation, request.TenantId,
                 out var memberId, out var display))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "An examination engagement decision requires a personal HTTP actor."));
 
+        var operation = AuthoredCommandReplay.Create(new ExaminationEngagement(request.TenantId,
+            request.ProgramId, request.ExaminationId, request.CommandId), request.CommandId,
+            nameof(ReviseExaminationEngagement), memberId, request.ExpectedRevision, request, clock.GetUtcNow());
+        var replayOwner = await reader.HydrateAsync(new ExaminationEngagement(request.TenantId,
+            request.ProgramId, request.ExaminationId, request.CommandId), ct).ConfigureAwait(false);
+        if (AuthoredCommandReplay.Unit(replayOwner.ReplayAcceptance, operation) is { } replay)
+            return replay;
         var currentEngagement = await reader.HydrateAsync(new ExaminationEngagement(request.TenantId,
-            request.ProgramId, request.ExaminationId), ct).ConfigureAwait(false);
+            request.ProgramId, request.ExaminationId, request.CommandId), ct).ConfigureAwait(false);
         if (currentEngagement.Current is not { } current)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The examination engagement was not found."));
@@ -30,9 +39,9 @@ sealed class ReviseExaminationEngagementHandler(IAggregateReader reader,
             request.AuditFirm, request.PeriodStart, request.PeriodEnd,
             request.TrustServicesCategories, current.BoundaryId, contacts);
         return await executor.ExecuteAsync(new ExaminationEngagement(request.TenantId,
-                request.ProgramId, request.ExaminationId), engagement =>
+                request.ProgramId, request.ExaminationId, request.CommandId), engagement =>
                 CommandFailureRequestAdapter.ToOutcome(engagement.Revise(
-                    request.ExpectedRevision, content, memberId, display, clock.GetUtcNow())),
+                    request.ExpectedRevision, content, memberId, display, clock.GetUtcNow(), operation: operation)),
             context, ct).ConfigureAwait(false);
     }
 }

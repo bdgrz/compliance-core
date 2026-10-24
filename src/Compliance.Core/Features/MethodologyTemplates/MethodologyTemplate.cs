@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
@@ -10,6 +11,9 @@ namespace Bdgrz.Compliance.Features.MethodologyTemplates;
 /// <summary>Platform-owned authored template versions, independent review, approval, and retirement.</summary>
 public sealed class MethodologyTemplate : Aggregate
 {
+    public NativeAcceptance ReplayAcceptance { get; }
+    OperationProvenance? _pendingOperation;
+
     const int MaximumVersions = 64;
     const int MaximumRecords = 100;
     const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
@@ -20,13 +24,15 @@ public sealed class MethodologyTemplate : Aggregate
         { "control", "policy", "evidence_request", "risk" };
 
     MethodologyTemplateView? _current;
+    MethodologyTemplateView? _initial;
 
     public long Revision => _current?.Revision ?? 0;
     public MethodologyTemplateView? Current => _current;
 
-    public MethodologyTemplate(Uuid templateId)
+    public MethodologyTemplate(Uuid templateId, Uuid selectedCommandId = default)
         : base(templateId, new EventStreamAddress("bdgrz", "methodology-templates", templateId.ToString()))
     {
+        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
         On<MethodologyTemplateCreated>(Apply);
         On<MethodologyTemplateDraftRevised>(Apply);
         On<MethodologyTemplateDraftReviewed>(Apply);
@@ -37,8 +43,8 @@ public sealed class MethodologyTemplate : Aggregate
     public CommandFailure? Create(MethodologyTemplateContent content, string changeNotes,
         Uuid actorMemberId, string actorDisplay, DateTimeOffset createdAt)
     {
-        if (_current is { } existing)
-            return SameCreate(existing, content, changeNotes, actorMemberId, actorDisplay, createdAt)
+        if (_current is not null)
+            return _initial is { } initial && SameCreate(initial, content, changeNotes, actorMemberId, actorDisplay, createdAt)
                 ? null : CommandFailure.StateConflict("The methodology template identity already has different initial content.");
         if (Id == Uuid.Empty || !ValidActor(actorMemberId, actorDisplay, createdAt) ||
             NormalizeContent(content) is not { } normalized ||
@@ -56,12 +62,14 @@ public sealed class MethodologyTemplate : Aggregate
     }
 
     public CommandFailure? ReviseDraft(long expectedRevision, MethodologyTemplateContent content,
-        string changeNotes, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt) =>
-        ReviseDraftCore(expectedRevision, content, changeNotes, actorMemberId, actorDisplay, revisedAt, null);
+        string changeNotes, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt,
+        OperationProvenance? operation = null) =>
+        ReviseDraftCore(expectedRevision, content, changeNotes, actorMemberId, actorDisplay, revisedAt, null, operation);
 
     public CommandFailure? ReviseDraftWithAcceptedContribution(long expectedRevision,
         MethodologyTemplateContent content, MethodologyTemplateContributionShareView contribution,
-        string changeNotes, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt)
+        string changeNotes, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt,
+        OperationProvenance? operation = null)
     {
         if (!ValidContributionShare(contribution))
             return Invalid("Template content can incorporate only an accepted, independently reviewed de-identified contribution.");
@@ -71,13 +79,17 @@ public sealed class MethodologyTemplate : Aggregate
             contribution.AcceptedByMemberId, contribution.AcceptedByDisplay,
             contribution.AcceptanceRationale, contribution.AcceptedAt);
         return ReviseDraftCore(expectedRevision, content, changeNotes, actorMemberId,
-            actorDisplay, revisedAt, reference);
+            actorDisplay, revisedAt, reference, operation);
     }
 
     CommandFailure? ReviseDraftCore(long expectedRevision, MethodologyTemplateContent content,
         string changeNotes, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt,
-        MethodologyTemplateContributionAcceptanceReference? newContribution)
+        MethodologyTemplateContributionAcceptanceReference? newContribution,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The methodology template was not found.");
         if (SameDraftRevision(current, content, changeNotes, actorMemberId, actorDisplay, revisedAt))
@@ -121,8 +133,12 @@ public sealed class MethodologyTemplate : Aggregate
     }
 
     public CommandFailure? ReviewDraft(long expectedRevision, string outcome, string comments,
-        Uuid reviewerMemberId, string reviewerDisplay, DateTimeOffset reviewedAt)
+        Uuid reviewerMemberId, string reviewerDisplay, DateTimeOffset reviewedAt,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The methodology template was not found.");
         outcome = Clean(outcome).ToLowerInvariant();
@@ -154,8 +170,12 @@ public sealed class MethodologyTemplate : Aggregate
     }
 
     public CommandFailure? ApproveVersion(long expectedRevision, string rationale,
-        Uuid approverMemberId, string approverDisplay, DateTimeOffset approvedAt)
+        Uuid approverMemberId, string approverDisplay, DateTimeOffset approvedAt,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The methodology template was not found.");
         rationale = Clean(rationale);
@@ -192,8 +212,12 @@ public sealed class MethodologyTemplate : Aggregate
     }
 
     public CommandFailure? Retire(long expectedRevision, DateOnly effectiveOn, string rationale,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset retiredAt)
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset retiredAt,
+        OperationProvenance? operation = null)
     {
+        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
+            return replayFailure;
+        _pendingOperation = operation;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The methodology template was not found.");
         rationale = Clean(rationale);
@@ -215,16 +239,36 @@ public sealed class MethodologyTemplate : Aggregate
                 new MethodologyTemplateRetired(tenant, subject, revision, actor, snapshot, at), "retire");
     }
 
-    void Apply(MethodologyTemplateCreated ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
-        ev.ActorMemberId, ev.State, ev.OccurredAt, true, "create");
-    void Apply(MethodologyTemplateDraftRevised ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
+    void Apply(MethodologyTemplateCreated ev)
+    {
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
+            ev.ActorMemberId, ev.State, ev.OccurredAt, true, "create");
+        _initial = Freeze(ev.State);
+    }
+    void Apply(MethodologyTemplateDraftRevised ev)
+    {
+        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
         ev.ActorMemberId, ev.State, ev.OccurredAt, false, "revise");
-    void Apply(MethodologyTemplateDraftReviewed ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
+    }
+    void Apply(MethodologyTemplateDraftReviewed ev)
+    {
+        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
         ev.ActorMemberId, ev.State, ev.OccurredAt, false, "review");
-    void Apply(MethodologyTemplateVersionPublished ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
+    }
+    void Apply(MethodologyTemplateVersionPublished ev)
+    {
+        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
         ev.ActorMemberId, ev.State, ev.OccurredAt, false, "publish");
-    void Apply(MethodologyTemplateRetired ev) => ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
+    }
+    void Apply(MethodologyTemplateRetired ev)
+    {
+        AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision,
         ev.ActorMemberId, ev.State, ev.OccurredAt, false, "retire");
+    }
 
     void ApplyState(Uuid tenantId, Uuid subjectId, long revision, Uuid? actorMemberId,
         MethodologyTemplateView state, DateTimeOffset occurredAt, bool creating, string transition)
@@ -247,6 +291,14 @@ public sealed class MethodologyTemplate : Aggregate
             (creating ? _current is not null : _current is null || !ValidTransition(_current, state, actorMemberId, transition)))
             return Invalid("The methodology-template transition is invalid.");
         var ev = createEvent(Uuid.Empty, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);
+        ev = ev switch
+        {
+            MethodologyTemplateDraftRevised fact => fact with { Operation = _pendingOperation },
+            MethodologyTemplateDraftReviewed fact => fact with { Operation = _pendingOperation },
+            MethodologyTemplateVersionPublished fact => fact with { Operation = _pendingOperation },
+            MethodologyTemplateRetired fact => fact with { Operation = _pendingOperation },
+            _ => ev,
+        };
         if (DomainEventPayload.Size(ev) > MaximumEventBytes)
             return Invalid("The methodology-template snapshot exceeds the bounded event payload.");
         RaiseEvent(ev);
@@ -408,7 +460,7 @@ public sealed class MethodologyTemplate : Aggregate
             Token(reference.Identifier, 100));
 
     static bool ValidInitialState(MethodologyTemplateView state) => state.Status == "active" &&
-        state.Revision == 1 && state.Versions.Count == 1 && state.Versions[0].VersionNumber == 1 &&
+        state.Versions.Count > 0 && state.Versions[0].VersionNumber == 1 &&
         state.Versions[0].Status == "draft" && state.Versions[0].Review is null &&
         state.Versions[0].ApprovedByMemberId is null && state.Versions[0].AcceptedContributions is { Count: 0 } &&
         state.Versions[0].Content.Records.All(item => item.ContributionApprovalId is null);
@@ -417,8 +469,7 @@ public sealed class MethodologyTemplate : Aggregate
         string notes, Uuid actor, string display, DateTimeOffset at) =>
         state.Revision == 1 && state.Versions.Count == 1 &&
         NormalizeContent(content) is { } normalized && Digest(normalized) == state.Versions[0].ContentSha256 &&
-        state.Versions[0].ChangeNotes == Clean(notes) && state.ActorMemberId == actor &&
-        state.ActorDisplay == Clean(display) && state.UpdatedAt == at;
+        state.Versions[0].ChangeNotes == Clean(notes) && state.Versions[0].AuthoredByMemberId == actor;
 
     static bool SameDraftRevision(MethodologyTemplateView state, MethodologyTemplateContent content,
         string notes, Uuid actor, string display, DateTimeOffset at) =>

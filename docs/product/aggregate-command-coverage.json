@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "453961cb0a0ff4b652bc9e937637b2e78dddfe7e",
+  "sourceCommit": "0b7e316d7772ef4a7532e5cbbef34ab7f78ff1a9",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -9896,14 +9896,14 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentApprovalTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentDraftActorProjectionTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentDraftActorSnapshotTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentDraftHistoryReadTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentDraftReplayTests.cs",
         "test/Compliance.Tests/Features/Commitments/CommitmentDraftTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentRetirementTests.cs",
-        "test/Compliance.Tests/Features/Commitments/CommitmentReviewTests.cs"
+        "test/Compliance.Tests/Features/Commitments/CommitmentRetirementTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12754,7 +12754,7 @@
     {
       "request": "AcceptTemplateContribution",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/AcceptTemplateContribution.cs",
-      "interfaces": "IRequest, IPlatformOperatorRequest, ICallable",
+      "interfaces": "IRequest, IPlatformOperatorRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -13880,7 +13880,7 @@
     {
       "request": "ApproveCommitmentDraft",
       "contract": "src/Compliance.Common/Features/Commitments/ApproveCommitmentDraft.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -13907,7 +13907,7 @@
     {
       "request": "ApproveControl",
       "contract": "src/Compliance.Common/Features/Controls/ApproveControl.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14023,7 +14023,7 @@
     {
       "request": "ApproveMethodologyTemplateVersion",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/ApproveMethodologyTemplateVersion.cs",
-      "interfaces": "IRequest, IPlatformOperatorRequest, ICallable",
+      "interfaces": "IRequest, IPlatformOperatorRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14048,7 +14048,7 @@
     {
       "request": "ApprovePolicy",
       "contract": "src/Compliance.Common/Features/Policies/ApprovePolicy.cs",
-      "interfaces": "IRequest<PolicyVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<PolicyVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14655,6 +14655,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Content/SourceUseReceiverContractTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingClosureContentRecoveryTests.cs",
         "test/Compliance.Tests/Features/Remediation/FindingClosureTests.cs"
       ],
       "note": "System-only acquire receiver of FindingClosureProcess; an unmaterialized action is a wait."
@@ -16790,7 +16791,7 @@
     {
       "request": "CreateCommitmentDraft",
       "contract": "src/Compliance.Common/Features/Commitments/CreateCommitmentDraft.cs",
-      "interfaces": "IRequest<CommitmentDraftRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<CommitmentDraftRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -25160,7 +25161,7 @@
     {
       "request": "ProposeTemplateSuccessorAdoption",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/ProposeTemplateSuccessorAdoption.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26898,7 +26899,7 @@
     {
       "request": "RecordTemplateSuccessorDisposition",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/RecordTemplateSuccessorDisposition.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28423,7 +28424,7 @@
     {
       "request": "RetireMethodologyTemplate",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/RetireMethodologyTemplate.cs",
-      "interfaces": "IRequest, IPlatformOperatorRequest, ICallable",
+      "interfaces": "IRequest, IPlatformOperatorRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28549,7 +28550,7 @@
     {
       "request": "ReviewCommitmentDraft",
       "contract": "src/Compliance.Common/Features/Commitments/ReviewCommitmentDraft.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28577,7 +28578,7 @@
     {
       "request": "ReviewControl",
       "contract": "src/Compliance.Common/Features/Controls/ReviewControl.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28723,7 +28724,7 @@
     {
       "request": "ReviewMethodologyTemplate",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/ReviewMethodologyTemplate.cs",
-      "interfaces": "IRequest, IPlatformOperatorRequest, ICallable",
+      "interfaces": "IRequest, IPlatformOperatorRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28748,7 +28749,7 @@
     {
       "request": "ReviewPolicyDraft",
       "contract": "src/Compliance.Common/Features/Policies/ReviewPolicyDraft.cs",
-      "interfaces": "IRequest<PolicyDecisionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<PolicyDecisionView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28862,7 +28863,7 @@
     {
       "request": "ReviewTemplateContribution",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/ReviewTemplateContribution.cs",
-      "interfaces": "IRequest, IPlatformOperatorRequest, ICallable",
+      "interfaces": "IRequest, IPlatformOperatorRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -29117,7 +29118,7 @@
     {
       "request": "ReviseCommitmentDraft",
       "contract": "src/Compliance.Common/Features/Commitments/ReviseCommitmentDraft.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -29213,7 +29214,7 @@
     {
       "request": "ReviseExaminationEngagement",
       "contract": "src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -29347,7 +29348,7 @@
     {
       "request": "ReviseMethodologyTemplateDraft",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/ReviseMethodologyTemplateDraft.cs",
-      "interfaces": "IRequest, IPlatformOperatorRequest, ICallable",
+      "interfaces": "IRequest, IPlatformOperatorRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -31310,11 +31311,11 @@
       "fact": "MethodologyTemplateDraftRevised",
       "aggregate": "MethodologyTemplate",
       "method": "ReviseDraftWithAcceptedContribution",
+      "methodArgumentCount": 8,
       "source": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 276,
       "callerSources": [],
-      "methodArgumentCount": 7,
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

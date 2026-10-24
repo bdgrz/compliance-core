@@ -4,7 +4,10 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-[Discriminator("bdgrz.control.review", 1)]
-public sealed record ReviewControl(Uuid TenantId, Uuid ProgramId, Uuid ControlId,
+[Discriminator("bdgrz.control.review", 2)]
+public sealed record ReviewControl(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid ControlId,
     long ExpectedRevision, string Outcome, string Rationale,
-    Uuid? SeparationOfDutiesWaiverId = null) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    Uuid? SeparationOfDutiesWaiverId = null) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}
