@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Criteria;
@@ -17,6 +19,7 @@ using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Bdgrz.Compliance.Features.Work;
+using Cntryl.Fitz;
 using Cntryl.Portia;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -646,6 +649,10 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<CurrentRatifiedIndependenceRulesReader>();
         services.TryAddScoped<IServiceEngagementAcceptanceEvidenceReader,
             EventSourcedServiceEngagementAcceptanceEvidenceReader>();
+        services.AddSingleton<IImmutableContentStore>(provider =>
+            new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>()));
+        // ISourceFactResolver stays unregistered until Portia publishes the shared connection's IStreamClient
+        // (AddStreamClient); the first consuming slice registers FitzSourceFactResolver.
         services.AddScoped<FitzActualStaffEngagementLocator>();
         services.AddScoped<IActualStaffEngagementLocatorProjection>(provider =>
             provider.GetRequiredService<FitzActualStaffEngagementLocator>());

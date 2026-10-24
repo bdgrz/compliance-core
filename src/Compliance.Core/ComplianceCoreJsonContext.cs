@@ -1913,5 +1913,6 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.ResponseBodyReference))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.StandardResponseBody))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.ProtectedResponseBody))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Content.ImmutableContentManifest))]
 [JsonSerializable(typeof(string))]
 sealed partial class ComplianceCoreJsonContext : JsonSerializerContext;
