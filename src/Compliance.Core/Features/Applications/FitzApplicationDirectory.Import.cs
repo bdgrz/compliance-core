@@ -23,17 +23,18 @@ sealed partial class FitzApplicationDirectory
         return batch;
     }
 
-    public async ValueTask ApplyCommittedImportAsync(ApplicationImportCommitted marker, ApplicationImportFrozenPlan plan,
+    public async ValueTask ApplyCommittedImportAsync(ApplicationImportCommitted marker, ImportFrozenPlanIntent plan,
+        IReadOnlyList<ApplicationImportPlannedRow> rows, IReadOnlyList<ApplicationImportEffectProof> proofs,
         CancellationToken ct = default)
     {
-        if (marker.TenantId != _batchTenantId || marker.TenantId != plan.Start.TenantId || marker.BatchId != plan.Start.BatchId ||
-            marker.SourceKey != plan.Start.SourceKey || marker.SourceNamespace != plan.Start.SourceNamespace ||
-            marker.PlanSha256 != plan.PlanSha256 || marker.Revision != plan.Revision + 1 ||
-            marker.Effects.Count != plan.Rows.Count ||
-            plan.Rows.Any(row => marker.Effects.Count(proof => proof.RowId == row.RowId &&
+        if (marker.TenantId != _batchTenantId || marker.BatchId != plan.BatchId ||
+            marker.SourceKey != plan.SourceKey || marker.SourceNamespace != plan.SourceNamespace ||
+            marker.PlanSha256 != marker.Intent.Sha256 || marker.FrozenRows != plan.Rows.Content ||
+            proofs.Count != rows.Count || plan.Rows.Count != rows.Count ||
+            rows.Any(row => proofs.Count(proof => proof.RowId == row.RowId &&
                 proof.ApplicationId == row.ApplicationId) != 1))
             throw new InvalidOperationException("The import projection requires its complete committed frozen plan.");
-        foreach (var row in plan.Rows)
+        foreach (var row in rows)
         {
             if (row.Decision == "link_existing")
             {
@@ -52,11 +53,11 @@ sealed partial class FitzApplicationDirectory
                 var retired = retiring with
                 {
                     Revision = checked(retiring.Revision + 1),
-                    LastChangedByMemberId = plan.Start.ApproverMemberId,
-                    LastChangedByDisplay = plan.Start.ApproverDisplay,
+                    LastChangedByMemberId = plan.ApproverMemberId,
+                    LastChangedByDisplay = plan.ApproverDisplay,
                     LastChangedAt = marker.CommittedAt,
-                    LastChangedBy = ActorReference.ForMember(plan.Start.ApproverMemberId,
-                        plan.Start.ApproverDisplay),
+                    LastChangedBy = ActorReference.ForMember(plan.ApproverMemberId,
+                        plan.ApproverDisplay),
                     Lifecycle = "retired",
                     Retirement = new RetirementView(marker.CommittedAt, row.RetirementReason, null),
                 };
@@ -69,10 +70,10 @@ sealed partial class FitzApplicationDirectory
                 throw new InvalidOperationException("The import projection has an unsupported row decision.");
             var view = new ApplicationView(marker.TenantId, row.ApplicationId, 1, row.Name.Trim(),
                 row.Purpose.Trim(), NormalizeImportOwner(row.OwnerReference), "import", row.SourceRecordId,
-                false, Gaps(row.OwnerReference, null, false, null, null), plan.Start.ApproverMemberId,
-                plan.Start.ApproverDisplay, marker.CommittedAt)
+                false, Gaps(row.OwnerReference, null, false, null, null), plan.ApproverMemberId,
+                plan.ApproverDisplay, marker.CommittedAt)
             {
-                LastChangedBy = ActorReference.ForMember(plan.Start.ApproverMemberId, plan.Start.ApproverDisplay),
+                LastChangedBy = ActorReference.ForMember(plan.ApproverMemberId, plan.ApproverDisplay),
             };
             await ApplicationDirectorySchema.Applications.InsertAsync(Transaction, view, ct).ConfigureAwait(false);
             await InsertRevisionAsync(view, "imported", null, ct).ConfigureAwait(false);

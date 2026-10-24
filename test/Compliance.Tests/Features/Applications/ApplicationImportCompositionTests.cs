@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
@@ -99,7 +100,20 @@ public sealed class ApplicationImportCompositionTests
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         }
 
-        ValueTask<Result> SendPersonalAsync(IRequest request) => Bus.DispatchAsync(request,
+        public IImmutableContentStore Content => _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+
+        /// <summary>Sends a personal HTTP 202 command, as the accepted routes do.</summary>
+        public ValueTask<Result<Bdgrz.Compliance.Features.NativeOperations.OperationAcceptedResponse>> SendPersonalAcceptedAsync(
+            IRequest<Bdgrz.Compliance.Features.NativeOperations.OperationAcceptedResponse> request) =>
+            Bus.DispatchAsync(request, new RequestDispatchContext(Actor, new HttpInvocation("PUT", "/synthetic/import",
+                "/synthetic/import", "synthetic")), CancellationToken.None);
+
+        /// <summary>The staged rows of a batch, from its immutable rows manifest.</summary>
+        public async Task<IReadOnlyList<ApplicationImportStagedRow>> RowsOfAsync(Uuid batchId) =>
+            (await ApplicationImportContent.ReadAsync<ApplicationImportRowsManifest>(Content, Tenant,
+                (await Reader.HydrateAsync(new ApplicationImportBatch(Tenant, batchId))).Staged!.RowsManifest)).Rows;
+
+        public ValueTask<Result> SendPersonalAsync(IRequest request) => Bus.DispatchAsync(request,
             new RequestDispatchContext(Actor, new HttpInvocation("POST", "/synthetic/import", "/synthetic/import", "synthetic")), CancellationToken.None);
 
         public async Task<(Uuid BatchId, Uuid OriginalBatchId, Uuid ApplicationId)> SeedAsync(string coverage = "declared_complete", bool invalid = false)
@@ -107,26 +121,53 @@ public sealed class ApplicationImportCompositionTests
             var original = await Bus.SendAsync(new StageApplicationImport(Tenant, Uuid.CreateVersion4(),
                 "manual", "applications", "partial", [new("omitted", "Observed application", "Purpose", null)]), Actor);
             Assert.True(original.IsSuccess, original.Error?.Message);
-            var originalBatch = await Reader.HydrateAsync(new ImportBatch(Tenant, original.Value!.BatchId));
-            var row = Assert.Single(originalBatch.GetRows());
-            Assert.True((await SendPersonalAsync(new CorrelateApplicationImportRow(Tenant, originalBatch.Id,
-                row.RowId, 1, "create_new", null, null, "New source identity"))).IsSuccess);
-            Assert.True((await SendPersonalAsync(new AcceptApplicationImport(Tenant, originalBatch.Id, 2))).IsSuccess);
-            Assert.True((await Bus.SendAsync(new ExecuteApplicationImport(Tenant, originalBatch.Id), RequestActor.System)).IsSuccess);
-            var ledger = await Reader.HydrateAsync(new ApplicationImportLedger(Tenant, "manual", "applications"));
-            Assert.Equal("committed", ledger.GetState(originalBatch));
-            var applicationId = Assert.Single(ledger.GetFrozenPlan(originalBatch.Id)!.Rows).ApplicationId;
+            var originalBatch = await Reader.HydrateAsync(new ApplicationImportBatch(Tenant, original.Value!.BatchId));
+            var rows = await ApplicationImportContent.ReadAsync<ApplicationImportRowsManifest>(
+                _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), Tenant,
+                originalBatch.Staged!.RowsManifest, CancellationToken.None);
+            var row = Assert.Single(rows.Rows);
+            Assert.True((await SendPersonalAsync(new CorrelateApplicationImportRow(Uuid.CreateVersion4(), Tenant,
+                originalBatch.Id, row.RowId, 1, "create_new", null, null, "New source identity"))).IsSuccess);
+            var accepted = await Bus.DispatchAsync(new AcceptApplicationImport(Uuid.CreateVersion4(), Tenant,
+                originalBatch.Id, 2), new RequestDispatchContext(Actor, new HttpInvocation("PUT", "/synthetic/import",
+                "/synthetic/import", "synthetic")), CancellationToken.None);
+            Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+            var run = await ApplicationImportProcessSupport.RunAsync(_provider, _scope.ServiceProvider, Tenant,
+                originalBatch.Id);
+            Assert.Equal(Bdgrz.Compliance.Features.Processes.ProcessState.Completed, run.State);
+            var published = await Reader.HydrateAsync(new ApplicationImportBatch(Tenant, originalBatch.Id));
+            Assert.Equal("committed", published.State);
+            var plan = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(
+                _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), Tenant,
+                published.Plan!.FrozenPlan, CancellationToken.None);
+            var applicationId = Assert.Single(await ApplicationImportContent.ReadSelectionAsync<ApplicationImportPlannedRow>(
+                _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), Tenant, plan.Rows)).ApplicationId;
             await CatchUpApplicationDirectoryAsync();
             var staged = await Bus.SendAsync(new StageApplicationImport(Tenant, Uuid.CreateVersion4(),
                 "manual", "applications", coverage, [new("present", invalid ? "" : "Present application", "Purpose", null)]), Actor);
             Assert.True(staged.IsSuccess, staged.Error?.Message);
-            var batch = await Reader.HydrateAsync(new ImportBatch(Tenant, staged.Value!.BatchId));
-            var directory = _scope.ServiceProvider.GetRequiredService<IApplicationImportDirectoryProjection>();
-            var identity = new CheckpointIdentity("ApplicationImportDirectoryV1", EventStreamPattern.ForPattern(Tenant.ToString(), "application_imports"));
-            await using var projection = await directory.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
-            await directory.ApplyAsync(Assert.IsType<ApplicationImportStaged>(batch.SourceObservation));
-            await projection.CommitAsync(ProjectionCheckpoint.Start);
-            return (batch.Id, originalBatch.Id, applicationId);
+            await CatchUpImportDirectoryAsync();
+            return (staged.Value!.BatchId, originalBatch.Id, applicationId);
+        }
+
+        ProjectionCheckpoint _importCheckpoint = ProjectionCheckpoint.Start;
+
+        /// <summary>Projects every committed import fact into the import directory, resuming from its checkpoint.</summary>
+        public async Task CatchUpImportDirectoryAsync()
+        {
+            var services = _scope.ServiceProvider;
+            var registration = Assert.Single(services.GetServices<WorkloadRegistration>(),
+                candidate => candidate.Name == "ApplicationImportDirectoryV1");
+            var projector = (Projector)services.GetRequiredService(registration.ComponentType);
+            await new ProjectorScenario(new TenantId(Tenant.ToString())).RunAsync(projector);
+            var runner = new ProjectorRunner(services.GetRequiredService<IDomainEventReader>());
+            while (true)
+            {
+                var next = await runner.RunAsync(projector, _importCheckpoint);
+                if (next == _importCheckpoint)
+                    break;
+                _importCheckpoint = next;
+            }
         }
 
         async Task CatchUpApplicationDirectoryAsync()

@@ -38,10 +38,10 @@ public sealed class ApplicationInventoryAuthorizerTests
             "missing" => new PreviewMissingApplicationImportRows(tenantId, batchId),
             "progress" => new GetApplicationImportProgress(tenantId, batchId),
             "report" => new GetApplicationImportRejectedReport(tenantId, batchId),
-            "accept" => new AcceptApplicationImport(tenantId, batchId, 1),
-            "cancel" => new CancelApplicationImport(tenantId, batchId, 1, "Canceled by lead"),
-            "correlate" => new CorrelateApplicationImportRow(tenantId, batchId, Uuid.CreateVersion4(),
-                1, "create_new", null, null, "Reviewed identity"),
+            "accept" => new AcceptApplicationImport(Uuid.CreateVersion4(), tenantId, batchId, 1),
+            "cancel" => new CancelApplicationImport(Uuid.CreateVersion4(), tenantId, batchId, 1, "Canceled by lead"),
+            "correlate" => new CorrelateApplicationImportRow(Uuid.CreateVersion4(), tenantId, batchId,
+                Uuid.CreateVersion4(), 1, "create_new", null, null, "Reviewed identity"),
             _ => new DeclareApplication(tenantId, "Payroll", "Run payroll"),
         };
         var permissions = new ImportStagingPermissions();

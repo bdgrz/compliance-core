@@ -968,25 +968,28 @@ public sealed class ComplianceWebTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var paths = document.RootElement.GetProperty("paths");
-        var collection = paths.GetProperty("/api/v1/tenants/{tenant_id}/application-imports");
-        var stage = collection.GetProperty("post");
+        Assert.False(paths.TryGetProperty("/api/v1/tenants/{tenant_id}/application-imports", out _));
+        var stage = paths.GetProperty("/api/v1/tenants/{tenant_id}/application-imports/{submission_id}")
+            .GetProperty("put");
         var body = stage.GetProperty("requestBody").GetProperty("content")
             .GetProperty("application/json").GetProperty("schema");
-        foreach (var name in new[] { "submission_id", "source_key", "source_namespace",
-                     "coverage", "rows" })
+        foreach (var name in new[] { "source_key", "source_namespace", "coverage", "rows" })
             Assert.True(body.GetProperty("properties").TryGetProperty(name, out _));
         Assert.False(body.GetProperty("properties").TryGetProperty("tenant_id", out _));
         Assert.True(stage.GetProperty("responses").TryGetProperty("200", out _));
         var batch = paths.GetProperty("/api/v1/tenants/{tenant_id}/application-imports/{batch_id}");
         Assert.True(batch.TryGetProperty("get", out _));
         var cancellation = paths.GetProperty(
-            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations");
-        Assert.True(cancellation.TryGetProperty("post", out var cancel));
+            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations/{command_id}");
+        Assert.True(cancellation.TryGetProperty("put", out var cancel));
+        Assert.True(cancel.GetProperty("responses").TryGetProperty("202", out _));
         var cancelBody = cancel.GetProperty("requestBody").GetProperty("content")
             .GetProperty("application/json").GetProperty("schema");
-        Assert.True(cancelBody.GetProperty("properties")
-            .TryGetProperty("expected_batch_revision", out _));
+        Assert.True(cancelBody.GetProperty("properties").TryGetProperty("expected_revision", out _));
         Assert.True(cancelBody.GetProperty("properties").TryGetProperty("reason", out _));
+        var acceptance = paths.GetProperty(
+            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances/{command_id}");
+        Assert.True(acceptance.GetProperty("put").GetProperty("responses").TryGetProperty("202", out _));
         foreach (var suffix in new[] { "/rows", "/preview", "/preview/missing" })
         {
             var read = paths.GetProperty(
@@ -1013,7 +1016,8 @@ public sealed class ComplianceWebTests
             .GetString());
         Assert.DoesNotContain(paths.EnumerateObject(), path =>
             path.Name.Contains("/application-imports/", StringComparison.Ordinal) &&
-            path.Name.Contains("acceptances", StringComparison.Ordinal));
+            (path.Name.EndsWith("/acceptances", StringComparison.Ordinal) ||
+             path.Name.EndsWith("/cancellations", StringComparison.Ordinal)));
     }
 
     [Fact]

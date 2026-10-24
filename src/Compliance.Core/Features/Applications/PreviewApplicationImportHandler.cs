@@ -1,10 +1,11 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
 public sealed class PreviewApplicationImportHandler(
     IApplicationImportDirectoryReader directory, ApplicationImportReadConsistency consistency,
-    IAggregateReader reader)
+    IAggregateReader reader, IImmutableContentStore content)
     : IRequestHandler<PreviewApplicationImport, Page<ApplicationImportPreviewRow>>
 {
     public async ValueTask<Result<Page<ApplicationImportPreviewRow>>> HandleAsync(
@@ -18,17 +19,17 @@ public sealed class PreviewApplicationImportHandler(
             request.MinimumRevision, ct).ConfigureAwait(false);
         if (!fresh.IsSuccess)
             return Result<Page<ApplicationImportPreviewRow>>.Failure(fresh.Error);
-        var source = await reader.HydrateAsync(new ImportBatch(request.TenantId, request.BatchId), ct).ConfigureAwait(false);
-        var ledger = await reader.HydrateAsync(new ApplicationImportLedger(request.TenantId,
-            source.SourceKey!, source.SourceNamespace!), ct).ConfigureAwait(false);
-        if (ledger.GetRevision(source) != fresh.Value.Revision)
+        var loaded = await ApplicationImportOmissionSources.LoadAsync(reader, content, request.TenantId,
+            request.BatchId, ct).ConfigureAwait(false);
+        if (!loaded.IsSuccess)
+            return Result<Page<ApplicationImportPreviewRow>>.Failure(loaded.Error);
+        var (source, view, stagedRows) = loaded.Value;
+        if (source.Revision != fresh.Value.Revision)
             return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The import lifecycle changed while reading the preview.", isTransient: true));
-        var missing = ledger.GetMissingSourceClaims(source);
-        if (!missing.IsSuccess)
-            return Result<Page<ApplicationImportPreviewRow>>.Failure(missing.Error);
-        var claims = ledger.GetSourceClaims().ToDictionary(claim => claim.Observation.SourceRecordId, StringComparer.Ordinal);
-        var sourcePosition = ledger.CommittedStreamPosition;
+        var missing = view.Missing(source, stagedRows);
+        var claims = view.Claims.ToDictionary(claim => claim.Observation.SourceRecordId, StringComparer.Ordinal);
+        var sourcePosition = view.Source.CommittedStreamPosition;
         var cursorError = ApplicationImportPaging.Decode(request.TenantId, request.BatchId,
             fresh.Value.Revision, request.Cursor, out var rowsCursor, sourcePosition);
         if (cursorError is not null)
@@ -56,8 +57,8 @@ public sealed class PreviewApplicationImportHandler(
         var items = new List<ApplicationImportPreviewRow>();
         foreach (var row in page.Items)
         {
-            var choice = ledger.GetCorrelation(request.BatchId, row.RowId);
-            var raw = source.GetRow(row.RowId);
+            var choice = source.GetCorrelation(row.RowId);
+            var raw = stagedRows.FirstOrDefault(candidate => candidate.RowId == row.RowId);
             if (raw is null || raw.RowNumber != row.RowNumber || raw.SourceRecordId != row.SourceRecordId ||
                 raw.Name != row.Name || raw.Purpose != row.Purpose || raw.OwnerReference != row.OwnerReference ||
                 !raw.ValidationFindings.SequenceEqual(row.ValidationFindings))
@@ -65,9 +66,9 @@ public sealed class PreviewApplicationImportHandler(
                     RequestErrorKind.Conflict, "The import row projection differs from its staged source.", isTransient: true));
             var claim = row.SourceRecordId is not null ? claims.GetValueOrDefault(row.SourceRecordId) : null;
             var blockers = new List<string>(row.ValidationFindings);
-            if (missing.Value.Count > 0)
+            if (missing.Count > 0)
                 blockers.Add("missing_source_retirement_unavailable");
-            if (ledger.GetState(source) == "canceled")
+            if (source.State is "canceled" or "canceling")
                 blockers.Add("batch_canceled");
             var targetId = claim?.Observation.ApplicationId ?? choice?.ApplicationId;
             var changed = claim?.ChangedFields(raw) ?? Array.Empty<string>();
@@ -108,10 +109,8 @@ public sealed class PreviewApplicationImportHandler(
                         : null,
             });
         }
-        var latest = await reader.HydrateAsync(new ApplicationImportLedger(request.TenantId,
-            source.SourceKey!, source.SourceNamespace!), ct).ConfigureAwait(false);
-        if (latest.CommittedStreamPosition != sourcePosition || latest.GetRevision(source) != fresh.Value.Revision ||
-            !latest.GetMissingSourceClaims(source).IsSuccess)
+        if (!await ApplicationImportOmissionSources.UnchangedAsync(reader, content, request.TenantId, source, view, ct)
+                .ConfigureAwait(false))
             return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "The import source changed while reading the preview.", isTransient: true));
         var nextCursor = ApplicationImportPaging.Encode(request.TenantId, request.BatchId,

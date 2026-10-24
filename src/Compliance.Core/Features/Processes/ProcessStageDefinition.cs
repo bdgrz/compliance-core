@@ -1,7 +1,12 @@
 namespace Bdgrz.Compliance.Features.Processes;
 
-/// <summary>One stage of an ordered process and the receivers it dispatches.</summary>
-public sealed record ProcessStageDefinition(string Stage, IReadOnlyList<string> Receivers, string? Rule = null)
+/// <summary>
+///     One stage of an ordered process and the receivers it dispatches. <paramref name="PerTarget" /> overrides the
+///     stage-name convention of <see cref="IsPerTarget" /> for a stage whose name does not say whether it dispatches
+///     once per canonical target.
+/// </summary>
+public sealed record ProcessStageDefinition(string Stage, IReadOnlyList<string> Receivers, string? Rule = null,
+    bool? PerTarget = null)
 {
     /// <summary>
     ///     How the stage walks the record's canonical targets. The default follows the stage name, which is how every
@@ -10,12 +15,12 @@ public sealed record ProcessStageDefinition(string Stage, IReadOnlyList<string> 
     public StageTargeting Targeting { get; init; } = StageTargeting.ByStageName;
 
     /// <summary>Stages that acquire keys dispatch once per canonical target; others dispatch once.</summary>
-    public bool IsPerTarget => Targeting switch
+    public bool IsPerTarget => PerTarget ?? (Targeting switch
     {
         StageTargeting.Once => false,
         StageTargeting.EachReceiver or StageTargeting.Interleaved => true,
         _ => Stage is "acquire" or "reserve" or "claim" or "protect" or "authorize" or "release" or "settle" or "materialize",
-    };
+    });
 
     /// <summary>
     ///     True when the canonical targets are the outer loop and the receivers the inner one, so one global key order

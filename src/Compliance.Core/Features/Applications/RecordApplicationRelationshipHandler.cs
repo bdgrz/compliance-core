@@ -36,8 +36,7 @@ public sealed class RecordApplicationRelationshipHandler(IAggregateExecutor exec
             return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "Relationships require active applications."));
 
-        var targetAggregate = await ApplicationImportWriteGuard.PrepareAsync(reader,
-            request.TenantId, request.SourceApplicationId, ct).ConfigureAwait(false);
+        var targetAggregate = new DeclaredApplication(request.TenantId, request.SourceApplicationId);
         var currentSource = await reader.HydrateApplicationAsync(request.TenantId,
             request.SourceApplicationId, ct).ConfigureAwait(false);
         var currentTarget = await reader.HydrateApplicationAsync(request.TenantId,

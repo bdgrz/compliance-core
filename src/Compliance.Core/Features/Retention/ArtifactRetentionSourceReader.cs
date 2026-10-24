@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Evidence;
 using Cntryl.Portia;
 
@@ -22,10 +23,12 @@ static class ArtifactRetentionSourceReader
         }
         else
         {
-            var batch = await reader.HydrateAsync(new ImportBatch(tenantId, id), ct).ConfigureAwait(false);
-            if (batch.IsCreated && batch.SourceObservation is { } staged && staged.TenantId == tenantId &&
+            var batch = await reader.HydrateAsync(new ApplicationImportBatch(tenantId, id), ct).ConfigureAwait(false);
+            // Retention binds the immutable staged observation, so its position is that of the staging fact: later
+            // lifecycle facts of the batch never change what is retained.
+            if (batch.IsCreated && batch.Staged is { Metadata: { } stagedMetadata } staged && staged.TenantId == tenantId &&
                 staged.BatchId == id && batch.ContentDigest is { } sha)
-                snapshot = new(new(tenantId, kind, id, sha.ToLowerInvariant()), batch.CommittedStreamPosition);
+                snapshot = new(new(tenantId, kind, id, sha.ToLowerInvariant()), stagedMetadata.AggregateVersion);
         }
         return snapshot is not null
             ? Result<ArtifactRetentionSourceSnapshot>.Success(snapshot)

@@ -2072,8 +2072,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}/releases")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Artifact retention");
-    app.MapPortiaPost<StageApplicationImport, ApplicationImportRegistration>(
-            "/api/v1/tenants/{tenant_id}/application-imports")
+    app.MapPortiaPut<StageApplicationImport, ApplicationImportRegistration>(
+            "/api/v1/tenants/{tenant_id}/application-imports/{submission_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Application imports");
     app.MapPortiaGet<GetApplicationImportProgress, ApplicationImportProgress>(
@@ -2086,17 +2086,37 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Read bounded rejected-item findings from retained import rows")
         .WithTags("Application imports");
-    app.MapPortiaPost<AcceptApplicationImport>(
-            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances")
+    app.MapPortiaPut<AcceptApplicationImport, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Personally accept a resolved whole application import batch")
         .WithTags("Application imports");
-    app.MapPortiaPost<CancelApplicationImport>(
-            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations")
+    app.MapPortiaPut<CancelApplicationImport, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Application imports");
-    app.MapPortiaPost<CorrelateApplicationImportRow>(
-            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations")
+    app.MapPortiaPut<CorrelateApplicationImportRow>(
+            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Record a personal source-row correlation decision before acceptance")
         .WithTags("Application imports");
@@ -2121,8 +2141,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal/preview")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Application imports");
-    app.MapPortiaPost<FreezeApplicationImportOmissionProposal>(
-            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal")
+    app.MapPortiaPut<FreezeApplicationImportOmissionProposal>(
+            "/api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Confirm a source-bound omission proposal without approving retirement")
         .WithTags("Application imports");

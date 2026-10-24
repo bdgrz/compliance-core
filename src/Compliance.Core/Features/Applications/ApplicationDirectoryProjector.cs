@@ -1,8 +1,10 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-public sealed partial class ApplicationDirectoryProjector(IApplicationDirectoryProjection projection, IAggregateReader reader)
+public sealed partial class ApplicationDirectoryProjector(IApplicationDirectoryProjection projection, IAggregateReader reader,
+    IImmutableContentStore content)
     : Projector(projection, EventStreamPattern.ForTenant(), "ApplicationDirectoryV2"),
       IProjectorHandler<ApplicationDeclared>, IProjectorHandler<ApplicationRevised>,
       IProjectorHandler<SystemInstanceDeclared>, IProjectorHandler<SystemInstanceRegistered>,
@@ -36,21 +38,40 @@ public sealed partial class ApplicationDirectoryProjector(IApplicationDirectoryP
     {
         if (context.Identity.Pattern.Realm != ev.TenantId.ToString())
             throw new InvalidOperationException("An import commit must belong to its tenant projection workload.");
-        var ledger = await reader.HydrateAsync(new ApplicationImportLedger(ev.TenantId,
-            ev.SourceKey, ev.SourceNamespace), ct).ConfigureAwait(false);
-        var marker = ledger.GetCommit(ev.BatchId);
-        var plan = ledger.GetFrozenPlan(ev.BatchId);
-        if (!ledger.IsCommitDurable(ev.BatchId) || marker is null || plan is null ||
-            marker with { Effects = ev.Effects } != ev || !marker.Effects.SequenceEqual(ev.Effects))
-            throw new InvalidOperationException("The import projection requires a durable authoritative source commit.");
-        foreach (var proof in marker.Effects)
+        var batch = await reader.HydrateAsync(new ApplicationImportBatch(ev.TenantId, ev.BatchId), ct)
+            .ConfigureAwait(false);
+        if (batch.Committed is not { Metadata: { } metadata } marker || marker != ev ||
+            batch.CommittedStreamPosition < metadata.AggregateVersion)
+            throw new InvalidOperationException("The import projection requires a durable authoritative batch commit.");
+        ImportFrozenPlanIntent plan;
+        IReadOnlyList<ApplicationImportPlannedRow> rows;
+        IReadOnlyList<ApplicationImportEffectProof> proofs;
+        try
+        {
+            plan = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, ev.TenantId, marker.Intent, ct)
+                .ConfigureAwait(false);
+            rows = await ApplicationImportContent.ReadAsync<IReadOnlyList<ApplicationImportPlannedRow>>(content,
+                ev.TenantId, marker.FrozenRows, ct).ConfigureAwait(false);
+            proofs = await ApplicationImportContent.ReadAsync<IReadOnlyList<ApplicationImportEffectProof>>(content,
+                ev.TenantId, marker.EffectsManifest, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            throw new InvalidOperationException(
+                $"The import projection requires verified immutable commit content: {exception.Message}");
+        }
+
+        foreach (var proof in proofs)
         {
             var target = await reader.HydrateAsync(new DeclaredApplication(ev.TenantId, proof.ApplicationId), ct)
                 .ConfigureAwait(false);
             var effect = target.GetPendingImportEffect(ev.BatchId, proof.RowId);
-            if (effect is null || target.CommittedStreamPosition < proof.EventVersion || !ledger.IsEffectCommitted(effect))
-                throw new InvalidOperationException("The committed import target proof is missing or differs from its source.");
+            if (effect?.Metadata is not { } effectMetadata || effectMetadata.EventId != proof.EventId ||
+                effectMetadata.AggregateVersion != proof.EventVersion ||
+                target.CommittedStreamPosition < proof.EventVersion)
+                throw new InvalidOperationException("The committed import target proof is missing or differs from its batch.");
         }
-        await projection.ApplyCommittedImportAsync(ev, plan, ct).ConfigureAwait(false);
+
+        await projection.ApplyCommittedImportAsync(ev, plan, rows, proofs, ct).ConfigureAwait(false);
     }
 }

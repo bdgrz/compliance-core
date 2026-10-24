@@ -26,133 +26,100 @@ sealed class FitzApplicationImportDirectory(IKvClient client)
         return batch;
     }
 
+    public async ValueTask ApplyStagedAsync(ApplicationImportStaged staged,
+        IReadOnlyList<ApplicationImportStagedRow> rows, CancellationToken ct = default)
+    {
+        if (staged.TenantId != _batchTenantId || rows.Count != staged.RowCount)
+            throw new InvalidOperationException("An import observation projects in its tenant with its complete rows.");
+        await ApplicationImportDirectorySchema.Batches.InsertAsync(Transaction,
+            new ApplicationImportView(staged.TenantId, staged.BatchId, staged.SubmissionId,
+                staged.SourceKey, staged.SourceNamespace, staged.Coverage,
+                staged.ContentSha256, 1, "preview_ready", staged.ActorMemberId,
+                staged.ActorDisplay, staged.SubmittedAt, staged.RowCount, staged.InvalidCount,
+                0, 0, 0, 0, staged.SubmittedAt), ct).ConfigureAwait(false);
+        foreach (var row in rows)
+            await ApplicationImportDirectorySchema.Rows.InsertAsync(Transaction,
+                    new ApplicationImportRowView(staged.TenantId, staged.BatchId, row.RowId,
+                        row.RowNumber, row.SourceRecordId, row.Name, row.Purpose,
+                        row.OwnerReference, row.ValidationFindings, "staged", null), ct)
+                .ConfigureAwait(false);
+    }
+
     public async ValueTask ApplyAsync(DomainEvent ev, CancellationToken ct = default)
     {
         switch (ev)
         {
             case ApplicationImportFailed failed:
-                var failedBatch = await ApplicationImportDirectorySchema.Batches.GetAsync(Transaction, failed.BatchId, ct).ConfigureAwait(false);
-                if (failed.TenantId != _batchTenantId || failedBatch is null || failedBatch.TenantId != failed.TenantId ||
-                    failedBatch.SourceKey != failed.SourceKey || failedBatch.SourceNamespace != failed.SourceNamespace ||
-                    failedBatch.State != "accepting" || failedBatch.Revision + 1 != failed.Revision)
-                    throw new InvalidOperationException("An import failure requires its exact accepting source batch.");
-                await ApplicationImportDirectorySchema.Batches.ReplaceAsync(Transaction, failedBatch, failedBatch with
+                await AdvanceAsync(failed.TenantId, failed.BatchId, failed.Revision, current => current with
                 {
-                    Revision = failed.Revision,
                     State = "failed",
                     PendingCount = 0,
                     AppliedCount = 0,
-                    FailedCount = failedBatch.PendingCount,
+                    FailedCount = current.PendingCount,
                     LastProgressAt = failed.FailedAt,
                 }, ct).ConfigureAwait(false);
                 break;
             case ApplicationImportCommitted committed:
-                var committedBatch = await ApplicationImportDirectorySchema.Batches.GetAsync(Transaction,
-                    committed.BatchId, ct).ConfigureAwait(false);
-                if (committed.TenantId != _batchTenantId || committedBatch is null || committedBatch.TenantId != committed.TenantId ||
-                    committedBatch.SourceKey != committed.SourceKey || committedBatch.SourceNamespace != committed.SourceNamespace ||
-                    committedBatch.Revision + 1 != committed.Revision || committedBatch.State != "accepting" ||
-                    committedBatch.PendingCount != committed.Effects.Count)
-                    throw new InvalidOperationException("An import commit cannot project before its complete source plan.");
-                await ApplicationImportDirectorySchema.Batches.ReplaceAsync(Transaction, committedBatch,
-                    committedBatch with
-                    {
-                        Revision = committed.Revision,
-                        State = "committed",
-                        AppliedCount = committed.Effects.Count,
-                        PendingCount = 0,
-                        LastProgressAt = committed.CommittedAt,
-                    }, ct).ConfigureAwait(false);
+                await AdvanceAsync(committed.TenantId, committed.BatchId, committed.Revision, current => current with
+                {
+                    State = "committed",
+                    AppliedCount = current.PendingCount,
+                    PendingCount = 0,
+                    LastProgressAt = committed.CommittedAt,
+                }, ct).ConfigureAwait(false);
                 break;
-            case ApplicationImportRetirementProposalStarted retirementStart:
-                await ApplyRetirementRevisionAsync(retirementStart.TenantId, retirementStart.BatchId,
-                    retirementStart.Revision, retirementStart.PreparedAt, retirementStart, ct).ConfigureAwait(false);
-                break;
-            case ApplicationImportRetirementRowFrozen retirementRow:
-                await ApplyRetirementRevisionAsync(retirementRow.TenantId, retirementRow.BatchId,
-                    retirementRow.Revision, null, null, ct).ConfigureAwait(false);
-                break;
-            case ApplicationImportRetirementProposalSealed retirementSeal:
-                await ApplyRetirementRevisionAsync(retirementSeal.TenantId, retirementSeal.BatchId,
-                    retirementSeal.Revision, null, null, ct).ConfigureAwait(false);
-                break;
-            case ApplicationImportPlanStarted started:
-                await ApplyPlanRevisionAsync(started.TenantId, started.BatchId, started.Revision,
-                    started.RowCount, started.StartedAt, ct).ConfigureAwait(false);
-                break;
-            case ApplicationImportPlanRowFrozen frozen:
-                await ApplyPlanRevisionAsync(frozen.TenantId, frozen.BatchId, frozen.Revision, null, null, ct).ConfigureAwait(false);
+            case ApplicationImportRetirementProposalSealed sealedProposal:
+                await AdvanceAsync(sealedProposal.TenantId, sealedProposal.BatchId, sealedProposal.Revision,
+                    current => current with { LastProgressAt = sealedProposal.Operation.AcceptedAt }, ct)
+                    .ConfigureAwait(false);
                 break;
             case ApplicationImportPlanSealed sealedPlan:
-                await ApplyPlanRevisionAsync(sealedPlan.TenantId, sealedPlan.BatchId, sealedPlan.Revision, null, null, ct).ConfigureAwait(false);
+                await AdvanceAsync(sealedPlan.TenantId, sealedPlan.BatchId, sealedPlan.Revision, current => current with
+                {
+                    State = "accepting",
+                    PendingCount = checked((int)sealedPlan.RowCount),
+                    LastProgressAt = sealedPlan.Operation.AcceptedAt,
+                }, ct).ConfigureAwait(false);
                 break;
-            case ApplicationImportStaged staged:
-                var invalid = staged.Rows.Count(row => row.ValidationFindings.Count > 0);
-                await ApplicationImportDirectorySchema.Batches.InsertAsync(Transaction,
-                    new ApplicationImportView(staged.TenantId, staged.BatchId, staged.SubmissionId,
-                        staged.SourceKey, staged.SourceNamespace, staged.Coverage,
-                        staged.ContentSha256, 1, "preview_ready", staged.ActorMemberId,
-                        staged.ActorDisplay, staged.SubmittedAt, staged.Rows.Count, invalid,
-                        0, 0, 0, 0, staged.SubmittedAt), ct).ConfigureAwait(false);
-                foreach (var row in staged.Rows)
-                    await ApplicationImportDirectorySchema.Rows.InsertAsync(Transaction,
-                            new ApplicationImportRowView(staged.TenantId, staged.BatchId, row.RowId,
-                                row.RowNumber, row.SourceRecordId, row.Name, row.Purpose,
-                                row.OwnerReference, row.ValidationFindings, "staged", null), ct)
-                        .ConfigureAwait(false);
+            case ApplicationImportExecutionAuthorized authorized:
+                await AdvanceAsync(_batchTenantId!.Value, Uuid.Parse(authorized.Owner.Resource!, null),
+                    authorized.Revision, current => current with { LastProgressAt = authorized.Operation.AcceptedAt },
+                    ct).ConfigureAwait(false);
                 break;
-            case ApplicationImportCanceled canceled:
-                var current = await ApplicationImportDirectorySchema.Batches.GetAsync(
-                                  Transaction, canceled.BatchId, ct).ConfigureAwait(false) ??
-                              throw new InvalidOperationException(
-                                  "An import cancellation cannot project before its staging event.");
-                await ApplicationImportDirectorySchema.Batches.ReplaceAsync(Transaction, current,
-                    current with
+            case ApplicationImportCancellationAccepted accepted:
+                await AdvanceAsync(_batchTenantId!.Value, Uuid.Parse(accepted.Owner.Resource!, null),
+                    accepted.Revision, current => current with
                     {
-                        Revision = canceled.Revision,
-                        State = "canceled",
-                        PendingCount = 0,
-                        LastProgressAt = canceled.CanceledAt,
+                        State = "canceling",
+                        LastProgressAt = accepted.Operation.AcceptedAt,
                     }, ct).ConfigureAwait(false);
                 break;
+            case ApplicationImportCanceled canceled:
+                await AdvanceAsync(canceled.TenantId, canceled.BatchId, canceled.Revision, current => current with
+                {
+                    State = "canceled",
+                    PendingCount = 0,
+                    LastProgressAt = canceled.CanceledAt,
+                }, ct).ConfigureAwait(false);
+                break;
             case ApplicationImportRowCorrelated correlated:
-                var batch = await ApplicationImportDirectorySchema.Batches.GetAsync(
-                                Transaction, correlated.BatchId, ct).ConfigureAwait(false) ??
-                            throw new InvalidOperationException("An import correlation cannot project before staging.");
-                await ApplicationImportDirectorySchema.Batches.ReplaceAsync(Transaction, batch,
-                    batch with { Revision = correlated.Revision, LastProgressAt = correlated.RecordedAt }, ct)
-                    .ConfigureAwait(false);
+                await AdvanceAsync(correlated.TenantId, correlated.BatchId, correlated.Revision,
+                    current => current with { LastProgressAt = correlated.RecordedAt }, ct).ConfigureAwait(false);
                 break;
         }
     }
 
-    async ValueTask ApplyRetirementRevisionAsync(Uuid tenantId, Uuid batchId, long revision,
-        DateTimeOffset? preparedAt, ApplicationImportRetirementProposalStarted? start, CancellationToken ct)
+    async ValueTask AdvanceAsync(Uuid tenantId, Uuid batchId, long revision,
+        Func<ApplicationImportView, ApplicationImportView> change, CancellationToken ct)
     {
-        var current = await ApplicationImportDirectorySchema.Batches.GetAsync(Transaction, batchId, ct).ConfigureAwait(false);
+        var current = await ApplicationImportDirectorySchema.Batches.GetAsync(Transaction, batchId, ct)
+            .ConfigureAwait(false);
         if (tenantId != _batchTenantId || current is null || current.TenantId != tenantId ||
-            current.Coverage != "declared_complete" || current.State != "preview_ready" || current.Revision + 1 != revision ||
-            (start is not null && (current.SourceKey != start.SourceKey || current.SourceNamespace != start.SourceNamespace ||
-                current.ContentSha256 != start.ContentSha256)))
-            throw new InvalidOperationException("A retirement proposal requires its exact preview-ready staged batch.");
+            current.Revision + 1 != revision)
+            throw new InvalidOperationException(
+                "An import fact projects in its tenant, in order, after its staged observation.");
         await ApplicationImportDirectorySchema.Batches.ReplaceAsync(Transaction, current,
-            current with { Revision = revision, LastProgressAt = preparedAt ?? current.LastProgressAt }, ct).ConfigureAwait(false);
-    }
-
-    async ValueTask ApplyPlanRevisionAsync(Uuid tenantId, Uuid batchId, long revision,
-        int? plannedRowCount, DateTimeOffset? startedAt, CancellationToken ct)
-    {
-        var current = await ApplicationImportDirectorySchema.Batches.GetAsync(Transaction, batchId, ct).ConfigureAwait(false);
-        if (current is null || current.TenantId != tenantId)
-            throw new InvalidOperationException("An import plan cannot project before its tenant's staging event.");
-        await ApplicationImportDirectorySchema.Batches.ReplaceAsync(Transaction, current,
-            current with
-            {
-                Revision = revision,
-                State = "accepting",
-                PendingCount = plannedRowCount ?? current.PendingCount,
-                LastProgressAt = startedAt ?? current.LastProgressAt,
-            }, ct).ConfigureAwait(false);
+            change(current) with { Revision = revision }, ct).ConfigureAwait(false);
     }
 
     public async ValueTask<ApplicationImportView?> GetAsync(Uuid tenantId, Uuid batchId,

@@ -21,7 +21,7 @@ static class ApplicationImportRetirementImpact
         IsDigest(impact.ImpactDigest) &&
         string.Equals(impact.ImpactDigest, row.RetirementImpactDigest, StringComparison.Ordinal);
 
-    public static bool IsValidFrozenRow(ApplicationImportPlanStarted plan,
+    public static bool IsValidFrozenRow(Uuid tenantId, Uuid batchId, string sourceKey, string sourceNamespace,
         ApplicationImportPlannedRow row) => row.Decision == "retire" &&
         row.ExpectedApplicationRevision is >= 1 && row.RetirementSourceClaimId is { } claimId &&
         claimId != Uuid.Empty && row.RetirementProposalSha256 is { } proposalSha && IsDigest(proposalSha) &&
@@ -30,10 +30,9 @@ static class ApplicationImportRetirementImpact
         !string.IsNullOrWhiteSpace(row.SourceRecordId) && row.SourceRecordId.Length <= 256 &&
         row.SourceRecordId == row.SourceRecordId.Trim() && row.Name is { Length: 0 } &&
         row.Purpose is { Length: 0 } &&
-        row.OwnerReference is null && row.RowId == Uuid.CreateVersion5(plan.BatchId,
-            $"application_import_retirement:{claimId}") && claimId == Uuid.CreateVersion5(
-            ApplicationImportLedger.IdFor(plan.TenantId, plan.SourceKey, plan.SourceNamespace),
-            $"application_import_claim:{row.SourceRecordId}");
+        row.OwnerReference is null && row.RowId == ApplicationImportEffects.RetirementRowId(batchId, claimId) &&
+        claimId == ApplicationImportEffects.SourceClaimId(
+            ApplicationImportSource.IdFor(tenantId, sourceKey, sourceNamespace), row.SourceRecordId);
 
     static bool IsCompleteWithoutKnownReferences(ApplicationChangePreview impact) =>
         impact.ChangeKind == "retire" && impact.Complete && impact.PendingContexts is { Count: 0 } &&

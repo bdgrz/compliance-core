@@ -40,8 +40,7 @@ public sealed class RemoveGovernedApplicationRelationshipHandler(
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Relationships require active applications."));
 
-        var targetAggregate = await ApplicationImportWriteGuard.PrepareAsync(reader,
-            request.TenantId, request.SourceApplicationId, ct).ConfigureAwait(false);
+        var targetAggregate = new DeclaredApplication(request.TenantId, request.SourceApplicationId);
         var (memberId, display) = ApplicationActor.From(context);
         return await executor.ExecuteAsync(targetAggregate,
             application => application.CheckPendingImportChanges() is { } importError

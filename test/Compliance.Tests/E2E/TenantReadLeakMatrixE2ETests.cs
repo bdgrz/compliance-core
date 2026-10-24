@@ -644,7 +644,7 @@ public sealed class TenantReadLeakMatrixE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(importsPath, body);
+            using var response = await owner.PutAsJsonAsync($"{importsPath}/{body.submission_id}", body);
             if (response.StatusCode == HttpStatusCode.OK)
                 return (await ReadJsonAsync(response)).GetProperty("batch_id").GetString()!;
             Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,

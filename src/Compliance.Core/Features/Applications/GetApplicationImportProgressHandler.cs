@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-public sealed class GetApplicationImportProgressHandler(IAggregateReader reader)
+public sealed class GetApplicationImportProgressHandler(IAggregateReader reader, IImmutableContentStore content)
     : IRequestHandler<GetApplicationImportProgress, ApplicationImportProgress>
 {
     public async ValueTask<Result<ApplicationImportProgress>> HandleAsync(IRequestContext<GetApplicationImportProgress> context,
@@ -13,35 +14,50 @@ public sealed class GetApplicationImportProgressHandler(IAggregateReader reader)
             request.BatchId, request.MinimumRevision, ct).ConfigureAwait(false);
         if (!loaded.IsSuccess)
             return Result<ApplicationImportProgress>.Failure(loaded.Error);
-        var (batch, ledger) = loaded.Value;
-        var plan = ledger.GetFrozenPlan(batch.Id);
+        var batch = loaded.Value;
+        var planned = 0;
         var durable = 0;
-        var targets = new Dictionary<Uuid, DeclaredApplication>();
-        foreach (var row in plan?.Rows ?? [])
+        if (batch.Plan is { } sealedPlan)
         {
-            if (!targets.TryGetValue(row.ApplicationId, out var target))
+            try
             {
-                target = await reader.HydrateAsync(new DeclaredApplication(request.TenantId, row.ApplicationId), ct).ConfigureAwait(false);
-                targets.Add(row.ApplicationId, target);
+                var plan = await ApplicationImportContent.ReadAsync<ImportFrozenPlanIntent>(content, request.TenantId,
+                    sealedPlan.FrozenPlan, ct).ConfigureAwait(false);
+                var groups = await ApplicationImportContent.ReadSelectionAsync<ImportTargetGroupIntent>(content,
+                    request.TenantId, plan.TargetGroups, ct).ConfigureAwait(false);
+                planned = checked((int)plan.Rows.Count);
+                foreach (var group in groups)
+                {
+                    var rows = await ApplicationImportContent.ReadSelectionAsync<ApplicationImportPlannedRow>(content,
+                        request.TenantId, group.Rows, ct).ConfigureAwait(false);
+                    var target = await reader.HydrateAsync(new DeclaredApplication(request.TenantId, group.ApplicationId), ct)
+                        .ConfigureAwait(false);
+                    foreach (var row in rows)
+                    {
+                        var effect = target.GetPendingImportEffect(batch.Id, row.RowId);
+                        if (effect is null)
+                            continue;
+                        if (target.Stream.Realm != request.TenantId.ToString() || target.Id != group.ApplicationId ||
+                            effect.FrozenPlan != sealedPlan.FrozenPlan || effect.Row != row)
+                            return Result<ApplicationImportProgress>.Failure(new RequestError(RequestErrorKind.Conflict,
+                                "The target progress differs from its frozen import plan."));
+                        if (target.CommittedStreamPosition >= effect.Metadata.AggregateVersion)
+                            durable++;
+                    }
+                }
             }
-            var effect = target.GetPendingImportEffect(batch.Id, row.RowId);
-            if (effect is null)
-                continue;
-            if (target.Stream.Realm != request.TenantId.ToString() || target.Id != row.ApplicationId ||
-                effect != new ApplicationImportEffectPending(request.TenantId, row.ApplicationId,
-                    plan!.Revision, plan.PlanSha256, plan.Start, row, effect.RecordedAt))
+            catch (ImmutableContentIntegrityException)
+            {
                 return Result<ApplicationImportProgress>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The target progress differs from its frozen import plan."));
-            if (target.CommittedStreamPosition >= effect.Metadata.AggregateVersion)
-                durable++;
+                    "The frozen import plan cannot be verified yet.", isTransient: true));
+            }
         }
-        var fence = await ApplicationImportLifecycleRead.CheckAsync(reader, batch, ledger, ct).ConfigureAwait(false);
+
+        var fence = await ApplicationImportLifecycleRead.CheckAsync(reader, batch, ct).ConfigureAwait(false);
         if (!fence.IsSuccess)
             return Result<ApplicationImportProgress>.Failure(fence.Error);
-        var failure = ledger.GetFailure(batch.Id);
-        var commit = ledger.GetCommit(batch.Id);
-        return Result<ApplicationImportProgress>.Success(new(request.TenantId, batch.Id, ledger.GetRevision(batch),
-            ledger.GetState(batch), plan?.Rows.Count ?? 0, durable, commit?.Effects.Count ?? 0,
-            failure?.FailureCode, failure?.RowId, plan?.Start.StartedAt, commit?.CommittedAt));
+        return Result<ApplicationImportProgress>.Success(new(request.TenantId, batch.Id, batch.Revision,
+            batch.State, planned, durable, batch.Committed is null ? 0 : planned, batch.Failed?.FailureCode,
+            batch.Failed?.RowId, batch.Plan?.Operation.AcceptedAt, batch.Committed?.CommittedAt));
     }
 }

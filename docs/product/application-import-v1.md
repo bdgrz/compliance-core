@@ -66,23 +66,42 @@ the same inventory-management authority as acceptance and cancellation.
 
 | HTTP operation | Portia request/result | Success and purpose | MCP |
 | --- | --- | --- | --- |
-| `POST /api/v1/tenants/{tenant_id}/application-imports` | `StageApplicationImport` → `ApplicationImportRegistration` | 200; store one immutable bounded observation and return `batch_id`, `revision`, `content_sha256` | `bdgrz.application_import.stage` (idempotent, bounded JSON) |
-| `POST /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations` | `CancelApplicationImport` → no value | 204 before acceptance or while accepting and before commit, rolling back every pending effect; 409 after commit or terminal failure | none; HTTP-only |
+| `PUT /api/v1/tenants/{tenant_id}/application-imports/{submission_id}` | `StageApplicationImport` → `ApplicationImportRegistration` | 200; store one immutable observation (rows are immutable content, with no row-count or frame cap) and return `batch_id`, `revision`, `content_sha256`; an exact retry returns the original registration | `bdgrz.application_import.stage` (idempotent) |
+| `PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations/{command_id}` | `CorrelateApplicationImportRow` → no value | 200/204; record an attributable link-existing or create-new choice without changing inventory | none; HTTP-only |
+| `PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal/{command_id}` | `FreezeApplicationImportOmissionProposal` → no value | 200/204; seal the complete omission proposal bound to the exact source position and content digest | none; HTTP-only |
+| `PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances/{command_id}` | `AcceptApplicationImport` → `OperationAcceptedResponse` | 202; seal the complete frozen plan under `expected_revision` and start the execution process | none; HTTP-only |
+| `PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations/{command_id}` | `CancelApplicationImport` → `OperationAcceptedResponse` | 202 before publication; every target is fenced before any hold is released; 409 after publication or terminal failure | none; HTTP-only |
 
-| `POST /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations` | `CorrelateApplicationImportRow` → no value | 204; record an attributable link-existing or create-new choice without changing inventory | none; HTTP-only |
-
-| `POST /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances` | `AcceptApplicationImport` → no value | 204; freeze every resolved valid row under `expected_batch_revision`; worker commits all effects together | none; HTTP-only |
+`command_id` and `submission_id` are the logical operation identities: an exact retry returns the
+original result even after later changes, and the same identity with a changed body returns 409.
+`expected_revision` is the batch's logical revision, which counts every fact of the batch.
 
 Acceptance rejects stale batch/linked-target revisions, invalid or duplicate rows,
-unresolved correlations and complete-source omissions. Replaying the frozen plan's
-original expected revision or its current lifecycle revision adds no decision or
-effect. Source observations never overwrite governed fields on linked applications.
+unresolved correlations and complete-source omissions without a current sealed proposal and
+complete impact evidence. Source observations do not overwrite governed fields on linked
+applications. Batch states are `preview_ready`, `accepting`, `canceling`, `committed`, `canceled`
+and `failed`.
+
+### Execution process
+
+`AcceptApplicationImport` seals an `ImportFrozenPlanIntent` (every planned row in authored order,
+every canonical target group, every source claim, the actors, the source cut and the exact source
+revision) as immutable content with no truncation, and appends `ApplicationImportPlanSealed`.
+`ApplicationImportExecutionProcess` then runs claim (the canonical `ApplicationImportSource`, once
+per batch against the frozen source revision), reserve (every target group in canonical stream-key
+order, driven by `ApplicationImportExecutionAuthorized`), apply (one preflighted native append batch
+per group: a provisional `ApplicationImportEffectPending` for every row, the baseline compared
+once), publish (one `ApplicationImportCommitted` from the complete target proof manifest) and settle
+(release the targets and the source). A target does not consult the live batch to change its own
+state: the published candidate is promoted by its own settlement fact without a second content
+revision. A cancellation first makes the batch refuse a later commit, fences every target even if
+its hold was never acquired, completes the cancellation from the fence manifest, and only then
+releases.
 
 `StageApplicationImport` body:
 
 ```json
 {
-  "submission_id": "018f0ed4-5d29-7e91-86bb-31a137fd6a6d",
   "source_key": "tenant_maintained_application_list",
   "source_namespace": "primary",
   "coverage": "partial",
@@ -98,8 +117,8 @@ effect. Source observations never overwrite governed fields on linked applicatio
 ```
 
 `coverage` is `partial` or `declared_complete`. A complete declaration is
-attributed to the caller; it does not verify the source. The body has 1–200
-rows. `source_key` and `source_namespace` are nonblank and at most 128
+attributed to the caller; it does not verify the source. The body has at least one
+row and no row-count cap. `source_key` and `source_namespace` are nonblank and at most 128
 characters each; `source_record_id` must be nonblank and at most 256 for later
 acceptance; `name` must be nonblank and at most 200; `purpose` must be nonblank
 and at most 2,000; nullable `owner_reference` is at most 2,000. Reject
@@ -129,7 +148,7 @@ that ID returns 409. The response is:
 }
 ```
 
-`CancelApplicationImport` takes `expected_batch_revision` and a nonblank
+`CancelApplicationImport` takes `command_id` (route) and `expected_revision` and a nonblank
 `reason`. Cancellation before commit retains the batch, rows, and attributed terminal decision.
 New cancellation decisions are serialized on the ledger for the exact tenant,
 source key, and namespace, in a separate stream within `application_imports`.
@@ -156,7 +175,7 @@ on the same ledger; a late failure cannot overwrite a committed or canceled batc
 
 ## Pre-acceptance correlation
 
-`CorrelateApplicationImportRow` takes `expected_batch_revision`, `decision`
+`CorrelateApplicationImportRow` takes `command_id` (route) and `expected_revision`, `decision`
 (`link_existing` or `create_new`), nullable `application_id` and
 `expected_application_revision`, and a nonblank `reason` of at most 2000 characters.
 A link requires the exact existing, active tenant application and its current

@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Applications;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization.Metadata;
 
@@ -18,6 +19,7 @@ public static class ResultSchemaRegistry
         ["operation-status-response.v1"] = ComplianceCoreJsonContext.Default.OperationStatusResponse,
         ["mutation-result-content.v1"] = ComplianceCoreJsonContext.Default.MutationResultContent,
         [AdministratorTransitionResponse.Schema] = ComplianceCoreJsonContext.Default.AdministratorTransitionResponse,
+        [ApplicationImportContent.RegistrationSchema] = ComplianceCoreJsonContext.Default.ApplicationImportRegistration,
         ["FirmStaffChangeRecorded.StaffContent.v1"] = ComplianceCoreJsonContext.Default.FirmStaffMemberView,
         ["FirmProfessionalDutyDesignationRecorded.DesignationContent.v1"] =
             ComplianceCoreJsonContext.Default.FirmProfessionalDutyDesignationView,

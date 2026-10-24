@@ -447,6 +447,8 @@ public sealed class ArtifactRetentionHandlerTests
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+            Content = new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(
+                new Cntryl.Fitz.Testing.InMemoryKvClient());
             Mutation = new(Executor, Reader, TimeProvider.System);
             Read = new(Reader, TimeProvider.System);
         }
@@ -462,9 +464,12 @@ public sealed class ArtifactRetentionHandlerTests
             return id;
         }
 
+        public Bdgrz.Compliance.Features.Content.IImmutableContentStore Content { get; }
+
         public async Task<Uuid> ImportAsync()
         {
-            var staged = await new StageApplicationImportHandler(Executor, Reader, TimeProvider.System).HandleAsync(
+            var staged = await new StageApplicationImportHandler(new Bdgrz.Compliance.Features.NativeOperations.NativeOperationExecutor(Reader, Executor,
+                    Content), Reader, Content, TimeProvider.System).HandleAsync(
                 new Cntryl.Portia.RequestContext<StageApplicationImport>(new(Tenant, Uuid.CreateVersion4(), "manual", "applications", "partial",
                     [new("row-1", "Payroll", "Pay staff", null)]), Actor), CancellationToken.None);
             Assert.True(staged.IsSuccess);

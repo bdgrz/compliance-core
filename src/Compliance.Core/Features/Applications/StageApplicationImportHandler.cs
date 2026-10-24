@@ -1,26 +1,96 @@
-using Cntryl.Fitz.Extensions;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-public sealed class StageApplicationImportHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock)
+/// <summary>
+///     Stages one immutable observation as the root native acceptance of its submission on the new batch. The
+///     complete rows are frozen as immutable content before the batch is touched, so the observation has no row or
+///     frame cap; an exact retry replays the original registration and a changed observation conflicts.
+/// </summary>
+public sealed class StageApplicationImportHandler(NativeOperationExecutor operations, IAggregateReader reader,
+    IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<StageApplicationImport, ApplicationImportRegistration>
 {
+    const string CommandKind = "StageApplicationImport";
+    const string InitialEpisode = "initial";
+
     public async ValueTask<Result<ApplicationImportRegistration>> HandleAsync(
         IRequestContext<StageApplicationImport> context, CancellationToken ct)
     {
         var request = context.Request;
         var (memberId, display) = ApplicationActor.From(context);
-        var result = await executor.ExecuteAsync(new ImportBatch(request.TenantId, ImportBatch.BatchIdFor(request)),
-            batch => AggregateOutcome.CommitOnSuccess(batch.Stage(request, memberId,
-                display, clock.GetUtcNow())), context, ct).ConfigureAwait(false);
-        if (!result.IsSuccess)
-            return result;
-        var ledger = await reader.HydrateAsync(new ApplicationImportLedger(request.TenantId,
-            request.SourceKey, request.SourceNamespace), ct).ConfigureAwait(false);
-        return ledger.GetRecordedRevision(result.Value.BatchId) is { } revision
-            ? Result<ApplicationImportRegistration>.Success(result.Value with { Revision = revision })
-            : result;
+        var batchId = request.TenantId != Uuid.Empty && request.SourceKey is not null && request.SourceNamespace is not null
+            ? ApplicationImportBatch.BatchIdFor(request)
+            : Uuid.Empty;
+        if (batchId == Uuid.Empty)
+            return Invalid();
+        var now = clock.GetUtcNow();
+        var snapshot = await reader.HydrateAsync(new ApplicationImportBatch(request.TenantId, batchId,
+            request.SubmissionId), ct).ConfigureAwait(false);
+        var provenance = new OperationProvenance(request.SubmissionId, request.SubmissionId, null, CommandKind,
+            ActorReference.ForMember(memberId, display), snapshot.Stream, InitialEpisode, null,
+            AuthoredIntentDigest.Compute(request), now, snapshot.Stream, snapshot.Stream);
+        var binding = AcceptedOperationBinding.Of(provenance);
+
+        // A submission that was already accepted resolves from the owner's facts before any guard is evaluated.
+        FirstResponseDescriptor? response = null;
+        ImmutableContentRef? rows = null;
+        ImmutableContentRef? result = null;
+        string? digest = null;
+        var invalid = 0;
+        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        {
+            if (!ApplicationImportRowRules.ValidRequest(request))
+                return Invalid();
+            var duplicated = ApplicationImportRowRules.Duplicated(request.Rows);
+            var staged = request.Rows.Select((row, index) => new ApplicationImportStagedRow(
+                ApplicationImportEffects.RowId(batchId, index + 1), index + 1, row.SourceRecordId, row.Name,
+                row.Purpose, row.OwnerReference, ApplicationImportRowRules.Findings(row, duplicated))).ToArray();
+            var manifest = new ApplicationImportRowsManifest(staged);
+            if (ApplicationImportContent.Size(manifest) > ApplicationImportBatch.MaximumStagedBytes)
+                return Result<ApplicationImportRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+                    "The import observation exceeds the bounded immutable content size."));
+            digest = ApplicationImportBatch.ObservationSha256(request);
+            invalid = staged.Count(row => row.ValidationFindings.Count > 0);
+            rows = await ApplicationImportContent.WriteAsync(content, request.TenantId,
+                ApplicationImportRowsManifest.Schema, manifest, ct).ConfigureAwait(false);
+            var registration = await ApplicationImportContent.WriteAsync(content, request.TenantId,
+                ApplicationImportContent.RegistrationSchema, new ApplicationImportRegistration(batchId, 1, digest), ct)
+                .ConfigureAwait(false);
+            result = await ApplicationImportContent.WriteResultAsync(content, request.TenantId,
+                ApplicationImportContent.RegistrationSchema, registration, ct).ConfigureAwait(false);
+            response = ApplicationImportContent.OkResponse(ApplicationImportContent.RegistrationSchema, registration);
+        }
+
+        var outcome = await operations.ExecuteAsync(new NativeOperation<ApplicationImportBatch>(binding,
+            () => new ApplicationImportBatch(request.TenantId, batchId, request.SubmissionId),
+            batch => batch.Acceptance,
+            batch => Prepare(batch, response),
+            (ApplicationImportBatch batch, ImmutableContentRef frozen) => batch.Stage(provenance,
+                request.SubmissionId, request.SourceKey!, request.SourceNamespace!, request.Coverage, digest!, rows!,
+                request.Rows.Count, invalid, memberId, display, now, frozen, result!)), context, ct)
+            .ConfigureAwait(false);
+        return await ApplicationImportContent.ResponseAsync<ApplicationImportRegistration>(content, request.TenantId,
+            outcome, ct).ConfigureAwait(false);
     }
+
+    static Result<FirstResponseDescriptor> Prepare(ApplicationImportBatch batch, FirstResponseDescriptor? response)
+    {
+        var prepared = batch.PrepareStage();
+        if (!prepared.IsSuccess)
+            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+        return response is null
+            ? Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The batch changed while the observation was prepared; retry.", true))
+            : Result<FirstResponseDescriptor>.Success(response);
+    }
+
+    static Result<ApplicationImportRegistration> Invalid() => Result<ApplicationImportRegistration>.Failure(
+        new RequestError(RequestErrorKind.Validation,
+            "An import requires a source, coverage, submission ID, and at least one bounded row."));
 }
