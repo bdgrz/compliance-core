@@ -23,8 +23,8 @@ public sealed class ProviderAssuranceHttpMcpTests
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var tenantId = Uuid.CreateVersion4();
         var otherTenant = Uuid.CreateVersion4();
-        var providerId = await RecordProviderAsync(client, tenantId);
-        var otherProviderId = await RecordProviderAsync(client, otherTenant);
+        var providerId = await RecordProviderAsync(factory.Services, tenantId);
+        var otherProviderId = await RecordProviderAsync(factory.Services, otherTenant);
 
         // Act
         using var recorded = await client.PostAsync($"{Path(tenantId, providerId)}/assurance-reports", Json("content", Report()));
@@ -79,7 +79,7 @@ public sealed class ProviderAssuranceHttpMcpTests
         using var login = await client.PostAsJsonAsync("/api/v1/developer-user-sessions", new { email_address = "assurance-mcp@example.com" });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var tenantId = Uuid.CreateVersion4();
-        var providerId = await RecordProviderAsync(client, tenantId);
+        var providerId = await RecordProviderAsync(factory.Services, tenantId);
         await using var scenario = await McpScenario.ConnectAsync(client, new Uri(client.BaseAddress!, "/mcp"));
 
         // Act
@@ -135,13 +135,11 @@ public sealed class ProviderAssuranceHttpMcpTests
     static StringContent Json(string name, ProviderReviewContent content) => new("{\"" + name + "\":" +
         JsonSerializer.Serialize(content, ComplianceCoreJsonContext.Default.ProviderReviewContent) + "}", Encoding.UTF8, "application/json");
 
-    static async Task<Uuid> RecordProviderAsync(HttpClient client, Uuid tenantId)
+    static async Task<Uuid> RecordProviderAsync(IServiceProvider services, Uuid tenantId)
     {
-        using var body = new StringContent("{\"content\":" + JsonSerializer.Serialize(MaterialProvider(),
-            ComplianceCoreJsonContext.Default.ProviderContent) + "}", Encoding.UTF8, "application/json");
-        using var created = await client.PostAsync($"/api/v1/tenants/{tenantId}/providers", body);
-        Assert.Equal(HttpStatusCode.OK, created.StatusCode);
-        return JsonSerializer.Deserialize(await created.Content.ReadAsStringAsync(), ComplianceCoreJsonContext.Default.ProviderRegistration)!.ProviderId;
+        var providerId = Uuid.CreateVersion4();
+        await NamedRecordFacts.SeedProviderAsync(services, tenantId, providerId, MaterialProvider());
+        return providerId;
     }
 
     static async Task CatchUpAsync(IServiceProvider provider, Uuid tenant)

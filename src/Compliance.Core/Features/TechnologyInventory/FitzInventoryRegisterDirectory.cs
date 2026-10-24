@@ -18,31 +18,32 @@ sealed class FitzInventoryRegisterDirectory(IKvClient client)
         base.LoadCheckpointAsync(new CheckpointIdentity(ProjectorName,
             InventoryRegisters.TenantPattern(tenantId)), ct);
 
-    public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
+    public async ValueTask ApplyAsync(LocationRevisionRecorded ev, LocationContent content,
+        CancellationToken ct = default)
     {
-        switch (domainEvent)
-        {
-            case LocationRevisionRecorded ev:
-                await ApplyAsync(InventoryRegisterDirectorySchema.Locations,
-                    InventoryRegisterDirectorySchema.LocationRevisions,
-                    ComplianceCoreJsonContext.Default.LocationView, ev.LocationId,
-                    new LocationView(ev.TenantId, ev.LocationId, ev.Revision, ev.Content,
-                        InventoryRegisters.ManualSource, ev.Actor, ev.ChangedAt),
-                    static view => (view.TenantId, view.Revision), ct).ConfigureAwait(false);
-                break;
-            case OperationalProcessRevisionRecorded ev:
-                await ApplyAsync(InventoryRegisterDirectorySchema.Processes,
-                    InventoryRegisterDirectorySchema.ProcessRevisions,
-                    ComplianceCoreJsonContext.Default.OperationalProcessView,
-                    ev.OperationalProcessId,
-                    new OperationalProcessView(ev.TenantId, ev.OperationalProcessId,
-                        ev.Revision, ev.Content, InventoryRegisters.ManualSource, ev.Actor,
-                        ev.ChangedAt), static view => (view.TenantId, view.Revision), ct)
-                    .ConfigureAwait(false);
-                break;
-            default:
-                throw new InvalidOperationException("The inventory register event is not supported.");
-        }
+        ArgumentNullException.ThrowIfNull(ev);
+        ArgumentNullException.ThrowIfNull(content);
+        await ApplyAsync(InventoryRegisterDirectorySchema.Locations,
+            InventoryRegisterDirectorySchema.LocationRevisions,
+            ComplianceCoreJsonContext.Default.LocationView, ev.LocationId,
+            new LocationView(ev.TenantId, ev.LocationId, ev.Revision, content,
+                InventoryRegisters.ManualSource, ev.Actor, ev.ChangedAt),
+            static view => (view.TenantId, view.Revision), ct).ConfigureAwait(false);
+    }
+
+    public async ValueTask ApplyAsync(OperationalProcessRevisionRecorded ev, OperationalProcessContent content,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(ev);
+        ArgumentNullException.ThrowIfNull(content);
+        await ApplyAsync(InventoryRegisterDirectorySchema.Processes,
+            InventoryRegisterDirectorySchema.ProcessRevisions,
+            ComplianceCoreJsonContext.Default.OperationalProcessView,
+            ev.OperationalProcessId,
+            new OperationalProcessView(ev.TenantId, ev.OperationalProcessId,
+                ev.Revision, content, InventoryRegisters.ManualSource, ev.Actor,
+                ev.ChangedAt), static view => (view.TenantId, view.Revision), ct)
+            .ConfigureAwait(false);
     }
 
     // Replaying an already-projected revision is a no-op; changed content never replaces it.

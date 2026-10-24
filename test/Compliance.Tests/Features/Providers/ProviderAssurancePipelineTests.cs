@@ -167,8 +167,8 @@ public sealed class ProviderAssurancePipelineTests
         await using var fixture = await Fixture.CreateAsync(RbacPermissions.TenantAccess, RbacPermissions.ProviderInventoryManage);
         var scenario = fixture.Scenario();
         var otherTenant = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync(fixture.Services, new ProviderRegister(otherTenant), register =>
-            register.Record(fixture.ProviderId, Uuid.CreateVersion4(), MaterialProvider("Other tenant provider"), Author, Now));
+        await NamedRecordFacts.SeedProviderAsync(fixture.Services, otherTenant, fixture.ProviderId,
+            MaterialProvider("Other tenant provider"), Author, Now);
         var report = (await scenario.When(new RecordAssuranceReport(fixture.TenantId, fixture.ProviderId, Report())).ExpectSuccess()).Value;
         await PersonalProviderReviewTransportTests.HttpAsync(fixture.Services, fixture.UserId, new RecordProviderReview(fixture.TenantId, fixture.ProviderId, Review(report.ReportId)));
         await fixture.CatchUpAsync();
@@ -217,8 +217,8 @@ public sealed class ProviderAssurancePipelineTests
                     services.AddScoped<AssuranceReadConsistency>();
                 }),
             };
-            await ProgramManagementServices.SeedAsync(fixture.Services, new ProviderRegister(fixture.TenantId), register =>
-                register.Record(fixture.ProviderId, Uuid.CreateVersion4(), MaterialProvider(), Author, Now));
+            await NamedRecordFacts.SeedProviderAsync(fixture.Services, fixture.TenantId, fixture.ProviderId,
+                MaterialProvider(), Author, Now);
             return fixture;
         }
 

@@ -114,10 +114,10 @@ public static class TechnologyInventoryRules
             _ => true,
         })
             return "A data flow destination must be a data store component or a named external party.";
-        if (content.InformationAssetIds.Count is < 1 or > 100 ||
+        if (content.InformationAssetIds.Count < 1 ||
             content.InformationAssetIds.Any(static id => id == Uuid.Empty) ||
             content.InformationAssetIds.Distinct().Count() != content.InformationAssetIds.Count)
-            return "A data flow carries between 1 and 100 distinct information assets.";
+            return "A data flow carries at least one distinct information asset.";
         if (content.Purpose.Length is < 1 or > 1000)
             return "A data flow requires a purpose of at most 1000 characters.";
         if (content.ExceptionReference is { Length: > 200 })

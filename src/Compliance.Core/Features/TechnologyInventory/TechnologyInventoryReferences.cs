@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Workforce;
 using Cntryl.Portia;
 
@@ -6,7 +8,8 @@ namespace Bdgrz.Compliance.Features.TechnologyInventory;
 
 /// <summary>Resolves cross-record references from the authoritative event-sourced records.</summary>
 public sealed class TechnologyInventoryReferences(IAggregateReader reader,
-    IApplicationInventoryActivity applications, IApplicationDirectoryReader instances)
+    IApplicationInventoryActivity applications, IApplicationDirectoryReader instances,
+    IImmutableContentStore content)
     : ITechnologyInventoryActivity
 {
     public async ValueTask<RequestError?> ValidateOwnerAsync(Uuid tenantId, Uuid personId,
@@ -89,14 +92,21 @@ public sealed class TechnologyInventoryReferences(IAggregateReader reader,
                 is not null,
             "information" => (await reader.HydrateAsync(new InformationAsset(tenantId, id), ct)
                 .ConfigureAwait(false)).Content is { Lifecycle: TechnologyInventoryRules.Active },
-            "location" => (await reader.HydrateAsync(new LocationRegister(tenantId), ct)
-                .ConfigureAwait(false)).Get(id) is { Lifecycle: TechnologyInventoryRules.Active },
-            "process" => (await reader.HydrateAsync(new OperationalProcessRegister(tenantId), ct)
-                .ConfigureAwait(false)).Get(id) is { Lifecycle: TechnologyInventoryRules.Active },
+            "location" => await IsActiveRecordAsync(
+                (await reader.HydrateAsync(new Location(tenantId, id), ct).ConfigureAwait(false)).Current,
+                tenantId, LocationNames.ReadName, ct).ConfigureAwait(false),
+            "process" => await IsActiveRecordAsync(
+                (await reader.HydrateAsync(new OperationalProcess(tenantId, id), ct).ConfigureAwait(false)).Current,
+                tenantId, OperationalProcessNames.ReadName, ct).ConfigureAwait(false),
             "data_flow" => (await reader.HydrateAsync(new DataFlow(tenantId, id), ct)
                 .ConfigureAwait(false)).Content is { Lifecycle: TechnologyInventoryRules.Active },
             _ => false,
         };
+
+    async ValueTask<bool> IsActiveRecordAsync(NamedRecord.AppliedRecord? current, Uuid tenantId,
+        Func<ReadOnlyMemory<byte>, NamedContentName> readName, CancellationToken ct) =>
+        current is not null && readName(await content.ReadVerifiedAsync(tenantId.ToString(), current.Content, ct)
+            .ConfigureAwait(false)).Lifecycle == TechnologyInventoryRules.Active;
 
     async ValueTask<TechnologyComponentContent?> ActiveComponentAsync(Uuid tenantId, Uuid id,
         CancellationToken ct) =>

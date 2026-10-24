@@ -164,7 +164,8 @@ public sealed class ProviderAssuranceE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await client.PostAsJsonAsync($"/api/v1/tenants/{tenantId}/providers", new
+            var providerId = Guid.NewGuid();
+            using var response = await client.PutAsJsonAsync($"/api/v1/tenants/{tenantId}/providers/{providerId}", new
             {
                 content = new
                 {
@@ -175,8 +176,8 @@ public sealed class ProviderAssuranceE2ETests(BrokerStackFixture broker)
                     materiality_rationale = "Processes customer data",
                 },
             });
-            if (response.StatusCode == HttpStatusCode.OK)
-                return (await response.Content.ReadFromJsonAsync<ProviderRegistration>())!.ProviderId;
+            if (response.StatusCode == HttpStatusCode.Accepted)
+                return providerId;
             Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,
                 await response.Content.ReadAsStringAsync());
             await Task.Delay(250);

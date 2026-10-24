@@ -4,6 +4,7 @@ using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Features.Providers;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
@@ -39,6 +40,7 @@ static class ProgramManagementServices
         collection.AddScoped<FirmStaffViews>();
         collection.AddScoped<NativeOperationExecutor>();
         collection.AddScoped<ControlOperationsReader>();
+        collection.AddScoped<ProviderSource>();
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });

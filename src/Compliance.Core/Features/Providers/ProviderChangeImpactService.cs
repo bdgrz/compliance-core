@@ -16,7 +16,7 @@ namespace Bdgrz.Compliance.Features.Providers;
 /// This is a planning preview only; it does not approve a supplier decision or claim a
 /// cross-stream transaction.
 /// </summary>
-public sealed class ProviderChangeImpactService(IAggregateReader reader,
+public sealed class ProviderChangeImpactService(IAggregateReader reader, ProviderSource providers,
     ProviderReferences references, ITechnologyInventoryReader inventory,
     TechnologyInventoryReadConsistency inventoryConsistency,
     TechnologyInventoryRestrictedVisibility inventoryVisibility,
@@ -38,9 +38,7 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader,
             return Failure(RequestErrorKind.Validation,
                 "A provider change requires a positive expected revision, a supported change kind, an effective date, and a summary of at most 2000 characters.");
 
-        var providerRegister = await reader.HydrateAsync(new ProviderRegister(request.TenantId), ct)
-            .ConfigureAwait(false);
-        var provider = providerRegister.Get(request.ProviderId);
+        var provider = await providers.GetAsync(request.TenantId, request.ProviderId, ct).ConfigureAwait(false);
         if (provider is null || provider.TenantId != request.TenantId)
             return Failure(RequestErrorKind.NotFound, "The provider was not found.");
         if (provider.Revision != request.ExpectedRevision)
@@ -211,8 +209,8 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader,
             if (!unchanged.IsSuccess)
                 return Result<ProviderChangeImpactPreview>.Failure(unchanged.Error);
 
-            var latestProvider = (await reader.HydrateAsync(new ProviderRegister(request.TenantId), ct)
-                .ConfigureAwait(false)).Get(request.ProviderId);
+            var latestProvider = await providers.GetAsync(request.TenantId, request.ProviderId, ct)
+                .ConfigureAwait(false);
             if (latestProvider is null)
                 return Failure(RequestErrorKind.NotFound, "The provider was not found.");
             if (latestProvider.Revision != provider.Revision)

@@ -48,12 +48,13 @@ public sealed class ProviderRegisterE2ETests(BrokerStackFixture broker)
             await worker.StopAsync();
 
         // Act
-        using var revised = await owner.PutAsJsonAsync(exact, new
+        using var revised = await owner.PutAsJsonAsync($"{path}/revise-provider/{Guid.NewGuid()}", new
         {
+            provider_id = registration.ProviderId,
             expected_revision = 1,
             content = new { name = "Revised supplier", provider_kind = "vendor" },
         });
-        Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, revised.StatusCode);
         if (split)
         {
             using var lagging = await owner.GetAsync($"{exact}?minimum_revision=2");
@@ -125,12 +126,13 @@ public sealed class ProviderRegisterE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await client.PostAsJsonAsync(path, new
+            var providerId = Guid.NewGuid();
+            using var response = await client.PutAsJsonAsync($"{path}/{providerId}", new
             {
                 content = new { name = "Original supplier", provider_kind = "vendor" },
             });
-            if (response.StatusCode == HttpStatusCode.OK)
-                return (await response.Content.ReadFromJsonAsync<RegistrationDocument>())!;
+            if (response.StatusCode == HttpStatusCode.Accepted)
+                return new RegistrationDocument(providerId);
             Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,
                 await response.Content.ReadAsStringAsync());
             await Task.Delay(250);

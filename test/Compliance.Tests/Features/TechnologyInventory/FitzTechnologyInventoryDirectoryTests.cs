@@ -24,12 +24,12 @@ public sealed class FitzTechnologyInventoryDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
                          Identity(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new InformationAssetRevisionRecorded(tenantId, assetId, 1,
+            await directory.ApplyAsync(InventoryFacts.AssetFact(tenantId, assetId, 1,
                 first, Author, Now));
-            await directory.ApplyAsync(new InformationAssetRevisionRecorded(tenantId, assetId, 2,
+            await directory.ApplyAsync(InventoryFacts.AssetFact(tenantId, assetId, 2,
                 second, Author, Now.AddMinutes(1)));
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await directory.ApplyAsync(new InformationAssetRevisionRecorded(tenantId,
+                await directory.ApplyAsync(InventoryFacts.AssetFact(tenantId,
                     assetId, 4, second, Author, Now)));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }

@@ -36,7 +36,7 @@ public sealed class ProviderReadConsistencyTests
         // Arrange
         var tenant = Uuid.CreateVersion4();
         var consistency = new ProviderReadConsistency(new FitzProviderDirectory(new InMemoryKvClient()),
-            new SourceReader(new ProviderRegister(tenant)), new InMemoryEventStore());
+            new SourceReader(new Provider(tenant, Uuid.CreateVersion4())), new InMemoryEventStore());
 
         // Act
         var result = await consistency.GetAsync(tenant, Uuid.CreateVersion4(), null, CancellationToken.None);
@@ -54,11 +54,9 @@ public sealed class ProviderReadConsistencyTests
         // Arrange
         var tenant = Uuid.CreateVersion4();
         var id = Uuid.CreateVersion4();
-        var ev = new ProviderRecorded(tenant, id, Uuid.CreateVersion4(), new ProviderContent("Provider", "Supplier"),
-            ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder"), DateTimeOffset.UtcNow);
+        var ev = NamedRecordFacts.ProviderRecordedFact(tenant, id);
         var events = new InMemoryEventStore();
-        await events.AppendAsync(new EventStreamAddress(tenant.ToString(), ProviderRegister.Area, tenant.ToString()), 0,
-            [DomainEventSeed.Attach(ev, tenant, 1)]);
+        await events.AppendAsync(new Provider(tenant, id).Stream, 0, [DomainEventSeed.Attach(ev, id, 1)]);
         var directory = new FitzProviderDirectory(new InMemoryKvClient());
         var consistency = new ProviderReadConsistency(directory, new SourceReader(Source(tenant, id)), events);
 
@@ -78,16 +76,14 @@ public sealed class ProviderReadConsistencyTests
         var id = Uuid.CreateVersion4();
         var author = ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder");
         var now = DateTimeOffset.UtcNow;
-        var source = new ProviderRegister(tenant);
-        Assert.True(source.Record(id, Uuid.CreateVersion4(), new ProviderContent("Original", "Supplier"), author, now).IsSuccess);
-        Assert.True(source.Revise(id, Uuid.CreateVersion4(), 1, new ProviderContent("Revised", "Supplier"), author, now.AddMinutes(1)).IsSuccess);
+        var source = NamedRecordFacts.RecordedProvider(tenant, id, author, now).Revise(author, now.AddMinutes(1));
         var directory = new FitzProviderDirectory(new InMemoryKvClient());
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
             new CheckpointIdentity(FitzProviderDirectory.ProjectorName,
-                EventStreamPattern.ForPattern(tenant.ToString(), ProviderRegister.Area)), ProjectionCheckpoint.Start)))
+                EventStreamPattern.ForPattern(tenant.ToString(), Provider.Area)), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new ProviderRecorded(tenant, id, Uuid.CreateVersion4(),
-                new ProviderContent("Original", "Supplier"), author, now));
+            await directory.ApplyAsync(NamedRecordFacts.ProviderRecordedFact(tenant, id, author, now),
+                new ProviderContent("Original", "Supplier"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var consistency = new ProviderReadConsistency(directory, new SourceReader(source), new InMemoryEventStore());
@@ -121,10 +117,10 @@ public sealed class ProviderReadConsistencyTests
         var author = ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder");
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
             new CheckpointIdentity(FitzProviderDirectory.ProjectorName,
-                EventStreamPattern.ForPattern(tenant.ToString(), ProviderRegister.Area)), ProjectionCheckpoint.Start)))
+                EventStreamPattern.ForPattern(tenant.ToString(), Provider.Area)), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new ProviderRecorded(tenant, id, Uuid.CreateVersion4(), new ProviderContent("Provider", "Supplier"), author, DateTimeOffset.UtcNow));
-            await directory.ApplyAsync(new ProviderRecorded(tenant, Uuid.CreateVersion4(), Uuid.CreateVersion4(), new ProviderContent("Second", "Supplier"), author, DateTimeOffset.UtcNow));
+            await directory.ApplyAsync(NamedRecordFacts.ProviderRecordedFact(tenant, id, author), new ProviderContent("Provider", "Supplier"));
+            await directory.ApplyAsync(NamedRecordFacts.ProviderRecordedFact(tenant, Uuid.CreateVersion4(), author), new ProviderContent("Second", "Supplier"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var consistency = new ProviderReadConsistency(directory, new SourceReader(source), new InMemoryEventStore());
@@ -148,15 +144,10 @@ public sealed class ProviderReadConsistencyTests
         Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(invalidHistory.Error).Kind);
     }
 
-    static ProviderRegister Source(Uuid tenant, Uuid id)
-    {
-        var source = new ProviderRegister(tenant);
-        Assert.True(source.Record(id, Uuid.CreateVersion4(), new ProviderContent("Provider", "Supplier"),
-            ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder"), DateTimeOffset.UtcNow).IsSuccess);
-        return source;
-    }
+    static Provider Source(Uuid tenant, Uuid id) => NamedRecordFacts.RecordedProvider(tenant, id,
+        ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder"), DateTimeOffset.UtcNow);
 
-    sealed class SourceReader(ProviderRegister source) : IAggregateReader
+    sealed class SourceReader(Provider source) : IAggregateReader
     {
         public ValueTask<T> HydrateAsync<T>(T aggregate, CancellationToken ct = default) where T : Aggregate =>
             ValueTask.FromResult((T)(Aggregate)source);

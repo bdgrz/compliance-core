@@ -4,5 +4,6 @@ namespace Bdgrz.Compliance.Features.Providers;
 
 public interface IProviderProjection : IProjectionStore
 {
-    ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default);
+    /// <summary>Projects an applied provider fact with the complete normalized content it references.</summary>
+    ValueTask ApplyAsync(DomainEvent domainEvent, ProviderContent content, CancellationToken ct = default);
 }

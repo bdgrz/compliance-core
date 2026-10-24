@@ -134,7 +134,7 @@ public sealed class InformationAssetTypeIBaselineSourceContributorTests
     static InformationAssetRevisionRecorded Revision(long revision, string name,
         string classification, DateTimeOffset changedAt,
         string lifecycle = TechnologyInventoryRules.Active) =>
-        new(TenantId, AssetId, revision, new InformationAssetContent(name, classification,
+        InventoryFacts.AssetFact(TenantId, AssetId, revision, new InformationAssetContent(name, classification,
             "RET-1", OwnerId, "Customer information", lifecycle), Actor, changedAt);
 
     static ExaminationEngagementView Engagement() => new(TenantId, ProgramId,

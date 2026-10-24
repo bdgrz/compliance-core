@@ -1,10 +1,16 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.TechnologyInventory;
 
-/// <summary>Owns one manually inventoried information asset and its attributed revisions.</summary>
+/// <summary>
+///     Owns one manually inventoried information asset and its attributed revisions. Every revision is the native
+///     fact of its own logical operation, so exact retries are decided by the original operation and never by the
+///     asset's current content.
+/// </summary>
 public sealed class InformationAsset : Aggregate
 {
     readonly Uuid _tenantId;
@@ -13,16 +19,21 @@ public sealed class InformationAsset : Aggregate
     long _revision;
     InformationAssetContent? _content;
 
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
     public bool IsCreated => _created && !_foreign;
     public long Revision => _revision;
     public InformationAssetContent? Content => IsCreated ? _content : null;
 
-    public InformationAsset(Uuid tenantId, Uuid id)
+    public InformationAsset(Uuid tenantId, Uuid id, Uuid selectedLogicalId = default)
         : base(id, TechnologyInventoryStreams.Address(tenantId, id))
     {
         _tenantId = tenantId;
+        Acceptance = new NativeAcceptance(selectedLogicalId);
         On<InformationAssetRevisionRecorded>(ev =>
         {
+            Acceptance.Observe(ev);
             _created = true;
             _revision = ev.Revision;
             _content = ev.Content;
@@ -31,8 +42,8 @@ public sealed class InformationAsset : Aggregate
         On<DataFlowRevisionRecorded>(_ => _foreign = true);
     }
 
-    public Result<InformationAssetRegistration> Record(InformationAssetContent requested, ActorReference actor,
-        DateTimeOffset changedAt)
+    /// <summary>Checks a creation against hydrated state without raising anything; returns the normalized content.</summary>
+    public Result<InformationAssetContent> PrepareRecord(InformationAssetContent requested)
     {
         var content = TechnologyInventoryRules.Normalize(requested with
         {
@@ -40,33 +51,65 @@ public sealed class InformationAsset : Aggregate
         });
         var error = TechnologyInventoryRules.Validate(content);
         if (error is not null)
-            return Result<InformationAssetRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
-                error));
+            return Result<InformationAssetContent>.Failure(new RequestError(RequestErrorKind.Validation, error));
         if (_foreign)
-            return Result<InformationAssetRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+            return Result<InformationAssetContent>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The identity belongs to another inventory record."));
-        if (_created)
-            return _content == content
-                ? Result<InformationAssetRegistration>.Success(new InformationAssetRegistration(Id))
-                : Result<InformationAssetRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The information asset already exists with different content."));
-        RaiseEvent(new InformationAssetRevisionRecorded(_tenantId, Id, 1, content, actor, changedAt));
-        return Result<InformationAssetRegistration>.Success(new InformationAssetRegistration(Id));
+        return _created
+            ? Result<InformationAssetContent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The information asset already exists."))
+            : Result<InformationAssetContent>.Success(content);
     }
 
-    public CommandFailure? Revise(long expectedRevision, Func<InformationAssetContent, InformationAssetContent> change,
-        ActorReference actor, DateTimeOffset changedAt)
+    /// <summary>Accepts the creation as the native fact of <paramref name="operation" />.</summary>
+    public Result Record(OperationProvenance operation, ImmutableContentRef firstResponse,
+        InformationAssetContent requested, ActorReference actor, DateTimeOffset changedAt)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "An information asset creation requires its own logical operation."));
+        var prepared = PrepareRecord(requested);
+        if (!prepared.IsSuccess)
+            return Result.Failure(prepared.Error!);
+        RaiseEvent(new InformationAssetRevisionRecorded(_tenantId, Id, 1, prepared.Value!, actor, changedAt,
+            operation, firstResponse));
+        return Result.Success;
+    }
+
+    /// <summary>Checks a revision against hydrated state without raising anything; returns the normalized content.</summary>
+    public Result<InformationAssetContent> PrepareRevise(long expectedRevision,
+        Func<InformationAssetContent, InformationAssetContent> change)
     {
         if (!IsCreated)
-            return CommandFailure.MissingRecord("The information asset was not found.");
+            return Failure(CommandFailure.MissingRecord("The information asset was not found."));
         if (expectedRevision != _revision)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("information asset",
-                _revision));
+            return Failure(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("information asset",
+                _revision)));
         var content = TechnologyInventoryRules.Normalize(change(_content!));
-        var error = TechnologyInventoryRules.Validate(content);
-        if (error is not null)
-            return CommandFailure.InvalidContent(error);
-        RaiseEvent(new InformationAssetRevisionRecorded(_tenantId, Id, _revision + 1, content, actor, changedAt));
-        return null;
+        return TechnologyInventoryRules.Validate(content) is { } error
+            ? Failure(CommandFailure.InvalidContent(error))
+            : Result<InformationAssetContent>.Success(content);
     }
+
+    /// <summary>Accepts the revision as the native fact of <paramref name="operation" />.</summary>
+    public Result Revise(OperationProvenance operation, ImmutableContentRef firstResponse, long expectedRevision,
+        Func<InformationAssetContent, InformationAssetContent> change, ActorReference actor, DateTimeOffset changedAt)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "An information asset revision requires its own logical operation."));
+        var prepared = PrepareRevise(expectedRevision, change);
+        if (!prepared.IsSuccess)
+            return Result.Failure(prepared.Error!);
+        RaiseEvent(new InformationAssetRevisionRecorded(_tenantId, Id, _revision + 1, prepared.Value!, actor,
+            changedAt, operation, firstResponse));
+        return Result.Success;
+    }
+
+    static Result<InformationAssetContent> Failure(CommandFailure failure) =>
+        Result<InformationAssetContent>.Failure(failure.ToRequestError());
 }

@@ -9,9 +9,9 @@ public sealed class ProviderReadConsistency(IProviderReader directory, IAggregat
     {
         if (minimumRevision is < 1)
             return Failure(RequestErrorKind.Validation, "The minimum provider revision must be positive.");
-        var source = await reader.HydrateAsync(new ProviderRegister(tenantId), ct).ConfigureAwait(false);
-        var current = source.Get(providerId);
-        if (current is null || current.TenantId != tenantId)
+        var source = await reader.HydrateAsync(new Provider(tenantId, providerId), ct).ConfigureAwait(false);
+        var current = source.Current;
+        if (current is null)
             return Failure(RequestErrorKind.NotFound, "The provider was not found.");
         if (minimumRevision is { } minimum && current.Revision < minimum)
             return Failure(RequestErrorKind.Conflict, "The provider source has not reached the requested revision.");
@@ -26,9 +26,9 @@ public sealed class ProviderReadConsistency(IProviderReader directory, IAggregat
     {
         if (revision < 1)
             return Failure(RequestErrorKind.Validation, "The provider revision must be positive.");
-        var source = await reader.HydrateAsync(new ProviderRegister(tenantId), ct).ConfigureAwait(false);
-        var current = source.Get(providerId);
-        if (current is null || current.TenantId != tenantId)
+        var source = await reader.HydrateAsync(new Provider(tenantId, providerId), ct).ConfigureAwait(false);
+        var current = source.Current;
+        if (current is null)
             return Failure(RequestErrorKind.NotFound, "The provider was not found.");
         if (revision > current.Revision)
             return Failure(RequestErrorKind.NotFound, "The provider revision was not found.");
@@ -67,7 +67,7 @@ public sealed class ProviderReadConsistency(IProviderReader directory, IAggregat
         ProjectionCheckpoint checkpoint, CancellationToken ct)
     {
         await using var pending = events.ReadAsync(EventStreamPattern.ForPattern(
-            tenantId.ToString(), ProviderRegister.Area), checkpoint.Cursor, ct)
+            tenantId.ToString(), Provider.Area), checkpoint.Cursor, ct)
             .GetAsyncEnumerator(ct);
         return await pending.MoveNextAsync().ConfigureAwait(false);
     }

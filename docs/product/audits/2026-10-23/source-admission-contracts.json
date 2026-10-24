@@ -735,6 +735,11 @@
           "required": true
         },
         {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
           "name": "RecordId",
           "type": "Uuid",
           "required": true
@@ -788,6 +793,11 @@
           "required": true
         },
         {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
           "name": "RecordId",
           "type": "Uuid",
           "required": true
@@ -837,6 +847,11 @@
       "fields": [
         {
           "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
           "type": "Uuid",
           "required": true
         },

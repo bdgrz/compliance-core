@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceFacts;
@@ -319,6 +320,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ITechnologyInventoryReader>(provider =>
             provider.GetRequiredService<FitzTechnologyInventoryDirectory>());
         services.AddScoped<ProviderReferences>();
+        services.AddScoped<ProviderSource>();
         services.AddScoped<FitzProviderDirectory>();
         services.AddScoped<IProviderProjection>(provider => provider.GetRequiredService<FitzProviderDirectory>());
         services.AddScoped<IProviderReader>(provider => provider.GetRequiredService<FitzProviderDirectory>());
@@ -499,6 +501,10 @@ public static class ComplianceServiceCollectionExtensions
         services.TryAddSingleton(TenantActivationPolicy.Default);
         services.AddScoped<TenantManagerGuardBootstrap>();
         services.AddScoped<TenantManagerGuardLoader>();
+        services.AddScoped<NamedRecordAdmission>();
+        services.AddScoped<NamedRecordReceivers>();
+        services.AddScoped<NamedRecordReactions>();
+        services.AddScoped<ReceiverAppend>();
         services.AddScoped<AdministratorTransitionAdmission>();
         services.AddScoped<AdministratorReceiverSupport>();
         services.AddScoped<IdentityRecoveryReceiverSupport>();
@@ -719,6 +725,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IFirmStaffDirectoryReader>(
             provider => provider.GetRequiredService<FitzFirmStaffDirectory>());
         services.AddSingleton(TenantInvitationDeliveryProcess.Definition);
+        services.AddSingleton(ProviderNameChangeProcess.Definition);
+        services.AddSingleton(LocationNameChangeProcess.Definition);
+        services.AddSingleton(OperationalProcessNameChangeProcess.Definition);
         // ISourceFactResolver cannot be resolved by the production container until Portia publishes the shared
         // connection's IStreamClient (AddStreamClient, Portia 0.9.1); the registration is lazy, so nothing resolves
         // it before then and the pin bump makes the receivers and the process factory work without further changes.
@@ -980,6 +989,19 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<ApplicationInventoryAuthorizer>()
             .AddRequestHandler<RecordProviderHandler>()
             .AddRequestHandler<ReviseProviderHandler>()
+            .AddRequestHandler<ClaimProviderNameHandler>()
+            .AddRequestHandler<ApplyProviderChangeHandler>()
+            .AddRequestHandler<ReleaseProviderNameHandler>()
+            .AddRequestHandler<CancelProviderChangeHandler>()
+            .AddRequestHandler<ClaimLocationNameHandler>()
+            .AddRequestHandler<ApplyLocationChangeHandler>()
+            .AddRequestHandler<ReleaseLocationNameHandler>()
+            .AddRequestHandler<CancelLocationChangeHandler>()
+            .AddRequestHandler<ClaimOperationalProcessNameHandler>()
+            .AddRequestHandler<ApplyOperationalProcessChangeHandler>()
+            .AddRequestHandler<ReleaseOperationalProcessNameHandler>()
+            .AddRequestHandler<CancelOperationalProcessChangeHandler>()
+            .AddRequestAuthorizer<NamedRecordReceiverAuthorizer>()
             .AddRequestHandler<GetProviderHandler>()
             .AddRequestHandler<ListProvidersHandler>()
             .AddRequestHandler<GetProviderRevisionHandler>()
@@ -1548,6 +1570,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<BoundaryRiskReassessmentReactor>("BoundaryRiskReassessmentV1",
                 WorkloadScope.PerTenant)
             .AddReactor<TeamCleanupReactor>("TeamCleanup", WorkloadScope.PerTenant)
+            .AddReactor<ProviderChangeAcceptedReactor>("ProviderChangeAcceptedV1", WorkloadScope.PerTenant,
+                options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<LocationChangeAcceptedReactor>("LocationChangeAcceptedV1", WorkloadScope.PerTenant,
+                options => options.FailureAttemptLimit = int.MaxValue)
+            .AddReactor<OperationalProcessChangeAcceptedReactor>("OperationalProcessChangeAcceptedV1",
+                WorkloadScope.PerTenant, options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<AdministratorWithdrawalReactor>("AdministratorWithdrawalV1", WorkloadScope.PerTenant,
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<AdministratorAssignmentWithdrawalReactor>("AdministratorAssignmentWithdrawalV1",

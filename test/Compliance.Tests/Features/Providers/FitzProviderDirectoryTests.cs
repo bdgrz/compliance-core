@@ -6,7 +6,7 @@ namespace Bdgrz.Compliance.Tests.Features.Providers;
 
 public sealed class FitzProviderDirectoryTests
 {
-    static readonly ActorReference Author = ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder");
+    static readonly ActorReference Author = NamedRecordFacts.Author;
     static readonly DateTimeOffset Now = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
@@ -21,10 +21,10 @@ public sealed class FitzProviderDirectoryTests
             await using var batch = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenants[index]), ProjectionCheckpoint.Start));
             for (var item = 0; item < 2; item++)
             {
-                await directory.ApplyAsync(new ProviderRecorded(tenants[index], ids[index][item], Uuid.CreateVersion4(),
-                    new ProviderContent($"Provider {item}", "Supplier"), Author, Now));
-                await directory.ApplyAsync(new ProviderRevised(tenants[index], ids[index][item], Uuid.CreateVersion4(), 2,
-                    new ProviderContent($"Provider {item} revised", "Supplier"), Author, Now.AddMinutes(1)));
+                await directory.ApplyAsync(Recorded(tenants[index], ids[index][item]),
+                    new ProviderContent($"Provider {item}", "Supplier"));
+                await directory.ApplyAsync(Revised(tenants[index], ids[index][item], 2),
+                    new ProviderContent($"Provider {item} revised", "Supplier"));
             }
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -79,27 +79,25 @@ public sealed class FitzProviderDirectoryTests
         var directory = new FitzProviderDirectory(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var id = Uuid.CreateVersion4();
-        var first = new ProviderRecorded(tenantId, id, Uuid.CreateVersion4(),
-            new ProviderContent("Original", "Supplier"), Author, Now);
-        var second = new ProviderRevised(tenantId, id, Uuid.CreateVersion4(), 2,
-            new ProviderContent("Revised", "Supplier"), Author, Now.AddMinutes(1));
+        var first = Recorded(tenantId, id);
+        var second = Revised(tenantId, id, 2);
         await using (var initial = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(first);
-            await directory.ApplyAsync(second);
+            await directory.ApplyAsync(first, new ProviderContent("Original", "Supplier"));
+            await directory.ApplyAsync(second, new ProviderContent("Revised", "Supplier"));
             await initial.CommitAsync(ProjectionCheckpoint.Start);
         }
 
         // Act
         await using (var replay = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(first);
-            await directory.ApplyAsync(second);
+            await directory.ApplyAsync(first, new ProviderContent("Original", "Supplier"));
+            await directory.ApplyAsync(second, new ProviderContent("Revised", "Supplier"));
             await replay.CommitAsync(ProjectionCheckpoint.Start);
         }
         await using (var changed = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start)))
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await directory.ApplyAsync(
-                first with { Content = first.Content with { Name = "Replacement" } }));
+                first, new ProviderContent("Replacement", "Supplier")));
 
         // Assert
         Assert.Equal("Original", (await directory.GetRevisionAsync(tenantId, id, 1))!.Content.Name);
@@ -116,17 +114,17 @@ public sealed class FitzProviderDirectoryTests
         // Arrange
         var directory = new FitzProviderDirectory(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
-        var ev = new ProviderRecorded(invalid == "foreign_tenant" ? Uuid.CreateVersion4() :
+        var ev = Recorded(invalid == "foreign_tenant" ? Uuid.CreateVersion4() :
             invalid == "empty_tenant" ? Uuid.Empty : tenantId,
-            invalid == "empty_provider" ? Uuid.Empty : Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            new ProviderContent("Provider", "Supplier"), Author, Now);
+            invalid == "empty_provider" ? Uuid.Empty : Uuid.CreateVersion4());
 
         // Act
         await using var batch = await ((IProviderProjection)directory).BeginAsync(
             new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start));
 
         // Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await directory.ApplyAsync(ev));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await directory.ApplyAsync(ev, new ProviderContent("Provider", "Supplier")));
     }
 
     [Fact]
@@ -136,20 +134,21 @@ public sealed class FitzProviderDirectoryTests
         var directory = new FitzProviderDirectory(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var id = Uuid.CreateVersion4();
-        var first = new ProviderRecorded(tenantId, id, Uuid.CreateVersion4(), new ProviderContent("Provider", "Supplier"), Author, Now);
-        var second = new ProviderRevised(tenantId, id, Uuid.CreateVersion4(), 2, new ProviderContent("Revised", "Supplier"), Author, Now.AddMinutes(1));
+        var first = Recorded(tenantId, id);
+        var second = Revised(tenantId, id, 2);
 
         // Act
         await using (var interrupted = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(first);
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await directory.ApplyAsync(second with { Revision = 3 }));
+            await directory.ApplyAsync(first, new ProviderContent("Provider", "Supplier"));
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await directory.ApplyAsync(
+                second with { Revision = 3 }, new ProviderContent("Revised", "Supplier")));
         }
         var before = await directory.GetAsync(tenantId, id);
         await using (var retry = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(first);
-            await directory.ApplyAsync(second);
+            await directory.ApplyAsync(first, new ProviderContent("Provider", "Supplier"));
+            await directory.ApplyAsync(second, new ProviderContent("Revised", "Supplier"));
             await retry.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -168,16 +167,22 @@ public sealed class FitzProviderDirectoryTests
         // Arrange
         var directory = new FitzProviderDirectory(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
-        var ev = new ProviderRevised(tenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), revision,
-            new ProviderContent("Unrecorded", "Supplier"), Author, Now);
+        var ev = Revised(tenantId, Uuid.CreateVersion4(), revision);
 
         // Act
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start));
 
         // Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await directory.ApplyAsync(ev));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await directory.ApplyAsync(ev, new ProviderContent("Unrecorded", "Supplier")));
     }
 
+    static ProviderRecorded Recorded(Uuid tenantId, Uuid providerId) =>
+        NamedRecordFacts.ProviderRecordedFact(tenantId, providerId, Author, Now);
+
+    static ProviderRevised Revised(Uuid tenantId, Uuid providerId, long revision) =>
+        NamedRecordFacts.ProviderRevisedFact(tenantId, providerId, revision, Author, Now.AddMinutes(1));
+
     static CheckpointIdentity Identity(Uuid tenantId) => new(FitzProviderDirectory.ProjectorName,
-        EventStreamPattern.ForPattern(tenantId.ToString(), ProviderRegister.Area));
+        EventStreamPattern.ForPattern(tenantId.ToString(), Provider.Area));
 }

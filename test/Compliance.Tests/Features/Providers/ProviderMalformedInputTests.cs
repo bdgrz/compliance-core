@@ -1,5 +1,8 @@
 using System.Text.Json;
+using Bdgrz.Compliance.Features.NamedRecords;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,10 +21,6 @@ public sealed class ProviderMalformedInputTests
         var content = JsonSerializer.Deserialize(json, ComplianceCoreJsonContext.Default.ProviderContent)!;
         var tenantId = Uuid.CreateVersion4();
         var id = Uuid.CreateVersion4();
-        var requestId = Uuid.CreateVersion4();
-        var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder");
-        var register = new ProviderRegister(tenantId);
-        Assert.True(register.Record(id, requestId, new ProviderContent("Provider", "Supplier"), actor, DateTimeOffset.UtcNow).IsSuccess);
         var services = new ServiceCollection();
         var store = new InMemoryEventStore();
         services.AddSingleton<IEventStore>(store);
@@ -30,18 +29,26 @@ public sealed class ProviderMalformedInputTests
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
         var references = new ProviderReferences(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), store);
+        var actor = ProgramManagementServices.Actor(Uuid.CreateVersion4());
+        var admission = new NamedRecordAdmission(new NativeOperationExecutor(
+            scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), null!),
+            scope.ServiceProvider.GetRequiredService<IAggregateReader>(), null!, TimeProvider.System);
 
         // Act
-        var creation = register.Record(Uuid.CreateVersion4(), Uuid.CreateVersion4(), content, actor, DateTimeOffset.UtcNow);
-        var revision = register.Revise(id, Uuid.CreateVersion4(), 1, content, actor, DateTimeOffset.UtcNow);
-        var retry = register.CheckRetry(id, requestId, null, content);
+        var creation = await new RecordProviderHandler(admission, references).HandleAsync(
+            new RequestContext<RecordProvider>(new RecordProvider(id, tenantId, content), actor), CancellationToken.None);
+        var revision = await new ReviseProviderHandler(admission, references).HandleAsync(
+            new RequestContext<ReviseProvider>(new ReviseProvider(Uuid.CreateVersion4(), tenantId, id, 1, content),
+                actor), CancellationToken.None);
         var resolved = await references.ResolveAsync(tenantId, content, CancellationToken.None);
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, creation.Error!.Kind);
         Assert.Equal(RequestErrorKind.Validation, revision.Error!.Kind);
-        Assert.Equal(RequestErrorKind.Validation, retry!.Value.Error!.Kind);
         Assert.Equal(RequestErrorKind.Validation, resolved.Error!.Kind);
-        Assert.Single(new AggregateScenario<ProviderRegister>(register).PendingEvents);
+        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new Provider(tenantId, id));
+        Assert.Equal(0UL, owner.CommittedStreamPosition);
     }
 }

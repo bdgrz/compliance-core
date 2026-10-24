@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Providers;
 using Cntryl.Portia;
 
@@ -10,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 /// <summary>Captures scoped provider and due-diligence history at the Type I cutoff.</summary>
 public sealed class ProviderTypeIBaselineSourceContributor(
     IProviderReader providers, IAssuranceReader assurance, IAggregateReader reader,
-    IDomainEventReader events, IProviderCsocBaselineReader providerCsocs)
+    IDomainEventReader events, IProviderCsocBaselineReader providerCsocs, IImmutableContentStore contentStore)
     : ITypeIBaselineSourceContributor
 {
     const int PageSize = 200;
@@ -38,7 +40,7 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         var assuranceFence = await assurance.LoadCheckpointAsync(engagement.TenantId, ct)
             .ConfigureAwait(false);
         var providerPattern = EventStreamPattern.ForPattern(engagement.TenantId.ToString(),
-            ProviderRegister.Area);
+            Provider.Area);
         var assurancePattern = EventStreamPattern.ForPattern(engagement.TenantId.ToString(),
             ProviderAssuranceRegister.Area);
         if (await HasPendingSourceAsync(providerPattern, providerFence, ct).ConfigureAwait(false) ||
@@ -155,24 +157,46 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         Uuid tenantId, Uuid programId, DateTimeOffset through,
         IReadOnlyList<ProviderView> summaries, CancellationToken ct)
     {
-        var stream = new EventStreamAddress(tenantId.ToString(), ProviderRegister.Area,
-            tenantId.ToString());
+        var pattern = EventStreamPattern.ForPattern(tenantId.ToString(), Provider.Area);
         var histories = new Dictionary<Uuid, ProviderHistory>();
         var eventIds = new HashSet<Uuid>();
         var requestIds = new HashSet<Uuid>();
-        var expectedVersion = 1UL;
-        DateTimeOffset? priorRecordedAt = null;
+        var versions = new Dictionary<EventStreamAddress, ulong>();
+        var priorAt = new Dictionary<EventStreamAddress, DateTimeOffset>();
         var count = 0;
-        await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
+        await foreach (var record in events.ReadAsync(pattern, ct).ConfigureAwait(false))
         {
-            if (++count > MaximumEventsPerStream || record.Stream != stream ||
+            if (++count > MaximumEventsPerStream || record.Stream.Realm != tenantId.ToString() ||
+                record.Stream.Area != Provider.Area ||
+                !Uuid.TryParse(record.Stream.Resource, System.Globalization.CultureInfo.InvariantCulture,
+                    out var providerId) ||
                 record.Event?.Metadata is not { } metadata || metadata.EventId == Uuid.Empty ||
-                !eventIds.Add(metadata.EventId) || metadata.AggregateId != tenantId ||
-                metadata.AggregateVersion != expectedVersion || metadata.OccurredOn == default ||
-                priorRecordedAt is { } prior && metadata.OccurredOn < prior ||
-                !TryProviderEvent(record.Event, tenantId, out var providerId, out var requestId,
-                    out var revision, out var providerContent, out var actor, out var recordedAt))
+                !eventIds.Add(metadata.EventId) || metadata.AggregateId != providerId ||
+                metadata.AggregateVersion != versions.GetValueOrDefault(record.Stream) + 1 ||
+                metadata.OccurredOn == default ||
+                priorAt.TryGetValue(record.Stream, out var prior) && metadata.OccurredOn < prior)
                 return InvalidHistory<Dictionary<Uuid, ProviderHistory>>();
+            versions[record.Stream] = metadata.AggregateVersion;
+            priorAt[record.Stream] = metadata.OccurredOn;
+            if (record.Event is ProviderChangeAccepted or ProviderChangeCanceled)
+                continue;
+            if (!TryProviderEvent(record.Event, tenantId, providerId, out var requestId, out var revision,
+                    out var contentRef, out var actor, out var recordedAt))
+                return InvalidHistory<Dictionary<Uuid, ProviderHistory>>();
+            ProviderContent providerContent;
+            try
+            {
+                var bytes = await contentStore.ReadVerifiedAsync(tenantId.ToString(), contentRef, ct)
+                    .ConfigureAwait(false);
+                providerContent = JsonSerializer.Deserialize(bytes.Span,
+                    ComplianceCoreJsonContext.Default.ProviderContent)!;
+            }
+            catch (Exception exception) when (exception is ImmutableContentIntegrityException or JsonException
+                or NullReferenceException)
+            {
+                return InvalidHistory<Dictionary<Uuid, ProviderHistory>>();
+            }
+
             if (!requestIds.Add(requestId) || recordedAt == default ||
                 !ValidProviderContent(providerContent) || !ValidMemberActor(actor))
                 return InvalidHistory<Dictionary<Uuid, ProviderHistory>>();
@@ -194,24 +218,20 @@ public sealed class ProviderTypeIBaselineSourceContributor(
                         existing.Content.Name, view.Content.Name)))
                 return InvalidHistory<Dictionary<Uuid, ProviderHistory>>();
 
-            var sourceEvent = SerializeEvent(record.Event, ProviderRegister.Area, tenantId,
-                metadata);
+            var sourceEvent = SerializeEvent(record.Event, Provider.Area, providerId, metadata, providerContent);
             var isAsOf = recordedAt <= through && metadata.OccurredOn <= through;
             if (!history.Apply(view, sourceEvent, isAsOf))
                 return InvalidHistory<Dictionary<Uuid, ProviderHistory>>();
-            priorRecordedAt = metadata.OccurredOn;
-            expectedVersion++;
         }
 
-        var source = await reader.HydrateAsync(new ProviderRegister(tenantId), ct)
-            .ConfigureAwait(false);
         var summaryById = summaries.ToDictionary(static summary => summary.ProviderId);
         if (summaryById.Count != histories.Count || histories.Keys.Any(id =>
                 !summaryById.ContainsKey(id)))
             return InvalidDirectory<Dictionary<Uuid, ProviderHistory>>();
+        var currentSource = new ProviderSource(reader, contentStore);
         foreach (var history in histories.Values)
         {
-            var current = source.Get(history.ProviderId);
+            var current = await currentSource.GetAsync(tenantId, history.ProviderId, ct).ConfigureAwait(false);
             if (current is null || history.Current is null ||
                 !SameJson(current, history.Current, ComplianceCoreJsonContext.Default.ProviderView) ||
                 !SameJson(summaryById[history.ProviderId], current,
@@ -348,26 +368,22 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         return Result<Dictionary<Uuid, ProviderAssuranceHistory>>.Success(histories);
     }
 
-    static bool TryProviderEvent(DomainEvent domainEvent, Uuid tenantId,
-        out Uuid providerId, out Uuid requestId, out long revision,
-        out ProviderContent content, out ActorReference? actor,
+    static bool TryProviderEvent(DomainEvent domainEvent, Uuid tenantId, Uuid streamProviderId,
+        out Uuid requestId, out long revision, out ImmutableContentRef content, out ActorReference? actor,
         out DateTimeOffset recordedAt)
     {
         switch (domainEvent)
         {
             case ProviderRecorded recorded:
-                (providerId, requestId, revision, content, actor, recordedAt) =
-                    (recorded.ProviderId, recorded.RequestId, 1, recorded.Content,
-                        recorded.Actor, recorded.RecordedAt);
-                return recorded.TenantId == tenantId;
+                (requestId, revision, content, actor, recordedAt) =
+                    (recorded.RequestId, 1, recorded.ContentContent, recorded.Actor, recorded.RecordedAt);
+                return recorded.TenantId == tenantId && recorded.ProviderId == streamProviderId;
             case ProviderRevised revised:
-                (providerId, requestId, revision, content, actor, recordedAt) =
-                    (revised.ProviderId, revised.RequestId, revised.Revision, revised.Content,
-                        revised.Actor, revised.RecordedAt);
-                return revised.TenantId == tenantId;
+                (requestId, revision, content, actor, recordedAt) =
+                    (revised.RequestId, revised.Revision, revised.ContentContent, revised.Actor, revised.RecordedAt);
+                return revised.TenantId == tenantId && revised.ProviderId == streamProviderId;
             default:
-                (providerId, requestId, revision, content, actor, recordedAt) =
-                    (Uuid.Empty, Uuid.Empty, 0, null!, null, default);
+                (requestId, revision, content, actor, recordedAt) = (Uuid.Empty, 0, null!, null, default);
                 return false;
         }
     }
@@ -532,15 +548,15 @@ public sealed class ProviderTypeIBaselineSourceContributor(
     }
 
     static ProviderSourceEvent SerializeEvent(DomainEvent domainEvent, string area,
-        Uuid aggregateId, DomainEventMetadata metadata)
+        Uuid aggregateId, DomainEventMetadata metadata, ProviderContent? providerContent = null)
     {
         var json = ComplianceCoreJsonContext.Default;
         var (kind, content) = domainEvent switch
         {
-            ProviderRecorded ev => ("provider_recorded", JsonSerializer.SerializeToElement(ev,
-                json.ProviderRecorded)),
-            ProviderRevised ev => ("provider_revised", JsonSerializer.SerializeToElement(ev,
-                json.ProviderRevised)),
+            ProviderRecorded ev => ("provider_recorded", WithContent(JsonSerializer.SerializeToElement(ev,
+                json.ProviderRecorded), providerContent)),
+            ProviderRevised ev => ("provider_revised", WithContent(JsonSerializer.SerializeToElement(ev,
+                json.ProviderRevised), providerContent)),
             AssuranceReportRecorded ev => ("assurance_report_recorded",
                 JsonSerializer.SerializeToElement(ev, json.AssuranceReportRecorded)),
             AssuranceReportRevised ev => ("assurance_report_revised",
@@ -573,6 +589,17 @@ public sealed class ProviderTypeIBaselineSourceContributor(
         domain.CopyTo(material, 0);
         bytes.CopyTo(material, domain.Length);
         return Convert.ToHexStringLower(SHA256.HashData(material));
+    }
+
+    /// <summary>The applied fact together with the complete content it references, so the baseline is self-contained.</summary>
+    static JsonElement WithContent(JsonElement fact, ProviderContent? providerContent)
+    {
+        var node = System.Text.Json.Nodes.JsonNode.Parse(fact.GetRawText())!.AsObject();
+        node["content"] = providerContent is null
+            ? null
+            : System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.SerializeToUtf8Bytes(providerContent,
+                ComplianceCoreJsonContext.Default.ProviderContent));
+        return JsonSerializer.SerializeToElement(node);
     }
 
     static ProviderView ProviderViewFor(Uuid tenantId, Uuid providerId, long revision,

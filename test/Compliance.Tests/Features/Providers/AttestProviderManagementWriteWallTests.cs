@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.Providers;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Boundaries;
@@ -28,12 +30,13 @@ public sealed class AttestProviderManagementWriteWallTests
         await using var provider = Compose();
         await AttestAssignmentHistoryFixture.SeedAsync(provider, Tenant, User, revoked: revoked);
         await using var scope = provider.CreateAsyncScope();
+        var providerId = Uuid.CreateVersion4();
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new RecordProvider(Tenant, new ProviderContent("Supplier", "Supplier")),
+            new RecordProvider(providerId, Tenant, new ProviderContent("Supplier", "Supplier")),
             Context(mcp), CancellationToken.None);
-        var retained = await ProgramManagementServices.HydrateAsync(provider, new ProviderRegister(Tenant));
+        var retained = await ProgramManagementServices.HydrateAsync(provider, new Provider(Tenant, providerId));
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
@@ -48,27 +51,27 @@ public sealed class AttestProviderManagementWriteWallTests
         await using var provider = Compose();
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
-        var recorded = await bus.DispatchAsync(new RecordProvider(Tenant, new ProviderContent("Supplier", "Supplier")),
-            Context(), CancellationToken.None);
-        Assert.True(recorded.IsSuccess, recorded.Error?.Message);
+        var providerId = Uuid.CreateVersion4();
+        await NamedRecordFacts.SeedProviderAsync(provider, Tenant, providerId, new ProviderContent("Supplier", "Supplier"));
         await ProjectProvidersAsync(scope.ServiceProvider);
         await AttestAssignmentHistoryFixture.SeedAsync(provider, Tenant, User, revoked: true);
         await ProjectSetupAsync(scope.ServiceProvider);
 
         // Act
-        var revision = await bus.DispatchAsync(new ReviseProvider(Tenant, recorded.Value!.ProviderId, 1,
+        var revision = await bus.DispatchAsync(new ReviseProvider(Uuid.CreateVersion4(), Tenant, providerId, 1,
             new ProviderContent("Changed", "Supplier")), Context(), CancellationToken.None);
-        var read = await bus.DispatchAsync(new GetProvider(Tenant, recorded.Value.ProviderId), Context(), CancellationToken.None);
-        var preview = await bus.DispatchAsync(new PreviewProviderChange(Tenant, recorded.Value.ProviderId, 1,
+        var read = await bus.DispatchAsync(new GetProvider(Tenant, providerId), Context(), CancellationToken.None);
+        var preview = await bus.DispatchAsync(new PreviewProviderChange(Tenant, providerId, 1,
             "renewal", new DateOnly(2027, 1, 1), "Review renewal"), Context(), CancellationToken.None);
-        var retained = await ProgramManagementServices.HydrateAsync(provider, new ProviderRegister(Tenant));
+        var retained = await scope.ServiceProvider.GetRequiredService<ProviderSource>()
+            .GetAsync(Tenant, providerId, CancellationToken.None);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, revision.Error?.Kind);
         Assert.True(read.IsSuccess, read.Error?.Message);
         Assert.True(preview.IsSuccess, preview.Error?.Message);
-        Assert.Equal(1, retained.Get(recorded.Value.ProviderId)!.Revision);
-        Assert.Equal("Supplier", retained.Get(recorded.Value.ProviderId)!.Content.Name);
+        Assert.Equal(1, retained!.Revision);
+        Assert.Equal("Supplier", retained.Content.Name);
     }
 
     [Theory]
@@ -81,15 +84,19 @@ public sealed class AttestProviderManagementWriteWallTests
         await AttestAssignmentHistoryFixture.SeedAsync(provider, sameClient ? Tenant : Uuid.CreateVersion4(), User,
             practice: practice);
         await using var scope = provider.CreateAsyncScope();
+        var providerId = Uuid.CreateVersion4();
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new RecordProvider(Tenant, new ProviderContent("Supplier", "Supplier")), Context(), CancellationToken.None);
-        var retained = await ProgramManagementServices.HydrateAsync(provider, new ProviderRegister(Tenant));
+            new RecordProvider(providerId, Tenant, new ProviderContent("Supplier", "Supplier")), Context(),
+            CancellationToken.None);
+        var retained = await ProgramManagementServices.HydrateAsync(provider, new Provider(Tenant, providerId));
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("Supplier", retained.Get(result.Value!.ProviderId)!.Content.Name);
+        Assert.Equal(providerId.ToString(), retained.Id.ToString());
+        Assert.Equal(1L, retained.Generation);
+        Assert.NotNull(retained.Pending);
     }
 
     static RequestDispatchContext Context(bool mcp = false) => new(ProgramManagementServices.Actor(User),
@@ -104,7 +111,8 @@ public sealed class AttestProviderManagementWriteWallTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new RecordProvider(Tenant, new ProviderContent("Supplier", "Supplier")), Context(), CancellationToken.None);
+            new RecordProvider(Uuid.CreateVersion4(), Tenant, new ProviderContent("Supplier", "Supplier")), Context(),
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
@@ -115,12 +123,18 @@ public sealed class AttestProviderManagementWriteWallTests
     {
         var events = services.GetRequiredService<IDomainEventReader>();
         var projection = services.GetRequiredService<IProviderProjection>();
-        var identity = new CheckpointIdentity("ProviderRegisterV1", EventStreamPattern.ForPattern(Tenant.ToString(), ProviderRegister.Area));
+        var identity = new CheckpointIdentity("ProviderRegisterV1", EventStreamPattern.ForPattern(Tenant.ToString(), Provider.Area));
+        var content = services.GetRequiredService<IImmutableContentStore>();
         await using var batch = await projection.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         var cursor = ProjectionCheckpoint.Start.Cursor;
         await foreach (var record in events.ReadAsync(identity.Pattern, cursor, CancellationToken.None))
         {
-            await projection.ApplyAsync(record.Event, CancellationToken.None);
+            if (record.Event is INamedRecordAppliedFact applied)
+            {
+                var bytes = await content.ReadVerifiedAsync(Tenant.ToString(), applied.ContentContent, CancellationToken.None);
+                await projection.ApplyAsync(record.Event, System.Text.Json.JsonSerializer.Deserialize(bytes.Span,
+                    ComplianceCoreJsonContext.Default.ProviderContent)!, CancellationToken.None);
+            }
             cursor = record.NextCursor;
         }
         await batch.CommitAsync(new ProjectionCheckpoint(cursor));

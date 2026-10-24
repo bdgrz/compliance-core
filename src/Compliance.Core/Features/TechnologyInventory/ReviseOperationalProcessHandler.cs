@@ -1,31 +1,39 @@
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NamedRecords;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.TechnologyInventory;
 
-public sealed class ReviseOperationalProcessHandler(IAggregateExecutor executor,
-    TechnologyInventoryReferences references, TimeProvider clock)
-    : IRequestHandler<ReviseOperationalProcess>
+/// <summary>
+///     Admits a revision of an operational process at its expected revision as the first native fact on the
+///     process's own owner. <c>CommandId</c> is the logical identity, so an exact retry replays the original 202 after
+///     any later change.
+/// </summary>
+public sealed class ReviseOperationalProcessHandler(NamedRecordAdmission admission,
+    TechnologyInventoryReferences references)
+    : IRequestHandler<ReviseOperationalProcess, OperationAcceptedResponse>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<ReviseOperationalProcess> context,
-        CancellationToken ct)
+    /// <inheritdoc />
+    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
+        IRequestContext<ReviseOperationalProcess> context, CancellationToken ct)
     {
-        var actor = TechnologyInventoryActor.From(context);
         var request = context.Request;
-        var owner = await references.ValidateOwnerAsync(request.TenantId,
-            request.OwnerPersonId, ct).ConfigureAwait(false);
-        if (owner is not null)
-            return Result.Failure(owner);
-        return await executor.ExecuteAsync(new OperationalProcessRegister(request.TenantId),
-            register => CommandFailureRequestAdapter.ToOutcome(register.Revise(
-                request.OperationalProcessId, request.ExpectedRevision, current => current with
-                {
-                    Name = request.Name,
-                    Purpose = request.Purpose,
-                    OwnerPersonId = request.OwnerPersonId,
-                    Lifecycle = request.Lifecycle,
-                    Inputs = request.Inputs,
-                    Outputs = request.Outputs,
-                }, actor, clock.GetUtcNow())), context, ct).ConfigureAwait(false);
+        if (request.CommandId == Uuid.Empty || request.OperationalProcessId == Uuid.Empty ||
+            request.TenantId == Uuid.Empty)
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A command id, operational process identity and tenant are required."));
+        if (request.ExpectedRevision < 1)
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Validation,
+                "The expected operational process revision must be positive."));
+        return await admission.AdmitAsync(OperationalProcessNames.Descriptor, context,
+            new NamedRecordAdmissionRequest(request.TenantId, request.OperationalProcessId, request.CommandId,
+                false, request.ExpectedRevision, TechnologyInventoryActor.From(context),
+                AuthoredIntentDigest.Compute(request), token => OperationalProcessContents.ResolveAsync(references,
+                    request.TenantId, new OperationalProcessContent(request.Name, request.Purpose,
+                        request.OwnerPersonId, request.Inputs, request.Outputs, request.Lifecycle), token)),
+            (OperationalProcess record, AcceptAttempt change) => record.AcceptChange(change.Operation, change.Create,
+                change.ExpectedRevision, change.Intent, change.FirstResponse), ct)
+            .ConfigureAwait(false);
     }
 }

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NamedRecords;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Retention;
@@ -1722,10 +1723,13 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/service-identities")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
-    app.MapPortiaPost<RecordProvider, ProviderRegistration>("/api/v1/tenants/{tenant_id}/providers")
+    app.MapPortiaPut<RecordProvider, OperationAcceptedResponse>("/api/v1/tenants/{tenant_id}/providers/{provider_id}",
+            config => config.OnResult((_, result) => NamedRecordHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
-    app.MapPortiaPut<ReviseProvider, ProviderRegistration>("/api/v1/tenants/{tenant_id}/providers/{provider_id}")
+    app.MapPortiaPut<ReviseProvider, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/providers/revise-provider/{command_id}",
+            config => config.OnResult((_, result) => NamedRecordHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Providers");
     app.MapPortiaGet<GetProvider, ProviderView>("/api/v1/tenants/{tenant_id}/providers/{provider_id}")
@@ -1792,11 +1796,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Preview provider change impact across systems, data, controls, evidence, and scope")
         .WithTags("Providers");
-    app.MapPortiaPost<RecordTechnologyComponent, TechnologyComponentRegistration>(
-            "/api/v1/tenants/{tenant_id}/technology-components")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("TechnologyInventory");
-    app.MapPortiaPut<ReviseTechnologyComponent>(
+    app.MapPortiaPut<RecordTechnologyComponent, TechnologyComponentRegistration>(
             "/api/v1/tenants/{tenant_id}/technology-components/{component_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
@@ -1824,11 +1824,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/technology-components/{component_id}/revisions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
-    app.MapPortiaPost<RecordInformationAsset, InformationAssetRegistration>(
-            "/api/v1/tenants/{tenant_id}/information-assets")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("TechnologyInventory");
-    app.MapPortiaPut<ReviseInformationAsset>(
+    app.MapPortiaPut<RecordInformationAsset, InformationAssetRegistration>(
             "/api/v1/tenants/{tenant_id}/information-assets/{information_asset_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
@@ -1849,12 +1845,14 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Preview the data-flow impact of reclassifying or retiring an information asset")
         .WithTags("TechnologyInventory");
-    app.MapPortiaPost<RecordLocation, LocationRegistration>(
-            "/api/v1/tenants/{tenant_id}/locations")
+    app.MapPortiaPut<RecordLocation, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/locations/{location_id}",
+            config => config.OnResult((_, result) => NamedRecordHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
-    app.MapPortiaPut<ReviseLocation>(
-            "/api/v1/tenants/{tenant_id}/locations/{location_id}")
+    app.MapPortiaPut<ReviseLocation, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/locations/revise-location/{command_id}",
+            config => config.OnResult((_, result) => NamedRecordHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
     app.MapPortiaGet<GetLocation, LocationView>(
@@ -1869,12 +1867,14 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/locations/{location_id}/revisions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
-    app.MapPortiaPost<RecordOperationalProcess, OperationalProcessRegistration>(
-            "/api/v1/tenants/{tenant_id}/operational-processes")
+    app.MapPortiaPut<RecordOperationalProcess, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id}",
+            config => config.OnResult((_, result) => NamedRecordHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
-    app.MapPortiaPut<ReviseOperationalProcess>(
-            "/api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id}")
+    app.MapPortiaPut<ReviseOperationalProcess, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/operational-processes/revise-operational-process/{command_id}",
+            config => config.OnResult((_, result) => NamedRecordHttp.Result(result)))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
     app.MapPortiaGet<GetOperationalProcess, OperationalProcessView>(
@@ -1889,11 +1889,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id}/revisions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");
-    app.MapPortiaPost<RecordDataFlow, DataFlowRegistration>(
-            "/api/v1/tenants/{tenant_id}/data-flows")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("TechnologyInventory");
-    app.MapPortiaPut<ReviseDataFlow>(
+    app.MapPortiaPut<RecordDataFlow, DataFlowRegistration>(
             "/api/v1/tenants/{tenant_id}/data-flows/{data_flow_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("TechnologyInventory");

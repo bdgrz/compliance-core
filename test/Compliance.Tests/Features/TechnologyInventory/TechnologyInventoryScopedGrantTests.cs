@@ -144,7 +144,7 @@ public sealed class TechnologyInventoryScopedGrantTests
         var authorizer = ActivatorUtilities.CreateInstance<TechnologyInventoryAuthorizer>(scope.ServiceProvider);
         ITechnologyInventoryRequest[] requests =
         [
-            new RecordInformationAsset(fixture.TenantId, "New", "public", "RET-1", Uuid.CreateVersion4()),
+            new RecordInformationAsset(Uuid.CreateVersion4(), fixture.TenantId, "New", "public", "RET-1", Uuid.CreateVersion4()),
             new ListTechnologyComponents(fixture.TenantId),
             new GetTechnologyComponent(fixture.TenantId, fixture.ResourceId),
             new ListLocations(fixture.TenantId),

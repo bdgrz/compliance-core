@@ -1,9 +1,12 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using static Bdgrz.Compliance.Tests.Features.Providers.AssuranceSamples;
 
 namespace Bdgrz.Compliance.Tests.Features.Providers;
@@ -57,13 +60,20 @@ public sealed class ProviderAssuranceDisclosureTests
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid ProviderId { get; } = Uuid.CreateVersion4();
         FitzAssuranceDirectory Directory { get; } = new(new InMemoryKvClient());
-        ProviderRegister Source { get; set; } = null!;
+        ServiceProvider Source { get; set; } = null!;
 
         public static async Task<Fixture> CreateAsync()
         {
             var fixture = new Fixture();
-            fixture.Source = new ProviderRegister(fixture.TenantId);
-            Assert.True(fixture.Source.Record(fixture.ProviderId, Uuid.CreateVersion4(), MaterialProvider(), Author, Now).IsSuccess);
+            var collection = new ServiceCollection();
+            var events = new InMemoryEventStore();
+            collection.AddSingleton<IEventStore>(events);
+            collection.AddSingleton<IDomainEventReader>(events);
+            collection.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+                new PersistenceKvClient(new InMemoryKvClient())));
+            collection.AddPortia();
+            fixture.Source = collection.BuildServiceProvider();
+            await NamedRecordFacts.SeedProviderAsync(fixture.Source, fixture.TenantId, fixture.ProviderId, MaterialProvider());
             var exception = new[] { new AssuranceExceptionNote("CC6.1", "Exception text") };
             await using var batch = await fixture.Directory.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(
                 FitzAssuranceDirectory.ProjectorName, EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ProviderAssuranceRegister.Area)),
@@ -86,17 +96,15 @@ public sealed class ProviderAssuranceDisclosureTests
 
         public ListProviderReviewsHandler ReviewsHandler(bool manager) => new(Directory, References(), Consistency(), Disclosure(manager));
 
-        AssuranceReferences References() => new(new SourceReader(Source));
+        AssuranceReferences References()
+        {
+            var reader = Source.GetRequiredService<IAggregateReader>();
+            return new(reader, new ProviderSource(reader, Source.GetRequiredService<IImmutableContentStore>()), null!, null!, null!);
+        }
 
         AssuranceReadConsistency Consistency() => new(Directory, new InMemoryEventStore());
 
         static AssuranceDisclosure Disclosure(bool manager) => new(new PermissionBackedAccessGrantPermissionAuthorizer(
             new RecordingPermissionAuthorizer(manager)));
-    }
-
-    sealed class SourceReader(ProviderRegister source) : IAggregateReader
-    {
-        public ValueTask<T> HydrateAsync<T>(T aggregate, CancellationToken ct = default) where T : Aggregate =>
-            ValueTask.FromResult((T)(Aggregate)source);
     }
 }

@@ -18,7 +18,7 @@ sealed class FitzProviderDirectory(IKvClient client)
 
     async ValueTask<IProjectionBatch> BeginProviderBatchAsync(ProjectionBatchContext context, CancellationToken ct)
     {
-        if (context.Identity.Pattern.Area != ProviderRegister.Area ||
+        if (context.Identity.Pattern.Area != Provider.Area ||
             context.Identity.Pattern.Resource is not null ||
             !Uuid.TryParse(context.Identity.Pattern.Realm, null, out var tenantId) || tenantId == Uuid.Empty)
             throw new InvalidOperationException("A provider projection batch requires its tenant's provider area.");
@@ -27,13 +27,15 @@ sealed class FitzProviderDirectory(IKvClient client)
         return batch;
     }
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default) =>
-        base.LoadCheckpointAsync(new CheckpointIdentity(ProjectorName, EventStreamPattern.ForPattern(tenantId.ToString(), ProviderRegister.Area)), ct);
-    public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
+        base.LoadCheckpointAsync(new CheckpointIdentity(ProjectorName, EventStreamPattern.ForPattern(tenantId.ToString(), Provider.Area)), ct);
+    public async ValueTask ApplyAsync(DomainEvent domainEvent, ProviderContent content, CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(content);
         var view = domainEvent switch
         {
-            ProviderRecorded ev => View(ev.TenantId, ev.ProviderId, 1, ev.Content, ev.Actor, ev.RecordedAt),
-            ProviderRevised ev => View(ev.TenantId, ev.ProviderId, ev.Revision, ev.Content, ev.Actor, ev.RecordedAt),
+            ProviderRecorded ev => ProviderSource.View(ev.TenantId, ev.ProviderId, 1, content, ev.Actor, ev.RecordedAt),
+            ProviderRevised ev => ProviderSource.View(ev.TenantId, ev.ProviderId, ev.Revision, content, ev.Actor,
+                ev.RecordedAt),
             _ => throw new InvalidOperationException("The provider event is not supported."),
         };
         if (view.TenantId == Uuid.Empty || view.ProviderId == Uuid.Empty || view.TenantId != _batchTenantId ||
@@ -91,14 +93,6 @@ sealed class FitzProviderDirectory(IKvClient client)
         return await ProviderDirectorySchema.Revisions.QueryAsync(tx,
             ProviderDirectorySchema.ByProvider.Query().WithPrefix(providerId.ToString()).Take(limit).After(cursor), ct)
             .ConfigureAwait(false);
-    }
-
-    static ProviderView View(Uuid tenantId, Uuid providerId, long revision, ProviderContent content,
-        Bdgrz.Compliance.Features.AccessControl.ActorReference actor, DateTimeOffset recordedAt)
-    {
-        content = ProviderRules.Normalize(content);
-        return new ProviderView(tenantId, providerId, revision, content, "manual", "active",
-            ProviderRules.Unresolved(content), actor, recordedAt);
     }
 
     static bool Same(ProviderView left, ProviderView right) =>

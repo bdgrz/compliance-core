@@ -28,12 +28,12 @@ public sealed class ProviderPagingHttpMcpTests
             identities[tenant] = [];
             for (var index = 0; index < 2; index++)
             {
-                using var created = await client.PostAsync(Path(tenant), Body($"Tenant {tenant} provider {index}"));
-                Assert.Equal(HttpStatusCode.OK, created.StatusCode);
-                var registration = JsonSerializer.Deserialize(await created.Content.ReadAsStringAsync(), ComplianceCoreJsonContext.Default.ProviderRegistration)!;
-                identities[tenant].Add(registration.ProviderId);
-                using var revised = await client.PutAsync(Path(tenant, registration.ProviderId), Body($"Revised {tenant} provider {index}", true));
-                Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
+                var providerId = Uuid.CreateVersion4();
+                await NamedRecordFacts.SeedProviderAsync(factory.Services, tenant, providerId,
+                    new ProviderContent($"Tenant {tenant} provider {index}", "supplier"));
+                await NamedRecordFacts.SeedProviderAsync(factory.Services, tenant, providerId,
+                    new ProviderContent($"Revised {tenant} provider {index}", "supplier"));
+                identities[tenant].Add(providerId);
             }
             await CatchUpAsync(factory.Services, tenant);
         }
@@ -82,10 +82,6 @@ public sealed class ProviderPagingHttpMcpTests
 
     static string Path(Uuid tenant, Uuid? provider = null) => $"/api/v1/tenants/{tenant}/providers" + (provider is null ? "" : $"/{provider}");
 
-    static StringContent Body(string name, bool revise = false) => new(
-        (revise ? "{\"expected_revision\":1,\"content\":" : "{\"content\":") +
-        JsonSerializer.Serialize(new ProviderContent(name, "supplier"), ComplianceCoreJsonContext.Default.ProviderContent) + "}", Encoding.UTF8, "application/json");
-
     static Dictionary<string, object?> Arguments(Uuid tenant, Uuid? provider, string? cursor)
     {
         var arguments = new Dictionary<string, object?> { ["tenant_id"] = tenant.ToString(), ["limit"] = 1 };
@@ -123,20 +119,6 @@ public sealed class ProviderPagingHttpMcpTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    static async Task CatchUpAsync(IServiceProvider provider, Uuid tenant)
-    {
-        using var scope = provider.CreateScope();
-        var directory = scope.ServiceProvider.GetRequiredService<FitzProviderDirectory>();
-        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
-        var checkpoint = await directory.LoadCheckpointAsync(tenant);
-        var pattern = EventStreamPattern.ForPattern(tenant.ToString(), ProviderRegister.Area);
-        await using var batch = await directory.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(FitzProviderDirectory.ProjectorName, pattern), checkpoint));
-        var cursor = checkpoint.Cursor;
-        await foreach (var record in events.ReadAsync(pattern, checkpoint.Cursor, CancellationToken.None))
-        {
-            await directory.ApplyAsync(record.Event);
-            cursor = record.NextCursor;
-        }
-        await batch.CommitAsync(new ProjectionCheckpoint(cursor));
-    }
+    static Task CatchUpAsync(IServiceProvider provider, Uuid tenant) =>
+        ProviderProjectionHelper.CatchUpAsync(provider, tenant);
 }
