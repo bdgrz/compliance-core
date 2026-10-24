@@ -1,0 +1,124 @@
+{
+  "version": "implementation-file-review-v1",
+  "total": 2,
+  "reviewed": 2,
+  "blocked": 0,
+  "calls": 2,
+  "cached": 0,
+  "usage": {
+    "input_tokens": 13225,
+    "output_tokens": 156
+  },
+  "records": [
+    {
+      "path": "src/Compliance.Core/Features/Remediation/AuthorizeCorrectiveActionFindingClosureUseHandler.cs",
+      "kinds": [
+        "handler"
+      ],
+      "sha256": "3cb7d8349d77a8aa3c3ca6833bfba456521d6006684ed6f0c995d2368ee0439d",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Remediation/AuthorizeCorrectiveActionFindingClosureUse.cs",
+          "sha256": "e6f9a43e1b19104c8537a094cc19c21037bd9498e81327f1e76915d6c01b83bd"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/FindingClosureVerifier.cs",
+          "sha256": "61afaa8577446cefcebe3889cc3fcf7bee8a03068dc511474f6c02d0f5a25b01"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Remediation/FindingContent.cs",
+          "sha256": "9aa402c2ddff6c28afd72693790c6c8cae753a449c34fc97db5eacd0dbfc241d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ChildAdmissionIntent.cs",
+          "sha256": "9fb634707c930c663dbd17fa4cb6988ade5e7d6cf7757f5b1cd7260bd12797dc"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureIntent.cs",
+          "sha256": "d768fec38d7a5ea95b6d3daf6c75affcb871220cb96ab10e0935c8e008e4a75a"
+        }
+      ],
+      "review_key": "01dc7cc1ad5d02066a223f342122c60709059da26b7c7ff85e8a0f150f311bb3",
+      "reviewed_at": "2026-10-24T16:12:52.675Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.42
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.43
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.39
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.75
+        }
+      },
+      "usage": {
+        "input_tokens": 7891,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Remediation/FindingClosureVerifier.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "61afaa8577446cefcebe3889cc3fcf7bee8a03068dc511474f6c02d0f5a25b01",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/Remediation/FindingContent.cs",
+          "sha256": "9aa402c2ddff6c28afd72693790c6c8cae753a449c34fc97db5eacd0dbfc241d"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureIntent.cs",
+          "sha256": "d768fec38d7a5ea95b6d3daf6c75affcb871220cb96ab10e0935c8e008e4a75a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/ClosureParentKind.cs",
+          "sha256": "8c32439d9bed0a63263291230131d5151e203fbf6644f29f40954309954d5611"
+        },
+        {
+          "path": "src/Compliance.Common/Features/NativeOperations/NativeFactReference.cs",
+          "sha256": "e8339249a228b922a84252879739e68919f6ff2b1767ba54a5e131a5f9989b39"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        }
+      ],
+      "review_key": "4f910042c72b1caaac09fccb369efc450742092fc393957c691d78000b71c7ff",
+      "reviewed_at": "2026-10-24T16:12:52.695Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.53
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.39
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.38
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.21
+        }
+      },
+      "usage": {
+        "input_tokens": 5334,
+        "output_tokens": 78
+      }
+    }
+  ]
+}
