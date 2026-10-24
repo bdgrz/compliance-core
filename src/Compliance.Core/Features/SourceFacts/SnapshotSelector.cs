@@ -14,7 +14,7 @@ public sealed record SnapshotSelector(string Area, string? Resource = null)
             Validate(Area, nameof(Area));
             if (Resource is not null)
                 Validate(Resource, nameof(Resource));
-            return $"*/{Area}/{Resource ?? "*"}";
+            return $"stream://*/{Area}/{Resource ?? "*"}";
         }
     }
 

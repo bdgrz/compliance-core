@@ -31,7 +31,9 @@ sealed class ScriptedStreamClient : IStreamClient
         ulong? capturedWatermark = null, CancellationToken ct = default)
     {
         Requests.Add(new Request(route, startOffset, cursorFingerprint, capturedWatermark));
-        var global = route == "stream://**" || route.StartsWith("*/", StringComparison.Ordinal);
+        if (!route.StartsWith("stream://", StringComparison.Ordinal))
+            throw new InvalidOperationException("A stream selector must use its canonical scheme.");
+        var global = route == "stream://**" || route.StartsWith("stream://*/", StringComparison.Ordinal);
         if (!global && (cursorFingerprint is not null || capturedWatermark is not null))
             throw new InvalidOperationException("Continuation tokens apply only to global selectors.");
         var snapshot = capturedWatermark ?? (ulong)_records.Count;
@@ -56,7 +58,7 @@ sealed class ScriptedStreamClient : IStreamClient
     {
         if (route == "stream://**")
             return true;
-        var parts = route.Split('/');
+        var parts = route["stream://".Length..].Split('/');
         return parts[1] == record.Address.Area && (parts[2] == "*" || parts[2] == record.Address.Resource);
     }
 

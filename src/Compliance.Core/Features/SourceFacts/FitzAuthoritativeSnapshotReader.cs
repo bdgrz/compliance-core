@@ -32,10 +32,12 @@ sealed class FitzAuthoritativeSnapshotReader(IStreamClient streams, IDomainEvent
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantScope);
         ArgumentNullException.ThrowIfNull(cut);
         var route = selector.Route;
-        if (cursor is not null && !string.Equals(cursor.Route, route, StringComparison.Ordinal))
-            throw new SourceFactVerificationException("The cursor belongs to a different selector.");
         var watermark = cut.GlobalWatermarkExclusive;
-        var state = cursor ?? new SnapshotCursor(route, 0, null, null);
+        if (cursor is not null && (!string.Equals(cursor.Route, route, StringComparison.Ordinal) ||
+            !string.Equals(cursor.TenantScope, tenantScope, StringComparison.Ordinal) ||
+            cursor.CutWatermarkExclusive != watermark))
+            throw new SourceFactVerificationException("The cursor belongs to a different selector, tenant or cut.");
+        var state = cursor ?? new SnapshotCursor(route, 0, null, null, tenantScope, watermark);
         var facts = new List<ResolvedSourceFact>();
         var nextResource = new Dictionary<string, ulong>(StringComparer.Ordinal);
         var fresh = cursor is null;
@@ -54,9 +56,15 @@ sealed class FitzAuthoritativeSnapshotReader(IStreamClient streams, IDomainEvent
             var next = state.NextGlobalOffset;
             foreach (var item in page.Items)
             {
+                var address = Address(item.Route);
+                var ownScope = string.Equals(address.Realm, tenantScope, StringComparison.Ordinal);
                 if (item.Kind != StreamReadItemKind.Event || item.Record is not { } record)
+                {
+                    if (!ownScope)
+                        continue;
                     throw new SourceFactVerificationException(
                         "A relevant record was withheld, so the source coverage is incomplete.");
+                }
                 if (record.GlobalOffset is not { } globalOffset || record.RealmOffset is not { } realmOffset)
                     throw new SourceFactVerificationException("The broker did not report realm and global offsets.");
                 if (globalOffset < next)
@@ -67,10 +75,9 @@ sealed class FitzAuthoritativeSnapshotReader(IStreamClient streams, IDomainEvent
                     break;
                 }
                 next = globalOffset + 1;
-                CheckContinuity(nextResource, record, fresh);
-                var address = Address(record.Route);
-                if (!string.Equals(address.Realm, tenantScope, StringComparison.Ordinal))
+                if (!ownScope)
                     continue;
+                CheckContinuity(nextResource, record, fresh);
                 var domainEvent = Deserialize(record.Body);
                 if (domainEvent.Metadata is { IsAudit: true })
                     continue;

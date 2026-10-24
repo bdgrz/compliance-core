@@ -14,6 +14,19 @@ public sealed class FitzAuthoritativeSnapshotReaderTests
     static readonly SnapshotSelector Other = new("tenants", "acme");
 
     [Fact]
+    public void ShouldUseCanonicalRouteGivenGlobalResourceSelector()
+    {
+        // Arrange
+        var selector = new SnapshotSelector("tenants", "acme");
+
+        // Act
+        var route = selector.Route;
+
+        // Assert
+        Assert.Equal("stream://*/tenants/acme", route);
+    }
+
+    [Fact]
     public async Task ShouldExcludePublicationGivenAppendAfterCut()
     {
         // Arrange
@@ -53,6 +66,79 @@ public sealed class FitzAuthoritativeSnapshotReaderTests
     }
 
     [Fact]
+    public async Task ShouldRejectCursorGivenAnotherTenantScope()
+    {
+        // Arrange
+        var (reader, streams, serializer) = Create();
+        Append(streams, serializer, Realm, "acme", 0);
+        Append(streams, serializer, "tenant-b", "acme", 0);
+        var capture = await reader.CaptureAsync();
+        var first = await reader.ReadAtAsync(Tenants, Realm, capture.Cut);
+
+        // Act
+        var failure = await Record.ExceptionAsync(() => reader.ReadAtAsync(Tenants, "tenant-b", capture.Cut,
+            first.Cursor));
+
+        // Assert
+        Assert.IsType<SourceFactVerificationException>(failure);
+    }
+
+    [Fact]
+    public async Task ShouldRejectCursorGivenAnotherCapturedCut()
+    {
+        // Arrange
+        var (reader, streams, serializer) = Create();
+        Append(streams, serializer, Realm, "acme", 0);
+        var earlier = await reader.CaptureAsync();
+        Append(streams, serializer, Realm, "acme", 1);
+        var later = await reader.CaptureAsync();
+        var first = await reader.ReadAtAsync(Tenants, Realm, later.Cut);
+
+        // Act
+        var failure = await Record.ExceptionAsync(() => reader.ReadAtAsync(Tenants, Realm, earlier.Cut,
+            first.Cursor));
+
+        // Assert
+        Assert.IsType<SourceFactVerificationException>(failure);
+    }
+
+    [Fact]
+    public async Task ShouldReadCompleteOwnScopeGivenUnrelatedRealmHistoryWasRetainedAway()
+    {
+        // Arrange
+        var (reader, streams, serializer) = Create();
+        streams.Append(new EventStreamAddress("tenant-b", "tenants", "acme"), Array.Empty<byte>(), skipResource: 3);
+        Append(streams, serializer, Realm, "acme", 0);
+        var capture = await reader.CaptureAsync();
+
+        // Act
+        var result = await reader.ReadAtAsync(Tenants, Realm, capture.Cut);
+
+        // Assert
+        Assert.True(result.IsComplete);
+        Assert.Equal(Realm, Assert.Single(result.Facts).Locator.Source.Realm);
+        Assert.Equal(1, serializer.Deserializations);
+    }
+
+    [Fact]
+    public async Task ShouldReadCompleteOwnScopeGivenFilteredRecordBelongsToAnotherRealm()
+    {
+        // Arrange
+        var (reader, streams, serializer) = Create();
+        streams.Append(new EventStreamAddress("tenant-b", "tenants", "acme"), Array.Empty<byte>(), filtered: true);
+        Append(streams, serializer, Realm, "acme", 0);
+        var capture = await reader.CaptureAsync();
+
+        // Act
+        var result = await reader.ReadAtAsync(Tenants, Realm, capture.Cut);
+
+        // Assert
+        Assert.True(result.IsComplete);
+        Assert.Equal(Realm, Assert.Single(result.Facts).Locator.Source.Realm);
+        Assert.Equal(1, serializer.Deserializations);
+    }
+
+    [Fact]
     public async Task ShouldUseFreshSnapshotPerSelectorGivenTwoSelectors()
     {
         // Arrange
@@ -71,7 +157,7 @@ public sealed class FitzAuthoritativeSnapshotReaderTests
         Assert.Equal("stream://**", anchor.Route);
         Assert.Equal(2, firstOfEach.Count);
         Assert.All(firstOfEach, request => Assert.Null(request.Watermark));
-        Assert.All(streams.Requests.Skip(1), request => Assert.StartsWith("*/", request.Route, StringComparison.Ordinal));
+        Assert.All(streams.Requests.Skip(1), request => Assert.StartsWith("stream://*/", request.Route, StringComparison.Ordinal));
         Assert.All(streams.Requests.Skip(1).Where(request => request.Fingerprint is not null),
             request => Assert.Equal(ScriptedStreamClient.FingerprintOf(request.Route, request.Watermark!.Value),
                 request.Fingerprint));
