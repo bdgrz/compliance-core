@@ -28,6 +28,9 @@ public sealed class PopulationSnapshot : Aggregate
     }
 
     public bool IsFrozen => _frozen is not null;
+
+    /// <summary>The freeze fact, once recorded; a launch pins it as the proof of the snapshot its items came from.</summary>
+    public PopulationSnapshotFrozen? FrozenFact => _frozen;
     public Uuid RootSnapshotId => _frozen?.RootSnapshotId ?? Uuid.Empty;
     public Uuid? AmendsSnapshotId => _frozen?.AmendsSnapshotId;
     public string? Kind => _frozen?.Kind;

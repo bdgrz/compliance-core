@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Features.AccessReviews;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization.Metadata;
 
@@ -58,6 +59,14 @@ public static class ResultSchemaRegistry
         [ProviderAssuranceContent.ReportRegistrationSchema] = ComplianceCoreJsonContext.Default.AssuranceReportRegistration,
         [ProviderAssuranceContent.GapRegistrationSchema] = ComplianceCoreJsonContext.Default.ProviderCoverageGapRegistration,
         [ProviderAssuranceContent.ReviewRegistrationSchema] = ComplianceCoreJsonContext.Default.ProviderReviewRegistration,
+        [AccessReviewContent.CampaignRegistrationSchema] = ComplianceCoreJsonContext.Default.AccessReviewCampaignRegistration,
+        [AccessReviewContent.DecisionViewSchema] = ComplianceCoreJsonContext.Default.AccessDecisionView,
+        [AccessReviewContent.ChangeViewSchema] = ComplianceCoreJsonContext.Default.AccessRemediationChangeView,
+        [AccessReviewContent.VerificationViewSchema] = ComplianceCoreJsonContext.Default.AccessRemediationVerificationView,
+        [AccessReviewContent.ExceptionViewSchema] = ComplianceCoreJsonContext.Default.AccessRemediationExceptionView,
+        [AccessReviewContent.ReassignmentViewSchema] =
+            ComplianceCoreJsonContext.Default.AccessReviewResponsibilityReassignmentView,
+        [AccessReviewContent.CompletionViewSchema] = ComplianceCoreJsonContext.Default.AccessReviewCampaignCompletionView,
     };
 
     /// <summary>Registered schema names.</summary>

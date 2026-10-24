@@ -386,12 +386,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetAccessVariance>(tool => tool.ReadOnly())
         .AddMcpTool<ProposeAccessExpectation>(tool => tool.Idempotent())
         .AddMcpTool<ListAccessExpectations>(tool => tool.ReadOnly())
-        .AddMcpTool<LaunchAccessReviewCampaign>()
+        .AddMcpTool<LaunchAccessReviewCampaign>(tool => tool.Idempotent())
         .AddMcpTool<GetAccessReviewCampaign>(tool => tool.ReadOnly())
         .AddMcpTool<ListAccessReviewCampaigns>(tool => tool.ReadOnly())
         .AddMcpTool<PreviewBulkAccessDecision>(tool => tool.ReadOnly())
-        .AddMcpTool<RecordAccessRemediationChange>()
-        .AddMcpTool<VerifyAccessRemediation>()
+        .AddMcpTool<RecordAccessRemediationChange>(tool => tool.Idempotent())
+        .AddMcpTool<VerifyAccessRemediation>(tool => tool.Idempotent())
         .AddMcpTool<ReassignAccessReviewResponsibility>(tool => tool.Idempotent())
         .AddMcpTool<ListWork>(tool => tool.ReadOnly())
         .AddMcpTool<GetWorkItem>(tool => tool.ReadOnly())
@@ -1554,8 +1554,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<LaunchAccessReviewCampaign, AccessReviewCampaignRegistration>(
-            "/api/v1/tenants/{tenant_id}/access-review-campaigns")
+    app.MapPortiaPut<LaunchAccessReviewCampaign, AccessReviewCampaignRegistration>(
+            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<ListAccessReviewCampaigns, Page<AccessReviewCampaignSummaryView>>(
@@ -1566,36 +1566,42 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<RecordAccessDecision, AccessDecisionView>(
-            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions")
+    app.MapPortiaPut<RecordAccessDecision, AccessDecisionView>(
+            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaPost<PreviewBulkAccessDecision, BulkAccessDecisionPreview>(
             "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decision-previews")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<RecordBulkAccessDecision, BulkAccessDecisionResult>(
-            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decisions")
+    app.MapPortiaPut<RecordAccessRemediationChange, AccessRemediationChangeView>(
+            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<RecordAccessRemediationChange, AccessRemediationChangeView>(
-            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes")
+    app.MapPortiaPut<ReassignAccessReviewResponsibility, AccessReviewResponsibilityReassignmentView>(
+            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<ReassignAccessReviewResponsibility, AccessReviewResponsibilityReassignmentView>(
-            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments")
+    app.MapPortiaPut<VerifyAccessRemediation, AccessRemediationVerificationView>(
+            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<VerifyAccessRemediation, AccessRemediationVerificationView>(
-            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications")
+    app.MapPortiaPut<ExemptAccessRemediation, AccessRemediationExceptionView>(
+            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<ExemptAccessRemediation, AccessRemediationExceptionView>(
-            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions")
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("AccessReviews");
-    app.MapPortiaPost<CompleteAccessReviewCampaign, AccessReviewCampaignCompletionView>(
-            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion")
+    app.MapPortiaPut<CompleteAccessReviewCampaign, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<ListWork, WorkQueueView>(

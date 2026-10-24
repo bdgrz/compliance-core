@@ -708,6 +708,12 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(ApplicationImportExecutionProcess.Definition());
         services.AddScoped<ApplicationImportVerifier>();
         services.AddScoped<ApplicationImportReceivers>();
+        services.AddSingleton(AccessReviewLaunchFanOut.Definition());
+        services.AddSingleton(AccessReviewCompletionProcess.Definition());
+        services.AddSingleton<AccessReviewManifests>();
+        services.AddScoped<AccessReviewReader>();
+        services.AddScoped<AccessReviewCompletionVerifier>();
+        services.AddScoped<AccessReviewCompletionFences>();
         services.AddScoped<ControlOperationsReader>();
         services.AddScoped<TypeIIOccurrenceCoverage>();
         services.AddScoped<TypeIIRangeVerifier>();
@@ -877,6 +883,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<EngagementAcceptanceReceiverAuthorizer>()
             .AddRequestAuthorizer<TypeIIRangeReceiverAuthorizer>()
             .AddRequestAuthorizer<ControlOccurrenceReceiverAuthorizer>()
+            .AddRequestAuthorizer<AccessReviewReceiverAuthorizer>()
             .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
             .AddRequestAuthorizer<ServiceEngagementAcceptanceAuthorizer>()
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
@@ -1312,7 +1319,11 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordAccessRemediationChangeHandler>()
             .AddRequestHandler<ReassignAccessReviewResponsibilityHandler>()
             .AddRequestHandler<ExemptAccessRemediationHandler>()
-            .AddRequestHandler<RecordBulkAccessDecisionHandler>()
+            .AddRequestHandler<MaterializeAccessReviewItemHandler>()
+            .AddRequestHandler<AuthorizeAccessReviewItemCampaignCompletionUseHandler>()
+            .AddRequestHandler<SettleAccessReviewItemCampaignCompletionUseHandler>()
+            .AddRequestHandler<CompleteAccessReviewCampaignClosureHandler>()
+            .AddRequestHandler<AbortAccessReviewCampaignCompletionHandler>()
             .AddRequestHandler<VerifyAccessRemediationHandler>()
             .AddRequestAuthorizer<AccessReviewAuthorizer>()
             .AddRequestHandler<DefineControlEvaluationPlanHandler>()
@@ -1567,6 +1578,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<TypeIIRangeReleaseReactor>(TypeIIRangeReleaseReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<ControlOccurrenceFanOutReactor>(ControlOccurrenceFanOutReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AccessReviewLaunchFanOutReactor>(AccessReviewLaunchFanOutReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AccessReviewCompletionReactor>(AccessReviewCompletionReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AccessReviewCompletionSettlementReactor>(AccessReviewCompletionSettlementReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })

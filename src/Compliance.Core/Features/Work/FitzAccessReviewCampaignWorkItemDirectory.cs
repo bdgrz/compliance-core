@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz;
@@ -8,7 +9,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Work;
 
 sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
-    IAggregateReader sourceReader)
+    IAggregateReader sourceReader, IImmutableContentStore content)
     : FitzKvProjectionStore(client,
         "kv://bdgrz/accountable-work-items/access-review-campaigns-v1", ProjectorName),
       IAccountableWorkItemDirectoryReader, IAccessReviewCampaignWorkItemProjection
@@ -21,7 +22,7 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
     public IReadOnlyCollection<string> ProjectedKinds => AccessReviewCampaignWork.ProjectedKinds;
 
     public EventStreamPattern SourcePattern(Uuid tenantId) =>
-        EventStreamPattern.ForPattern(tenantId.ToString(), AccessReviewCampaign.Area);
+        EventStreamPattern.ForPattern(tenantId.ToString(), AccessReviewItem.Area);
 
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
         CancellationToken ct = default) => base.LoadCheckpointAsync(new CheckpointIdentity(
@@ -37,25 +38,27 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
-        var (tenantId, campaignId, eventRevision) = ScopeFor(domainEvent);
-        if (tenantId == Uuid.Empty || campaignId == Uuid.Empty)
+        var (tenantId, campaignId, itemId, eventRevision) = ScopeFor(domainEvent);
+        if (tenantId == Uuid.Empty || campaignId == Uuid.Empty || itemId == Uuid.Empty)
             throw new InvalidOperationException(
-                "An access-review campaign work event must have complete tenant and campaign scope.");
+                "An access-review item work event must have complete tenant, campaign and item scope.");
 
-        var campaign = await sourceReader.HydrateAsync(
-            new AccessReviewCampaign(tenantId, campaignId), ct).ConfigureAwait(false);
-        if (!campaign.IsLaunched || campaign.Revision < eventRevision || campaign.Revision < 1 ||
+        var item = await sourceReader.HydrateAsync(new AccessReviewItem(tenantId, campaignId, itemId), ct)
+            .ConfigureAwait(false);
+        var campaign = await sourceReader.HydrateAsync(new AccessReviewCampaign(tenantId, campaignId), ct)
+            .ConfigureAwait(false);
+        if (item.Opened is null || item.Revision < eventRevision || item.Revision < 1 ||
             campaign.Launched is not { } launched || launched.TenantId != tenantId ||
             launched.CampaignId != campaignId)
             throw new InvalidOperationException(
-                "An access-review work event must match its authoritative source aggregate.");
+                "An access-review work event must match its authoritative source aggregates.");
 
-        var current = await AccessReviewCampaignWorkItemDirectorySchema.Campaigns.GetAsync(
-            Transaction, campaignId, ct).ConfigureAwait(false);
-        if (current is not null && (current.TenantId != tenantId ||
-            current.CampaignId != campaignId))
+        var current = await AccessReviewCampaignWorkItemDirectorySchema.Items.GetAsync(Transaction,
+            AccessReviewCampaignWorkItemDirectorySchema.ItemKey(campaignId, itemId), ct).ConfigureAwait(false);
+        if (current is not null && (current.TenantId != tenantId || current.CampaignId != campaignId ||
+                                    current.ItemId != itemId))
             throw new InvalidOperationException(
-                "An access-review campaign cannot replace work state outside its recorded scope.");
+                "An access-review item cannot replace work state outside its recorded scope.");
 
         if (launched.ProgramId is null && launched.RemediationOwnerMemberId is null)
         {
@@ -70,8 +73,7 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
             throw new InvalidOperationException(
                 "A routed access-review campaign must freeze both its Program and remediation owner.");
 
-        if (programId == Uuid.Empty || remediationOwnerId == Uuid.Empty ||
-            launched.Items.Count == 0 || campaign.Revision < 1)
+        if (programId == Uuid.Empty || remediationOwnerId == Uuid.Empty)
             throw new InvalidOperationException(
                 "A routed access-review campaign has incomplete work projection state.");
 
@@ -85,59 +87,29 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
             throw new InvalidOperationException(
                 "A campaign's frozen Program cannot change after launch.");
 
-        if (current is not null && current.SourceRevision > campaign.Revision)
+        // A replay or an older event leaves newer work state alone; the closure fence completes the work at the
+        // revision the item stopped at.
+        if (current is not null && current.SourceRevision >= item.Revision && current.IsCompleted == item.IsClosed)
             return;
-        if (current is not null && current.SourceRevision == campaign.Revision)
-            return;
 
-        var view = campaign.ToView(DateTimeOffset.UtcNow);
-        var nextCampaign = new AccessReviewCampaignWorkCampaignState(tenantId, programId,
-            campaignId, campaign.Revision, DateOnly.FromDateTime(launched.Deadline.UtcDateTime),
-            launched.LaunchedAt, campaign.Completion is not null, view.Items.Count);
-
-        if (current is null)
-            await AccessReviewCampaignWorkItemDirectorySchema.Campaigns.InsertAsync(Transaction,
-                nextCampaign, ct).ConfigureAwait(false);
-        else
-            await AccessReviewCampaignWorkItemDirectorySchema.Campaigns.ReplaceAsync(Transaction,
-                current, nextCampaign, ct).ConfigureAwait(false);
-
-        var desiredItemIds = view.Items.Select(static item => item.Item.ItemId).ToHashSet();
-        var staleItems = await ReadCampaignItemsAsync(programId, campaignId, ct)
+        var frozen = await AccessReviewItemFold.FrozenItemAsync(item, content, tenantId, ct).ConfigureAwait(false);
+        var folded = await AccessReviewItemFold.ReadAsync(item, frozen, remediationOwnerId, content, tenantId, ct)
             .ConfigureAwait(false);
-        foreach (var stale in staleItems.Where(item => !desiredItemIds.Contains(item.ItemId)))
-            await AccessReviewCampaignWorkItemDirectorySchema.Items.DeleteAsync(Transaction,
-                stale, ct).ConfigureAwait(false);
-
-        foreach (var item in view.Items)
-        {
-            if (item.Item.ItemId == Uuid.Empty || item.Item.SystemInstanceId == Uuid.Empty)
-                throw new InvalidOperationException(
-                    "A frozen campaign item has incomplete work scope.");
-            var next = new AccessReviewCampaignWorkItemState(tenantId, programId, campaignId,
-                item.Item.ItemId, campaign.Revision, nextCampaign.DueOn, launched.LaunchedAt,
-                nextCampaign.IsCompleted, item.Item.SystemInstanceId,
-                item.Item.SubjectUserId is { } subjectUserId
-                    ? RbacIds.Member(tenantId, subjectUserId)
-                    : null,
-                item.Item.Privileged,
-                item.Decision?.Decision, item.Verification is not null, item.Exception is not null,
-                item.Exception?.ExpiresAt, item.CurrentReviewerMemberId,
-                item.CurrentRemediationOwnerMemberId, item.ProviderChanges.Count > 0);
-            var existing = await AccessReviewCampaignWorkItemDirectorySchema.Items.GetAsync(
-                Transaction, AccessReviewCampaignWorkItemDirectorySchema.ItemKey(campaignId,
-                    item.Item.ItemId), ct).ConfigureAwait(false);
-            if (existing is null)
-                await AccessReviewCampaignWorkItemDirectorySchema.Items.InsertAsync(Transaction,
-                    next, ct).ConfigureAwait(false);
-            else if (existing.TenantId != tenantId || existing.ProgramId != programId ||
-                     existing.CampaignId != campaignId || existing.ItemId != item.Item.ItemId)
-                throw new InvalidOperationException(
-                    "An access-review item cannot replace work state outside its recorded scope.");
-            else
-                await AccessReviewCampaignWorkItemDirectorySchema.Items.ReplaceAsync(Transaction,
-                    existing, next, ct).ConfigureAwait(false);
-        }
+        if (frozen.ItemId == Uuid.Empty || frozen.SystemInstanceId == Uuid.Empty)
+            throw new InvalidOperationException("A frozen campaign item has incomplete work scope.");
+        var next = new AccessReviewCampaignWorkItemState(tenantId, programId, campaignId, itemId, item.Revision,
+            DateOnly.FromDateTime(launched.Deadline.UtcDateTime), launched.LaunchedAt, item.IsClosed,
+            frozen.SystemInstanceId,
+            frozen.SubjectUserId is { } subjectUserId ? RbacIds.Member(tenantId, subjectUserId) : null,
+            frozen.Privileged, folded.CurrentDecision?.Decision, folded.Verification is not null,
+            folded.Exception is not null, folded.Exception?.ExpiresAt, folded.CurrentReviewerMemberId,
+            folded.CurrentRemediationOwnerMemberId, folded.Changes.Count > 0);
+        if (current is null)
+            await AccessReviewCampaignWorkItemDirectorySchema.Items.InsertAsync(Transaction, next, ct)
+                .ConfigureAwait(false);
+        else
+            await AccessReviewCampaignWorkItemDirectorySchema.Items.ReplaceAsync(Transaction, current, next, ct)
+                .ConfigureAwait(false);
 
         await IncrementRevisionAsync(ct).ConfigureAwait(false);
     }
@@ -182,23 +154,6 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
         return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
     }
 
-    async ValueTask<IReadOnlyList<AccessReviewCampaignWorkItemState>> ReadCampaignItemsAsync(
-        Uuid programId, Uuid campaignId, CancellationToken ct)
-    {
-        var items = new List<AccessReviewCampaignWorkItemState>();
-        string? cursor = null;
-        do
-        {
-            var page = await AccessReviewCampaignWorkItemDirectorySchema.Items.QueryAsync(Transaction,
-                AccessReviewCampaignWorkItemDirectorySchema.ItemsByProgram.Query()
-                    .WithPrefix(programId.ToString(), campaignId.ToString()).Take(200).After(cursor),
-                ct).ConfigureAwait(false);
-            items.AddRange(page.Items);
-            cursor = page.NextCursor;
-        } while (cursor is not null);
-        return items;
-    }
-
     async ValueTask IncrementRevisionAsync(CancellationToken ct)
     {
         var current = await AccessReviewCampaignWorkItemDirectorySchema.Revisions.GetAsync(
@@ -213,17 +168,17 @@ sealed class FitzAccessReviewCampaignWorkItemDirectory(IKvClient client,
                 current, next, ct).ConfigureAwait(false);
     }
 
-    static (Uuid TenantId, Uuid CampaignId, long Revision) ScopeFor(DomainEvent domainEvent) =>
+    static (Uuid TenantId, Uuid CampaignId, Uuid ItemId, long Revision) ScopeFor(DomainEvent domainEvent) =>
         domainEvent switch
         {
-            AccessReviewCampaignLaunched ev => (ev.TenantId, ev.CampaignId, 1),
-            AccessDecisionsRecorded ev => (ev.TenantId, ev.CampaignId, ev.Revision),
-            AccessRemediationChangeRecorded ev => (ev.TenantId, ev.CampaignId, ev.Revision),
-            AccessRemediationVerified ev => (ev.TenantId, ev.CampaignId, ev.Revision),
-            AccessRemediationExceptionRecorded ev => (ev.TenantId, ev.CampaignId, ev.Revision),
-            AccessReviewResponsibilityReassigned ev => (ev.TenantId, ev.CampaignId, ev.Revision),
-            AccessReviewCampaignCompleted ev => (ev.TenantId, ev.CampaignId, ev.Revision),
-            _ => (Uuid.Empty, Uuid.Empty, 0),
+            AccessReviewItemOpened ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
+            AccessDecisionsRecorded ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
+            AccessRemediationChangeRecorded ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
+            AccessRemediationVerified ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
+            AccessRemediationExceptionRecorded ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
+            AccessReviewResponsibilityReassigned ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
+            AccessReviewItemCampaignCompletionUseSettled ev => (ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision),
+            _ => (Uuid.Empty, Uuid.Empty, Uuid.Empty, 0),
         };
 
     static RequestError InvalidScope() => new(RequestErrorKind.Conflict,

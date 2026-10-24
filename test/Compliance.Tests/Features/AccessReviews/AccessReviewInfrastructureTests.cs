@@ -82,7 +82,8 @@ public sealed class AccessReviewInfrastructureTests
         var participant = await authorizer.AuthorizeAsync(new RequestContext<IAccessReviewRequest>(
             new GetAccessReviewCampaign(tenantId, Uuid.CreateVersion4()), actor), CancellationToken.None);
         var management = await authorizer.AuthorizeAsync(new RequestContext<IAccessReviewRequest>(
-            new LaunchAccessReviewCampaign(tenantId, "Review", "Do it", DateTimeOffset.UtcNow.AddDays(1), []),
+            new LaunchAccessReviewCampaign(Uuid.CreateVersion4(), tenantId, "Review", "Do it",
+                DateTimeOffset.UtcNow.AddDays(1), []),
             actor), CancellationToken.None);
         var firmStaff = await new AccessReviewAuthorizer(new FixedMembershipDirectory(true, "firm_staff"),
                 new ActiveTenant(), permissions)

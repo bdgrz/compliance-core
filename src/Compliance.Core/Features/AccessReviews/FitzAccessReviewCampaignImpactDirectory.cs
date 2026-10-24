@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
@@ -5,7 +6,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
 /// <summary>Projects frozen campaign-to-system links on an independently replayable checkpoint.</summary>
-sealed class FitzAccessReviewCampaignImpactDirectory(IKvClient client)
+sealed class FitzAccessReviewCampaignImpactDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client,
             "kv://bdgrz/access-review-campaign-application-impact-v1/projection",
             AccessReviewCampaignImpactSchema.Projector),
@@ -52,17 +53,18 @@ sealed class FitzAccessReviewCampaignImpactDirectory(IKvClient client)
         CancellationToken ct)
     {
         if (launched.TenantId == Uuid.Empty || launched.CampaignId == Uuid.Empty ||
-            launched.SnapshotId == Uuid.Empty || launched.LaunchedAt == default ||
-            launched.Items is null)
+            launched.SnapshotId == Uuid.Empty || launched.LaunchedAt == default)
             throw new InvalidOperationException("An access review campaign launch is invalid.");
+        var launchedItems = await AccessReviewContent.ReadAsync<IReadOnlyList<AccessReviewItemView>>(content,
+            launched.TenantId, launched.ItemsManifest, ct).ConfigureAwait(false);
 
         var summaries = AccessReviewCampaignImpactSchema.Campaigns;
         var existing = await summaries.GetAsync(Transaction, launched.CampaignId, ct)
             .ConfigureAwait(false);
         var summary = new AccessReviewCampaignSummaryView(launched.TenantId,
             launched.CampaignId, launched.Name, launched.Deadline, AccessReviewCampaign.Active,
-            launched.Items.Count, launched.SnapshotId, launched.LaunchedAt, null, null);
-        var systemInstanceIds = launched.Items.Select(static item => item.SystemInstanceId)
+            launchedItems.Count, launched.SnapshotId, launched.LaunchedAt, null, null);
+        var systemInstanceIds = launchedItems.Select(static item => item.SystemInstanceId)
             .Distinct()
             .OrderBy(static id => id.ToString(), StringComparer.Ordinal)
             .ToArray();
@@ -107,18 +109,20 @@ sealed class FitzAccessReviewCampaignImpactDirectory(IKvClient client)
         var existing = await summaries.GetAsync(Transaction, completed.CampaignId, ct)
             .ConfigureAwait(false) ?? throw new InvalidOperationException(
             "A campaign completion cannot project before its launch.");
-        if (existing.TenantId != completed.TenantId ||
-            completed.Completion.SnapshotId == Uuid.Empty ||
-            completed.Completion.CompletedAt == default)
+        if (existing.TenantId != completed.TenantId)
             throw new InvalidOperationException("An access review campaign completion is invalid.");
 
+        var completion = await AccessReviewContent.ReadAsync<AccessReviewCampaignCompletionView>(content,
+            completed.TenantId, completed.CompletionContent, ct).ConfigureAwait(false);
+        if (completion.SnapshotId == Uuid.Empty || completion.CompletedAt == default)
+            throw new InvalidOperationException("An access review campaign completion is invalid.");
         var updated = existing with
         {
             Summary = existing.Summary with
             {
                 Status = AccessReviewCampaign.Completed,
-                FinalSnapshotId = completed.Completion.SnapshotId,
-                CompletedAt = completed.Completion.CompletedAt,
+                FinalSnapshotId = completion.SnapshotId,
+                CompletedAt = completion.CompletedAt,
             },
         };
         if (existing.Summary.Status == AccessReviewCampaign.Completed)

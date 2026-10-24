@@ -14,21 +14,25 @@ public sealed class FitzAccessReviewCampaignDirectoryTests
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
-        var directory = new FitzAccessReviewCampaignDirectory(new PrefixCompatibleKvClient(new InMemoryKvClient()));
+        var content = AccessReviewFacts.NewStore();
+        var directory = new FitzAccessReviewCampaignDirectory(new PrefixCompatibleKvClient(new InMemoryKvClient()),
+            content);
         var now = new DateTimeOffset(2026, 10, 2, 0, 0, 0, TimeSpan.Zero);
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer");
-        var launched = LaunchOffsets.Select(offset => new AccessReviewCampaignLaunched(
-            tenantId, Uuid.CreateVersion4(), $"Campaign {offset}", "Review", now.AddDays(30),
-            Uuid.CreateVersion4(), new string('a', 64), [], [], actor, now.AddMinutes(offset))).ToArray();
+        var launched = new List<AccessReviewCampaignLaunched>();
+        foreach (var offset in LaunchOffsets)
+            launched.Add(await AccessReviewFacts.LaunchedAsync(content, tenantId, Uuid.CreateVersion4(),
+                $"Campaign {offset}", now.AddDays(30), Uuid.CreateVersion4(), new string('a', 64), [], [], actor,
+                now.AddMinutes(offset)));
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
             new CheckpointIdentity(AccessReviewDirectorySchema.CampaignProjector,
                 AccessReviewDirectorySchema.CampaignPattern(tenantId)), ProjectionCheckpoint.Start)))
         {
             foreach (var campaign in launched)
                 await directory.ApplyAsync(campaign);
-            await directory.ApplyAsync(new AccessReviewCampaignCompleted(tenantId, launched[1].CampaignId, 2,
-                new AccessReviewCampaignCompletionView(Uuid.CreateVersion4(), new string('b', 64),
-                    "Complete", actor, now.AddDays(1))));
+            await directory.ApplyAsync(await AccessReviewFacts.CompletedAsync(content, tenantId,
+                launched[1].CampaignId, 2, new AccessReviewCampaignCompletionView(Uuid.CreateVersion4(),
+                    new string('b', 64), "Complete", actor, now.AddDays(1)), actor));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 

@@ -1,15 +1,23 @@
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
-/// <summary>Records the assigned reviewer's own decision; HTTP-only, never an MCP tool.</summary>
-public sealed class RecordAccessDecisionHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock, RestrictedApplicationVisibility visibility,
-    AccessReviewQueueEligibility eligibility)
+/// <summary>
+///     Records the assigned reviewer's own decision on one item as the root native fact of the item; HTTP-only, never
+///     an MCP tool. The frozen first response is the complete decision, so an exact retry returns it even after later
+///     changes.
+/// </summary>
+public sealed class RecordAccessDecisionHandler(NativeOperationExecutor operations, AccessReviewReader campaigns,
+    IAggregateReader reader, IImmutableContentStore content, TimeProvider clock,
+    RestrictedApplicationVisibility visibility, AccessReviewQueueEligibility eligibility)
     : IRequestHandler<RecordAccessDecision, AccessDecisionView>
 {
+    const string CommandKind = nameof(RecordAccessDecision);
+
     public async ValueTask<Result<AccessDecisionView>> HandleAsync(
         IRequestContext<RecordAccessDecision> context, CancellationToken ct)
     {
@@ -18,32 +26,62 @@ public sealed class RecordAccessDecisionHandler(IAggregateExecutor executor,
             return AccessReviewOutcome.Failure<AccessDecisionView>(RequestErrorKind.Forbidden,
                 "Access review sign-off requires personal HTTP submission.");
         var request = context.Request;
+        if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
+            return AccessReviewOutcome.Failure<AccessDecisionView>(RequestErrorKind.Validation,
+                "A decision requires a command id and a non-negative expected revision.");
         var actor = AccessReviewActor.From(context);
-        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(request.TenantId,
-            request.CampaignId), ct).ConfigureAwait(false);
-        if (!await RestrictedAccessReviewVisibility.CanReadCampaignItemsAsync(visibility,
-                request.TenantId, actor.UserId, campaign, [request.ItemId], ct)
-            .ConfigureAwait(false))
+        var read = await campaigns.ReadItemAsync(request.TenantId, request.CampaignId, request.ItemId,
+            request.CommandId, ct).ConfigureAwait(false);
+        if (read.State is not { } state || read.Frozen is not { } frozen || read.Campaign.Launched is not { } launched ||
+            !await visibility.CanReadSystemInstanceAsync(request.TenantId, actor.UserId, frozen.SystemInstanceId, ct)
+                .ConfigureAwait(false))
             return AccessReviewOutcome.Failure<AccessDecisionView>(RequestErrorKind.NotFound,
                 "The review item was not found.");
-        if (campaign.FindItem(request.ItemId) is not { } item ||
-            campaign.Launched?.ProgramId is { } programId &&
-            !await eligibility.CanReviewAsync(request.TenantId, programId, actor.MemberId,
-                item.SystemInstanceId, ct).ConfigureAwait(false))
+
+        var now = clock.GetUtcNow();
+        var provenance = AccessReviewItemWrites.Provenance(read, request.CommandId, CommandKind, actor.Reference,
+            request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);
+        var binding = AcceptedOperationBinding.Of(provenance);
+        var decided = read.Item.Acceptance.Decide(binding);
+        if (decided != NativeAcceptanceDecision.Replayed && launched.ProgramId is { } programId &&
+            !await eligibility.CanReviewAsync(request.TenantId, programId, actor.MemberId, frozen.SystemInstanceId, ct)
+                .ConfigureAwait(false))
             return AccessReviewOutcome.Failure<AccessDecisionView>(RequestErrorKind.NotFound,
                 "The review item was not found among the reviewer's current queue access.");
-        SeparationOfDutiesWaiver? waiver = null;
-        if (request.SeparationOfDutiesWaiverId is { } waiverId)
-            waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId,
-                waiverId), ct).ConfigureAwait(false);
-        var result = await executor.ExecuteAsync(new AccessReviewCampaign(request.TenantId,
-                request.CampaignId),
-            campaign => AccessReviewOutcome.From(campaign.Decide([request.ItemId],
-                request.ExpectedRevision, context.RequestId, request.Decision, request.Rationale,
-                actor.MemberId, actor.UserId, actor.Reference, clock.GetUtcNow(), null, waiver)),
-            context, ct).ConfigureAwait(false);
-        return result.IsSuccess
-            ? Result<AccessDecisionView>.Success(result.Value[0])
-            : Result<AccessDecisionView>.Failure(result.Error);
+
+        FirstResponseDescriptor? response = null;
+        ImmutableContentRef? decisions = null;
+        ImmutableContentRef? intent = null;
+        ImmutableContentRef? result = null;
+        if (decided == NativeAcceptanceDecision.None)
+        {
+            SeparationOfDutiesWaiver? waiver = null;
+            if (request.SeparationOfDutiesWaiverId is { } waiverId)
+                waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId, waiverId), ct)
+                    .ConfigureAwait(false);
+            if (read.Item.PrepareChange(request.ExpectedRevision) is { IsSuccess: false } blocked)
+                return Result<AccessDecisionView>.Failure(blocked.Error!);
+            if (AccessReviewRules.CheckDecision(state, request.TenantId, request.CampaignId, request.Decision,
+                    request.Rationale, actor.MemberId, actor.UserId, now, waiver) is { } failure)
+                return Result<AccessDecisionView>.Failure(failure);
+            var view = AccessReviewRules.BuildDecision(request.CommandId, state, request.Decision, request.Rationale,
+                actor.MemberId, actor.Reference, now, launched.Deadline, waiver?.Id);
+            decisions = await AccessReviewContent.WriteAsync<IReadOnlyList<AccessDecisionView>>(content,
+                request.TenantId, AccessReviewContent.DecisionsSchema, [view], ct).ConfigureAwait(false);
+            intent = await AccessReviewContent.WriteAsync(content, request.TenantId,
+                AccessReviewContent.DecisionIntentSchema, request, ct).ConfigureAwait(false);
+            (response, result) = await AccessReviewContent.FreezeOkAsync(content, request.TenantId,
+                AccessReviewContent.DecisionViewSchema, view, ct).ConfigureAwait(false);
+        }
+
+        var observed = state.Revision;
+        var outcome = await operations.ExecuteAsync(new NativeOperation<AccessReviewItem>(binding,
+            () => new AccessReviewItem(request.TenantId, request.CampaignId, request.ItemId, request.CommandId),
+            owner => owner.Acceptance,
+            owner => AccessReviewItemWrites.Prepare(owner, request.ExpectedRevision, observed, response),
+            (AccessReviewItem owner, ImmutableContentRef frozenResponse) => owner.RecordDecision(provenance,
+                decisions!, intent!, frozenResponse, result!)), context, ct).ConfigureAwait(false);
+        return await AccessReviewContent.ResponseAsync<AccessDecisionView>(content, request.TenantId, outcome, ct)
+            .ConfigureAwait(false);
     }
 }

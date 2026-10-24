@@ -8,7 +8,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     Returns visible campaign items to access-review managers and only visible items assigned
 ///     to the current reviewer. Anyone without a visible item receives not found.
 /// </summary>
-public sealed class GetAccessReviewCampaignHandler(IAggregateReader reader,
+public sealed class GetAccessReviewCampaignHandler(AccessReviewReader reader,
     IPermissionAuthorizer permissions, TimeProvider clock,
     RestrictedApplicationVisibility visibility, AccessReviewQueueEligibility eligibility)
     : IRequestHandler<GetAccessReviewCampaign, AccessReviewCampaignView>
@@ -17,8 +17,8 @@ public sealed class GetAccessReviewCampaignHandler(IAggregateReader reader,
         IRequestContext<GetAccessReviewCampaign> context, CancellationToken ct)
     {
         var request = context.Request;
-        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(request.TenantId,
-            request.CampaignId), ct).ConfigureAwait(false);
+        var campaign = await reader.ReadCampaignAsync(request.TenantId, request.CampaignId, ct)
+            .ConfigureAwait(false);
         if (campaign.Launched is not { } launched)
             return NotFound();
         var actor = AccessReviewActor.From(context);

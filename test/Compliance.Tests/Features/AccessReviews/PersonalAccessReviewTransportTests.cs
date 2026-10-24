@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Bdgrz.Compliance.Tests.Testing;
@@ -23,7 +24,6 @@ public sealed class PersonalAccessReviewTransportTests
         { "expectation_exception", "direct" }, { "expectation_exception", "mcp" },
         { "population_exception", "direct" }, { "population_exception", "mcp" },
         { "decision", "direct" }, { "decision", "mcp" },
-        { "bulk", "direct" }, { "bulk", "mcp" },
         { "remediation_exception", "direct" }, { "remediation_exception", "mcp" },
         { "completion", "direct" }, { "completion", "mcp" }
     };
@@ -57,7 +57,6 @@ public sealed class PersonalAccessReviewTransportTests
     [InlineData("expectation_exception")]
     [InlineData("population_exception")]
     [InlineData("decision")]
-    [InlineData("bulk")]
     [InlineData("remediation_exception")]
     [InlineData("completion")]
     public async Task ShouldRetainAttributedAccessReviewDecisionGivenNativeHttp(string action)
@@ -75,7 +74,7 @@ public sealed class PersonalAccessReviewTransportTests
         Assert.Equal(before + 1, await fixture.SourcePositionAsync());
         Assert.Equal(RbacIds.Member(fixture.Source.TenantId, fixture.User).ToString(), result.Actor!.Id);
         var snapshot = await fixture.SnapshotAsync(action == "population" ? await fixture.AcceptedSnapshotIdAsync() : context.RequestId);
-        Assert.Equal(action is "population" or "completion", snapshot.HasIntactContent);
+        Assert.Equal(action == "population", snapshot.HasIntactContent);
     }
 
     [Theory]
@@ -83,7 +82,6 @@ public sealed class PersonalAccessReviewTransportTests
     [InlineData("remediation_exception", "reviewer", RequestErrorKind.Forbidden, "The item's reviewer cannot approve an exception to its remediation.")]
     [InlineData("decision", "self", RequestErrorKind.Forbidden, "A reviewer cannot decide their own access without an active exact-scope waiver.")]
     [InlineData("decision", "unassigned", RequestErrorKind.NotFound, "The review item was not found among the reviewer's assignments.")]
-    [InlineData("bulk", "privileged", RequestErrorKind.Conflict, "The bulk decision no longer matches its preview; preview it again.")]
     public async Task ShouldPreserveAccessReviewBusinessRefusalGivenNativeHttp(string action, string refusal, RequestErrorKind kind, string message)
     {
         // Arrange
@@ -129,10 +127,8 @@ public sealed class PersonalAccessReviewTransportTests
         Uuid _sourceId;
         Uuid _itemId;
         Uuid _selfItemId;
-        Uuid _privilegedItemId;
         Uuid _expectationId;
         long _revision;
-        string _preview = "";
         public Uuid User { get; private set; }
 
         public static async Task<Fixture> CreateAsync(string action)
@@ -194,26 +190,19 @@ public sealed class PersonalAccessReviewTransportTests
                 var campaign = await source.CampaignAsync(launched.CampaignId);
                 fixture._itemId = AccessReviewCampaignTests.ItemId(campaign, "ada", "deploy");
                 fixture._selfItemId = AccessReviewCampaignTests.ItemId(campaign, "rae", "admin");
-                fixture._privilegedItemId = AccessReviewCampaignTests.ItemId(campaign, "ada", "admin");
                 fixture._revision = campaign.Revision;
                 fixture.User = source.ReviewerUserId;
-                if (action == "bulk")
-                {
-                    var preview = await source.SendAsync(source.ReviewerUserId, new PreviewBulkAccessDecision(source.TenantId,
-                        launched.CampaignId, [fixture._itemId], "keep"));
-                    fixture._preview = preview.PreviewToken;
-                }
                 if (action == "remediation_exception")
                 {
-                    await source.SendAsync(source.ReviewerUserId, new RecordAccessDecision(source.TenantId, launched.CampaignId,
+                    await source.SendAsync(source.ReviewerUserId, source.Decision(launched.CampaignId,
                         fixture._itemId, fixture._revision++, "modify", "Reduce access"));
                     fixture.User = source.ApproverUserId;
                 }
                 if (action == "completion")
                 {
                     foreach (var item in campaign.Items)
-                        await source.SendAsync(source.ManagerUserId, new RecordAccessDecision(source.TenantId, launched.CampaignId,
-                            item.Item.ItemId, fixture._revision++, "keep", "All access reviewed"));
+                        await source.SendAsync(source.ManagerUserId, source.Decision(launched.CampaignId,
+                            item.Item.ItemId, 1, "keep", "All access reviewed"));
                     fixture.User = source.ManagerUserId;
                 }
             }
@@ -233,10 +222,9 @@ public sealed class PersonalAccessReviewTransportTests
                 "expectation" => await SendAsync(new ApproveAccessExpectation(Uuid.CreateVersion4(), Source.TenantId, Source.InstanceId, _expectationId, _revision), context),
                 "expectation_exception" => await SendAsync(new ExemptAccessExpectation(Uuid.CreateVersion4(), Source.TenantId, Source.InstanceId, _expectationId, _revision, "ada", "Time-bound exception", expires), context),
                 "population_exception" => await SendAsync(new ExemptMissingAccessPopulation(_sourceId, Source.TenantId, Source.ApplicationId, Source.InstanceId, 0, "Population collection pending", expires), context),
-                "decision" => await SendAsync(new RecordAccessDecision(Source.TenantId, _sourceId, refusal == "self" ? _selfItemId : _itemId, _revision, "keep", "Reviewed"), context),
-                "bulk" => await SendAsync(new RecordBulkAccessDecision(Source.TenantId, _sourceId, [refusal == "privileged" ? _privilegedItemId : _itemId], "keep", "Reviewed", _preview), context),
-                "remediation_exception" => await SendAsync(new ExemptAccessRemediation(Source.TenantId, _sourceId, _itemId, _revision, "Provider remediation pending", expires), context),
-                _ => await SendAsync(new CompleteAccessReviewCampaign(Source.TenantId, _sourceId, _revision, "Complete review attestation"), context)
+                "decision" => await SendAsync(Source.Decision(_sourceId, refusal == "self" ? _selfItemId : _itemId, _revision, "keep", "Reviewed"), context),
+                "remediation_exception" => await SendAsync(Source.Exception(_sourceId, _itemId, _revision, "Provider remediation pending", expires), context),
+                _ => await SendAsync(Source.Completion(_sourceId, _revision, "Complete review attestation"), context)
             };
         }
 
@@ -250,9 +238,9 @@ public sealed class PersonalAccessReviewTransportTests
                 AccessExpectationExceptionView view => view.ApprovedBy,
                 AccessPopulationExceptionView view => view.ApprovedBy,
                 AccessDecisionView view => view.DecidedBy,
-                BulkAccessDecisionResult view => Assert.Single(view.Decisions).DecidedBy,
                 AccessRemediationExceptionView view => view.ApprovedBy,
-                AccessReviewCampaignCompletionView view => view.CompletedBy,
+                OperationAcceptedResponse accepted => (await ProgramManagementServices.HydrateAsync(_provider,
+                    new AccessReviewCampaign(Source.TenantId, _sourceId))).AcceptedFor(accepted.OperationId)!.Operation.Actor,
                 AccessPopulationAcceptance => (await ProgramManagementServices.HydrateAsync(_provider,
                     new AccessPopulation(Source.TenantId, _sourceId))).AcceptedFact!.AcceptedBy,
                 _ => null
@@ -271,6 +259,8 @@ public sealed class PersonalAccessReviewTransportTests
                 new AccessExpectation(Source.TenantId, _expectationId))).CommittedStreamPosition,
             "population_exception" => (await ProgramManagementServices.HydrateAsync(_provider,
                 new AccessPopulationException(Source.TenantId, _sourceId))).CommittedStreamPosition,
+            "decision" or "remediation_exception" => (await ProgramManagementServices.HydrateAsync(_provider,
+                new AccessReviewItem(Source.TenantId, _sourceId, _itemId))).CommittedStreamPosition,
             _ => (await ProgramManagementServices.HydrateAsync(_provider, new AccessReviewCampaign(Source.TenantId, _sourceId))).CommittedStreamPosition
         };
         public async ValueTask DisposeAsync() { await _provider.DisposeAsync(); await Source.DisposeAsync(); }

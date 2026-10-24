@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Snapshots;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
@@ -13,7 +14,8 @@ namespace Bdgrz.Compliance.Features.Examinations;
 /// <summary>Captures each routed access-review campaign's history on the Type I date.</summary>
 public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
     IAccessReviewCampaignDirectoryReader directory, IAggregateReader reader,
-    IDomainEventReader events) : ITypeIBaselineSourceContributor
+    IDomainEventReader events, AccessReviewReader campaigns, IImmutableContentStore content)
+    : ITypeIBaselineSourceContributor
 {
     const int PageSize = 200;
     const string DigestDomain = "bdgrz.snapshot.source.access_review_campaign.v1\0";
@@ -85,7 +87,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
             if (!await VerifyLaunchSnapshotAsync(engagement.TenantId, history.Value.Launch, ct)
                     .ConfigureAwait(false) ||
                 history.Value.Completion is { } completion &&
-                !await VerifyCompletionSnapshotAsync(engagement.TenantId, history.Value.Campaign,
+                !await VerifyCompletionSnapshotAsync(engagement.TenantId, history.Value.Snapshot,
                     history.Value.Launch, completion, ct).ConfigureAwait(false))
                 return SourceConflict();
 
@@ -140,19 +142,40 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         EventStreamAddress stream, Uuid tenantId, Uuid campaignId, DateTimeOffset through,
         AccessReviewCampaignSummaryView summary, CancellationToken ct)
     {
+        try
+        {
+            return await ReadHistoryCoreAsync(stream, tenantId, campaignId, through, summary, ct)
+                .ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException)
+        {
+            return InvalidHistory();
+        }
+    }
+
+    async ValueTask<Result<AccessReviewCampaignHistory>> ReadHistoryCoreAsync(
+        EventStreamAddress stream, Uuid tenantId, Uuid campaignId, DateTimeOffset through,
+        AccessReviewCampaignSummaryView summary, CancellationToken ct)
+    {
         var seenEventIds = new HashSet<Uuid>();
         var usedDecisionIds = new HashSet<Uuid>();
         var usedReassignmentIds = new HashSet<Uuid>();
-        var asOfEvents = new List<AccessReviewCampaignSourceEvent>();
+        var asOf = new List<AsOfEvent>();
         var states = new Dictionary<Uuid, CampaignItemHistory>();
-        AccessReviewCampaignLaunched? launch = null;
+        var aggregate = await reader.HydrateAsync(new AccessReviewCampaign(tenantId, campaignId), ct)
+            .ConfigureAwait(false);
+        if (aggregate.Launched is not { } launched || launched.TenantId != tenantId ||
+            launched.CampaignId != campaignId)
+            return InvalidHistory();
+        var launch = await campaigns.LaunchOfAsync(tenantId, launched, ct).ConfigureAwait(false);
+        if (!ValidLaunch(launch, campaignId))
+            return InvalidHistory();
+        foreach (var item in launch.Items)
+            states.Add(item.ItemId, new CampaignItemHistory(item, launch.RemediationOwnerMemberId));
+
         AccessReviewCampaignCompletionView? completion = null;
         ulong expectedVersion = 1;
-        long expectedRevision = 1;
-        long asOfRevision = 0;
         DateTimeOffset? priorRecordedAt = null;
-        DateTimeOffset? priorOccurredAt = null;
-
         await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
         {
             var domainEvent = record.Event;
@@ -161,137 +184,221 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                 metadata.EventId == Uuid.Empty || !seenEventIds.Add(metadata.EventId) ||
                 metadata.AggregateId != campaignId || metadata.AggregateVersion != expectedVersion ||
                 metadata.OccurredOn == default ||
-                priorRecordedAt is { } earlierRecord && metadata.OccurredOn < earlierRecord ||
-                completion is not null || !TryEventTime(domainEvent, out var occurredAt) ||
-                priorOccurredAt is { } earlierEvent && occurredAt < earlierEvent)
+                priorRecordedAt is { } earlierRecord && metadata.OccurredOn < earlierRecord)
                 return InvalidHistory();
-
-            if (launch is null)
+            switch (domainEvent)
             {
-                if (domainEvent is not AccessReviewCampaignLaunched launched ||
-                    !ValidLaunch(launched, tenantId, campaignId))
+                case AccessReviewCampaignLaunched when expectedVersion == 1:
+                    Include(asOf, launch.LaunchedAt, metadata, "campaign_launched", stream,
+                        JsonSerializer.SerializeToElement(launch, ComplianceCoreJsonContext.Default.AccessReviewLaunch),
+                        through);
+                    break;
+                case AccessReviewCampaignCompletionAccepted or AccessReviewCampaignCompletionCanceled
+                    when expectedVersion > 1 && completion is null:
+                    break;
+                case AccessReviewCampaignCompleted completed when expectedVersion > 1 && completion is null:
+                    completion = await AccessReviewContent.ReadAsync<AccessReviewCampaignCompletionView>(content,
+                        tenantId, completed.CompletionContent, ct).ConfigureAwait(false);
+                    Include(asOf, completion.CompletedAt, metadata, "campaign_completed", stream,
+                        JsonSerializer.SerializeToElement(new AccessReviewCampaignCompletionSource(completed.Revision,
+                            completion), ComplianceCoreJsonContext.Default.AccessReviewCampaignCompletionSource),
+                        through);
+                    break;
+                default:
                     return InvalidHistory();
-                launch = launched;
-                foreach (var item in launched.Items)
-                    states.Add(item.ItemId, new CampaignItemHistory(item,
-                        launched.RemediationOwnerMemberId));
-            }
-            else
-            {
-                if (!Apply(domainEvent, tenantId, campaignId, expectedRevision, launch, states,
-                        usedDecisionIds, usedReassignmentIds, out completion))
-                    return InvalidHistory();
             }
 
-            if (occurredAt <= through && metadata.OccurredOn <= through)
-            {
-                asOfRevision = expectedRevision;
-                asOfEvents.Add(SerializeEvent(domainEvent, metadata));
-            }
             priorRecordedAt = metadata.OccurredOn;
-            priorOccurredAt = occurredAt;
-            expectedRevision++;
             expectedVersion++;
         }
 
-        if (launch is null || !MatchesSummary(summary, launch, completion))
-            return InvalidHistory();
-        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenantId, campaignId), ct)
-            .ConfigureAwait(false);
-        if (!CurrentStateMatches(campaign, launch, completion, expectedRevision - 1, states))
+        if (expectedVersion == 1)
             return InvalidHistory();
 
-        return Result<AccessReviewCampaignHistory>.Success(new AccessReviewCampaignHistory(
-            launch, completion, campaign, asOfRevision, asOfEvents));
+        foreach (var item in launch.Items)
+        {
+            var replayed = await ReplayItemAsync(tenantId, campaignId, launch, item, states[item.ItemId], seenEventIds,
+                usedDecisionIds, usedReassignmentIds, asOf, through, ct).ConfigureAwait(false);
+            if (!replayed)
+                return InvalidHistory();
+        }
+
+        if (completion is not null && !ValidCompletion(completion, launch, states))
+            return InvalidHistory();
+        if (!MatchesSummary(summary, launch, completion))
+            return InvalidHistory();
+        var snapshot = await campaigns.ReadCampaignAsync(tenantId, campaignId, ct).ConfigureAwait(false);
+        if (!CurrentStateMatches(snapshot, launch, completion, states))
+            return InvalidHistory();
+
+        var ordered = asOf.OrderBy(static fact => fact.At)
+            .ThenBy(static fact => fact.Stream.Resource, StringComparer.Ordinal)
+            .ThenBy(static fact => fact.Event.AggregateVersion).ToList();
+        return Result<AccessReviewCampaignHistory>.Success(new AccessReviewCampaignHistory(launch, completion, snapshot,
+            ordered.Count, [.. ordered.Select(static fact => fact.Event)]));
     }
 
-    static bool Apply(DomainEvent domainEvent, Uuid tenantId, Uuid campaignId,
-        long expectedRevision, AccessReviewCampaignLaunched launch,
-        IReadOnlyDictionary<Uuid, CampaignItemHistory> states, HashSet<Uuid> usedDecisionIds,
-        HashSet<Uuid> usedReassignmentIds,
-        out AccessReviewCampaignCompletionView? completion)
+    async ValueTask<bool> ReplayItemAsync(Uuid tenantId, Uuid campaignId, AccessReviewLaunch launch,
+        AccessReviewItemView frozen, CampaignItemHistory state, HashSet<Uuid> seenEventIds,
+        HashSet<Uuid> usedDecisionIds, HashSet<Uuid> usedReassignmentIds, List<AsOfEvent> asOf,
+        DateTimeOffset through, CancellationToken ct)
     {
-        completion = null;
+        var stream = AccessReviewEffects.ItemStream(tenantId, campaignId, frozen.ItemId);
+        var streamId = AccessReviewEffects.ItemStreamId(tenantId, campaignId, frozen.ItemId);
+        ulong expectedVersion = 1;
+        long expectedRevision = 0;
+        DateTimeOffset? priorRecordedAt = null;
+        DateTimeOffset? priorOccurredAt = null;
+        var opened = false;
+        try
+        {
+            await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
+            {
+                var domainEvent = record.Event;
+                var metadata = domainEvent?.Metadata;
+                if (record.Stream != stream || domainEvent is null || metadata is null ||
+                    metadata.EventId == Uuid.Empty || !seenEventIds.Add(metadata.EventId) ||
+                    metadata.AggregateId != streamId || metadata.AggregateVersion != expectedVersion ||
+                    metadata.OccurredOn == default ||
+                    priorRecordedAt is { } earlierRecord && metadata.OccurredOn < earlierRecord)
+                    return false;
+                priorRecordedAt = metadata.OccurredOn;
+                expectedVersion++;
+                if (domainEvent is AccessReviewItemCampaignCompletionUseAuthorized or
+                    AccessReviewItemCampaignCompletionUseSettled)
+                    continue;
+                if (domainEvent is AccessReviewItemOpened itemOpened)
+                {
+                    var intent = await AccessReviewContent.ReadAsync<AccessReviewItemCreationIntent>(content, tenantId,
+                        itemOpened.Intent, ct).ConfigureAwait(false);
+                    var entry = await AccessReviewContent.ReadAsync<AccessReviewItemView>(content, tenantId,
+                        intent.PopulationEntry, ct).ConfigureAwait(false);
+                    if (opened || itemOpened.Revision != 1 || !SameJson(entry, frozen,
+                            ComplianceCoreJsonContext.Default.AccessReviewItemView))
+                        return false;
+                    opened = true;
+                    expectedRevision = 1;
+                    continue;
+                }
+
+                var (kind, at, payload) = await ApplyItemFactAsync(domainEvent, tenantId, campaignId, launch, state,
+                    usedDecisionIds, usedReassignmentIds, ++expectedRevision, ct).ConfigureAwait(false);
+                if (!opened || kind is null || priorOccurredAt is { } earlierEvent && at < earlierEvent)
+                    return false;
+                priorOccurredAt = at;
+                Include(asOf, at, metadata, kind, stream, payload, through);
+            }
+        }
+        catch (InvalidOperationException) when (expectedVersion == 1)
+        {
+            // The in-memory store reports an item stream that was never written this way.
+        }
+
+        return true;
+    }
+
+    async ValueTask<(string? Kind, DateTimeOffset At, JsonElement Payload)> ApplyItemFactAsync(DomainEvent domainEvent,
+        Uuid tenantId, Uuid campaignId, AccessReviewLaunch launch, CampaignItemHistory state,
+        HashSet<Uuid> usedDecisionIds, HashSet<Uuid> usedReassignmentIds, long expectedRevision, CancellationToken ct)
+    {
+        var json = ComplianceCoreJsonContext.Default;
+        var itemId = state.Item.ItemId;
+        var invalid = (default(string), default(DateTimeOffset), default(JsonElement));
         switch (domainEvent)
         {
             case AccessDecisionsRecorded decisions:
-                if (decisions.TenantId != tenantId || decisions.CampaignId != campaignId ||
-                    decisions.Revision != expectedRevision ||
-                    !ValidDecisions(decisions, launch, states, usedDecisionIds))
-                    return false;
-                foreach (var decision in decisions.Decisions)
-                    states[decision.ItemId].Decisions.Add(decision);
-                return true;
-
+                {
+                    var list = await AccessReviewContent.ReadAsync<IReadOnlyList<AccessDecisionView>>(content, tenantId,
+                        decisions.DecisionsManifest, ct).ConfigureAwait(false);
+                    if (decisions.TenantId != tenantId || decisions.CampaignId != campaignId ||
+                        decisions.ItemId != itemId || decisions.Revision != expectedRevision ||
+                        decisions.DecisionBatchId is not null || list.Any(decision => decision.ItemId != itemId) ||
+                        !ValidDecisions(list, launch, new Dictionary<Uuid, CampaignItemHistory> { [itemId] = state },
+                            usedDecisionIds))
+                        return invalid;
+                    state.Decisions.Add(list[0]);
+                    return ("decisions_recorded", list[0].DecidedAt, JsonSerializer.SerializeToElement(
+                        new AccessReviewItemDecisionsSource(itemId, decisions.Revision, list),
+                        json.AccessReviewItemDecisionsSource));
+                }
             case AccessRemediationChangeRecorded changed:
-                if (changed.TenantId != tenantId || changed.CampaignId != campaignId ||
-                    changed.Revision != expectedRevision || changed.Change is not { } change ||
-                    !states.TryGetValue(changed.ItemId, out var changedItem) ||
-                    !RequiresRemediation(changedItem) || change.ChangeId == Uuid.Empty ||
-                    !ValidText(change.Reference, 500) || !ValidText(change.Description, 4000) ||
-                    change.ChangedAt == default || change.RecordedAt == default ||
-                    change.ChangedAt > change.RecordedAt ||
-                    !ValidMemberActor(change.RecordedBy) ||
-                    launch.ProgramId is not null &&
-                    changedItem.CurrentRemediationOwnerMemberId != ActorMemberId(change.RecordedBy) ||
-                    changedItem.Changes.Any(existing => existing.ChangeId == change.ChangeId))
-                    return false;
-                changedItem.Changes.Add(change);
-                return true;
-
+                {
+                    var change = await AccessReviewContent.ReadAsync<AccessRemediationChangeView>(content, tenantId,
+                        changed.ChangeContent, ct).ConfigureAwait(false);
+                    if (changed.TenantId != tenantId || changed.CampaignId != campaignId || changed.ItemId != itemId ||
+                        changed.Revision != expectedRevision || !RequiresRemediation(state) ||
+                        change.ChangeId == Uuid.Empty || !ValidText(change.Reference, 500) ||
+                        !ValidText(change.Description, 4000) || change.ChangedAt == default ||
+                        change.RecordedAt == default || change.ChangedAt > change.RecordedAt ||
+                        !ValidMemberActor(change.RecordedBy) ||
+                        launch.ProgramId is not null &&
+                        state.CurrentRemediationOwnerMemberId != ActorMemberId(change.RecordedBy) ||
+                        state.Changes.Any(existing => existing.ChangeId == change.ChangeId))
+                        return invalid;
+                    state.Changes.Add(change);
+                    return ("remediation_change_recorded", change.RecordedAt, JsonSerializer.SerializeToElement(
+                        new AccessReviewItemChangeSource(itemId, changed.Revision, change),
+                        json.AccessReviewItemChangeSource));
+                }
             case AccessRemediationVerified verified:
-                if (verified.TenantId != tenantId || verified.CampaignId != campaignId ||
-                    verified.Revision != expectedRevision ||
-                    verified.Verification is not { } verification ||
-                    !states.TryGetValue(verified.ItemId, out var verifiedItem) ||
-                    !RequiresRemediation(verifiedItem) ||
-                    !ValidVerification(verification, verifiedItem))
-                    return false;
-                verifiedItem.Verification = verification;
-                return true;
-
+                {
+                    var verification = await AccessReviewContent.ReadAsync<AccessRemediationVerificationView>(content,
+                        tenantId, verified.VerificationContent, ct).ConfigureAwait(false);
+                    if (verified.TenantId != tenantId || verified.CampaignId != campaignId || verified.ItemId != itemId ||
+                        verified.Revision != expectedRevision || !RequiresRemediation(state) ||
+                        !ValidVerification(verification, state))
+                        return invalid;
+                    state.Verification = verification;
+                    return ("remediation_verified", verification.VerifiedAt, JsonSerializer.SerializeToElement(
+                        new AccessReviewItemVerificationSource(itemId, verified.Revision, verification),
+                        json.AccessReviewItemVerificationSource));
+                }
             case AccessRemediationExceptionRecorded excepted:
-                if (excepted.TenantId != tenantId || excepted.CampaignId != campaignId ||
-                    excepted.Revision != expectedRevision ||
-                    excepted.Exception is not { } exception ||
-                    !states.TryGetValue(excepted.ItemId, out var exceptedItem) ||
-                    !RequiresRemediation(exceptedItem) ||
-                    !ValidException(exception, exceptedItem))
-                    return false;
-                exceptedItem.Exception = exception;
-                return true;
-
+                {
+                    var exception = await AccessReviewContent.ReadAsync<AccessRemediationExceptionView>(content, tenantId,
+                        excepted.ExceptionContent, ct).ConfigureAwait(false);
+                    if (excepted.TenantId != tenantId || excepted.CampaignId != campaignId || excepted.ItemId != itemId ||
+                        excepted.Revision != expectedRevision || !RequiresRemediation(state) ||
+                        !ValidException(exception, state))
+                        return invalid;
+                    state.Exception = exception;
+                    return ("remediation_exception_recorded", exception.ApprovedAt, JsonSerializer.SerializeToElement(
+                        new AccessReviewItemExceptionSource(itemId, excepted.Revision, exception),
+                        json.AccessReviewItemExceptionSource));
+                }
             case AccessReviewResponsibilityReassigned reassigned:
-                if (reassigned.TenantId != tenantId || reassigned.CampaignId != campaignId ||
-                    reassigned.Revision != expectedRevision ||
-                    reassigned.Reassignment is not { } reassignment ||
-                    !states.TryGetValue(reassignment.ItemId, out var reassignedItem) ||
-                    !ValidReassignment(reassignment, launch, reassignedItem,
-                        usedReassignmentIds))
-                    return false;
-                reassignedItem.Reassignments.Add(reassignment);
-                if (reassignment.Responsibility == AccessReviewResponsibilityKind.Reviewer)
-                    reassignedItem.CurrentReviewerMemberId = reassignment.AssignedMemberId;
-                else
-                    reassignedItem.CurrentRemediationOwnerMemberId = reassignment.AssignedMemberId;
-                return true;
-
-            case AccessReviewCampaignCompleted completed:
-                if (completed.TenantId != tenantId || completed.CampaignId != campaignId ||
-                    completed.Revision != expectedRevision ||
-                    !ValidCompletion(completed.Completion, launch, states))
-                    return false;
-                completion = completed.Completion;
-                return true;
-
+                {
+                    var reassignment = await AccessReviewContent.ReadAsync<AccessReviewResponsibilityReassignmentView>(
+                        content, tenantId, reassigned.ReassignmentContent, ct).ConfigureAwait(false);
+                    if (reassigned.TenantId != tenantId || reassigned.CampaignId != campaignId ||
+                        reassigned.ItemId != itemId || reassigned.Revision != expectedRevision ||
+                        !ValidReassignment(reassignment, launch, state, usedReassignmentIds))
+                        return invalid;
+                    state.Reassignments.Add(reassignment);
+                    if (reassignment.Responsibility == AccessReviewResponsibilityKind.Reviewer)
+                        state.CurrentReviewerMemberId = reassignment.AssignedMemberId;
+                    else
+                        state.CurrentRemediationOwnerMemberId = reassignment.AssignedMemberId;
+                    return ("responsibility_reassigned", reassignment.ReassignedAt, JsonSerializer.SerializeToElement(
+                        new AccessReviewItemReassignmentSource(itemId, reassigned.Revision, reassignment),
+                        json.AccessReviewItemReassignmentSource));
+                }
             default:
-                return false;
+                return invalid;
         }
     }
 
-    static bool ValidLaunch(AccessReviewCampaignLaunched launch, Uuid tenantId, Uuid campaignId)
+    static void Include(List<AsOfEvent> asOf, DateTimeOffset at, DomainEventMetadata metadata, string kind,
+        EventStreamAddress stream, JsonElement payload, DateTimeOffset through)
     {
-        if (launch.TenantId != tenantId || launch.CampaignId != campaignId ||
+        if (at <= through && metadata.OccurredOn <= through)
+            asOf.Add(new AsOfEvent(at, stream, new AccessReviewCampaignSourceEvent(metadata.EventId,
+                metadata.AggregateVersion, metadata.OccurredOn, kind, payload)));
+    }
+
+    static bool ValidLaunch(AccessReviewLaunch launch, Uuid campaignId)
+    {
+        if (launch.CampaignId != campaignId ||
             !ValidText(launch.Name, 200) || !ValidText(launch.Instructions, 8000) ||
             launch.Deadline <= launch.LaunchedAt || launch.LaunchedAt == default ||
             launch.SnapshotId == Uuid.Empty || !IsSha256(launch.ContentSha256) ||
@@ -357,10 +464,9 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
                launch.Reviewers.All(reviewer => reviewer.ReviewerMemberId != remediationOwner);
     }
 
-    static bool ValidDecisions(AccessDecisionsRecorded ev, AccessReviewCampaignLaunched launch,
+    static bool ValidDecisions(IReadOnlyList<AccessDecisionView> decisions, AccessReviewLaunch launch,
         IReadOnlyDictionary<Uuid, CampaignItemHistory> states, HashSet<Uuid> usedDecisionIds)
     {
-        var decisions = ev.Decisions;
         if (decisions is not { Count: > 0 and <= 500 } || decisions[0] is not { } first ||
             first.DecisionId == Uuid.Empty || !usedDecisionIds.Add(first.DecisionId) ||
             !AccessReviewVocabulary.Decisions.Contains(first.Decision) ||
@@ -411,7 +517,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
     }
 
     static bool ValidReassignment(AccessReviewResponsibilityReassignmentView reassignment,
-        AccessReviewCampaignLaunched launch, CampaignItemHistory item,
+        AccessReviewLaunch launch, CampaignItemHistory item,
         HashSet<Uuid> usedReassignmentIds)
     {
         if (reassignment.ReassignmentId == Uuid.Empty ||
@@ -443,7 +549,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
     }
 
     static bool ValidCompletion(AccessReviewCampaignCompletionView? completion,
-        AccessReviewCampaignLaunched launch,
+        AccessReviewLaunch launch,
         IReadOnlyDictionary<Uuid, CampaignItemHistory> states)
     {
         if (completion is null || completion.SnapshotId == Uuid.Empty ||
@@ -455,18 +561,15 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
             RemediationStatus(item, completion.CompletedAt) is not ("pending" or "provider_changed"));
     }
 
-    static bool CurrentStateMatches(AccessReviewCampaign campaign,
-        AccessReviewCampaignLaunched launch, AccessReviewCampaignCompletionView? completion,
-        long revision, IReadOnlyDictionary<Uuid, CampaignItemHistory> states)
+    static bool CurrentStateMatches(AccessReviewCampaignSnapshot snapshot, AccessReviewLaunch launch,
+        AccessReviewCampaignCompletionView? completion, IReadOnlyDictionary<Uuid, CampaignItemHistory> states)
     {
         var json = ComplianceCoreJsonContext.Default;
-        if (campaign.Id != launch.CampaignId || campaign.Revision != revision ||
-            !SameJson(campaign.Launched, launch, json.AccessReviewCampaignLaunched) ||
-            !SameJson(campaign.Completion, completion, json.AccessReviewCampaignCompletionView))
+        if (snapshot.Id != launch.CampaignId || snapshot.Launched is null ||
+            !SameJson(snapshot.Completion, completion, json.AccessReviewCampaignCompletionView))
             return false;
-        var view = campaign.ToView(DateTimeOffset.MaxValue);
-        if (view.TenantId == Uuid.Empty || view.CampaignId != launch.CampaignId ||
-            view.Revision != revision || view.Status != (completion is null
+        var view = snapshot.ToView(DateTimeOffset.MaxValue);
+        if (view.TenantId == Uuid.Empty || view.CampaignId != launch.CampaignId || view.Status != (completion is null
                 ? AccessReviewCampaign.Active
                 : AccessReviewCampaign.Completed) ||
             !view.Reviewers.SequenceEqual(launch.Reviewers) ||
@@ -512,13 +615,13 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
     }
 
     async ValueTask<bool> VerifyLaunchSnapshotAsync(Uuid tenantId,
-        AccessReviewCampaignLaunched launch, CancellationToken ct)
+        AccessReviewLaunch launch, CancellationToken ct)
     {
-        var content = await PopulationSnapshotContent.ReadAsync(reader, tenantId, launch.SnapshotId,
+        var snapshotContent = await PopulationSnapshotContent.ReadAsync(reader, tenantId, launch.SnapshotId,
             AccessReviewCampaignContent.LaunchKind, ct).ConfigureAwait(false);
-        if (!content.IsSuccess)
+        if (!snapshotContent.IsSuccess)
             return false;
-        var snapshot = content.Value.Snapshot;
+        var snapshot = snapshotContent.Value.Snapshot;
         if (snapshot.Id != launch.SnapshotId || !snapshot.HasIntactIdentity ||
             snapshot.RootSnapshotId != launch.SnapshotId || snapshot.AmendsSnapshotId is not null ||
             snapshot.ContentSha256 != launch.ContentSha256)
@@ -534,14 +637,14 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
     }
 
     async ValueTask<bool> VerifyCompletionSnapshotAsync(Uuid tenantId,
-        AccessReviewCampaign campaign, AccessReviewCampaignLaunched launch,
+        AccessReviewCampaignSnapshot campaign, AccessReviewLaunch launch,
         AccessReviewCampaignCompletionView completion, CancellationToken ct)
     {
-        var content = await PopulationSnapshotContent.ReadAsync(reader, tenantId,
+        var snapshotContent = await PopulationSnapshotContent.ReadAsync(reader, tenantId,
             completion.SnapshotId, AccessReviewCampaignContent.ResultKind, ct).ConfigureAwait(false);
-        if (!content.IsSuccess)
+        if (!snapshotContent.IsSuccess)
             return false;
-        var snapshot = content.Value.Snapshot;
+        var snapshot = snapshotContent.Value.Snapshot;
         if (snapshot.Id != completion.SnapshotId || !snapshot.HasIntactIdentity ||
             snapshot.RootSnapshotId != completion.SnapshotId || snapshot.AmendsSnapshotId is not null ||
             snapshot.ContentSha256 != completion.ContentSha256)
@@ -557,8 +660,8 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
     }
 
     static bool MatchesSummary(AccessReviewCampaignSummaryView summary,
-        AccessReviewCampaignLaunched launch, AccessReviewCampaignCompletionView? completion) =>
-        summary.TenantId == launch.TenantId && summary.CampaignId == launch.CampaignId &&
+        AccessReviewLaunch launch, AccessReviewCampaignCompletionView? completion) =>
+        summary.CampaignId == launch.CampaignId &&
         summary.Name == launch.Name && summary.Deadline == launch.Deadline &&
         summary.Status == (completion is null ? AccessReviewCampaign.Active : AccessReviewCampaign.Completed) &&
         summary.ItemCount == launch.Items.Count && summary.SnapshotId == launch.SnapshotId &&
@@ -575,81 +678,6 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
             ? summary.FinalSnapshotId is null && summary.CompletedAt is null
             : summary.FinalSnapshotId is { } finalId && finalId != Uuid.Empty &&
               summary.CompletedAt is { } completedAt && completedAt != default);
-
-    static bool TryEventTime(DomainEvent domainEvent, out DateTimeOffset occurredAt)
-    {
-        switch (domainEvent)
-        {
-            case AccessReviewCampaignLaunched launched:
-                occurredAt = launched.LaunchedAt;
-                return occurredAt != default;
-            case AccessDecisionsRecorded { Decisions: { Count: > 0 } decisions }:
-                if (decisions[0] is not { } first || first.DecidedAt == default ||
-                    decisions.Any(decision => decision is null || decision.DecidedAt != first.DecidedAt))
-                {
-                    occurredAt = default;
-                    return false;
-                }
-                occurredAt = first.DecidedAt;
-                return true;
-            case AccessRemediationChangeRecorded { Change: { } change }:
-                occurredAt = change.RecordedAt;
-                return occurredAt != default;
-            case AccessRemediationVerified { Verification: { } verification }:
-                occurredAt = verification.VerifiedAt;
-                return occurredAt != default;
-            case AccessRemediationExceptionRecorded { Exception: { } exception }:
-                occurredAt = exception.ApprovedAt;
-                return occurredAt != default;
-            case AccessReviewResponsibilityReassigned { Reassignment: { } reassignment }:
-                occurredAt = reassignment.ReassignedAt;
-                return occurredAt != default;
-            case AccessReviewCampaignCompleted { Completion: { } completion }:
-                occurredAt = completion.CompletedAt;
-                return occurredAt != default;
-            default:
-                occurredAt = default;
-                return false;
-        }
-    }
-
-    static AccessReviewCampaignSourceEvent SerializeEvent(DomainEvent domainEvent,
-        DomainEventMetadata metadata)
-    {
-        var json = ComplianceCoreJsonContext.Default;
-        return domainEvent switch
-        {
-            AccessReviewCampaignLaunched launched => new AccessReviewCampaignSourceEvent(
-                metadata.EventId, metadata.AggregateVersion, metadata.OccurredOn,
-                "campaign_launched", JsonSerializer.SerializeToElement(launched,
-                    json.AccessReviewCampaignLaunched)),
-            AccessDecisionsRecorded decisions => new AccessReviewCampaignSourceEvent(
-                metadata.EventId, metadata.AggregateVersion, metadata.OccurredOn,
-                "decisions_recorded", JsonSerializer.SerializeToElement(decisions,
-                    json.AccessDecisionsRecorded)),
-            AccessRemediationChangeRecorded change => new AccessReviewCampaignSourceEvent(
-                metadata.EventId, metadata.AggregateVersion, metadata.OccurredOn,
-                "remediation_change_recorded", JsonSerializer.SerializeToElement(change,
-                    json.AccessRemediationChangeRecorded)),
-            AccessRemediationVerified verified => new AccessReviewCampaignSourceEvent(
-                metadata.EventId, metadata.AggregateVersion, metadata.OccurredOn,
-                "remediation_verified", JsonSerializer.SerializeToElement(verified,
-                    json.AccessRemediationVerified)),
-            AccessRemediationExceptionRecorded exception => new AccessReviewCampaignSourceEvent(
-                metadata.EventId, metadata.AggregateVersion, metadata.OccurredOn,
-                "remediation_exception_recorded", JsonSerializer.SerializeToElement(exception,
-                    json.AccessRemediationExceptionRecorded)),
-            AccessReviewResponsibilityReassigned reassigned => new AccessReviewCampaignSourceEvent(
-                metadata.EventId, metadata.AggregateVersion, metadata.OccurredOn,
-                "responsibility_reassigned", JsonSerializer.SerializeToElement(reassigned,
-                    json.AccessReviewResponsibilityReassigned)),
-            AccessReviewCampaignCompleted completed => new AccessReviewCampaignSourceEvent(
-                metadata.EventId, metadata.AggregateVersion, metadata.OccurredOn,
-                "campaign_completed", JsonSerializer.SerializeToElement(completed,
-                    json.AccessReviewCampaignCompleted)),
-            _ => throw new JsonException("The campaign stream contains an unknown event."),
-        };
-    }
 
     static bool RequiresRemediation(CampaignItemHistory item) =>
         AccessReviewVocabulary.RequiresRemediation(item.Decisions.LastOrDefault()?.Decision);
@@ -735,7 +763,9 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributor(
         public AccessRemediationExceptionView? Exception { get; set; }
     }
 
-    sealed record AccessReviewCampaignHistory(AccessReviewCampaignLaunched Launch,
-        AccessReviewCampaignCompletionView? Completion, AccessReviewCampaign Campaign,
+    sealed record AsOfEvent(DateTimeOffset At, EventStreamAddress Stream, AccessReviewCampaignSourceEvent Event);
+
+    sealed record AccessReviewCampaignHistory(AccessReviewLaunch Launch,
+        AccessReviewCampaignCompletionView? Completion, AccessReviewCampaignSnapshot Snapshot,
         long AsOfRevision, List<AccessReviewCampaignSourceEvent> AsOfEvents);
 }

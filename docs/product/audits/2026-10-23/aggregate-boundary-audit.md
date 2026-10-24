@@ -151,7 +151,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | TeamRole | AccessControl | retain | ACCESS-08 (in_progress) | 0.16 | [source](../../../../src/Compliance.Core/Features/AccessControl/TeamRole.cs) |
 | TenantManagerGuard | AccessControl | retain | ACCESS-01 (pending) | 0.68 | [source](../../../../src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs) |
 | AccessPopulation | AccessReviews | split | OPS-07 (pending), OPS-15 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs) |
-| AccessReviewCampaign | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs) |
+| AccessReviewCampaign | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.89 | split into campaign and item owners (#1022); [campaign](../../../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs), [item](../../../../src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs) |
 | AccessReviewSystemLedger | AccessReviews | split | OPS-07 (pending), OPS-11 (pending), OPS-16 (pending) | 0.91 | retired by the expectation line and population exception split (#1022) |
 | AdvisorHandoff | AdvisorCollaboration | split | ROOTASSURE-01 (pending), ROOTASSURE-04 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs) |
 | ApplicationImportLedger | Applications | split | ROOT-02 (pending) | 0.86 |  |

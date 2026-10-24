@@ -6,10 +6,13 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     A frozen item with its decision history and remediation. <c>Status</c> is
 ///     <c>unresolved</c> until decided. <c>RemediationStatus</c> is <c>not_required</c>,
 ///     <c>pending</c>, <c>provider_changed</c>, <c>verified</c>, or <c>excepted</c>.
+///     <c>Revision</c> is the item's own logical revision, the value every item command expects; it is zero for an
+///     item the launch fan-out has not materialized yet.
 /// </summary>
 public sealed record AccessReviewItemStateView(AccessReviewItemView Item, string Status,
     AccessDecisionView? Decision, IReadOnlyList<AccessDecisionView> DecisionHistory,
     string RemediationStatus, IReadOnlyList<AccessRemediationChangeView> ProviderChanges,
     AccessRemediationVerificationView? Verification, AccessRemediationExceptionView? Exception,
     Uuid? CurrentReviewerMemberId = null, Uuid? CurrentRemediationOwnerMemberId = null,
-    IReadOnlyList<AccessReviewResponsibilityReassignmentView>? ResponsibilityReassignments = null);
+    IReadOnlyList<AccessReviewResponsibilityReassignmentView>? ResponsibilityReassignments = null,
+    long Revision = 0);

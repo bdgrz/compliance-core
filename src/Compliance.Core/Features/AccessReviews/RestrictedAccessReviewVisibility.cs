@@ -18,7 +18,7 @@ static class RestrictedAccessReviewVisibility
 
     public static async ValueTask<bool> CanReadCampaignItemsAsync(
         RestrictedApplicationVisibility visibility, Uuid tenantId, Uuid userId,
-        AccessReviewCampaign campaign, IReadOnlyCollection<Uuid>? itemIds = null,
+        AccessReviewCampaignSnapshot campaign, IReadOnlyCollection<Uuid>? itemIds = null,
         CancellationToken ct = default)
     {
         if (campaign.Launched is not { } launched)

@@ -3,7 +3,7 @@ using Bdgrz.Compliance.Features.Applications;
 
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
-public sealed class PreviewBulkAccessDecisionHandler(IAggregateReader reader,
+public sealed class PreviewBulkAccessDecisionHandler(AccessReviewReader reader,
     RestrictedApplicationVisibility visibility, AccessReviewQueueEligibility eligibility)
     : IRequestHandler<PreviewBulkAccessDecision, BulkAccessDecisionPreview>
 {
@@ -11,8 +11,8 @@ public sealed class PreviewBulkAccessDecisionHandler(IAggregateReader reader,
         IRequestContext<PreviewBulkAccessDecision> context, CancellationToken ct)
     {
         var request = context.Request;
-        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(request.TenantId,
-            request.CampaignId), ct).ConfigureAwait(false);
+        var campaign = await reader.ReadCampaignAsync(request.TenantId, request.CampaignId, ct)
+            .ConfigureAwait(false);
         var actor = AccessReviewActor.From(context);
         if (campaign.Launched is not { } launched)
             return AccessReviewOutcome.Failure<BulkAccessDecisionPreview>(RequestErrorKind.NotFound,
