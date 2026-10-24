@@ -58,6 +58,51 @@ public sealed class IdentityRecoveryHandlerTests
     }
 
     [Fact]
+    public async Task ShouldIssueAnotherChallengeGivenTheOutstandingOneFailedDeliveryDefinitively()
+    {
+        // Arrange
+        await using var host = new IdentityRecoveryHost();
+        var account = await host.SeedAccountAsync();
+        var first = Uuid.CreateVersion4();
+        Assert.True((await host.StartAsync(first)).IsSuccess);
+        var attempt = (await host.Ledger.OpenAttemptAsync(first, EmailChallengeDeliveryIntent.Recovery,
+            host.Clock.GetUtcNow())).Latest!;
+        await host.Ledger.RecordOutcomeAsync(first, attempt.AttemptId, EmailChallengeFailureCertainty.DefinitePermanent,
+            "smtp_permanent_rejection", Uuid.CreateVersion4(), host.Clock.GetUtcNow());
+
+        // Act
+        var second = Uuid.CreateVersion4();
+        var reissued = await host.StartAsync(second);
+        var facts = await host.FactsAsync(new EmailAddress(account.Email).Stream);
+
+        // Assert
+        Assert.True(reissued.IsSuccess);
+        Assert.Equal([first, second], facts.OfType<IdentityRecoveryChallengeIssued>().Select(issued => issued.ChallengeId));
+    }
+
+    [Fact]
+    public async Task ShouldKeepTheOutstandingChallengeGivenDeliveryStillPendingOrUnknown()
+    {
+        // Arrange
+        await using var host = new IdentityRecoveryHost();
+        var account = await host.SeedAccountAsync();
+        var first = Uuid.CreateVersion4();
+        Assert.True((await host.StartAsync(first)).IsSuccess);
+        var attempt = (await host.Ledger.OpenAttemptAsync(first, EmailChallengeDeliveryIntent.Recovery,
+            host.Clock.GetUtcNow())).Latest!;
+        await host.Ledger.RecordOutcomeAsync(first, attempt.AttemptId, EmailChallengeFailureCertainty.Unknown,
+            "transport_ambiguous", Uuid.CreateVersion4(), host.Clock.GetUtcNow());
+
+        // Act
+        var another = await host.StartAsync(Uuid.CreateVersion4());
+        var facts = await host.FactsAsync(new EmailAddress(account.Email).Stream);
+
+        // Assert
+        Assert.True(another.IsSuccess);
+        Assert.Equal(first, Assert.Single(facts.OfType<IdentityRecoveryChallengeIssued>()).ChallengeId);
+    }
+
+    [Fact]
     public async Task ShouldRejectStartGivenEmptyChallengeIdentity()
     {
         // Arrange

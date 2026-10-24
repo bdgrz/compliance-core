@@ -1,17 +1,23 @@
-using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
-/// <summary>Retains a bounded safe test result; provider tokens and response bodies are never persisted.</summary>
+/// <summary>
+///     The native acceptance of <see cref="RecordTenantIdentityProviderTestResult" />: a bounded safe test result for
+///     the exact request event and credential epoch. Provider tokens and response bodies are never persisted.
+/// </summary>
 [Discriminator("bdgrz.useridentities.tenant-identity-provider-tested", 3)]
 public sealed record TenantIdentityProviderTested(
     Uuid TenantId,
-    Uuid SubjectId,
-    long Revision,
-    Uuid? ActorMemberId,
+    Uuid ProviderConnectionId,
     Uuid TestRequestEventId,
+    long CredentialRevision,
     ActorReference TestedByActor,
     TenantIdentityProviderTestResultContent Result,
-    TenantIdentityProviderView State,
-    DateTimeOffset OccurredAt) : DomainEvent;
+    DateTimeOffset TestedAt,
+    OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

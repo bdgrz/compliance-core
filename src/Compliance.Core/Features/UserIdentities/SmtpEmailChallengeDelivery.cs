@@ -64,11 +64,27 @@ public sealed class SmtpEmailChallengeDelivery(EmailChallengeDeliverySettings se
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            // SMTP exceptions can echo recipient addresses or provider details. The worker
-            // records only a generic failure code and retries the same effect identity.
-            throw new InvalidOperationException("Email challenge delivery failed.");
+            // SMTP exceptions can echo recipient addresses or provider details. Only a redacted category leaves
+            // this boundary, and only an explicit SMTP reply proves the relay did not accept the message: every
+            // other transport failure may have happened after the relay accepted DATA.
+            throw Classify(exception);
         }
+    }
+
+    internal static EmailChallengeDeliveryException Classify(Exception exception)
+    {
+        if (exception is not SmtpException smtp)
+            return new EmailChallengeDeliveryException(EmailChallengeFailureCertainty.Unknown, "transport_ambiguous");
+        var statusCode = (int)smtp.StatusCode;
+        return statusCode switch
+        {
+            >= 400 and < 500 => new EmailChallengeDeliveryException(
+                EmailChallengeFailureCertainty.DefiniteTransient, "smtp_transient_rejection"),
+            >= 500 and < 600 => new EmailChallengeDeliveryException(
+                EmailChallengeFailureCertainty.DefinitePermanent, "smtp_permanent_rejection"),
+            _ => new EmailChallengeDeliveryException(EmailChallengeFailureCertainty.Unknown, "transport_ambiguous"),
+        };
     }
 }

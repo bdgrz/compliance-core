@@ -1,6 +1,14 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
+/// <summary>The native acceptance of <see cref="ReserveEmail" />, the first reservation of the address.</summary>
 [Discriminator("bdgrz.email-address.reserved", 1)]
-public sealed record EmailAddressReserved(Uuid UserId, string EmailAddress) : DomainEvent;
+public sealed record EmailAddressReserved(
+    Uuid UserId,
+    string EmailAddress,
+    OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

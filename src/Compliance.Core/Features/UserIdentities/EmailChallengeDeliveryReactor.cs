@@ -1,178 +1,50 @@
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
-public sealed partial class EmailChallengeDeliveryReactor(
-    IProjectionCheckpointStore checkpoints,
-    IAggregateReader reader,
-    IAggregateWriter writer,
-    IEmailChallengeDelivery delivery,
-    EmailChallengeTokenKeys tokenKeys,
-    TimeProvider clock)
+/// <summary>
+///     Starts the email challenge delivery process when a verification or identity recovery challenge is accepted on an
+///     email address. The process record, with the effect payload frozen from the accepted fact, exists before the
+///     source checkpoint advances; delivery itself, and every retry of it, belongs to the process.
+/// </summary>
+public sealed partial class EmailChallengeDeliveryReactor(IProjectionCheckpointStore checkpoints,
+    ProcessRootReaction process, IImmutableContentStore content, TimeProvider clock)
     : Reactor(checkpoints, EventStreamPattern.ForPattern("bdgrz", "email-addresses")),
       IReactorHandler<EmailChallengeIssued>,
       IReactorHandler<IdentityRecoveryChallengeIssued>
 {
-    public async ValueTask HandleAsync(IReactorContext<EmailChallengeIssued> context,
-        CancellationToken ct)
+    public ValueTask HandleAsync(IReactorContext<EmailChallengeIssued> context, CancellationToken ct)
     {
         var issued = context.Trigger;
-        if (clock.GetUtcNow() >= issued.ExpiresAt)
-            return;
-        var address = await reader.HydrateAsync(new EmailAddress(issued.EmailAddress), ct)
-            .ConfigureAwait(false);
-        if (address.IsVerified || address.CurrentChallengeId != issued.ChallengeId ||
-            address.DeliveryStatus is "delivered" or "failed")
-            return;
-
-        // Events written before durable delivery have no derivation key. Their original
-        // plaintext token cannot be recovered; let the owner reissue without blocking the
-        // global reactor behind this historical event until it expires.
-        if (issued.TokenKeyId is null)
-        {
-            await RecordFailureAsync(issued, context.Actor, "key_unavailable", ct)
-                .ConfigureAwait(false);
-            return;
-        }
-
-        if (!tokenKeys.TryDerive(issued.TokenKeyId, issued.ChallengeId, issued.UserId,
-                issued.EmailAddress, issued.ExpiresAt, out var token) ||
-            !CryptographicOperations.FixedTimeEquals(
-                SHA256.HashData(Encoding.UTF8.GetBytes(token!)),
-                Convert.FromHexString(issued.TokenHash)))
-        {
-            await RecordFailureAsync(issued, context.Actor, "key_unavailable", ct)
-                .ConfigureAwait(false);
-            return;
-        }
-
-        try
-        {
-            await delivery.SendAsync(issued.ChallengeId, issued.UserId, issued.EmailAddress,
-                token!, ct).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            await RecordFailureAsync(issued, context.Actor, "delivery_failed", ct)
-                .ConfigureAwait(false);
-            return;
-        }
-
-        await RecordOutcomeAsync(issued, context.Actor,
-            address => address.RecordDeliverySent(issued.ChallengeId, clock.GetUtcNow()), ct)
-            .ConfigureAwait(false);
+        return StartAsync(context, issued.Operation, issued.ChallengeId, issued.UserId, issued.ExpiresAt,
+            issued.TokenKeyId, EmailChallengeDeliveryIntent.Verification, ct);
     }
 
-    public async ValueTask HandleAsync(IReactorContext<IdentityRecoveryChallengeIssued> context,
-        CancellationToken ct)
+    public ValueTask HandleAsync(IReactorContext<IdentityRecoveryChallengeIssued> context, CancellationToken ct)
     {
         var issued = context.Trigger;
-        if (clock.GetUtcNow() >= issued.ExpiresAt)
-            return;
-        var address = await reader.HydrateAsync(new EmailAddress(issued.EmailAddress), ct)
-            .ConfigureAwait(false);
-        if (!address.IsVerified || address.Owner != issued.UserId ||
-            address.CurrentRecoveryChallengeId != issued.ChallengeId ||
-            address.RecoveryDeliveryStatus is "delivered" or "failed")
-            return;
-
-        if (!tokenKeys.TryDeriveRecovery(issued.TokenKeyId, issued.ChallengeId, issued.UserId,
-                issued.EmailAddress, issued.ExpiresAt, out var token) ||
-            !CryptographicOperations.FixedTimeEquals(
-                SHA256.HashData(Encoding.UTF8.GetBytes(token!)),
-                Convert.FromHexString(issued.TokenHash)))
-        {
-            await RecordRecoveryOutcomeAsync(issued, context.Actor,
-                address => address.RecordRecoveryDeliveryFailure(issued.ChallengeId,
-                    "key_unavailable", clock.GetUtcNow()), ct).ConfigureAwait(false);
-            return;
-        }
-
-        try
-        {
-            await delivery.SendRecoveryAsync(issued.ChallengeId, issued.UserId,
-                issued.EmailAddress, token!, ct).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            await RecordRecoveryOutcomeAsync(issued, context.Actor,
-                address => address.RecordRecoveryDeliveryFailure(issued.ChallengeId,
-                    "delivery_failed", clock.GetUtcNow()), ct).ConfigureAwait(false);
-            return;
-        }
-
-        await RecordRecoveryOutcomeAsync(issued, context.Actor,
-            address => address.RecordRecoveryDeliverySent(issued.ChallengeId,
-                clock.GetUtcNow()), ct).ConfigureAwait(false);
+        return StartAsync(context, issued.Operation, issued.ChallengeId, issued.UserId, issued.ExpiresAt,
+            issued.TokenKeyId, EmailChallengeDeliveryIntent.Recovery, ct);
     }
 
-    async ValueTask RecordRecoveryOutcomeAsync(IdentityRecoveryChallengeIssued issued,
-        ClaimsPrincipal actor, Func<EmailAddress, Result> operation, CancellationToken ct)
+    async ValueTask StartAsync(IReactorContext context, OperationProvenance operation, Uuid challengeId, Uuid userId,
+        DateTimeOffset expiresAt, string tokenKeyId, string purpose, CancellationToken ct)
     {
-        try
-        {
-            var address = await reader.HydrateAsync(new EmailAddress(issued.EmailAddress), ct)
-                .ConfigureAwait(false);
-            if (address.CurrentRecoveryChallengeId != issued.ChallengeId ||
-                address.RecoveryDeliveryStatus is "delivered" or "failed")
-                return;
-            var result = operation(address);
-            if (!result.IsSuccess)
-                throw new InvalidOperationException();
-            await writer.SaveAsync(address, new RequestDispatchContext(actor), ct)
-                .ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            throw new InvalidOperationException("Identity recovery delivery outcome could not be recorded.");
-        }
-    }
-
-    async ValueTask RecordFailureAsync(EmailChallengeIssued issued, ClaimsPrincipal actor,
-        string code, CancellationToken ct) =>
-        await RecordOutcomeAsync(issued, actor,
-            address => address.RecordDeliveryFailure(issued.ChallengeId, code, clock.GetUtcNow()), ct)
-            .ConfigureAwait(false);
-
-    async ValueTask RecordOutcomeAsync(EmailChallengeIssued issued, ClaimsPrincipal actor,
-        Func<EmailAddress, Result> operation, CancellationToken ct)
-    {
-        try
-        {
-            var address = await reader.HydrateAsync(new EmailAddress(issued.EmailAddress), ct)
-                .ConfigureAwait(false);
-            if (address.IsVerified || address.CurrentChallengeId != issued.ChallengeId ||
-                address.DeliveryStatus is "delivered" or "failed")
-                return;
-            var result = operation(address);
-            if (!result.IsSuccess)
-                throw new InvalidOperationException();
-            await writer.SaveAsync(address, new RequestDispatchContext(actor), ct)
-                .ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            // Event-store errors can contain the stream address (an email-derived ID).
-            throw new InvalidOperationException("Email challenge delivery outcome could not be recorded.");
-        }
+        // A challenge that expired before this reaction can never be used, so nothing is delivered for it.
+        if (clock.GetUtcNow() >= expiresAt)
+            return;
+        var intent = new EmailChallengeDeliveryIntent(new DurableIntentHeader(operation.RootOperationId,
+            operation.Owner, operation.AffectedOwner, operation.ExpectedRevisionOwner, operation.Actor,
+            operation.Episode, operation.OriginalExpectedRevision, operation.AuthoredIntentSha256,
+            operation.AcceptedAt), challengeId, userId, purpose, expiresAt, tokenKeyId);
+        // The content id derives from the source fact, so a replayed reaction freezes the identical intent.
+        var frozen = await content.WriteJsonAsync(EmailChallengeDeliveryWorker.Realm,
+            Uuid.CreateVersion5(context.Source.Event.Metadata.EventId, EmailChallengeDeliveryIntent.Schema),
+            EmailChallengeDeliveryIntent.Schema, intent, ct).ConfigureAwait(false);
+        await process.StartAsync(EmailChallengeDeliveryProcess.Name, context, frozen, [],
+            nameof(EmailChallengeDeliveryReactor), ct).ConfigureAwait(false);
     }
 }

@@ -18,6 +18,7 @@ namespace Bdgrz.Compliance.Features.UserIdentities;
 public sealed class StartIdentityRecoveryHandler(
     NativeOperationExecutor operations,
     IAggregateReader reader,
+    IEmailChallengeDeliveryLedger deliveries,
     EmailChallengeTokenKeys tokenKeys,
     IImmutableContentStore content,
     TimeProvider clock) : IRequestHandler<StartIdentityRecovery>
@@ -38,8 +39,12 @@ public sealed class StartIdentityRecoveryHandler(
         var provenance = Provenance(request, normalized, current.Stream, now);
         var binding = AcceptedOperationBinding.Of(provenance);
         var decided = current.Acceptance.Decide(binding);
+        // A challenge whose delivery ended in a definite failure no longer blocks a new one; the delivery process
+        // owns that technical state, not the address.
+        var deliveryFailed = current.CurrentRecoveryChallengeId is { } outstanding &&
+                             await deliveries.ReadAsync(outstanding, ct).ConfigureAwait(false) is { IsFailed: true };
         if (decided == NativeAcceptanceDecision.None &&
-            (current.Owner is null || !current.IsVerified || current.HasOutstandingRecoveryChallenge(now)))
+            (current.Owner is null || !current.IsVerified || current.HasOutstandingRecoveryChallenge(now, deliveryFailed)))
             return Result.Success;
 
         var owner = current.Owner;
@@ -60,11 +65,12 @@ public sealed class StartIdentityRecoveryHandler(
             () => new EmailAddress(normalized, request.ChallengeId, CommandKind),
             address => address.Acceptance,
             address => address.PrepareIssueRecoveryChallenge(address.Owner ?? Uuid.Empty, request.ChallengeId, hash,
-                expiresAt, now, tokenKeys.ActiveKeyId) is { IsSuccess: false } failed
+                expiresAt, now, tokenKeys.ActiveKeyId, deliveryFailed) is { IsSuccess: false } failed
                 ? Result<FirstResponseDescriptor>.Failure(failed.Error!)
                 : Result<FirstResponseDescriptor>.Success(response),
             (EmailAddress address, ImmutableContentRef frozen) => address.IssueRecoveryChallenge(provenance, frozen,
-                address.Owner ?? Uuid.Empty, request.ChallengeId, hash, expiresAt, now, tokenKeys.ActiveKeyId)),
+                address.Owner ?? Uuid.Empty, request.ChallengeId, hash, expiresAt, now, tokenKeys.ActiveKeyId,
+                deliveryFailed)),
             context, ct).ConfigureAwait(false);
         if (!accepted.IsSuccess)
             return accepted.Error == EmailAddress.OutstandingRecoveryChallenge

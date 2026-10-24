@@ -1,17 +1,21 @@
 using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
-using System.Security.Cryptography;
-using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
-/// <summary>Owns one organization's OIDC connection configuration, test, rotation, and disable lifecycle.</summary>
+/// <summary>
+///     Owns one organization's OIDC connection: its configuration, the credential epoch and the decision to enable it
+///     after a successful test of the current epoch. Test and rotation history is not retained here: a test request is
+///     an independently identified native operation, so neither the number of tests nor the number of credential
+///     rotations has a lifetime ceiling, and every fact stays a bounded delta.
+/// </summary>
 public sealed class TenantIdentityProvider : Aggregate
 {
-    const int MaximumTests = 100;
     const int MaximumEventBytes = DomainEventPayload.MaximumBytes;
     const int MaximumTextLength = 1000;
     static readonly HashSet<string> CredentialSchemes = new(StringComparer.Ordinal)
@@ -27,319 +31,114 @@ public sealed class TenantIdentityProvider : Aggregate
     };
 
     readonly Uuid _tenantId;
-    string? _encryptedCredentialReference;
-    TenantIdentityProviderView? _current;
+    bool _configured;
+    string _status = "unconfigured";
+    long _credentialRevision;
+    string _issuer = string.Empty;
+    string _clientId = string.Empty;
+    IReadOnlyList<string> _audiences = [];
+    ImmutableContentRef? _credential;
+    string? _lastRotationReference;
+    string? _disabledRationale;
+    DateTimeOffset _updatedAt;
+    PendingTest? _pending;
 
-    public long Revision => _current?.Revision ?? 0;
-    public TenantIdentityProviderView? Current => _current;
-
+    /// <summary>Hydrates the connection of a tenant.</summary>
     public TenantIdentityProvider(Uuid tenantId, Uuid providerConnectionId)
+        : this(tenantId, providerConnectionId, Uuid.Empty, null)
+    {
+    }
+
+    /// <summary>
+    ///     Hydrates the connection for one logical operation: <paramref name="selectedLogicalId" /> and
+    ///     <paramref name="selectedCommandKind" /> select the accepted fact that retry resolution compares against.
+    /// </summary>
+    public TenantIdentityProvider(Uuid tenantId, Uuid providerConnectionId, Uuid selectedLogicalId,
+        string? selectedCommandKind)
         : base(providerConnectionId, new EventStreamAddress(tenantId.ToString(), "tenant-identity-providers",
             providerConnectionId.ToString()))
     {
         _tenantId = tenantId;
+        Acceptance = new NativeAcceptance(selectedLogicalId, selectedCommandKind);
         On<TenantIdentityProviderConfigured>(Apply);
         On<TenantIdentityProviderTestRequested>(Apply);
-        On<TenantIdentityProviderTestedV2>(Apply);
         On<TenantIdentityProviderTested>(Apply);
         On<TenantIdentityProviderCredentialsRotated>(Apply);
         On<TenantIdentityProviderDisabled>(Apply);
     }
 
-    public CommandFailure? Configure(TenantIdentityProviderConfigurationContent configuration,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset configuredAt)
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
+    /// <summary>The logical revision of the connection: the number of facts it holds.</summary>
+    public long Revision => (long)Version;
+
+    /// <summary>True once the connection was configured.</summary>
+    public bool IsConfigured => _configured;
+
+    /// <summary>"pending_test", "enabled", "test_failed" or "disabled"; "unconfigured" before the first fact.</summary>
+    public string Status => _status;
+
+    /// <summary>The credential epoch, starting at one and advancing with every rotation.</summary>
+    public long CredentialRevision => _credentialRevision;
+
+    /// <summary>The configured issuer.</summary>
+    public string Issuer => _issuer;
+
+    /// <summary>The configured client id.</summary>
+    public string ClientId => _clientId;
+
+    /// <summary>The configured audiences, sorted.</summary>
+    public IReadOnlyList<string> AllowedAudiences => _audiences;
+
+    /// <summary>The protected content of the current credential epoch's secret-store pointer.</summary>
+    public ImmutableContentRef? Credential => _credential;
+
+    /// <summary>The rotation reference of the latest rotation.</summary>
+    public string? LastRotationReference => _lastRotationReference;
+
+    /// <summary>Why the connection was disabled.</summary>
+    public string? DisabledRationale => _disabledRationale;
+
+    /// <summary>The key of the test awaiting its result, if any.</summary>
+    public string? PendingTestKey => _pending?.Fact.TestKey;
+
+    /// <summary>The credential epoch the pending test targets.</summary>
+    public long? PendingTestCredentialRevision => _pending?.Fact.CredentialRevision;
+
+    /// <summary>The event id of the pending test request, once it is a stored fact.</summary>
+    public Uuid? PendingTestRequestEventId => _pending?.Fact.Metadata?.EventId;
+
+    /// <summary>The member who requested the pending test.</summary>
+    public Uuid? PendingTestRequestedBy => _pending?.Fact.RequestedByMemberId;
+
+    /// <summary>Validates and normalizes a connection definition; null when it is not acceptable.</summary>
+    public static TenantIdentityProviderConfiguration? NormalizeConfiguration(string? issuer, string? clientId,
+        string? credentialReference, IReadOnlyList<string>? audiences)
     {
-        if (_current is { } existing)
-            return SameConfiguration(existing, configuration, actorMemberId, actorDisplay, configuredAt)
-                ? null : CommandFailure.StateConflict("A tenant identity-provider connection can be configured only once.");
-        if (!ValidIdentity() || !ValidActor(actorMemberId, actorDisplay, configuredAt) ||
-            NormalizeConfiguration(configuration) is not { } normalized)
-            return Invalid("A tenant identity provider requires a secure issuer, matching audience, client ID, and secret-store reference.");
-        var state = NewState(normalized, _tenantId, Id, actorMemberId, actorDisplay.Trim(), configuredAt);
-        var ev = new TenantIdentityProviderConfigured(_tenantId, Id, state.Revision, actorMemberId,
-            normalized, Freeze(state), configuredAt);
-        if (!Fits(ev))
-            return Invalid("The identity-provider configuration exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? RequestTest(long expectedRevision, string testKey,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset requestedAt)
-    {
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The tenant identity-provider connection was not found.");
-        testKey = Clean(testKey);
-        if (current.PendingTest is { } pending)
-            return pending.TestKey == testKey && pending.CredentialRevision == current.CredentialRevision &&
-                pending.RequestedByMemberId == actorMemberId &&
-                pending.RequestedByDisplay == Clean(actorDisplay)
-                ? null : CommandFailure.StateConflict("A different identity-provider test is already pending.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        if (current.Status == "disabled" || current.TestHistory.Count >= MaximumTests ||
-            !Token(testKey, 100) || current.TestHistory.Any(test => test.TestKey == testKey) ||
-            !ValidActor(actorMemberId, actorDisplay, requestedAt) || requestedAt < current.UpdatedAt)
-            return Invalid("A provider test request requires an active connection, a unique test key, and attributable timing.");
-
-        var request = new TenantIdentityProviderTestRequestView(testKey, current.CredentialRevision,
-            actorMemberId, actorDisplay.Trim(), requestedAt);
-        var state = State(current, current.Status, current.CredentialRevision, current.TestHistory,
-            current.LastRotationReference, current.DisabledRationale, actorMemberId,
-            actorDisplay.Trim(), requestedAt, request);
-        var ev = new TenantIdentityProviderTestRequested(_tenantId, Id, state.Revision,
-            request, Freeze(state), requestedAt);
-        if (!Fits(ev))
-            return Invalid("The identity-provider test request exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? RecordTest(long expectedRevision, Uuid testRequestEventId,
-        TenantIdentityProviderTestResultContent result, ActorReference testedBy, DateTimeOffset testedAt)
-    {
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The tenant identity-provider connection was not found.");
-        var normalized = NormalizeTestResult(result);
-        if (result is not null && current.TestHistory.FirstOrDefault(item => item.TestKey == Clean(result.TestKey)) is { } prior)
-            return SameTest(prior, normalized, current.CredentialRevision, testRequestEventId, testedBy, testedAt)
-                ? null : CommandFailure.StateConflict("An identity-provider test key cannot be reused for a different result.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        if (current.Status == "disabled" || current.TestHistory.Count >= MaximumTests || normalized is null ||
-            testRequestEventId == Uuid.Empty ||
-            current.PendingTest is not { } pending || pending.TestKey != normalized.TestKey ||
-            pending.CredentialRevision != current.CredentialRevision || testedAt < pending.RequestedAt ||
-            !ValidTester(testedBy, testedAt) || testedAt < current.UpdatedAt)
-            return CommandFailure.StateConflict("A provider test requires an active connection and a safe, attributable test result.");
-        var actorMemberId = MemberId(testedBy);
-        var test = new TenantIdentityProviderTestView(normalized.TestKey, current.CredentialRevision,
-            normalized.Outcome, normalized.FailureCode, normalized.ActionableMessage,
-            actorMemberId, testedBy.Display.Trim(), testedAt, testedBy, testRequestEventId);
-        var history = Append(current.TestHistory, test);
-        var state = State(current, normalized.Outcome == "passed" ? "enabled" : "test_failed",
-            current.CredentialRevision, history, current.LastRotationReference, null,
-            actorMemberId, testedBy.Display.Trim(), testedAt, actorReference: testedBy);
-        var ev = new TenantIdentityProviderTested(_tenantId, Id, state.Revision, actorMemberId,
-            testRequestEventId, testedBy, normalized, Freeze(state), testedAt);
-        if (!Fits(ev))
-            return Invalid("The identity-provider test history exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? RotateCredentials(long expectedRevision, string encryptedCredentialReference,
-        string rotationReference, Uuid actorMemberId, string actorDisplay, DateTimeOffset rotatedAt)
-    {
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The tenant identity-provider connection was not found.");
-        encryptedCredentialReference = Clean(encryptedCredentialReference);
-        rotationReference = Clean(rotationReference);
-        if (current.LastRotationReference == rotationReference)
-            return _encryptedCredentialReference == encryptedCredentialReference &&
-                current.ActorMemberId == actorMemberId && current.ActorDisplay == Clean(actorDisplay) &&
-                current.UpdatedAt == rotatedAt
-                ? null : CommandFailure.StateConflict("A credential-rotation reference cannot be reused.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        if (current.Status == "disabled" || current.CredentialRevision >= MaximumTests ||
-            !ValidCredentialReference(encryptedCredentialReference) ||
-            encryptedCredentialReference == _encryptedCredentialReference || !Token(rotationReference, 200) ||
-            !ValidActor(actorMemberId, actorDisplay, rotatedAt) || rotatedAt < current.UpdatedAt)
-            return CommandFailure.StateConflict("Credential rotation requires a new secret-store reference and an enabled connection lifecycle.");
-        var credentialRevision = current.CredentialRevision + 1;
-        var state = State(current, "pending_test", credentialRevision, current.TestHistory,
-            rotationReference, null, actorMemberId, actorDisplay.Trim(), rotatedAt);
-        var ev = new TenantIdentityProviderCredentialsRotated(_tenantId, Id, state.Revision,
-            actorMemberId, encryptedCredentialReference, rotationReference, Freeze(state), rotatedAt);
-        if (!Fits(ev))
-            return Invalid("The credential-rotation event exceeds the bounded payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    public CommandFailure? Disable(long expectedRevision, string rationale,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset disabledAt)
-    {
-        if (_current is not { } current)
-            return CommandFailure.MissingRecord("The tenant identity-provider connection was not found.");
-        rationale = Clean(rationale);
-        if (current.Status == "disabled")
-            return current.DisabledRationale == rationale && current.ActorMemberId == actorMemberId &&
-                current.ActorDisplay == Clean(actorDisplay) && current.UpdatedAt == disabledAt
-                ? null : CommandFailure.StateConflict("A disabled identity-provider connection cannot be changed.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
-        if (!Bounded(rationale, 1, MaximumTextLength) || !ValidActor(actorMemberId, actorDisplay, disabledAt) ||
-            disabledAt < current.UpdatedAt)
-            return Invalid("Disabling an identity-provider connection requires an attributable rationale.");
-        var state = State(current, "disabled", current.CredentialRevision, current.TestHistory,
-            current.LastRotationReference, rationale, actorMemberId, actorDisplay.Trim(), disabledAt);
-        var ev = new TenantIdentityProviderDisabled(_tenantId, Id, state.Revision,
-            actorMemberId, rationale, Freeze(state), disabledAt);
-        if (!Fits(ev))
-            return Invalid("The disabled identity-provider event exceeds the bounded payload.");
-        RaiseEvent(ev);
-        return null;
-    }
-
-    void Apply(TenantIdentityProviderConfigured ev)
-    {
-        if (_current is not null || ev.TenantId != _tenantId || ev.SubjectId != Id ||
-            ev.Revision != 1 || ev.State is null ||
-            NormalizeConfiguration(ev.Configuration) is not { } configuration ||
-            !ValidCredentialReference(configuration.EncryptedCredentialReference) ||
-            !ValidState(ev.State, _tenantId, Id) || ev.State.Status != "pending_test" ||
-            ev.State.PendingTest is not null ||
-            ev.State.Revision != ev.Revision || ev.State.CredentialRevision != 1 ||
-            !SamePublicConfiguration(ev.State, configuration, ev.ActorMemberId ?? Uuid.Empty,
-                ev.State.ActorDisplay, ev.OccurredAt) || ev.State.ActorMemberId != ev.ActorMemberId ||
-            ev.State.UpdatedAt != ev.OccurredAt)
-            throw new InvalidOperationException("The tenant identity-provider configuration event is invalid.");
-        _encryptedCredentialReference = configuration.EncryptedCredentialReference;
-        _current = Freeze(ev.State);
-    }
-
-    void Apply(TenantIdentityProviderTestRequested ev)
-    {
-        if (_current is not { } current || current.Status == "disabled" ||
-            ev.TenantId != _tenantId || ev.SubjectId != Id || ev.Revision != Revision + 1 ||
-            ev.State is null || ev.Request is null || ev.OccurredAt < current.UpdatedAt ||
-            ev.Request.CredentialRevision != current.CredentialRevision ||
-            current.TestHistory.Count >= MaximumTests ||
-            current.TestHistory.Any(test => test.TestKey == ev.Request.TestKey) ||
-            !ValidTestRequest(ev.Request, current, ev.OccurredAt) ||
-            !ValidState(ev.State, _tenantId, Id) || ev.State.Revision != ev.Revision ||
-            ev.State.Status != current.Status || ev.State.CredentialRevision != current.CredentialRevision ||
-            ev.State.UpdatedAt != ev.OccurredAt || ev.State.PendingTest != ev.Request ||
-            ev.State.TestHistory.Count != current.TestHistory.Count ||
-            !HistoryPrefix(current.TestHistory, ev.State.TestHistory) ||
-            !SameProviderDefinition(current, ev.State) ||
-            ev.State.LastRotationReference != current.LastRotationReference ||
-            ev.State.DisabledRationale != current.DisabledRationale ||
-            ev.State.ActorMemberId != ev.Request.RequestedByMemberId ||
-            ev.State.ActorDisplay != ev.Request.RequestedByDisplay ||
-            ev.State.UpdatedByActor is { } updatedBy && updatedBy !=
-                ActorReference.ForMember(ev.Request.RequestedByMemberId, ev.Request.RequestedByDisplay))
-            throw new InvalidOperationException("The tenant identity-provider test-request event is invalid.");
-        _current = Freeze(ev.State);
-    }
-
-    void Apply(TenantIdentityProviderTestedV2 ev)
-    {
-        if (_current is not { } current || current.Status == "disabled" ||
-            ev.TenantId != _tenantId || ev.SubjectId != Id || ev.Revision != Revision + 1 ||
-            ev.State is null || ev.ActorMemberId is not { } actorMemberId || actorMemberId == Uuid.Empty ||
-            NormalizeTestResult(ev.Result) is not { } result || !ValidState(ev.State, _tenantId, Id) ||
-            ev.State.Revision != ev.Revision || ev.State.UpdatedAt != ev.OccurredAt || ev.OccurredAt < current.UpdatedAt ||
-            current.PendingTest is { } pending &&
-                (pending.TestKey != result.TestKey || ev.OccurredAt < pending.RequestedAt) ||
-            ev.State.PendingTest is not null || ev.State.UpdatedByActor is not null ||
-            ev.State.CredentialRevision != current.CredentialRevision ||
-            !SameProviderDefinition(current, ev.State) ||
-            ev.State.LastRotationReference != current.LastRotationReference ||
-            ev.State.DisabledRationale is not null || ev.State.ActorMemberId != actorMemberId ||
-            ev.State.TestHistory.Count != current.TestHistory.Count + 1 ||
-            !HistoryPrefix(current.TestHistory, ev.State.TestHistory) ||
-            ev.State.TestHistory[^1] is not { } test || test.TestKey != result.TestKey ||
-            test.Outcome != result.Outcome || test.FailureCode != result.FailureCode ||
-            test.ActionableMessage != result.ActionableMessage || test.CredentialRevision != current.CredentialRevision ||
-            test.TestedByMemberId != actorMemberId || test.TestedByActor is not null ||
-            test.TestRequestEventId is not null || test.TestedByDisplay != ev.State.ActorDisplay ||
-            test.TestedAt != ev.OccurredAt || ev.State.Status != (result.Outcome == "passed" ? "enabled" : "test_failed"))
-            throw new InvalidOperationException("The legacy tenant identity-provider test event is invalid.");
-        _current = Freeze(ev.State);
-    }
-
-    void Apply(TenantIdentityProviderTested ev)
-    {
-        if (_current is not { } current || current.Status == "disabled" || ev.TenantId != _tenantId ||
-            ev.SubjectId != Id || ev.Revision != Revision + 1 || ev.State is null ||
-            ev.TestRequestEventId == Uuid.Empty || current.PendingTest is not { } pending ||
-            NormalizeTestResult(ev.Result) is not { } result || !ValidTester(ev.TestedByActor, ev.OccurredAt) ||
-            ev.ActorMemberId != MemberId(ev.TestedByActor) || !ValidState(ev.State, _tenantId, Id) ||
-            ev.State.Revision != ev.Revision || ev.State.UpdatedAt != ev.OccurredAt ||
-            ev.OccurredAt < current.UpdatedAt || ev.OccurredAt < pending.RequestedAt ||
-            result.TestKey != pending.TestKey || ev.State.PendingTest is not null ||
-            ev.State.CredentialRevision != current.CredentialRevision ||
-            !SameProviderDefinition(current, ev.State) ||
-            ev.State.LastRotationReference != current.LastRotationReference ||
-            ev.State.DisabledRationale is not null || ev.State.ActorMemberId != ev.ActorMemberId ||
-            ev.State.UpdatedByActor != ev.TestedByActor ||
-            ev.State.TestHistory.Count != current.TestHistory.Count + 1 ||
-            !HistoryPrefix(current.TestHistory, ev.State.TestHistory) ||
-            ev.State.TestHistory[^1] is not { } test || test.TestKey != result.TestKey ||
-            test.Outcome != result.Outcome || test.FailureCode != result.FailureCode ||
-            test.ActionableMessage != result.ActionableMessage ||
-            test.CredentialRevision != current.CredentialRevision ||
-            test.TestedByMemberId != ev.ActorMemberId || test.TestedByActor != ev.TestedByActor ||
-            test.TestRequestEventId != ev.TestRequestEventId ||
-            test.TestedByDisplay != ev.State.ActorDisplay || test.TestedAt != ev.OccurredAt ||
-            ev.State.Status != (result.Outcome == "passed" ? "enabled" : "test_failed"))
-            throw new InvalidOperationException("The tenant identity-provider test event is invalid.");
-        _current = Freeze(ev.State);
-    }
-
-    void Apply(TenantIdentityProviderCredentialsRotated ev)
-    {
-        if (_current is not { } current || current.Status == "disabled" || ev.TenantId != _tenantId || ev.SubjectId != Id ||
-            ev.Revision != Revision + 1 || ev.State is null || ev.ActorMemberId == Uuid.Empty ||
-            !ValidCredentialReference(ev.EncryptedCredentialReference) ||
-            ev.EncryptedCredentialReference == _encryptedCredentialReference || !Token(ev.RotationReference, 200) ||
-            !ValidState(ev.State, _tenantId, Id) || ev.State.Revision != ev.Revision ||
-            ev.State.CredentialRevision != current.CredentialRevision + 1 || ev.State.Status != "pending_test" ||
-            ev.State.LastRotationReference != ev.RotationReference || ev.State.UpdatedAt != ev.OccurredAt ||
-            ev.OccurredAt < current.UpdatedAt ||
-            ev.State.PendingTest is not null ||
-            ev.State.TestHistory.Count != current.TestHistory.Count || !SameProviderDefinition(current, ev.State) ||
-            !HistoryPrefix(current.TestHistory, ev.State.TestHistory) ||
-            ev.State.DisabledRationale is not null || ev.State.ActorMemberId != ev.ActorMemberId)
-            throw new InvalidOperationException("The tenant identity-provider credential-rotation event is invalid.");
-        _encryptedCredentialReference = ev.EncryptedCredentialReference;
-        _current = Freeze(ev.State);
-    }
-
-    void Apply(TenantIdentityProviderDisabled ev)
-    {
-        if (_current is not { } current || current.Status == "disabled" || ev.TenantId != _tenantId || ev.SubjectId != Id ||
-            ev.Revision != Revision + 1 || ev.State is null || ev.ActorMemberId == Uuid.Empty ||
-            !Bounded(ev.Rationale, 1, MaximumTextLength) || !ValidState(ev.State, _tenantId, Id) ||
-            ev.State.Revision != ev.Revision || ev.State.Status != "disabled" ||
-            ev.State.DisabledRationale != ev.Rationale || ev.State.UpdatedAt != ev.OccurredAt ||
-            ev.OccurredAt < current.UpdatedAt ||
-            ev.State.PendingTest is not null ||
-            ev.State.CredentialRevision != current.CredentialRevision || !SameProviderDefinition(current, ev.State) ||
-            ev.State.LastRotationReference != current.LastRotationReference ||
-            !HistoryPrefix(current.TestHistory, ev.State.TestHistory) ||
-            ev.State.ActorMemberId != ev.ActorMemberId)
-            throw new InvalidOperationException("The tenant identity-provider disable event is invalid.");
-        _current = Freeze(ev.State);
-    }
-
-    bool ValidIdentity() => _tenantId != Uuid.Empty && Id != Uuid.Empty;
-
-    static TenantIdentityProviderConfigurationContent? NormalizeConfiguration(
-        TenantIdentityProviderConfigurationContent? configuration)
-    {
-        if (configuration is null || !Bounded(configuration.Issuer, 1, 500) ||
-            !Uri.TryCreate(configuration.Issuer.Trim(), UriKind.Absolute, out var issuer) ||
-            issuer.Scheme != Uri.UriSchemeHttps || string.IsNullOrWhiteSpace(issuer.Host) ||
-            !string.IsNullOrEmpty(issuer.UserInfo) || !string.IsNullOrEmpty(issuer.Query) ||
-            !string.IsNullOrEmpty(issuer.Fragment) || !Bounded(configuration.ClientId, 1, 300) ||
-            !ValidCredentialReference(configuration.EncryptedCredentialReference) ||
-            configuration.AllowedAudiences is null || configuration.AllowedAudiences.Count is < 1 or > 16 ||
-            configuration.AllowedAudiences.Any(item => !Bounded(item, 1, 500)) ||
-            configuration.AllowedAudiences.Select(item => item.Trim()).Distinct(StringComparer.Ordinal).Count() !=
-                configuration.AllowedAudiences.Count ||
-            !configuration.AllowedAudiences.Any(item => item.Trim() == configuration.ClientId.Trim()))
+        if (!Bounded(issuer, 1, 500) || !Uri.TryCreate(issuer!.Trim(), UriKind.Absolute, out var uri) ||
+            uri.Scheme != Uri.UriSchemeHttps || string.IsNullOrWhiteSpace(uri.Host) ||
+            !string.IsNullOrEmpty(uri.UserInfo) || !string.IsNullOrEmpty(uri.Query) ||
+            !string.IsNullOrEmpty(uri.Fragment) || !Bounded(clientId, 1, 300) ||
+            !ValidCredentialReference(credentialReference) ||
+            audiences is null || audiences.Count is < 1 or > 16 || audiences.Any(item => !Bounded(item, 1, 500)) ||
+            audiences.Select(item => item.Trim()).Distinct(StringComparer.Ordinal).Count() != audiences.Count ||
+            !audiences.Any(item => item.Trim() == clientId!.Trim()))
             return null;
-        return new TenantIdentityProviderConfigurationContent(configuration.Issuer.Trim(),
-            configuration.ClientId.Trim(), configuration.EncryptedCredentialReference.Trim(),
-            Freeze(configuration.AllowedAudiences.Select(item => item.Trim())
-                .OrderBy(item => item, StringComparer.Ordinal).ToArray()));
+        return new TenantIdentityProviderConfiguration(issuer.Trim(), clientId!.Trim(),
+            Freeze(audiences.Select(item => item.Trim()).OrderBy(item => item, StringComparer.Ordinal).ToArray()),
+            credentialReference!.Trim());
     }
 
-    static TenantIdentityProviderTestResultContent? NormalizeTestResult(
+    /// <summary>True for a secret-store pointer of an accepted scheme.</summary>
+    public static bool ValidCredentialReference(string? value) => Bounded(value, 1, 1000) &&
+        Uri.TryCreate(value!.Trim(), UriKind.Absolute, out var reference) &&
+        CredentialSchemes.Contains(reference.Scheme) && !string.IsNullOrWhiteSpace(reference.Host) &&
+        string.IsNullOrEmpty(reference.Query) && string.IsNullOrEmpty(reference.Fragment) &&
+        string.IsNullOrEmpty(reference.UserInfo);
+
+    /// <summary>Validates and normalizes a test result; null when it is not a safe, known result.</summary>
+    public static TenantIdentityProviderTestResultContent? NormalizeTestResult(
         TenantIdentityProviderTestResultContent? result)
     {
         if (result is null || !Token(result.TestKey, 100))
@@ -356,213 +155,226 @@ public sealed class TenantIdentityProvider : Aggregate
             : null;
     }
 
-    static bool ValidState(TenantIdentityProviderView state, Uuid tenantId, Uuid providerId)
+    /// <summary>Checks a configuration against hydrated state without raising anything.</summary>
+    public CommandFailure? PrepareConfigure(long expectedRevision, Uuid actorMemberId, string actorDisplay,
+        DateTimeOffset configuredAt)
     {
-        if (state.TenantId != tenantId || state.ProviderConnectionId != providerId || state.Revision <= 0 ||
-            state.CredentialRevision <= 0 || NormalizeConfiguration(new TenantIdentityProviderConfigurationContent(
-                state.Issuer, state.ClientId, "vault://internal/validation-only", state.AllowedAudiences)) is null ||
-            state.TestHistory is null || state.TestHistory.Count > MaximumTests ||
-            state.TestHistory.Any(item => !ValidTestView(item, state)) ||
-            state.TestHistory.Select(item => item.TestKey).Distinct(StringComparer.Ordinal).Count() != state.TestHistory.Count ||
-            state.Status is not ("pending_test" or "enabled" or "test_failed" or "disabled") ||
-            state.Status == "enabled" && !HasCurrentTestOutcome(state, "passed") ||
-            state.Status == "test_failed" && !HasCurrentTestOutcome(state, "failed") ||
-            state.Status == "pending_test" && state.TestHistory.Count > 0 &&
-                state.TestHistory[^1] is { } latest &&
-                latest.CredentialRevision == state.CredentialRevision ||
-            (state.Status == "disabled") != (state.DisabledRationale is not null) ||
-            state.DisabledRationale is not null && !Bounded(state.DisabledRationale, 1, MaximumTextLength) ||
-            state.LastRotationReference is not null && !Token(state.LastRotationReference, 200) ||
-            state.PendingTest is not null && !ValidTestRequest(state.PendingTest, state, state.UpdatedAt) ||
-            state.PendingTest is not null && state.Status == "disabled" ||
-            state.PendingTest is not null && state.TestHistory.Any(test => test.TestKey == state.PendingTest.TestKey) ||
-            !ValidActor(state.ConfiguredByMemberId, state.ConfiguredByDisplay, state.ConfiguredAt) ||
-            !ValidActor(state.UpdatedByActor, state.ActorMemberId, state.ActorDisplay, state.UpdatedAt) ||
-            state.ContentSha256 != StateDigest(state with { ContentSha256 = string.Empty }))
-            return false;
-        return true;
+        if (_configured)
+            return CommandFailure.StateConflict("A tenant identity-provider connection can be configured only once.");
+        if (_tenantId == Uuid.Empty || Id == Uuid.Empty || !ValidActor(actorMemberId, actorDisplay, configuredAt))
+            return Invalid("A tenant identity provider requires a tenant, a connection and an attributable actor.");
+        return expectedRevision != Revision ? StaleRevision() : null;
     }
 
-    static bool ValidTestView(TenantIdentityProviderTestView test, TenantIdentityProviderView state) =>
-        NormalizeTestResult(new TenantIdentityProviderTestResultContent(test.TestKey, test.Outcome,
-            test.FailureCode, test.ActionableMessage)) is not null &&
-        test.CredentialRevision > 0 && test.CredentialRevision <= state.CredentialRevision &&
-        ValidActor(test.TestedByActor, test.TestedByMemberId, test.TestedByDisplay, test.TestedAt) &&
-        test.TestedAt >= state.ConfiguredAt &&
-        ((test.TestedByActor is null && test.TestRequestEventId is null) ||
-         test.TestedByActor is not null && test.TestRequestEventId is { } requestId &&
-         requestId != Uuid.Empty);
-
-    static bool ValidTestRequest(TenantIdentityProviderTestRequestView request,
-        TenantIdentityProviderView state, DateTimeOffset occurredAt) =>
-        Token(request.TestKey, 100) && request.CredentialRevision == state.CredentialRevision &&
-        ValidActor(request.RequestedByMemberId, request.RequestedByDisplay, request.RequestedAt) &&
-        request.RequestedAt >= state.ConfiguredAt && request.RequestedAt <= occurredAt;
-
-    static bool HasCurrentTestOutcome(TenantIdentityProviderView state, string outcome) =>
-        state.TestHistory.Count > 0 && state.TestHistory[^1] is { } latest &&
-        latest.CredentialRevision == state.CredentialRevision &&
-        latest.Outcome == outcome;
-
-    static bool SameProviderDefinition(TenantIdentityProviderView prior, TenantIdentityProviderView next) =>
-        prior.TenantId == next.TenantId && prior.ProviderConnectionId == next.ProviderConnectionId &&
-        prior.Issuer == next.Issuer && prior.ClientId == next.ClientId &&
-        prior.AllowedAudiences.SequenceEqual(next.AllowedAudiences) &&
-        prior.ConfiguredByMemberId == next.ConfiguredByMemberId &&
-        prior.ConfiguredByDisplay == next.ConfiguredByDisplay && prior.ConfiguredAt == next.ConfiguredAt;
-
-    static bool HistoryPrefix(IReadOnlyList<TenantIdentityProviderTestView> prior,
-        IReadOnlyList<TenantIdentityProviderTestView> next) => prior.Count <= next.Count &&
-        prior.Zip(next).All(pair => Digest(pair.First) == Digest(pair.Second));
-
-    static TenantIdentityProviderView NewState(TenantIdentityProviderConfigurationContent configuration,
-        Uuid tenantId, Uuid providerId, Uuid actor, string display, DateTimeOffset at)
+    /// <summary>Accepts the configuration as the native fact of <paramref name="operation" />.</summary>
+    public CommandFailure? Configure(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, TenantIdentityProviderConfiguration configuration, ImmutableContentRef credential,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset configuredAt)
     {
-        var state = new TenantIdentityProviderView(tenantId, providerId, "pending_test", 1, 1,
-            configuration.Issuer, configuration.ClientId, configuration.AllowedAudiences, [], null,
-            null, actor, display, at, actor, display, at, string.Empty, null,
-            ActorReference.ForMember(actor, display));
-        return state with { ContentSha256 = StateDigest(state) };
+        ArgumentNullException.ThrowIfNull(operation);
+        if (PrepareConfigure(expectedRevision, actorMemberId, actorDisplay, configuredAt) is { } failure)
+            return failure;
+        var fact = new TenantIdentityProviderConfigured(_tenantId, Id, configuration.Issuer, configuration.ClientId,
+            configuration.AllowedAudiences, credential, actorMemberId, actorDisplay.Trim(), configuredAt, operation,
+            firstResponse, null);
+        if (!Fits(fact))
+            return Invalid("The identity-provider configuration exceeds the bounded event payload.");
+        RaiseEvent(fact);
+        return null;
     }
 
-    static TenantIdentityProviderView State(TenantIdentityProviderView current, string status,
-        long credentialRevision, IReadOnlyList<TenantIdentityProviderTestView> testHistory,
-        string? rotationReference, string? disabledRationale, Uuid? actor, string display, DateTimeOffset at,
-        TenantIdentityProviderTestRequestView? pendingTest = null, ActorReference? actorReference = null)
+    /// <summary>Checks a test request against hydrated state without raising anything.</summary>
+    public CommandFailure? PrepareRequestTest(long expectedRevision, string testKey, Uuid actorMemberId,
+        string actorDisplay, DateTimeOffset requestedAt)
     {
-        actorReference ??= actor is { } memberId && memberId != Uuid.Empty
-            ? ActorReference.ForMember(memberId, display)
+        if (!_configured)
+            return CommandFailure.MissingRecord("The tenant identity-provider connection was not found.");
+        if (_pending is not null)
+            return CommandFailure.StateConflict("A different identity-provider test is already pending.");
+        if (expectedRevision != Revision)
+            return StaleRevision();
+        return _status == "disabled" || !Token(testKey, 100) || testKey != testKey.Trim() ||
+               !ValidActor(actorMemberId, actorDisplay, requestedAt) || requestedAt < _updatedAt
+            ? Invalid("A provider test request requires an active connection, a test key and attributable timing.")
             : null;
-        var state = current with
-        {
-            Status = status,
-            Revision = current.Revision + 1,
-            CredentialRevision = credentialRevision,
-            TestHistory = Freeze(testHistory.ToArray()),
-            LastRotationReference = rotationReference,
-            DisabledRationale = disabledRationale,
-            ActorMemberId = MemberId(actorReference),
-            ActorDisplay = actorReference?.Display ?? display,
-            UpdatedAt = at,
-            PendingTest = pendingTest,
-            UpdatedByActor = actorReference,
-            ContentSha256 = string.Empty,
-        };
-        return state with { ContentSha256 = StateDigest(state) };
     }
 
-    bool SameConfiguration(TenantIdentityProviderView state,
-        TenantIdentityProviderConfigurationContent? configuration, Uuid actor, string display, DateTimeOffset at) =>
-        NormalizeConfiguration(configuration) is { } normalized &&
-        normalized.EncryptedCredentialReference == _encryptedCredentialReference &&
-        SamePublicConfiguration(state, normalized, actor, display, at);
+    /// <summary>Accepts the test request as the native fact of <paramref name="operation" />.</summary>
+    public CommandFailure? RequestTest(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, string testKey, Uuid actorMemberId, string actorDisplay, DateTimeOffset requestedAt)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (PrepareRequestTest(expectedRevision, testKey, actorMemberId, actorDisplay, requestedAt) is { } failure)
+            return failure;
+        RaiseEvent(new TenantIdentityProviderTestRequested(_tenantId, Id, testKey, _credentialRevision,
+            actorMemberId, actorDisplay.Trim(), requestedAt, operation, firstResponse, null));
+        return null;
+    }
 
-    static bool SamePublicConfiguration(TenantIdentityProviderView state,
-        TenantIdentityProviderConfigurationContent? configuration, Uuid actor, string display, DateTimeOffset at) =>
-        NormalizeConfiguration(configuration) is { } normalized && state.Revision == 1 &&
-        state.Issuer == normalized.Issuer && state.ClientId == normalized.ClientId &&
-        state.AllowedAudiences.SequenceEqual(normalized.AllowedAudiences) &&
-        state.ConfiguredByMemberId == actor && state.ConfiguredByDisplay == Clean(display) && state.ConfiguredAt == at;
+    /// <summary>
+    ///     Checks a worker's result against hydrated state without raising anything. The result must answer the exact
+    ///     pending request of the current credential epoch at the revision the request was accepted at.
+    /// </summary>
+    public CommandFailure? PrepareRecordTest(long expectedRevision, Uuid testRequestEventId,
+        TenantIdentityProviderTestResultContent? result, ActorReference testedBy, DateTimeOffset testedAt)
+    {
+        if (!_configured)
+            return CommandFailure.MissingRecord("The tenant identity-provider connection was not found.");
+        var normalized = NormalizeTestResult(result);
+        if (_status == "disabled" || normalized is null || testRequestEventId == Uuid.Empty ||
+            expectedRevision != Revision || _pending is not { } pending || pending.Fact.TestKey != normalized.TestKey ||
+            pending.Fact.Metadata?.EventId != testRequestEventId || pending.Fact.CredentialRevision != _credentialRevision ||
+            testedAt < pending.Fact.RequestedAt || !ValidTester(testedBy, testedAt) || testedAt < _updatedAt)
+            return CommandFailure.StateConflict(
+                "A provider test requires an active connection and a safe, attributable result of the exact pending request.");
+        return null;
+    }
 
-    static bool SameTest(TenantIdentityProviderTestView prior, TenantIdentityProviderTestResultContent? result,
-        long credentialRevision, Uuid testRequestEventId, ActorReference actor, DateTimeOffset at) =>
-        result is not null &&
-        prior.TestKey == result.TestKey && prior.CredentialRevision == credentialRevision &&
-        prior.Outcome == result.Outcome && prior.FailureCode == result.FailureCode &&
-        prior.ActionableMessage == result.ActionableMessage &&
-        prior.TestedByMemberId == MemberId(actor) && prior.TestedByActor == actor &&
-        prior.TestRequestEventId == testRequestEventId && prior.TestedAt == at;
+    /// <summary>Accepts the result as the native fact of <paramref name="operation" />.</summary>
+    public CommandFailure? RecordTest(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, Uuid testRequestEventId, TenantIdentityProviderTestResultContent result,
+        ActorReference testedBy, DateTimeOffset testedAt)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (PrepareRecordTest(expectedRevision, testRequestEventId, result, testedBy, testedAt) is { } failure)
+            return failure;
+        RaiseEvent(new TenantIdentityProviderTested(_tenantId, Id, testRequestEventId, _credentialRevision, testedBy,
+            NormalizeTestResult(result)!, testedAt, operation, firstResponse, null));
+        return null;
+    }
 
-    static bool ValidCredentialReference(string? value) => Bounded(value, 1, 1000) &&
-        Uri.TryCreate(value!.Trim(), UriKind.Absolute, out var reference) &&
-        CredentialSchemes.Contains(reference.Scheme) && !string.IsNullOrWhiteSpace(reference.Host) &&
-        string.IsNullOrEmpty(reference.Query) && string.IsNullOrEmpty(reference.Fragment) &&
-        string.IsNullOrEmpty(reference.UserInfo);
+    /// <summary>Checks a credential rotation against hydrated state without raising anything.</summary>
+    public CommandFailure? PrepareRotate(long expectedRevision, ImmutableContentRef credential, string rotationReference,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset rotatedAt)
+    {
+        if (!_configured)
+            return CommandFailure.MissingRecord("The tenant identity-provider connection was not found.");
+        if (expectedRevision != Revision)
+            return StaleRevision();
+        rotationReference = Clean(rotationReference);
+        if (_status == "disabled" || credential.Sha256 == _credential?.Sha256 || !Token(rotationReference, 200) ||
+            rotationReference == _lastRotationReference || !ValidActor(actorMemberId, actorDisplay, rotatedAt) ||
+            rotatedAt < _updatedAt)
+            return CommandFailure.StateConflict(
+                "Credential rotation requires a new secret-store reference, a new rotation reference and an enabled connection lifecycle.");
+        return null;
+    }
+
+    /// <summary>Accepts the rotation as the native fact of <paramref name="operation" />.</summary>
+    public CommandFailure? RotateCredentials(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, ImmutableContentRef credential, string rotationReference, Uuid actorMemberId,
+        string actorDisplay, DateTimeOffset rotatedAt)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (PrepareRotate(expectedRevision, credential, rotationReference, actorMemberId, actorDisplay, rotatedAt)
+            is { } failure)
+            return failure;
+        RaiseEvent(new TenantIdentityProviderCredentialsRotated(_tenantId, Id, credential, Clean(rotationReference),
+            _credentialRevision + 1, actorMemberId, actorDisplay.Trim(), rotatedAt, operation, firstResponse, null));
+        return null;
+    }
+
+    /// <summary>Checks a disable against hydrated state without raising anything.</summary>
+    public CommandFailure? PrepareDisable(long expectedRevision, string rationale, Uuid actorMemberId,
+        string actorDisplay, DateTimeOffset disabledAt)
+    {
+        if (!_configured)
+            return CommandFailure.MissingRecord("The tenant identity-provider connection was not found.");
+        if (_status == "disabled")
+            return CommandFailure.StateConflict("A disabled identity-provider connection cannot be changed.");
+        if (expectedRevision != Revision)
+            return StaleRevision();
+        return !Bounded(Clean(rationale), 1, MaximumTextLength) || !ValidActor(actorMemberId, actorDisplay, disabledAt) ||
+               disabledAt < _updatedAt
+            ? Invalid("Disabling an identity-provider connection requires an attributable rationale.")
+            : null;
+    }
+
+    /// <summary>Accepts the disable as the native fact of <paramref name="operation" />.</summary>
+    public CommandFailure? Disable(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, string rationale, Uuid actorMemberId, string actorDisplay, DateTimeOffset disabledAt)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (PrepareDisable(expectedRevision, rationale, actorMemberId, actorDisplay, disabledAt) is { } failure)
+            return failure;
+        RaiseEvent(new TenantIdentityProviderDisabled(_tenantId, Id, Clean(rationale), actorMemberId,
+            actorDisplay.Trim(), disabledAt, operation, firstResponse, null));
+        return null;
+    }
+
+    void Apply(TenantIdentityProviderConfigured ev)
+    {
+        Acceptance.Observe(ev);
+        if (_configured || ev.TenantId != _tenantId || ev.ProviderConnectionId != Id ||
+            NormalizeConfiguration(ev.Issuer, ev.ClientId, "vault://internal/validation-only", ev.AllowedAudiences)
+                is not { } configuration || ev.Operation.Owner != Stream ||
+            !ValidActor(ev.ActorMemberId, ev.ActorDisplay, ev.ConfiguredAt))
+            throw new InvalidOperationException("The tenant identity-provider configuration event is invalid.");
+        _configured = true;
+        _status = "pending_test";
+        _credentialRevision = 1;
+        _issuer = configuration.Issuer;
+        _clientId = configuration.ClientId;
+        _audiences = configuration.AllowedAudiences;
+        _credential = ev.CredentialReference;
+        _updatedAt = ev.ConfiguredAt;
+    }
+
+    void Apply(TenantIdentityProviderTestRequested ev)
+    {
+        Acceptance.Observe(ev);
+        if (!_configured || _status == "disabled" || _pending is not null || ev.TenantId != _tenantId ||
+            ev.ProviderConnectionId != Id || ev.CredentialRevision != _credentialRevision ||
+            !Token(ev.TestKey, 100) || !ValidActor(ev.RequestedByMemberId, ev.RequestedByDisplay, ev.RequestedAt) ||
+            ev.RequestedAt < _updatedAt)
+            throw new InvalidOperationException("The tenant identity-provider test-request event is invalid.");
+        _pending = new PendingTest(ev);
+        _updatedAt = ev.RequestedAt;
+    }
+
+    void Apply(TenantIdentityProviderTested ev)
+    {
+        Acceptance.Observe(ev);
+        if (!_configured || _status == "disabled" || _pending is not { } pending || ev.TenantId != _tenantId ||
+            ev.ProviderConnectionId != Id || ev.CredentialRevision != _credentialRevision ||
+            NormalizeTestResult(ev.Result) is not { } result || result.TestKey != pending.Fact.TestKey ||
+            !ValidTester(ev.TestedByActor, ev.TestedAt) || ev.TestedAt < pending.Fact.RequestedAt ||
+            ev.TestedAt < _updatedAt)
+            throw new InvalidOperationException("The tenant identity-provider test event is invalid.");
+        _status = result.Outcome == "passed" ? "enabled" : "test_failed";
+        _pending = null;
+        _updatedAt = ev.TestedAt;
+    }
+
+    void Apply(TenantIdentityProviderCredentialsRotated ev)
+    {
+        Acceptance.Observe(ev);
+        if (!_configured || _status == "disabled" || ev.TenantId != _tenantId || ev.ProviderConnectionId != Id ||
+            ev.CredentialRevision != _credentialRevision + 1 || !Token(ev.RotationReference, 200) ||
+            !ValidActor(ev.ActorMemberId, ev.ActorDisplay, ev.RotatedAt) || ev.RotatedAt < _updatedAt)
+            throw new InvalidOperationException("The tenant identity-provider credential-rotation event is invalid.");
+        _status = "pending_test";
+        _credentialRevision = ev.CredentialRevision;
+        _credential = ev.CredentialReference;
+        _lastRotationReference = ev.RotationReference;
+        _pending = null;
+        _updatedAt = ev.RotatedAt;
+    }
+
+    void Apply(TenantIdentityProviderDisabled ev)
+    {
+        Acceptance.Observe(ev);
+        if (!_configured || _status == "disabled" || ev.TenantId != _tenantId || ev.ProviderConnectionId != Id ||
+            !Bounded(ev.Rationale, 1, MaximumTextLength) || !ValidActor(ev.ActorMemberId, ev.ActorDisplay, ev.DisabledAt) ||
+            ev.DisabledAt < _updatedAt)
+            throw new InvalidOperationException("The tenant identity-provider disable event is invalid.");
+        _status = "disabled";
+        _disabledRationale = ev.Rationale;
+        _pending = null;
+        _updatedAt = ev.DisabledAt;
+    }
 
     static bool Fits(DomainEvent value) => DomainEventPayload.Size(value) <= MaximumEventBytes;
-    static string StateDigest(TenantIdentityProviderView state)
-    {
-        var legacyTestHistory = state.TestHistory.Select(test => new
-        {
-            test.TestKey,
-            test.CredentialRevision,
-            test.Outcome,
-            test.FailureCode,
-            test.ActionableMessage,
-            test.TestedByMemberId,
-            test.TestedByDisplay,
-            test.TestedAt,
-        }).ToArray();
-        if (state.UpdatedByActor is null && state.TestHistory.All(test =>
-                test.TestedByActor is null && test.TestRequestEventId is null))
-        {
-            if (state.PendingTest is null)
-                return Digest(new
-                {
-                    state.TenantId,
-                    state.ProviderConnectionId,
-                    state.Status,
-                    state.Revision,
-                    state.CredentialRevision,
-                    state.Issuer,
-                    state.ClientId,
-                    state.AllowedAudiences,
-                    TestHistory = legacyTestHistory,
-                    state.LastRotationReference,
-                    state.DisabledRationale,
-                    state.ConfiguredByMemberId,
-                    state.ConfiguredByDisplay,
-                    state.ConfiguredAt,
-                    state.ActorMemberId,
-                    state.ActorDisplay,
-                    state.UpdatedAt,
-                });
-            return Digest(new
-            {
-                state.TenantId,
-                state.ProviderConnectionId,
-                state.Status,
-                state.Revision,
-                state.CredentialRevision,
-                state.Issuer,
-                state.ClientId,
-                state.AllowedAudiences,
-                TestHistory = legacyTestHistory,
-                state.LastRotationReference,
-                state.DisabledRationale,
-                state.ConfiguredByMemberId,
-                state.ConfiguredByDisplay,
-                state.ConfiguredAt,
-                state.ActorMemberId,
-                state.ActorDisplay,
-                state.UpdatedAt,
-                state.PendingTest,
-            });
-        }
-        return Digest(new
-        {
-            state.TenantId,
-            state.ProviderConnectionId,
-            state.Status,
-            state.Revision,
-            state.CredentialRevision,
-            state.Issuer,
-            state.ClientId,
-            state.AllowedAudiences,
-            state.TestHistory,
-            state.LastRotationReference,
-            state.DisabledRationale,
-            state.ConfiguredByMemberId,
-            state.ConfiguredByDisplay,
-            state.ConfiguredAt,
-            state.ActorMemberId,
-            state.ActorDisplay,
-            state.UpdatedAt,
-            state.PendingTest,
-            state.UpdatedByActor,
-        });
-    }
-    static string Digest<T>(T value) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(value))).ToLowerInvariant();
     static string Clean(string? value) => value?.Trim() ?? string.Empty;
     static bool Bounded(string? value, int min, int max) => value is not null && value.Trim().Length >= min &&
         value.Trim().Length <= max && !value.Any(char.IsControl);
@@ -570,10 +382,6 @@ public sealed class TenantIdentityProvider : Aggregate
         char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '.');
     static bool ValidActor(Uuid id, string? display, DateTimeOffset at) => id != Uuid.Empty &&
         Bounded(display, 1, 200) && at != default;
-    static bool ValidActor(ActorReference? actor, Uuid? memberId, string? display, DateTimeOffset at) =>
-        actor is null
-            ? memberId is { } id && ValidActor(id, display, at)
-            : ValidTester(actor, at) && actor.Display == display && MemberId(actor) == memberId;
     static bool ValidTester(ActorReference? actor, DateTimeOffset at)
     {
         if (actor is null || at == default || !Bounded(actor.Display, 1, 200))
@@ -583,12 +391,10 @@ public sealed class TenantIdentityProvider : Aggregate
         return actor.Kind == "system_process" && actor.Id.Length is > 8 and <= 200 &&
             actor.Id.StartsWith("reactor:", StringComparison.Ordinal);
     }
-    static Uuid? MemberId(ActorReference? actor) => actor is { Kind: "member" } member &&
-        Uuid.TryParse(member.Id, out var id) && id != Uuid.Empty ? id : null;
-    static TenantIdentityProviderView Freeze(TenantIdentityProviderView state) => state with
-    { AllowedAudiences = Freeze(state.AllowedAudiences.ToArray()), TestHistory = Freeze(state.TestHistory.ToArray()) };
+
     CommandFailure StaleRevision() => CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("tenant identity provider", Revision));
     static CommandFailure Invalid(string message) => CommandFailure.InvalidContent(message);
     static ReadOnlyCollection<T> Freeze<T>(T[] values) => Array.AsReadOnly(values);
-    static ReadOnlyCollection<T> Append<T>(IReadOnlyList<T> values, T item) => Freeze(values.Append(item).ToArray());
+
+    sealed record PendingTest(TenantIdentityProviderTestRequested Fact);
 }

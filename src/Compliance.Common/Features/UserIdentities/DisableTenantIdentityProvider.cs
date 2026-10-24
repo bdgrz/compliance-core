@@ -3,6 +3,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
-/// <summary>Records the disable tenant identity provider intent required by the owning feature workflow.</summary>
+/// <summary>Disables one connection without changing any platform-user identity or membership history.</summary>
 [Discriminator("bdgrz.user-identities.disable-tenant-identity-provider", 1)]
-public sealed record DisableTenantIdentityProvider(Uuid TenantId, Uuid ProviderConnectionId, long ExpectedRevision, string Rationale) : IRequest, IClientRbacMutationRequest, ICallable;
+public sealed record DisableTenantIdentityProvider(Uuid CommandId, Uuid TenantId, Uuid ProviderConnectionId,
+    long ExpectedRevision, string Rationale)
+    : IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

@@ -1,40 +1,58 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
-public sealed class CompleteEmailChallengeHandler(IAggregateExecutor executor, TimeProvider clock)
-    : IRequestHandler<CompleteEmailChallenge>
+/// <summary>
+///     Verifies the address with the token of the challenge. The challenge identity is the caller's and the logical
+///     identity of the verification: an exact retry replays the original acceptance after the token is checked again,
+///     and the bearer token never enters the fact or the intent digest.
+/// </summary>
+public sealed class CompleteEmailChallengeHandler(
+    NativeOperationExecutor operations,
+    IAggregateReader reader,
+    IImmutableContentStore content,
+    TimeProvider clock) : IRequestHandler<CompleteEmailChallenge>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<CompleteEmailChallenge> context,
-        CancellationToken ct)
-    {
-        if (!EmailAddresses.TryNormalize(context.Request.EmailAddress, out var normalized))
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Enter a valid email address."));
+    const string CommandKind = nameof(CompleteEmailChallenge);
 
-        // A recipient can use the token before the delivery reactor commits its
-        // outcome on this stream. Allow roughly one second for that competing append,
-        // reloading and re-evaluating this idempotent operation on each conflict.
-        for (var attempt = 1; ; attempt++)
+    public async ValueTask<Result> HandleAsync(IRequestContext<CompleteEmailChallenge> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        if (!EmailAddresses.TryNormalize(request.EmailAddress, out var normalized))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "Enter a valid email address."));
+        if (request.ChallengeId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A challenge id is required."));
+        if (EmailAddressOperations.ActorOf(context.Actor) is not { } actor)
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden, "The caller identity is not recognized."));
+
+        var now = clock.GetUtcNow();
+        var current = await reader.HydrateAsync(Hydrate(normalized, request), ct).ConfigureAwait(false);
+        var provenance = EmailAddressOperations.Provenance(request.ChallengeId, CommandKind, actor, current.Stream, -1,
+            AuthoredIntentDigest.Compute(new CompleteEmailChallengeAuthoredIntent(request.ChallengeId, request.UserId,
+                normalized)), now);
+        if (current.Acceptance.Decide(AcceptedOperationBinding.Of(provenance)) == NativeAcceptanceDecision.Replayed)
         {
-            try
-            {
-                return await executor.ExecuteAsync(
-                    new EmailAddress(normalized),
-                    address => AggregateOutcome.CommitOnSuccess(
-                        address.CurrentChallengeId != context.Request.ChallengeId
-                            ? Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                                "No verification challenge is available."))
-                            : address.CompleteChallenge(context.Request.UserId, context.Request.Token,
-                                clock.GetUtcNow())),
-                    context, ct).ConfigureAwait(false);
-            }
-            catch (EventStreamConcurrencyException) when (attempt < 9)
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(
-                    Math.Min(10 << (attempt - 1), 250)), ct)
-                    .ConfigureAwait(false);
-            }
+            // The original acceptance stands, but a retry still proves possession of the token.
+            var proof = current.PrepareReplayCompleteChallenge(request.UserId, request.ChallengeId, request.Token);
+            if (!proof.IsSuccess)
+                return proof;
         }
+
+        var response = await EmailAddressOperations.UnitResponseAsync(content, ct).ConfigureAwait(false);
+        return EmailAddressOperations.Of(await operations.ExecuteAsync(new NativeOperation<EmailAddress>(
+            AcceptedOperationBinding.Of(provenance), () => Hydrate(normalized, request), address => address.Acceptance,
+            address => address.PrepareCompleteChallenge(request.UserId, request.ChallengeId, request.Token, now)
+                is { IsSuccess: false } failed
+                ? Result<FirstResponseDescriptor>.Failure(failed.Error!)
+                : Result<FirstResponseDescriptor>.Success(response),
+            (EmailAddress address, ImmutableContentRef frozen) => address.CompleteChallenge(provenance, frozen,
+                request.UserId, request.ChallengeId, request.Token, now)), context, ct).ConfigureAwait(false));
     }
+
+    static EmailAddress Hydrate(string normalized, CompleteEmailChallenge request) =>
+        new(normalized, request.ChallengeId, CommandKind);
 }

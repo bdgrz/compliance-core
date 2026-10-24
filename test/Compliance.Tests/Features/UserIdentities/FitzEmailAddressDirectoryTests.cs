@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 
@@ -16,10 +17,10 @@ public sealed class FitzEmailAddressDirectoryTests
         var identity = new CheckpointIdentity("EmailAddressDirectory", EventStreamPattern.ForPattern("bdgrz"));
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new EmailAddressReserved(owner, "first@example.com"));
-            await directory.ApplyAsync(new EmailAddressReserved(owner, "second@example.com"));
-            await directory.ApplyAsync(new EmailAddressReserved(other, "other@example.com"));
-            await directory.ApplyAsync(new EmailAddressVerified(owner, "first@example.com", Uuid.CreateVersion4()));
+            await directory.ApplyAsync(EmailAddressFacts.ReservedFact(owner, "first@example.com"));
+            await directory.ApplyAsync(EmailAddressFacts.ReservedFact(owner, "second@example.com"));
+            await directory.ApplyAsync(EmailAddressFacts.ReservedFact(other, "other@example.com"));
+            await directory.ApplyAsync(EmailAddressFacts.VerifiedFact(owner, "first@example.com", Uuid.CreateVersion4()));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 

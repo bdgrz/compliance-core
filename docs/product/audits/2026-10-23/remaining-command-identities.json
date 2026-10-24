@@ -1,6 +1,6 @@
 {
   "sourceHead": "b7a2bd02cc90c6734c94391399a55c0da1621521",
-  "count": 201,
+  "count": 203,
   "contracts": [
     {
       "command": "AcceptRisk",
@@ -15046,6 +15046,136 @@
         "owner": "ControlDraft",
         "counter": "logical ResourceRevision of this owner",
         "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RecordEmailChallengeDeliverySent",
+      "handler": "RecordEmailChallengeDeliverySentHandler",
+      "disposition": "selected_signature_new_internal_callback",
+      "owner": "EmailChallengeDeliveryLedger",
+      "sourceContract": "src/Compliance.Common/Features/UserIdentities/RecordEmailChallengeDeliverySent.cs",
+      "sourceHandlers": [
+        {
+          "name": "RecordEmailChallengeDeliverySentHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/RecordEmailChallengeDeliverySentHandler.cs",
+          "registered": true
+        }
+      ],
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AttemptId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SentAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "logicalIdentity": "CommandId",
+      "identityRule": "UUIDv5(source eventId, length-prefixed effectKind + challenge + attempt ordinal); never the attempt id. An outcome of an attempt that a newer attempt replaced is ignored; the same outcome replays; a different outcome for the latest attempt conflicts unless it settles an ambiguous result.",
+      "http": [],
+      "mcp": false,
+      "entry": "trusted_process_principal_only",
+      "changes": [
+        "New typed outcome: the relay accepted one attempt."
+      ],
+      "guardContract": "System principal only. The delivery ledger is technical process state keyed by challenge; no fact is appended to the email address stream and no token or recipient is stored.",
+      "existingTests": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs"
+      ],
+      "eventPolicy": "No domain fact: technical delivery outcomes live in process state (ACCESS-13, CHOREO-07).",
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "EmailChallengeDeliveryLedger",
+        "counter": "Attempt ordinal; stale attempts are ignored."
+      }
+    },
+    {
+      "command": "RecordEmailChallengeDeliveryFailed",
+      "handler": "RecordEmailChallengeDeliveryFailedHandler",
+      "disposition": "selected_signature_new_internal_callback",
+      "owner": "EmailChallengeDeliveryLedger",
+      "sourceContract": "src/Compliance.Common/Features/UserIdentities/RecordEmailChallengeDeliveryFailed.cs",
+      "sourceHandlers": [
+        {
+          "name": "RecordEmailChallengeDeliveryFailedHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/RecordEmailChallengeDeliveryFailedHandler.cs",
+          "registered": true
+        }
+      ],
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AttemptId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Certainty",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "FailureCode",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "FailedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "logicalIdentity": "CommandId",
+      "identityRule": "UUIDv5(source eventId, length-prefixed effectKind + challenge + attempt ordinal); never the attempt id. An outcome of an attempt that a newer attempt replaced is ignored; the same outcome replays; a different outcome for the latest attempt conflicts unless it settles an ambiguous result.",
+      "http": [],
+      "mcp": false,
+      "entry": "trusted_process_principal_only",
+      "changes": [
+        "New typed outcome: one attempt failed, definitely (transient or permanent) or with an unknown result."
+      ],
+      "guardContract": "System principal only. The delivery ledger is technical process state keyed by challenge; no fact is appended to the email address stream and no token or recipient is stored.",
+      "existingTests": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs"
+      ],
+      "eventPolicy": "No domain fact: technical delivery outcomes live in process state (ACCESS-13, CHOREO-07).",
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "EmailChallengeDeliveryLedger",
+        "counter": "Attempt ordinal; stale attempts are ignored."
       }
     }
   ]

@@ -1,26 +1,38 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
-using Bdgrz.Compliance.Features.Versioning;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
 
 /// <summary>Disables one tenant identity-provider connection with personal administrator attribution.</summary>
-public sealed class DisableTenantIdentityProviderHandler(IAggregateExecutor executor,
-    TimeProvider clock) : IRequestHandler<DisableTenantIdentityProvider>
+public sealed class DisableTenantIdentityProviderHandler(NativeOperationExecutor operations,
+    IImmutableContentStore content, TimeProvider clock) : IRequestHandler<DisableTenantIdentityProvider>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<DisableTenantIdentityProvider> context,
+    const string CommandKind = nameof(DisableTenantIdentityProvider);
+
+    public async ValueTask<Result> HandleAsync(IRequestContext<DisableTenantIdentityProvider> context,
         CancellationToken ct)
     {
         var request = context.Request;
-        if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
-            !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
-            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Disabling a tenant identity provider requires a personal administrator actor.")));
+        if (!TenantIdentityProviderCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,
+                out var actorMemberId, out var actorDisplay))
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Disabling a tenant identity provider requires a personal administrator actor."));
+        if (request.CommandId == Uuid.Empty || request.TenantId == Uuid.Empty || request.ProviderConnectionId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A command id, tenant and provider connection are required."));
 
-        var actorMemberId = RbacIds.Member(request.TenantId, userId);
-        var actorDisplay = UserIdentityClaims.BdgrzDisplay(context.Actor, userId);
-        return executor.ExecuteAsync(new TenantIdentityProvider(request.TenantId,
-                request.ProviderConnectionId), provider =>
-            CommandFailureRequestAdapter.ToOutcome(provider.Disable(request.ExpectedRevision,
-                request.Rationale, actorMemberId, actorDisplay, clock.GetUtcNow())), context, ct);
+        var now = clock.GetUtcNow();
+        var rationale = request.Rationale?.Trim() ?? string.Empty;
+        var provenance = TenantIdentityProviderOperations.Provenance(request.TenantId, request.ProviderConnectionId,
+            request.CommandId, CommandKind, ActorReference.ForMember(actorMemberId, actorDisplay),
+            request.ExpectedRevision, AuthoredIntentDigest.Compute(request with { Rationale = rationale }), now);
+        return await TenantIdentityProviderOperations.AdmitAsync(operations, content, context, provenance,
+            request.TenantId, request.ProviderConnectionId,
+            (TenantIdentityProvider provider) => provider.PrepareDisable(request.ExpectedRevision, rationale, actorMemberId, actorDisplay, now),
+            (TenantIdentityProvider provider, ImmutableContentRef frozen) => provider.Disable(provenance, frozen, request.ExpectedRevision, rationale,
+                actorMemberId, actorDisplay, now), ct).ConfigureAwait(false);
     }
 }

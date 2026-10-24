@@ -1,6 +1,6 @@
 {
   "status": "selected target schemas; disposable histories allow direct replacement",
-  "eventCount": 287,
+  "eventCount": 295,
   "events": [
     {
       "event": "AccessDecisionsRecorded",
@@ -39323,6 +39323,494 @@
       "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
       "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
       "resolvedIntentSchema": "IdentityRecoveryIntent",
+      "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+    },
+    {
+      "event": "EmailAddressReserved",
+      "discriminator": "bdgrz.email-address.reserved",
+      "discriminatorVersion": 1,
+      "owner": "EmailAddress",
+      "existingContract": "src/Compliance.Common/Features/UserIdentities/EmailAddressReserved.cs",
+      "status": "selected target schema; implementation pending",
+      "reason": "native fact of a retained owner command",
+      "fields": [
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Operation",
+          "type": "OperationProvenance",
+          "required": true
+        },
+        {
+          "name": "FirstResponse",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "OperationResult",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "contentSchemas": [],
+      "changes": [],
+      "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+      "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+      "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+    },
+    {
+      "event": "EmailChallengeIssued",
+      "discriminator": "bdgrz.email-address.challenge-issued",
+      "discriminatorVersion": 1,
+      "owner": "EmailAddress",
+      "existingContract": "src/Compliance.Common/Features/UserIdentities/EmailChallengeIssued.cs",
+      "status": "selected target schema; implementation pending",
+      "reason": "native fact of a retained owner command",
+      "fields": [
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TokenHash",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "TokenKeyId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Operation",
+          "type": "OperationProvenance",
+          "required": true
+        },
+        {
+          "name": "FirstResponse",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "OperationResult",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "contentSchemas": [],
+      "changes": [],
+      "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+      "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+      "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+    },
+    {
+      "event": "EmailAddressVerified",
+      "discriminator": "bdgrz.email-address.verified",
+      "discriminatorVersion": 1,
+      "owner": "EmailAddress",
+      "existingContract": "src/Compliance.Common/Features/UserIdentities/EmailAddressVerified.cs",
+      "status": "selected target schema; implementation pending",
+      "reason": "native fact of a retained owner command",
+      "fields": [
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Operation",
+          "type": "OperationProvenance",
+          "required": true
+        },
+        {
+          "name": "FirstResponse",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "OperationResult",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "contentSchemas": [],
+      "changes": [],
+      "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+      "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+      "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+    },
+    {
+      "event": "TenantIdentityProviderConfigured",
+      "discriminator": "bdgrz.useridentities.tenant-identity-provider-configured",
+      "discriminatorVersion": 2,
+      "owner": "TenantIdentityProvider",
+      "existingContract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderConfigured.cs",
+      "status": "selected target schema; implementation pending",
+      "reason": "native fact of a retained owner command",
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Issuer",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ClientId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AllowedAudiences",
+          "type": "IReadOnlyList<string>",
+          "required": true
+        },
+        {
+          "name": "CredentialReference",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "ActorMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ActorDisplay",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ConfiguredAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Operation",
+          "type": "OperationProvenance",
+          "required": true
+        },
+        {
+          "name": "FirstResponse",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "OperationResult",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "contentSchemas": [],
+      "changes": [],
+      "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+      "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+      "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+    },
+    {
+      "event": "TenantIdentityProviderCredentialsRotated",
+      "discriminator": "bdgrz.useridentities.tenant-identity-provider-credentials-rotated",
+      "discriminatorVersion": 2,
+      "owner": "TenantIdentityProvider",
+      "existingContract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderCredentialsRotated.cs",
+      "status": "selected target schema; implementation pending",
+      "reason": "native fact of a retained owner command",
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CredentialReference",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "RotationReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "CredentialRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ActorMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ActorDisplay",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RotatedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Operation",
+          "type": "OperationProvenance",
+          "required": true
+        },
+        {
+          "name": "FirstResponse",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "OperationResult",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "contentSchemas": [],
+      "changes": [],
+      "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+      "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+      "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+    },
+    {
+      "event": "TenantIdentityProviderTestRequested",
+      "discriminator": "bdgrz.user-identities.tenant-identity-provider-test-requested",
+      "discriminatorVersion": 1,
+      "owner": "TenantIdentityProvider",
+      "existingContract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestRequested.cs",
+      "status": "selected target schema; implementation pending",
+      "reason": "native fact of a retained owner command",
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TestKey",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "CredentialRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "RequestedByMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RequestedByDisplay",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RequestedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Operation",
+          "type": "OperationProvenance",
+          "required": true
+        },
+        {
+          "name": "FirstResponse",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "OperationResult",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "contentSchemas": [],
+      "changes": [],
+      "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+      "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+      "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+    },
+    {
+      "event": "TenantIdentityProviderTested",
+      "discriminator": "bdgrz.useridentities.tenant-identity-provider-tested",
+      "discriminatorVersion": 3,
+      "owner": "TenantIdentityProvider",
+      "existingContract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTested.cs",
+      "status": "selected target schema; implementation pending",
+      "reason": "native fact of a retained owner command",
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TestRequestEventId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CredentialRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "TestedByActor",
+          "type": "ActorReference",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "TenantIdentityProviderTestResultContent",
+          "required": true
+        },
+        {
+          "name": "TestedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Operation",
+          "type": "OperationProvenance",
+          "required": true
+        },
+        {
+          "name": "FirstResponse",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "OperationResult",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "contentSchemas": [],
+      "changes": [],
+      "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+      "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+      "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+    },
+    {
+      "event": "TenantIdentityProviderDisabled",
+      "discriminator": "bdgrz.useridentities.tenant-identity-provider-disabled",
+      "discriminatorVersion": 2,
+      "owner": "TenantIdentityProvider",
+      "existingContract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderDisabled.cs",
+      "status": "selected target schema; implementation pending",
+      "reason": "native fact of a retained owner command",
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ActorMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ActorDisplay",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "DisabledAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Operation",
+          "type": "OperationProvenance",
+          "required": true
+        },
+        {
+          "name": "FirstResponse",
+          "type": "ImmutableContentRef?",
+          "required": true
+        },
+        {
+          "name": "OperationResult",
+          "type": "ImmutableContentRef?",
+          "required": true
+        }
+      ],
+      "contentSchemas": [],
+      "changes": [],
+      "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+      "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
       "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
     }
   ]

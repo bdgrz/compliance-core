@@ -30,7 +30,7 @@ public sealed class ProcessCatalogContractTests
         var registered = provider.GetRequiredService<ProcessCatalog>().Definitions;
 
         // Assert
-        Assert.Equal(27, catalog.Count);
+        Assert.Equal(28, catalog.Count);
         foreach (var definition in registered)
         {
             var entry = Assert.Contains(definition.Name, catalog);
