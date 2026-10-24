@@ -1,0 +1,33 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Request-local original native HTTP responses; all286 existing generated mutation mappings install explicit result callback+request-type marker.",
+  "validation": {
+    "strictBuildWarnings": 0,
+    "backendUnitPassed": 5743,
+    "backendUnitFailed": 0,
+    "broadHttpPassed": 379,
+    "broadHttpFailed": 1,
+    "broadHttpFailure": "Stale204 assertion on identity-recovery start; corrected then final13/13 identity class passed. All production source unchanged after broad run.",
+    "finalIdentityHttpPassed": 13,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass"
+  },
+  "red": [
+    "Production plainUnit and real native Control both returned204 beforebridge.",
+    "Canonical globalTenant member rejected; wrongTenant/wrongArea rejection controls passed."
+  ],
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 12,
+    "highSignals": 0,
+    "integrationMergeProbability": 0.85,
+    "adopted": "merge scoped repair; continue owner refactors"
+  },
+  "qualification": [
+    "No protected response producer qualification; protected responses fail closed without decrypting.",
+    "No persisted-schema migration, retained-store cutover, deployment or full owner-refactor completion claim.",
+    "Initial broadHTTP host failures from missing digest links; rerun used process-local test origins/routes. Logout204 unchanged."
+  ]
+}

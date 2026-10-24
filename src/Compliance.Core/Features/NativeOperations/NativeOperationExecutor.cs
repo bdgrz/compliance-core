@@ -11,14 +11,37 @@ namespace Bdgrz.Compliance.Features.NativeOperations;
 /// identical concurrent request that already committed is replayed and never appended twice.
 /// </summary>
 public sealed class NativeOperationExecutor(IAggregateReader reader, IAggregateExecutor executor,
-    IImmutableContentStore content)
+    IImmutableContentStore content, INativeOperationTransportObserver? transport = null)
 {
     /// <summary>Attempts before an unresolved append race is surfaced to the caller.</summary>
     internal const int MaximumAttempts = 4;
 
-    /// <summary>Executes the operation and returns its closed acceptance outcome.</summary>
+    /// <summary>Executes admission, then exposes only a successful committed/replayed first response to the optional transport.</summary>
     public async ValueTask<Result<AcceptedAppendResult>> ExecuteAsync<TAggregate>(
         NativeOperation<TAggregate> operation, IExecutionContext context, CancellationToken ct = default)
+        where TAggregate : Aggregate
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(context);
+        Result<AcceptedAppendResult> result;
+        try
+        {
+            result = await ExecuteCoreAsync(operation, context, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            var classified = transport?.ClassifyFailure(operation.Binding, context, error);
+            if (classified is null)
+                throw;
+            return Result<AcceptedAppendResult>.Failure(classified);
+        }
+        if (result.IsSuccess && result.Value is AcceptedAppendResult.Committed or AcceptedAppendResult.Replayed)
+            transport?.Observe(operation.Binding, context, result.Value);
+        return result;
+    }
+
+    async ValueTask<Result<AcceptedAppendResult>> ExecuteCoreAsync<TAggregate>(
+        NativeOperation<TAggregate> operation, IExecutionContext context, CancellationToken ct)
         where TAggregate : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);

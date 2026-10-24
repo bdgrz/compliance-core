@@ -21,6 +21,29 @@ public sealed class PlatformOperatorTransportTests
     const string OperationId = "b4eb443f-94d4-4ca6-aec8-06d7946ff1da";
     const string AnotherId = "dc97120d-631c-4aa7-ae05-ecf9e5d18791";
 
+    [Fact]
+    public async Task ShouldReturnDeclaredUnitBodyGivenPlatformGrantHttpSuccessAndRetry()
+    {
+        // Arrange
+        await using var factory = Factory();
+        using var client = factory.CreateClient();
+        await LoginAndSeedAsync(factory, client);
+        var command = Uuid.CreateVersion4();
+        var body = new { user_id = Uuid.CreateVersion4(), expected_revision = 1, reason = "Cover operations" };
+        var route = $"/api/v1/platform/operator-grants/{command}";
+
+        // Act
+        using var first = await client.PutAsJsonAsync(route, body);
+        using var retry = await client.PutAsJsonAsync(route, body);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
+        Assert.Equal("{}", await first.Content.ReadAsStringAsync());
+        Assert.Equal(await first.Content.ReadAsByteArrayAsync(), await retry.Content.ReadAsByteArrayAsync());
+        Assert.Equal("application/json", first.Content.Headers.ContentType?.MediaType);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -88,7 +111,7 @@ public sealed class PlatformOperatorTransportTests
             }
             using var result = await client.PutAsJsonAsync(
                 $"/api/v1/platform/{(assignment is null ? "operator-grants" : "operator-revocations")}/{commandId}", arguments);
-            Assert.Equal(HttpStatusCode.NoContent, result.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
         }
     }
 
@@ -96,8 +119,8 @@ public sealed class PlatformOperatorTransportTests
     [InlineData("", "", HttpStatusCode.NotFound)]
     [InlineData("malformed", "", HttpStatusCode.BadRequest)]
     [InlineData("00000000-0000-0000-0000-000000000000", "", HttpStatusCode.BadRequest)]
-    [InlineData(OperationId, "", HttpStatusCode.NoContent)]
-    [InlineData(OperationId, ",\"command_id\":\"" + OperationId + "\"", HttpStatusCode.NoContent)]
+    [InlineData(OperationId, "", HttpStatusCode.OK)]
+    [InlineData(OperationId, ",\"command_id\":\"" + OperationId + "\"", HttpStatusCode.OK)]
     [InlineData(OperationId, ",\"command_id\":\"" + AnotherId + "\"", HttpStatusCode.BadRequest)]
     [InlineData(OperationId, ",\"command_id\":null", HttpStatusCode.BadRequest)]
     [InlineData(OperationId, ",\"command_id\":\"malformed\"", HttpStatusCode.BadRequest)]
@@ -119,7 +142,7 @@ public sealed class PlatformOperatorTransportTests
 
         // Assert
         Assert.Equal(expected, response.StatusCode);
-        Assert.Equal(expected == HttpStatusCode.NoContent ? 2UL : 1UL, owner.Version);
+        Assert.Equal(expected == HttpStatusCode.OK ? 2UL : 1UL, owner.Version);
     }
 
     [Theory]

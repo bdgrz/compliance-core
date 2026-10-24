@@ -1,0 +1,7 @@
+{
+  "reviewed": 12,
+  "blockedReviews": 0,
+  "signalsTriaged": 0,
+  "rows": [],
+  "scope": "Request-local transport bridge; remaining owner compaction and protected response qualification remain separate."
+}

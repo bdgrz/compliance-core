@@ -226,7 +226,7 @@ public sealed class UserIdentityContinuationWebTests
                 "proof", Uuid.CreateVersion4()), CancellationToken.None);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, start.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, start.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, options.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, complete.StatusCode);
     }

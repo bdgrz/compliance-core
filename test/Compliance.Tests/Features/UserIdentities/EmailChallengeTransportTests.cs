@@ -40,7 +40,7 @@ public sealed class EmailChallengeTransportTests
         var facts = await FactsAsync(factory);
 
         // Assert
-        Assert.All(new[] { reserved, issued, verified }, code => Assert.Equal(HttpStatusCode.NoContent, code));
+        Assert.All(new[] { reserved, issued, verified }, code => Assert.Equal(HttpStatusCode.OK, code));
         Assert.False(wrongToken.IsSuccessStatusCode);
         Assert.Equal("verified", (await status.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("delivery_status").GetString());
         Assert.Collection(facts,

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "a65f5f64e33b2d6b08e6c5465462bcec9ad63a88",
+  "sourceCommit": "768a1794613dddaa6c50b6dd541384310a6163ab",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -2900,6 +2900,7 @@
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
         "test/Compliance.Tests/Features/Controls/ControlDraftActorSnapshotTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlNativeContentTests.cs",
+        "test/Compliance.Tests/Features/NativeOperations/NativeFirstResponseProductionHttpTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Testing/ControlProjectionFacts.cs"
       ],

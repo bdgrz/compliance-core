@@ -66,7 +66,8 @@ public sealed class AccessReviewTransportTests
                      Base + "/{campaign_id}/items/{item_id}/remediation-changes", Base + "/{campaign_id}/bulk-decisions",
                  })
             Assert.False(paths.TryGetProperty(retired, out var item) && item.TryGetProperty("post", out _), retired);
-        Assert.False(paths.TryGetProperty(Base + "/{campaign_id}/bulk-decisions/{decision_batch_id}", out _));
+        var bulk = paths.GetProperty(Base + "/{campaign_id}/bulk-decisions/{decision_batch_id}").GetProperty("put");
+        Assert.True(bulk.GetProperty("responses").TryGetProperty("202", out _));
     }
 
     [Fact]

@@ -51,7 +51,7 @@ public sealed class TenantIdentityProviderTransportTests
         var facts = await FactsAsync(factory, tenant, provider);
 
         // Assert
-        Assert.All(new[] { configured, tested, rotated, disabled }, status => Assert.Equal(HttpStatusCode.NoContent, status));
+        Assert.All(new[] { configured, tested, rotated, disabled }, status => Assert.Equal(HttpStatusCode.OK, status));
         Assert.Collection(facts,
             fact => Assert.Equal(configure, Assert.IsType<TenantIdentityProviderConfigured>(fact).Operation.LogicalId),
             fact => Assert.Equal(TestTenantIdentityProvider.TestId(provider, "oidc-check"),
@@ -100,7 +100,7 @@ public sealed class TenantIdentityProviderTransportTests
         var facts = await FactsAsync(factory, tenant, provider);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, changed.StatusCode);
         var configured = Assert.IsType<TenantIdentityProviderConfigured>(Assert.Single(facts));
         Assert.DoesNotContain("vault://", JsonSerializer.Serialize(configured,

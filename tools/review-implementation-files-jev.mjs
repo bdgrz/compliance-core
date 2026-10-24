@@ -19,7 +19,8 @@ const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry =
     const full = path.join(dir, entry.name);
     return entry.isDirectory() ? walk(full) : entry.name.endsWith('.cs') ? [full] : [];
 });
-const sources = [...walk(path.join(root, 'src/Compliance.Core')), ...walk(path.join(root, 'src/Compliance.Common'))]
+const sources = [...walk(path.join(root, 'src/Compliance.Core')), ...walk(path.join(root, 'src/Compliance.Common')),
+    ...walk(path.join(root, 'src/Compliance.App'))]
     .map(file => ({ path: path.relative(root, file), text: fs.readFileSync(file, 'utf8') }));
 const byName = new Map();
 for (const source of sources) byName.set(path.basename(source.path, '.cs'), source);
