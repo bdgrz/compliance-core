@@ -4,6 +4,9 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -16,6 +19,9 @@ namespace Bdgrz.Compliance.Features.Operations;
 /// </summary>
 public sealed class TypeIIPeriod : Aggregate
 {
+    /// <summary>Stream area of every Type II period (the realm is the tenant).</summary>
+    public const string Area = "type-ii-periods";
+
     const int MaximumSources = 1000;
     const int MaximumOccurrences = 10000;
     const int MaximumAmendments = 64;
@@ -30,6 +36,11 @@ public sealed class TypeIIPeriod : Aggregate
 
     readonly Uuid _tenantId;
     readonly Uuid _programId;
+    readonly Dictionary<Uuid, DomainEvent> _accepted = [];
+    readonly Dictionary<Uuid, DomainEvent> _terminal = [];
+    readonly List<DomainEvent> _facts = [];
+    Uuid? _pending;
+    TypeIIPeriodCalendarAuthorization? _live;
     TypeIIPeriodView? _current;
     IReadOnlyList<OccurrenceGenerationBatchView> _occurrenceGenerationBatches =
         Array.Empty<OccurrenceGenerationBatchView>();
@@ -39,12 +50,23 @@ public sealed class TypeIIPeriod : Aggregate
     public IReadOnlyList<OccurrenceGenerationBatchView> OccurrenceGenerationBatches =>
         _occurrenceGenerationBatches;
 
-    public TypeIIPeriod(Uuid tenantId, Uuid programId, Uuid periodId)
-        : base(periodId, new EventStreamAddress(tenantId.ToString(), "type-ii-periods",
-            periodId.ToString()))
+    /// <summary>Opens one period, selecting the logical operation to resolve.</summary>
+    public TypeIIPeriod(Uuid tenantId, Uuid programId, Uuid periodId, Uuid selectedLogicalId = default)
+        : base(periodId, new EventStreamAddress(tenantId.ToString(), Area, periodId.ToString()))
     {
         _tenantId = tenantId;
         _programId = programId;
+        Acceptance = new NativeAcceptance(selectedLogicalId);
+        On<TypeIIPeriodOpeningAccepted>(accepted =>
+            Accept(accepted, accepted.Owner, accepted.Revision, accepted.Generation, accepted.Operation,
+                accepted.FirstResponse, true));
+        On<TypeIIPeriodAmendmentAccepted>(accepted =>
+            Accept(accepted, accepted.Owner, accepted.Revision, accepted.Generation, accepted.Operation,
+                accepted.FirstResponse, false));
+        On<TypeIIPeriodOpeningRejected>(rejected => Fence(rejected, rejected.Owner, rejected.Operation,
+            rejected.Intent, true));
+        On<TypeIIPeriodAmendmentCanceled>(canceled => Fence(canceled, canceled.Owner, canceled.Operation,
+            canceled.Intent, false));
         On<ObservationPeriodStarted>(Apply);
         On<ObservationPeriodAmended>(Apply);
         On<DueControlOccurrencesGenerated>(Apply);
@@ -54,13 +76,54 @@ public sealed class TypeIIPeriod : Aggregate
         On<TypeIIPeriodCloseAmended>(Apply);
     }
 
-    public CommandFailure? Start(TypeIIPlanView approvedPlan, TypeIIPeriodOpeningContent opening,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset startedAt)
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
+    /// <summary>The root operation of the accepted opening or amendment that is not applied or ended yet.</summary>
+    public Uuid? PendingOperationId => _pending;
+
+    /// <summary>The accepted opening or amendment that is neither applied, rejected nor canceled yet.</summary>
+    public DomainEvent? Pending => _pending is { } id ? _accepted[id] : null;
+
+    /// <summary>The exact live calendar reservation of the period: the latest applied opening or amendment.</summary>
+    public TypeIIPeriodCalendarAuthorization? CalendarAuthorization => _live;
+
+    /// <summary>The accepted opening or amendment of a root operation, once recorded.</summary>
+    public DomainEvent? AcceptedFor(Uuid operationId) => _accepted.GetValueOrDefault(operationId);
+
+    /// <summary>The applied, rejected or canceled fact that ended a root operation, once recorded.</summary>
+    public DomainEvent? TerminalFor(Uuid operationId) => _terminal.GetValueOrDefault(operationId);
+
+    /// <summary>True when the opening or amendment was rejected or canceled, so a delayed apply must do nothing.</summary>
+    public bool IsFenced(Uuid operationId) =>
+        TerminalFor(operationId) is TypeIIPeriodOpeningRejected or TypeIIPeriodAmendmentCanceled;
+
+    /// <summary>True when the opening or amendment was applied to the period.</summary>
+    public bool IsApplied(Uuid operationId) =>
+        TerminalFor(operationId) is ObservationPeriodStarted or ObservationPeriodAmended;
+
+    /// <summary>A committed range fact of the period (applied, close-frozen, rejected or canceled) by its event id.</summary>
+    public DomainEvent? FactById(Uuid eventId) =>
+        _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+
+    /// <summary>The frozen intent of an accepted opening or amendment fact.</summary>
+    public static ImmutableContentRef? IntentOf(DomainEvent? accepted) => accepted switch
     {
-        if (_current is { } existing)
-            return SameOpening(existing, approvedPlan, opening, actorMemberId, actorDisplay)
-                ? null
-                : CommandFailure.StateConflict("The Type II period already exists with a different opening.");
+        TypeIIPeriodOpeningAccepted opening => opening.Intent,
+        TypeIIPeriodAmendmentAccepted amendment => amendment.Intent,
+        _ => null,
+    };
+
+    /// <summary>
+    ///     Validates an opening against an approved plan and returns the complete initial state that is frozen into the
+    ///     persisted intent. Nothing is raised.
+    /// </summary>
+    public CommandFailure? PrepareOpening(TypeIIPlanView approvedPlan, TypeIIPeriodOpeningContent opening,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset startedAt, out TypeIIPeriodView? initial)
+    {
+        initial = null;
+        if (_current is not null || _accepted.Count > 0)
+            return CommandFailure.StateConflict("The Type II period already exists with a different opening.");
         if (!ValidIdentity() || !ValidActor(actorMemberId, actorDisplay, startedAt))
             return Invalid("A Type II period requires tenant, program, period, and attributed actor identities.");
         if (!ApprovedPlan(approvedPlan) || approvedPlan.TenantId != _tenantId ||
@@ -83,25 +146,200 @@ public sealed class TypeIIPeriod : Aggregate
             normalizedOpening.OpeningSnapshotSha256, normalizedOpening.SourceReferences,
             normalizedOpening.AcknowledgedOpeningGapIds, occurrences, [], null, [], [],
             actorMemberId, actorDisplay.Trim(), startedAt);
-        return Emit(state, actorMemberId, startedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new ObservationPeriodStarted(tenant, subject, revision, actor, snapshot, at),
-            "start", creating: true);
+        if (ValidateState(state) is { } invalid)
+            return invalid;
+        if (!ValidOpeningState(state))
+            return Invalid("The Type II period transition is invalid.");
+        initial = Freeze(state);
+        return null;
     }
 
-    public CommandFailure? Amend(long expectedRevision, DateOnly periodStart, DateOnly periodEnd,
-        string reason, Uuid actorMemberId, string actorDisplay, DateTimeOffset amendedAt)
+    /// <summary>Checks that the period can still accept its opening; the period opens at most once.</summary>
+    public Result PrepareOpeningAcceptance() => _current is null && _accepted.Count == 0
+        ? Result.Success
+        : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+            "The Type II period already exists with a different opening."));
+
+    /// <summary>Accepts the complete opening intent as the root native fact of the period; no calendar is touched.</summary>
+    public Result AcceptOpening(OperationProvenance operation, ImmutableContentRef intent,
+        ImmutableContentRef firstResponse)
     {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.Owner != Stream || operation.LogicalId != operation.RootOperationId ||
+            operation.RootOperationId != Id)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A period opening is the logical operation of its own period."));
+        var prepared = PrepareOpeningAcceptance();
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new TypeIIPeriodOpeningAccepted(Stream, Revision, TypeIIRangeEffects.Generation, intent, null,
+            operation, firstResponse, null));
+        return Result.Success;
+    }
+
+    /// <summary>
+    ///     Validates an amendment against the current period and returns the state it would produce. The expected
+    ///     revision is the period's logical revision; only one opening or amendment is pending at a time.
+    /// </summary>
+    public CommandFailure? PrepareAmendment(long expectedRevision, DateOnly periodStart, DateOnly periodEnd,
+        string reason, Uuid actorMemberId, string actorDisplay, DateTimeOffset amendedAt, out TypeIIPeriodView? next)
+    {
+        next = null;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The Type II period was not found.");
-        reason = Clean(reason);
-        if (current.Amendments.Count > 0 && current.Amendments[^1] is { } prior &&
-            prior.PeriodStart == periodStart &&
-            prior.PeriodEnd == periodEnd && prior.Reason == reason && prior.ActorMemberId == actorMemberId &&
-            prior.ActorDisplay == actorDisplay.Trim())
-            return null;
+        if (_pending is not null)
+            return CommandFailure.StateConflict(
+                "Another opening or amendment is still being applied; retry after it ends.");
         if (expectedRevision != Revision)
             return StaleRevision();
+        return AmendedState(current, periodStart, periodEnd, reason, actorMemberId, actorDisplay, amendedAt,
+            out next);
+    }
+
+    /// <summary>Accepts the complete amendment intent, holding both ranges, as the root native fact of the amendment.</summary>
+    public Result AcceptAmendment(long expectedRevision, OperationProvenance operation, ImmutableContentRef intent,
+        ImmutableContentRef firstResponse)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.Owner != Stream || operation.LogicalId != operation.RootOperationId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A period amendment is the logical operation of its own command."));
+        if (_current is null)
+            return Result.Failure(CommandFailure.MissingRecord("The Type II period was not found.").ToRequestError());
+        if (_pending is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Another opening or amendment is still being applied; retry after it ends.", true));
+        if (expectedRevision != Revision)
+            return Result.Failure(StaleRevision().ToRequestError());
+        RaiseEvent(new TypeIIPeriodAmendmentAccepted(Stream, Revision, TypeIIRangeEffects.Generation, intent, null,
+            operation, firstResponse, null));
+        return Result.Success;
+    }
+
+    /// <summary>Checks that a pending, not yet applied amendment can be canceled at the expected revision.</summary>
+    public Result PrepareCancel(Uuid amendmentId, long expectedRevision)
+    {
+        if (_pending != amendmentId || _accepted[amendmentId] is not TypeIIPeriodAmendmentAccepted)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only a pending amendment can be canceled; an applied amendment is irreversible."));
+        return expectedRevision == Revision
+            ? Result.Success
+            : Result.Failure(StaleRevision().ToRequestError());
+    }
+
+    /// <summary>
+    ///     Cancels the pending amendment. This fact is the local receiver fence: a delayed apply sees it and does
+    ///     nothing, and the pending calendar reservation is released only after it.
+    /// </summary>
+    public Result CancelAmendment(Uuid amendmentId, OperationProvenance operation, ImmutableContentRef firstResponse)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.Owner != Stream || operation.RootOperationId != amendmentId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A cancellation names the amendment it ends."));
+        if (_pending != amendmentId || _accepted[amendmentId] is not TypeIIPeriodAmendmentAccepted accepted)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only a pending amendment can be canceled; an applied amendment is irreversible."));
+        RaiseEvent(new TypeIIPeriodAmendmentCanceled(Stream, Revision, TypeIIRangeEffects.Generation,
+            accepted.Intent, null, operation, firstResponse, null));
+        return Result.Success;
+    }
+
+    /// <summary>Rejects the pending opening that the calendar proved conflicts; an applied opening is never rejected.</summary>
+    public Result RejectOpening(OperationProvenance operation, ImmutableContentRef failureProof)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(failureProof);
+        if (_pending != operation.RootOperationId || operation.Owner != Stream ||
+            _accepted[operation.RootOperationId] is not TypeIIPeriodOpeningAccepted accepted)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only the exact pending opening can be rejected."));
+        RaiseEvent(new TypeIIPeriodOpeningRejected(Stream, Revision, TypeIIRangeEffects.Generation, accepted.Intent,
+            failureProof, operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Rejects the pending amendment that the calendar proved conflicts; the applied range is preserved.</summary>
+    public Result RejectAmendment(OperationProvenance operation, ImmutableContentRef failureProof)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(failureProof);
+        if (_pending != operation.RootOperationId || operation.Owner != Stream ||
+            _accepted[operation.RootOperationId] is not TypeIIPeriodAmendmentAccepted accepted)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only the exact pending amendment can be rejected."));
+        RaiseEvent(new TypeIIPeriodAmendmentCanceled(Stream, Revision, TypeIIRangeEffects.Generation,
+            accepted.Intent, failureProof, operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>
+    ///     Applies the frozen opening: the period starts with the exact initial state persisted at admission and the
+    ///     calendar permit that holds its range.
+    /// </summary>
+    public Result ApplyOpening(OperationProvenance operation, TypeIIPeriodView state,
+        TypeIIPeriodCalendarAuthorization permit, ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(permit);
+        ArgumentNullException.ThrowIfNull(operationResult);
+        if (_pending != operation.RootOperationId || operation.Owner != Stream || _current is not null ||
+            _accepted[operation.RootOperationId] is not TypeIIPeriodOpeningAccepted accepted)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only the exact pending opening can be applied."));
+        if (ValidateState(state) is { } invalid)
+            return Result.Failure(invalid.ToRequestError());
+        var started = new ObservationPeriodStarted(_tenantId, Id, state.Revision, state.ActorMemberId,
+            Freeze(state), state.UpdatedAt, accepted.Intent, operation, permit.AuthorizationId, permit.Generation,
+            null, operationResult);
+        if (DomainEventPayload.Size(started) > MaximumEventBytes)
+            return Result.Failure(Invalid("The complete Type II period state exceeds the bounded event payload.")
+                .ToRequestError());
+        RaiseEvent(started);
+        return Result.Success;
+    }
+
+    /// <summary>
+    ///     Applies the frozen amendment to the current period with the calendar permit that holds the new range. The
+    ///     state is derived from the period as it is now; the expected revision was proven at admission.
+    /// </summary>
+    public Result ApplyAmendment(OperationProvenance operation, TypeIIPeriodAmendmentChange change,
+        TypeIIPeriodCalendarAuthorization permit, ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(change);
+        ArgumentNullException.ThrowIfNull(permit);
+        ArgumentNullException.ThrowIfNull(operationResult);
+        if (_pending != operation.RootOperationId || operation.Owner != Stream || _current is not { } current ||
+            _accepted[operation.RootOperationId] is not TypeIIPeriodAmendmentAccepted accepted)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only the exact pending amendment can be applied."));
+        var at = change.AmendedAt < current.UpdatedAt ? current.UpdatedAt : change.AmendedAt;
+        var failure = AmendedState(current, change.PeriodStart, change.PeriodEnd, change.Reason,
+            change.ActorMemberId, change.ActorDisplay, at, out var state);
+        if (failure is not null)
+            return Result.Failure(failure.ToRequestError());
+        var amended = new ObservationPeriodAmended(_tenantId, Id, state!.Revision, change.ActorMemberId,
+            Freeze(state), at, accepted.Intent, operation, permit.AuthorizationId, permit.Generation, null,
+            operationResult);
+        if (DomainEventPayload.Size(amended) > MaximumEventBytes)
+            return Result.Failure(Invalid("The complete Type II period state exceeds the bounded event payload.")
+                .ToRequestError());
+        RaiseEvent(amended);
+        return Result.Success;
+    }
+
+    CommandFailure? AmendedState(TypeIIPeriodView current, DateOnly periodStart, DateOnly periodEnd, string reason,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset amendedAt, out TypeIIPeriodView? next)
+    {
+        next = null;
+        reason = Clean(reason);
         if (current.Status != "active" || current.CloseValidation is not null)
             return CommandFailure.StateConflict("Only an active period without a close validation can be amended.");
         if (!ValidActor(actorMemberId, actorDisplay, amendedAt) ||
@@ -121,7 +359,7 @@ public sealed class TypeIIPeriod : Aggregate
             periodStart, periodEnd, reason, actorMemberId, actorDisplay.Trim(), amendedAt);
         var state = current with
         {
-            Revision = Revision + 1,
+            Revision = current.Revision + 1,
             PeriodStart = periodStart,
             PeriodEnd = periodEnd,
             Amendments = Append(current.Amendments, amendment),
@@ -129,10 +367,12 @@ public sealed class TypeIIPeriod : Aggregate
             ActorDisplay = actorDisplay.Trim(),
             UpdatedAt = amendedAt,
         };
-        return Emit(state, actorMemberId, amendedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new ObservationPeriodAmended(tenant, subject, revision, actor, snapshot, at),
-            "period_amendment");
+        if (ValidateState(state) is { } invalid)
+            return invalid;
+        if (!ValidTransition(current, state, actorMemberId, "period_amendment"))
+            return Invalid("The Type II period transition is invalid.");
+        next = state;
+        return null;
     }
 
     /// <summary>
@@ -187,6 +427,9 @@ public sealed class TypeIIPeriod : Aggregate
             return null;
         if (expectedRevision != Revision)
             return StaleRevision();
+        if (_pending is not null)
+            return CommandFailure.StateConflict(
+                "An opening or amendment is still being applied; validate the close after it ends.");
         if (current.Status is not ("active" or "close_blocked" or "close_ready"))
             return CommandFailure.StateConflict("Close validation is only allowed before executive approval.");
         if (!ValidActor(validatorMemberId, validatorDisplay, validatedAt) || validatedAt < current.UpdatedAt ||
@@ -302,9 +545,15 @@ public sealed class TypeIIPeriod : Aggregate
             ActorDisplay = actorRole,
             UpdatedAt = frozenAt,
         };
+        if (_pending is not null)
+            return CommandFailure.StateConflict(
+                "An opening or amendment is still being applied; the close can freeze after it ends.");
+        if (_live is not { } live)
+            return CommandFailure.StateConflict("The period holds no live calendar range to release at close.");
         return Emit(state, actorMemberId, frozenAt,
-            static (tenant, subject, revision, actor, snapshotState, at) =>
-                new ObservationPeriodCloseFrozen(tenant, subject, revision, actor, snapshotState, at),
+            (tenant, subject, revision, actor, snapshotState, at) =>
+                new ObservationPeriodCloseFrozen(tenant, subject, revision, actor, snapshotState, at,
+                    live.AuthorizationId, live.Generation),
             "freeze");
     }
 
@@ -362,10 +611,69 @@ public sealed class TypeIIPeriod : Aggregate
             "close_amendment");
     }
 
-    void Apply(ObservationPeriodStarted ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, true, "start");
-    void Apply(ObservationPeriodAmended ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "period_amendment");
+    void Accept(DomainEvent fact, EventStreamAddress owner, long revision, long generation,
+        OperationProvenance operation, ImmutableContentRef? firstResponse, bool opening)
+    {
+        Acceptance.Observe(fact);
+        if (_pending is not null || owner != Stream || operation.Owner != Stream ||
+            operation.LogicalId != operation.RootOperationId || revision != Revision ||
+            generation != TypeIIRangeEffects.Generation || firstResponse is null ||
+            (opening ? _current is not null || _accepted.Count > 0 || operation.RootOperationId != Id
+                : _current is null) ||
+            !_accepted.TryAdd(operation.RootOperationId, fact))
+            throw new InvalidOperationException(
+                "A period accepts one new opening or amendment at a time, at its own revision.");
+        _pending = operation.RootOperationId;
+    }
+
+    void Fence(DomainEvent fact, EventStreamAddress owner, OperationProvenance operation, ImmutableContentRef intent,
+        bool opening)
+    {
+        Acceptance.Observe(fact);
+        if (_pending is not { } pending || pending != operation.RootOperationId || owner != Stream ||
+            operation.Owner != Stream || (_accepted[pending] is TypeIIPeriodOpeningAccepted) != opening ||
+            IntentOf(_accepted[pending]) != intent)
+            throw new InvalidOperationException("Only the exact pending opening or amendment can be rejected or canceled.");
+        _terminal.Add(pending, fact);
+        _facts.Add(fact);
+        _pending = null;
+    }
+
+    void Apply(ObservationPeriodStarted ev)
+    {
+        Acceptance.Observe(ev);
+        RequirePending(ev.Operation, ev.Change, ev.CalendarAuthorizationId, ev.CalendarGeneration, true);
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, true, "start");
+        Settle(ev, ev.Operation, ev.CalendarAuthorizationId, ev.CalendarGeneration);
+    }
+
+    void Apply(ObservationPeriodAmended ev)
+    {
+        Acceptance.Observe(ev);
+        RequirePending(ev.Operation, ev.Change, ev.CalendarAuthorizationId, ev.CalendarGeneration, false);
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false,
+            "period_amendment");
+        Settle(ev, ev.Operation, ev.CalendarAuthorizationId, ev.CalendarGeneration);
+    }
+
+    void RequirePending(OperationProvenance operation, ImmutableContentRef change, Uuid authorizationId,
+        long generation, bool opening)
+    {
+        if (_pending is not { } pending || pending != operation.RootOperationId || operation.Owner != Stream ||
+            (_accepted[pending] is TypeIIPeriodOpeningAccepted) != opening || IntentOf(_accepted[pending]) != change ||
+            authorizationId != pending || generation <= 0)
+            throw new InvalidOperationException(
+                "A period range change must follow its accepted opening or amendment and carry its calendar permit.");
+    }
+
+    void Settle(DomainEvent fact, OperationProvenance operation, Uuid authorizationId, long generation)
+    {
+        _terminal.Add(operation.RootOperationId, fact);
+        _facts.Add(fact);
+        _live = new TypeIIPeriodCalendarAuthorization(authorizationId, generation);
+        _pending = null;
+    }
+
     void Apply(DueControlOccurrencesGenerated ev)
     {
         if (_current is not { } current || ev.TenantId != _tenantId || ev.SubjectId != Id ||
@@ -398,8 +706,15 @@ public sealed class TypeIIPeriod : Aggregate
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "validation");
     void Apply(TypeIIPeriodCloseApproved ev) => ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "approval");
-    void Apply(ObservationPeriodCloseFrozen ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "freeze");
+    void Apply(ObservationPeriodCloseFrozen ev)
+    {
+        if (_pending is not null || _live is not { } live || live.AuthorizationId != ev.CalendarAuthorizationId ||
+            live.Generation != ev.CalendarGeneration)
+            throw new InvalidOperationException(
+                "A close freeze must name the exact live calendar reservation of a period without a pending change.");
+        ApplyState(ev.TenantId, ev.SubjectId, ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "freeze");
+        _facts.Add(ev);
+    }
     void Apply(TypeIIPeriodCloseAmended ev) => ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "close_amendment");
 

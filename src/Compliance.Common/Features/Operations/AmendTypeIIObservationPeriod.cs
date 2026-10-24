@@ -1,9 +1,20 @@
-using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
-/// <summary>Records the amend type iiobservation period intent required by the owning feature workflow.</summary>
+/// <summary>
+///     Amends the date range of an open Type II period. <paramref name="CommandId" /> is the logical operation
+///     identity and the amendment identity; <paramref name="ExpectedRevision" /> is the period's logical revision.
+///     The old and the new range are both held by the calendar until the period applies the amendment.
+/// </summary>
 [Discriminator("bdgrz.operations.amend-type-iiobservation-period", 1)]
-public sealed record AmendTypeIIObservationPeriod(Uuid TenantId, Uuid ProgramId, Uuid PeriodId, long ExpectedRevision, DateOnly? PeriodStart, DateOnly? PeriodEnd, string AmendmentReason) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+public sealed record AmendTypeIIObservationPeriod(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid PeriodId,
+    long ExpectedRevision, DateOnly? PeriodStart, DateOnly? PeriodEnd, string AmendmentReason)
+    : IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest,
+        IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

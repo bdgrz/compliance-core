@@ -1,374 +1,191 @@
-using System.Security.Cryptography;
-using System.Text.Json;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
-/// <summary>Owns program-wide Type II period reservations and their non-overlap invariant.</summary>
+/// <summary>
+///     The one stable program guard of Type II observation ranges. It owns the reservations of every period of the
+///     program, keyed by the root operation that acquired them, and the inclusive non-overlap rule between periods:
+///     a range may not overlap a live (pending or active) range of any other period, while an amendment's own period
+///     keeps its old range held next to the new one until the amendment is applied. A reservation settled before it
+///     was ever granted leaves a fence, so a delayed acquisition is refused. Reservations are rebuilt from the
+///     ordered stream alone; time never releases anything.
+/// </summary>
 public sealed class TypeIIObservationCalendar : Aggregate
 {
-    const int MaximumPeriods = 10_000;
-    const int MaximumEventBytes = 32 * 1024;
-    const int MaximumActorDisplayLength = 200;
-    const int MaximumReasonLength = 2000;
+    /// <summary>Stream area of every program calendar.</summary>
+    public const string Area = "type-ii-observation-calendars";
 
-    readonly Uuid _tenantId;
-    readonly Uuid _programId;
-    readonly List<TypeIIObservationCalendarPeriodView> _periods = [];
-    TypeIIObservationCalendarView? _current;
+    readonly Dictionary<Uuid, TypeIIRangeReservation> _reservations = [];
+    long _revision;
+    long _generation;
 
-    public long Revision => _current?.Revision ?? 0;
-    public TypeIIObservationCalendarView? Current => _current;
-
-    public TypeIIObservationCalendar(Uuid tenantId, Uuid programId)
-        : base(programId, new EventStreamAddress(tenantId.ToString(),
-            "type-ii-observation-calendars", programId.ToString()))
+    /// <summary>Opens the calendar of one program, selecting the logical operation to resolve.</summary>
+    public TypeIIObservationCalendar(Uuid tenantId, Uuid programId, Uuid selectedLogicalId = default)
+        : base(programId, new EventStreamAddress(tenantId.ToString(), Area, programId.ToString()))
     {
-        _tenantId = tenantId;
-        _programId = programId;
-        On<ObservationPeriodReserved>(Apply);
-        On<ObservationPeriodAmendmentReserved>(Apply);
-        On<ObservationPeriodAmendmentCompleted>(Apply);
-        On<ObservationPeriodAmendmentCancelled>(Apply);
-        On<ObservationPeriodReservationReleased>(Apply);
+        Acceptance = new NativeAcceptance(selectedLogicalId);
+        On<TypeIIPeriodRangeAuthorized>(Apply);
+        On<TypeIIPeriodRangeSettled>(Apply);
     }
 
-    public CommandFailure? Reserve(Uuid periodId, Uuid examinationId, Uuid planId,
-        DateOnly periodStart, DateOnly periodEnd, string openingSnapshotSha256,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset reservedAt,
-        bool isActive = true)
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
+    /// <summary>The number of facts on the calendar.</summary>
+    public long Revision => _revision;
+
+    /// <summary>The calendar's own monotonic reservation counter: the number of authorizations so far.</summary>
+    public long ReservationGeneration => _generation;
+
+    /// <summary>Every reservation and fence, by root operation.</summary>
+    public IReadOnlyCollection<TypeIIRangeReservation> Reservations => _reservations.Values;
+
+    /// <summary>The reservation or fence of a root operation, once recorded.</summary>
+    public TypeIIRangeReservation? Find(Uuid operationId) => _reservations.GetValueOrDefault(operationId);
+
+    /// <summary>The reservation granted by the authorization fact with this event id, once recorded.</summary>
+    public TypeIIRangeReservation? FindByAuthorization(Uuid eventId) => _reservations.Values.FirstOrDefault(
+        reservation => reservation.AuthorizedFact?.Metadata?.EventId == eventId);
+
+    /// <summary>
+    ///     The first live reservation of another period whose range overlaps <paramref name="range" />, using the
+    ///     inclusive date rule. The period's own reservations never conflict with it.
+    /// </summary>
+    public TypeIIRangeReservation? FindOverlap(Uuid periodId, ObservationRange range)
     {
-        if (!ValidIdentity() || periodId == Uuid.Empty || examinationId == Uuid.Empty ||
-            planId == Uuid.Empty || !ValidRange(periodStart, periodEnd) ||
-            !Sha256(openingSnapshotSha256) || actorMemberId == Uuid.Empty ||
-            !Bounded(actorDisplay, 1, MaximumActorDisplayLength) || reservedAt == default)
-            return CommandFailure.InvalidContent(
-                "An observation-period reservation requires exact identities, dates, snapshot, and actor.");
-
-        if (_periods.FirstOrDefault(item => item.PeriodId == periodId) is { } existing)
-            return existing.ExaminationId == examinationId && existing.PlanId == planId &&
-                   existing.PeriodStart == periodStart && existing.PeriodEnd == periodEnd &&
-                   HashEquals(existing.OpeningSnapshotSha256, openingSnapshotSha256) &&
-                   existing.ReservedByMemberId == actorMemberId &&
-                   existing.ReservedByDisplay == actorDisplay.Trim() &&
-                   existing.IsActive == isActive
-                ? null
-                : CommandFailure.StateConflict(
-                    "An observation-period identity cannot be reused with different opening intent.");
-        if (_periods.Count >= MaximumPeriods)
-            return CommandFailure.StateConflict("The program reached its observation-period limit.");
-        if (isActive && ConflictsWith(periodStart, periodEnd, Uuid.Empty))
-            return CommandFailure.StateConflict(
-                "A program cannot reserve overlapping Type II observation periods.");
-
-        var period = new TypeIIObservationCalendarPeriodView(periodId, examinationId, planId,
-            periodStart, periodEnd, openingSnapshotSha256.ToLowerInvariant(), actorMemberId,
-            actorDisplay.Trim(), reservedAt, reservedAt, isActive);
-        var revision = Revision + 1;
-        var ev = new ObservationPeriodReserved(_tenantId, _programId, revision, actorMemberId,
-            period, reservedAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
-            return CommandFailure.InvalidContent(
-                "The observation-period reservation exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
+        ArgumentNullException.ThrowIfNull(range);
+        return _reservations.Values.Where(reservation => reservation.IsLive && reservation.PeriodId != periodId &&
+                reservation.Range!.Overlaps(range))
+            .OrderBy(reservation => reservation.Generation).FirstOrDefault();
     }
 
-    public CommandFailure? BeginAmendment(Uuid periodId, DateOnly periodStart, DateOnly periodEnd,
-        string reason, Uuid actorMemberId, string actorDisplay, DateTimeOffset requestedAt)
+    /// <summary>Holds the new range of an opening or amendment; the replaced reservation stays held.</summary>
+    public Result Authorize(OperationProvenance operation, ImmutableContentRef intent, Uuid periodId,
+        TypeIIRangeOperationKind kind, ObservationRange newRange, Uuid? priorOperationId)
     {
-        reason = Clean(reason);
-        actorDisplay = Clean(actorDisplay);
-        if (!ValidIdentity() || periodId == Uuid.Empty || !ValidRange(periodStart, periodEnd) ||
-            !Bounded(reason, 1, MaximumReasonLength) || actorMemberId == Uuid.Empty ||
-            !Bounded(actorDisplay, 1, MaximumActorDisplayLength) || requestedAt == default)
-            return CommandFailure.InvalidContent(
-                "An observation-period date amendment requires valid dates, rationale, and actor.");
-        var index = _periods.FindIndex(item => item.PeriodId == periodId);
-        if (index < 0)
-            return CommandFailure.MissingRecord("The observation-period reservation was not found.");
-        var period = _periods[index];
-        if (!period.IsActive)
-            return CommandFailure.StateConflict("Only an active observation period can be amended.");
-        if (period.PendingAmendment is { } pending)
-            return SameAmendment(pending, periodStart, periodEnd, reason, actorMemberId, actorDisplay)
-                ? null
-                : CommandFailure.StateConflict(
-                    "The observation period already has a different date amendment in progress.");
-        if (period.LastAmendment is { } last && SameAmendment(last, periodStart,
-                periodEnd, reason, actorMemberId, actorDisplay))
-            return null;
-        if (requestedAt < period.UpdatedAt ||
-            periodStart == period.PeriodStart && periodEnd == period.PeriodEnd)
-            return CommandFailure.InvalidContent(
-                "An observation-period amendment must change dates after the current reservation.");
-        if (ConflictsWith(periodStart, periodEnd, periodId))
-            return CommandFailure.StateConflict(
-                "A program cannot amend a Type II period into another reserved date range.");
-
-        var amendment = new TypeIIObservationCalendarAmendmentView(periodStart, periodEnd,
-            reason, actorMemberId, actorDisplay, requestedAt, null);
-        var ev = new ObservationPeriodAmendmentReserved(_tenantId, _programId,
-            Revision + 1, actorMemberId, periodId, amendment, requestedAt);
-        if (JsonSerializer.SerializeToUtf8Bytes(ev).Length > MaximumEventBytes)
-            return CommandFailure.InvalidContent(
-                "The observation-period amendment exceeds the bounded event payload.");
-        RaiseEvent(ev);
-        return null;
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        ArgumentNullException.ThrowIfNull(newRange);
+        if (operation.Owner != Stream || periodId == Uuid.Empty || !newRange.IsValid ||
+            kind == TypeIIRangeOperationKind.Opening != (priorOperationId is null))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A range authorization names its calendar, period, a valid range and, for an amendment, its prior range."));
+        var refused = Check(operation.RootOperationId, periodId, newRange, priorOperationId);
+        if (refused is not null)
+            return Result.Failure(refused);
+        RaiseEvent(new TypeIIPeriodRangeAuthorized(Stream, _revision + 1, TypeIIRangeEffects.Generation, intent, null,
+            operation, null, null, periodId, kind, newRange, priorOperationId));
+        return Result.Success;
     }
 
-    public CommandFailure? CompleteAmendment(Uuid periodId, DateOnly periodStart,
-        DateOnly periodEnd, string reason, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset completedAt)
+    /// <summary>
+    ///     Settles exactly one reservation: activates a pending one (releasing the one it replaced), releases a live
+    ///     one, or fences an operation that was never granted. It never touches any other reservation.
+    /// </summary>
+    public Result Settle(OperationProvenance operation, ImmutableContentRef intent, Uuid periodId,
+        TypeIIRangeSettlementKind settlement, Uuid targetOperationId, Uuid? releasedOperationId)
     {
-        reason = Clean(reason);
-        actorDisplay = Clean(actorDisplay);
-        if (!ValidIdentity() || periodId == Uuid.Empty || actorMemberId == Uuid.Empty ||
-            !Bounded(reason, 1, MaximumReasonLength) ||
-            !Bounded(actorDisplay, 1, MaximumActorDisplayLength) || completedAt == default)
-            return CommandFailure.InvalidContent(
-                "Completing an observation-period amendment requires its exact intent and actor.");
-        var index = _periods.FindIndex(item => item.PeriodId == periodId);
-        if (index < 0)
-            return CommandFailure.MissingRecord("The observation-period reservation was not found.");
-        var period = _periods[index];
-        var amendment = period.PendingAmendment;
-        if (amendment is null)
-            return period.LastAmendment is { } last && SameAmendment(last, periodStart,
-                    periodEnd, reason, actorMemberId, actorDisplay)
-                ? null
-                : CommandFailure.StateConflict(
-                    "The observation period has no matching reserved date amendment.");
-        if (!SameAmendment(amendment, periodStart, periodEnd, reason, actorMemberId, actorDisplay) ||
-            completedAt < amendment.RequestedAt || completedAt < period.UpdatedAt)
-            return CommandFailure.StateConflict(
-                "The completed date amendment must match its reservation and follow its request.");
-        if (ConflictsWith(periodStart, periodEnd, periodId))
-            return CommandFailure.StateConflict(
-                "A program cannot complete an amendment into another reserved date range.");
-
-        var ev = new ObservationPeriodAmendmentCompleted(_tenantId, _programId,
-            Revision + 1, actorMemberId, periodId, amendment, completedAt);
-        RaiseEvent(ev);
-        return null;
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (operation.Owner != Stream || periodId == Uuid.Empty || targetOperationId == Uuid.Empty ||
+            releasedOperationId is not null && settlement != TypeIIRangeSettlementKind.Activated)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A settlement names its calendar, period and the exact reservation it settles."));
+        var refused = CheckSettlement(periodId, settlement, targetOperationId, releasedOperationId);
+        if (refused is not null)
+            return Result.Failure(refused);
+        RaiseEvent(new TypeIIPeriodRangeSettled(Stream, _revision + 1, TypeIIRangeEffects.Generation, intent, null,
+            operation, null, null, periodId, settlement, targetOperationId, releasedOperationId));
+        return Result.Success;
     }
 
-    public CommandFailure? CancelAmendment(Uuid periodId, DateOnly periodStart,
-        DateOnly periodEnd, string reason, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset cancelledAt)
+    void Apply(TypeIIPeriodRangeAuthorized ev)
     {
-        reason = Clean(reason);
-        actorDisplay = Clean(actorDisplay);
-        if (!ValidIdentity() || periodId == Uuid.Empty || actorMemberId == Uuid.Empty ||
-            !Bounded(reason, 1, MaximumReasonLength) ||
-            !Bounded(actorDisplay, 1, MaximumActorDisplayLength) || cancelledAt == default)
-            return CommandFailure.InvalidContent(
-                "Cancelling an observation-period amendment requires its exact intent and actor.");
-        var index = _periods.FindIndex(item => item.PeriodId == periodId);
-        if (index < 0)
-            return CommandFailure.MissingRecord("The observation-period reservation was not found.");
-        var period = _periods[index];
-        var amendment = period.PendingAmendment;
-        if (amendment is null)
-            return null;
-        if (!SameAmendment(amendment, periodStart, periodEnd, reason, actorMemberId, actorDisplay) ||
-            cancelledAt < amendment.RequestedAt || cancelledAt < period.UpdatedAt)
-            return CommandFailure.StateConflict(
-                "The cancelled date amendment must match its reservation and follow its request.");
-
-        var ev = new ObservationPeriodAmendmentCancelled(_tenantId, _programId,
-            Revision + 1, actorMemberId, periodId, amendment, cancelledAt);
-        RaiseEvent(ev);
-        return null;
+        Acceptance.Observe(ev);
+        var failure = ev.Owner != Stream || ev.Operation.Owner != Stream || ev.Revision != _revision + 1 ||
+            ev.Generation != TypeIIRangeEffects.Generation || !ev.NewRange.IsValid || ev.PeriodId == Uuid.Empty
+            || ev.Kind == TypeIIRangeOperationKind.Opening != (ev.PriorOperationId is null)
+            ? new RequestError(RequestErrorKind.Validation, "invalid")
+            : Check(ev.Operation.RootOperationId, ev.PeriodId, ev.NewRange, ev.PriorOperationId);
+        if (failure is not null)
+            throw new InvalidOperationException($"The range authorization is invalid: {failure.Message}");
+        _revision = ev.Revision;
+        _generation++;
+        _reservations.Add(ev.Operation.RootOperationId, new TypeIIRangeReservation(ev.Operation.RootOperationId,
+            ev.PeriodId, TypeIIRangeReservationState.Pending, ev.Kind, ev.NewRange, _generation, ev.PriorOperationId,
+            ev, null));
     }
 
-    public CommandFailure? Release(Uuid periodId, Uuid closeSnapshotId,
-        string closeSnapshotSha256, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset releasedAt)
+    void Apply(TypeIIPeriodRangeSettled ev)
     {
-        actorDisplay = Clean(actorDisplay);
-        if (!ValidIdentity() || periodId == Uuid.Empty || closeSnapshotId == Uuid.Empty ||
-            !Sha256(closeSnapshotSha256) || actorMemberId == Uuid.Empty ||
-            !Bounded(actorDisplay, 1, MaximumActorDisplayLength) || releasedAt == default)
-            return CommandFailure.InvalidContent(
-                "Releasing a Type II date range requires its exact frozen close snapshot and actor.");
-        var index = _periods.FindIndex(item => item.PeriodId == periodId);
-        if (index < 0)
-            return CommandFailure.MissingRecord("The observation-period reservation was not found.");
-        var period = _periods[index];
-        if (!period.IsActive)
-            return null;
-        if (period.PendingAmendment is not null)
-            return CommandFailure.StateConflict(
-                "An observation-period amendment must finish before its date range can be released.");
-        if (releasedAt < period.UpdatedAt)
-            return CommandFailure.StateConflict(
-                "The observation-period date range cannot be released before its latest calendar change.");
-
-        var ev = new ObservationPeriodReservationReleased(_tenantId, _programId,
-            Revision + 1, actorMemberId, periodId, closeSnapshotId,
-            closeSnapshotSha256.ToLowerInvariant(), releasedAt);
-        RaiseEvent(ev);
-        return null;
-    }
-
-    void Apply(ObservationPeriodReserved ev)
-    {
-        if (ev.TenantId != _tenantId || ev.SubjectId != _programId || ev.Period is null ||
-            ev.Revision != Revision + 1 || ev.ActorMemberId is not { } actor ||
-            !ValidPeriod(ev.Period) || ev.Period.ReservedByMemberId != actor ||
-            ev.Period.CreatedAt != ev.OccurredAt || ev.Period.UpdatedAt != ev.OccurredAt ||
-            _periods.Count >= MaximumPeriods ||
-            _periods.Any(item => item.PeriodId == ev.Period.PeriodId) ||
-            ev.Period.IsActive &&
-            ConflictsWith(ev.Period.PeriodStart, ev.Period.PeriodEnd, Uuid.Empty))
-            throw new InvalidOperationException("The observation-period reservation event is invalid.");
-
-        _periods.Add(ev.Period);
-        Publish(ev.Revision, ev.OccurredAt);
-    }
-
-    void Apply(ObservationPeriodAmendmentReserved ev)
-    {
-        var index = _periods.FindIndex(item => item.PeriodId == ev.PeriodId);
-        if (ev.TenantId != _tenantId || ev.SubjectId != _programId ||
-            ev.Revision != Revision + 1 || ev.ActorMemberId == Uuid.Empty || index < 0 ||
-            ev.Amendment is not { } amendment || ev.ActorMemberId != amendment.ActorMemberId ||
-            amendment.RequestedAt != ev.OccurredAt || amendment.CompletedAt is not null ||
-            !ValidAmendment(amendment) || !_periods[index].IsActive ||
-            _periods[index].PendingAmendment is not null ||
-            amendment.PeriodStart == _periods[index].PeriodStart &&
-            amendment.PeriodEnd == _periods[index].PeriodEnd ||
-            ConflictsWith(amendment.PeriodStart, amendment.PeriodEnd, ev.PeriodId))
-            throw new InvalidOperationException("The observation-period amendment reservation event is invalid.");
-
-        _periods[index] = _periods[index] with
+        Acceptance.Observe(ev);
+        var failure = ev.Owner != Stream || ev.Operation.Owner != Stream || ev.Revision != _revision + 1 ||
+            ev.Generation != TypeIIRangeEffects.Generation ||
+            ev.ReleasedOperationId is not null && ev.Settlement != TypeIIRangeSettlementKind.Activated
+            ? new RequestError(RequestErrorKind.Validation, "invalid")
+            : CheckSettlement(ev.PeriodId, ev.Settlement, ev.TargetOperationId, ev.ReleasedOperationId);
+        if (failure is not null)
+            throw new InvalidOperationException($"The range settlement is invalid: {failure.Message}");
+        _revision = ev.Revision;
+        switch (ev.Settlement)
         {
-            PendingAmendment = amendment,
-            UpdatedAt = ev.OccurredAt,
+            case TypeIIRangeSettlementKind.Fenced:
+                _reservations.Add(ev.TargetOperationId, new TypeIIRangeReservation(ev.TargetOperationId, ev.PeriodId,
+                    TypeIIRangeReservationState.Fenced, TypeIIRangeOperationKind.Opening, null, 0, null, null, ev));
+                break;
+            case TypeIIRangeSettlementKind.Released:
+                _reservations[ev.TargetOperationId] = _reservations[ev.TargetOperationId] with
+                {
+                    State = TypeIIRangeReservationState.Released,
+                    SettledFact = ev,
+                };
+                break;
+            default:
+                _reservations[ev.TargetOperationId] = _reservations[ev.TargetOperationId] with
+                {
+                    State = TypeIIRangeReservationState.Active,
+                    SettledFact = ev,
+                };
+                if (ev.ReleasedOperationId is { } released)
+                    _reservations[released] = _reservations[released] with
+                    {
+                        State = TypeIIRangeReservationState.Released,
+                        SettledFact = ev,
+                    };
+                break;
+        }
+    }
+
+    RequestError? Check(Uuid operationId, Uuid periodId, ObservationRange newRange, Uuid? priorOperationId)
+    {
+        if (_reservations.ContainsKey(operationId))
+            return new RequestError(RequestErrorKind.Conflict,
+                "This operation already holds a reservation or a fence on the calendar.");
+        if (priorOperationId is { } prior && (_reservations.GetValueOrDefault(prior) is not { IsLive: true } held ||
+                                              held.PeriodId != periodId))
+            return new RequestError(RequestErrorKind.Conflict,
+                "An amendment must replace a live reservation of its own period.");
+        return FindOverlap(periodId, newRange) is not null
+            ? new RequestError(RequestErrorKind.Conflict,
+                "A program cannot reserve overlapping Type II observation periods.")
+            : null;
+    }
+
+    RequestError? CheckSettlement(Uuid periodId, TypeIIRangeSettlementKind settlement, Uuid target, Uuid? released)
+    {
+        var existing = _reservations.GetValueOrDefault(target);
+        var bad = settlement switch
+        {
+            TypeIIRangeSettlementKind.Fenced => existing is not null,
+            TypeIIRangeSettlementKind.Released => existing is not { IsLive: true } || existing.PeriodId != periodId,
+            _ => existing is not { State: TypeIIRangeReservationState.Pending } || existing.PeriodId != periodId ||
+                 released is { } other && (_reservations.GetValueOrDefault(other) is not { IsLive: true } old ||
+                                           old.PeriodId != periodId || existing.PriorOperationId != other),
         };
-        Publish(ev.Revision, ev.OccurredAt);
+        return bad
+            ? new RequestError(RequestErrorKind.Conflict, "The settlement does not match a live reservation of its period.")
+            : null;
     }
-
-    void Apply(ObservationPeriodAmendmentCompleted ev)
-    {
-        var index = _periods.FindIndex(item => item.PeriodId == ev.PeriodId);
-        if (ev.TenantId != _tenantId || ev.SubjectId != _programId ||
-            ev.Revision != Revision + 1 || ev.ActorMemberId == Uuid.Empty || index < 0 ||
-            ev.Amendment is not { } amendment || ev.ActorMemberId != amendment.ActorMemberId ||
-            !ValidAmendment(amendment) || amendment.CompletedAt is not null ||
-            _periods[index].PendingAmendment != amendment ||
-            ev.OccurredAt < amendment.RequestedAt || ev.OccurredAt < _periods[index].UpdatedAt ||
-            ConflictsWith(amendment.PeriodStart, amendment.PeriodEnd, ev.PeriodId))
-            throw new InvalidOperationException("The observation-period amendment completion event is invalid.");
-
-        var completed = amendment with { CompletedAt = ev.OccurredAt };
-        _periods[index] = _periods[index] with
-        {
-            PeriodStart = amendment.PeriodStart,
-            PeriodEnd = amendment.PeriodEnd,
-            PendingAmendment = null,
-            LastAmendment = completed,
-            UpdatedAt = ev.OccurredAt,
-        };
-        Publish(ev.Revision, ev.OccurredAt);
-    }
-
-    void Apply(ObservationPeriodAmendmentCancelled ev)
-    {
-        var index = _periods.FindIndex(item => item.PeriodId == ev.PeriodId);
-        if (ev.TenantId != _tenantId || ev.SubjectId != _programId ||
-            ev.Revision != Revision + 1 || ev.ActorMemberId == Uuid.Empty || index < 0 ||
-            ev.Amendment is not { } amendment || ev.ActorMemberId != amendment.ActorMemberId ||
-            !ValidAmendment(amendment) || amendment.CompletedAt is not null ||
-            _periods[index].PendingAmendment != amendment ||
-            ev.OccurredAt < amendment.RequestedAt || ev.OccurredAt < _periods[index].UpdatedAt)
-            throw new InvalidOperationException("The observation-period amendment cancellation event is invalid.");
-
-        _periods[index] = _periods[index] with
-        {
-            PendingAmendment = null,
-            UpdatedAt = ev.OccurredAt,
-        };
-        Publish(ev.Revision, ev.OccurredAt);
-    }
-
-    void Apply(ObservationPeriodReservationReleased ev)
-    {
-        var index = _periods.FindIndex(item => item.PeriodId == ev.PeriodId);
-        if (ev.TenantId != _tenantId || ev.SubjectId != _programId ||
-            ev.Revision != Revision + 1 || ev.ActorMemberId == Uuid.Empty ||
-            ev.CloseSnapshotId == Uuid.Empty || !Sha256(ev.CloseSnapshotSha256) || index < 0 ||
-            !_periods[index].IsActive || _periods[index].PendingAmendment is not null ||
-            ev.OccurredAt < _periods[index].UpdatedAt)
-            throw new InvalidOperationException("The observation-period reservation release event is invalid.");
-
-        _periods[index] = _periods[index] with
-        {
-            IsActive = false,
-            UpdatedAt = ev.OccurredAt,
-        };
-        Publish(ev.Revision, ev.OccurredAt);
-    }
-
-    void Publish(long revision, DateTimeOffset at)
-    {
-        _periods.Sort(static (left, right) =>
-        {
-            var start = left.PeriodStart.CompareTo(right.PeriodStart);
-            return start != 0 ? start : StringComparer.Ordinal.Compare(
-                left.PeriodId.ToString(), right.PeriodId.ToString());
-        });
-        _current = new TypeIIObservationCalendarView(_tenantId, _programId, revision,
-            Array.AsReadOnly(_periods.ToArray()), at);
-    }
-
-    bool ValidIdentity() => _tenantId != Uuid.Empty && _programId != Uuid.Empty && Id == _programId;
-
-    static bool ValidPeriod(TypeIIObservationCalendarPeriodView period) =>
-        period.PeriodId != Uuid.Empty && period.ExaminationId != Uuid.Empty &&
-        period.PlanId != Uuid.Empty && ValidRange(period.PeriodStart, period.PeriodEnd) &&
-        Sha256(period.OpeningSnapshotSha256) && period.ReservedByMemberId != Uuid.Empty &&
-        Bounded(period.ReservedByDisplay, 1, MaximumActorDisplayLength) &&
-        period.CreatedAt != default && period.UpdatedAt >= period.CreatedAt &&
-        (period.PendingAmendment is null || ValidAmendment(period.PendingAmendment) &&
-            period.PendingAmendment.CompletedAt is null) &&
-        (period.LastAmendment is null || ValidAmendment(period.LastAmendment) &&
-            period.LastAmendment.CompletedAt is not null);
-
-    bool ConflictsWith(DateOnly periodStart, DateOnly periodEnd, Uuid exceptPeriodId) =>
-        _periods.Any(item => item.IsActive && item.PeriodId != exceptPeriodId &&
-            (Overlaps(periodStart, periodEnd, item.PeriodStart, item.PeriodEnd) ||
-             item.PendingAmendment is { } pending &&
-             Overlaps(periodStart, periodEnd, pending.PeriodStart, pending.PeriodEnd)));
-
-    static bool ValidAmendment(TypeIIObservationCalendarAmendmentView amendment) =>
-        ValidRange(amendment.PeriodStart, amendment.PeriodEnd) &&
-        Bounded(amendment.Reason, 1, MaximumReasonLength) &&
-        amendment.ActorMemberId != Uuid.Empty &&
-        Bounded(amendment.ActorDisplay, 1, MaximumActorDisplayLength) &&
-        amendment.RequestedAt != default &&
-        (amendment.CompletedAt is null || amendment.CompletedAt >= amendment.RequestedAt);
-
-    static bool SameAmendment(TypeIIObservationCalendarAmendmentView existing,
-        DateOnly periodStart, DateOnly periodEnd, string reason, Uuid actorMemberId,
-        string actorDisplay) => existing.PeriodStart == periodStart &&
-        existing.PeriodEnd == periodEnd && existing.Reason == reason &&
-        existing.ActorMemberId == actorMemberId && existing.ActorDisplay == actorDisplay;
-
-    static bool ValidRange(DateOnly start, DateOnly end) => start != default && end >= start;
-
-    static bool Overlaps(DateOnly leftStart, DateOnly leftEnd, DateOnly rightStart,
-        DateOnly rightEnd) => leftStart <= rightEnd && leftEnd >= rightStart;
-
-    static bool Sha256(string? value) => value is { Length: 64 } && value.All(char.IsAsciiHexDigit);
-
-    static bool HashEquals(string? left, string? right) => left is not null && right is not null &&
-        StringComparer.OrdinalIgnoreCase.Equals(left, right);
-
-    static string Clean(string? value) => value?.Trim() ?? string.Empty;
-
-    static bool Bounded(string? value, int minimum, int maximum) => value is not null &&
-        value.Trim().Length >= minimum && value.Trim().Length <= maximum;
 }

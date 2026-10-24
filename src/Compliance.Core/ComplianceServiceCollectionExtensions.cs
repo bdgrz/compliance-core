@@ -690,6 +690,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ServiceEngagementViews>();
         services.AddScoped<FirmStaffRegistrationReceivers>();
         services.AddSingleton(ProfessionalDutyChangeProcess.Definition());
+        services.AddSingleton(TypeIIRangeProcess.Definition());
+        services.AddScoped<TypeIIRangeVerifier>();
+        services.AddScoped<TypeIIRangeReceivers>();
         services.AddScoped<ProfessionalDutyAdmission>();
         services.AddScoped<ProfessionalDutyChangeVerifier>();
         services.AddScoped<ProfessionalDutyFences>();
@@ -840,6 +843,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<ClientIndependencePreviewReceiverAuthorizer>()
             .AddRequestAuthorizer<EngagementPersonalDecisionReceiverAuthorizer>()
             .AddRequestAuthorizer<EngagementAcceptanceReceiverAuthorizer>()
+            .AddRequestAuthorizer<TypeIIRangeReceiverAuthorizer>()
             .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
             .AddRequestAuthorizer<ServiceEngagementAcceptanceAuthorizer>()
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
@@ -1144,6 +1148,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<AssessComplianceIncidentHandler>()
             .AddRequestHandler<RecordComplianceIncidentResolutionHandler>()
             .AddRequestHandler<AmendTypeIIObservationPeriodHandler>()
+            .AddRequestHandler<CancelTypeIIPeriodAmendmentHandler>()
+            .AddRequestHandler<AcquireTypeIIPeriodRangeHandler>()
+            .AddRequestHandler<ApplyTypeIIPeriodRangeHandler>()
+            .AddRequestHandler<SettleTypeIIPeriodRangeHandler>()
+            .AddRequestHandler<RejectTypeIIPeriodOpeningHandler>()
+            .AddRequestHandler<RejectTypeIIPeriodAmendmentHandler>()
             .AddRequestHandler<GenerateDueControlOccurrencesHandler>()
             .AddRequestHandler<CreateSystemDescriptionDraftHandler>()
             .AddRequestHandler<ReviseSystemDescriptionDraftHandler>()
@@ -1488,6 +1498,10 @@ public static class ComplianceServiceCollectionExtensions
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<EngagementAcceptanceReactor>(EngagementAcceptanceReactor.WorkloadName,
                 WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<TypeIIRangeReactor>(TypeIIRangeReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<TypeIIRangeReleaseReactor>(TypeIIRangeReleaseReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })

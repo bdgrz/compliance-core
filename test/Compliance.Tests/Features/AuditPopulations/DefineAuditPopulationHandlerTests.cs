@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using AuditPopulationAggregate = Bdgrz.Compliance.Features.AuditPopulations.AuditPopulation;
 using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 using TypeIIPeriodAggregate = Bdgrz.Compliance.Features.Operations.TypeIIPeriod;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AuditPopulations;
 

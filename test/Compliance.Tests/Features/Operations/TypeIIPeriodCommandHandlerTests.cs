@@ -1,7 +1,13 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,16 +26,22 @@ public sealed class TypeIIPeriodCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         await fixture.SeedStartedPeriodAsync();
-        var request = new AmendTypeIIObservationPeriod(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, 1, null, fixture.PeriodEnd.AddDays(7), "Extend for the delayed sample window.");
+        var request = fixture.Amendment(1, null, fixture.PeriodEnd.AddDays(7), "Extend for the delayed sample window.");
 
         // Act
         var result = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var pending = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
+            fixture.ProgramId, fixture.PeriodId));
+        await fixture.RunProcessAsync(request.CommandId);
         var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
             fixture.ProgramId, fixture.PeriodId));
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(request.CommandId, result.Value!.OperationId);
+        Assert.Equal(1, pending.Revision);
+        Assert.Equal(fixture.PeriodEnd, pending.Current!.PeriodEnd);
+        Assert.Equal(request.CommandId, pending.PendingOperationId);
         Assert.Equal(2, saved.Revision);
         Assert.Equal(fixture.PeriodStart, saved.Current!.PeriodStart);
         Assert.Equal(fixture.PeriodEnd.AddDays(7), saved.Current.PeriodEnd);
@@ -38,18 +50,19 @@ public sealed class TypeIIPeriodCommandHandlerTests
     }
 
     [Fact]
-    public async Task ShouldSynchronizeReservedRangeAfterAmendmentGivenStartedPeriod()
+    public async Task ShouldHoldBothRangesThenReleaseOldRangeGivenAmendmentProcess()
     {
         // Arrange
         await using var fixture = new Fixture();
         await fixture.SeedStartedPeriodAsync();
         var amendedEnd = fixture.PeriodEnd.AddDays(7);
-        var request = new AmendTypeIIObservationPeriod(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, 1, null, amendedEnd, "Extend for the delayed sample window.");
+        var request = fixture.Amendment(1, null, amendedEnd, "Extend for the delayed sample window.");
 
         // Act
         var result = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
         var retry = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
+        var run = await fixture.RunProcessAsync(request.CommandId);
+        var replayed = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
         var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
             fixture.TenantId, fixture.ProgramId));
         var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
@@ -57,10 +70,17 @@ public sealed class TypeIIPeriodCommandHandlerTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(result.Value, retry.Value);
+        Assert.Equal(result.Value, replayed.Value);
+        Assert.Equal(ProcessState.Completed, run.State);
         Assert.Equal(2, period.Revision);
-        Assert.Equal(3, calendar.Revision);
-        Assert.Equal(amendedEnd, Assert.Single(calendar.Current!.Periods).PeriodEnd);
+        Assert.Equal(4, calendar.Revision);
+        Assert.Equal(TypeIIRangeReservationState.Released, calendar.Find(fixture.PeriodId)!.State);
+        var live = calendar.Find(request.CommandId)!;
+        Assert.Equal(TypeIIRangeReservationState.Active, live.State);
+        Assert.Equal(new ObservationRange(fixture.PeriodStart, amendedEnd), live.Range);
+        Assert.Equal(new TypeIIPeriodCalendarAuthorization(request.CommandId, live.Generation),
+            period.CalendarAuthorization);
     }
 
     [Fact]
@@ -69,11 +89,10 @@ public sealed class TypeIIPeriodCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         await fixture.SeedStartedPeriodAsync();
-        var first = new AmendTypeIIObservationPeriod(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, 1, null, fixture.PeriodEnd.AddDays(7), "Extend the period.");
+        var first = fixture.Amendment(1, null, fixture.PeriodEnd.AddDays(7), "Extend the period.");
         Assert.True((await fixture.Handler.HandleAsync(fixture.Context(first), CancellationToken.None)).IsSuccess);
-        var stale = new AmendTypeIIObservationPeriod(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, 1, fixture.PeriodStart.AddDays(1), null, "Move the start date.");
+        await fixture.RunProcessAsync(first.CommandId);
+        var stale = fixture.Amendment(1, fixture.PeriodStart.AddDays(1), null, "Move the start date.");
 
         // Act
         var result = await fixture.Handler.HandleAsync(fixture.Context(stale), CancellationToken.None);
@@ -86,6 +105,33 @@ public sealed class TypeIIPeriodCommandHandlerTests
         Assert.Equal(fixture.PeriodStart, saved.Current!.PeriodStart);
         Assert.Equal(fixture.PeriodEnd.AddDays(7), saved.Current.PeriodEnd);
         Assert.Single(saved.Current.Amendments);
+        Assert.Null(saved.Pending);
+    }
+
+    [Fact]
+    public async Task ShouldConflictGivenSameAmendmentIdentityWithChangedIntent()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        await fixture.SeedStartedPeriodAsync();
+        var request = fixture.Amendment(1, null, fixture.PeriodEnd.AddDays(7), "Extend the period.");
+        Assert.True((await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None)).IsSuccess);
+
+        // Act
+        var changedDates = await fixture.Handler.HandleAsync(fixture.Context(request with
+        {
+            PeriodEnd = fixture.PeriodEnd.AddDays(8),
+        }), CancellationToken.None);
+        var changedRevision = await fixture.Handler.HandleAsync(fixture.Context(request with { ExpectedRevision = 0 }),
+            CancellationToken.None);
+        var otherAmendment = await fixture.Handler.HandleAsync(fixture.Context(fixture.Amendment(1, null,
+            fixture.PeriodEnd.AddDays(9), "A second amendment while one is pending.")), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, changedDates.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, changedRevision.Error?.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, otherAmendment.Error?.Kind);
+        Assert.True(otherAmendment.Error?.IsTransient);
     }
 
     [Fact]
@@ -164,7 +210,7 @@ public sealed class TypeIIPeriodCommandHandlerTests
     }
 
     [Fact]
-    public async Task ShouldFreezeExactApprovedCloseAndReleaseCalendarGivenAuthorizedExecutive()
+    public async Task ShouldFreezeExactApprovedCloseNamingLiveReservationAndReleaseItGivenAuthorizedExecutive()
     {
         // Arrange
         await using var fixture = new Fixture();
@@ -184,31 +230,32 @@ public sealed class TypeIIPeriodCommandHandlerTests
             .HandleAsync(fixture.Context(request), CancellationToken.None);
         var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
             fixture.ProgramId, fixture.PeriodId));
+        var calendarBefore = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
+            fixture.TenantId, fixture.ProgramId));
+        await fixture.Host.ReleaseAsync<ObservationPeriodCloseFrozen>(period.Stream);
+        await fixture.Host.ReleaseAsync<ObservationPeriodCloseFrozen>(period.Stream);
         var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
             fixture.TenantId, fixture.ProgramId));
-        var calendarEvents = new List<DomainEventRecord>();
-        await foreach (var record in fixture.Events.ReadAsync(
-                           new TypeIIObservationCalendar(fixture.TenantId, fixture.ProgramId).Stream,
-                           0, CancellationToken.None))
-            calendarEvents.Add(record);
+        var frozen = Assert.Single(await fixture.Host.EventsAsync<ObservationPeriodCloseFrozen>(period.Stream));
+        var settlements = await fixture.Host.EventsAsync<TypeIIPeriodRangeSettled>(calendar.Stream);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
         var snapshot = Assert.Single(period.Current!.CloseSnapshots);
         Assert.Equal(closeSnapshotId, snapshot.CloseSnapshotId);
         Assert.Equal("closed", period.Current.Status);
-        Assert.False(Assert.Single(calendar.Current!.Periods).IsActive);
-        Assert.Equal(2, calendar.Revision);
-        var releaseRecord = Assert.Single(calendarEvents,
-            item => item.Event is ObservationPeriodReservationReleased);
-        var release = Assert.IsType<ObservationPeriodReservationReleased>(releaseRecord.Event);
-        Assert.Equal(closeSnapshotId, release.CloseSnapshotId);
-        Assert.Equal(snapshot.ContentSha256, release.CloseSnapshotSha256);
-        Assert.Equal(fixture.ActorMemberId, release.ActorMemberId);
+        Assert.Equal(fixture.PeriodId, frozen.CalendarAuthorizationId);
+        Assert.Equal(1, frozen.CalendarGeneration);
+        Assert.Equal(TypeIIRangeReservationState.Active, calendarBefore.Find(fixture.PeriodId)!.State);
+        Assert.Equal(TypeIIRangeReservationState.Released, calendar.Find(fixture.PeriodId)!.State);
+        Assert.Equal(3, calendar.Revision);
+        var release = settlements.Last();
+        Assert.Equal(TypeIIRangeSettlementKind.Released, release.Settlement);
+        Assert.Equal(fixture.PeriodId, release.TargetOperationId);
     }
 
     [Fact]
-    public async Task ShouldCompleteCalendarReleaseGivenCloseFreezeRetryAfterClockAdvances()
+    public async Task ShouldReplayFreezeWithoutAppendingGivenCloseFreezeRetryAfterClockAdvances()
     {
         // Arrange
         await using var fixture = new Fixture();
@@ -230,14 +277,11 @@ public sealed class TypeIIPeriodCommandHandlerTests
         var retry = await handler.HandleAsync(context, CancellationToken.None);
         var period = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
             fixture.ProgramId, fixture.PeriodId));
-        var calendar = await fixture.Reader.HydrateAsync(new TypeIIObservationCalendar(
-            fixture.TenantId, fixture.ProgramId));
 
         // Assert
         Assert.True(retry.IsSuccess, retry.Error?.Message);
         Assert.Equal(4, period.Revision);
         Assert.Single(period.Current!.CloseSnapshots);
-        Assert.Equal(2, calendar.Revision);
     }
 
     [Fact]
@@ -269,8 +313,6 @@ public sealed class TypeIIPeriodCommandHandlerTests
 
     sealed class Fixture : IAsyncDisposable
     {
-        readonly ServiceProvider _provider;
-        readonly AsyncServiceScope _scope;
         readonly ClaimsPrincipal _actor;
 
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
@@ -290,10 +332,11 @@ public sealed class TypeIIPeriodCommandHandlerTests
         public Uuid ActorMemberId => RbacIds.Member(TenantId, ActorUserId);
         public DateTimeOffset CloseValidationAt { get; } = StartedAt.AddMonths(12);
         public MutableTimeProvider CloseClock { get; }
-        public IAggregateExecutor Executor { get; }
-        public IAggregateWriter Writer { get; }
-        public IAggregateReader Reader { get; }
-        public IDomainEventReader Events { get; }
+        public TypeIIRangeHost Host { get; }
+        public IAggregateExecutor Executor => Host.Executor;
+        public IAggregateWriter Writer => Host.Writer;
+        public IAggregateReader Reader => Host.Reader;
+        public IDomainEventReader Events => Host.Events;
         public AmendTypeIIObservationPeriodHandler Handler { get; }
         public TimeProvider Clock { get; } = new FixedTimeProvider(AmendedAt);
 
@@ -302,16 +345,8 @@ public sealed class TypeIIPeriodCommandHandlerTests
             _actor = new ClaimsPrincipal(new ClaimsIdentity(
                 [new Claim("iss", "bdgrz"), new Claim("sub", ActorUserId.ToString()),
                     new Claim("name", "Period manager")], "BdgrzSession"));
-            var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
-            services.AddPortia();
-            _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-            _scope = _provider.CreateAsyncScope();
-            Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-            Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
-            Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-            Events = (IDomainEventReader)_scope.ServiceProvider.GetRequiredService<IEventStore>();
-            Handler = new AmendTypeIIObservationPeriodHandler(Executor, Reader, Events, Clock);
+            Host = new TypeIIRangeHost(Clock);
+            Handler = Host.AmendHandler(Clock);
             CloseClock = new MutableTimeProvider(CloseValidationAt.AddHours(1));
         }
 
@@ -336,8 +371,16 @@ public sealed class TypeIIPeriodCommandHandlerTests
                 new ExecutivePermissions(permissions)), CloseClock);
 
         public FreezeTypeIIPeriodCloseHandler FreezeHandler(params string[] permissions) =>
-            new(Executor, Reader, Events, new ManagementExecutiveAuthority(Reader,
+            new(Executor, Reader, new ManagementExecutiveAuthority(Reader,
                 new ExecutivePermissions(permissions)), CloseClock);
+
+        public AmendTypeIIObservationPeriod Amendment(long expectedRevision, DateOnly? start, DateOnly? end,
+            string reason) => new(Uuid.CreateVersion4(), TenantId, ProgramId, PeriodId, expectedRevision, start, end,
+            reason);
+
+        /// <summary>Starts (if absent) and drives the range process of an admitted amendment to its end.</summary>
+        public Task<ProcessRecord> RunProcessAsync(Uuid operationId) =>
+            Host.RunProcessAsync(TenantId, ProgramId, PeriodId, operationId);
 
         public async Task RegisterActorAsync()
         {
@@ -357,8 +400,29 @@ public sealed class TypeIIPeriodCommandHandlerTests
             await Writer.SaveAsync(plan, new RequestDispatchContext(RequestActor.System));
 
             var period = new TypeIIPeriod(TenantId, ProgramId, PeriodId);
-            Assert.Null(period.Start(plan.Current!, Opening(), ProposerMemberId, "Compliance lead", StartedAt));
+            var calendar = new TypeIIObservationCalendar(TenantId, ProgramId);
+            var header = new DurableIntentHeader(PeriodId, period.Stream, period.Stream, period.Stream,
+                ActorReference.ForMember(ProposerMemberId, "Compliance lead"), "initial", null, new string('b', 64),
+                StartedAt);
+            var intent = await Host.Content.WriteJsonAsync(TenantId.ToString(), Uuid.CreateVersion4(),
+                TypeIIRangeIntent.Schema, new TypeIIRangeIntent(header, ProgramId, PeriodId,
+                    TypeIIRangeOperationKind.Opening, null, null, new ObservationRange(PeriodStart, PeriodEnd),
+                    new ImmutableContentRef(Uuid.CreateVersion4(), new string('a', 64), 2, "application/json",
+                        TypeIIPeriodOpeningChange.Schema),
+                    TypeIIRangeEffects.KeyOf(PeriodId, period.Stream, calendar.Stream)));
+            Assert.Null(period.Start(plan.Current!, Opening(), ProposerMemberId, "Compliance lead", StartedAt,
+                intent));
             await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
+
+            // The calendar holds the range the opening was applied with, exactly as the range process leaves it.
+            var provenance = new OperationProvenance(Uuid.CreateVersion4(), PeriodId, null, "SeedRange",
+                ActorReference.ForMember(ProposerMemberId, "Compliance lead"), calendar.Stream, "initial", null,
+                new string('b', 64), StartedAt, calendar.Stream, calendar.Stream);
+            Assert.True(calendar.Authorize(provenance, intent, PeriodId, TypeIIRangeOperationKind.Opening,
+                new ObservationRange(PeriodStart, PeriodEnd), null).IsSuccess);
+            Assert.True(calendar.Settle(provenance with { LogicalId = Uuid.CreateVersion4() }, intent, PeriodId,
+                TypeIIRangeSettlementKind.Activated, PeriodId, null).IsSuccess);
+            await Writer.SaveAsync(calendar, new RequestDispatchContext(RequestActor.System));
         }
 
         public async Task SeedCloseReadyPeriodAsync()
@@ -399,11 +463,7 @@ public sealed class TypeIIPeriodCommandHandlerTests
             [Reference("boundary"), Reference("inventory"), Reference("control"),
                 Reference("policy"), Reference("provider"), Reference("finding")];
 
-        public async ValueTask DisposeAsync()
-        {
-            await _scope.DisposeAsync();
-            await _provider.DisposeAsync();
-        }
+        public ValueTask DisposeAsync() => Host.DisposeAsync();
     }
 
     sealed class ExecutivePermissions(params string[] permissions)

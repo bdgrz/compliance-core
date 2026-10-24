@@ -370,8 +370,9 @@ public sealed class ComplianceWebTests
         // Arrange
         await using var factory = CreateBrokerFreeFactory("Development");
         using var client = factory.CreateClient();
-        const string route = "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/observation-periods/{period_id}/starts";
-        const string amendmentRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/amendments";
+        const string route = "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}";
+        const string amendmentRoute = route + "/amendments/{command_id}";
+        const string cancellationRoute = route + "/amendments/{amendment_id}/cancellations/{command_id}";
         const string closeApprovalRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-approvals";
         const string closeFreezeRoute = "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/freezes";
 
@@ -383,16 +384,16 @@ public sealed class ComplianceWebTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var operation = document.RootElement.GetProperty("paths").GetProperty(route)
-            .GetProperty("post");
+            .GetProperty("put");
         Assert.True(operation.TryGetProperty("requestBody", out _));
         var parameters = operation.GetProperty("parameters").EnumerateArray()
             .Select(parameter => parameter.GetProperty("name").GetString()).ToArray();
         Assert.Contains("tenant_id", parameters);
         Assert.Contains("program_id", parameters);
-        Assert.Contains("examination_id", parameters);
         Assert.Contains("period_id", parameters);
         var paths = document.RootElement.GetProperty("paths");
-        Assert.True(paths.GetProperty(amendmentRoute).TryGetProperty("post", out _));
+        Assert.True(paths.GetProperty(amendmentRoute).TryGetProperty("put", out _));
+        Assert.True(paths.GetProperty(cancellationRoute).TryGetProperty("put", out _));
         Assert.True(paths.GetProperty(closeApprovalRoute).TryGetProperty("post", out _));
         var closeFreeze = paths.GetProperty(closeFreezeRoute).GetProperty("post");
         Assert.True(closeFreeze.TryGetProperty("requestBody", out _));

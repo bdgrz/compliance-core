@@ -8,6 +8,7 @@ using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using AuditOutcomeAggregate = Bdgrz.Compliance.Features.Examinations.AuditOutcome;
 using ProgramRolloverAggregate = Bdgrz.Compliance.Features.Programs.ProgramRollover;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Programs;
 

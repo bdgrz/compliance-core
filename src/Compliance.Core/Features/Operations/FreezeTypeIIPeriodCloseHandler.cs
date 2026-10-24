@@ -4,10 +4,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
-/// <summary>Freezes the persisted, approved close reconciliation and releases its program date reservation.</summary>
+/// <summary>
+/// Freezes the persisted, approved close reconciliation. The frozen fact names the exact live calendar reservation
+/// of the period; <see cref="TypeIIRangeReleaseReactor" /> releases that reservation from it afterwards.
+/// </summary>
 public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IDomainEventReader events,
-    ManagementExecutiveAuthority executiveAuthority, TimeProvider clock)
+    IAggregateReader reader, ManagementExecutiveAuthority executiveAuthority, TimeProvider clock)
     : IRequestHandler<FreezeTypeIIPeriodClose>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<FreezeTypeIIPeriodClose> context,
@@ -56,12 +58,6 @@ public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
                     frozenAt) is { } freezeFailure)
                 return Result.Failure(freezeFailure.ToRequestError());
 
-            var bootstrap = await TypeIIObservationCalendarBootstrap.EnsureAsync(executor,
-                reader, events, context, request.TenantId, request.ProgramId, ct)
-                .ConfigureAwait(false);
-            if (!bootstrap.IsSuccess)
-                return bootstrap;
-
             var freeze = await executor.ExecuteAsync(new TypeIIPeriod(request.TenantId,
                     request.ProgramId, request.PeriodId), aggregate =>
                     CommandFailureRequestAdapter.ToOutcome(aggregate.FreezeClose(
@@ -85,18 +81,7 @@ public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
         if (snapshot is null || !MatchesFrozenSnapshot(snapshot, content, memberId, role))
             return Conflict("The frozen close snapshot could not be verified after persistence.");
 
-        var calendar = await TypeIIObservationCalendarBootstrap.EnsureAsync(executor,
-            reader, events, context, request.TenantId, request.ProgramId, ct)
-            .ConfigureAwait(false);
-        if (!calendar.IsSuccess)
-            return calendar;
-
-        var releasedAt = clock.GetUtcNow();
-        return await executor.ExecuteAsync(new TypeIIObservationCalendar(request.TenantId,
-                request.ProgramId), aggregate => CommandFailureRequestAdapter.ToOutcome(
-                aggregate.Release(request.PeriodId, snapshot.CloseSnapshotId,
-                    snapshot.ContentSha256, memberId, role, releasedAt)), context, ct)
-            .ConfigureAwait(false);
+        return Result.Success;
     }
 
     static bool MatchesFrozenSnapshot(TypeIIPeriodCloseSnapshotView snapshot,
