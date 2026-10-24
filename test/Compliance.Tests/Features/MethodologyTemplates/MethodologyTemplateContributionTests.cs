@@ -1,6 +1,6 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.MethodologyTemplates;
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -21,25 +21,27 @@ public sealed class MethodologyTemplateContributionTests
     static readonly DateTimeOffset Now = new(2026, 10, 18, 15, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public void ShouldShareOnlyReviewedDeidentifiedContributionAndRetainNoClientIdentityInTemplateGivenAcceptance()
+    public async Task ShouldShareOnlyReviewedDeidentifiedContributionAndRetainNoClientIdentityInTemplateGivenAcceptance()
     {
         // Arrange
-        var contribution = new MethodologyTemplateContribution(TenantId, ContributionId);
+        await using var contribution = new MethodologyTemplateContributionScenario(Now);
         var proposedContent = new MethodologyTemplateRecordContent("quarterly-access-review", "control",
             "Review privileged access", "The owner reviews privileged access quarterly.", []);
 
         // Act
-        var proposed = contribution.Propose(SourceRecordId, 3, proposedContent,
-            "Removed customer name, user references, evidence and engagement identifiers.",
-            ContributorId, "Client compliance lead", Now);
-        var selfReview = contribution.Review(contribution.Revision, "approved", "Ready to reuse.",
-            ContributorId, "Client compliance lead", Now.AddMinutes(1));
-        var reviewed = contribution.Review(contribution.Revision, "approved",
-            "Verified the proposal contains no client identifiers or evidence.",
-            ReviewerId, "Independent reviewer", Now.AddMinutes(2));
-        var accepted = contribution.Accept(contribution.Revision, "Approved for platform methodology use.",
-            AcceptorId, "Platform operator", Now.AddMinutes(3));
-        var share = contribution.ShareableContent;
+        var proposed = await contribution.ProposeAsync(new ProposeDeidentifiedTemplateContribution(TenantId,
+            ContributionId, SourceRecordId, 3, proposedContent,
+            "Removed customer name, user references, evidence and engagement identifiers."), ContributorId);
+        contribution.Clock.Now = Now.AddMinutes(1);
+        var selfReview = await contribution.ReviewAsync(new ReviewTemplateContribution(Uuid.CreateVersion4(),
+            TenantId, ContributionId, "approved", "Ready to reuse."), ContributorId);
+        contribution.Clock.Now = Now.AddMinutes(2);
+        var reviewed = await contribution.ReviewAsync(new ReviewTemplateContribution(Uuid.CreateVersion4(),
+            TenantId, ContributionId, "approved", "Verified no client identifiers or evidence."), ReviewerId);
+        contribution.Clock.Now = Now.AddMinutes(3);
+        var accepted = await contribution.AcceptAsync(new AcceptTemplateContribution(Uuid.CreateVersion4(),
+            TenantId, ContributionId, "Approved for platform methodology use."), AcceptorId);
+        var share = await contribution.Views.ShareAsync(TenantId, ContributionId);
         var template = new MethodologyTemplate(TemplateId);
         Assert.Null(template.Create(MethodologyTemplateTests.Content("Platform authored procedure."),
             "Initial version.", TemplateAuthorId, "Practice lead", Now));
@@ -50,28 +52,28 @@ public sealed class MethodologyTemplateContributionTests
         var revised = template.ReviseDraftWithAcceptedContribution(template.Revision, content, share!,
             "Added a reviewed deidentified access-review procedure.", TemplateAuthorId,
             "Practice lead", Now.AddMinutes(4));
-        var contributionEvents = new AggregateScenario<MethodologyTemplateContribution>(contribution)
-            .PendingEvents.ToArray();
+        var contributionEvents = await contribution.FactsAsync(TenantId);
         var contributionReplay = new AggregateScenario<MethodologyTemplateContribution>(
-            new MethodologyTemplateContribution(TenantId, ContributionId)).Given(contributionEvents).Aggregate;
+            new MethodologyTemplateContribution(TenantId, ContributionId)).Given(contributionEvents.ToArray()).Aggregate;
+        var contributionView = await contribution.Views.ReadAsync(TenantId, ContributionId);
         var events = new AggregateScenario<MethodologyTemplate>(template).PendingEvents.ToArray();
         var templateReplay = new AggregateScenario<MethodologyTemplate>(new MethodologyTemplate(TemplateId))
             .Given(events).Aggregate;
 
         // Assert
-        Assert.Null(proposed);
-        Assert.Equal(CommandFailureCode.ActorProhibited, Assert.IsType<CommandFailure>(selfReview).Code);
-        Assert.Null(reviewed);
-        Assert.Null(accepted);
+        Assert.True(proposed.IsSuccess, proposed.Error?.Message);
+        Assert.Equal(RequestErrorKind.Forbidden, selfReview.Error?.Kind);
+        Assert.True(reviewed.IsSuccess, reviewed.Error?.Message);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
         Assert.Null(revised);
         Assert.NotNull(share);
-        Assert.Equal("accepted", contribution.Current!.Status);
+        Assert.Equal("accepted", contributionView!.Status);
         Assert.DoesNotContain(TenantId.ToString(), JsonSerializer.Serialize(share));
         Assert.DoesNotContain(SourceRecordId.ToString(), JsonSerializer.Serialize(share));
         Assert.DoesNotContain(TenantId.ToString(), JsonSerializer.Serialize(events));
         Assert.DoesNotContain(SourceRecordId.ToString(), JsonSerializer.Serialize(events));
-        Assert.Equal(contribution.Current.ContentSha256, contributionReplay.Current!.ContentSha256);
-        Assert.Equal(SourceRecordId, contributionReplay.Current.SourceRecordId);
+        Assert.Equal("accepted", contributionReplay.Status);
+        Assert.Equal(SourceRecordId, contributionView.SourceRecordId);
         Assert.Equal(template.Current.ContentSha256, templateReplay.Current!.ContentSha256);
         Assert.Equal(share.AcceptanceId, template.Current!.Versions[^1].AcceptedContributions!.Single().AcceptanceId);
         Assert.Equal(share.ContentSha256, template.Current.Versions[^1].AcceptedContributions!.Single().ContentSha256);
@@ -79,27 +81,27 @@ public sealed class MethodologyTemplateContributionTests
     }
 
     [Fact]
-    public void ShouldRejectSourceIdentifiersAndUnreviewedAcceptanceGivenDeidentifiedContribution()
+    public async Task ShouldRejectSourceIdentifiersAndUnreviewedAcceptanceGivenDeidentifiedContribution()
     {
         // Arrange
-        var contribution = new MethodologyTemplateContribution(TenantId, ContributionId);
+        await using var contribution = new MethodologyTemplateContributionScenario(Now);
         var sourceIdentifier = new MethodologyTemplateRecordContent("unsafe", "policy", "Client-specific policy",
             $"Evidence for {TenantId} was kept in {SourceRecordId}.", []);
-        var rejected = contribution.Propose(SourceRecordId, 1, sourceIdentifier,
-            "No client identifiers were included.", ContributorId, "Contributor", Now);
-        var safe = contribution.Propose(SourceRecordId, 1,
-            new MethodologyTemplateRecordContent("safe", "policy", "Review the policy",
-                "The policy owner reviews the policy annually.", []),
-            "Removed identifying details.", ContributorId, "Contributor", Now);
+        var rejected = await contribution.ProposeAsync(new ProposeDeidentifiedTemplateContribution(TenantId,
+            ContributionId, SourceRecordId, 1, sourceIdentifier, "No client identifiers were included."), ContributorId);
+        var safe = await contribution.ProposeAsync(new ProposeDeidentifiedTemplateContribution(TenantId,
+            ContributionId, SourceRecordId, 1, new MethodologyTemplateRecordContent("safe", "policy", "Review policy",
+                "The owner reviews the policy annually.", []), "Removed identifying details."), ContributorId);
 
         // Act
-        var prematureAcceptance = contribution.Accept(contribution.Revision,
-            "No review has occurred.", AcceptorId, "Platform operator", Now.AddMinutes(1));
+        contribution.Clock.Now = Now.AddMinutes(1);
+        var prematureAcceptance = await contribution.AcceptAsync(new AcceptTemplateContribution(Uuid.CreateVersion4(),
+            TenantId, ContributionId, "No review has occurred."), AcceptorId);
 
         // Assert
-        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(rejected).Code);
-        Assert.Null(safe);
-        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(prematureAcceptance).Code);
-        Assert.Null(contribution.ShareableContent);
+        Assert.Equal(RequestErrorKind.Validation, rejected.Error?.Kind);
+        Assert.True(safe.IsSuccess, safe.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, prematureAcceptance.Error?.Kind);
+        Assert.Null(await contribution.Views.ShareAsync(TenantId, ContributionId));
     }
 }

@@ -46,7 +46,10 @@
     "foundation-file-triage.json",
     "foundation-integration-jev-response.json",
     "audit-package-read-file-reviews.json",
-    "audit-package-read-integration-jev.json"
+    "audit-package-read-integration-jev.json",
+    "contribution-file-reviews.json",
+    "contribution-file-triage.json",
+    "contribution-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -98,12 +101,14 @@
     {
       "id": "audit-package-scoped-queries",
       "slice": "S29",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "externalDependency": false,
       "evidence": "Get/List DTOs have full program/tenant scope but owning public handlers/index/routes were absent; implementing independently of bare-ID lookup blocker.",
       "focusedGreen": "52passed/0failed includingproductionHTTP/OpenAPI",
       "fullUnitGreen": "5510passed/0failed",
-      "jev": "10current implementation/dependency hashes;0highsignals;directpreflightmerge0.73"
+      "jev": "10current implementation/dependency hashes;0highsignals;directpreflightmerge0.73",
+      "pullRequest": 1095,
+      "mergeCommit": "8825d5519f7adbbcd21262ffae9814d319a1845c"
     },
     {
       "id": "audit-package-source-byte-publication",
@@ -121,6 +126,14 @@
       "jev": "5current files;4 high signals source/test triaged; direct integration choice merge_scoped_repair0.81",
       "pullRequest": 1094,
       "mergeCommit": "e046974fb01cca7dc80fb42df6ee107ca4346977"
+    },
+    {
+      "id": "methodology-template-contribution",
+      "slice": "S34",
+      "status": "validated_awaiting_merge",
+      "focusedGreen": "23passed/0failed",
+      "fullUnitGreen": "5521passed/0failed",
+      "jev": "12current files;1helper signal triaged;directintegrationmerge.72"
     }
   ],
   "resolved": [

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "e046974fb01cca7dc80fb42df6ee107ca4346977",
+  "sourceCommit": "8825d5519f7adbbcd21262ffae9814d319a1845c",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -4937,7 +4937,9 @@
       "emitters": [
         "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionNativeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -4953,7 +4955,9 @@
       "emitters": [
         "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionNativeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -4969,7 +4973,9 @@
       "emitters": [
         "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionNativeTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -10924,6 +10930,7 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionNativeTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -12779,15 +12786,18 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "MethodologyTemplateContribution"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
         "MethodologyTemplateContribution"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "MethodologyTemplateContributionOperations"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionNativeTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs",
+        "test/Compliance.Tests/Testing/MethodologyTemplateContributionScenario.cs"
       ],
       "note": ""
     },
@@ -25040,7 +25050,7 @@
     {
       "request": "ProposeDeidentifiedTemplateContribution",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/ProposeDeidentifiedTemplateContribution.cs",
-      "interfaces": "IRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -25050,15 +25060,18 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "MethodologyTemplateContribution"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
         "MethodologyTemplateContribution"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "MethodologyTemplateContributionOperations"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionNativeTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs",
+        "test/Compliance.Tests/Testing/MethodologyTemplateContributionScenario.cs"
       ],
       "note": ""
     },
@@ -28940,15 +28953,18 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "MethodologyTemplateContribution"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
         "MethodologyTemplateContribution"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "MethodologyTemplateContributionOperations"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionNativeTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs",
+        "test/Compliance.Tests/Testing/MethodologyTemplateContributionScenario.cs"
       ],
       "note": ""
     },

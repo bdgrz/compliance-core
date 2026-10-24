@@ -1,0 +1,19 @@
+{
+  "reviewed": 12,
+  "blockedReviews": 0,
+  "signalsTriaged": 1,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContributionRules.cs",
+      "sha256": "70be3c833cc9385c201abe86abc380f69d48f4071f5d61155fb242202582a6d9",
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.51,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.26
+      },
+      "classification": "pure_helper_signal_resolved_by_native_owner_and_executor",
+      "evidence": "Rules has no persistence authority. Compact owner binds exact user subjects and forbids cross-context self-review/acceptance. NativeOperationExecutor selects original acceptance before mutable current content, rechecks on failed preparation/OCC, and retains original Unit response. 23 focused tests prove canonical-user separation, replay after acceptance with missing current body, changed-intent conflict, missing-vs-corrupt classification and all result envelopes. No additional concrete unresolved defect was found."
+    }
+  ]
+}
