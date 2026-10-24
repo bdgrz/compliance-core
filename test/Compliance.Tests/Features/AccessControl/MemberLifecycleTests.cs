@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
@@ -298,6 +299,49 @@ public sealed class MemberLifecycleTests
     }
 
     [Fact]
+    public async Task ShouldReturnValidationWithoutWritingContentGivenInvalidRegistration()
+    {
+        // Arrange
+        RegistrationContentStore? content = null;
+        await using var provider = RegistrationServices(store => content = new RegistrationContentStore(store));
+        content!.RejectWrites = true;
+        var request = new RegisterMember(Uuid.CreateVersion4(), TenantId, UserId, "guest");
+
+        // Act
+        var result = await HandleRegistrationAsync(provider, request);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind);
+        Assert.Equal(0, content.WriteAttempts);
+        Assert.Empty(await HistoryAsync(provider));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldResolveAcceptedIdentityWithoutWritingContentGivenRegistrationRetry(bool changed)
+    {
+        // Arrange
+        RegistrationContentStore? content = null;
+        await using var provider = RegistrationServices(store => content = new RegistrationContentStore(store));
+        var request = new RegisterMember(Uuid.CreateVersion4(), TenantId, UserId);
+        Assert.True((await HandleRegistrationAsync(provider, request)).IsSuccess);
+        var writes = content!.WriteAttempts;
+        content.RejectWrites = true;
+
+        // Act
+        var retry = await HandleRegistrationAsync(provider, changed ? request with { Affiliation = "firm_staff" } : request);
+
+        // Assert
+        if (changed)
+            Assert.Equal(RequestErrorKind.Conflict, retry.Error!.Kind);
+        else
+            Assert.True(retry.IsSuccess);
+        Assert.Equal(writes, content.WriteAttempts);
+        Assert.Single(await HistoryAsync(provider));
+    }
+
+    [Fact]
     public async Task ShouldAppendNothingGivenExactRegisterMemberRetry()
     {
         // Arrange
@@ -420,7 +464,7 @@ public sealed class MemberLifecycleTests
         Assert.Equal(request.CommandId, owner.MembershipEpisodeId);
     }
 
-    static ServiceProvider RegistrationServices()
+    static ServiceProvider RegistrationServices(Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
     {
         var services = new ServiceCollection();
         var events = new InMemoryEventStore();
@@ -428,8 +472,8 @@ public sealed class MemberLifecycleTests
         services.AddSingleton<IDomainEventReader>(events);
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IProjectionCheckpointStore, InMemoryProjectionCheckpointStore>();
-        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
-            new PersistenceKvClient(new InMemoryKvClient())));
+        IImmutableContentStore content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+        services.AddSingleton(configureContent?.Invoke(content) ?? content);
         services.AddPortia();
         return services.BuildServiceProvider();
     }
@@ -467,4 +511,22 @@ public sealed class MemberLifecycleTests
 
     static ClaimsPrincipal Caller(Uuid userId) => new(new ClaimsIdentity(
         [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
+
+    sealed class RegistrationContentStore(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        public bool RejectWrites { get; set; }
+        public int WriteAttempts { get; private set; }
+
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            WriteAttempts++;
+            if (RejectWrites)
+                throw new InvalidOperationException("Content writes are unavailable.");
+            return inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+        }
+
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => inner.ReadVerifiedAsync(realm, reference, ct);
+    }
 }

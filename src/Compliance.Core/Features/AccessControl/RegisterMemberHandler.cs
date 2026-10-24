@@ -36,13 +36,9 @@ public sealed class RegisterMemberHandler(NativeOperationExecutor operations, IA
                 return cleanupResult;
         }
 
-        var result = await content.WriteJsonAsync(request.TenantId.ToString(), Uuid.CreateVersion4(),
-            UnitResult.Schema, new UnitResult(), ct).ConfigureAwait(false);
-        var response = new FirstResponseDescriptor(200, ImmutableContentStoreExtensions.JsonMediaType,
-            UnitResult.Schema, new StandardResponseBody(result));
         var accepted = await operations.ExecuteAsync(new NativeOperation<Member>(binding, () => Hydrate(request),
             member => member.Acceptance,
-            member => Prepare(member, request, response),
+            (member, token) => PrepareAsync(member, request, token),
             (Member member, ImmutableContentRef frozen) => member.Register(provenance, frozen, request.Affiliation,
                 request.MembershipExpiresOn)), context, ct).ConfigureAwait(false);
         if (!accepted.IsSuccess)
@@ -63,13 +59,16 @@ public sealed class RegisterMemberHandler(NativeOperationExecutor operations, IA
             InitialEpisode, null, AuthoredIntentDigest.Compute(request), acceptedAt, owner, owner);
     }
 
-    static Result<FirstResponseDescriptor> Prepare(Member member, RegisterMember request,
-        FirstResponseDescriptor response)
+    async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(Member member, RegisterMember request,
+        CancellationToken ct)
     {
         var prepared = member.PrepareRegister(request.Affiliation, request.MembershipExpiresOn);
-        return prepared.IsSuccess
-            ? Result<FirstResponseDescriptor>.Success(response)
-            : Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+        if (!prepared.IsSuccess)
+            return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+        var result = await content.WriteJsonAsync(request.TenantId.ToString(), Uuid.CreateVersion4(),
+            UnitResult.Schema, new UnitResult(), ct).ConfigureAwait(false);
+        return Result<FirstResponseDescriptor>.Success(new FirstResponseDescriptor(200,
+            ImmutableContentStoreExtensions.JsonMediaType, UnitResult.Schema, new StandardResponseBody(result)));
     }
 
     static Member Hydrate(RegisterMember request) =>
