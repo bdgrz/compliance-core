@@ -233,7 +233,9 @@ for (const process of reactorCatalog.processes) {
     // A public route ships in the same PR as every receiver of every process rooted at its native facts.
     const rootCommands = commands.filter(c => c.status !== 'remove' && (c.events ?? []).some(e => process.rootSourceEvents.includes(e)));
     for (const command of rootCommands) {
-        const exposed = commandStatus.get(command.command) === 'implemented' && ((mappedRoutes.get(command.command) ?? []).length > 0 || mcpTools.has(command.command));
+        // A selected replacement contract can be exposed before its owner or handler is complete.
+        // Legacy contracts with the same name remain pending until their owning cutover slice.
+        const exposed = requestMatches(command.command, command.fields).ok && ((mappedRoutes.get(command.command) ?? []).length > 0 || mcpTools.has(command.command));
         if (exposed && !(allDone && registered)) fail(`${command.command} is exposed over HTTP/MCP but ${process.process}, rooted at its facts, is incomplete: ${statuses.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ') || 'definition literal absent'}`);
     }
 }
@@ -265,7 +267,8 @@ for (const row of split.splitOwners) {
 }
 
 // ---------- traces ----------
-const traceStatus = new Map(traces.map(t => [t.id, [...testNames].some(n => n === t.test || n.endsWith(`_${t.test}`) || n.endsWith(t.test)) ? 'passing' : 'pending']));
+// Source presence is evidence that a trace has a test, not that the test has passed.
+const traceStatus = new Map(traces.map(t => [t.id, [...testNames].some(n => n === t.test || n.endsWith(`_${t.test}`) || n.endsWith(t.test)) ? 'present' : 'pending']));
 
 // ---------- report ----------
 const count = (map, ...states) => [...map.values()].filter(v => states.includes(v)).length;
@@ -284,7 +287,7 @@ const summary = {
     processesImplemented: `${count(processStatus, 'implemented')}/${processStatus.size}`,
     processesPartial: count(processStatus, 'partial'),
     eventsImplemented: `${count(eventStatus, 'implemented')}/${eventStatus.size}`,
-    tracesPassing: `${count(traceStatus, 'passing')}/${traceStatus.size}`,
+    tracesPresent: `${count(traceStatus, 'present')}/${traceStatus.size}`,
     reactorClassesPresent: reactorClasses.length,
     scanned: { sourceFiles: sources.length, testFiles: tests.length, aggregates: aggregates.size, domainEvents: domainEvents.size, requests: requests.size, registeredHandlers: registeredHandlers.size, registeredReactors: registeredReactors.size, routes: [...mappedRoutes.values()].flat().length, mcpTools: mcpTools.size, tests: testNames.size },
     failures: failures.length,
