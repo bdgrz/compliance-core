@@ -274,7 +274,8 @@ public sealed class TenantIdentityReadLeakMatrixE2ETests(BrokerStackFixture brok
         }, "The email reservation was not projected.");
         if ((await ReadHttpAsync(client, path)).GetProperty("verified").GetBoolean())
             return;
-        using var issued = await client.PostAsync(path + "/challenges", null);
+        var challengeId = Guid.NewGuid();
+        using var issued = await client.PutAsync($"{path}/challenges/{challengeId}", null);
         Assert.Equal(HttpStatusCode.NoContent, issued.StatusCode);
         var delivery = (worker?.Services ?? factory.Services)
             .GetRequiredService<MockEmailChallengeDelivery>();
@@ -292,7 +293,7 @@ public sealed class TenantIdentityReadLeakMatrixE2ETests(BrokerStackFixture brok
             var status = await ReadJsonAsync(response);
             return status.GetProperty("delivery_status").GetString() == "delivered";
         }, "The challenge delivery outcome was not recorded.");
-        using var verified = await client.PostAsJsonAsync(path + "/verifications", new { token });
+        using var verified = await client.PutAsJsonAsync($"{path}/verifications/{challengeId}", new { token });
         Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
         await WaitUntilAsync(async () =>
         {

@@ -36,7 +36,7 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
         }
 
         // Act
-        using var issued = await client.PostAsync($"{path}/challenges", null);
+        using var issued = await client.PutAsync($"{path}/challenges/{Guid.NewGuid()}", null);
         Assert.Equal(HttpStatusCode.NoContent, issued.StatusCode);
         await WaitForDeliveryStatusAsync(client, path, "failed");
         delivery.AllowSuccess = true;
@@ -45,11 +45,11 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
         var laterId = await TenantInvitationE2ETests.LoginAsync(laterClient, laterEmail);
         var laterPath = $"/api/v1/users/{laterId}/email-addresses/{laterEmail}";
         await WaitForDeliveryStatusAsync(laterClient, laterPath, "not_issued");
-        using var laterIssued = await laterClient.PostAsync($"{laterPath}/challenges", null);
+        using var laterIssued = await laterClient.PutAsync($"{laterPath}/challenges/{Guid.NewGuid()}", null);
         Assert.Equal(HttpStatusCode.NoContent, laterIssued.StatusCode);
         await WaitForDeliveryStatusAsync(laterClient, laterPath, "delivered");
         await WaitForDeliveryStatusAsync(client, path, "failed");
-        using var reissued = await client.PostAsync($"{path}/challenges", null);
+        using var reissued = await client.PutAsync($"{path}/challenges/{Guid.NewGuid()}", null);
         Assert.Equal(HttpStatusCode.NoContent, reissued.StatusCode);
         await WaitForDeliveryStatusAsync(client, path, "delivered");
         var attempts = delivery.Attempts.ToArray();
@@ -59,8 +59,8 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
         Assert.Equal(2, ownerAttempts.Length);
         Assert.Equal(2, ownerAttempts.Select(attempt => attempt.ChallengeId).Distinct().Count());
         Assert.Single(attempts, attempt => attempt.EmailAddress == laterEmail);
-        using var completed = await client.PostAsJsonAsync($"{path}/verifications",
-            new { token = ownerAttempts[1].Token });
+        using var completed = await client.PutAsJsonAsync(
+            $"{path}/verifications/{ownerAttempts[1].ChallengeId}", new { token = ownerAttempts[1].Token });
         Assert.Equal(HttpStatusCode.NoContent, completed.StatusCode);
         await WaitForDeliveryStatusAsync(client, path, "verified");
     }
@@ -152,8 +152,8 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
         var second = await secondSession.Content.ReadFromJsonAsync<SessionDocument>();
         Assert.NotNull(second);
 
-        using var conflict = await secondClient.PostAsync(
-            $"/api/v1/users/{second.Id}/email-addresses/{ownedEmail}", null);
+        using var conflict = await secondClient.PutAsJsonAsync(
+            $"/api/v1/users/{second.Id}/email-addresses/{ownedEmail}/{Guid.NewGuid()}", new { expected_revision = 0 });
         Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
     }
 
@@ -193,8 +193,8 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
         Assert.False(reserved.Verified);
         get.Dispose();
 
-        using var forbidden = await client.PostAsync(
-            $"/api/v1/users/{Guid.NewGuid()}/email-addresses/{email}/challenges", null);
+        using var forbidden = await client.PutAsync(
+            $"/api/v1/users/{Guid.NewGuid()}/email-addresses/{email}/challenges/{Guid.NewGuid()}", null);
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
         using var forbiddenList = await client.GetAsync($"/api/v1/users/{Guid.NewGuid()}/email-addresses");
         Assert.Equal(HttpStatusCode.Forbidden, forbiddenList.StatusCode);
@@ -202,7 +202,8 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
             $"/api/v1/users/{Guid.NewGuid()}/email-addresses/{email}/challenges/status");
         Assert.Equal(HttpStatusCode.Forbidden, forbiddenStatus.StatusCode);
 
-        using var issued = await client.PostAsync($"{path}/challenges", null);
+        var challengeId = Guid.NewGuid();
+        using var issued = await client.PutAsync($"{path}/challenges/{challengeId}", null);
         Assert.Equal(HttpStatusCode.NoContent, issued.StatusCode);
         var delivery = factory.Services.GetRequiredService<MockEmailChallengeDelivery>();
         string? token = null;
@@ -219,7 +220,7 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
         Assert.DoesNotContain(token, statusBody, StringComparison.Ordinal);
         Assert.DoesNotContain(email, statusBody, StringComparison.Ordinal);
 
-        using var completed = await client.PostAsJsonAsync($"{path}/verifications", new { token });
+        using var completed = await client.PutAsJsonAsync($"{path}/verifications/{challengeId}", new { token });
         Assert.Equal(HttpStatusCode.NoContent, completed.StatusCode);
 
         EmailDocument? verified = null;
@@ -241,9 +242,11 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
 
         var secondEmail = $"second-{Guid.NewGuid():N}@example.com";
         var secondPath = $"/api/v1/users/{identity.Id}/email-addresses/{secondEmail}";
-        using var reservedSecond = await client.PostAsync(secondPath, null);
+        using var reservedSecond = await client.PutAsJsonAsync($"{secondPath}/{Guid.NewGuid()}",
+            new { expected_revision = 0 });
         Assert.Equal(HttpStatusCode.NoContent, reservedSecond.StatusCode);
-        using var issuedSecond = await client.PostAsync($"{secondPath}/challenges", null);
+        var secondChallengeId = Guid.NewGuid();
+        using var issuedSecond = await client.PutAsync($"{secondPath}/challenges/{secondChallengeId}", null);
         Assert.Equal(HttpStatusCode.NoContent, issuedSecond.StatusCode);
         string? secondToken = null;
         var secondDeadline = DateTimeOffset.UtcNow.AddSeconds(30);
@@ -252,8 +255,8 @@ public sealed class EmailVerificationE2ETests(BrokerStackFixture broker)
                    secondEmail, out secondToken))
             await Task.Delay(250);
         Assert.NotNull(secondToken);
-        using var completedSecond = await client.PostAsJsonAsync(
-            $"{secondPath}/verifications", new { token = secondToken });
+        using var completedSecond = await client.PutAsJsonAsync(
+            $"{secondPath}/verifications/{secondChallengeId}", new { token = secondToken });
         Assert.Equal(HttpStatusCode.NoContent, completedSecond.StatusCode);
 
         EmailListDocument? addresses = null;

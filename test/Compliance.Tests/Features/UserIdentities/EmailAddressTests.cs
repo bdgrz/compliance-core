@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Cryptography;
 using System.Text;
 using Cntryl.Portia;
@@ -156,7 +157,7 @@ public sealed class EmailAddressTests
         Assert.True(address.Reserve(userId).IsSuccess);
 
         // Act
-        var result = address.IssueRecoveryChallenge(userId, Uuid.CreateVersion4(),
+        var result = address.IssueRecovery(userId, Uuid.CreateVersion4(),
             new string('a', 64), now.AddMinutes(15), now, "key-1");
 
         // Assert
@@ -181,29 +182,27 @@ public sealed class EmailAddressTests
         Assert.True(address.CompleteChallenge(userId, "verified", now).IsSuccess);
         var challengeId = Uuid.CreateVersion4();
         var recoveryHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(recoveryToken)));
-        Assert.True(address.IssueRecoveryChallenge(userId, challengeId, recoveryHash,
+        Assert.True(address.IssueRecovery(userId, challengeId, recoveryHash,
             now.AddMinutes(15), now, "key-1").IsSuccess);
 
         // Act
-        var claimed = address.ClaimIdentityRecovery(userId, challengeId, recoveryToken,
+        var claimed = address.Claim(userId, challengeId, recoveryToken,
             oldIdentityId, replacementIdentityId, now.AddMinutes(1));
-        var replay = address.ClaimIdentityRecovery(userId, challengeId, recoveryToken,
+        var second = address.Claim(userId, challengeId, recoveryToken,
             oldIdentityId, replacementIdentityId, now.AddMinutes(2));
-        var replayAfterExpiry = address.ClaimIdentityRecovery(userId, challengeId, recoveryToken,
-            oldIdentityId, replacementIdentityId, now.AddMinutes(16));
-        var retargeted = address.ClaimIdentityRecovery(userId, challengeId, recoveryToken,
+        var retargeted = address.Claim(userId, challengeId, recoveryToken,
             oldIdentityId, Uuid.CreateVersion4(), now.AddMinutes(2));
-        var retargetedAfterExpiry = address.ClaimIdentityRecovery(userId, challengeId, recoveryToken,
+        var retargetedAfterExpiry = address.Claim(userId, challengeId, recoveryToken,
             oldIdentityId, Uuid.CreateVersion4(), now.AddMinutes(16));
 
         // Assert
         Assert.True(claimed.IsSuccess);
-        Assert.True(replay.IsSuccess);
-        Assert.True(replayAfterExpiry.IsSuccess);
+        Assert.False(second.IsSuccess);
         Assert.False(retargeted.IsSuccess);
         Assert.False(retargetedAfterExpiry.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, second.Error.Kind);
         Assert.Equal(RequestErrorKind.Conflict, retargeted.Error.Kind);
-        Assert.Equal(RequestErrorKind.Conflict, retargetedAfterExpiry.Error.Kind);
+        Assert.Equal(replacementIdentityId, address.RecoveryReplacementIdentityId);
         Assert.True(address.IsVerified);
         Assert.Equal(challengeId, address.CurrentRecoveryChallengeId);
     }
@@ -223,7 +222,7 @@ public sealed class EmailAddressTests
         Assert.True(address.CompleteChallenge(userId, verifiedToken, now).IsSuccess);
         const string recoveryToken = "recovery-token";
         var challengeId = Uuid.CreateVersion4();
-        Assert.True(address.IssueRecoveryChallenge(userId, challengeId,
+        Assert.True(address.IssueRecovery(userId, challengeId,
             Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(recoveryToken))),
             now.AddMinutes(15), now, "key-1").IsSuccess);
 

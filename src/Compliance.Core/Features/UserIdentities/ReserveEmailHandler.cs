@@ -12,7 +12,8 @@ public sealed class ReserveEmailHandler(IAggregateExecutor executor) : IRequestH
 
         return executor.ExecuteAsync(
             new EmailAddress(normalized),
-            address => AggregateOutcome.CommitOnSuccess(address.Reserve(context.Request.UserId)),
+            address => AggregateOutcome.CommitOnSuccess(address.Reserve(context.Request.UserId,
+                context.Request.ExpectedRevision)),
             context, ct);
     }
 }

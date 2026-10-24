@@ -53,7 +53,8 @@ public sealed class SplitHostEmailDeliveryE2ETests(BrokerStackFixture broker)
         await WaitForStatusAsync(owner, path, "not_issued");
 
         // Act: the first worker hands the message to the provider, then loses its acknowledgment.
-        using var issued = await owner.PostAsync($"{path}/challenges", null);
+        var challengeId = Guid.NewGuid();
+        using var issued = await owner.PutAsync($"{path}/challenges/{challengeId}", null);
         Assert.Equal(HttpStatusCode.NoContent, issued.StatusCode);
         var firstDeadline = DateTimeOffset.UtcNow.AddSeconds(30);
         while (DateTimeOffset.UtcNow < firstDeadline && firstDelivery.Attempts.IsEmpty)
@@ -89,7 +90,7 @@ public sealed class SplitHostEmailDeliveryE2ETests(BrokerStackFixture broker)
             var body = await status.Content.ReadAsStringAsync();
             Assert.DoesNotContain(email, body, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain(firstAttempt.Token, body, StringComparison.Ordinal);
-            using var completed = await owner.PostAsJsonAsync($"{path}/verifications",
+            using var completed = await owner.PutAsJsonAsync($"{path}/verifications/{challengeId}",
                 new { token = firstAttempt.Token });
             Assert.Equal(HttpStatusCode.NoContent, completed.StatusCode);
             var logText = string.Join('\n', workerLogs.Records.Concat(apiLogs.Records)

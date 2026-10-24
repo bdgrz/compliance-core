@@ -41,32 +41,32 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 455,
-    "factsWithReducer": 433,
-    "factsWithAggregateEmitter": 426,
+    "domainEventContracts": 461,
+    "factsWithReducer": 439,
+    "factsWithAggregateEmitter": 432,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 110,
-    "aggregateTypesWithCommandPath": 107,
-    "requestContracts": 693,
-    "commonRequestContracts": 691,
+    "aggregateTypes": 111,
+    "aggregateTypesWithCommandPath": 108,
+    "requestContracts": 703,
+    "commonRequestContracts": 701,
     "requestClassificationCounts": {
       "command": 347,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 58,
+      "internal_reaction": 68,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 634,
+    "registeredCoreHandlerRegistrations": 644,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 41,
+    "unwiredAggregateProducerOperations": 42,
     "unwiredAggregateProducerClassifications": {
-      "legacy_emitter_to_prune": 8,
       "no_registered_request_route": 17,
       "direct_reactor_executor": 6,
+      "legacy_emitter_to_prune": 9,
       "direct_processor_executor": 10
     },
     "factReplayGuardRows": 7
@@ -4182,7 +4182,11 @@
       "emitters": [
         "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/EmailAddressTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -4199,7 +4203,7 @@
         "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryNoticeReactorTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4217,8 +4221,9 @@
         "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryReactorTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/EmailAddressTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryReactorTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8073,12 +8078,13 @@
         "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationWebTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/FitzPlatformUserDirectoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/EmailReservationReactorTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/FitzPlatformUserDirectoryTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationWebTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/UserIdentityTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -8097,8 +8103,9 @@
         "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8417,6 +8424,120 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/FitzWorkforceSourceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "IdentityRecoveryAccepted",
+      "contract": "src/Compliance.Common/Features/UserIdentities/IdentityRecoveryAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "IdentityRecovery",
+          "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "IdentityRecoveryCompleted",
+      "contract": "src/Compliance.Common/Features/UserIdentities/IdentityRecoveryCompleted.cs",
+      "reducers": [
+        {
+          "aggregate": "IdentityRecovery",
+          "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "IdentityRecoveryPreparationRejected",
+      "contract": "src/Compliance.Common/Features/UserIdentities/IdentityRecoveryPreparationRejected.cs",
+      "reducers": [
+        {
+          "aggregate": "IdentityRecovery",
+          "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "IdentityRecoveryPrepared",
+      "contract": "src/Compliance.Common/Features/UserIdentities/IdentityRecoveryPrepared.cs",
+      "reducers": [
+        {
+          "aggregate": "IdentityRecovery",
+          "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "RecoveryIdentityProtected",
+      "contract": "src/Compliance.Common/Features/UserIdentities/RecoveryIdentityProtected.cs",
+      "reducers": [
+        {
+          "aggregate": "UserIdentity",
+          "source": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "RecoveryIdentityProtectionSettled",
+      "contract": "src/Compliance.Common/Features/UserIdentities/RecoveryIdentityProtectionSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "UserIdentity",
+          "source": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9459,7 +9580,9 @@
         "ReserveEmail",
         "StartIdentityRecovery"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "CompleteEmailRecoveryChallenge"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/BrowserE2EHostIntegrationTests.cs",
         "test/Compliance.Tests/E2E/EmailVerificationE2ETests.cs",
@@ -9479,11 +9602,13 @@
         "test/Compliance.Tests/Features/UserIdentities/EmailReservationReactorTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzEmailAddressDirectoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryNoticeReactorTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationWebTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/UserIdentityTests.cs",
-        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Work/WeeklyWorkDigestCommandHandlerTests.cs",
+        "test/Compliance.Tests/Testing/EmailAddressFacts.cs",
+        "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11659,24 +11784,32 @@
       "aggregate": "UserIdentity",
       "source": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
       "appliedFacts": [
+        "RecoveryIdentityProtected",
+        "RecoveryIdentityProtectionSettled",
         "UserIdentityRegistered",
         "UserIdentityRevoked"
       ],
       "commandRequests": [
-        "CompleteIdentityRecovery",
         "ContinueWithDeveloperIdentity",
         "ContinueWithOidcProvider",
         "LinkOidcProviderIdentity"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "ProtectRecoveryIdentity",
+        "RegisterRecoveredIdentity",
+        "RevokeRecoveredOldIdentity",
+        "SettleRecoveryIdentityProtection"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/IdentityLinkE2ETests.cs",
         "test/Compliance.Tests/E2E/IdentityRecoveryE2ETests.cs",
         "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationTests.cs",
         "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationWebTests.cs",
-        "test/Compliance.Tests/Features/UserIdentities/UserIdentityTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/UserIdentityTests.cs",
+        "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11820,6 +11953,28 @@
         "test/Compliance.Tests/Features/Workforce/PersonalWorkforceObservationTransportTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/WorkforceSourceObservationTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "IdentityRecovery",
+      "source": "src/Compliance.Core/Features/UserIdentities/IdentityRecovery.cs",
+      "appliedFacts": [
+        "IdentityRecoveryAccepted",
+        "IdentityRecoveryCompleted",
+        "IdentityRecoveryPrepared",
+        "IdentityRecoveryPreparationRejected"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "AcceptProtectedIdentityRecovery",
+        "CompleteAcceptedIdentityRecovery",
+        "MaterializeIdentityRecoveryPreparation",
+        "RejectIdentityRecoveryPreparation"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     }
@@ -14506,7 +14661,7 @@
     {
       "request": "CompleteEmailChallenge",
       "contract": "src/Compliance.Common/Features/UserIdentities/CompleteEmailChallenge.cs",
-      "interfaces": "IRequest, IEmailOwnershipRequest, ICallable",
+      "interfaces": "IRequest, IEmailOwnershipRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -14556,7 +14711,7 @@
     {
       "request": "CompleteIdentityRecovery",
       "contract": "src/Compliance.Common/Features/UserIdentities/CompleteIdentityRecovery.cs",
-      "interfaces": "IRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -14571,12 +14726,15 @@
         "UserIdentity"
       ],
       "aggregateTargets": [
-        "EmailAddress",
-        "UserIdentity"
+        "EmailAddress"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "NativeOperationExecutor"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryTransportTests.cs"
       ],
       "note": ""
     },
@@ -19208,7 +19366,7 @@
     {
       "request": "IssueEmailChallenge",
       "contract": "src/Compliance.Common/Features/UserIdentities/IssueEmailChallenge.cs",
-      "interfaces": "IRequest, IEmailOwnershipRequest, ICallable",
+      "interfaces": "IRequest, IEmailOwnershipRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25645,7 +25803,7 @@
     {
       "request": "ReserveEmail",
       "contract": "src/Compliance.Common/Features/UserIdentities/ReserveEmail.cs",
-      "interfaces": "IRequest, IEmailOwnershipRequest, ICallable",
+      "interfaces": "IRequest, IEmailOwnershipRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27973,7 +28131,7 @@
     {
       "request": "StartIdentityRecovery",
       "contract": "src/Compliance.Common/Features/UserIdentities/StartIdentityRecovery.cs",
-      "interfaces": "IRequest, ICallable",
+      "interfaces": "IRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27989,9 +28147,12 @@
       "aggregateTargets": [
         "EmailAddress"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "NativeOperationExecutor"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs"
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryTransportTests.cs"
       ],
       "note": ""
     },
@@ -28372,6 +28533,254 @@
       "helperServices": [],
       "testSymbolReferences": [],
       "note": "The nested IRequest is passed directly to AggregateExecutor; it is not dispatched."
+    },
+    {
+      "request": "AcceptProtectedIdentityRecovery",
+      "contract": "src/Compliance.Common/Features/UserIdentities/AcceptProtectedIdentityRecovery.cs",
+      "interfaces": "IIdentityRecoveryStepReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AcceptProtectedIdentityRecoveryHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/AcceptProtectedIdentityRecoveryHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "IdentityRecovery"
+      ],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process receiver: accepts the swap only after both slots carry exact protection proofs. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "CompleteAcceptedIdentityRecovery",
+      "contract": "src/Compliance.Common/Features/UserIdentities/CompleteAcceptedIdentityRecovery.cs",
+      "interfaces": "IIdentityRecoveryStepReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteAcceptedIdentityRecoveryHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/CompleteAcceptedIdentityRecoveryHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "IdentityRecovery"
+      ],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process receiver: completes the accepted swap once the registration and the revocation are proven. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "CompleteEmailRecoveryChallenge",
+      "contract": "src/Compliance.Common/Features/UserIdentities/CompleteEmailRecoveryChallenge.cs",
+      "interfaces": "IIdentityRecoveryStepReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteEmailRecoveryChallengeHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/CompleteEmailRecoveryChallengeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "EmailAddress"
+      ],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process receiver: completes the original email challenge without clearing a newer challenge slot. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "MaterializeIdentityRecoveryPreparation",
+      "contract": "src/Compliance.Common/Features/UserIdentities/MaterializeIdentityRecoveryPreparation.cs",
+      "interfaces": "IIdentityRecoveryStepReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "MaterializeIdentityRecoveryPreparationHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/MaterializeIdentityRecoveryPreparationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "IdentityRecovery"
+      ],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process receiver: freezes the exact both-proof-verified candidate of the claimed challenge as an immutable preparation. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ProtectRecoveryIdentity",
+      "contract": "src/Compliance.Common/Features/UserIdentities/ProtectRecoveryIdentity.cs",
+      "interfaces": "IIdentityRecoveryStepReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ProtectRecoveryIdentityHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/ProtectRecoveryIdentityHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "UserIdentity"
+      ],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process receiver: protects one identity slot of a prepared recovery; a definite competing association rejects the preparation. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "RegisterRecoveredIdentity",
+      "contract": "src/Compliance.Common/Features/UserIdentities/RegisterRecoveredIdentity.cs",
+      "interfaces": "IIdentityRecoveryStepReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RegisterRecoveredIdentityHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/RegisterRecoveredIdentityHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "UserIdentity"
+      ],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process receiver: registers the replacement for the account or returns the existing same-account registration proof. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "RejectIdentityRecoveryPreparation",
+      "contract": "src/Compliance.Common/Features/UserIdentities/RejectIdentityRecoveryPreparation.cs",
+      "interfaces": "IIdentityRecoveryReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RejectIdentityRecoveryPreparationHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/RejectIdentityRecoveryPreparationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "IdentityRecovery"
+      ],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process abort receiver: rejects a prepared recovery before acceptance and fences delayed receivers. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "RevokeRecoveredOldIdentity",
+      "contract": "src/Compliance.Common/Features/UserIdentities/RevokeRecoveredOldIdentity.cs",
+      "interfaces": "IIdentityRecoveryStepReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "RevokeRecoveredOldIdentityHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/RevokeRecoveredOldIdentityHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "UserIdentity"
+      ],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process receiver: revokes the old identity to the replacement only with the replacement registration proof. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "SendIdentityRecoveryNotice",
+      "contract": "src/Compliance.Common/Features/UserIdentities/SendIdentityRecoveryNotice.cs",
+      "interfaces": "IIdentityRecoveryStepReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SendIdentityRecoveryNoticeHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/SendIdentityRecoveryNoticeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process receiver: sends the independent completion notice under the at-least-once policy; it mutates no aggregate. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "SettleRecoveryIdentityProtection",
+      "contract": "src/Compliance.Common/Features/UserIdentities/SettleRecoveryIdentityProtection.cs",
+      "interfaces": "IIdentityRecoveryStepReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleRecoveryIdentityProtectionHandler",
+          "source": "src/Compliance.Core/Features/UserIdentities/SettleRecoveryIdentityProtectionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "UserIdentity"
+      ],
+      "helperServices": [
+        "IdentityRecoveryReceiverSupport"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs"
+      ],
+      "note": "Process receiver: settles the protection of one slot after completion or rejection. System principal only; no HTTP/MCP route."
     }
   ],
   "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",
@@ -28947,6 +29356,18 @@
         }
       ],
       "methodArgumentCount": 4
+    },
+    {
+      "fact": "UserIdentityRevoked",
+      "aggregate": "UserIdentity",
+      "method": "Revoke",
+      "source": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 2
     }
   ],
   "factEmissionHelpers": [

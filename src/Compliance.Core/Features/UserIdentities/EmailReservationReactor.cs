@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.UserIdentities;
@@ -11,7 +12,10 @@ public sealed partial class EmailReservationReactor(IProjectionCheckpointStore c
         if (context.Trigger.EmailAddress is not { } address)
             return;
 
-        var result = await bus.SendAsync(new ReserveEmail(context.Trigger.UserId, address), context, ct)
+        // The command id is derived from the registration it reacts to, so a replayed reaction is the same command;
+        // the reactor reserves as the system and does not constrain the address revision.
+        var commandId = EffectIdentity.CommandId(context.Trigger.Metadata.EventId, nameof(ReserveEmail), address, null);
+        var result = await bus.SendAsync(new ReserveEmail(commandId, context.Trigger.UserId, address, -1), context, ct)
             .ConfigureAwait(false);
         // A second provider identity may assert an address already owned by another user. That
         // conflict is terminal for this event; retrying it would block all later registrations.

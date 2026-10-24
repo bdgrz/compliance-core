@@ -21,8 +21,12 @@ public sealed class CompleteEmailChallengeHandler(IAggregateExecutor executor, T
             {
                 return await executor.ExecuteAsync(
                     new EmailAddress(normalized),
-                    address => AggregateOutcome.CommitOnSuccess(address.CompleteChallenge(
-                        context.Request.UserId, context.Request.Token, clock.GetUtcNow())),
+                    address => AggregateOutcome.CommitOnSuccess(
+                        address.CurrentChallengeId != context.Request.ChallengeId
+                            ? Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                                "No verification challenge is available."))
+                            : address.CompleteChallenge(context.Request.UserId, context.Request.Token,
+                                clock.GetUtcNow())),
                     context, ct).ConfigureAwait(false);
             }
             catch (EventStreamConcurrencyException) when (attempt < 9)

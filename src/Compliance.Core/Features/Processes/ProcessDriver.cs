@@ -109,6 +109,8 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 record = await store.ReplaceAsync(record with
                 {
                     State = ProcessState.Aborting,
+                    AbortIndex = 0,
+                    Attempts = 0,
                     Lease = null,
                     NextDueAt = now,
                     Note = $"{step.Receiver} rejected: {rejected.Reason}",
@@ -193,7 +195,7 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
             {
                 Facts = new Dictionary<string, NativeFactReference>(next.Facts, StringComparer.Ordinal)
                 {
-                    [step.Receiver] = produced,
+                    [ProcessRecord.FactKey(step.Receiver, step.Target)] = produced,
                 },
             };
         return await store.ReplaceAsync(next with { Attempts = 0, Note = null }, record.Version, ct).ConfigureAwait(false);

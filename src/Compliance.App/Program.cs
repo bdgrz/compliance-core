@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Retention;
 using Bdgrz.Compliance.Hosting;
@@ -501,14 +502,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
                 "/api/v1/my/oidc-identity-links")
             .RequireAuthorization(ComplianceAuthorizationPolicies.IdentityLink)
             .WithTags("Users");
-        app.MapPortiaPost<StartIdentityRecovery>("/api/v1/identity-recovery/challenges")
+        app.MapPortiaPut<StartIdentityRecovery>("/api/v1/identity-recovery/challenges/{challenge_id}")
             .AllowAnonymous()
             .WithTags("Users");
         app.MapPortiaPost<GetIdentityRecoveryOptions, IdentityRecoveryOptions>(
                 "/api/v1/identity-recovery/options")
             .RequireAuthorization(ComplianceAuthorizationPolicies.OidcContinuation)
             .WithTags("Users");
-        app.MapPortiaPost<CompleteIdentityRecovery>("/api/v1/identity-recovery/completions")
+        app.MapPortiaPut<CompleteIdentityRecovery, OperationAcceptedResponse>(
+                "/api/v1/identity-recovery/challenges/{challenge_id}/completion",
+                config => config.OnResult((_, result) => IdentityRecoveryHttp.Result(result)))
             .RequireAuthorization(ComplianceAuthorizationPolicies.OidcContinuation)
             .WithTags("Users");
     }
@@ -2293,17 +2296,17 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}/successors")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
-    app.MapPortiaPost<ReserveEmail>("/api/v1/users/{user_id}/email-addresses/{email_address}")
+    app.MapPortiaPut<ReserveEmail>("/api/v1/users/{user_id}/email-addresses/{email_address}/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Email addresses");
-    app.MapPortiaPost<IssueEmailChallenge>("/api/v1/users/{user_id}/email-addresses/{email_address}/challenges")
+    app.MapPortiaPut<IssueEmailChallenge>("/api/v1/users/{user_id}/email-addresses/{email_address}/challenges/{challenge_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Email addresses");
     app.MapPortiaGet<GetEmailChallengeStatus, EmailChallengeStatusView>(
             "/api/v1/users/{user_id}/email-addresses/{email_address}/challenges/status")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Email addresses");
-    app.MapPortiaPost<CompleteEmailChallenge>("/api/v1/users/{user_id}/email-addresses/{email_address}/verifications")
+    app.MapPortiaPut<CompleteEmailChallenge>("/api/v1/users/{user_id}/email-addresses/{email_address}/verifications/{challenge_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Email addresses");
     app.MapPortiaGet<GetEmailAddress, EmailAddressView>("/api/v1/users/{user_id}/email-addresses/{email_address}")

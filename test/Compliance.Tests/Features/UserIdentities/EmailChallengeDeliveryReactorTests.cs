@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -44,8 +45,7 @@ public sealed class EmailChallengeDeliveryReactorTests
             Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(emailProof))),
             expiresAt, now).IsSuccess);
         Assert.True(address.CompleteChallenge(owner, emailProof, now).IsSuccess);
-        Assert.True(address.IssueRecoveryChallenge(owner, challengeId, hash, expiresAt,
-            now, "current").IsSuccess);
+        Assert.True(address.IssueRecovery(owner, challengeId, hash, expiresAt, now, "current").IsSuccess);
         await writer.SaveAsync(address, new RequestDispatchContext(RequestActor.System),
             CancellationToken.None);
         var delivery = new FailingOnceDelivery(failFirst: false);
@@ -53,8 +53,8 @@ public sealed class EmailChallengeDeliveryReactorTests
             reader, writer, delivery, keys, TimeProvider.System);
 
         // Act
-        await reactor.HandleAsync(new RecoveryContext(new IdentityRecoveryChallengeIssued(
-            owner, email, challengeId, hash, expiresAt, "current")), CancellationToken.None);
+        await reactor.HandleAsync(new RecoveryContext(EmailAddressFacts.IssuedFact(address, owner, email,
+            challengeId, hash, expiresAt, "current")), CancellationToken.None);
         var updated = await reader.HydrateAsync(new EmailAddress(email), CancellationToken.None);
 
         // Assert

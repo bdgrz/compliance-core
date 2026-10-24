@@ -991,7 +991,8 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
                 break;
             await Task.Delay(250);
         }
-        using var issued = await client.PostAsync($"{path}/challenges", null);
+        var challengeId = Guid.NewGuid();
+        using var issued = await client.PutAsync($"{path}/challenges/{challengeId}", null);
         Assert.Equal(HttpStatusCode.NoContent, issued.StatusCode);
         var delivery = workerDelivery ?? factory.Services.GetRequiredService<MockEmailChallengeDelivery>();
         string? token = null;
@@ -1001,7 +1002,7 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
                    emailAddress, out token))
             await Task.Delay(250);
         Assert.NotNull(token);
-        using var completed = await client.PostAsJsonAsync($"{path}/verifications", new { token });
+        using var completed = await client.PutAsJsonAsync($"{path}/verifications/{challengeId}", new { token });
         Assert.Equal(HttpStatusCode.NoContent, completed.StatusCode);
         while (DateTimeOffset.UtcNow < deadline)
         {

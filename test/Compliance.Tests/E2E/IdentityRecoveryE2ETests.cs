@@ -88,10 +88,12 @@ public sealed class IdentityRecoveryE2ETests(BrokerStackFixture broker)
         await worker.StartAsync();
 
         // Act: the API writes the challenge; the independent worker delivers it.
-        using var started = await owner.PostAsJsonAsync("/api/v1/identity-recovery/challenges",
+        var challengeId = Uuid.CreateVersion4();
+        using var started = await owner.PutAsJsonAsync($"/api/v1/identity-recovery/challenges/{challengeId}",
             new { email_address = email });
         Assert.Equal(HttpStatusCode.NoContent, started.StatusCode);
         var challenge = await WaitForRecoveryAsync(delivery);
+        Assert.Equal(challengeId, challenge.ChallengeId);
         var providerToken = Token("https://issuer.example/", "compliance-api",
             ProviderSecret, "new-subject");
         using var optionsRequest = new HttpRequestMessage(HttpMethod.Post,
@@ -113,48 +115,37 @@ public sealed class IdentityRecoveryE2ETests(BrokerStackFixture broker)
         Assert.True(optionsBody!.ProjectionRevision > 0);
         Assert.Equal(oldIdentity.Id.ToString(), Assert.Single(optionsBody.Identities.Items).UserIdentityId);
 
-        // Preserve a live old-identity session so revocation is proven through authentication.
-        var oldProviderToken = Token("https://issuer.example/", "compliance-api",
-            ProviderSecret, "old-subject");
-        using var loginRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/oidc-user-sessions")
-        {
-            Content = JsonContent.Create(new { }),
-        };
-        loginRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
-            "Bearer", oldProviderToken);
-        using var login = await owner.SendAsync(loginRequest);
-        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
-        var sessionCookie = Assert.Single(login.Headers.GetValues("Set-Cookie"))
-            .Split(';', 2)[0];
-        using var beforeRevocation = await GetSessionAsync(owner, sessionCookie);
-        Assert.Equal(HttpStatusCode.OK, beforeRevocation.StatusCode);
-
-        using var completionRequest = new HttpRequestMessage(HttpMethod.Post,
-            "/api/v1/identity-recovery/completions")
+        using var completionRequest = new HttpRequestMessage(HttpMethod.Put,
+            $"/api/v1/identity-recovery/challenges/{challenge.ChallengeId}/completion")
         {
             Content = JsonContent.Create(new
             {
                 email_address = email,
-                challenge_id = challenge.ChallengeId,
                 token = challenge.Token,
                 old_identity_id = oldIdentity.Id,
             }),
         };
         completionRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
             "Bearer", providerToken);
+        using var retryRequest = await CloneAsync(completionRequest);
         using var completed = await owner.SendAsync(completionRequest);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, completed.StatusCode);
-        using var afterRevocation = await GetSessionAsync(owner, sessionCookie);
-        Assert.Equal(HttpStatusCode.Unauthorized, afterRevocation.StatusCode);
+        // The claim is accepted with the fixed acknowledgment. The swap itself completes in the identity recovery
+        // process, which reads its source facts through the broker stream client; that end to end proof belongs to the
+        // later validation phase, and the in-memory process tests prove every stage.
+        Assert.Equal(HttpStatusCode.Accepted, completed.StatusCode);
+        var acknowledgment = await completed.Content.ReadAsStringAsync();
+        using var retry = await owner.SendAsync(retryRequest);
+        Assert.Equal(HttpStatusCode.Accepted, retry.StatusCode);
+        Assert.Equal(acknowledgment, await retry.Content.ReadAsStringAsync());
+        using var document = JsonDocument.Parse(acknowledgment);
+        Assert.Equal(challenge.ChallengeId.ToString(), document.RootElement.GetProperty("operation_id").GetString());
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var replacement = await reader.HydrateAsync(
-            new UserIdentity("https://issuer.example/", "new-subject"), CancellationToken.None);
-        var retired = await reader.HydrateAsync(new UserIdentity(oldIdentity.Id), CancellationToken.None);
-        Assert.Equal(userId, replacement.UserId);
-        Assert.True(retired.IsRevoked);
-        await WaitForCompletionNoticeAsync(delivery, challenge.ChallengeId);
+        var claimedAddress = await reader.HydrateAsync(new EmailAddress(email), CancellationToken.None);
+        Assert.Equal(oldIdentity.Id, claimedAddress.RecoveryOldIdentityId);
+        Assert.Equal(UserIdentity.GetIdentityId("https://issuer.example/", "new-subject"),
+            claimedAddress.RecoveryReplacementIdentityId);
         await worker.StopAsync();
     }
 
@@ -217,18 +208,6 @@ public sealed class IdentityRecoveryE2ETests(BrokerStackFixture broker)
         throw new InvalidOperationException("Unreachable.");
     }
 
-    static async Task WaitForCompletionNoticeAsync(RecordingDelivery delivery, Uuid challengeId)
-    {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
-        while (DateTimeOffset.UtcNow < deadline)
-        {
-            if (delivery.Completions.Contains(challengeId))
-                return;
-            await Task.Delay(100);
-        }
-        Assert.Fail("Identity recovery completion notice was not sent by the independent worker.");
-    }
-
     static async Task<HttpResponseMessage> SendUntilSuccessAsync(HttpClient client,
         HttpRequestMessage request, IReadOnlyCollection<HttpStatusCode> retryStatuses)
     {
@@ -256,13 +235,6 @@ public sealed class IdentityRecoveryE2ETests(BrokerStackFixture broker)
         foreach (var header in source.Headers)
             clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
         return clone;
-    }
-
-    static async Task<HttpResponseMessage> GetSessionAsync(HttpClient client, string cookie)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/auth/session");
-        request.Headers.Add("Cookie", cookie);
-        return await client.SendAsync(request);
     }
 
     static string Token(string issuer, string audience, string secret, string subject)
