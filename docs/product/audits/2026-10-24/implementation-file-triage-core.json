@@ -1,0 +1,326 @@
+{
+  "reviewed_files": 16,
+  "method": "Source/test/spec triage of Jev signals; scores alone are not findings.",
+  "files": [
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactDisclosure.cs",
+      "sha256": "15a5c001edf6eeee8cd3160eb677e38b14ab6062e9bca531243eec8b1480d414",
+      "signals": {
+        "authority_gap": 0.68,
+        "invariant_gap": 0.63,
+        "recovery_gap": 0.77,
+        "incomplete_path": 0.38
+      },
+      "classification": "actual_finding",
+      "summary": "Approve compares its server-generated ApprovedAt on replay and revalidates current source before recognizing the accepted approval. Exact retry at a later clock conflicts.",
+      "known_family": "remaining-identities/retention",
+      "evidence": [
+        "ArtifactDisclosure.cs:33-59",
+        "ApproveArtifactDisclosureHandler.cs:37-38",
+        "canonical-intent-contracts.json:7"
+      ],
+      "regression_to_add": "Approve through handler, advance clock, retry same authored intent; preserve original actor/time and reject changed intent.",
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Remediation/AuthorizeCorrectiveActionFindingClosureUseHandler.cs",
+      "sha256": "84d3e56e9752b54bcfef517e1b372fccdc3c54d9208b3bcc22e1c629a196f35b",
+      "signals": {
+        "authority_gap": 0.48,
+        "invariant_gap": 0.46,
+        "recovery_gap": 0.34,
+        "incomplete_path": 0.76
+      },
+      "classification": "actual_finding",
+      "summary": "Missing admitted-child or authored-action content is caught as base integrity and returned permanently. Unavailable content must leave the durable closure pending.",
+      "known_family": "reactor-recovery",
+      "evidence": [
+        "AuthorizeCorrectiveActionFindingClosureUseHandler.cs:38-41",
+        "AuthorizeCorrectiveActionFindingClosureUseHandler.cs:73-76",
+        "ImmutableContentUnavailableException.cs"
+      ],
+      "regression_to_add": "Temporarily hide each required immutable value, observe transient/no grant, restore and resume.",
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactDisposition.cs",
+      "sha256": "47528144f606836c1181c915eca2f1de65c0f5562b4ec122f82e34b33243389f",
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.64,
+        "recovery_gap": 0.74,
+        "incomplete_path": 0.41
+      },
+      "classification": "actual_finding",
+      "summary": "Approval retry compares server ApprovedAt; replay also does not bind the original expected revision exactly. Technical attempt history and lifetime cap remain S35 work.",
+      "known_family": "remaining-identities/retention;S35",
+      "evidence": [
+        "ArtifactDisposition.cs:39-62",
+        "ArtifactDisposition.cs:10",
+        "ArtifactDisposition.cs:90"
+      ],
+      "regression_to_add": "Retry approval at later clock and with changed original token; exact replay succeeds without new fact, changed intent conflicts.",
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs",
+      "sha256": "f1794c49fdd7312ae981c6f0291295b6c6b952785732d77f5a3e0a673db04e87",
+      "signals": {
+        "authority_gap": 0.44,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.74,
+        "incomplete_path": 0.32
+      },
+      "classification": "known_implementation_gap",
+      "summary": "Delivery attempts and technical outcomes remain native aggregate state; accepted S35 moves them to CAS process state. Scheduler/member-week and delivery-key replay guards are already explicit.",
+      "known_family": "S35",
+      "evidence": [
+        "WeeklyWorkDigest.cs:17-33",
+        "WeeklyWorkDigest.cs:67-98",
+        "aggregate-remediation.json family13"
+      ],
+      "regression_to_add": null,
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/ListWorkforceSourceObservationsHandler.cs",
+      "sha256": "79a6a318cbf78a761619aa9fc10a595b23b33469e9f6c690ce357f72e35123a0",
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.4,
+        "recovery_gap": 0.73,
+        "incomplete_path": 0.42
+      },
+      "classification": "false_positive",
+      "summary": "Read-only query validates filter/cursor shape, tenant-scopes directory reads, fences source projection, rejects foreign rows and applies restricted-source redaction; mutation receipts are inapplicable.",
+      "known_family": "workforce",
+      "evidence": [
+        "ListWorkforceSourceObservationsHandler.cs:14-35",
+        "WorkforceSourceReadConsistency.cs",
+        "WorkforceSourceRedaction.cs"
+      ],
+      "regression_to_add": null,
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
+      "sha256": "9a8b93e563b971defe35f76ae92a9005375de5ef9b2919f026385c20e18d0156",
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.58,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.34
+      },
+      "classification": "known_implementation_gap",
+      "summary": "Combined package manifest, build attempts and deliveries await selected compact manifest, technical build process and independent delivery owner.",
+      "known_family": "S29",
+      "evidence": [
+        "AuditPackage.cs",
+        "aggregate-split-targets.json AuditPackage",
+        "/tmp/compliance-s29-plan.md"
+      ],
+      "regression_to_add": null,
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactEngagementHold.cs",
+      "sha256": "195119139866f16406abcf1bf32085ee80cf19e0fff8540bdc713d33f64586d8",
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.55,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.29
+      },
+      "classification": "actual_finding",
+      "summary": "Place compares server PlacedAt for an existing hold, and Release compares server ReleasedAt, preventing normal exact retry after the clock advances.",
+      "known_family": "remaining-identities/retention",
+      "evidence": [
+        "ArtifactEngagementHold.cs:31-48",
+        "ArtifactEngagementHold.cs:100-119",
+        "PlaceArtifactEngagementHoldHandler.cs:20-21",
+        "ReleaseArtifactEngagementHoldHandler.cs:20-21"
+      ],
+      "regression_to_add": "Exercise placement/release exact retries after time advances and after later legal state; retain original attributed facts.",
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/ArtifactRetention.cs",
+      "sha256": "0be83795914dec39e40ed53c80f61b6aff3727c993e69c763074e68ee3bf7cfb",
+      "signals": {
+        "authority_gap": 0.65,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.49
+      },
+      "classification": "known_implementation_gap",
+      "summary": "Basis and independently mutable legal holds share the combined owner and revision. Accepted S31 replaces them with exact-content basis and HoldId owners.",
+      "known_family": "S31",
+      "evidence": [
+        "ArtifactRetention.cs:16-44",
+        "ArtifactRetention.cs:99-147",
+        "aggregate-split-targets.json ArtifactRetention"
+      ],
+      "regression_to_add": null,
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
+      "sha256": "8e1421c8f75c124f9f3950230708c4e1fe3d5ced73215bd8e14e0f565149cd0b",
+      "signals": {
+        "authority_gap": 0.38,
+        "invariant_gap": 0.7,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.46
+      },
+      "classification": "known_implementation_gap",
+      "summary": "Recipient/week technical attempts, unknown outcomes and retry windows remain aggregate state; S35 specifies CAS process ownership. Existing unknown-outcome/manual retry fences remain required regressions.",
+      "known_family": "S35",
+      "evidence": [
+        "WorkDigestDispatch.cs:71-144",
+        "aggregate-remediation.json family13"
+      ],
+      "regression_to_add": null,
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Exports/RecordClientExportBuildResultHandler.cs",
+      "sha256": "9b38c9c8a33237e29efa532a9795336a00ca4539570191c33ee64af5ce42a079",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.19
+      },
+      "classification": "false_positive",
+      "summary": "Named-worker authorizer, causation, exact historical request proof, tenant/export/attempt binding and prior-attempt replay precede any new result mutation. Broader export process/product qualification is separate existing work.",
+      "known_family": "S35/existing-export-gates",
+      "evidence": [
+        "RecordClientExportBuildResultHandler.cs:14-56",
+        "RecordClientExportBuildResultAuthorizer.cs",
+        "ClientExport.cs.RecordBuildResult"
+      ],
+      "regression_to_add": null,
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Retention/RecordArtifactDispositionResultHandler.cs",
+      "sha256": "82397487861e8f2daa206e570fc28bb1851c305eead8d74a219d3a824bf347f1",
+      "signals": {
+        "authority_gap": 0.44,
+        "invariant_gap": 0.7,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.17
+      },
+      "classification": "known_implementation_gap",
+      "summary": "Exact execution-request and named-worker proof bind the callback, but technical attempt state remains on ArtifactDisposition and old-attempt replay depends on current last attempt. Move it to selected process outcome state.",
+      "known_family": "S35",
+      "evidence": [
+        "RecordArtifactDispositionResultHandler.cs:16-72",
+        "ArtifactDisposition.cs:111-136"
+      ],
+      "regression_to_add": "Replay an accepted failed result after the next attempt starts; it must not mutate or reject the original accepted outcome.",
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Remediation/CompleteCorrectiveActionHandler.cs",
+      "sha256": "b7850250f26ee4a9adfb4de095cd992b00889b76980d0a1ce7714b26d3af4363",
+      "signals": {
+        "authority_gap": 0.41,
+        "invariant_gap": 0.69,
+        "recovery_gap": 0.59,
+        "incomplete_path": 0.26
+      },
+      "classification": "false_positive",
+      "summary": "Exact selected native receipt is resolved before current finding, owner authority, evidence and date feasibility. Frozen result content supplies the original response.",
+      "known_family": "S20",
+      "evidence": [
+        "CompleteCorrectiveActionHandler.cs:25-44",
+        "CompleteCorrectiveActionHandler.cs:76-90",
+        "FindingIdentifiedOperationTests.cs"
+      ],
+      "regression_to_add": null,
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPackages/RecordAuditPackageBuildResultHandler.cs",
+      "sha256": "24ae699e6b42bebd08ab8927f3c45251809ef4b77ab12d38d907d20c437c6045",
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.68,
+        "recovery_gap": 0.6,
+        "incomplete_path": 0.22
+      },
+      "classification": "known_implementation_gap",
+      "summary": "Old build callback contract lacks selected native source/target/output envelope and compact manifest process. S29 must verify actual archive bytes/output before Built.",
+      "known_family": "S29",
+      "evidence": [
+        "RecordAuditPackageBuildResultHandler.cs",
+        "target-command-contracts.json RecordAuditPackageBuildResult",
+        "/tmp/compliance-s29-plan.md"
+      ],
+      "regression_to_add": null,
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Snapshots/VerifyProgramScopeSnapshotHandler.cs",
+      "sha256": "e6889bd430b34ebe48863b623d2f77e864dcaccf2da90177faf8f7f441f43753",
+      "signals": {
+        "authority_gap": 0.67,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.44,
+        "incomplete_path": 0.24
+      },
+      "classification": "false_positive",
+      "summary": "Verification checks authoritative frozen manifest/digest and tenant/program scope; projection lag is represented as verification status. Manifest equality is scalar record equality, not collection reference equality.",
+      "known_family": "snapshots",
+      "evidence": [
+        "VerifyProgramScopeSnapshotHandler.cs:17-69",
+        "ProgramScopeManifest.cs",
+        "SnapshotContentIdentity.cs"
+      ],
+      "regression_to_add": null,
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/ReviseServiceIdentityHandler.cs",
+      "sha256": "68e38b6a83b6095314d17f2121fcbe15bf64b76c2162f8100735fbdbea0c71d5",
+      "signals": {
+        "authority_gap": 0.43,
+        "invariant_gap": 0.65,
+        "recovery_gap": 0.37,
+        "incomplete_path": 0.13
+      },
+      "classification": "actual_finding",
+      "summary": "No client CommandId or selected receipt exists; current owner feasibility and stale revision are checked for every attempt, so an accepted revise cannot replay after append or owner changes.",
+      "known_family": "remaining-identities/workforce",
+      "evidence": [
+        "ReviseServiceIdentity.cs",
+        "ReviseServiceIdentityHandler.cs:16-38",
+        "ServiceIdentity.cs:57-72",
+        "remaining-command-identities.json ReviseServiceIdentity"
+      ],
+      "regression_to_add": "Migrate required CommandId; test exact replay after later state and owner retirement, changed intent/actor/original revision conflicts.",
+      "sha_matches": true
+    },
+    {
+      "path": "src/Compliance.Core/Features/Workforce/ServiceIdentity.cs",
+      "sha256": "3171dcb95d3b7e9648b11a257c06b4dd2d427931ddc74c089c7c8f533e138e76",
+      "signals": {
+        "authority_gap": 0.4,
+        "invariant_gap": 0.47,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.26
+      },
+      "classification": "actual_finding",
+      "summary": "Creation validates time-dependent feasibility before matching initial terms and ignores original actor; revise has no selected operation. Accepted identity contracts require stable caller identities and native replay.",
+      "known_family": "remaining-identities/workforce",
+      "evidence": [
+        "ServiceIdentity.cs:40-72",
+        "RecordServiceIdentity.cs",
+        "remaining-command-identities.json RecordServiceIdentity"
+      ],
+      "regression_to_add": "Retry original creation after due/expiry changes, and revise after another operation; preserve original output and actor.",
+      "sha_matches": true
+    }
+  ]
+}

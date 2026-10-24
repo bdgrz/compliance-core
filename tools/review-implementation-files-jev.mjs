@@ -36,7 +36,8 @@ if (argv.includes('--files')) {
     const supplied = fs.readFileSync(option('--files'), 'utf8');
     const names = new Set(supplied.trim().startsWith('[')
         ? JSON.parse(supplied).map(row => typeof row === 'string' ? row : row.path) : supplied.trim().split(/\r?\n/));
-    inventory = inventory.filter(source => names.has(source.path));
+    inventory = sources.filter(source => names.has(source.path))
+        .map(source => ({ ...source, kinds: kindOf(source).length ? kindOf(source) : ['dependency'] }));
 }
 inventory.sort((a, b) => a.path.localeCompare(b.path));
 fs.mkdirSync(path.join(output, 'requests'), { recursive: true });

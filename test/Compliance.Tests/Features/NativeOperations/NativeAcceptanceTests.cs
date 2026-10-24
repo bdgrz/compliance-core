@@ -78,6 +78,41 @@ public sealed class NativeAcceptanceTests
     }
 
     [Fact]
+    public void ShouldReplayOriginalFactGivenOnlyActorDisplayChanged()
+    {
+        // Arrange
+        var acceptance = new NativeAcceptance(Logical);
+        var original = Provenance(Logical);
+        acceptance.Observe(new ProbeAdmitted(Uuid.CreateVersion4(), "p", original, Response));
+        var candidate = original with { Actor = Actor with { Display = "Updated profile label" } };
+
+        // Act
+        var decision = acceptance.Decide(AcceptedOperationBinding.Of(candidate));
+
+        // Assert
+        Assert.Equal(NativeAcceptanceDecision.Replayed, decision);
+        Assert.Equal(Actor, acceptance.SelectedProvenance!.Actor);
+    }
+
+    [Theory]
+    [InlineData("member", "other-member")]
+    [InlineData("platform_operator", "m1")]
+    public void ShouldConflictGivenActorIdentityChanged(string kind, string id)
+    {
+        // Arrange
+        var acceptance = new NativeAcceptance(Logical);
+        var original = Provenance(Logical);
+        acceptance.Observe(new ProbeAdmitted(Uuid.CreateVersion4(), "p", original, Response));
+        var candidate = original with { Actor = Actor with { Kind = kind, Id = id } };
+
+        // Act
+        var decision = acceptance.Decide(AcceptedOperationBinding.Of(candidate));
+
+        // Assert
+        Assert.Equal(NativeAcceptanceDecision.Conflict, decision);
+    }
+
+    [Fact]
     public void ShouldConflictGivenAcceptedFactWithChangedKind()
     {
         // Arrange

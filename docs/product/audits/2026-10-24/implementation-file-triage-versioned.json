@@ -1,0 +1,1373 @@
+{
+  "generated_at_utc": "2026-10-24T15:15:52.181953+00:00",
+  "source": "implementation-file-reviews.json",
+  "reviewed_files": 22,
+  "summary": {
+    "false_positive": 9,
+    "actual_finding": 8,
+    "known_blocker": 5
+  },
+  "all_reviewed_sha_match": true,
+  "policy": "No GitHub issues, source/index/git edits, builds or tests in this read-only task. Scores are signals only; no claimed defect based solely on score or missing duplicate authorization. Native realm-wide #1042 remains a status/cross-route lookup prerequisite, not a blocker for per-first-owner write migrations.",
+  "files": [
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/ListCampaignsHandler.cs",
+      "sha256": "4c79d25418ceb1bec5afa25ee0a98a5cb8a5bf5ce01a9c5f84c85c2cb1fc7323",
+      "current_sha256": "4c79d25418ceb1bec5afa25ee0a98a5cb8a5bf5ce01a9c5f84c85c2cb1fc7323",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.68,
+        "invariant_gap": 0.49,
+        "recovery_gap": 0.77,
+        "incomplete_path": 0.56
+      },
+      "classification": "false_positive",
+      "summary": "No concrete authority/recovery defect established. The request is IProgramReadRequest, so current program authorization is upstream. Handler refuses a behind checkpoint and rejects foreign tenant/program rows; a read has no replay side effect.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/ListCampaignsHandler.cs",
+          "line_start": 13,
+          "line_end": 42,
+          "excerpt": "        if (request.Limit is < 1 or > 200)\n            return Result<Page<CampaignSummaryView>>.Failure(new RequestError(\n                RequestErrorKind.Validation, \"Limit must be between 1 and 200.\"));\n        var checkpoint = await directory.LoadCheckpointAsync(request.TenantId, ct)\n            .ConfigureAwait(false);\n        await using (var pending = events.ReadAsync(EventStreamPattern.ForPattern(\n                         request.TenantId.ToString(), \"policy-distribution-campaigns\"),\n                     checkpoint.Cursor, ct).GetAsyncEnumerator(ct))\n        {\n            if (await pending.MoveNextAsync().ConfigureAwait(false))\n                return Result<Page<CampaignSummaryView>>.Failure(new RequestError(\n                    RequestErrorKind.Conflict,\n                    \"The campaign list projection has not reached the source.\", isTransient: true));\n        }\n        Page<CampaignSummaryView> page;\n        try\n        {\n            page = await directory.ListProgramAsync(request.TenantId, request.ProgramId,\n                request.Limit ?? 50, request.Cursor, ct).ConfigureAwait(false);\n        }\n        catch (KvDirectoryQueryException)\n        {\n            return Result<Page<CampaignSummaryView>>.Failure(new RequestError(\n                RequestErrorKind.Validation, \"The campaign cursor is invalid.\"));\n        }\n        return page.Items.Any(item => item.TenantId != request.TenantId ||\n                                      item.ProgramId != request.ProgramId)\n            ? Result<Page<CampaignSummaryView>>.Failure(new RequestError(\n                RequestErrorKind.Conflict, \"The campaign projection has an invalid program scope.\"))\n            : Result<Page<CampaignSummaryView>>.Success(page);"
+        },
+        {
+          "path": "src/Compliance.Common/Features/PolicyDistribution/ListCampaigns.cs",
+          "line_start": 8,
+          "line_end": 10,
+          "excerpt": "public sealed record ListCampaigns(Uuid TenantId, Uuid ProgramId, int? Limit = null,\n    string? Cursor = null)\n    : IRequest<Page<CampaignSummaryView>>, IProgramReadRequest, ICallable;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs",
+          "line_start": 86,
+          "line_end": 112,
+          "excerpt": "                        scoped.ProgramId, BuiltInRbac.ComplianceManagementRoleId(tenantId),\n                        scoped.RequiredPermission, ct).ConfigureAwait(false);\n                return complianceLead\n                    ? Result.Success\n                    : Result.Failure(new RequestError(RequestErrorKind.Forbidden,\n                        \"This advisor handoff operation requires a current Compliance Lead grant.\"));\n            }\n            var scopedAllowed = await scopedPermissions.IsAllowedAsync(tenantId, userId, memberId,\n                    scoped.ProgramId, scoped.RequiredPermission, ct)\n                .ConfigureAwait(false);\n            return scopedAllowed\n                ? Result.Success\n                : Result.Failure(new RequestError(RequestErrorKind.Forbidden,\n                    \"The actor may not manage this program.\"));\n        }\n\n        if (context.Request is PreviewApplicationChange preview)\n        {\n            // The preview summarizes references across an application and may cross Programs.\n            // A grant to one Program cannot authorize the whole tenant-owned response.\n            if (!await resourceScopes.IsTenantApplicationAsync(tenantId, preview.ApplicationId, ct)\n                    .ConfigureAwait(false))\n                return Result.Failure(new RequestError(RequestErrorKind.NotFound,\n                    \"The application was not found.\"));\n            var visibility = await scopedPermissions.GetProgramVisibilityAsync(tenantId, userId,\n                    memberId, IProgramReadRequest.ReadPermission, ct)\n                .ConfigureAwait(false);"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Policies/FitzPolicyDirectoryTests.cs",
+          "line_start": 28,
+          "line_end": 28,
+          "excerpt": "    public async Task ShouldReadOnlyMatchingCampaignsGivenLargeUnrelatedProgramPopulation()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs",
+          "line_start": 119,
+          "line_end": 119,
+          "excerpt": "    public async Task ShouldUseProgramReadGrantGivenProgramReadRequest()"
+        }
+      ],
+      "regression_to_add": "Optional direct handler race/lag regression: append a campaign source event after the checkpoint and assert transient Conflict before list. Existing directory tests establish scope, not this exact handler boundary.",
+      "known_blockers": [],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Controls/GetCurrentControlVersionHandler.cs",
+      "sha256": "76def4dfbb084799655fffc7aeed3bff8ba48376aa31d04ec0ba967661ca7f62",
+      "current_sha256": "76def4dfbb084799655fffc7aeed3bff8ba48376aa31d04ec0ba967661ca7f62",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.52,
+        "invariant_gap": 0.47,
+        "recovery_gap": 0.35,
+        "incomplete_path": 0.75
+      },
+      "classification": "false_positive",
+      "summary": "This path is complete for the current query semantics: hydrate authoritative control, enforce visible/owning program, return latest approved version or NotFound. No missing projection wait or mutation workflow exists here. IProgramScopedRequest authorization is upstream.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Controls/GetCurrentControlVersionHandler.cs",
+          "line_start": 10,
+          "line_end": 18,
+          "excerpt": "    {\n        var request = context.Request;\n        var control = await source.LoadAsync(request.TenantId, request.ProgramId,\n            request.ControlId, ct).ConfigureAwait(false);\n        return control.IsSuccess\n            ? ControlActivationSource.Version(control.Value.ApprovedVersion,\n                \"The control has no approved version.\")\n            : Result<ControlVersionView>.Failure(control.Error);\n    }"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Controls/ControlActivationSource.cs",
+          "line_start": 16,
+          "line_end": 30,
+          "excerpt": "    public async ValueTask<Result<ControlDraft>> LoadAsync(Uuid tenantId, Uuid programId,\n        Uuid controlId, CancellationToken ct)\n    {\n        var control = await reader.HydrateAsync(new ControlDraft(tenantId, controlId), ct)\n            .ConfigureAwait(false);\n        return control.IsVisible && control.ProgramId == programId\n            ? Result<ControlDraft>.Success(control)\n            : Result<ControlDraft>.Failure(new RequestError(RequestErrorKind.NotFound,\n                \"The control was not found.\"));\n    }\n\n    public static Result<ControlVersionView> Version(ControlVersionView? version, string missing) =>\n        version is not null\n            ? Result<ControlVersionView>.Success(version)\n            : Result<ControlVersionView>.Failure(new RequestError(RequestErrorKind.NotFound,"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Controls/GetCurrentControlVersion.cs",
+          "line_start": 7,
+          "line_end": 8,
+          "excerpt": "public sealed record GetCurrentControlVersion(Uuid TenantId, Uuid ProgramId, Uuid ControlId)\n    : IRequest<ControlVersionView>, IProgramScopedRequest, ICallable;"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Controls/ControlActivationHandlerTests.cs",
+          "line_start": 64,
+          "line_end": 64,
+          "excerpt": "    public async Task ShouldReturnNotFoundGivenControlFromAnotherProgram()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
+          "line_start": 74,
+          "line_end": 74,
+          "excerpt": "    public async Task ShouldRetireGivenMatchingDigestAndKeepHistoricalReads()"
+        }
+      ],
+      "regression_to_add": null,
+      "known_blockers": [],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Commitments/CreateCommitmentDraftHandler.cs",
+      "sha256": "4e8e5773b5845bb72d1005aa50b0e9f3ab1e7a8df8c666c85be46d2a7ebcb8ee",
+      "current_sha256": "4e8e5773b5845bb72d1005aa50b0e9f3ab1e7a8df8c666c85be46d2a7ebcb8ee",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.68,
+        "invariant_gap": 0.72,
+        "recovery_gap": 0.52,
+        "incomplete_path": 0.47
+      },
+      "classification": "actual_finding",
+      "summary": "Creation retry is coupled to context.RequestId rather than selected immutable DraftId. Common request carries no DraftId/IIdentifiedRequest; handler generates natural ID but passes the adapter request ID to Create, whose replay comparator requires the original ID. An identical later HTTP/MCP request with a fresh transport ID returns Conflict even though its stable natural creation identity and authored content match.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Commitments/CreateCommitmentDraftHandler.cs",
+          "line_start": 14,
+          "line_end": 17,
+          "excerpt": "        var request = context.Request;\n        var kind = CommitmentDraft.NormalizeKind(request.Kind);\n        var identifier = CommitmentDraft.NormalizeIdentifier(request.Identifier);\n        var draftId = CommitmentDraft.IdFor(request.TenantId, request.ProgramId,"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Commitments/CreateCommitmentDraftHandler.cs",
+          "line_start": 53,
+          "line_end": 59,
+          "excerpt": "                    RbacIds.Member(request.TenantId, userId),\n                    UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow(),\n                    request.ProviderId));\n            },\n            context, ct).ConfigureAwait(false);\n    }\n}"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+          "line_start": 163,
+          "line_end": 180,
+          "excerpt": "        var cleanContext = context.Trim();\n        var cleanSourceReference = sourceReference.Trim();\n        if (_created)\n            return ProgramId == programId && ServiceId == serviceId &&\n                   _createRequestId == createRequestId &&\n                   StringComparer.Ordinal.Equals(Kind, normalizedKind) &&\n                   StringComparer.Ordinal.Equals(Identifier, normalizedIdentifier) &&\n                   StringComparer.Ordinal.Equals(_initialStatement, cleanStatement) &&\n                   StringComparer.Ordinal.Equals(_initialContext, cleanContext) &&\n                   StringComparer.Ordinal.Equals(_initialSourceReference, cleanSourceReference) &&\n                   _providerId == providerId\n                ? Result<CommitmentDraftRegistration>.Success(new CommitmentDraftRegistration(\n                    Id, normalizedKind, normalizedIdentifier, 1))\n                : Result<CommitmentDraftRegistration>.Failure(new RequestError(\n                    RequestErrorKind.Conflict, \"The draft identifier already exists.\"));\n        CommitmentDraftCreated created = new(_tenantId, programId, Id, createRequestId,\n            serviceId, normalizedKind, normalizedIdentifier, cleanStatement, cleanContext,\n            cleanSourceReference, actorMemberId, actorDisplay, changedAt)"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Commitments/CreateCommitmentDraft.cs",
+          "line_start": 8,
+          "line_end": 11,
+          "excerpt": "public sealed record CreateCommitmentDraft(Uuid TenantId, Uuid ProgramId, Uuid ServiceId,\n    string Kind, string Identifier, string Statement, string Context, string SourceReference,\n    Uuid? ProviderId = null)\n    : IRequest<CommitmentDraftRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Commitments/CommitmentDraftReplayTests.cs",
+          "line_start": 13,
+          "line_end": 13,
+          "excerpt": "    public async Task ShouldReplayOriginalCreateAndRejectNewDraftGivenRetiredService()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Commitments/CommitmentDraftReplayTests.cs",
+          "line_start": 19,
+          "line_end": 20,
+          "excerpt": "        var actorId = Uuid.CreateVersion4();\n        var requestId = Uuid.CreateVersion4();"
+        }
+      ],
+      "regression_to_add": "Repeat the same creation through HTTP/MCP with a new transport RequestId after service retirement and later draft edits; selected DraftId must equal IdFor, exact original registration returns once, changed actor/intent conflicts.",
+      "known_blockers": [
+        "S33-native-commitment: selected CreateCommitmentDraft adds DraftId; migrate request/routes/owner native first result rather than only removing request-ID comparison."
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+      "sha256": "5d2a29f5ae57018cf830c84e95dd61f8a4a046d60c20efaf50000f9426d5012e",
+      "current_sha256": "5d2a29f5ae57018cf830c84e95dd61f8a4a046d60c20efaf50000f9426d5012e",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.53,
+        "recovery_gap": 0.72,
+        "incomplete_path": 0.33
+      },
+      "classification": "actual_finding",
+      "summary": "A successful Revise cannot be retried with its original expected revision: expectedRevision is checked before unchanged-content handling, and no selected operation receipt exists. Creation also compares retry content against current mutable terms, so original create after a later revision can conflict. This is a concrete accepted-command recovery gap; existing baseline-ID replay is separately implemented and is not this defect.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+          "line_start": 54,
+          "line_end": 61,
+          "excerpt": "    public CommandFailure? Create(ExaminationEngagementContent content, Uuid actorMemberId,\n        string actorDisplay, DateTimeOffset occurredAt)\n    {\n        if (_current is not null)\n            return SameContent(_current, content)\n                ? null\n                : CommandFailure.StateConflict(\n                    \"The examination engagement already exists with different terms.\");"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+          "line_start": 79,
+          "line_end": 98,
+          "excerpt": "    public CommandFailure? Revise(long expectedRevision, ExaminationEngagementContent content,\n        Uuid actorMemberId, string actorDisplay, DateTimeOffset occurredAt)\n    {\n        if (_current is null)\n            return CommandFailure.MissingRecord(\"The examination engagement was not found.\");\n        if (expectedRevision != Revision)\n            return CommandFailure.ForVersion(\n                VersionedRecordRules.StaleRevision(\"examination engagement\", Revision));\n        if (_baseline is not null)\n            return CommandFailure.StateConflict(\n                \"A frozen Type I engagement can only change through a baseline amendment.\");\n        if (ValidateActor(actorMemberId, actorDisplay, occurredAt) is { } actorFailure)\n            return actorFailure;\n        if (NormalizeContent(content) is not { } normalized)\n            return InvalidEngagement();\n        if (SameContent(_current, normalized))\n            return null;\n\n        var engagement = View(normalized, \"draft\", Revision + 1, actorMemberId,\n            actorDisplay.Trim(), occurredAt);"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/ExaminationEngagementTests.cs",
+          "line_start": 37,
+          "line_end": 37,
+          "excerpt": "    public void ShouldKeepEngagementIdentityAndRejectStaleRevisionGivenRevision()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/ExaminationEngagementTests.cs",
+          "line_start": 177,
+          "line_end": 177,
+          "excerpt": "    public void ShouldFreezeExactBaselineAndPreserveItGivenLaterSourceChange()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs",
+          "line_start": 149,
+          "line_end": 149,
+          "excerpt": "    public async Task ShouldAllowFreezeRetryAfterSourceChangesGivenSameBaselineIdentity()"
+        }
+      ],
+      "regression_to_add": "Revise once at revision N, retry same CommandId/original N at a later server time after N+1 and after a subsequent edit; return original result without append. Changed actor/terms under same CommandId conflicts.",
+      "known_blockers": [
+        "Retained-owner native migration: remaining-command-identities.json selects required CommandId for ReviseExaminationEngagement."
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+      "sha256": "6123ac432cfb7f30be360e30e494da18cca77b6ba874b941dc19205370cd13a1",
+      "current_sha256": "6123ac432cfb7f30be360e30e494da18cca77b6ba874b941dc19205370cd13a1",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.5,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.43
+      },
+      "classification": "false_positive",
+      "summary": "The recovery/authority score is resolved by existing bounded command-selected receipt folding and consuming handlers. Each mutation requires matching command selector, compares exact retained fact before stale-state checks, validates tenant/program replay, and rehydrates authoritative source in handlers. No duplicated aggregate authorization is required.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+          "line_start": 41,
+          "line_end": 58,
+          "excerpt": "    public CommandFailure? Record(Uuid requestId, AuditObservationContent content,\n        Uuid actorMemberId, string actorDisplay, DateTimeOffset recordedAt)\n    {\n        if (CheckCommand(requestId) is { } commandFailure)\n            return commandFailure;\n        if (Normalize(content) is not { } normalized)\n            return Invalid(\"An observation requires received auditor wording and exact source references.\");\n        if (_receipt is { } receipt)\n            return receipt is AuditObservationRecorded recorded &&\n                   recorded.ActorMemberId == actorMemberId && SameContent(recorded.Received.Content, normalized)\n                ? null : ChangedRequest();\n        if (_current is not null)\n            return CommandFailure.StateConflict(\"The received observation already exists; record an auditor correction.\");\n        if (!ValidActor(actorMemberId, actorDisplay, recordedAt) || normalized.ReceivedAt > recordedAt)\n            return Invalid(\"An observation requires valid recording attribution after its receipt time.\");\n        var received = new AuditObservationReceivedVersion(1, requestId, normalized, Digest(normalized),\n            actorMemberId, actorDisplay.Trim(), recordedAt);\n        return Emit(new AuditObservationRecorded(_tenantId, Id, 1, actorMemberId, _programId, received, recordedAt));"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+          "line_start": 61,
+          "line_end": 78,
+          "excerpt": "    public CommandFailure? Correct(Uuid requestId, long expectedRevision, int previousSourceVersion,\n        AuditObservationContent content, string reason, Uuid actorMemberId,\n        string actorDisplay, DateTimeOffset recordedAt)\n    {\n        if (CheckCommand(requestId) is { } commandFailure)\n            return commandFailure;\n        if (Normalize(content) is not { } normalized || !Text(reason, MaximumTextLength))\n            return Invalid(\"An auditor correction requires received source content and a reason.\");\n        var cleanReason = reason.Trim();\n        if (_receipt is { } receipt)\n            return receipt is AuditObservationCorrected corrected && corrected.Revision - 1 == expectedRevision &&\n                   corrected.PreviousSourceVersion == previousSourceVersion && corrected.Reason == cleanReason &&\n                   corrected.ActorMemberId == actorMemberId && SameContent(corrected.Received.Content, normalized)\n                ? null : ChangedRequest();\n        if (CheckCurrent(expectedRevision) is { } currentFailure)\n            return currentFailure;\n        var current = _current!;\n        if (previousSourceVersion != current.Received.Version)"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+          "line_start": 217,
+          "line_end": 233,
+          "excerpt": "    CommandFailure? CheckCommand(Uuid requestId) => requestId == Uuid.Empty || _commandId != requestId ||\n        _tenantId == Uuid.Empty || _programId == Uuid.Empty || Id == Uuid.Empty\n        ? Invalid(\"A mutation requires hydration with its exact nonempty command identity.\") : null;\n\n    CommandFailure? CheckCurrent(long expectedRevision) => _current is null\n        ? CommandFailure.MissingRecord(\"The received observation was not found.\")\n        : expectedRevision != Revision\n            ? CommandFailure.ForVersion(VersionedRecordRules.StaleRevision(\"audit observation\", Revision)) : null;\n\n    void Remember(Uuid requestId, DomainEvent ev)\n    {\n        if (_commandId != requestId)\n            return;\n        if (_receipt is not null)\n            throw InvalidEvent();\n        _receipt = ev;\n    }"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/AuditObservationTests.cs",
+          "line_start": 112,
+          "line_end": 112,
+          "excerpt": "    public void ShouldRememberExactOlderCommandGivenLaterCorrectionResponseAndFindingLink()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/AuditObservationTests.cs",
+          "line_start": 176,
+          "line_end": 176,
+          "excerpt": "    public void ShouldRejectMalformedOrCrossTenantEventGivenReplay()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/AuditObservationTests.cs",
+          "line_start": 279,
+          "line_end": 279,
+          "excerpt": "    public void ShouldRejectRepeatedSelectedCommandIdentityGivenOtherwiseValidLaterFact()"
+        }
+      ],
+      "regression_to_add": null,
+      "known_blockers": [],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs",
+      "sha256": "10b4bd2c31a8a2754889f8a9206dd8d37052dfa23d30652cdbbd4331379e069c",
+      "current_sha256": "10b4bd2c31a8a2754889f8a9206dd8d37052dfa23d30652cdbbd4331379e069c",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.65,
+        "invariant_gap": 0.46,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.24
+      },
+      "classification": "false_positive",
+      "summary": "No concrete defect from this alert alone. Sign binds named member/exact artifact and caller-authored SignedAt; replay precedes revision checks. Although aggregate Record SameInitial contains server time, actual handler handles existing LetterId by immutable content/actor before calling Record, so the timestamp alone is not an exposed normal retry defect. S34/native operation provenance is still unimplemented but cannot be inferred as lost signatures.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs",
+          "line_start": 56,
+          "line_end": 76,
+          "excerpt": "    public CommandFailure? Sign(long expectedRevision, Uuid signerMemberId,\n        Uuid signedArtifactId, string signedArtifactSha256, DateTimeOffset signedAt)\n    {\n        if (_current is not { } current)\n            return CommandFailure.MissingRecord(\"The representation letter was not found.\");\n        if (signerMemberId == Uuid.Empty || signedAt == default || signedArtifactId == Uuid.Empty ||\n            !Sha256(signedArtifactSha256))\n            return Invalid(\"A signature requires an identified member, exact signed artifact, digest, and time.\");\n        var signer = current.Content.RequiredSigners.FirstOrDefault(item => item.MemberId == signerMemberId);\n        if (signer is null || !ExecutiveRoles.Contains(signer.Role))\n            return CommandFailure.StateConflict(\"Only a named CEO/CISO signer can sign this letter.\");\n        var prior = current.Signatures.FirstOrDefault(item => item.SignerMemberId == signerMemberId);\n        if (prior is not null)\n            return prior.SignedArtifactId == signedArtifactId &&\n                   prior.SignedArtifactSha256 == NormalizeHash(signedArtifactSha256) && prior.SignedAt == signedAt\n                ? null\n                : CommandFailure.StateConflict(\"A signer's retained letter artifact is immutable.\");\n        if (expectedRevision != Revision)\n            return StaleRevision();\n        if (current.Status == \"signed\")\n            return CommandFailure.StateConflict(\"A fully signed representation letter is immutable.\");"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/RecordManagementRepresentationLetterHandler.cs",
+          "line_start": 112,
+          "line_end": 124,
+          "excerpt": "        var existingLetter = await reader.HydrateAsync(new ManagementRepresentationLetter(\n            request.TenantId, request.ProgramId, request.LetterId), ct).ConfigureAwait(false);\n        if (existingLetter.Current is { } existing)\n            return SameContent(existing.Content, content) &&\n                   existing.RecordedByMemberId == actorMemberId\n                ? Result.Success\n                : Conflict(\"The representation letter identity already contains a different immutable record.\");\n\n        return await executor.ExecuteAsync(new ManagementRepresentationLetter(request.TenantId,\n                request.ProgramId, request.LetterId), aggregate =>\n                CommandFailureRequestAdapter.ToOutcome(aggregate.Record(content, actorMemberId,\n                    actorDisplay, now)), context, ct).ConfigureAwait(false);\n    }"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/SignManagementRepresentationLetterHandler.cs",
+          "line_start": 14,
+          "line_end": 24,
+          "excerpt": "        if (!ExaminationCommandActor.TryGet(context.Actor, context.Invocation, request.TenantId,\n                out var actorMemberId, out _))\n            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,\n                \"A representation-letter signature requires a personal HTTP actor.\"));\n        if (request.SignerMemberId != actorMemberId)\n            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,\n                \"A representation letter can only be signed by the authenticated named signer.\"));\n        if (request.SignedAt == default || request.SignedAt > clock.GetUtcNow())\n            return Result.Failure(new RequestError(RequestErrorKind.Validation,\n                \"A representation-letter signature requires a non-future signing time.\"));\n"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/ManagementRepresentationLetterTests.cs",
+          "line_start": 45,
+          "line_end": 45,
+          "excerpt": "    public void ShouldMarkLetterSignedOnlyAfterAllRequiredAttributableSignaturesGivenLetter()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/ManagementRepresentationLetterTests.cs",
+          "line_start": 81,
+          "line_end": 81,
+          "excerpt": "    public void ShouldReplayEveryRequiredSignatureGivenSignedLetter()"
+        }
+      ],
+      "regression_to_add": "Add handler retry after upstream assertion/artifact lifecycle changes when migrating native acceptance; current handler rereads sources before existing LetterId, so preservation of original response needs proof. No specific allowed source transition demonstrated in this review.",
+      "known_blockers": [],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+      "sha256": "b1de9037cb80b7460b2a41da53c6b2d7d80b03ccd2db41efb5e7a8a26b81b303",
+      "current_sha256": "b1de9037cb80b7460b2a41da53c6b2d7d80b03ccd2db41efb5e7a8a26b81b303",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.52,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.34
+      },
+      "classification": "known_blocker",
+      "summary": "S34 has not externalized version history: revision 25 is refused by MaximumVersions=24 and every fact copies the entire Versions/Reviews state. Selected ReviseTypeIIPlan producer is absent. Existing tests already cover immediate proposal/approval retries at later time, so do not report those as new lost-retry findings.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+          "line_start": 17,
+          "line_end": 21,
+          "excerpt": "    const int MaximumVersions = 24;\n    const int MaximumControls = 512;\n    const int MaximumGaps = 1000;\n    const int MaximumChanges = 512;\n    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+          "line_start": 72,
+          "line_end": 80,
+          "excerpt": "    public CommandFailure? Revise(long expectedRevision, TypeIIPlanContent content,\n        string changeReason, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt)\n    {\n        if (_current is not { } current)\n            return CommandFailure.MissingRecord(\"The Type II plan was not found.\");\n        if (expectedRevision != Revision)\n            return StaleRevision();\n        if (current.Status is \"approved\" or \"retired\" || current.Versions.Count >= MaximumVersions)\n            return CommandFailure.StateConflict(\"An approved plan is immutable; propose a successor plan for later periods.\");"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
+          "line_start": 224,
+          "line_end": 235,
+          "excerpt": "    CommandFailure? Emit(TypeIIPlanView state, Uuid actorMemberId, DateTimeOffset occurredAt,\n        Func<Uuid, Uuid, long, Uuid?, TypeIIPlanView, DateTimeOffset, DomainEvent> createEvent,\n        bool creating = false)\n    {\n        if (ValidateState(state) is not null ||\n            (creating ? _current is not null || state.Current?.ProposedByMemberId != actorMemberId\n                : _current is null || !ValidTransition(_current, state, actorMemberId)))\n            return Invalid(\"The Type II plan transition is invalid.\");\n        var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);\n        if (DomainEventPayload.Size(ev) > MaximumEventBytes)\n            return Invalid(\"The complete Type II plan exceeds the bounded event payload.\");\n        RaiseEvent(ev);"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/command-handler-gaps.md",
+          "line_start": 40,
+          "line_end": 40,
+          "excerpt": "| `TypeIIPlan.Revise` | `TypeIIPlanRevised` | `ReviseTypeIIPlanHandler` \u2192 `TypeIIPlan` | Add under #303 with exact plan version and period binding. |"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/TypeIIPlanTests.cs",
+          "line_start": 130,
+          "line_end": 130,
+          "excerpt": "    public void ShouldTreatRepeatedExecutiveDecisionAsIdempotentGivenLaterRetryTime()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/TypeIIPlanTests.cs",
+          "line_start": 157,
+          "line_end": 157,
+          "excerpt": "    public void ShouldPreserveFirstProposalTimeGivenSameIntentRetriedLater()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/TypeIIPlanTests.cs",
+          "line_start": 204,
+          "line_end": 204,
+          "excerpt": "    public void ShouldReplayProposedReviewedAndApprovedPlanHistoryGivenEvents()"
+        }
+      ],
+      "regression_to_add": "Exercise >24 valid version revisions via the missing revise producer; replay old proposal/review/approval by selected CommandId after later lifecycle; immutable prior versions remain queryable.",
+      "known_blockers": [
+        "S34-version-manifests",
+        "S34-ReviseTypeIIPlan-producer"
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Policies/Policy.cs",
+      "sha256": "54d43dff32ee9ad6cb64c5e5c0f0064a3911968edd9b75ac31ab610bf9faed2b",
+      "current_sha256": "54d43dff32ee9ad6cb64c5e5c0f0064a3911968edd9b75ac31ab610bf9faed2b",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.5,
+        "invariant_gap": 0.59,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.34
+      },
+      "classification": "actual_finding",
+      "summary": "Review appends again for an exact reused decision ID because CheckPendingTarget checks content revision/open target only; neither aggregate Review nor handler first selects an existing accepted operation. A changed rationale under the same ID also appends rather than conflicts. Approval retry after its first append is refused after draft closes. This is the pending native-command migration, not an inferred missing RBAC guard.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Policies/Policy.cs",
+          "line_start": 358,
+          "line_end": 374,
+          "excerpt": "    public CommandFailure? Review(Uuid programId, long expectedRevision, Uuid decisionId,\n        string outcome, string rationale, ActorReference actor, Uuid reviewerMemberId,\n        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? waiver = null)\n    {\n        if (CheckPendingTarget(programId, expectedRevision) is { } target)\n            return target;\n        if (CheckIndependence(reviewerMemberId, _pendingAuthors.Contains(reviewerMemberId),\n                SeparationOfDutiesActions.Review, decidedAt, waiver,\n                \"A policy author cannot review a revision they proposed.\") is { } sod)\n            return sod;\n        if (decisionId == Uuid.Empty || outcome is not (\"accept\" or \"request_changes\") ||\n            !IsBoundedText(rationale))\n            return CommandFailure.InvalidContent(\n                \"A policy review requires an outcome of accept or request_changes and a rationale of at most 4000 characters.\");\n        RaiseEvent(new PolicyReviewed(_tenantId, programId, Id, expectedRevision, decisionId,\n            outcome, rationale.Trim(), actor, reviewerMemberId, decidedAt, waiver?.Id));\n        return null;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Policies/Policy.cs",
+          "line_start": 381,
+          "line_end": 390,
+          "excerpt": "    public CommandFailure? Approve(Uuid programId, long expectedRevision, Uuid decisionId,\n        Uuid acceptedReviewDecisionId, DateOnly effectiveFrom, bool major, string rationale,\n        string? impactDigest, ActorReference actor, Uuid approverMemberId,\n        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? waiver = null)\n    {\n        if (CheckPendingTarget(programId, expectedRevision) is { } target)\n            return target;\n        if (!_draftOpen)\n            return CommandFailure.StateConflict(\n                \"Only an open policy draft can be approved. Retirement uses its own approval.\");"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Policies/ReviewPolicyDraftHandler.cs",
+          "line_start": 23,
+          "line_end": 31,
+          "excerpt": "        return await executor.ExecuteAsync(new Policy(request.TenantId, request.PolicyId),\n            policy =>\n            {\n                var failure = policy.Review(request.ProgramId, request.ExpectedRevision,\n                    context.RequestId, request.Outcome, request.Rationale, actor.Reference,\n                    actor.MemberId, clock.GetUtcNow(), waiver);\n                return CommandFailureRequestAdapter.ToOutcome(failure,\n                    policy.FindDecision(context.RequestId)!);\n            }, context, ct).ConfigureAwait(false);"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Policies/PersonalPolicyDecisionTransportTests.cs",
+          "line_start": 1,
+          "line_end": 12,
+          "excerpt": "using Bdgrz.Compliance.Features.AccessControl;\nusing Bdgrz.Compliance.Features.Policies;\nusing Bdgrz.Compliance.Features.Programs;\nusing Bdgrz.Compliance.Tests.Features.AccessControl;\nusing Bdgrz.Compliance.Tests.Testing;\nusing Cntryl.Fitz;\nusing Cntryl.Fitz.Testing;\nusing Cntryl.Portia;\nusing Cntryl.Portia.Testing;\nusing Microsoft.Extensions.Configuration;\nusing Microsoft.Extensions.DependencyInjection;\n"
+        }
+      ],
+      "regression_to_add": "Dispatch same personal review CommandId twice at later clocks, then same ID changed rationale: one fact/first result for exact retry, Conflict/no append for changed intent; approval retry remains original after successor/review lifecycle.",
+      "known_blockers": [
+        "S33-native-policy and exact waiver proof migration; retain personal HTTP and author/reviewer/approver separation."
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Readiness/AdoptReadinessAssessmentHandler.cs",
+      "sha256": "8ac4ae3963eaba5198cf6683a29c0ff15ae80ae473d9bf88c207caad9182663f",
+      "current_sha256": "8ac4ae3963eaba5198cf6683a29c0ff15ae80ae473d9bf88c207caad9182663f",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.61,
+        "invariant_gap": 0.63,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.23
+      },
+      "classification": "false_positive",
+      "summary": "Adoption verifies run proof and exact assessment fact/intent/target; selected binding replay/conflict is checked before current generation guards; generation advancement produces Superseded; OCC rehydrates. Registration uses the actual current ProgramReadiness logical revision plus one. No concrete wrong-program or recovery flaw established.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Readiness/AdoptReadinessAssessmentHandler.cs",
+          "line_start": 27,
+          "line_end": 50,
+          "excerpt": "        if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty || command.AssessmentId == Uuid.Empty ||\n            command.ProgramId == Uuid.Empty || command.ExpectedRevision is not null)\n            return SourceUseReceiverSupport.Permanent(\"The adoption names another operation, program or assessment.\");\n        var run = await verifier.VerifyRunAsync(command.RequestProof, command.Intent, command.OperationId,\n            command.CommandId, ct).ConfigureAwait(false);\n        if (run.Error is not null)\n            return Result<ReceiverOutcome>.Failure(run.Error);\n        var (intent, tenant) = (run.Intent!, run.TenantId);\n        var assessment = await reader.HydrateAsync(new ReadinessAssessment(tenant, intent.ProgramId, intent.AssessmentId),\n            ct).ConfigureAwait(false);\n        if (command.ProgramId != intent.ProgramId || command.AssessmentId != intent.AssessmentId ||\n            command.Generation != (long)intent.AdoptionGeneration || command.AdmissionGeneration != command.Generation ||\n            run.Program!.Stream != command.Target || command.Source.Stream != assessment.Stream)\n            return SourceUseReceiverSupport.Permanent(\"The adoption differs from the frozen run intent.\");\n        if (assessment.Recorded is not { } recorded)\n            return SourceUseReceiverSupport.Transient(\"The computed assessment is not visible yet.\");\n        if (recorded.Metadata!.EventId != command.Source.EventId ||\n            recorded.Metadata.AggregateVersion != command.Source.AggregateVersion || recorded.Intent != command.Intent ||\n            recorded.AssessmentId != command.AssessmentId)\n            return SourceUseReceiverSupport.Permanent(\"The source is not the computation of this run.\");\n\n        var provenance = ReadinessEffects.Child(command.CommandId, nameof(AdoptReadinessAssessment),\n            command.Source.EventId, intent.Header, command.Target, clock.GetUtcNow());\n        var binding = AcceptedOperationBinding.Of(provenance);"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Readiness/AdoptReadinessAssessmentHandler.cs",
+          "line_start": 58,
+          "line_end": 88,
+          "excerpt": "            {\n                var program = await reader.HydrateAsync(new ProgramReadiness(tenant, intent.ProgramId, command.CommandId),\n                    ct).ConfigureAwait(false);\n                if (Decide(program, binding, command) is { } early)\n                    return early;\n                var registration = await ReadinessContent.WriteDeterministicAsync(content, tenant,\n                    Uuid.CreateVersion5(command.CommandId, $\"registration:{program.Revision}\"),\n                    ReadinessContent.RegistrationSchema,\n                    new ReadinessAssessmentRegistration(command.AssessmentId, program.Revision + 1), ct)\n                    .ConfigureAwait(false);\n                var result = await ReadinessContent.WriteResultAsync(content, tenant, ReadinessContent.RegistrationSchema,\n                    registration, ct).ConfigureAwait(false);\n                var step = await executor.ExecuteAsync(new ProgramReadiness(tenant, intent.ProgramId, command.CommandId),\n                    fresh =>\n                    {\n                        if (Decide(fresh, binding, command) is { } decided)\n                            return AggregateOutcome.Discard(Result<Decided>.Success(new Decided(decided)));\n                        if (fresh.Revision != program.Revision)\n                            return AggregateOutcome.Discard(Result<Decided>.Failure(new RequestError(\n                                RequestErrorKind.Conflict, \"The program readiness changed while the adoption was prepared.\",\n                                true)));\n                        var raised = fresh.Adopt(provenance, command.Intent, command.Generation, proofs, result);\n                        return raised.IsSuccess\n                            ? AggregateOutcome.Commit(Result<Decided>.Success(new Decided(\n                                SourceUseReceiverSupport.Applied(NativeFactReference.Of(fresh.Stream,\n                                    fresh.AdoptionOf(command.AssessmentId)!)))))\n                            : AggregateOutcome.Discard(Result<Decided>.Failure(raised.Error!));\n                    }, context, ct).ConfigureAwait(false);\n                return step.IsSuccess ? step.Value!.Outcome : Result<ReceiverOutcome>.Failure(step.Error!);\n            }\n            catch (EventStreamConcurrencyException) when (attempt < MaximumAttempts)"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Readiness/AdoptReadinessAssessmentHandler.cs",
+          "line_start": 112,
+          "line_end": 139,
+          "excerpt": "        return program.PendingAdoption is { } pending && pending.Generation == command.AdmissionGeneration &&\n               pending.Operation.RootOperationId == command.OperationId\n            ? null\n            : SourceUseReceiverSupport.Permanent(\"The program no longer holds this run's pending adoption generation.\");\n    }\n\n    sealed record Decided(Result<ReceiverOutcome> Outcome);\n}"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/owner-protocols.md",
+          "line_start": 145,
+          "line_end": 151,
+          "excerpt": "`RunReadinessAssessment` first admits on ProgramReadiness using ExpectedProgramRevision. Freeze complete ReadinessInputSnapshot, AssessmentId, AsOf and evaluator version; one pending latest-adoption generation prevents decisions on the previous latest. ReadinessAssessmentRequested drives pure child computation, then ReadinessAssessmentRecorded drives exact generation adoption. Child revision zero never stands in for program revision. Missing business facts become explicit gaps; source infrastructure failure/incomplete coverage retries rather than publishing a partial assessment.\n\nGap plans/annotations are per stable gapId/program. A decision seals latest adoption and gap-edit admission, drains earlier admitted work, freezes exact assessment/rules/complete gap set/plans/acknowledgements and acquires exact current plan uses in canonical order. Preserve independent runner/decider and exact waiver policy. Append compact ReadinessDecisionRecorded or TypeIEntryDecisionRecorded before settlement. Only one approved Type I entry per program; defer does not consume approval. A changed source before hold acquisition fences the pending decision rather than silently reauthoring it.\n\nTests: parent revision versus new child zero; two run admissions; pure rerun after compute-before-adopt crash; no decision on old latest while pending; missing source versus missing business fact; gap edit versus seal/use; no omitted gap; wrong rules/fingerprint/waiver; proceed prerequisite; repeated defer then one approval; old exact retry after newer assessment.\n\n## Action admission and finding closure"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Readiness/ReadinessProjectionReadTests.cs",
+          "line_start": 12,
+          "line_end": 12,
+          "excerpt": "    public async Task ShouldExposeAssessmentOnlyAfterAdoptionGivenAdmittedRun()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
+          "line_start": 224,
+          "line_end": 224,
+          "excerpt": "    public async Task ShouldReturnNotFoundGivenAssessmentFromAnotherTenantOrProgram()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+          "line_start": 102,
+          "line_end": 102,
+          "excerpt": "    public async Task ShouldSettleReadinessPlanUsesGivenCancellationPersistedBeforeProcessCheckpoint(int stageIndex,"
+        }
+      ],
+      "regression_to_add": null,
+      "known_blockers": [],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/TechnologyInventory/GetDataFlowHandler.cs",
+      "sha256": "72460c32a51ae7c870ee174b4a0f87f361ddf8172cd1288b7aaa3b04c4dc76bf",
+      "current_sha256": "72460c32a51ae7c870ee174b4a0f87f361ddf8172cd1288b7aaa3b04c4dc76bf",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.57,
+        "invariant_gap": 0.48,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.32
+      },
+      "classification": "false_positive",
+      "summary": "Source visibility is checked before reading a potentially lagging projection, projection visibility is checked, source is reread afterward, and a changed revision returns transient Conflict. Tenant/active membership and permission checks are upstream. Existing tests exercise the exact restricted-public race and revision change.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/TechnologyInventory/GetDataFlowHandler.cs",
+          "line_start": 15,
+          "line_end": 58,
+          "excerpt": "        if (request.MinimumRevision is < 1)\n            return Result<DataFlowView>.Failure(new RequestError(RequestErrorKind.Validation,\n                \"The minimum data flow revision must be positive.\"));\n        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)\n            ? subject\n            : Uuid.Empty;\n        var source = await aggregates.HydrateAsync(new DataFlow(request.TenantId,\n            request.DataFlowId), ct).ConfigureAwait(false);\n        if (!source.IsCreated || !await visibility.CanReadFlowAsync(request.TenantId, userId,\n                source.Id, source.Content?.Classification, ct).ConfigureAwait(false))\n            return Result<DataFlowView>.Failure(new RequestError(RequestErrorKind.NotFound,\n                \"The data flow was not found.\"));\n        var flow = await consistency.GetFlowAsync(request.TenantId, request.DataFlowId,\n            request.MinimumRevision, ct).ConfigureAwait(false);\n        if (flow.IsSuccess && !await visibility.CanReadFlowAsync(request.TenantId, userId, flow.Value, ct)\n                .ConfigureAwait(false))\n            return Result<DataFlowView>.Failure(new RequestError(RequestErrorKind.NotFound,\n                \"The data flow was not found.\"));\n        var current = await aggregates.HydrateAsync(new DataFlow(request.TenantId,\n            request.DataFlowId), ct).ConfigureAwait(false);\n        if (!current.IsCreated || !await visibility.CanReadFlowAsync(request.TenantId, userId,\n                current.Id, current.Content?.Classification, ct).ConfigureAwait(false))\n            return Result<DataFlowView>.Failure(new RequestError(RequestErrorKind.NotFound,\n                \"The data flow was not found.\"));\n        if (!flow.IsSuccess)\n            return flow;\n        if (current.Revision != flow.Value.Revision)\n            return Result<DataFlowView>.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"The data flow changed while it was being read. Retry the query.\",\n                isTransient: true));\n        return flow;\n    }\n}"
+        },
+        {
+          "path": "src/Compliance.Core/Features/TechnologyInventory/TechnologyInventoryAuthorizer.cs",
+          "line_start": 16,
+          "line_end": 40,
+          "excerpt": "        if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))\n            return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,\n                \"The technology inventory requires a Bdgrz user identity.\"));\n        var tenantId = context.Request.TenantId;\n        var membership = await memberships.GetAsync(tenantId.ToString(), userId, ct)\n            .ConfigureAwait(false);\n        if (membership is null || membership.IsSuspended || membership.IsDeprovisioned)\n            return Result.Failure(new RequestError(RequestErrorKind.NotFound,\n                \"The tenant was not found.\"));\n        if (membership.Affiliation == \"firm_staff\")\n            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,\n                \"Firm staff require an accepted engagement to access client work.\"));\n        if (!await tenants.IsActiveAsync(tenantId, ct).ConfigureAwait(false))\n            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,\n                \"The tenant is not active.\"));\n        var memberId = RbacIds.Member(tenantId, userId);\n        if (await permissions.IsAllowedAsync(tenantId, userId, memberId,\n                RbacPermissions.TechnologyInventoryManage, ct).ConfigureAwait(false))\n            return Result.Success;\n        if (context.Request is ITechnologyInventoryReadRequest && scopedPermissions is not null &&\n            await scopedPermissions.IsAllowedAtAnyTechnologyInventoryScopeAsync(tenantId,\n                userId, memberId, RbacPermissions.TechnologyInventoryManage, ct)\n                .ConfigureAwait(false))\n            return Result.Success;\n        return Result.Failure(new RequestError(RequestErrorKind.Forbidden,"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/TechnologyInventory/TechnologyInventoryRestrictedReadHandlerTests.cs",
+          "line_start": 105,
+          "line_end": 105,
+          "excerpt": "    public async Task ShouldHideFlowGivenSourceBecomesRestrictedDuringProjectionRead()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/TechnologyInventory/TechnologyInventoryRestrictedReadHandlerTests.cs",
+          "line_start": 129,
+          "line_end": 129,
+          "excerpt": "    public async Task ShouldRejectFlowGivenSourceRevisionChangesDuringProjectionRead()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/TechnologyInventory/TechnologyInventoryRestrictedReadHandlerTests.cs",
+          "line_start": 183,
+          "line_end": 183,
+          "excerpt": "    public async Task ShouldHideFlowGivenRestrictedSourceChangesBeforeLaggingProjectionRead()"
+        }
+      ],
+      "regression_to_add": null,
+      "known_blockers": [],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+      "sha256": "fb7c99d7b5b5a69f9950743fd8715a9dfd95601be661b5b6883fb4ca1dd18bac",
+      "current_sha256": "fb7c99d7b5b5a69f9950743fd8715a9dfd95601be661b5b6883fb4ca1dd18bac",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.59,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.29
+      },
+      "classification": "actual_finding",
+      "summary": "Revise checks stale revision before it can recognize an already committed operation. Review and Approve have no command-selected receipt; repeated same Review ID can append again at unchanged content revision, while Approve clears the accepted review so exact later retry fails. Selected native CommandId/proof contracts remain pending.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+          "line_start": 195,
+          "line_end": 206,
+          "excerpt": "    public CommandFailure? Revise(Uuid programId, long expectedRevision, string statement,\n        string context, string sourceReference, Uuid actorMemberId, string actorDisplay,\n        DateTimeOffset changedAt)\n    {\n        if (!_created || ProgramId != programId)\n            return CommandFailure.MissingRecord(\"The draft was not found.\");\n        if (_retired)\n            return CommandFailure.StateConflict(\"A retired commitment cannot be changed.\");\n        if (expectedRevision != _revision)\n            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision(\n                \"commitment draft\", _revision));\n        var error = Validate(Kind!, Identifier!, statement, context, sourceReference);"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+          "line_start": 235,
+          "line_end": 248,
+          "excerpt": "    public CommandFailure? Review(Uuid programId, long expectedRevision, Uuid decisionId,\n        string outcome, string? ownerReference, string? applicability, string? interpretation,\n        string? interpretationNote, string rationale, Uuid reviewerMemberId,\n        string reviewerDisplay, DateTimeOffset decidedAt,\n        SeparationOfDutiesWaiver? separationOfDutiesWaiver = null,\n        string? sourceVerifiedReference = null, string? sourceEvidence = null)\n    {\n        if (CheckTarget(programId, expectedRevision) is { } target)\n            return target;\n        if (CheckSeparationOfDuties(expectedRevision, reviewerMemberId,\n                ResponsibilityType.AssignedReviewer, SeparationOfDutiesActions.Review, decidedAt,\n                separationOfDutiesWaiver, false) is { } sod)\n            return sod;\n        if (decisionId == Uuid.Empty || string.IsNullOrWhiteSpace(rationale) ||"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+          "line_start": 281,
+          "line_end": 285,
+          "excerpt": "        RaiseEvent(new CommitmentReviewed(_tenantId, programId, Id, expectedRevision,\n            decisionId, outcome, accepted ? ownerReference!.Trim() : null,\n            accepted ? applicability : null, accepted ? interpretation : null,\n            string.IsNullOrWhiteSpace(interpretationNote) ? null : interpretationNote.Trim(),\n            rationale.Trim(), null, null, null, reviewerMemberId, reviewerDisplay, decidedAt,"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+          "line_start": 296,
+          "line_end": 307,
+          "excerpt": "    public CommandFailure? Approve(Uuid programId, long expectedRevision, Uuid decisionId,\n        Uuid acceptedReviewDecisionId, DateOnly effectiveFrom, string rationale,\n        string impactDigest, Uuid approverMemberId, string approverDisplay,\n        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? separationOfDutiesWaiver = null)\n    {\n        if (CheckTarget(programId, expectedRevision) is { } target)\n            return target;\n        if (_acceptedReview is not { } review || review.Revision != _revision ||\n            acceptedReviewDecisionId == Uuid.Empty || acceptedReviewDecisionId != review.DecisionId)\n            return CommandFailure.StateConflict(\n                \"Approval requires the latest accepted review of this exact draft revision.\");\n        if (CheckSeparationOfDuties(expectedRevision, approverMemberId,"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Commitments/CommitmentDraftReplayTests.cs",
+          "line_start": 13,
+          "line_end": 13,
+          "excerpt": "    public async Task ShouldReplayOriginalCreateAndRejectNewDraftGivenRetiredService()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Commitments/CommitmentReviewTests.cs",
+          "line_start": 186,
+          "line_end": 186,
+          "excerpt": "    public void ShouldRecordRequestChangesWithoutVersionGivenRationale()"
+        }
+      ],
+      "regression_to_add": "Repeated same CommandId review/revision/approval across later edits and clock changes must return original result once; changed intent under same key refuses. Verify stale/current exact waiver behavior through immutable proof rather than live aggregate argument.",
+      "known_blockers": [
+        "S33-native-commitment"
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Controls/ControlDraft.cs",
+      "sha256": "29e689843e994318beece4d9396dd739a8cdb75cb82139d6c0bc91b5687e1f23",
+      "current_sha256": "29e689843e994318beece4d9396dd739a8cdb75cb82139d6c0bc91b5687e1f23",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.45,
+        "invariant_gap": 0.6,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.27
+      },
+      "classification": "actual_finding",
+      "summary": "Review reuses decisionId without immutable binding: CheckDecisionTarget only validates current pending target/revision; Review unconditionally emits and the fold appends to decisions. An identical retry duplicates the decision, and same ID with changed rationale is not rejected. After approval PendingTargetId is null, so an exact approval retry cannot recover. Existing repeated-review tests use distinct decisions and do not prove same-ID replay.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Controls/ControlDraft.cs",
+          "line_start": 630,
+          "line_end": 642,
+          "excerpt": "    CommandFailure? CheckDecisionTarget(Uuid programId, long expectedRevision)\n    {\n        if (!IsVisible || ProgramId != programId)\n            return CommandFailure.MissingRecord(\"The control draft was not found.\");\n        if (_retired)\n            return CommandFailure.StateConflict(\"The control is retired.\");\n        if (PendingTargetId is null)\n            return CommandFailure.StateConflict(\n                \"The control version is already approved and has no pending successor or retirement.\");\n        return expectedRevision != _revision\n            ? CommandFailure.ForVersion(VersionedRecordRules.StaleRevision(\"control draft\",\n                _revision))\n            : null;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Controls/ControlDraft.cs",
+          "line_start": 671,
+          "line_end": 690,
+          "excerpt": "    public CommandFailure? Review(Uuid programId, long expectedRevision, Uuid decisionId,\n        string outcome, string rationale, Uuid reviewerMemberId, string reviewerDisplay,\n        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? separationOfDutiesWaiver = null)\n    {\n        if (CheckDecisionTarget(programId, expectedRevision) is { } target)\n            return target;\n        var targetId = PendingTargetId!.Value;\n        var scope = Scope(targetId, expectedRevision);\n        if (CheckSeparationOfDuties(scope, reviewerMemberId, ResponsibilityType.AssignedReviewer,\n                SeparationOfDutiesActions.Review, decidedAt, separationOfDutiesWaiver) is { } sod)\n            return sod;\n        if (decisionId == Uuid.Empty || outcome is not (\"accept\" or \"request_changes\") ||\n            string.IsNullOrWhiteSpace(rationale) || rationale.Length > 4000)\n            return CommandFailure.InvalidContent(\n                \"A control review requires an outcome of accept or request_changes and a rationale of at most 4000 characters.\");\n        RaiseEvent(new ControlReviewed(_tenantId, ProgramId, Id, targetId,\n            expectedRevision, decisionId, outcome, reviewerMemberId, reviewerDisplay,\n            rationale.Trim(), decidedAt, _latestReviewDecisionId, separationOfDutiesWaiver?.Id)\n        {\n            StoredActor = ActorReference.ForMember(reviewerMemberId, reviewerDisplay),"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Controls/ReviewControlHandler.cs",
+          "line_start": 31,
+          "line_end": 39,
+          "excerpt": "                RbacIds.Member(request.TenantId, userId),\n                UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow(),\n                waiver)),\n            context, ct).ConfigureAwait(false);\n    }\n}"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Controls/ControlActivationTests.cs",
+          "line_start": 130,
+          "line_end": 130,
+          "excerpt": "    public void ShouldRecordSupersedingDecisionGivenRepeatedReview()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Controls/ControlActivationTests.cs",
+          "line_start": 234,
+          "line_end": 234,
+          "excerpt": "    public void ShouldReplayActivationGivenPersistedEvents()"
+        }
+      ],
+      "regression_to_add": "Personal HTTP Review/Approve with selected required CommandId: duplicate same key/later clock appends once, changed rationale under same key conflicts, exact old approval after successor retains first response.",
+      "known_blockers": [
+        "S33-native-control and exact waiver proof migration; do not bypass release gates."
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+      "sha256": "36bb4d72de1746a3e673fd493fa246803420c8c78b2730e718b9486514cf25d0",
+      "current_sha256": "36bb4d72de1746a3e673fd493fa246803420c8c78b2730e718b9486514cf25d0",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.57,
+        "invariant_gap": 0.53,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.29
+      },
+      "classification": "known_blocker",
+      "summary": "S34 still has hard 32-version lifetime bound and repeats complete history in each state fact. Missing ReviseManagementAssertion request/handler leaves accepted revise behavior unreachable from normal bus. Immediate create/approval later-time replay is explicitly covered, so not reported as broken.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+          "line_start": 17,
+          "line_end": 20,
+          "excerpt": "    const int MaximumVersions = 32;\n    const int MaximumReferences = 256;\n    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;\n    const int MaximumTextLength = 4000;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+          "line_start": 67,
+          "line_end": 75,
+          "excerpt": "    public CommandFailure? Revise(long expectedRevision, ManagementAssertionContent content,\n        string changeReason, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt)\n    {\n        if (_current is not { } current)\n            return CommandFailure.MissingRecord(\"The management assertion was not found.\");\n        if (expectedRevision != Revision)\n            return StaleRevision();\n        if (current.Versions.Count >= MaximumVersions || current.Status == \"retired\")\n            return CommandFailure.StateConflict(\"The assertion is retired or has reached its version limit.\");"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+          "line_start": 174,
+          "line_end": 186,
+          "excerpt": "    CommandFailure? Emit(ManagementAssertionView state, Uuid? actorMemberId,\n        DateTimeOffset occurredAt,\n        Func<Uuid, Uuid, long, Uuid?, ManagementAssertionView, DateTimeOffset, DomainEvent> createEvent,\n        bool creating = false)\n    {\n        if (ValidateState(state) is not null ||\n            (creating ? _current is not null || state.CurrentVersion?.AuthoredByMemberId != actorMemberId\n                : _current is null || !ValidTransition(_current, state, actorMemberId)))\n            return Invalid(\"The assertion transition is not a valid next state.\");\n        var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);\n        if (DomainEventPayload.Size(ev) > MaximumEventBytes)\n            return Invalid(\"The complete assertion state exceeds the bounded event payload.\");\n        RaiseEvent(ev);"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/command-handler-gaps.md",
+          "line_start": 33,
+          "line_end": 33,
+          "excerpt": "| `ManagementAssertion.Revise` | `ManagementAssertionRevised` | `ReviseManagementAssertionHandler` \u2192 `ManagementAssertion` | Add under #303 with immutable authored version identity. |"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/ManagementAssertionTests.cs",
+          "line_start": 42,
+          "line_end": 42,
+          "excerpt": "    public void ShouldTreatSameAssertionCreationAsIdempotentGivenLaterRetryTime()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/ManagementAssertionTests.cs",
+          "line_start": 118,
+          "line_end": 118,
+          "excerpt": "    public void ShouldTreatRepeatedSameSignerDecisionAsIdempotentGivenLaterRetryTime()"
+        }
+      ],
+      "regression_to_add": "Add real revise producer >32 revisions with exact immutable source manifests and old operation retries; compare predecessor reads and preserve named executive independence.",
+      "known_blockers": [
+        "S34-version-manifests",
+        "S34-ReviseManagementAssertion-producer"
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs",
+      "sha256": "1a3b6c4a39372a5b5a90228a6a5eedc149a0fc288dbea9e762e7f1d95c6a22e2",
+      "current_sha256": "1a3b6c4a39372a5b5a90228a6a5eedc149a0fc288dbea9e762e7f1d95c6a22e2",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.55,
+        "invariant_gap": 0.57,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.37
+      },
+      "classification": "false_positive",
+      "summary": "Aggregate local mutators rely on production native handler append gate by design. CampaignLaunch checks selected binding before PrepareLaunch and executes AcceptedAppend; other admissions follow same protocol. Audience manifests externalized, participant/closure authority independently owned, closure generation sealed and terminal fact precedes settlement. No concrete defect established from this file score.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs",
+          "line_start": 218,
+          "line_end": 243,
+          "excerpt": "    public Result LaunchCampaign(OperationProvenance operation, Uuid programId, CampaignSubject subject,\n        string audienceKind, ImmutableContentRef audienceTeams, Uuid rosterSnapshotId, string rosterContentSha256,\n        DateOnly launchedOn, DateOnly dueOn, string? instructions, int audienceCount, ActorReference actor,\n        Uuid actorMemberId, DateTimeOffset launchedAt, ImmutableContentRef entries, ImmutableContentRef firstResponse,\n        ImmutableContentRef operationResult)\n    {\n        ArgumentNullException.ThrowIfNull(operation);\n        ArgumentNullException.ThrowIfNull(subject);\n        if (operation.Owner != Stream || operation.LogicalId != Id)\n            return Result.Failure(new RequestError(RequestErrorKind.Validation,\n                \"A launch is the root operation of its own campaign.\"));\n        var prepared = PrepareLaunch();\n        if (!prepared.IsSuccess)\n            return prepared;\n        RaiseEvent(new PolicyCampaignLaunched(_tenantId, programId, Id, subject, audienceKind, audienceTeams,\n            rosterSnapshotId, rosterContentSha256, launchedOn, dueOn, instructions,\n            subject.Kind == \"policy\" ? DefaultAcknowledgementText : null, audienceCount, actor, actorMemberId,\n            launchedAt, operation, firstResponse, operationResult));\n        // The frozen audience is part of the launch: its own logical id keeps one root fact per logical id.\n        RaiseEvent(new PolicyCampaignAudienceFrozen(_tenantId, Id, 1, entries,\n            operation with { LogicalId = Kernel.AggregateIdentity.Create(\"PolicyCampaignAudienceFrozen\", Id) },\n            null, null));\n        return Result.Success;\n    }\n\n    /// <summary>Checks the guards every admission of a caller operation shares, without raising anything.</summary>"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs",
+          "line_start": 244,
+          "line_end": 253,
+          "excerpt": "    public Result PrepareOpenAdmission(long expectedRevision)\n    {\n        if (!IsLaunched)\n            return NotFound();\n        if (IsClosed)\n            return Conflict(\"The campaign is closed.\");\n        if (IsSealed)\n            return Conflict(\"The campaign is closing; its result admission is sealed.\");\n        return expectedRevision == _revision ? Result.Success : Stale();\n    }"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs",
+          "line_start": 293,
+          "line_end": 333,
+          "excerpt": "    public Result AcceptClosure(OperationProvenance operation, ImmutableContentRef intent,\n        ImmutableContentRef firstResponse)\n    {\n        ArgumentNullException.ThrowIfNull(operation);\n        ArgumentNullException.ThrowIfNull(intent);\n        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)\n            return Result.Failure(new RequestError(RequestErrorKind.Validation,\n                \"A closure is a root operation of its own campaign with an expected revision.\"));\n        var prepared = PrepareOpenAdmission((long)expected);\n        if (!prepared.IsSuccess)\n            return prepared;\n        RaiseEvent(new PolicyCampaignClosureAccepted(Stream, _revision + 1, Generation, intent, null, operation,\n            firstResponse, null));\n        return Result.Success;\n    }\n\n    /// <summary>Cancels the pending closure and reopens result admission on the next generation.</summary>\n    public Result CancelClosure(OperationProvenance operation, ImmutableContentRef failureProof)\n    {\n        ArgumentNullException.ThrowIfNull(operation);\n        if (_pending is null || _pending.Operation.RootOperationId != operation.RootOperationId)\n            return Conflict(\"Only the exact pending closure can be canceled.\");\n        RaiseEvent(new PolicyCampaignClosureCanceled(Stream, _revision + 1, _pending.Generation, failureProof,\n            null, operation, null, null));\n        return Result.Success;\n    }\n\n    /// <summary>Completes the pending closure with the frozen totals and the complete participant proofs.</summary>\n    public Result CompleteClosure(OperationProvenance operation, DateOnly closedOn, string rationale,\n        ImmutableContentRef totals, ActorReference actor, DateTimeOffset closedAt, ImmutableContentRef participantProofs,\n        ImmutableContentRef intent, ImmutableContentRef operationResult)\n    {\n        ArgumentNullException.ThrowIfNull(operation);\n        if (_pending is null || _pending.Operation.RootOperationId != operation.RootOperationId ||\n            _pending.Intent != intent)\n            return Conflict(\"Only the exact pending closure can complete.\");\n        RaiseEvent(new PolicyCampaignClosed(_tenantId, Id, closedOn, rationale, totals, actor, closedAt, operation,\n            _reconciliations, participantProofs, intent, null, operationResult));\n        return Result.Success;\n    }\n"
+        },
+        {
+          "path": "src/Compliance.Core/Features/PolicyDistribution/CampaignLaunch.cs",
+          "line_start": 44,
+          "line_end": 48,
+          "excerpt": "        if (current.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)\n        {\n            var prepared = current.PrepareLaunch();\n            if (!prepared.IsSuccess)\n                return Result<CampaignRegistration>.Failure(prepared.Error!);"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/owner-protocols.md",
+          "line_start": 121,
+          "line_end": 125,
+          "excerpt": "`PolicyDistributionCampaign` owns immutable launched material, audience manifest/generation, reconciliation and closure. `PolicyCampaignParticipant` is keyed by `(campaignId, personId)` and owns the exact acknowledgement/completion/waiver facts for that included person. Participant commands acquire the campaign's open-generation admission permit, verify selected material version/hash/text and current authoritative audience membership; close seals result admission, resolves all accepted participant operations, holds complete participant proof manifest, and freezes exact totals. No result can append with an old permit after close; a permit accepted before close must finish or be fenced before closure. Audience removal preserves history and cannot silently erase already accepted contributions.\n\nTests: acknowledgement versus close, accepted-but-unmaterialized result blocks closure, changed material text/hash rejects, new audience generation versus old command, exact waiver expiry at use time, training versus policy kind mismatch, more than former participant caps, totals equal complete manifest.\n\n## Independent training requirement"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/PolicyDistribution/PolicyDistributionCampaignTests.cs",
+          "line_start": 292,
+          "line_end": 292,
+          "excerpt": "    public async Task ShouldFreezeAudienceBeyondFormerCapsAndReplayGivenLargeCampaign()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+          "line_start": 133,
+          "line_end": 133,
+          "excerpt": "    public async Task ShouldRejectStaleCloseAndLateAcknowledgementGivenAcknowledgedCampaign()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignClosureProcessTests.cs",
+          "line_start": 159,
+          "line_end": 159,
+          "excerpt": "    public async Task ShouldReturnOriginalAcceptanceGivenExactCloseRetryAfterClosureCompleted()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/PolicyDistribution/CampaignAdmissionTests.cs",
+          "line_start": 220,
+          "line_end": 220,
+          "excerpt": "    public async Task ShouldReplayOnceGivenAppendThatCommittedBeforeTheCallerSawIt()"
+        }
+      ],
+      "regression_to_add": null,
+      "known_blockers": [],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/TechnologyInventory/ListOperationalProcessesHandler.cs",
+      "sha256": "c259b3113fc48d514c05d733f5e3793717a15df765d4e686a7aeaff4472ee1d8",
+      "current_sha256": "c259b3113fc48d514c05d733f5e3793717a15df765d4e686a7aeaff4472ee1d8",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.61,
+        "invariant_gap": 0.42,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.31
+      },
+      "classification": "false_positive",
+      "summary": "List is tenant scoped, validates limits/cursor, refuses a behind event checkpoint including empty page, rejects foreign rows. Unlike GetDataFlow it implements ITechnologyInventoryRequest rather than scoped-read marker, so an isolated asset grant cannot authorize the list. Existing regression specifically denies other inventories for scoped grant.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/TechnologyInventory/ListOperationalProcessesHandler.cs",
+          "line_start": 15,
+          "line_end": 41,
+          "excerpt": "            return Result<Page<OperationalProcessView>>.Failure(new RequestError(RequestErrorKind.Validation,\n                \"The operational process list limit must be between 1 and 200.\"));\n        var ready = await consistency.EnsureListCaughtUpAsync(request.TenantId, ct)\n            .ConfigureAwait(false);\n        if (!ready.IsSuccess)\n            return Result<Page<OperationalProcessView>>.Failure(ready.Error);\n        Page<OperationalProcessView> page;\n        try\n        {\n            page = await directory.ListOperationalProcessesAsync(request.TenantId, request.Limit ?? 50,\n                request.Cursor, ct).ConfigureAwait(false);\n        }\n        catch (KvDirectoryQueryException)\n        {\n            return Result<Page<OperationalProcessView>>.Failure(new RequestError(RequestErrorKind.Validation,\n                \"The operational process cursor is invalid.\"));\n        }\n        return page.Items.Any(item => item.TenantId != request.TenantId)\n            ? Result<Page<OperationalProcessView>>.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"The operational process projection is incomplete.\", isTransient: true))\n            : Result<Page<OperationalProcessView>>.Success(page);\n    }\n}"
+        },
+        {
+          "path": "src/Compliance.Core/Features/TechnologyInventory/InventoryRegisterReadConsistency.cs",
+          "line_start": 41,
+          "line_end": 54,
+          "excerpt": "            checkpoint.Cursor, ct).GetAsyncEnumerator(ct);\n        return await pending.MoveNextAsync().ConfigureAwait(false)\n            ? Result.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"The inventory register projection has not reached the source.\",\n                isTransient: true))\n            : Result.Success;\n    }\n\n    static async ValueTask<Result<TView>> ServeAsync<TView>(string noun, long sourceRevision,\n        long? minimumRevision, Func<ValueTask<(TView? View, long Revision)>> load)\n        where TView : class\n    {\n        if (minimumRevision is < 1)\n            return Result<TView>.Failure(new RequestError(RequestErrorKind.Validation,"
+        },
+        {
+          "path": "src/Compliance.Common/Features/TechnologyInventory/ListOperationalProcesses.cs",
+          "line_start": 6,
+          "line_end": 8,
+          "excerpt": "[Discriminator(\"bdgrz.inventory.operational_process.list\", 1)]\npublic sealed record ListOperationalProcesses(Uuid TenantId, int? Limit = null, string? Cursor = null)\n    : IRequest<Page<OperationalProcessView>>, ITechnologyInventoryRequest, ICallable;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/TechnologyInventory/TechnologyInventoryAuthorizer.cs",
+          "line_start": 32,
+          "line_end": 40,
+          "excerpt": "        if (await permissions.IsAllowedAsync(tenantId, userId, memberId,\n                RbacPermissions.TechnologyInventoryManage, ct).ConfigureAwait(false))\n            return Result.Success;\n        if (context.Request is ITechnologyInventoryReadRequest && scopedPermissions is not null &&\n            await scopedPermissions.IsAllowedAtAnyTechnologyInventoryScopeAsync(tenantId,\n                userId, memberId, RbacPermissions.TechnologyInventoryManage, ct)\n                .ConfigureAwait(false))\n            return Result.Success;\n        return Result.Failure(new RequestError(RequestErrorKind.Forbidden,"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs",
+          "line_start": 94,
+          "line_end": 94,
+          "excerpt": "    [InlineData(201, RequestErrorKind.Validation)]"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs",
+          "line_start": 121,
+          "line_end": 121,
+          "excerpt": "    public async Task ShouldTranslateForeignCursorsAndIsolateTenantsGivenCaughtUpProjection()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/TechnologyInventory/TechnologyInventoryScopedGrantTests.cs",
+          "line_start": 138,
+          "line_end": 138,
+          "excerpt": "    [Fact]"
+        }
+      ],
+      "regression_to_add": null,
+      "known_blockers": [],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Examinations/FreezeTypeIBaselineHandler.cs",
+      "sha256": "8c93285e383beb4a9e6669f767ef8f0735b73ca1dd31671024241e7e894fce40",
+      "current_sha256": "8c93285e383beb4a9e6669f767ef8f0735b73ca1dd31671024241e7e894fce40",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.59,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.18
+      },
+      "classification": "false_positive",
+      "summary": "No concrete stale-source defect established merely because the handler uses a preview. It requires personal actor, exact scoped engagement, expected preview digest, authoritative engagement reread, and passes all blockers/exact coverage to aggregate freeze under OCC. Exact BaselineId retry uses retained baseline instead of mutable source preview. Source-current-at-append requirements would need an explicit permit contract; historical pinned approved inputs need not be latest after freeze.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Examinations/FreezeTypeIBaselineHandler.cs",
+          "line_start": 19,
+          "line_end": 38,
+          "excerpt": "            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,\n                \"Freezing a Type I baseline requires an authenticated personal actor.\"));\n        if (request.ExpectedRevision <= 0 || request.BaselineId == Uuid.Empty ||\n            string.IsNullOrWhiteSpace(request.ConfirmationRationale) ||\n            request.ConfirmationRationale.Length > 2000 || !ValidDigest(request.ExpectedPreviewSha256))\n            return Invalid(\"A baseline confirmation requires a stable identity, current revision, rationale, and preview digest.\");\n\n        var projected = await directory.GetAsync(request.TenantId, request.ExaminationId, ct)\n            .ConfigureAwait(false);\n        if (projected is null || projected.ProgramId != request.ProgramId ||\n            projected.TenantId != request.TenantId ||\n            projected.ExaminationEngagementId != request.ExaminationId)\n            return Result.Failure(new RequestError(RequestErrorKind.NotFound,\n                \"The examination engagement was not found.\"));\n\n        var engagement = await reader.HydrateAsync(new ExaminationEngagement(request.TenantId,\n            request.ProgramId, request.ExaminationId), ct).ConfigureAwait(false);\n        if (engagement.Current is not { } current)\n            return Result.Failure(new RequestError(RequestErrorKind.NotFound,\n                \"The examination engagement was not found.\"));"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/FreezeTypeIBaselineHandler.cs",
+          "line_start": 45,
+          "line_end": 87,
+          "excerpt": "            preview = FromBaseline(existing);\n            readCurrentPreview = false;\n        }\n        else\n        {\n            var result = await previews.ReadAsync(current, requesterUserId, ct)\n                .ConfigureAwait(false);\n            if (!result.IsSuccess)\n                return Result.Failure(result.Error);\n            preview = result.Value;\n        }\n        if (!StringComparer.Ordinal.Equals(preview.ContentSha256, request.ExpectedPreviewSha256))\n            return Conflict(\"The Type I baseline preview changed. Review the current preview before confirming.\");\n        if (readCurrentPreview)\n        {\n            var confirmed = await reader.HydrateAsync(new ExaminationEngagement(request.TenantId,\n                request.ProgramId, request.ExaminationId), ct).ConfigureAwait(false);\n            if (confirmed.Current is not { } afterRead ||\n                !ExaminationEngagementSourceMatch.Matches(current, afterRead))\n                return Conflict(\"The examination engagement changed during preview confirmation. Retry the command.\",\n                    transient: true);\n        }\n\n        return await executor.ExecuteAsync(new ExaminationEngagement(request.TenantId,\n                request.ProgramId, request.ExaminationId), aggregate =>\n                CommandFailureRequestAdapter.ToOutcome(aggregate.FreezeBaseline(\n                    request.ExpectedRevision, request.BaselineId, preview,\n                    request.ConfirmationRationale, memberId, display, clock.GetUtcNow())),\n            context, ct).ConfigureAwait(false);\n    }\n\n    internal static TypeIBaselinePreview FromBaseline(TypeIBaselineView baseline) =>\n        TypeIBaselinePreview.Create(baseline.TenantId, baseline.ProgramId,\n            baseline.ExaminationEngagementId, baseline.Sources, [], baseline.ScopeDifferences,\n            baseline.SourceCoverage);\n\n    static bool ValidDigest(string? value) => value is { Length: 64 } && value.All(\n        static character => character is >= '0' and <= '9' or >= 'a' and <= 'f');\n\n    static Result Invalid(string message) =>\n        Result.Failure(new RequestError(RequestErrorKind.Validation, message));\n\n    static Result Conflict(string message, bool transient = false) =>"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+          "line_start": 107,
+          "line_end": 126,
+          "excerpt": "    public CommandFailure? FreezeBaseline(long expectedRevision, Uuid baselineId,\n        TypeIBaselinePreview preview, string confirmationRationale, Uuid actorMemberId,\n        string actorDisplay, DateTimeOffset frozenAt)\n    {\n        confirmationRationale = confirmationRationale?.Trim() ?? string.Empty;\n        if (preview is null)\n            return CommandFailure.InvalidContent(\"A complete baseline preview is required.\");\n        if (_baseline is { } existing)\n            return SameFreeze(existing, baselineId, preview, confirmationRationale,\n                    actorMemberId, actorDisplay)\n                ? null\n                : CommandFailure.StateConflict(\n                    \"The Type I baseline is already frozen; changes require an attributable amendment.\");\n        if (_current is null)\n            return CommandFailure.MissingRecord(\"The examination engagement was not found.\");\n        if (expectedRevision != Revision)\n            return CommandFailure.ForVersion(\n                VersionedRecordRules.StaleRevision(\"examination engagement\", Revision));\n        if (ValidateActor(actorMemberId, actorDisplay, frozenAt) is { } actorFailure)\n            return actorFailure;"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs",
+          "line_start": 60,
+          "line_end": 60,
+          "excerpt": "    public async Task ShouldRejectChangedPreviewGivenFreezeConfirmation()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs",
+          "line_start": 83,
+          "line_end": 83,
+          "excerpt": "    public async Task ShouldReturnNotFoundGivenDifferentProgram()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Examinations/TypeIBaselineCommandHandlerTests.cs",
+          "line_start": 149,
+          "line_end": 149,
+          "excerpt": "    public async Task ShouldAllowFreezeRetryAfterSourceChangesGivenSameBaselineIdentity()"
+        }
+      ],
+      "regression_to_add": "Retained native migration must keep exact old BaselineId replay, full coverage and scoped source proof. Do not invent a current-latest rule without selected spec.",
+      "known_blockers": [],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+      "sha256": "523e290b9941774adfe24b317837c81fb39ff6daad63c5d5a056b03290b1cae4",
+      "current_sha256": "523e290b9941774adfe24b317837c81fb39ff6daad63c5d5a056b03290b1cae4",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.48,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.2
+      },
+      "classification": "known_blocker",
+      "summary": "S34 carries complete Versions/Approvals in each event and stops at 32 versions. Revise and successor receipt producers are absent, despite owner methods existing; therefore approved rollover cannot complete through an implemented normal callback path. Basic later-time proposal/approval retries are already tested and should not be mislabeled.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+          "line_start": 18,
+          "line_end": 21,
+          "excerpt": "    const int MaximumRecords = 2000;\n    const int MaximumCommitments = 1000;\n    const int MaximumVersions = 32;\n    const int MaximumEventBytes = DomainEventPayload.MaximumBytes;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+          "line_start": 82,
+          "line_end": 94,
+          "excerpt": "    public CommandFailure? Revise(long expectedRevision, ProgramRolloverContent content,\n        TypeIIPeriodView sourcePeriod, AuditOutcomeView outcome, string changeReason,\n        Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt)\n    {\n        if (_current is not { } current)\n            return CommandFailure.MissingRecord(\"The program rollover was not found.\");\n        changeReason = Clean(changeReason);\n        if (expectedRevision != Revision)\n            return StaleRevision();\n        if (current.Status == \"period_created\" || current.Versions.Count >= MaximumVersions ||\n            !Bounded(changeReason, 1, MaximumTextLength) || !ValidActor(actorMemberId, actorDisplay, revisedAt) ||\n            revisedAt < current.UpdatedAt || NormalizeContent(content) is not { } normalized ||\n            !ValidCompletedSources(normalized, sourcePeriod, outcome) ||"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+          "line_start": 169,
+          "line_end": 184,
+          "excerpt": "    public CommandFailure? RecordNextPeriodCreated(long expectedRevision, Uuid periodId,\n        Uuid typeIIPlanId, DateTimeOffset createdAt)\n    {\n        if (_current is not { } current)\n            return CommandFailure.MissingRecord(\"The program rollover was not found.\");\n        if (current.CreatedPeriodId == periodId && current.CreatedTypeIIPlanId == typeIIPlanId &&\n            current.NextPeriodCreatedAt == createdAt)\n            return null;\n        if (expectedRevision != Revision)\n            return StaleRevision();\n        if (current.Status != \"approved\" || current.Approvals.Count == 0 ||\n            current.Approvals[^1].Decision != \"approved\" ||\n            periodId != current.Content.NextPeriodId || typeIIPlanId != current.Content.NextTypeIIPlanId ||\n            !ValidActor(current.ActorMemberId, current.ActorDisplay, createdAt) ||\n            createdAt < current.Approvals[^1].ApprovedAt)\n            return CommandFailure.StateConflict(\"Only the exact approved successor period and plan can complete a rollover.\");"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+          "line_start": 225,
+          "line_end": 235,
+          "excerpt": "    CommandFailure? Emit(ProgramRolloverView state, Uuid actorMemberId, DateTimeOffset occurredAt,\n        Func<Uuid, Uuid, long, Uuid?, ProgramRolloverView, DateTimeOffset, DomainEvent> createEvent,\n        string transition, bool creating = false)\n    {\n        if (ValidateState(state) is not null ||\n            (creating ? _current is not null : _current is null ||\n                !ValidTransition(_current, state, actorMemberId, transition)))\n            return Invalid(\"The program-rollover transition is invalid.\");\n        var ev = createEvent(_tenantId, Id, state.Revision, actorMemberId, Freeze(state), occurredAt);\n        if (DomainEventPayload.Size(ev) > MaximumEventBytes)\n            return Invalid(\"The complete program-rollover state exceeds its bounded event size.\");"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/command-handler-gaps.md",
+          "line_start": 35,
+          "line_end": 36,
+          "excerpt": "| `ProgramRollover.RecordNextPeriodCreated` | `ProgramNextPeriodCreated` | `RecordProgramRolloverSuccessorHandler` \u2192 `ProgramRollover` | Add under #316 with exact successor period/plan IDs. |\n| `ProgramRollover.Revise` | `ProgramRolloverRevised` | `ReviseProgramRolloverHandler` \u2192 `ProgramRollover` | Add under #316 with exact proposal revision. |"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Programs/ProgramRolloverTests.cs",
+          "line_start": 46,
+          "line_end": 46,
+          "excerpt": "    public void ShouldRetrySameProposalWithoutChangingFirstTimestampGivenLaterCommandTime()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Programs/ProgramRolloverTests.cs",
+          "line_start": 174,
+          "line_end": 174,
+          "excerpt": "    public void ShouldReplaySameApprovalIntentWithoutChangingFirstTimestampGivenApprovedRollover()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Programs/ProgramRolloverTests.cs",
+          "line_start": 200,
+          "line_end": 200,
+          "excerpt": "    public void ShouldReplayApprovedRolloverWithoutChangingCompletedSourceGivenSuccessorCreation()"
+        }
+      ],
+      "regression_to_add": "Real callback must prove exact committed next period/plan, wrong tenant/hash refuses, exact replay after lost acknowledgment does not append, native old approval survives later lifecycle and >32 revisions.",
+      "known_blockers": [
+        "S34-version-manifests",
+        "S34-ReviseProgramRollover-producer",
+        "S34-RecordProgramRolloverSuccessor-producer"
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+      "sha256": "90b1ae3c548aef7c9c72d06ac08489536b19e1a0c848d2aa49c04d5985d25d1b",
+      "current_sha256": "90b1ae3c548aef7c9c72d06ac08489536b19e1a0c848d2aa49c04d5985d25d1b",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.57,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.41
+      },
+      "classification": "actual_finding",
+      "summary": "SameApplication compares handler-generated appliedAt with first RequestedAt, so repeating the same stable ApplicationKey at a later clock conflicts. Successor proposal/disposition compares server time too. The draft-created callback producer is absent; no end-to-end template draft materialization completion exists.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+          "line_start": 37,
+          "line_end": 43,
+          "excerpt": "    public CommandFailure? Apply(MethodologyTemplateVersionView sourceVersion, string applicationKey,\n        Uuid actorMemberId, string actorDisplay, DateTimeOffset appliedAt)\n    {\n        if (_current is { } existing)\n            return SameApplication(existing, sourceVersion, applicationKey, actorMemberId, actorDisplay, appliedAt)\n                ? null : CommandFailure.StateConflict(\"A template application identity cannot be reused for another version or tenant intent.\");\n        if (!ValidIdentity() || !ValidActor(actorMemberId, actorDisplay, appliedAt) ||"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+          "line_start": 315,
+          "line_end": 321,
+          "excerpt": "    static bool SameApplication(TemplateApplicationView state, MethodologyTemplateVersionView? version,\n        string key, Uuid actor, string display, DateTimeOffset at) =>\n        NormalizePublishedVersion(version) is { } normalized && normalized.TemplateId == state.TemplateId &&\n        normalized.VersionId == state.TemplateVersionId && normalized.ContentSha256 == state.TemplateContentSha256 &&\n        Clean(key) == state.ApplicationKey && actor == state.RequestedByMemberId &&\n        Clean(display) == state.RequestedByDisplay && at == state.RequestedAt;\n"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/ApplyMethodologyTemplateHandler.cs",
+          "line_start": 34,
+          "line_end": 40,
+          "excerpt": "        var actor = ClientServiceActor.Snapshot(context);\n        return await executor.ExecuteAsync(new TemplateApplication(request.TenantId, request.ProgramId,\n                TemplateApplicationId.For(request.ProgramId, request.TemplateId, request.ApplicationKey)),\n            application => CommandFailureRequestAdapter.ToOutcome(application.Apply(version,\n                request.ApplicationKey, actor.MemberId, actor.Display, clock.GetUtcNow())), context, ct)\n            .ConfigureAwait(false);\n    }"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
+          "line_start": 103,
+          "line_end": 113,
+          "excerpt": "        var normalized = NormalizePublishedVersion(successor);\n        proposedDisposition = Clean(proposedDisposition).ToLowerInvariant();\n        if (normalized is not null && current.SuccessorProposals.FirstOrDefault(item =>\n                item.Version.VersionId == normalized.VersionId) is { } existingProposal)\n            return Digest(existingProposal.Version) == Digest(normalized) &&\n                existingProposal.ContentSha256 == normalized.ContentSha256 &&\n                existingProposal.ProposedDisposition == proposedDisposition &&\n                existingProposal.ProposedByMemberId == actorMemberId &&\n                existingProposal.ProposedByDisplay == Clean(actorDisplay) &&\n                existingProposal.ProposedAt == proposedAt\n                ? null : CommandFailure.StateConflict(\"A successor proposal version cannot be reused with different details.\");"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/command-handler-gaps.md",
+          "line_start": 37,
+          "line_end": 37,
+          "excerpt": "| `TemplateApplication.RecordDraftCreated` | `TemplateApplicationDraftCreated` | `RecordTemplateApplicationDraftHandler` \u2192 `TemplateApplication` | Add under #276 with the exact target draft and source template version. |"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationTests.cs",
+          "line_start": 22,
+          "line_end": 22,
+          "excerpt": "    public void ShouldPinOneApprovedVersionAndCreateOnlyDraftProvenanceGivenApplication()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/MethodologyTemplates/TemplateApplicationTests.cs",
+          "line_start": 51,
+          "line_end": 51,
+          "excerpt": "    public void ShouldRequireExactPublishedSuccessorAndRetainTenantDispositionGivenTemplateUpdate()"
+        }
+      ],
+      "regression_to_add": "Repeat Apply through real handler at later clock after callbacks; same full intent/key returns original, changed template/version/actor under key conflicts. Add trusted exact draft callback with >former lifetime successor cap.",
+      "known_blockers": [
+        "S34-RecordTemplateApplicationDraft-producer"
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+      "sha256": "8c7505ec29e6d21d0e70037eb1856790e6ed0cf2d949727fa74b2a4ca62b6d52",
+      "current_sha256": "8c7505ec29e6d21d0e70037eb1856790e6ed0cf2d949727fa74b2a4ca62b6d52",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.5,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.26
+      },
+      "classification": "actual_finding",
+      "summary": "Create/revise/review/approve/retire replay uses server-generated timestamps and current/latest state rather than operation-selected original facts. An identical handler call at later clock conflicts; initial creation retry after any later mutation cannot match SameCreate Revision==1. Hard64 cap and missing accepted-contribution revise branch are also accepted S34 unfinished work.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+          "line_start": 129,
+          "line_end": 134,
+          "excerpt": "        comments = Clean(comments);\n        if (current.Versions[^1].Review is { } priorReview)\n            return priorReview.Outcome == outcome && priorReview.Comments == comments &&\n                priorReview.ReviewedByMemberId == reviewerMemberId && priorReview.ReviewedByDisplay == Clean(reviewerDisplay) &&\n                priorReview.ReviewedAt == reviewedAt\n                ? null : CommandFailure.StateConflict(\"A methodology-template review decision is immutable.\");"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+          "line_start": 160,
+          "line_end": 168,
+          "excerpt": "            return CommandFailure.MissingRecord(\"The methodology template was not found.\");\n        rationale = Clean(rationale);\n        if (current.Versions[^1].Status == \"published\")\n        {\n            var published = current.Versions[^1];\n            return published.ApprovalRationale == rationale && published.ApprovedByMemberId == approverMemberId &&\n                published.ApprovedByDisplay == Clean(approverDisplay) && published.ApprovedAt == approvedAt\n                ? null : CommandFailure.StateConflict(\"A published template version cannot be re-approved with different details.\");\n        }"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+          "line_start": 416,
+          "line_end": 427,
+          "excerpt": "    static bool SameCreate(MethodologyTemplateView state, MethodologyTemplateContent content,\n        string notes, Uuid actor, string display, DateTimeOffset at) =>\n        state.Revision == 1 && state.Versions.Count == 1 &&\n        NormalizeContent(content) is { } normalized && Digest(normalized) == state.Versions[0].ContentSha256 &&\n        state.Versions[0].ChangeNotes == Clean(notes) && state.ActorMemberId == actor &&\n        state.ActorDisplay == Clean(display) && state.UpdatedAt == at;\n\n    static bool SameDraftRevision(MethodologyTemplateView state, MethodologyTemplateContent content,\n        string notes, Uuid actor, string display, DateTimeOffset at) =>\n        NormalizeContent(content) is { } normalized && state.Versions[^1] is { } version &&\n        Digest(normalized) == version.ContentSha256 && version.ChangeNotes == Clean(notes) &&\n        version.AuthoredByMemberId == actor && version.AuthoredByDisplay == Clean(display) && version.AuthoredAt == at;"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/command-handler-gaps.md",
+          "line_start": 34,
+          "line_end": 34,
+          "excerpt": "| `MethodologyTemplate.ReviseDraftWithAcceptedContribution` | `MethodologyTemplateDraftRevised` | `ReviseMethodologyTemplateDraftHandler` \u2192 `MethodologyTemplate` | Add under #276; bind exact accepted deidentified contribution proof. |"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateTests.cs",
+          "line_start": 17,
+          "line_end": 17,
+          "excerpt": "    public void ShouldPublishIndependentlyReviewedImmutableVersionAndRetainAuthorshipGivenSuccessiveDraft()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateTests.cs",
+          "line_start": 51,
+          "line_end": 51,
+          "excerpt": "    public void ShouldReplayVersionReviewsAndApprovalGivenRetainedTemplateEvents()"
+        }
+      ],
+      "regression_to_add": "Real handlers with independently advanced clock: original create/revise/review/publish/retire operation retries after later versions return original response once; changed intent conflicts; >64 old immutable versions remain readable.",
+      "known_blockers": [
+        "S34-native-template",
+        "S34-accepted-contribution-revise-branch"
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+      "sha256": "e84a5f36a5d531bcd17a4d9ffe3a842244ed561b3825704ff8febfb81fbfd4b5",
+      "current_sha256": "e84a5f36a5d531bcd17a4d9ffe3a842244ed561b3825704ff8febfb81fbfd4b5",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.42,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.25
+      },
+      "classification": "actual_finding",
+      "summary": "Proposal/review/accept retries compare server clock to retained first time, so identical handler request later conflicts. Proposal SameProposal also requires current Revision==1, causing exact proposal retry after review/accept to fail even if clock were frozen. This is concrete independent of missing global lookup or authorization duplication.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+          "line_start": 47,
+          "line_end": 55,
+          "excerpt": "    public CommandFailure? Propose(Uuid sourceRecordId, long sourceRecordVersion,\n        MethodologyTemplateRecordContent proposedContent, string deidentificationRationale,\n        Uuid contributorMemberId, string contributorDisplay, DateTimeOffset proposedAt)\n    {\n        deidentificationRationale = Clean(deidentificationRationale);\n        if (_current is { } existing)\n            return SameProposal(existing, sourceRecordId, sourceRecordVersion, proposedContent,\n                deidentificationRationale, contributorMemberId, contributorDisplay, proposedAt)\n                ? null : CommandFailure.StateConflict(\"A template contribution identity cannot be reused for different source content.\");"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+          "line_start": 78,
+          "line_end": 85,
+          "excerpt": "        outcome = Clean(outcome).ToLowerInvariant();\n        comments = Clean(comments);\n        if (current.Review is { } previous)\n            return previous.Outcome == outcome && previous.Comments == comments &&\n                previous.ReviewedByMemberId == reviewerMemberId && previous.ReviewedByDisplay == Clean(reviewerDisplay) &&\n                previous.ReviewedAt == reviewedAt\n                ? null : CommandFailure.StateConflict(\"A template contribution review decision is immutable.\");\n        if (expectedRevision != Revision)"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+          "line_start": 108,
+          "line_end": 113,
+          "excerpt": "        if (current.Status == \"accepted\")\n            return current.AcceptanceRationale == acceptanceRationale && current.AcceptedByMemberId == platformOperatorId &&\n                current.AcceptedByDisplay == Clean(operatorDisplay) && current.AcceptedAt == acceptedAt\n                ? null : CommandFailure.StateConflict(\"An accepted template contribution cannot be changed.\");\n        if (expectedRevision != Revision)\n            return StaleRevision();"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
+          "line_start": 225,
+          "line_end": 231,
+          "excerpt": "    static bool SameProposal(MethodologyTemplateContributionView state, Uuid sourceRecordId,\n        long sourceRecordVersion, MethodologyTemplateRecordContent content, string rationale,\n        Uuid actor, string display, DateTimeOffset at) => state.Revision == 1 &&\n        NormalizeContent(content) is { } normalized && state.SourceRecordId == sourceRecordId &&\n        state.SourceRecordVersion == sourceRecordVersion && Digest(state.ProposedContent) == Digest(normalized) &&\n        state.DeidentificationRationale == rationale && state.ProposedByMemberId == actor &&\n        state.ProposedByDisplay == Clean(display) && state.ProposedAt == at;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/MethodologyTemplates/ProposeDeidentifiedTemplateContributionHandler.cs",
+          "line_start": 13,
+          "line_end": 18,
+          "excerpt": "        var actor = MethodologyTemplateCommandActor.For(context, request.TenantId);\n        return executor.ExecuteAsync(new MethodologyTemplateContribution(request.TenantId,\n                request.ContributionId), contribution => CommandFailureRequestAdapter.ToOutcome(\n                contribution.Propose(request.SourceRecordId, request.SourceVersion, request.ProposedContent,\n                    request.DeidentificationRationale, actor.MemberId, actor.Display, clock.GetUtcNow())),\n            context, ct);"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs",
+          "line_start": 24,
+          "line_end": 24,
+          "excerpt": "    public void ShouldShareOnlyReviewedDeidentifiedContributionAndRetainNoClientIdentityInTemplateGivenAcceptance()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs",
+          "line_start": 82,
+          "line_end": 82,
+          "excerpt": "    public void ShouldRejectSourceIdentifiersAndUnreviewedAcceptanceGivenDeidentifiedContribution()"
+        }
+      ],
+      "regression_to_add": "Real producer handlers with later server clocks: proposal after review/accept, review after accept, accept after exact duplicate return first result without append. Changed actor/rationale/content under selected key conflicts; retain contributor/reviewer/operator independence.",
+      "known_blockers": [
+        "S34-native-template-contribution"
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs",
+      "sha256": "1dec1fc0e02401531d456daad3393e205c803992d22d46f223cd396702a943b8",
+      "current_sha256": "1dec1fc0e02401531d456daad3393e205c803992d22d46f223cd396702a943b8",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.52,
+        "invariant_gap": 0.63,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.33
+      },
+      "classification": "known_blocker",
+      "summary": "Existing exact tenant/draft/version/waiver scope and responsibility checks are real; no naked authorization absence defect inferred. Accepted S33 requires replacing live waiver aggregate argument with exact immutable authorized proof, and native selected operation retries. Boundary currently retains whole approved-version history and calls waiver.Allows during owner decision; it is not migrated.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs",
+          "line_start": 316,
+          "line_end": 350,
+          "excerpt": "    public CommandFailure? Approve(Uuid draftVersionId, long expectedRevision,\n        Uuid approvalDecisionId, Uuid acceptedReviewDecisionId, DateOnly effectiveFrom, string rationale,\n        string impactDigest, Uuid approverMemberId, string approverDisplay, DateTimeOffset decidedAt,\n        SeparationOfDutiesWaiver? separationOfDutiesWaiver = null)\n    {\n        var current = CheckDraft(draftVersionId, expectedRevision);\n        if (current is not null)\n            return current;\n        var responsibilityScope = new ResponsibilityScope(\"boundary\", Id, draftVersionId,\n            expectedRevision);\n        var responsibilityFailure = ResponsibilityDecisionGuard.Validate(\n            GetResponsibilitySet(responsibilityScope), responsibilityScope, approverMemberId,\n            ResponsibilityType.PolicyApprover, decidedAt,\n            approverMemberId == _draftAuthorMemberId, separationOfDutiesWaiver);\n        if (responsibilityFailure is not null)\n            return responsibilityFailure;\n        var approvalWaiverScope = new SeparationOfDutiesWaiverScope(\n            SeparationOfDutiesRecordTypes.Boundary, Id, draftVersionId,\n            expectedRevision, SeparationOfDutiesActions.Approve);\n        if (separationOfDutiesWaiver is not null &&\n            (separationOfDutiesWaiver.TenantId != _tenantId ||\n             !separationOfDutiesWaiver.Allows(approvalWaiverScope, approverMemberId, decidedAt)))\n            return CommandFailure.ActorProhibited(\n                \"The separation-of-duties waiver is not active for this approver and draft revision.\");\n        if (approverMemberId == _draftAuthorMemberId && separationOfDutiesWaiver is null)\n            return CommandFailure.ActorProhibited(\n                \"A boundary author cannot approve their own draft.\");\n        // Drafts recorded before a content rule existed must satisfy it before approval.\n        if (Validate(_draftContent) is { } invalidContent)\n            return CommandFailure.InvalidContent(invalidContent);\n        if (acceptedReviewDecisionId == Uuid.Empty ||\n            acceptedReviewDecisionId != _acceptedReviewDecisionId)\n            return CommandFailure.StateConflict(\n                \"Approval requires the latest accepted review of this draft revision.\");\n        if (string.IsNullOrWhiteSpace(rationale))"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs",
+          "line_start": 37,
+          "line_end": 44,
+          "excerpt": "    public string? LatestReviewOutcome => _latestReviewOutcome;\n    public Uuid LatestApprovedVersionId => _latestApprovedVersionId;\n    public bool IsVersionApproved(Uuid versionId) => _approvedVersions.ContainsKey(versionId);\n\n    public bool IsVersionApproved(Uuid versionId, long revision, Uuid decisionId) =>\n        _approvedVersions.TryGetValue(versionId, out var approval) &&\n        approval.Revision == revision && approval.DecisionId == decisionId;\n"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/native-acceptance-contract.md",
+          "line_start": 25,
+          "line_end": 32,
+          "excerpt": "1. Authenticate and apply current top-level tenant/platform/account policy.\n2. Bind required route/typed IDs and normalize authored input, including presence flags and selected-source variants.\n3. Look up routing binding as an authorization input; authorize the concrete current resource scope before loading prior intent/result. Never disclose routing metadata to an unauthorized caller.\n4. For an existing accepted binding, compare kind, all owner scopes, canonical actor, episode, authored input digest and original expected revision. Return exact first response or Conflict. Do not regenerate clocks, tokens, source selections or expected revisions.\n5. For no binding, resolve current sources, freeze concrete intent/result content, validate logical source/resource revision and local invariant, then perform the atomic native append at the hydrated physical tail.\n6. On OCC, busy source or guard failure, recheck accepted binding before failing/retrying: an identical concurrent request may already have committed. An unknown append outcome always resumes by lookup with the same logical ID.\n\nRebuild verifies the first batch and all subsequent operation/cause links, including native terminal facts. A duplicate key with different binding is corruption, never a last-write-wins repair. Derived effects have their own LogicalId and CommandKind; RootOperationId and CausationEventId link them to the root. The root's original binding is not compared against a child command kind. A no-append condition proof (e.g. an already-associated replacement identity) is a verified existing native fact; it must still resume the waiting process without a receipt event."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
+          "line_start": 199,
+          "line_end": 199,
+          "excerpt": "    public void ShouldPreserveCreateReplayGivenRevisedDraft()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
+          "line_start": 288,
+          "line_end": 288,
+          "excerpt": "    public void ShouldRequireApprovedExactWaiverGivenAuthorSelfReview()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Boundaries/SystemBoundaryTests.cs",
+          "line_start": 318,
+          "line_end": 318,
+          "excerpt": "    public void ShouldRequireApprovedExactWaiverGivenAuthorSelfApproval()"
+        }
+      ],
+      "regression_to_add": "Waiver current source changes versus approval hold, exact wrong scope refuses, same original operation after successor returns original, immutable prior boundary version remains available.",
+      "known_blockers": [
+        "S33-native-boundary-exact-waiver-proof"
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Changes/RecordSignificantChangeSystemDescriptionDecisionHandler.cs",
+      "sha256": "3e7d872804fb3e8189bcfce711dd9b88c27c2d989b8dfa0f6a5c9bc3242fd3d3",
+      "current_sha256": "3e7d872804fb3e8189bcfce711dd9b88c27c2d989b8dfa0f6a5c9bc3242fd3d3",
+      "sha_matches": true,
+      "signals": {
+        "authority_gap": 0.46,
+        "invariant_gap": 0.55,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.24
+      },
+      "classification": "known_blocker",
+      "summary": "This is an intentionally source-verifying trusted callback, not an external missing-RBAC hole: system actor, exact description decision, current assessment digest/time and pending review-work links checked. However S32/S33 replace retained inline description/history and change owner; this callback still reads old aggregate collections and lacks selected required CommandId/native fact linkage. Must migrate together with description reader and SignificantChange native owner before cutover.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Changes/RecordSignificantChangeSystemDescriptionDecisionHandler.cs",
+          "line_start": 16,
+          "line_end": 19,
+          "excerpt": "        if (!RequestActor.IsSystem(context.Actor))\n            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,\n                \"System-description decisions may only be copied by a trusted reactor.\"));\n        var request = context.Request;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/RecordSignificantChangeSystemDescriptionDecisionHandler.cs",
+          "line_start": 31,
+          "line_end": 57,
+          "excerpt": "        var decision = SystemDescriptionDecisionCorrelation.Find(description, request.TenantId,\n            request.ProgramId, request.ChangeId, request.SystemDescriptionVersionId,\n            request.DecisionId, request.Decision, request.AssessmentSha256);\n        if (decision is null)\n            return Result.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"The requested description decision is not an exact approved successor or no-change fact for this change.\"));\n\n        return await executor.ExecuteAsync(new SignificantChange(request.TenantId,\n                request.ProgramId, request.ChangeId), change =>\n            {\n                if (Classify(change, request, decision) is { } outcome)\n                    return AggregateOutcome.Discard(Result.Failure(outcome));\n                if (change.Current?.CurrentAssessment is not { RequiresSystemDescriptionReview: true } assessment ||\n                    assessment.ContentVersion != request.ContentVersion ||\n                    SignificantChange.AssessmentSha256(assessment) != request.AssessmentSha256 ||\n                    decision.DecidedAt < assessment.AssessedAt)\n                    return AggregateOutcome.Discard(Result.Failure(new RequestError(\n                        RequestErrorKind.Conflict,\n                        \"The system-description decision does not match the current change assessment.\")));\n                return CommandFailureRequestAdapter.ToOutcome(change.RecordSystemDescriptionDecision(\n                    change.Revision, decision.Decision, decision.DecisionId, decision.Rationale,\n                    decision.ActorMemberId, decision.ActorDisplay, decision.DecidedAt));\n            }, context, ct).ConfigureAwait(false);\n    }\n\n    /// <summary>\n    ///     Separates a decision that can still be applied from one whose assessment is superseded or already decided"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Changes/RecordSignificantChangeSystemDescriptionDecisionHandler.cs",
+          "line_start": 68,
+          "line_end": 90,
+          "excerpt": "        if (current.SystemDescriptionDecisions.Any(item => item.DecisionId == request.DecisionId))\n            return null;\n        var outcome = ImpactReactionOutcomes.ClassifyDecision(request.ContentVersion, current.CurrentVersionNumber,\n            retained is not null,\n            current.SystemDescriptionDecisions.Any(item => item.ContentVersion == request.ContentVersion),\n            decision.DecidedAt, retained?.AssessedAt ?? default);\n        if (outcome is not null)\n            return outcome;\n        return retained is not null && retained.RequiresSystemDescriptionReview &&\n               retained.RelatedReviewWorkIds.Concat(retained.RelatedCorrectiveActionIds).Any(id =>\n                   !current.ReviewWorkLinks.Any(link => link.ContentVersion == request.ContentVersion &&\n                                                        link.WorkId == id))\n            ? ImpactReactionOutcomes.NotReady(\"Required follow-up work for the description review is not linked yet.\")\n            : null;\n    }\n}"
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/owner-protocols.md",
+          "line_start": 171,
+          "line_end": 173,
+          "excerpt": "`SystemDescription` keeps draft/version/current approved pointer, immutable narrative/source manifests, review decisions, exact examination bindings and change/no-change decisions. Preserve current completeness, approval, source freshness and historical as-of rules. Write full sections/source snapshot content before publishing. Every live aggregate argument becomes an exact proof; current-at-approval sources require held admission/read permits through approval append. `SystemDescriptionExportProcess` is keyed by description/version/ExportKey, owns attempts and immutable generated output, and never increments description revision for progress. Export result is process state plus immutable content reference; downstream package/retention authority consumes exact verified output proof.\n\nTests: stale source approval, draft changes versus approval, review/approver independence, export retry after description later changes, unknown export result, complete narrative larger than old event envelope, exact historical baseline uses pinned version, no export attempt facts in description replay."
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "test/Compliance.Tests/Features/Changes/SignificantChangeTests.cs",
+          "line_start": 64,
+          "line_end": 64,
+          "excerpt": "    public void ShouldRequireExactReviewWorkAndSystemDescriptionDispositionGivenSignificantChange()"
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs",
+          "line_start": 128,
+          "line_end": 128,
+          "excerpt": "        var handler = new RecordSignificantChangeSystemDescriptionDecisionHandler("
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs",
+          "line_start": 233,
+          "line_end": 233,
+          "excerpt": "        var handler = new RecordSignificantChangeSystemDescriptionDecisionHandler("
+        }
+      ],
+      "regression_to_add": "Exact source decision retry after later change assessment, not-yet-visible work remains transient, superseded assessment terminal, wrong descriptor/version/decision digest refuses. Use immutable exact manifest reader instead of retained inline source history.",
+      "known_blockers": [
+        "S32-description-reader-and-manifests",
+        "S33-significant-change-native",
+        "S32-approval-source-permit"
+      ],
+      "review_validation": "Read-only source/spec/test inspection; no tests/builds run for this triage."
+    }
+  ]
+}

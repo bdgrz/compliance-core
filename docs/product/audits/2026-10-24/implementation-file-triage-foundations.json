@@ -1,0 +1,1226 @@
+{
+  "generatedAtUtc": "2026-10-24T15:18:09.197121+00:00",
+  "repository": "/Users/jrepanich/Code/bdgrz/compliance-core",
+  "scope": "Direct Jev alert triage: foundations / access control / risks / evidence / operations / source use / identity / tenants.",
+  "source": "implementation-file-reviews.json final 73 alerts, parent review model 1.14; 916/916 reviewed implementation files.",
+  "method": "Static read-only source, related tests and accepted target contracts. Probabilities prioritize review only; no issue is inferred solely from a probability or omitted cross-owner authorization in an aggregate.",
+  "limitations": [
+    "No builds or tests executed during this triage; test references are existing source evidence, not a fresh green claim.",
+    "No source files, GitHub issues, git index, branches or PRs were mutated.",
+    "P2 replay/intent findings are correctness/protocol gaps, not demonstrated privilege escalation.",
+    "The accepted target catalog contains pending work; known implementation gaps are distinguished from reachable replay defects."
+  ],
+  "counts": {
+    "actionable_replay_defect": 6,
+    "false_positive_context_gap": 14,
+    "known_implementation_gap": 2,
+    "supporting_duplicate": 1
+  },
+  "uniqueActionableFindings": 6,
+  "knownImplementationGaps": 2,
+  "prerequisiteScope": "#1042 does not block per-first-owner accepted write/replay binding. It blocks operation-ID-only status/result lookup and realm-wide cross-route dedupe. Blocked endpoints should stay disabled while owner work proceeds.",
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Operations/FreezeTypeIIPeriodCloseHandler.cs",
+      "sha256": "f61d14ab08582d9239b8fd44f3cca20ea98ca794d78c38a92b21ca324be979f9",
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.79,
+        "recovery_gap": 0.82,
+        "incomplete_path": 0.55
+      },
+      "currentSha256": "f61d14ab08582d9239b8fd44f3cca20ea98ca794d78c38a92b21ca324be979f9",
+      "matchesReviewedSha": true,
+      "classification": "actionable_replay_defect",
+      "severity": "P2",
+      "finding": "FND-01: Freeze retry does not bind the original expected revision.",
+      "rationale": "After one freeze succeeds, reuse the same CloseSnapshotId, actor and current frozen content with a different positive ExpectedRevision: the handler finds the existing snapshot and returns success without comparing the original authored expected revision. There is no client CommandId or selected native binding. Ordinary exact retry after clock advancement is deliberately supported and tested; that test does not cover changed authored revision. Current executive authorization, exact approval attribution, OCC and occurrence coverage are present and should be preserved.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/FreezeTypeIIPeriodCloseHandler.cs",
+          "line": 27,
+          "supports": "Only positivity of authored ExpectedRevision is validated before retry."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/FreezeTypeIIPeriodCloseHandler.cs",
+          "line": 53,
+          "supports": "Existing snapshot bypasses FreezeClose expected revision check."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/FreezeTypeIIPeriodCloseHandler.cs",
+          "line": 95,
+          "supports": "MatchesFrozenSnapshot compares content/actor/role but no original ExpectedRevision."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.cs",
+          "line": 258,
+          "supports": "Existing retry test advances the clock, keeps original request, and asserts one append."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.md",
+          "line": 83,
+          "supports": "Selected contract requires CommandId and original ExpectedRevision in accepted intent."
+        }
+      ],
+      "regressionNeeded": [
+        "Same CommandId plus changed original ExpectedRevision must conflict with no append.",
+        "Exact original retry after freeze and later close amendment returns frozen original Unit result with no append.",
+        "Preserve current executive authorization and full occurrence-coverage admission checks."
+      ],
+      "knownFamily": "Residual command identity/replay migration; Type II period close. Not a new coverage/OCC finding.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs",
+      "sha256": "d9b9dbb3548f44867c7815b2c69f8e0c177fcfc7b2564ca5e0a898bbe6ab652d",
+      "signals": {
+        "authority_gap": 0.69,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.82,
+        "incomplete_path": 0.41
+      },
+      "currentSha256": "d9b9dbb3548f44867c7815b2c69f8e0c177fcfc7b2564ca5e0a898bbe6ab652d",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "The owner has a selected accepted fact, exact actor/subject/reason/original revision binding, assignment episodes and an atomic last-active-operator check. Authorization before retry is intentional: old receipts cannot restore revoked authority. Event hydration verifies the original revision/assignment. The existing tests cover delayed old revocations, exact retry after revocation, changed intent, unauthorized replay, durable serialization and concurrent last-operator changes; score alone does not establish a recovery flaw.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs",
+          "line": 51,
+          "supports": "Grant/revoke check selected original accepted fact and exact assignment."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs",
+          "line": 90,
+          "supports": "Current operator authorization is checked before retry."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs",
+          "line": 115,
+          "supports": "Reducer validates original revision and assignment episode."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
+          "line": 173,
+          "supports": "Retry retains original timestamp/display."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
+          "line": 211,
+          "supports": "Unauthorized actor cannot replay accepted operation."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
+          "line": 286,
+          "supports": "Durable replay preserves exact selected receipt."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
+          "line": 325,
+          "supports": "Concurrent revocations preserve last active operator."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Already implemented platform-operator selected owner protocol.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/GrantAccessHandler.cs",
+      "sha256": "fc879a3598b333ae753bcfa9ae75e399d48ce9b110dba876d60f6eb2c18f0dd8",
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.76,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.36
+      },
+      "currentSha256": "fc879a3598b333ae753bcfa9ae75e399d48ce9b110dba876d60f6eb2c18f0dd8",
+      "matchesReviewedSha": true,
+      "classification": "actionable_replay_defect",
+      "severity": "P2",
+      "finding": "FND-02: Original grant creation cannot replay after target retirement or grant revocation.",
+      "rationale": "The handler checks the target member current episode and proposal validity before hydrating the GrantId owner. A previously accepted creation retried after the target is deprovisioned returns NotFound instead of original success, even when the caller remains authorized. The aggregate itself also returns Conflict for the original Issue after later revocation. The root GrantId already identifies the immutable creation, so replay must resolve the accepted creation before new-operation target checks; it must not restore the revoked grant. Episode binding and the second membership read are present and protect fresh admissions, so this is not a claim of a stale-membership authority exploit.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/GrantAccessHandler.cs",
+          "line": 16,
+          "supports": "Current target episode is read before owner hydration."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/GrantAccessHandler.cs",
+          "line": 26,
+          "supports": "Current proposal validation precedes resolving accepted creation."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/GrantAccessHandler.cs",
+          "line": 43,
+          "supports": "Fresh grant binds exact membership episode."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AccessGrant.cs",
+          "line": 35,
+          "supports": "Existing revoked grant returns conflict before original creation replay."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/GrantAccessHandlerTests.cs",
+          "line": 18,
+          "supports": "Tests bind grants to the current episode."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/GrantAccessHandlerTests.cs",
+          "line": 42,
+          "supports": "Tests reject episode changes during admission."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.md",
+          "line": 87,
+          "supports": "GrantId is the fixed creation identity; response is immediate original Unit."
+        }
+      ],
+      "regressionNeeded": [
+        "Create a grant, revoke it, retry exact creation as currently authorized caller: original success, no new event, grant remains revoked.",
+        "Create for a member, deprovision that member, retry original creation while caller remains authorized: original success without reacquiring a membership episode.",
+        "Changed proposal or original actor under the same GrantId conflicts."
+      ],
+      "knownFamily": "Residual command identity/replay migration; immutable grant root and membership episode preservation.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+      "sha256": "bd40d3e380d1cfb511e6c567b04feaf20d96ce4dc7400665ab90293ab5053648",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.75,
+        "incomplete_path": 0.35
+      },
+      "currentSha256": "bd40d3e380d1cfb511e6c567b04feaf20d96ce4dc7400665ab90293ab5053648",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "This owner implements the native equivalent selected-fact protocol directly. Accepted fact selection precedes current assignment checks; actor, original revision, permission and assignment identity are bound. Old removal retries preserve a later assignment episode. Absence of the shared NativeAcceptance class is not a defect when the local protocol enforces the accepted contract.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 36,
+          "supports": "Selected original operation resolves before mutable current-assignment checks."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
+          "line": 87,
+          "supports": "Accepted fact validates actor/owner/original revision."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/RolePermissionTests.cs",
+          "line": 18,
+          "supports": "Original add retries after removal."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/RolePermissionTests.cs",
+          "line": 60,
+          "supports": "Old removal cannot remove newer assignment."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/RolePermissionTests.cs",
+          "line": 81,
+          "supports": "Changed authored intent conflicts."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/RolePermissionTests.cs",
+          "line": 226,
+          "supports": "Current authorization required before replay."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/RolePermissionTests.cs",
+          "line": 302,
+          "supports": "Durable serialization regression."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Already implemented RBAC selected owner protocol.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/UserIdentities/CompleteIdentityRecoveryHandler.cs",
+      "sha256": "6851254e00992584cdecb11ac24b2190b64bbb947474cc10ed3d642029d86589",
+      "signals": {
+        "authority_gap": 0.74,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.74,
+        "incomplete_path": 0.39
+      },
+      "currentSha256": "6851254e00992584cdecb11ac24b2190b64bbb947474cc10ed3d642029d86589",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "The handler resolves selected accepted intent before revalidating an expiring token/current proof for a new operation; it verifies OIDC replacement identity, exact verified email owner and immutable proof provenance. A fixed 202 acknowledgment is retained and the process owns protected registration/revocation. Raw proof/token is not persisted in accepted intent. Current entry authorization is supplied by the registered authorizer; duplicating it in every aggregate is not required.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/CompleteIdentityRecoveryHandler.cs",
+          "line": 51,
+          "supports": "Existing native acceptance resolves before new recovery validation."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+          "line": 69,
+          "supports": "Completion/provenance behavior."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+          "line": 126,
+          "supports": "Competing replacement registration is protected."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+          "line": 438,
+          "supports": "Exact receiver retry preserves accepted result."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+          "line": 460,
+          "supports": "Changed intent conflicts."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+          "line": 480,
+          "supports": "Non-system receiver actor denied."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+          "line": 498,
+          "supports": "Missing/mismatched proofs rejected."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Implemented native identity recovery/process family.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+      "sha256": "c0fb5efa2c3213017627c60bb5542aeb885af7fe84839d9487060c2aa93d667b",
+      "signals": {
+        "authority_gap": 0.63,
+        "invariant_gap": 0.73,
+        "recovery_gap": 0.54,
+        "incomplete_path": 0.56
+      },
+      "currentSha256": "c0fb5efa2c3213017627c60bb5542aeb885af7fe84839d9487060c2aa93d667b",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "Ordinary provider registration cannot reassign an existing identity to another account; a protected unregistered slot can only be associated with the protected account. Recovery receivers require exact held challenge/account/role before registering or revoking and raise native accepted facts. A receiver direct method may refuse a repeated state change because its handler resolves native acceptance first. Those cross-file boundaries explain the single-file invariant signal; no conflicting account association or replay authority bypass was demonstrated.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+          "line": 127,
+          "supports": "Existing provider registration rejects a different account."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+          "line": 136,
+          "supports": "Recovery protection fences conflicting ordinary association."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+          "line": 274,
+          "supports": "Recovered registration requires exact challenge/account/replacement protection."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+          "line": 323,
+          "supports": "Recovered revocation requires exact challenge/account/old protection."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/UserIdentityTests.cs",
+          "line": 113,
+          "supports": "Conflicting user registration rejected."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/UserIdentityTests.cs",
+          "line": 195,
+          "supports": "Revoked identity cannot authenticate."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+          "line": 266,
+          "supports": "Existing proof revocation path."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+          "line": 319,
+          "supports": "Held protection regression."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Implemented identity association/protected recovery owners.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/GetMemberAccessHandler.cs",
+      "sha256": "1289703a973c7353a0cc41fd4c5e787dc92923db47ec13adbf85b9b0f87f2a9d",
+      "signals": {
+        "authority_gap": 0.67,
+        "invariant_gap": 0.68,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.33
+      },
+      "currentSha256": "1289703a973c7353a0cc41fd4c5e787dc92923db47ec13adbf85b9b0f87f2a9d",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "This query explains currently effective access and is not the mutation authorization boundary. It verifies tenant/member scope, requires the current membership episode, reads permission/grant tails and checks active team/role/source records. Current authoritative permission checks remain in the authorization service. No ability to mutate through a stale explanation or cross-tenant source was found; requiring duplicated aggregate authorization based on this file would be misplaced.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/GetMemberAccessHandler.cs",
+          "line": 24,
+          "supports": "Tenant/user/member scope check."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/GetMemberAccessHandler.cs",
+          "line": 72,
+          "supports": "Permission/grant stream tail checks."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/GetMemberAccessHandler.cs",
+          "line": 99,
+          "supports": "Current role/team source checks."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/GetMemberAccessHandler.cs",
+          "line": 124,
+          "supports": "Membership episode and exact grant/source eligibility."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/GetMemberAccessHandlerTests.cs",
+          "line": 337,
+          "supports": "Revoked source omitted."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/GetMemberAccessHandlerTests.cs",
+          "line": 358,
+          "supports": "Deleted source omitted."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Access explanation query with current source eligibility.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/RegisterFirmStaffHandler.cs",
+      "sha256": "3ac5c80bb90d2533feca2e4f45273f0a57525d619e99d0ca2e2165349b3609d8",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.43
+      },
+      "currentSha256": "3ac5c80bb90d2533feca2e4f45273f0a57525d619e99d0ca2e2165349b3609d8",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "NativeOperationExecutor resolves selected acceptance before the Prepare callback performs current canonical user lookup. The original fixed 202 acknowledgment is stored before root append, and the typed process owns subsequent claim/completion. Directory drift does not require reselecting an accepted registration.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RegisterFirmStaffHandler.cs",
+          "line": 45,
+          "supports": "Canonical user lookup is inside new-operation preparation."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
+          "line": 27,
+          "supports": "Selected retry precedes directory lookup."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
+          "line": 191,
+          "supports": "Original acknowledgment survives later owner change."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
+          "line": 220,
+          "supports": "Changed intent or operator conflicts."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Implemented firm staff native admission/process.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/SourceUse/SettleSourceUseHandler.cs",
+      "sha256": "7111860578852fe2360fb00c8f8d0b31be76f36cb02a9687a32610bd3288afbe",
+      "signals": {
+        "authority_gap": 0.26,
+        "invariant_gap": 0.39,
+        "recovery_gap": 0.54,
+        "incomplete_path": 0.71
+      },
+      "currentSha256": "7111860578852fe2360fb00c8f8d0b31be76f36cb02a9687a32610bd3288afbe",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "This is an abstract generic protocol; the default factory throwing NotSupportedException is an explicit override contract, not a reachable concrete handler failure. Concrete handlers override simple or disposition-aware settlement. The generic flow verifies exact terminal proof, derives the receiver native binding, settles live generation under OCC, or writes a receiving fence when no grant exists. Unknown append is resolved by the same native receipt. The crash-after-cancel regressions exercise release/fencing across the concrete evidence and readiness families.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/SourceUse/SettleSourceUseHandler.cs",
+          "line": 1,
+          "supports": "Generic base supplies proof verification, native receiver binding and settlement flow; concrete owner supplies event factory."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+          "line": 26,
+          "supports": "Evidence uses settle after cancellation persisted before checkpoint."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+          "line": 102,
+          "supports": "Readiness uses settle after cancellation persisted before checkpoint."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Shared source-use settlement protocol; concrete owner adapters required by design.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/Member.cs",
+      "sha256": "399ebad8d0da2032e2bc1390a63d79df5a6d34c5fe0fb3fb4a2b78605fbe7d7d",
+      "signals": {
+        "authority_gap": 0.65,
+        "invariant_gap": 0.7,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.47
+      },
+      "currentSha256": "399ebad8d0da2032e2bc1390a63d79df5a6d34c5fe0fb3fb4a2b78605fbe7d7d",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "The current owner contains selected NativeAcceptance registration and explicit administrator transition/termination lifecycle. Delayed cleanup is bound to exact MembershipTerminationProof and membership episode, preventing an old retirement from withdrawing a new membership. Foreign source/current caller authorization belongs in handlers and registered authorizers, with owner-local invariants here. Existing boundary tests cover delayed cleanup and tenant manager protection.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/Member.cs",
+          "line": 190,
+          "supports": "Native registration entry."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/Member.cs",
+          "line": 295,
+          "supports": "Membership deprovision lifecycle."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/Member.cs",
+          "line": 329,
+          "supports": "Cleanup completion requires exact termination proof and deterministic command."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/DeprovisionMemberHandlerTests.cs",
+          "line": 1,
+          "supports": "Contains ShouldPreserveNewMembershipAuthorityGivenDelayedRetirementCleanup."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+          "line": 1,
+          "supports": "Tenant administrator guard coverage."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Implemented membership episode/termination family.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Evidence/IssueArtifactDownloadHandler.cs",
+      "sha256": "8c035d54268227f510c020085a8cd8f077aa262377c37abee89f8d9d7acb5318",
+      "signals": {
+        "authority_gap": 0.47,
+        "invariant_gap": 0.57,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.22
+      },
+      "currentSha256": "8c035d54268227f510c020085a8cd8f077aa262377c37abee89f8d9d7acb5318",
+      "matchesReviewedSha": true,
+      "classification": "known_implementation_gap",
+      "severity": "P2",
+      "finding": "FND-07: S31 protected download protocol is still pending.",
+      "rationale": "Current handler synchronously issues a delivery before appending an ordinary artifact download audit. Retrying can issue a fresh Location/ExpiresAt instead of the original protected terminal result, and there is no required client CommandId, authored ExpectedArtifactRevision, protected store or independent download grant. Current artifact and disclosure checks are present, including a final exact artifact check, and the domain audit does not contain the raw ticket URL. This is the already selected S31 work, not a newly proven ticket disclosure exploit.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Evidence/IssueArtifactDownloadHandler.cs",
+          "line": 43,
+          "supports": "Issues delivery on each invocation."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/IssueArtifactDownloadHandler.cs",
+          "line": 56,
+          "supports": "Current disclosure and metadata rechecks are present."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/IssueArtifactDownloadHandler.cs",
+          "line": 65,
+          "supports": "Returns freshly issued link while ordinary artifact audit is appended."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/protected-response-contract.md",
+          "line": 3,
+          "supports": "Requires authored identity/revision and current disclosure."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/protected-response-contract.md",
+          "line": 5,
+          "supports": "Fixed 202 artifact admission, exact source uses and independent grant."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/protected-response-contract.md",
+          "line": 7,
+          "supports": "Original protected terminal link; no raw ticket in durable public content."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/protected-response-contract.md",
+          "line": 9,
+          "supports": "AES-GCM protected response store contract."
+        }
+      ],
+      "regressionNeeded": [
+        "Implement the required regressions enumerated in protected-response-contract.md:28, including fixed acknowledgment replay, one winning protected result, unknown append, key/restart/swap checks and current disclosure before decrypt."
+      ],
+      "knownFamily": "S31 artifact retention/hold/protected download grant; known planned implementation.",
+      "prerequisite": "Per-first-owner write admission and protected grant work are implementable now. #1042 blocks operation-ID-only status/result lookup and cross-route duplicate detection, not this owner write path.",
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Evidence/LinkEvidenceSupportHandler.cs",
+      "sha256": "3ee2cad7a0119734e9f02b4971b7405c5a3e0025ad59b4ddb6b1ee544012d48c",
+      "signals": {
+        "authority_gap": 0.6,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.31
+      },
+      "currentSha256": "3ee2cad7a0119734e9f02b4971b7405c5a3e0025ad59b4ddb6b1ee544012d48c",
+      "matchesReviewedSha": true,
+      "classification": "actionable_replay_defect",
+      "severity": "P2",
+      "finding": "FND-06: Original evidence support cannot replay after its target advances.",
+      "rationale": "The handler checks the currently exact supported-record revision twice before hydrating the existing support owner. After an accepted link, a subsequent target revision causes exact retry to fail current-source validation instead of returning the original frozen EvidenceSupportView to a still-authorized caller. The selected contract also requires a client CommandId and owner ExpectedRevision, both absent from the current request. Existing immutable relationship hashing and exact artifact/source checks should remain fresh-admission rules, not replace the original command identity.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Evidence/LinkEvidenceSupportHandler.cs",
+          "line": 52,
+          "supports": "Current exact target check precedes owner resolution."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/LinkEvidenceSupportHandler.cs",
+          "line": 63,
+          "supports": "Second current target check also precedes owner resolution."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/LinkEvidenceSupportHandler.cs",
+          "line": 67,
+          "supports": "Only then opens EvidenceSupport using relationship-derived ID."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/EvidenceSupport.cs",
+          "line": 33,
+          "supports": "Relationship identity hashes artifact, target revision and period."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/EvidenceSupport.cs",
+          "line": 67,
+          "supports": "Owner itself can return existing relationship without append."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Evidence/LinkEvidenceSupportHandlerTests.cs",
+          "line": 17,
+          "supports": "Current happy-path persistence."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Evidence/LinkEvidenceSupportHandlerTests.cs",
+          "line": 64,
+          "supports": "Tests reject stale target for fresh link, not original replay."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.md",
+          "line": 91,
+          "supports": "Selected CommandId, ExpectedRevision and immediate original response."
+        }
+      ],
+      "regressionNeeded": [
+        "Accept support, advance supported record, then retry original accepted operation as currently authorized caller: original view/no append.",
+        "Fresh new CommandId against stale target still conflicts.",
+        "Same CommandId with changed rationale/period/actor/original revision conflicts."
+      ],
+      "knownFamily": "Residual command identity/replay migration; evidence support immutable assertion.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Risks/RiskEvaluation.cs",
+      "sha256": "716c913106e8d5fac0e03471e0adc07d9eb56521edc376b01844df461b6708e8",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.66,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.45
+      },
+      "currentSha256": "716c913106e8d5fac0e03471e0adc07d9eb56521edc376b01844df461b6708e8",
+      "matchesReviewedSha": true,
+      "classification": "actionable_replay_defect",
+      "severity": "P2",
+      "finding": "FND-04: Assessment identity accepts changed rationale and original actor/revision.",
+      "rationale": "RecordAssessment returns success for an existing AssessmentId if only phase, likelihood, impact and MethodVersionId match. It does not compare authored rationale, assessor identity or original ExpectedRevision, so changed authored intent can be treated as an exact accepted retry. ChooseTreatment also has no selected command identity and exact old revision retries conflict. This is an owner-local binding defect, not a request to duplicate cross-owner permission rules in the aggregate.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskEvaluation.cs",
+          "line": 68,
+          "supports": "RecordAssessment method and authored inputs."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskEvaluation.cs",
+          "line": 74,
+          "supports": "Existing assessment comparison omits rationale/actor/original expected revision."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskEvaluation.cs",
+          "line": 111,
+          "supports": "ChooseTreatment checks current revision but has no command identity."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Risks/RiskEvaluationTests.cs",
+          "line": 18,
+          "supports": "Assessment history/attribution tests do not cover changed-intent replay."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.md",
+          "line": 132,
+          "supports": "Selected RecordRiskAssessment CommandId and immediate original result."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.md",
+          "line": 40,
+          "supports": "Selected ChooseRiskTreatment CommandId."
+        }
+      ],
+      "regressionNeeded": [
+        "Record assessment then reuse its accepted command identity with different rationale, assessor or original ExpectedRevision: conflict/no append.",
+        "Exact original assessment/treatment retry after later evaluation changes returns original result.",
+        "Persist and reload owner before replay assertions."
+      ],
+      "knownFamily": "Residual risk evaluation identity/replay migration; OPS-15/ASSURE-11 acceptance source family.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Evidence/AuthorizeEvidenceRequestActionCompletionUseHandler.cs",
+      "sha256": "fdafb3e002b9e1f3a3a5bc0a89f98a278e0ef35ecf61de9fd3a440f087d99f1b",
+      "signals": {
+        "authority_gap": 0.46,
+        "invariant_gap": 0.43,
+        "recovery_gap": 0.46,
+        "incomplete_path": 0.68
+      },
+      "currentSha256": "fdafb3e002b9e1f3a3a5bc0a89f98a278e0ef35ecf61de9fd3a440f087d99f1b",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "The concrete source adapter verifies exact accepted request, immutable receiver intent, action/program/generation and cited selection; generic AuthorizeSourceUse verifies the receiving binding and owns reservations. The current terminal action branch distinguishes canceled (requires abort and superseded source) from completed (recover forward). Existing cancellation-recovery regressions cover a persisted cancel before process checkpoint and fence unacquired uses. No reachable missing path was demonstrated.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Evidence/AuthorizeEvidenceRequestActionCompletionUseHandler.cs",
+          "line": 52,
+          "supports": "Terminal action cancellation/completion recovery disposition."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Processes/SourceUseCancellationRecoveryTests.cs",
+          "line": 26,
+          "supports": "Crash-after-cancel evidence recovery across stages."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "S26 source-use action-completion protocol; cancellation recovery already corrected.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Evidence/GetEvidenceArtifactMetadataHandler.cs",
+      "sha256": "02e7c5ff88f19893a3cee8d0b9e6c98a580ad9962dec9b1e0e089e6fa1bb9dbb",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.55,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.22
+      },
+      "currentSha256": "02e7c5ff88f19893a3cee8d0b9e6c98a580ad9962dec9b1e0e089e6fa1bb9dbb",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "This query delegates current artifact disclosure to EvidenceArtifactAccess and authoritative source validation to the metadata reader. It requires access before reading and again before returning, then checks the captured source. Tests explicitly distinguish exact artifact grant from known UUID, hide existing and absent artifacts alike without authorization, and cover source changes during read. No missing duplicate policy in this file is actionable.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Evidence/GetEvidenceArtifactMetadataHandler.cs",
+          "line": 12,
+          "supports": "Authorization before metadata read."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/GetEvidenceArtifactMetadataHandler.cs",
+          "line": 18,
+          "supports": "Authorization rechecked before return."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Evidence/GetEvidenceArtifactMetadataHandler.cs",
+          "line": 21,
+          "supports": "Captured metadata source checked."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+          "line": 41,
+          "supports": "Exact native artifact grant required."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+          "line": 121,
+          "supports": "Existing and absent artifact hidden without grant."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+          "line": 287,
+          "supports": "Source/authority change during read."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+          "line": 305,
+          "supports": "Incomplete enumeration denied."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Current artifact disclosure query/source validation.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "sha256": "d307cc6b4aaee14683d235ad66324ca17e64033ebe415f5c40fc36bc0ef00c05",
+      "signals": {
+        "authority_gap": 0.52,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.5
+      },
+      "currentSha256": "d307cc6b4aaee14683d235ad66324ca17e64033ebe415f5c40fc36bc0ef00c05",
+      "matchesReviewedSha": true,
+      "classification": "supporting_duplicate",
+      "severity": "P2",
+      "finding": "FND-01: Supporting owner gap for close-freeze original intent binding.",
+      "rationale": "FreezeClose recognizes prior snapshot identity before checking expectedRevision, and SameSnapshot compares content/actor/role/time without recording the original expected revision. The handler compensates for changing server time but still has no selected accepted intent with the authored expected revision. This supports the same FND-01 finding; do not count it as another defect. Owner state/OCC, snapshot lineage and live range checks are present.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 524,
+          "supports": "FreezeClose entry."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 531,
+          "supports": "Existing snapshot retry branch precedes current expected revision check."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+          "line": 1085,
+          "supports": "SameSnapshot omits original authored ExpectedRevision."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Operations/TypeIIPeriodTests.cs",
+          "line": 239,
+          "supports": "Existing snapshot freeze/amendment lineage coverage."
+        }
+      ],
+      "regressionNeeded": [
+        "Include owner-level changed original ExpectedRevision and hydrated selected-binding tests with FND-01."
+      ],
+      "knownFamily": "Type II period close identity/replay, same finding as handler.",
+      "prerequisite": null,
+      "relatedFinding": "FND-01"
+    },
+    {
+      "path": "src/Compliance.Core/Features/UserIdentities/MaterializeIdentityRecoveryPreparationHandler.cs",
+      "sha256": "ed3ef98f1e34eae7237d961fede7461e61a30a9e6631837553c0447c1f63c49e",
+      "signals": {
+        "authority_gap": 0.67,
+        "invariant_gap": 0.51,
+        "recovery_gap": 0.47,
+        "incomplete_path": 0.21
+      },
+      "currentSha256": "ed3ef98f1e34eae7237d961fede7461e61a30a9e6631837553c0447c1f63c49e",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "The adapter verifies the source recovery claim and exact process realm/root/logical ID/generation/immutable intent, then checks account/old/replacement identity capsules before applying a native target fact. Internal receiver authorization is registered for the command. The generic support layer is intentional shared implementation rather than omitted correctness checks.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/MaterializeIdentityRecoveryPreparationHandler.cs",
+          "line": 18,
+          "supports": "Exact source/process operation binding."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/MaterializeIdentityRecoveryPreparationHandler.cs",
+          "line": 29,
+          "supports": "Exact recovery account and identity capsules."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/MaterializeIdentityRecoveryPreparationHandler.cs",
+          "line": 40,
+          "supports": "Native receiver application."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryProcessTests.cs",
+          "line": 498,
+          "supports": "Missing or mismatched proof rejected."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Implemented identity recovery preparation receiver.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs",
+      "sha256": "1e8416aa17a22d31a5645b9f9522ba3cba453e36397efaf90aedde59c7e0ca0b",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.39
+      },
+      "currentSha256": "1e8416aa17a22d31a5645b9f9522ba3cba453e36397efaf90aedde59c7e0ca0b",
+      "matchesReviewedSha": true,
+      "classification": "actionable_replay_defect",
+      "severity": "P2",
+      "finding": "FND-03: Ratification handler rejects every immediate original successful retry before owner Retry.",
+      "rationale": "The catalog itself retains exact authored request JSON, actor and original response and can replay it. However the actual handler first requires current catalog sequence equal the original ExpectedRatificationSequence and request.RuleVersion greater than current active ratification. Both conditions are false immediately after the first accepted ratification. Thus the existing owner Retry is unreachable for an ordinary accepted HTTP retry, even with unchanged current professional authority. The request also lacks selected client CommandId/owner ExpectedRevision and the handler keys the dictionary by context.RequestId. Current staff/duty checks are valid current authorization and are not the reported defect.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RatifyIndependenceRuleVersionHandler.cs",
+          "line": 21,
+          "supports": "Current draft revalidation occurs before accepted operation resolution."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RatifyIndependenceRuleVersionHandler.cs",
+          "line": 31,
+          "supports": "Original sequence/version are rejected after successful append."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/RatifyIndependenceRuleVersionHandler.cs",
+          "line": 47,
+          "supports": "Only later invokes catalog with transport RequestId."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs",
+          "line": 84,
+          "supports": "Catalog Retry compares original request/actor."
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs",
+          "line": 149,
+          "supports": "Retained decision can return original response."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/IndependenceRuleRatificationCatalogTests.cs",
+          "line": 11,
+          "supports": "Existing test checks monotonic versions but not handler retry."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.md",
+          "line": 109,
+          "supports": "Selected typed CommandId, owner ExpectedRevision and immediate original result."
+        }
+      ],
+      "regressionNeeded": [
+        "Run handler twice with one accepted client command and original sequence/version: second returns original view/no append.",
+        "Exact retry after newer draft and newer ratification still returns original view under current authorization.",
+        "Same command with changed digest/source/actor/original revision conflicts."
+      ],
+      "knownFamily": "Residual professional rule ratification identity/replay migration.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Operations/GenerateDueControlOccurrencesHandler.cs",
+      "sha256": "d016570084540054c49630b31186a689849c4b655cd605d0b6473dc28fad2428",
+      "signals": {
+        "authority_gap": 0.34,
+        "invariant_gap": 0.58,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.3
+      },
+      "currentSha256": "d016570084540054c49630b31186a689849c4b655cd605d0b6473dc28fad2428",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "Generation key is the logical ID; authored digest, source selection and target intents are frozen in native admission. Accepted operation is resolved before reselecting current due occurrences. A committed fan-out reactor/process materializes independent occurrence owners. The handler not directly invoking each receiver is required choreography, not missing behavior. Existing tests cover frozen selection and durable fan-out recovery.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Operations/GenerateDueControlOccurrencesHandler.cs",
+          "line": 34,
+          "supports": "Generation key/logical ID and authored digest."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/GenerateDueControlOccurrencesHandler.cs",
+          "line": 48,
+          "supports": "Accepted operation resolution precedes current selection."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/GenerateDueControlOccurrencesHandler.cs",
+          "line": 57,
+          "supports": "Immutable target selection/intent."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Operations/GenerateDueControlOccurrencesHandler.cs",
+          "line": 71,
+          "supports": "Native executor admission."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Operations/GenerateDueControlOccurrencesHandlerTests.cs",
+          "line": 1,
+          "supports": "Handler admission/selection tests."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs",
+          "line": 1,
+          "supports": "Independent receiver fan-out/recovery tests."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Implemented native recurring occurrence selection/fan-out process.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Risks/RiskDraft.cs",
+      "sha256": "dfd630a7be2b57f62b0108f78c6ee6e26c6990e3145e6d8007b05ff4736fa5b7",
+      "signals": {
+        "authority_gap": 0.51,
+        "invariant_gap": 0.49,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.21
+      },
+      "currentSha256": "dfd630a7be2b57f62b0108f78c6ee6e26c6990e3145e6d8007b05ff4736fa5b7",
+      "matchesReviewedSha": true,
+      "classification": "actionable_replay_defect",
+      "severity": "P2",
+      "finding": "FND-05: Draft create binding omits original actor; revisions have no replay identity.",
+      "rationale": "Create replay compares program/createRequestId/normalized identifier/initial content but never compares original actor identity, so the same creation identity with a different actor is accepted as original success. Revise lacks CommandId and checks current revision before any accepted operation lookup, so exact accepted revision retry conflicts after its own append. Existing draft test intentionally proves stale-version rejection and original create replay, but does not distinguish accepted revision retry or changed original actor. Create still derives RiskId from normalized identifier, whereas selected contract requires authored RiskId.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskDraft.cs",
+          "line": 47,
+          "supports": "Create authored actor inputs."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskDraft.cs",
+          "line": 56,
+          "supports": "Original create comparison omits actor."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Risks/RiskDraft.cs",
+          "line": 77,
+          "supports": "Revise lacks command identity and resolves only current revision."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Risks/RiskDraftTests.cs",
+          "line": 32,
+          "supports": "Original creation/stale revision test, no actor/accepted revision retry case."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.md",
+          "line": 62,
+          "supports": "Selected client RiskId for draft creation."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.md",
+          "line": 189,
+          "supports": "Selected CommandId for revise."
+        }
+      ],
+      "regressionNeeded": [
+        "Create with one actor then retry same creation ID/content as different actor: conflict/no append.",
+        "Revise with one CommandId, later revise again, retry original command: original Unit/no append.",
+        "Changed original expected revision/content under same CommandId conflicts.",
+        "Verify authored RiskId is preserved rather than replaced by derived identifier identity."
+      ],
+      "knownFamily": "Residual risk draft native identity/replay migration.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/Tenants/ActivateTenantHandler.cs",
+      "sha256": "0ba99bd2ed047900bae3edae881a0f3b2240b8146c25926dec73f2db05da267d",
+      "signals": {
+        "authority_gap": 0.33,
+        "invariant_gap": 0.66,
+        "recovery_gap": 0.47,
+        "incomplete_path": 0.24
+      },
+      "currentSha256": "0ba99bd2ed047900bae3edae881a0f3b2240b8146c25926dec73f2db05da267d",
+      "matchesReviewedSha": true,
+      "classification": "known_implementation_gap",
+      "severity": "P3",
+      "finding": "FND-08: Selected typed activation operation identity remains unimplemented; current terminal shortcut is intentional.",
+      "rationale": "The selected catalog calls for CommandId, while the current internal request contains only tenant/admin/email. There is no selected native binding for changed authored activation intent. However already-activated and registration-rejected returns are intentional reactor checkpoint behavior, directly covered by tests, and current initial administrator affiliation/assignment episode/permission readiness are checked before first activation. Do not report the existing terminal no-op as an unauthorized activation or proven new invariant defect. Treat typed command migration as known remaining work; preserve current later-administrator checkpoint semantics.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Tenants/ActivateTenantHandler.cs",
+          "line": 13,
+          "supports": "Rejected/activated terminal outcomes intentionally checkpoint reactors."
+        },
+        {
+          "path": "src/Compliance.Core/Features/Tenants/ActivateTenantHandler.cs",
+          "line": 23,
+          "supports": "Fresh activation verifies client personnel and exact membership episode."
+        },
+        {
+          "path": "src/Compliance.Common/Features/Tenants/ActivateTenant.cs",
+          "line": 6,
+          "supports": "Current request lacks typed CommandId."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Tenants/ActivateTenantReadinessTests.cs",
+          "line": 51,
+          "supports": "Later administrator activation checkpoints already active tenant."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/Tenants/ActivateTenantReadinessTests.cs",
+          "line": 85,
+          "supports": "Rejected slug checkpoints without administrator projection."
+        },
+        {
+          "path": "docs/product/audits/2026-10-23/remaining-command-identities.md",
+          "line": 9,
+          "supports": "Selected CommandId and original Unit result."
+        }
+      ],
+      "regressionNeeded": [
+        "When migrating identity, cover exact activation replay plus changed authored administrator/email under the same command and preserve distinct later-administrator no-op reactions."
+      ],
+      "knownFamily": "Residual tenant activation/internal receiver identity migration.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+      "sha256": "83dbc9815f5fefa5eb3a2d93af7ff404e5a98a3146aa086182651c194f35fa3c",
+      "signals": {
+        "authority_gap": 0.41,
+        "invariant_gap": 0.6,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.39
+      },
+      "currentSha256": "83dbc9815f5fefa5eb3a2d93af7ff404e5a98a3146aa086182651c194f35fa3c",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "Email challenges/recovery are native selected operations, with command-kind scoped selection to distinguish issue/claim/complete sharing a challenge ID. Token hashes and immutable proof references are retained, not raw codes; challenge ownership/expiration/replacement binding and settled recovery claim fences are checked. Delivery behavior is in its separate process with unknown SMTP outcome reconciliation and restart coverage. No concrete new invariant or replay defect follows from this file score.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+          "line": 57,
+          "supports": "Native acceptance selected by command kind."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+          "line": 139,
+          "supports": "Native issue challenge fact."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+          "line": 207,
+          "supports": "Claim binds exact challenge and replacement."
+        },
+        {
+          "path": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+          "line": 266,
+          "supports": "Recovery completion native fact."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/EmailAddressTests.cs",
+          "line": 147,
+          "supports": "Challenge identity reuse rejected."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/EmailAddressTests.cs",
+          "line": 169,
+          "supports": "Recovery requires verified owned email."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/EmailAddressTests.cs",
+          "line": 187,
+          "supports": "Proof binds one replacement."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs",
+          "line": 61,
+          "supports": "Unknown SMTP result reconciled before resend."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/UserIdentities/EmailChallengeDeliveryProcessTests.cs",
+          "line": 343,
+          "supports": "No raw token or recipient in ledger/process records."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Implemented email challenge/recovery native admission and delivery process.",
+      "prerequisite": null,
+      "relatedFinding": null
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/SetFirmStaffStatusHandler.cs",
+      "sha256": "7eab7913af0a5d0f286e9756aae14eef29df4105b080a3f1c0af34a33e6ac636",
+      "signals": {
+        "authority_gap": 0.46,
+        "invariant_gap": 0.64,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.39
+      },
+      "currentSha256": "7eab7913af0a5d0f286e9756aae14eef29df4105b080a3f1c0af34a33e6ac636",
+      "matchesReviewedSha": true,
+      "classification": "false_positive_context_gap",
+      "severity": null,
+      "finding": null,
+      "rationale": "Typed operation provenance binds CommandId, original actor/revision and authored digest. Existing native acceptance resolves before fresh status view generation; NativeOperationExecutor replays the frozen original response even after subsequent status changes. No additional duplicate current status check should be inserted ahead of accepted retry.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/SetFirmStaffStatusHandler.cs",
+          "line": 1,
+          "supports": "Selected native operation handler."
+        },
+        {
+          "path": "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
+          "line": 266,
+          "supports": "Exact original status view is retained after later status changes."
+        }
+      ],
+      "regressionNeeded": [],
+      "knownFamily": "Implemented firm staff native status mutation.",
+      "prerequisite": null,
+      "relatedFinding": null
+    }
+  ]
+}
