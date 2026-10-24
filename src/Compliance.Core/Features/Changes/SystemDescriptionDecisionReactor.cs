@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Incidents;
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using SystemDescriptionAggregate = Bdgrz.Compliance.Features.SystemDescription.SystemDescription;
@@ -44,7 +45,7 @@ public sealed partial class SystemDescriptionDecisionReactor(
                     "An approved description does not retain an exact change correlation.");
             if (correlated.DecidedAt < assessment.AssessedAt)
                 continue;
-            await bus.SendReactionAsync(new RecordSignificantChangeSystemDescriptionDecision(
+            await ImpactReactionOutcomes.SendAsync(bus, new RecordSignificantChangeSystemDescriptionDecision(
                 ev.TenantId, ev.ProgramId, changeId, assessment.ContentVersion,
                 ev.SystemDescriptionId, version.SystemDescriptionVersionId,
                 correlated.DecisionId, correlated.Decision, assessment.AssessmentSha256),
@@ -91,7 +92,7 @@ public sealed partial class SystemDescriptionDecisionReactor(
             if (correlated is null)
                 throw new InvalidOperationException(
                     "A no-change decision does not retain an exact change correlation.");
-            await bus.SendReactionAsync(new RecordSignificantChangeSystemDescriptionDecision(
+            await ImpactReactionOutcomes.SendAsync(bus, new RecordSignificantChangeSystemDescriptionDecision(
                 ev.TenantId, ev.ProgramId, ev.Decision.ChangeId,
                 currentChangeAssessment.ContentVersion, ev.SystemDescriptionId,
                 ev.Decision.VersionId, decisionId, "no_change",
@@ -108,7 +109,9 @@ public sealed partial class SystemDescriptionDecisionReactor(
             if (correlated is null)
                 throw new InvalidOperationException(
                     "A no-change decision does not retain an exact incident correlation.");
-            await bus.SendReactionAsync(new RecordComplianceIncidentSystemDescriptionDecision(
+            await ImpactReactionOutcomes.SendAsync(bus, new RecordComplianceIncidentSystemDescriptionDecision(
+                EffectIdentity.CommandId(ev.Metadata.EventId, "incident:system-description-decision",
+                    $"{ev.TenantId}:{ev.Decision.ChangeId}", null),
                 ev.TenantId, ev.ProgramId, ev.Decision.ChangeId,
                 currentIncidentAssessment.ContentVersion, ev.SystemDescriptionId,
                 ev.Decision.VersionId, decisionId, currentIncidentAssessment.AssessmentSha256),

@@ -63,7 +63,7 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
         var assessorUserId = Uuid.CreateVersion4();
         var assessorMemberId = RbacIds.Member(tenantId, assessorUserId);
         await scenario.SaveAsync(AssessedIncident(tenantId, programId, incidentId, assessorMemberId));
-        var request = new RecordComplianceIncidentResolution(tenantId, programId, incidentId, 2,
+        var request = new RecordComplianceIncidentResolution(Uuid.CreateVersion4(), tenantId, programId, incidentId, 2,
             new ComplianceIncidentResolutionContent("The issue was contained.", Now, [], []));
         var permissions = new RecordingPermissionAuthorizer(false);
 

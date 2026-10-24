@@ -23,8 +23,7 @@ public sealed class LinkImpactReviewWorkHandler(IAggregateExecutor executor,
             request.ProgramId, request.ChangeId), ct).ConfigureAwait(false);
         if (observed.Current is not { CurrentAssessment: { } assessment } state ||
             assessment.ContentVersion != request.ContentVersion)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "The requested significant-change assessment is no longer current."));
+            return Result.Failure(NotCurrent(observed, request.ContentVersion));
         var workItemIds = assessment.RelatedReviewWorkIds.Concat(
                 assessment.RelatedCorrectiveActionIds)
             .OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray();
@@ -45,12 +44,28 @@ public sealed class LinkImpactReviewWorkHandler(IAggregateExecutor executor,
                             currentAssessment.RelatedCorrectiveActionIds)
                         .OrderBy(static id => id.ToString(), StringComparer.Ordinal)
                         .SequenceEqual(workItemIds))
-                    return AggregateOutcome.Discard(Result.Failure(new RequestError(
-                        RequestErrorKind.Conflict,
-                        "The significant-change assessment changed while ownership was checked.")));
+                    return AggregateOutcome.Discard(Result.Failure(NotCurrent(change, request.ContentVersion)));
                 return CommandFailureRequestAdapter.ToOutcome(change.LinkReviewWork(change.Revision,
                     workItemIds, assessment.AssessedByMemberId, assessment.AssessedByDisplay,
                     clock.GetUtcNow()));
             }, context, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Separates an assessment that a newer content version has replaced (terminal) or that the owner does not show
+    ///     yet (transient) from a request that never matched this change.
+    /// </summary>
+    static RequestError NotCurrent(SignificantChange change, int contentVersion)
+    {
+        if (change.Current is not { } current)
+            return new RequestError(RequestErrorKind.Conflict,
+                "The requested significant-change assessment is no longer current.");
+        if (contentVersion > current.CurrentVersionNumber)
+            return ImpactReactionOutcomes.NotReady("The requested significant-change assessment is not visible yet.");
+        return current.Assessments.Any(item => item.ContentVersion == contentVersion) &&
+               contentVersion < current.CurrentVersionNumber
+            ? ImpactReactionOutcomes.Superseded
+            : new RequestError(RequestErrorKind.Conflict,
+                "The requested significant-change assessment is no longer current.");
     }
 }

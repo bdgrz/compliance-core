@@ -2,6 +2,10 @@ using Bdgrz.Compliance.Hosting.Persistence;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.Remediation;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -31,15 +35,19 @@ public sealed class ComplianceIncident : Aggregate
     readonly Uuid _programId;
     ComplianceIncidentView? _current;
 
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
     public long Revision => _current?.Revision ?? 0;
     public ComplianceIncidentView? Current => _current;
 
-    public ComplianceIncident(Uuid tenantId, Uuid programId, Uuid incidentId)
+    public ComplianceIncident(Uuid tenantId, Uuid programId, Uuid incidentId, Uuid selectedCommandId = default)
         : base(incidentId, new EventStreamAddress(tenantId.ToString(), "compliance-incidents",
             incidentId.ToString()))
     {
         _tenantId = tenantId;
         _programId = programId;
+        Acceptance = new NativeAcceptance(selectedCommandId);
         On<ComplianceIncidentRecorded>(Apply);
         On<ComplianceIncidentRevised>(Apply);
         On<ComplianceIncidentImpactAssessed>(Apply);
@@ -67,14 +75,34 @@ public sealed class ComplianceIncident : Aggregate
             "record", creating: true);
     }
 
-    public CommandFailure? Revise(long expectedRevision, ComplianceIncidentContent content,
-        string changeReason, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt)
+    /// <summary>Checks a revision against hydrated state without raising anything.</summary>
+    public CommandFailure? PrepareRevise(long expectedRevision, ComplianceIncidentContent content,
+        string changeReason, Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt) =>
+        PlanRevise(expectedRevision, content, changeReason, actorMemberId, actorDisplay, revisedAt, out var state) ??
+        CheckTransition(state!, actorMemberId, "revise");
+
+    /// <summary>Accepts the revision as the native fact of <paramref name="operation" />.</summary>
+    public CommandFailure? Revise(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, ComplianceIncidentContent content, string changeReason, Uuid actorMemberId,
+        string actorDisplay)
     {
+        if (OwnOperation(operation, firstResponse) is { } foreign)
+            return foreign;
+        if (PlanRevise(expectedRevision, content, changeReason, actorMemberId, actorDisplay, operation.AcceptedAt,
+                out var state) is { } failure)
+            return failure;
+        return Emit(state!, actorMemberId, operation.AcceptedAt,
+            (tenant, subject, revision, actor, snapshot, at) => new ComplianceIncidentRevised(tenant, subject,
+                revision, actor, snapshot, at, operation.LogicalId, operation, firstResponse), "revise");
+    }
+
+    CommandFailure? PlanRevise(long expectedRevision, ComplianceIncidentContent content, string changeReason,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset revisedAt, out ComplianceIncidentView? state)
+    {
+        state = null;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The compliance incident was not found.");
         changeReason = Clean(changeReason);
-        if (SameRevision(current, content, changeReason, actorMemberId, actorDisplay, revisedAt))
-            return null;
         if (expectedRevision != Revision)
             return StaleRevision();
         if (current.Status == "resolved" || current.Versions.Count >= MaximumVersions)
@@ -89,7 +117,7 @@ public sealed class ComplianceIncident : Aggregate
             return CommandFailure.StateConflict("A correction must change incident content.");
         var version = NewVersion(normalized, current.CurrentVersionNumber + 1,
             actorMemberId, actorDisplay.Trim(), revisedAt, changeReason);
-        var state = current with
+        state = current with
         {
             Status = "recorded",
             Revision = Revision + 1,
@@ -100,20 +128,36 @@ public sealed class ComplianceIncident : Aggregate
             ActorDisplay = actorDisplay.Trim(),
             UpdatedAt = revisedAt,
         };
-        return Emit(state, actorMemberId, revisedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new ComplianceIncidentRevised(tenant, subject, revision, actor, snapshot, at),
-            "revise");
+        return null;
     }
 
-    public CommandFailure? Assess(long expectedRevision,
-        ComplianceIncidentImpactAssessmentContent content, Uuid assessorMemberId,
-        string assessorDisplay, DateTimeOffset assessedAt)
+    /// <summary>Checks an assessment against hydrated state without raising anything.</summary>
+    public CommandFailure? PrepareAssess(long expectedRevision, ComplianceIncidentImpactAssessmentContent content,
+        Uuid assessorMemberId, string assessorDisplay, DateTimeOffset assessedAt) =>
+        PlanAssess(expectedRevision, content, assessorMemberId, assessorDisplay, assessedAt, out var state) ??
+        CheckTransition(state!, assessorMemberId, "assessment");
+
+    /// <summary>Accepts the assessment as the native fact of <paramref name="operation" />.</summary>
+    public CommandFailure? Assess(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, ComplianceIncidentImpactAssessmentContent content, Uuid assessorMemberId,
+        string assessorDisplay)
     {
+        if (OwnOperation(operation, firstResponse) is { } foreign)
+            return foreign;
+        if (PlanAssess(expectedRevision, content, assessorMemberId, assessorDisplay, operation.AcceptedAt,
+                out var state) is { } failure)
+            return failure;
+        return Emit(state!, assessorMemberId, operation.AcceptedAt,
+            (tenant, subject, revision, actor, snapshot, at) => new ComplianceIncidentImpactAssessed(tenant, subject,
+                revision, actor, snapshot, at, operation.LogicalId, operation, firstResponse), "assessment");
+    }
+
+    CommandFailure? PlanAssess(long expectedRevision, ComplianceIncidentImpactAssessmentContent content,
+        Uuid assessorMemberId, string assessorDisplay, DateTimeOffset assessedAt, out ComplianceIncidentView? state)
+    {
+        state = null;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The compliance incident was not found.");
-        if (SameAssessment(current, content, assessorMemberId, assessorDisplay, assessedAt))
-            return null;
         if (expectedRevision != Revision)
             return StaleRevision();
         if (current.Status == "resolved")
@@ -144,7 +188,7 @@ public sealed class ComplianceIncident : Aggregate
             normalized.RequiresSystemDescriptionReview, normalized.CustomerDataAffected,
             normalized.AvailabilitySlaAffected, assessorMemberId,
             assessorDisplay.Trim(), assessedAt);
-        var state = current with
+        state = current with
         {
             Status = normalized.RequiresSystemDescriptionReview ? "needs_review" : "assessed",
             Revision = Revision + 1,
@@ -153,29 +197,42 @@ public sealed class ComplianceIncident : Aggregate
             ActorDisplay = assessorDisplay.Trim(),
             UpdatedAt = assessedAt,
         };
-        return Emit(state, assessorMemberId, assessedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new ComplianceIncidentImpactAssessed(tenant, subject, revision, actor, snapshot, at),
-            "assessment");
+        return null;
     }
 
-    public CommandFailure? RecordSystemDescriptionDecision(long expectedRevision,
-        string decision, Uuid decisionId, string rationale, Uuid actorMemberId,
+    /// <summary>Checks a description decision against hydrated state without raising anything.</summary>
+    public CommandFailure? PrepareSystemDescriptionDecision(string decision, Uuid decisionId, string rationale,
+        Uuid actorMemberId, string actorDisplay, DateTimeOffset decidedAt) =>
+        PlanDecision(decision, decisionId, rationale, actorMemberId, actorDisplay, decidedAt, out var state) ??
+        CheckTransition(state!, actorMemberId, "description_decision");
+
+    /// <summary>
+    ///     Accepts the description decision as the native fact of <paramref name="operation" />. A decision is bound
+    ///     to the current assessment by the command that carries the assessment digest, so it takes no caller revision.
+    /// </summary>
+    public CommandFailure? RecordSystemDescriptionDecision(OperationProvenance operation,
+        ImmutableContentRef firstResponse, string decision, Uuid decisionId, string rationale, Uuid actorMemberId,
         string actorDisplay, DateTimeOffset decidedAt)
     {
+        if (OwnOperation(operation, firstResponse) is { } foreign)
+            return foreign;
+        if (PlanDecision(decision, decisionId, rationale, actorMemberId, actorDisplay, decidedAt,
+                out var state) is { } failure)
+            return failure;
+        return Emit(state!, actorMemberId, decidedAt,
+            (tenant, subject, revision, actor, snapshot, at) => new ComplianceIncidentSystemDescriptionDecisionRecorded(
+                tenant, subject, revision, actor, snapshot, at, operation.LogicalId, operation, firstResponse),
+            "description_decision");
+    }
+
+    CommandFailure? PlanDecision(string decision, Uuid decisionId, string rationale, Uuid actorMemberId,
+        string actorDisplay, DateTimeOffset decidedAt, out ComplianceIncidentView? state)
+    {
+        state = null;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The compliance incident was not found.");
         decision = Clean(decision).ToLowerInvariant();
         rationale = Clean(rationale);
-        if (current.SystemDescriptionDecisions.Count > 0 &&
-            current.SystemDescriptionDecisions[^1] is { } prior && prior.DecisionId == decisionId)
-            return prior.ContentVersion == current.CurrentVersionNumber && prior.Decision == decision &&
-                   prior.Rationale == rationale && prior.DecidedByMemberId == actorMemberId &&
-                   prior.DecidedByDisplay == actorDisplay.Trim() && prior.DecidedAt == decidedAt
-                ? null
-                : CommandFailure.StateConflict("An incident description-decision identity cannot be reused.");
-        if (expectedRevision != Revision)
-            return StaleRevision();
         var assessment = current.CurrentAssessment;
         if (assessment is null || !assessment.RequiresSystemDescriptionReview || current.Status != "needs_review")
             return CommandFailure.StateConflict("This incident has no unresolved system-description review.");
@@ -188,7 +245,7 @@ public sealed class ComplianceIncident : Aggregate
         var disposition = new ComplianceIncidentSystemDescriptionDecisionView(
             current.CurrentVersionNumber, decision, decisionId, rationale,
             actorMemberId, actorDisplay.Trim(), decidedAt);
-        var state = current with
+        state = current with
         {
             Status = "assessed",
             Revision = Revision + 1,
@@ -197,63 +254,104 @@ public sealed class ComplianceIncident : Aggregate
             ActorDisplay = actorDisplay.Trim(),
             UpdatedAt = decidedAt,
         };
-        return Emit(state, actorMemberId, decidedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new ComplianceIncidentSystemDescriptionDecisionRecorded(tenant, subject, revision, actor, snapshot, at),
-            "description_decision");
+        return null;
     }
 
-    public CommandFailure? Resolve(long expectedRevision,
-        ComplianceIncidentResolutionContent content, Uuid resolverMemberId,
-        string resolverDisplay, DateTimeOffset recordedAt)
+    /// <summary>Checks a resolution against hydrated state without raising anything.</summary>
+    public CommandFailure? PrepareResolve(long expectedRevision, VerifiedIncidentResolution resolution,
+        Uuid resolverMemberId, string resolverDisplay, DateTimeOffset recordedAt) =>
+        PlanResolve(expectedRevision, resolution, resolverMemberId, resolverDisplay, recordedAt, out var state) ??
+        CheckTransition(state!, resolverMemberId, "resolution");
+
+    /// <summary>
+    ///     Accepts the resolution as the native fact of <paramref name="operation" />. The follow-up completions in
+    ///     <paramref name="resolution" /> were verified against their committed native facts by the caller.
+    /// </summary>
+    public CommandFailure? Resolve(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, VerifiedIncidentResolution resolution, Uuid resolverMemberId, string resolverDisplay)
     {
+        if (OwnOperation(operation, firstResponse) is { } foreign)
+            return foreign;
+        if (PlanResolve(expectedRevision, resolution, resolverMemberId, resolverDisplay, operation.AcceptedAt,
+                out var state) is { } failure)
+            return failure;
+        return Emit(state!, resolverMemberId, operation.AcceptedAt,
+            (tenant, subject, revision, actor, snapshot, at) => new IncidentResolutionRecorded(tenant, subject,
+                revision, actor, snapshot, at, operation.LogicalId, operation, firstResponse), "resolution");
+    }
+
+    CommandFailure? PlanResolve(long expectedRevision, VerifiedIncidentResolution resolution, Uuid resolverMemberId,
+        string resolverDisplay, DateTimeOffset recordedAt, out ComplianceIncidentView? state)
+    {
+        state = null;
         if (_current is not { } current)
             return CommandFailure.MissingRecord("The compliance incident was not found.");
-        if (SameResolution(current.Resolution, content, resolverMemberId, resolverDisplay))
-            return null;
         if (expectedRevision != Revision)
             return StaleRevision();
         var assessment = current.CurrentAssessment;
         if (assessment is null || current.Status != "assessed")
             return CommandFailure.StateConflict("The current incident version must be assessed and have no unresolved description review before resolution.");
         if (!ValidActor(resolverMemberId, resolverDisplay, recordedAt) || recordedAt < current.UpdatedAt ||
-            NormalizeResolution(content) is not { } normalized)
+            NormalizeResolution(resolution) is not { } normalized)
             return Invalid("Incident resolution requires an attributed resolver, rationale, and governed evidence.");
         if (assessment.RequiresSystemDescriptionReview && current.CurrentSystemDescriptionDecision is null)
             return CommandFailure.StateConflict("Incident resolution is blocked until the system-description review is decided.");
         if (!assessment.FollowUpWorkIds.OrderBy(IdKey, StringComparer.Ordinal)
-                .SequenceEqual(normalized.ResolvedFollowUpWorkIds))
+                .SequenceEqual(normalized.Completions.Select(static item => item.WorkItemId)))
             return CommandFailure.StateConflict("Every follow-up work item must be completed exactly once before incident resolution.");
         if (normalized.ResolvedAt < assessment.AssessedAt || normalized.ResolvedAt > recordedAt)
             return Invalid("The incident resolution time must follow assessment and not exceed its recording time.");
-        var resolution = new ComplianceIncidentResolutionView(current.CurrentVersionNumber,
+        var view = new ComplianceIncidentResolutionView(current.CurrentVersionNumber,
             normalized.Resolution, normalized.ResolvedAt, normalized.EvidenceArtifactIds,
-            normalized.ResolvedFollowUpWorkIds, resolverMemberId, resolverDisplay.Trim());
-        var state = current with
+            Freeze(normalized.Completions.Select(static item => item.WorkItemId).ToArray()),
+            normalized.Completions, resolverMemberId, resolverDisplay.Trim());
+        state = current with
         {
             Status = "resolved",
             Revision = Revision + 1,
-            Resolution = resolution,
+            Resolution = view,
             ActorMemberId = resolverMemberId,
             ActorDisplay = resolverDisplay.Trim(),
             UpdatedAt = recordedAt,
         };
-        return Emit(state, resolverMemberId, recordedAt,
-            static (tenant, subject, revision, actor, snapshot, at) =>
-                new IncidentResolutionRecorded(tenant, subject, revision, actor, snapshot, at),
-            "resolution");
+        return null;
     }
+
+    CommandFailure? OwnOperation(OperationProvenance operation, ImmutableContentRef firstResponse)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        return operation.LogicalId == Uuid.Empty || operation.Owner != Stream
+            ? Invalid("An incident operation requires its own logical operation.")
+            : null;
+    }
+
+    CommandFailure? CheckTransition(ComplianceIncidentView state, Uuid actorMemberId, string transition) =>
+        ValidateState(state) is not null || _current is null ||
+        !ValidTransition(_current, state, actorMemberId, transition)
+            ? Invalid("The compliance-incident transition is invalid.")
+            : null;
 
     void Apply(ComplianceIncidentRecorded ev) => ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, true, "record");
-    void Apply(ComplianceIncidentRevised ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "revise");
-    void Apply(ComplianceIncidentImpactAssessed ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "assessment");
-    void Apply(ComplianceIncidentSystemDescriptionDecisionRecorded ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "description_decision");
-    void Apply(IncidentResolutionRecorded ev) => ApplyState(ev.TenantId, ev.SubjectId,
-        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, false, "resolution");
+    void Apply(ComplianceIncidentRevised ev) => ApplyNative(ev, ev.TenantId, ev.SubjectId,
+        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, "revise");
+    void Apply(ComplianceIncidentImpactAssessed ev) => ApplyNative(ev, ev.TenantId, ev.SubjectId,
+        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, "assessment");
+    void Apply(ComplianceIncidentSystemDescriptionDecisionRecorded ev) => ApplyNative(ev, ev.TenantId, ev.SubjectId,
+        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, "description_decision");
+    void Apply(IncidentResolutionRecorded ev) => ApplyNative(ev, ev.TenantId, ev.SubjectId,
+        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, "resolution");
+
+    void ApplyNative<TFact>(TFact fact, Uuid tenantId, Uuid subjectId, long revision, Uuid? actorMemberId,
+        ComplianceIncidentView state, DateTimeOffset occurredAt, string transition)
+        where TFact : DomainEvent, INativeOperationFact
+    {
+        Acceptance.Observe(fact);
+        if (fact.Operation.LogicalId == Uuid.Empty || fact.Operation.Owner != Stream)
+            throw new InvalidOperationException("The compliance-incident event must accept its own logical operation.");
+        ApplyState(tenantId, subjectId, revision, actorMemberId, state, occurredAt, false, transition);
+    }
 
     void ApplyState(Uuid tenantId, Uuid subjectId, long revision, Uuid? actorMemberId,
         ComplianceIncidentView state, DateTimeOffset occurredAt, bool creating, string transition)
@@ -399,11 +497,19 @@ public sealed class ComplianceIncident : Aggregate
             Bounded(resolution.Resolution, 1, MaximumTextLength) && resolution.ResolvedAt >= assessment.AssessedAt &&
             resolution.EvidenceArtifactIds is not null && resolution.EvidenceArtifactIds.Count > 0 &&
             ValidIds(resolution.EvidenceArtifactIds) && resolution.ResolvedFollowUpWorkIds is not null &&
-            ValidIds(resolution.ResolvedFollowUpWorkIds) &&
+            ValidIds(resolution.ResolvedFollowUpWorkIds) && resolution.FollowUpCompletions is not null &&
             assessment.FollowUpWorkIds.OrderBy(IdKey, StringComparer.Ordinal)
                 .SequenceEqual(resolution.ResolvedFollowUpWorkIds) &&
+            resolution.FollowUpCompletions.Select(static item => item.WorkItemId)
+                .SequenceEqual(resolution.ResolvedFollowUpWorkIds) &&
+            resolution.FollowUpCompletions.All(item => ValidCompletion(item, state.TenantId)) &&
             ValidActor(resolution.ResolvedByMemberId, resolution.ResolvedByDisplay, state.UpdatedAt);
     }
+
+    static bool ValidCompletion(ComplianceIncidentFollowUpCompletionView item, Uuid tenantId) =>
+        item is { Proof: { } proof } && item.WorkItemId != Uuid.Empty &&
+        proof.Source.Realm == tenantId.ToString() && proof.Source.Area == FindingAggregate.Area &&
+        proof.EventKind == EventKind.Of(typeof(CorrectiveActionCompletedV2)) && proof.EventId != Uuid.Empty;
 
     static bool ValidStatus(ComplianceIncidentView state)
     {
@@ -497,18 +603,20 @@ public sealed class ComplianceIncident : Aggregate
         };
     }
 
-    static ComplianceIncidentResolutionContent? NormalizeResolution(ComplianceIncidentResolutionContent? content)
+    static VerifiedIncidentResolution? NormalizeResolution(VerifiedIncidentResolution? content)
     {
         if (content is null || !Bounded(content.Resolution, 1, MaximumTextLength) || content.ResolvedAt == default ||
             content.EvidenceArtifactIds is null || content.EvidenceArtifactIds.Count == 0 ||
-            !ValidIds(content.EvidenceArtifactIds) || content.ResolvedFollowUpWorkIds is null ||
-            !ValidIds(content.ResolvedFollowUpWorkIds))
+            !ValidIds(content.EvidenceArtifactIds) || content.Completions is null ||
+            content.Completions.Any(item => item is null || item.WorkItemId == Uuid.Empty) ||
+            !ValidIds(content.Completions.Select(static item => item.WorkItemId).ToArray()))
             return null;
         return content with
         {
             Resolution = content.Resolution.Trim(),
             EvidenceArtifactIds = Freeze(content.EvidenceArtifactIds.OrderBy(IdKey, StringComparer.Ordinal).ToArray()),
-            ResolvedFollowUpWorkIds = Freeze(content.ResolvedFollowUpWorkIds.OrderBy(IdKey, StringComparer.Ordinal).ToArray()),
+            Completions = Freeze(content.Completions.OrderBy(static item => IdKey(item.WorkItemId),
+                StringComparer.Ordinal).ToArray()),
         };
     }
 
@@ -533,16 +641,6 @@ public sealed class ComplianceIncident : Aggregate
         Uuid actor, string display, DateTimeOffset at) => NormalizeContent(content) is { } normalized &&
         state.Current is { } current && current.ContentSha256 == Digest(normalized) &&
         current.RecordedByMemberId == actor && current.RecordedByDisplay == display.Trim() && current.RecordedAt == at;
-    static bool SameRevision(ComplianceIncidentView state, ComplianceIncidentContent? content,
-        string reason, Uuid actor, string display, DateTimeOffset at) => NormalizeContent(content) is { } normalized &&
-        state.Current is { } current && current.ContentSha256 == Digest(normalized) && current.ChangeReason == reason &&
-        current.RecordedByMemberId == actor && current.RecordedByDisplay == display.Trim() && current.RecordedAt == at;
-    static bool SameAssessment(ComplianceIncidentView state,
-        ComplianceIncidentImpactAssessmentContent? content, Uuid actor, string display, DateTimeOffset at) =>
-        state.CurrentAssessment is { } existing && NormalizeAssessment(content) is { } normalized &&
-        existing.ContentVersion == state.CurrentVersionNumber && existing.AssessedByMemberId == actor &&
-        existing.AssessedByDisplay == display.Trim() && existing.AssessedAt == at &&
-        AssessmentDigest(existing) == Digest(normalized);
     static string AssessmentDigest(ComplianceIncidentImpactAssessmentView item) => Digest(new
     {
         item.Significance,
@@ -566,14 +664,6 @@ public sealed class ComplianceIncident : Aggregate
         ArgumentNullException.ThrowIfNull(item);
         return AssessmentDigest(item);
     }
-    static bool SameResolution(ComplianceIncidentResolutionView? existing,
-        ComplianceIncidentResolutionContent content, Uuid actor, string display) =>
-        existing is not null && NormalizeResolution(content) is { } normalized &&
-        existing.ContentVersion > 0 && existing.Resolution == normalized.Resolution &&
-        existing.ResolvedAt == normalized.ResolvedAt &&
-        existing.EvidenceArtifactIds.SequenceEqual(normalized.EvidenceArtifactIds) &&
-        existing.ResolvedFollowUpWorkIds.SequenceEqual(normalized.ResolvedFollowUpWorkIds) &&
-        existing.ResolvedByMemberId == actor && existing.ResolvedByDisplay == display.Trim();
     static bool SameVersion(ComplianceIncidentVersionView left, ComplianceIncidentVersionView right) =>
         left.Version == right.Version && left.ContentSha256 == right.ContentSha256 &&
         left.RecordedByMemberId == right.RecordedByMemberId && left.RecordedByDisplay == right.RecordedByDisplay &&
@@ -616,6 +706,7 @@ public sealed class ComplianceIncident : Aggregate
         {
             EvidenceArtifactIds = Freeze(resolution.EvidenceArtifactIds.ToArray()),
             ResolvedFollowUpWorkIds = Freeze(resolution.ResolvedFollowUpWorkIds.ToArray()),
+            FollowUpCompletions = Freeze(resolution.FollowUpCompletions.ToArray()),
         } : null,
     };
 }

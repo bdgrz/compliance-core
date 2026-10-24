@@ -27,7 +27,7 @@ public sealed partial class LinkImpactReviewWorkReactor(IProjectionCheckpointSto
             assessment.RelatedCorrectiveActionIds.Count == 0)
             return ValueTask.CompletedTask;
 
-        return bus.SendReactionAsync(new LinkImpactReviewWork(ev.TenantId,
+        return ImpactReactionOutcomes.SendAsync(bus, new LinkImpactReviewWork(ev.TenantId,
             ev.State.ProgramId, ev.SubjectId, assessment.ContentVersion), context, ct);
     }
 }

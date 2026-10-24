@@ -93,23 +93,20 @@ public sealed class ComplianceIncidentTests
         Assert.Null(incident.Assess(incident.Revision, Assessment("significant",
             customerDataAffected: true, availabilitySlaAffected: false, followUpWorkIds: [workId]),
             AssessorId, "Compliance lead", Now.AddHours(1)));
-        Assert.Null(incident.RecordSystemDescriptionDecision(incident.Revision, "no_change",
+        Assert.Null(incident.RecordSystemDescriptionDecision("no_change",
             Uuid.CreateVersion4(), "The incident response did not change the approved system description",
             ResolverId, "Compliance lead", Now.AddHours(1).AddMinutes(30)));
 
         // Act
-        var unresolved = incident.Resolve(incident.Revision, new ComplianceIncidentResolutionContent(
-            "Contained and customer records restored", Now.AddHours(2), [Uuid.CreateVersion4()], []),
-            ResolverId, "Compliance lead", Now.AddHours(2));
-        var resolved = incident.Resolve(incident.Revision, new ComplianceIncidentResolutionContent(
-            "Contained and customer records restored", Now.AddHours(2), [Uuid.CreateVersion4()], [workId]),
-            ResolverId, "Compliance lead", Now.AddHours(2));
+        var unresolved = incident.Resolve(incident.Revision, "Contained and customer records restored", Now.AddHours(2), [Uuid.CreateVersion4()], [], ResolverId, "Compliance lead", Now.AddHours(2));
+        var resolved = incident.Resolve(incident.Revision, "Contained and customer records restored", Now.AddHours(2), [Uuid.CreateVersion4()], [workId], ResolverId, "Compliance lead", Now.AddHours(2));
 
         // Assert
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(unresolved).Code);
         Assert.Null(resolved);
         Assert.Equal("resolved", incident.Current!.Status);
         Assert.Equal(workId, Assert.Single(incident.Current.Resolution!.ResolvedFollowUpWorkIds));
+        Assert.Equal(workId, Assert.Single(incident.Current.Resolution.FollowUpCompletions).WorkItemId);
         Assert.True(incident.Current.PeriodCloseEligible);
     }
 
@@ -121,12 +118,10 @@ public sealed class ComplianceIncidentTests
         Assert.Null(incident.Assess(incident.Revision, Assessment("significant",
             customerDataAffected: true, availabilitySlaAffected: false), AssessorId,
             "Compliance lead", Now.AddHours(1)));
-        Assert.Null(incident.RecordSystemDescriptionDecision(incident.Revision, "no_change",
+        Assert.Null(incident.RecordSystemDescriptionDecision("no_change",
             Uuid.CreateVersion4(), "The incident response did not change the approved system description",
             ResolverId, "Compliance lead", Now.AddHours(1).AddMinutes(30)));
-        Assert.Null(incident.Resolve(incident.Revision, new ComplianceIncidentResolutionContent(
-            "Contained and customer records restored", Now.AddHours(2), [Uuid.CreateVersion4()], []),
-            ResolverId, "Compliance lead", Now.AddHours(2)));
+        Assert.Null(incident.Resolve(incident.Revision, "Contained and customer records restored", Now.AddHours(2), [Uuid.CreateVersion4()], [], ResolverId, "Compliance lead", Now.AddHours(2)));
         var events = new AggregateScenario<ComplianceIncidentAggregate>(incident).PendingEvents.ToArray();
 
         // Act

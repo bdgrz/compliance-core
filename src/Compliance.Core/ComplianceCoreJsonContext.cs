@@ -1985,6 +1985,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.SourceFactProof<MemberReinstated>))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.SourceFactProof<TeamMemberRemoved>))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.SourceFactProof<TeamMemberAssigned>))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.SourceFactProof<Bdgrz.Compliance.Features.Remediation.CorrectiveActionCompletedV2>))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Incidents.ComplianceIncidentFollowUpCompletionView))]
 [JsonSerializable(typeof(SuspendMember))]
 [JsonSerializable(typeof(ReinstateMember))]
 [JsonSerializable(typeof(DeprovisionMember))]
