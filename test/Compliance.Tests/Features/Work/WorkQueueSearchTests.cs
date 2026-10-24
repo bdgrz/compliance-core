@@ -208,16 +208,14 @@ public sealed class WorkQueueSearchTests
             fixture.Today.AddDays(-7));
         var remediated = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today);
-        await fixture.AsAsync(fixture.OwnerUserId, new CompleteCorrectiveAction(fixture.TenantId,
-            fixture.ProgramId, remediated.FindingId, remediated.Revision,
-            Assert.Single(remediated.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport));
+        await fixture.AsAsync(fixture.OwnerUserId, fixture.Complete(remediated, Assert.Single(remediated.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport));
         await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId,
             fixture.ProgramId, "Review export", "Capture proof.", fixture.OwnerMemberId, fixture.Today));
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var client = new InMemoryKvClient();
         var evidence = new FitzEvidenceWorkItemDirectory(client);
         await using var findingScope = fixture.Provider.CreateAsyncScope();
-        var findingSource = new FindingReadSource(findingScope.ServiceProvider.GetRequiredService<IAggregateReader>(), events);
+        var findingSource = findingScope.ServiceProvider.GetRequiredService<FindingReader>();
         var corrective = new FitzCorrectiveActionWorkItemDirectory(client, findingSource, TimeProvider.System);
         var closure = new FitzFindingClosureWorkItemDirectory(client, findingSource, TimeProvider.System);
         await CatchUpAsync(events, fixture.TenantId, evidence, evidence, evidence.ApplyAsync);

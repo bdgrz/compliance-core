@@ -17,7 +17,7 @@ public sealed class FindingClosureWorkTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var finding = await ReadyAsync(fixture, fixture.OwnerUserId);
-        finding = await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(fixture.TenantId,
+        finding = await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, finding.FindingId, finding.Revision, "high", fixture.LeadMemberId,
             fixture.Today.AddDays(-7), "VPN", null, "Verification deadline passed."));
         var queue = await fixture.AsAsync(fixture.ApproverUserId,
@@ -35,9 +35,7 @@ public sealed class FindingClosureWorkTests
             new ListWorkReminders(fixture.TenantId, fixture.ProgramId));
         var digest = await fixture.AsAsync(fixture.ApproverUserId,
             new GetWorkDigest(fixture.TenantId, fixture.ProgramId));
-        var closed = (await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId, new CloseFinding(
-            fixture.TenantId, fixture.ProgramId, finding.FindingId, finding.Revision,
-            "Independently verified correction.", OperationsFixture.FullSupport, "Closure accepted."))).Value;
+        var closed = await fixture.CloseAsync(fixture.ApproverUserId, finding);
         var after = await fixture.AsAsync(fixture.ApproverUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId, "all"));
         var afterReminders = await fixture.AsAsync(fixture.ApproverUserId,
@@ -50,7 +48,7 @@ public sealed class FindingClosureWorkTests
         Assert.Equal(Assert.Single(mine.Items), detail.Item);
         Assert.Equal(item.WorkItemId, Assert.Single(reminders).WorkItemId);
         Assert.Equal(item.WorkItemId, Assert.Single(digest.Overdue).WorkItemId);
-        Assert.Equal(RemediationLedger.Closed, closed.Status);
+        Assert.Equal(FindingStates.Closed, closed.Status);
         Assert.Equal(new WorkCountsView(0, 0, 0, 0), after.Counts);
         Assert.Empty(afterReminders);
         Assert.Empty(afterDigest.Overdue);
@@ -107,7 +105,7 @@ public sealed class FindingClosureWorkTests
             fixture.ProgramId, candidate.WorkItemId, 0, fixture.ApproverMemberId));
 
         // Act
-        finding = await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(fixture.TenantId,
+        finding = await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, finding.FindingId, finding.Revision, "medium", fixture.LeadMemberId,
             finding.DueOn, "VPN", null, "Severity reassessed."));
         var queue = await fixture.AsAsync(fixture.ApproverUserId,
@@ -152,7 +150,7 @@ public sealed class FindingClosureWorkTests
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var findingScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(),
-            new FindingReadSource(findingScope.ServiceProvider.GetRequiredService<IAggregateReader>(), events), TimeProvider.System);
+            findingScope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
         var consistency = new WorkQueueReadConsistency(events, [directory]);
         var lagging = await consistency.CaptureAsync(fixture.TenantId, CancellationToken.None);
         var pattern = directory.SourcePattern(fixture.TenantId);
@@ -180,7 +178,7 @@ public sealed class FindingClosureWorkTests
         var read = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId,
             new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId, "Reviewer"),
             30, CancellationToken.None);
-        await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(fixture.TenantId,
+        await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, finding.FindingId, finding.Revision, "medium", fixture.LeadMemberId,
             finding.DueOn, "VPN", null, "Review inputs changed."));
         var changed = await consistency.ConfirmUnchangedAndCaughtUpAsync(fixture.TenantId,
@@ -204,9 +202,6 @@ public sealed class FindingClosureWorkTests
     {
         var finding = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today);
-        return await fixture.AsAsync(completerUserId, new CompleteCorrectiveAction(fixture.TenantId,
-            fixture.ProgramId, finding.FindingId, finding.Revision,
-            Assert.Single(finding.CorrectiveActions).ActionId, "Removed obsolete access.",
-            OperationsFixture.FullSupport));
+        return await fixture.AsAsync(completerUserId, fixture.Complete(finding, Assert.Single(finding.CorrectiveActions).ActionId, "Removed obsolete access.", OperationsFixture.FullSupport));
     }
 }

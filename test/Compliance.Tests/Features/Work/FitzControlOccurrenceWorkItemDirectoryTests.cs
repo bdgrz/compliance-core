@@ -51,8 +51,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         var now = DateTimeOffset.UtcNow;
         var today = DateOnly.FromDateTime(now.UtcDateTime);
         var horizon = today.AddDays(30);
-        var ledgerWork = await WorkSource.LoadAsync(sourceReader,
-            sourceScope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+        var ledgerWork = await WorkSource.LoadAsync(sourceReader, null,
             sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), fixture.TenantId,
             fixture.ProgramId, today, horizon, now, null, fixture.Boundaries,
             new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
@@ -85,8 +84,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         var horizon = today.AddDays(30);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var ledgerWork = await WorkSource.LoadAsync(sourceReader,
-            sourceScope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+        var ledgerWork = await WorkSource.LoadAsync(sourceReader, null,
             sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), fixture.TenantId,
             fixture.ProgramId, today, horizon, now, null, fixture.Boundaries,
             new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);
@@ -119,8 +117,7 @@ public sealed class FitzControlOccurrenceWorkItemDirectoryTests
         var horizon = today.AddDays(120);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var sourceReader = sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var ledgerWork = await WorkSource.LoadAsync(sourceReader,
-            sourceScope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+        var ledgerWork = await WorkSource.LoadAsync(sourceReader, null,
             sourceScope.ServiceProvider.GetRequiredService<ControlOperationsReader>(), fixture.TenantId,
             fixture.ProgramId, today, horizon, now, null, fixture.Boundaries,
             new HashSet<string>(StringComparer.Ordinal), CancellationToken.None);

@@ -1,4 +1,12 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Independence;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Features.Readiness;
+using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Tests.Features.Evaluations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
@@ -59,7 +67,7 @@ sealed class OperationsFixture
 
     public Uuid Member(Uuid userId) => RbacIds.Member(TenantId, userId);
 
-    public static async Task<OperationsFixture> CreateAsync()
+    public static async Task<OperationsFixture> CreateAsync(Func<IProcessRecordStore, IProcessRecordStore>? processStore = null)
     {
         var permissions = new ManagerPermissions();
         var boundaries = new ProgramBoundaries();
@@ -87,6 +95,12 @@ sealed class OperationsFixture
                 .AddRequestHandler<ReopenFindingHandler>()
                 .AddRequestHandler<GetFindingHandler>()
                 .AddRequestHandler<ListFindingsHandler>()
+                .AddRequestHandler<MaterializeCorrectiveActionHandler>()
+                .AddRequestHandler<AuthorizeCorrectiveActionFindingClosureUseHandler>()
+                .AddRequestHandler<CompleteFindingClosureHandler>()
+                .AddRequestHandler<SettleCorrectiveActionFindingClosureUseHandler>()
+                .AddRequestHandler<AbortFindingClosureHandler>()
+                .AddRequestAuthorizer<FindingReceiverAuthorizer>()
                 .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.OpenEvidenceRequestHandler>()
                 .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.FulfilEvidenceRequestHandler>()
                 .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.CancelEvidenceRequestHandler>()
@@ -119,6 +133,21 @@ sealed class OperationsFixture
             {
                 services.AddScoped<OperatingAuthority>();
                 services.AddScoped<ControlOperationsReader>();
+                services.AddScoped<FindingReader>();
+                services.AddScoped<FindingClosureVerifier>();
+                services.AddScoped<FindingClosureFences>();
+                services.AddSingleton<ISourceFactResolver>(provider =>
+                    new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
+                services.AddScoped<ISeparationOfDutiesWaiverProofResolver, SeparationOfDutiesWaiverProofResolver>();
+                IProcessRecordStore records = new FitzKvProcessRecordStore(
+                    new PersistenceKvClient(new InMemoryKvClient()));
+                services.AddSingleton(processStore?.Invoke(records) ?? records);
+                services.AddSingleton(FindingClosureProcess.Definition());
+                services.AddSingleton(IndependentChildMaterialization.Definition());
+                services.AddSingleton<ProcessCatalog>(provider =>
+                    new ProcessCatalog(provider.GetServices<ProcessDefinition>()));
+                services.AddScoped<ProcessDriver>();
+                services.AddScoped<ProcessRootReaction>();
                 services.AddScoped<WorkQueueReader>();
                 services.AddScoped<WorkQueueReadConsistency>();
                 services.AddSingleton<IDomainEventReader>(provider =>
@@ -373,13 +402,105 @@ sealed class OperationsFixture
         expectedRevision, commandId ?? Uuid.CreateVersion4(),
         window ?? new ControlEventWindow("test", Uuid.CreateVersion4().ToString()));
 
-    public RaiseFinding Raise(Uuid ownerMemberId, DateOnly? dueOn = null) => new(TenantId,
-        ProgramId, new FindingSource("manual", null, null, "Terminated users kept VPN access."),
+    public RaiseFinding Raise(Uuid ownerMemberId, DateOnly? dueOn = null, Uuid? findingId = null) => new(
+        findingId ?? Uuid.CreateVersion4(), TenantId, ProgramId, new FindingSource("manual", null, null, "Terminated users kept VPN access."),
         "Stale VPN access", "Two leavers retained VPN access.", "high", "VPN", ownerMemberId,
         dueOn ?? Today.AddDays(14), [new FindingLink("control", ControlId.ToString())]);
 
     public Task<FindingView> GetFindingAsync(Uuid findingId) => AsAsync(OutsiderUserId,
         new GetFinding(TenantId, ProgramId, findingId));
+
+    /// <summary>Raises a finding and returns its view.</summary>
+    public async Task<FindingView> RaiseFindingAsync(Uuid ownerMemberId, DateOnly? dueOn = null, Uuid? userId = null)
+    {
+        var registration = await AsAsync(userId ?? LeadUserId, Raise(ownerMemberId, dueOn));
+        return await GetFindingAsync(registration.FindingId);
+    }
+
+    /// <summary>Admits a corrective action, materializes it through its process, and returns the finding view.</summary>
+    public async Task<FindingView> AddActionAsync(FindingView finding, Uuid ownerMemberId, DateOnly dueOn,
+        string description = "Remove the stale access.", Uuid? userId = null, bool materialize = true)
+    {
+        var ack = await AsAsync(userId ?? LeadUserId, new AddCorrectiveAction(Uuid.CreateVersion4(), TenantId, ProgramId,
+            finding.FindingId, finding.Revision, description, ownerMemberId, dueOn));
+        Assert.NotEqual(Uuid.Empty, ack.OperationId);
+        if (materialize)
+            await MaterializeAsync(finding.FindingId);
+        return await GetFindingAsync(finding.FindingId);
+    }
+
+    /// <summary>Completes an action with one evidence reference and returns the finding view.</summary>
+    public Task<FindingView> CompleteActionAsync(Uuid userId, FindingView finding, Uuid actionId,
+        string notes = "Access removed.") => AsAsync(userId, new CompleteCorrectiveAction(Uuid.CreateVersion4(), TenantId,
+        ProgramId, finding.FindingId, finding.CorrectiveActions.Single(item => item.ActionId == actionId).Revision,
+        actionId, notes, [new EvidenceReference(0, "external", "ticket-1", "Removal ticket", "unresolved")]));
+
+    public CompleteCorrectiveAction Complete(FindingView finding, Uuid actionId, string notes,
+        IReadOnlyList<EvidenceReference> evidence) => new(Uuid.CreateVersion4(), TenantId, ProgramId, finding.FindingId,
+        finding.CorrectiveActions.Single(item => item.ActionId == actionId).Revision, actionId, notes, evidence);
+
+    public CloseFinding Close(FindingView finding, Uuid? waiverId = null, long? expectedRevision = null,
+        Uuid? commandId = null) => new(commandId ?? Uuid.CreateVersion4(), TenantId, ProgramId, finding.FindingId,
+        expectedRevision ?? finding.Revision, "Verified the removal tickets.",
+        [new EvidenceReference(0, "external", "verification-1", "Verification export", "unresolved")],
+        "Remediation verified.", waiverId);
+
+    /// <summary>Accepts a closure as a reviewer over personal HTTP, runs its process, and returns the finding view.</summary>
+    public async Task<FindingView> CloseAsync(Uuid userId, FindingView finding, Uuid? waiverId = null)
+    {
+        var request = Close(finding, waiverId);
+        var accepted = await PersonalReadinessClosureTransportTests.CloseHttpAsync(Provider, userId, request);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+        await RunClosureAsync(finding.FindingId, request.CommandId);
+        return await GetFindingAsync(finding.FindingId);
+    }
+
+    /// <summary>Starts and drives the materialization process of every admitted action of the finding.</summary>
+    public Task MaterializeAsync(Uuid findingId) =>
+        FindingProcesses.MaterializeAsync(Provider, TenantId, ProgramId, findingId);
+
+    /// <summary>Starts (if absent) the closure process of an accepted closure.</summary>
+    public Task<ProcessRecord> StartClosureAsync(Uuid findingId, Uuid commandId) =>
+        FindingProcesses.StartClosureAsync(Provider, TenantId, ProgramId, findingId, commandId);
+
+    /// <summary>The receiver command a step of the closure record builds, with the deterministic command id of the driver.</summary>
+    public async Task<IRequest<ReceiverOutcome>> ClosureStepAsync(ProcessRecord record, string stage, string receiver,
+        string? target)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var definition = scope.ServiceProvider.GetRequiredService<ProcessCatalog>().Get(FindingClosureEffects.ProcessName);
+        return (await definition.CreateReceiver(new ProcessStep(record, stage, receiver, target,
+            EffectIdentity.CommandId(record.Source.EventId, $"{FindingClosureEffects.ProcessName}:{receiver}",
+                target ?? "-", record.Episode)), scope.ServiceProvider, CancellationToken.None))!;
+    }
+
+    /// <summary>Dispatches a receiver as the trusted process principal, in its own scope.</summary>
+    public async Task<Result<ReceiverOutcome>> SendReceiverAsync(IRequest<ReceiverOutcome> command)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(command,
+            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+    }
+
+    public async Task<CorrectiveAction> ActionAsync(Uuid findingId, Uuid actionId)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new CorrectiveAction(TenantId, ProgramId, findingId, actionId));
+    }
+
+    public async Task<FindingAggregate> FindingStreamAsync(Uuid findingId)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new FindingAggregate(TenantId, ProgramId, findingId));
+    }
+
+    public ProcessKey ClosureKey(Uuid commandId) => FindingProcesses.ClosureKey(TenantId, commandId);
+
+    /// <summary>Drives the closure process of an accepted closure until it is terminal or waits.</summary>
+    public Task<ProcessRecord> RunClosureAsync(Uuid findingId, Uuid commandId) =>
+        FindingProcesses.RunClosureAsync(Provider, TenantId, ProgramId, findingId, commandId);
 
     static Result Command(CommandFailure? failure) => failure is null
         ? Result.Success

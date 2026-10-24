@@ -31,9 +31,9 @@ public sealed class ReviseRiskTreatmentActionHandler(IAggregateExecutor executor
             return replayFailure is null
                 ? Result.Success
                 : Result.Failure(CommandFailureRequestAdapter.ToRequestError(replayFailure));
-        if (!await RemediationCommands.IsActiveMemberAsync(reader, request.TenantId,
+        if (!await FindingCommands.IsActiveMemberAsync(reader, request.TenantId,
                 request.AccountableMemberId, ct).ConfigureAwait(false))
-            return Result.Failure(RemediationCommands.InactiveOwner());
+            return Result.Failure(FindingCommands.InactiveOwner());
         var evidence = await reader.HydrateAsync(new EvidenceRequestLedger(request.TenantId,
             request.ProgramId), ct).ConfigureAwait(false);
         foreach (var id in request.EvidenceRequestIds ?? [])

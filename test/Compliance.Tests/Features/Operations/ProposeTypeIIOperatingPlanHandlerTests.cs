@@ -438,6 +438,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IAggregateExecutor Executor { get; }
+        public FindingReader Findings { get; }
         public ProposeTypeIIOperatingPlanHandler Handler { get; }
 
         public Fixture()
@@ -456,7 +457,8 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             Reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             Writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-            Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader, events,
+            Findings = new FindingReader(Reader, events, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader, Findings,
                 new ControlOperationsReader(Reader, events,
                     scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Clock);
         }
@@ -479,16 +481,13 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
                 await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
             }
 
-            var findings = new RemediationLedger(TenantId, ProgramId);
-            Assert.Null(findings.Raise(FindingId,
+            await FindingSeed.RaiseAsync(provider, TenantId, ProgramId, FindingId,
                 new FindingSource("readiness_gap", Uuid.CreateVersion4(), "1", "Known opening gap."),
-                "Known opening finding", "A readiness gap remains open.", "medium",
-                "System access", MemberId, new DateOnly(2026, 12, 1), [],
-                ActorReference.ForMember(ActorMemberId, "Plan author"), Now.AddMinutes(-21)));
-            await Writer.SaveAsync(findings, new RequestDispatchContext(RequestActor.System));
-            var finding = findings.Read(FindingId, Now)!;
-            var findingIdentity = FindingContentIdentityFactory.Create(finding,
-                findings.ReadClosures(FindingId));
+                "Known opening finding", "A readiness gap remains open.", "medium", "System access", MemberId,
+                new DateOnly(2026, 12, 1), [], ActorReference.ForMember(ActorMemberId, "Plan author"),
+                Now.AddMinutes(-21));
+            var finding = (await Findings.ReadViewAsync(TenantId, ProgramId, FindingId, Now))!;
+            var findingIdentity = FindingContentIdentityFactory.Create(finding, []);
 
             var control = new ControlDraft(TenantId, ControlId);
             Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "AC-T1-01",
@@ -600,29 +599,17 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
 
         public async Task<FindingContentIdentity> ReviseFindingAsync()
         {
-            var findings = await Reader.HydrateAsync(new RemediationLedger(TenantId, ProgramId));
-            var current = findings.Read(FindingId, Now)!;
-            Assert.Null(findings.Revise(FindingId, current.Revision, "high", MemberId,
-                current.DueOn, current.AffectedScope, "Updated current finding state.",
-                "Refresh finding for the Type II opening plan.",
-                ActorReference.ForMember(ActorMemberId, "Plan author"), Now.AddMinutes(1)));
-            await Writer.SaveAsync(findings, new RequestDispatchContext(RequestActor.System));
-            var revised = findings.Read(FindingId, Now.AddMinutes(1))!;
-            return FindingContentIdentityFactory.Create(revised,
-                findings.ReadClosures(FindingId));
+            await FindingSeed.ReviseAsync(provider, TenantId, ProgramId, FindingId, "high", MemberId,
+                "Refresh finding for the Type II opening plan.", ActorReference.ForMember(ActorMemberId, "Plan author"),
+                Now.AddMinutes(1));
+            var revised = (await Findings.ReadViewAsync(TenantId, ProgramId, FindingId, Now.AddMinutes(1)))!;
+            return FindingContentIdentityFactory.Create(revised, []);
         }
 
-        public async Task SeedAdditionalFindingAsync()
-        {
-            var findings = await Reader.HydrateAsync(new RemediationLedger(TenantId, ProgramId));
-            Assert.Null(findings.Raise(SecondFindingId,
-                new FindingSource("readiness_gap", Uuid.CreateVersion4(), "2",
-                    "Another known opening gap."),
-                "Second opening finding", "A second readiness gap remains open.", "low",
-                "Data retention", MemberId, new DateOnly(2026, 12, 15), [],
-                ActorReference.ForMember(ActorMemberId, "Plan author"), Now.AddMinutes(-20)));
-            await Writer.SaveAsync(findings, new RequestDispatchContext(RequestActor.System));
-        }
+        public Task SeedAdditionalFindingAsync() => FindingSeed.RaiseAsync(provider, TenantId, ProgramId, SecondFindingId,
+            new FindingSource("readiness_gap", Uuid.CreateVersion4(), "2", "Another known opening gap."),
+            "Second opening finding", "A second readiness gap remains open.", "low", "Data retention", MemberId,
+            new DateOnly(2026, 12, 15), [], ActorReference.ForMember(ActorMemberId, "Plan author"), Now.AddMinutes(-20));
 
         static ExaminationContentReference ToReference(TypeIBaselineSourceReference source) =>
             new(source.Kind, source.RecordId, source.VersionId, source.Revision, source.ContentSha256);

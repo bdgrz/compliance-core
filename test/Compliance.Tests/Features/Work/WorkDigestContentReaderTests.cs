@@ -65,19 +65,14 @@ public sealed class WorkDigestContentReaderTests
         var restrictedActionId = Uuid.CreateVersion4();
         var restrictedFindingId = Uuid.CreateVersion4();
         var recordedAt = DateTimeOffset.UtcNow.AddMinutes(-5);
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RemediationLedger(fixture.TenantId, restrictedProgramId), ledger =>
-            {
-                var actor = ActorReference.ForMember(fixture.LeadMemberId, "Lead");
-                Assert.Null(ledger.Raise(restrictedFindingId,
-                    new FindingSource("manual", null, null, "Restricted payroll access issue."),
-                    "Restricted payroll finding", "Review payroll access", "high", "Payroll",
-                    fixture.OwnerMemberId, weekOf.AddDays(3), [], actor, recordedAt));
-                Assert.Null(ledger.AddAction(restrictedFindingId, 1, restrictedActionId,
-                    restrictedSummary, fixture.OwnerMemberId, weekOf.AddDays(3), actor,
-                    recordedAt.AddMinutes(1)));
-                return Result.Success;
-            });
+        var restrictedActor = ActorReference.ForMember(fixture.LeadMemberId, "Lead");
+        await FindingSeed.RaiseAsync(fixture.Provider, fixture.TenantId, restrictedProgramId, restrictedFindingId,
+            new FindingSource("manual", null, null, "Restricted payroll access issue."),
+            "Restricted payroll finding", "Review payroll access", "high", "Payroll", fixture.OwnerMemberId,
+            weekOf.AddDays(3), [], restrictedActor, recordedAt);
+        await FindingSeed.AddActionAsync(fixture.Provider, fixture.TenantId, restrictedProgramId, restrictedFindingId,
+            restrictedActionId, restrictedSummary, fixture.OwnerMemberId, weekOf.AddDays(3), restrictedActor,
+            recordedAt.AddMinutes(1));
         var programs = new ProgramDirectory([
             Program(fixture.TenantId, fixture.ProgramId, "Security"),
             Program(fixture.TenantId, restrictedProgramId, "Payroll"),

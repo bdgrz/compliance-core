@@ -47,7 +47,7 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
         var provenance = SourceUseReceiverSupport.Child(request.CommandId, source.CommandKind,
             request.Source.EventId, source.Header, request.Target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var settle = SettleOperation(required);
+        var settle = SettleOperationWithDisposition();
         for (var attempt = 1; ; attempt++)
         {
             try
@@ -66,7 +66,7 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
                         return AggregateOutcome.Discard(Result<Step>.Success(new Decided(decided)));
                     if (fresh.Uses.GrantOf(source.Key)?.ReservationGeneration != held?.ReservationGeneration)
                         return AggregateOutcome.Discard(Result<Step>.Success(new Stale()));
-                    var raised = settle(fresh, provenance, intent, request.Generation);
+                    var raised = settle(fresh, provenance, intent, request.Generation, required);
                     return raised.IsSuccess
                         ? AggregateOutcome.Commit(Result<Step>.Success(new Decided(SourceUseReceiverSupport.Applied(
                             NativeFactReference.Of(fresh.Stream, fresh.Acceptance.SelectedFact!)))))
@@ -100,8 +100,23 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
     /// <summary>
     ///     The pair's settle operation: raises its settlement fact on the owner. A method that returns the operation,
     ///     with explicitly typed lambda parameters, keeps the owner mutation visible to the aggregate route inventory.
+    ///     A pair whose settlement fact depends on how the use ends overrides
+    ///     <see cref="SettleOperationWithDisposition" /> instead.
     /// </summary>
-    protected abstract Func<TOwner, OperationProvenance, ImmutableContentRef, long, Result> SettleOperation();
+    protected virtual Func<TOwner, OperationProvenance, ImmutableContentRef, long, Result> SettleOperation() =>
+        throw new NotSupportedException("The pair declares no disposition-independent settle operation.");
+
+    /// <summary>
+    ///     The pair's settle operation when the settlement fact records the disposition the verified terminal source
+    ///     event required. The default wraps <see cref="SettleOperation" /> and ignores the disposition.
+    /// </summary>
+    protected virtual Func<TOwner, OperationProvenance, ImmutableContentRef, long, SourceUseSettlementDisposition, Result>
+        SettleOperationWithDisposition()
+    {
+        return (TOwner owner, OperationProvenance provenance, ImmutableContentRef intent, long generation,
+            SourceUseSettlementDisposition disposition) =>
+            SettleOperation(disposition)(owner, provenance, intent, generation);
+    }
 
     /// <summary>
     ///     The settle operation for a verified disposition. A pair whose owner must distinguish a closure fence from a

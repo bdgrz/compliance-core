@@ -591,6 +591,7 @@ public sealed class ControlLifecycleHandlerTests
                     .AddSingleton(new ControlLifecycleReleaseGate(lifecycleEnabled))
                     .AddScoped<ControlActivationSource>()
                     .AddScoped<ControlOperationsReader>()
+                    .AddScoped<FindingReader>()
                     .AddScoped<ControlImpactService>()
                     .AddScoped<IControlImpactContributor, ApplicabilityControlImpactContributor>()
                     .AddScoped<IControlImpactContributor, ResponsibilityControlImpactContributor>()
@@ -778,28 +779,23 @@ public sealed class ControlLifecycleHandlerTests
             var actionId = Uuid.CreateVersion4();
             var now = DateTimeOffset.UtcNow;
             var actor = ActorReference.ForMember(OwnerMemberId, "Owner");
-            await ProgramManagementServices.SeedAsync(Provider,
-                new RemediationLedger(tenantId ?? TenantId, programId ?? ProgramId), ledger =>
-                {
-                    Assert.Null(ledger.Raise(findingId,
-                        sourceOccurrenceId is { } sourceId
-                            ? new FindingSource("control_occurrence", sourceId, null, "Access was retained.")
-                            : new FindingSource("manual", null, null, "Access was retained."),
-                        "Stale access", "A leaver retained access.", "medium", "Accounts",
-                        OwnerMemberId, EffectiveFrom.AddMonths(1),
-                        sourceOccurrenceId is null
-                            ? [new FindingLink("control", linkReference ?? (controlId ?? ControlId).ToString())]
-                            : [], actor, now));
-                    Assert.Null(ledger.AddAction(findingId, 1, actionId, "Remove access.",
-                        OwnerMemberId, EffectiveFrom.AddMonths(1), actor, now));
-                    return CommandResult(complete
-                        ? ledger.CompleteAction(findingId, 2, actionId, "Access removed.",
-                            [artifactId is { } artifact
-                                ? new EvidenceReference(null, "artifact", artifact.ToString())
-                                : new EvidenceReference(null, "external", "https://tickets.example/1")],
-                            OwnerMemberId, actor, now)
-                        : null);
-                });
+            var (tenant, program) = (tenantId ?? TenantId, programId ?? ProgramId);
+            await FindingSeed.RaiseAsync(Provider, tenant, program, findingId,
+                sourceOccurrenceId is { } sourceId
+                    ? new FindingSource("control_occurrence", sourceId, null, "Access was retained.")
+                    : new FindingSource("manual", null, null, "Access was retained."),
+                "Stale access", "A leaver retained access.", "medium", "Accounts", OwnerMemberId,
+                EffectiveFrom.AddMonths(1),
+                sourceOccurrenceId is null
+                    ? [new FindingLink("control", linkReference ?? (controlId ?? ControlId).ToString())]
+                    : [], actor, now);
+            await FindingSeed.AddActionAsync(Provider, tenant, program, findingId, actionId, "Remove access.",
+                OwnerMemberId, EffectiveFrom.AddMonths(1), actor, now,
+                complete
+                    ? artifactId is { } artifact
+                        ? new EvidenceReference(null, "artifact", artifact.ToString())
+                        : new EvidenceReference(null, "external", "https://tickets.example/1")
+                    : null);
             return actionId;
         }
 
@@ -822,21 +818,14 @@ public sealed class ControlLifecycleHandlerTests
         public async Task<Uuid> CloseAndReopenFindingAsync(Uuid actionId, Uuid artifactId)
         {
             var closureId = Uuid.CreateVersion4();
-            var now = DateTimeOffset.UtcNow;
-            var closerMemberId = RbacIds.Member(TenantId, ReviewerUserId);
-            var closer = ActorReference.ForMember(closerMemberId, "Reviewer");
-            await ProgramManagementServices.SeedAsync(Provider,
-                new RemediationLedger(TenantId, ProgramId), ledger =>
-                {
-                    var finding = Assert.Single(ledger.ReadAll(now), item =>
-                        item.CorrectiveActions.Any(action => action.ActionId == actionId));
-                    Assert.Null(ledger.Close(finding.FindingId, finding.Revision, closureId,
-                        "Verified access is removed.",
-                        [new EvidenceReference(null, "artifact", artifactId.ToString())],
-                        "Verified.", closerMemberId, closer, now, null));
-                    return CommandResult(ledger.Reopen(finding.FindingId, finding.Revision + 1,
-                        "More accounts found.", closer, now));
-                });
+            await using var scope = Provider.CreateAsyncScope();
+            var findings = await scope.ServiceProvider.GetRequiredService<FindingReader>().ReadAsync(TenantId, ProgramId,
+                DateTimeOffset.UtcNow);
+            var finding = Assert.Single(findings.Value.Findings, item =>
+                item.CorrectiveActions.Any(action => action.ActionId == actionId));
+            await FindingSeed.CloseAsync(Provider, TenantId, ProgramId, finding.FindingId, closureId,
+                RbacIds.Member(TenantId, ReviewerUserId), new EvidenceReference(null, "artifact", artifactId.ToString()),
+                DateTimeOffset.UtcNow, reopen: true);
             return closureId;
         }
 

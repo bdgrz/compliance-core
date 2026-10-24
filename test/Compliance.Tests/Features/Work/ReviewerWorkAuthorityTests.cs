@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Independence;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Tests.Features.Controls;
 using Bdgrz.Compliance.Tests.Features.Evaluations;
 using Bdgrz.Compliance.Tests.Features.Risks;
@@ -208,11 +210,9 @@ public sealed class ReviewerWorkAuthorityTests
             operations.Today);
         finding = await operations.AsAsync(role == "completer" ? fixture.GuestUserId :
                 role == "action_owner" ? operations.ApproverUserId : operations.OwnerUserId,
-            new CompleteCorrectiveAction(operations.TenantId, operations.ProgramId,
-                finding.FindingId, finding.Revision, Assert.Single(finding.CorrectiveActions).ActionId,
-                "Corrected access.", OperationsFixture.FullSupport));
+            operations.Complete(finding, Assert.Single(finding.CorrectiveActions).ActionId, "Corrected access.", OperationsFixture.FullSupport));
         if (role == "finding_owner")
-            finding = await operations.AsAsync(operations.LeadUserId, new ReviseFinding(
+            finding = await operations.AsAsync(operations.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(),
                 operations.TenantId, operations.ProgramId, finding.FindingId, finding.Revision,
                 "high", fixture.GuestMemberId, finding.DueOn, "VPN", null, "Owner changed."));
         await fixture.CatchUpAsync();
@@ -285,6 +285,10 @@ public sealed class ReviewerWorkAuthorityTests
                     services.AddSingleton<ICommitmentDraftDirectoryReader>(operations.Commitments);
                     services.AddSingleton(operations.Provider.GetRequiredService<IControlDraftDirectoryReader>());
                     services.AddScoped<WorkQueueReader>();
+                    services.AddScoped<FindingReader>();
+                    services.AddSingleton<ISourceFactResolver>(provider =>
+                        new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
+                    services.AddScoped<ISeparationOfDutiesWaiverProofResolver, SeparationOfDutiesWaiverProofResolver>();
                     services.AddScoped<WorkQueueReadConsistency>();
                     if (projected)
                     {
@@ -297,7 +301,7 @@ public sealed class ReviewerWorkAuthorityTests
                             new FitzControlDecisionWorkItemDirectory(client, provider.GetRequiredService<IAggregateReader>(),
                                 provider.GetRequiredService<OperatingAuthority>(), new(true), new(true)));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                            new FitzFindingClosureWorkItemDirectory(client, new FindingReadSource(provider.GetRequiredService<IAggregateReader>(), events), TimeProvider.System));
+                            new FitzFindingClosureWorkItemDirectory(client, provider.GetRequiredService<FindingReader>(), TimeProvider.System));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzControlEvaluationWorkItemDirectory(client));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
@@ -436,10 +440,7 @@ public sealed class ReviewerWorkAuthorityTests
             {
                 var finding = await WorkTestData.AddActionsAsync(Operations, Operations.OwnerMemberId,
                     Operations.Today);
-                finding = await Operations.AsAsync(Operations.OwnerUserId, new CompleteCorrectiveAction(
-                    Operations.TenantId, Operations.ProgramId, finding.FindingId, finding.Revision,
-                    Assert.Single(finding.CorrectiveActions).ActionId, "Corrected access.",
-                    OperationsFixture.FullSupport));
+                finding = await Operations.AsAsync(Operations.OwnerUserId, Operations.Complete(finding, Assert.Single(finding.CorrectiveActions).ActionId, "Corrected access.", OperationsFixture.FullSupport));
                 return new Pending(finding.FindingId, finding.Revision);
             }
             if (kind == "operating_plan")
@@ -535,7 +536,7 @@ public sealed class ReviewerWorkAuthorityTests
             else if (kind == "finding_closure")
             {
                 await PersonalReadinessClosureTransportTests.CloseHttpAsync(Provider, GuestUserId,
-                    new CloseFinding(Operations.TenantId, Operations.ProgramId, pending.Id, pending.Revision,
+                    new CloseFinding(Uuid.CreateVersion4(), Operations.TenantId, Operations.ProgramId, pending.Id, pending.Revision,
                         "Independently verified correction.", OperationsFixture.FullSupport, "Closure accepted."), error);
             }
             else if (kind == "evaluation")

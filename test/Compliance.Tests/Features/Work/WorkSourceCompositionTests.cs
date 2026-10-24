@@ -111,9 +111,7 @@ public sealed class WorkSourceCompositionTests
         await using var ownedSource = fixture.Provider;
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today.AddDays(-7));
         var remediated = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today);
-        var verified = await fixture.AsAsync(fixture.OwnerUserId, new CompleteCorrectiveAction(fixture.TenantId,
-            fixture.ProgramId, remediated.FindingId, remediated.Revision,
-            Assert.Single(remediated.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport));
+        var verified = await fixture.AsAsync(fixture.OwnerUserId, fixture.Complete(remediated, Assert.Single(remediated.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport));
         var evidenceRequest = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(
             fixture.TenantId, fixture.ProgramId, "Quarterly evidence", "Reviewed export", fixture.OwnerMemberId,
             fixture.Today));
@@ -177,9 +175,10 @@ public sealed class WorkSourceCompositionTests
         var closureItem = Assert.Single(after.Value.Items, item => item.Kind == "finding_closure_review");
         await Scenario().When(new AssignWorkItem(fixture.TenantId, fixture.ProgramId, closureItem.WorkItemId,
             0, fixture.ApproverMemberId)).ExpectSuccess();
-        await PersonalReadinessClosureTransportTests.CloseHttpAsync(provider, fixture.ApproverUserId, new CloseFinding(fixture.TenantId, fixture.ProgramId, verified.FindingId,
-            verified.Revision, "Independently verified correction", OperationsFixture.FullSupport,
-            "Closure accepted"));
+        var closure = fixture.Close(verified);
+        await PersonalReadinessClosureTransportTests.CloseHttpAsync(provider, fixture.ApproverUserId, closure);
+        await FindingProcesses.RunClosureAsync(provider, fixture.TenantId, fixture.ProgramId, verified.FindingId,
+            closure.CommandId);
         await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
         await CatchUpAsync(provider, fixture.TenantId);
         var final = await Scenario().When(list).ExpectSuccess();
@@ -452,9 +451,7 @@ public sealed class WorkSourceCompositionTests
         var completed = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today.AddDays(7));
         var completedAction = Assert.Single(completed.CorrectiveActions);
-        await fixture.AsAsync(fixture.OwnerUserId, new CompleteCorrectiveAction(fixture.TenantId,
-            fixture.ProgramId, completed.FindingId, completed.Revision,
-            completedAction.ActionId, "Removed the unsafe behavior.", OperationsFixture.FullSupport));
+        await fixture.AsAsync(fixture.OwnerUserId, fixture.Complete(completed, completedAction.ActionId, "Removed the unsafe behavior.", OperationsFixture.FullSupport));
 
         return await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId,
             fixture.ProgramId, "Quarterly evidence", "Upload the approved export.",
@@ -866,9 +863,8 @@ public sealed class WorkSourceCompositionTests
         await using var provider = CreateProvider(fixture);
         RequestScenario Scenario() => RequestScenario.For(provider)
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
-        CompleteCorrectiveAction Complete(FindingView finding) => new(fixture.TenantId, fixture.ProgramId,
-            finding.FindingId, finding.Revision, Assert.Single(finding.CorrectiveActions).ActionId,
-            "Removed.", OperationsFixture.FullSupport);
+        CompleteCorrectiveAction Complete(FindingView finding) => fixture.Complete(finding,
+            Assert.Single(finding.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport);
         await Scenario().When(Complete(permitted)).ExpectSuccess();
         await CatchUpAsync(provider, fixture.TenantId);
         var before = await Scenario().When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine"))
@@ -1003,9 +999,7 @@ public sealed class WorkSourceCompositionTests
         // Act
         var mine = await Scenario().When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine"))
             .ExpectSuccess();
-        var completed = await Scenario().When(new CompleteCorrectiveAction(fixture.TenantId,
-            fixture.ProgramId, finding.FindingId, finding.Revision,
-            Assert.Single(finding.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport))
+        var completed = await Scenario().When(fixture.Complete(finding, Assert.Single(finding.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport))
             .ExpectSuccess();
         await CatchUpAsync(provider, fixture.TenantId);
         var after = await Scenario().When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine"))
@@ -1275,9 +1269,7 @@ public sealed class WorkSourceCompositionTests
             .GivenActor(ProgramManagementServices.Actor(fixture.OwnerUserId));
 
         // Act
-        await Scenario().When(new CompleteCorrectiveAction(fixture.TenantId, fixture.ProgramId,
-            finding.FindingId, finding.Revision, Assert.Single(finding.CorrectiveActions).ActionId,
-            "Removed.", OperationsFixture.FullSupport)).ExpectFailure(RequestErrorKind.Forbidden);
+        await Scenario().When(fixture.Complete(finding, Assert.Single(finding.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport)).ExpectFailure(RequestErrorKind.Forbidden);
         var mine = await Scenario().When(new ListWork(fixture.TenantId, fixture.ProgramId, "mine"))
             .ExpectSuccess();
 

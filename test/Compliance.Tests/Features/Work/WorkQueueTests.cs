@@ -51,9 +51,7 @@ public sealed class WorkQueueTests
         var finding = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today);
         var action = Assert.Single(finding.CorrectiveActions);
-        finding = await fixture.AsAsync(fixture.OwnerUserId, new CompleteCorrectiveAction(
-            fixture.TenantId, fixture.ProgramId, finding.FindingId, finding.Revision,
-            action.ActionId, "Removed obsolete access.", OperationsFixture.FullSupport));
+        finding = await fixture.AsAsync(fixture.OwnerUserId, fixture.Complete(finding, action.ActionId, "Removed obsolete access.", OperationsFixture.FullSupport));
 
         // Act
         var queue = await fixture.AsAsync(fixture.ApproverUserId,
@@ -744,10 +742,7 @@ public sealed class WorkQueueTests
             new ListWork(fixture.TenantId, fixture.ProgramId))).Items);
 
         // Act
-        await fixture.AsAsync(fixture.OwnerUserId, new CompleteCorrectiveAction(fixture.TenantId,
-            fixture.ProgramId, finding.FindingId, finding.Revision,
-            finding.CorrectiveActions[0].ActionId, "Removed.",
-            [new EvidenceReference(null, "record", "VPN-EXPORT")]));
+        await fixture.AsAsync(fixture.OwnerUserId, fixture.Complete(finding, finding.CorrectiveActions[0].ActionId, "Removed.", [new EvidenceReference(null, "record", "VPN-EXPORT")]));
 
         // Assert
         var after = await fixture.AsAsync(fixture.OwnerUserId,

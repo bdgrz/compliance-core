@@ -199,10 +199,10 @@ These remain the actionable design risks from the full source review. “Split�
 | ProviderAssuranceRegister | Providers | split | ROOTTECH-03 (split into ProviderAssuranceReport, ProviderAssuranceReview, ProviderAssuranceGap and ProviderRiskAcceptance), ROOTTECH-04 (split into ProviderAssuranceGap and ProviderRiskAcceptance) | 0.90 | `ProviderAssuranceRegister.cs` (removed by the provider assurance split, #1022) |
 | ProviderRegister | Providers | split | ROOTTECH-01 (pending) | 0.89 | source retired by S18 (`Providers/ProviderRegister.cs`) |
 | ReadinessLedger | Readiness | split | OPS-08 (pending), OPS-11 (pending), OPS-16 (pending) | 0.93 | [source](../../../../src/Compliance.Core/Features/Readiness/ReadinessLedger.cs) |
-| FindingAggregate | Remediation | split | OPS-06 (pending), OPS-11 (pending), OPS-12 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/Remediation/FindingAggregate.NativeValidation.cs) |
-| FindingMigrationAggregate | Remediation | process | OPS-12 (pending) | 0.18 | [source](../../../../src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs) |
-| RemediationLedger | Remediation | legacy | — | 0.19 | [source](../../../../src/Compliance.Core/Features/Remediation/RemediationLedger.cs) |
-| RemediationMigrationFenceAggregate | Remediation | process | OPS-12 (pending) | 0.20 | [source](../../../../src/Compliance.Core/Features/Remediation/RemediationMigrationFenceAggregate.cs) |
+| FindingAggregate | Remediation | split | OPS-06 (pending), OPS-11 (pending), OPS-12 (pending) | 0.90 | source |
+| FindingMigrationAggregate | Remediation | process | OPS-12 (pending) | 0.18 | retired by the finding and corrective action split (#1022) |
+| RemediationLedger | Remediation | legacy | — | 0.19 | retired by the finding and corrective action split (#1022) |
+| RemediationMigrationFenceAggregate | Remediation | process | OPS-12 (pending) | 0.20 | retired by the finding and corrective action split (#1022) |
 | ArtifactDisclosure | Retention | retain | ASSURE-10 (pending) | 0.17 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactDisclosure.cs) |
 | ArtifactDisposition | Retention | process | ASSURE-15 (pending) | 0.81 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactDisposition.cs) |
 | ArtifactEngagementHold | Retention | retain | ASSURE-10 (pending) | 0.15 | [source](../../../../src/Compliance.Core/Features/Retention/ArtifactEngagementHold.cs) |

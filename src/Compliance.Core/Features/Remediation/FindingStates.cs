@@ -1,6 +1,7 @@
 namespace Bdgrz.Compliance.Features.Remediation;
 
-static class FindingStates
+/// <summary>The status vocabulary of findings and corrective actions, and the materiality mapping of severities.</summary>
+public static class FindingStates
 {
     public const string Open = "open";
     public const string Remediated = "remediated";
@@ -11,4 +12,12 @@ static class FindingStates
     public const string Completed = "completed";
     public const string RiskAcceptance = "risk_acceptance";
     public const string Waiver = "waiver";
+
+    /// <summary>The work-queue materiality of a finding severity.</summary>
+    public static string Materiality(string severity) => severity switch
+    {
+        "critical" or "high" => "high",
+        "medium" => "medium",
+        _ => "low",
+    };
 }

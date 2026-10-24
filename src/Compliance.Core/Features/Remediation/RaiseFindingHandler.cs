@@ -1,51 +1,73 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Remediation;
 
 /// <summary>
-///     Records a finding. A governed source must exist in this program: a readiness gap names its
-///     assessment as the source version, and a control occurrence must have been recorded.
+///     Records a finding. A governed source must exist in this program: a readiness gap names its assessment as the
+///     source version, and a control occurrence must have been recorded. The finding identity is the logical
+///     operation, so an exact retry replays the original registration even after the finding changed.
 /// </summary>
-public sealed class RaiseFindingHandler(IAggregateExecutor executor, IAggregateReader reader,
-    IDomainEventReader events, ControlOperationsReader operatingReader, TimeProvider clock) : IRequestHandler<RaiseFinding, FindingRegistration>
+public sealed class RaiseFindingHandler(NativeOperationExecutor operations, IAggregateReader reader,
+    ControlOperationsReader operatingReader, IImmutableContentStore content, TimeProvider clock)
+    : IRequestHandler<RaiseFinding, FindingRegistration>
 {
-    public async ValueTask<Result<FindingRegistration>> HandleAsync(
-        IRequestContext<RaiseFinding> context, CancellationToken ct)
+    public async ValueTask<Result<FindingRegistration>> HandleAsync(IRequestContext<RaiseFinding> context,
+        CancellationToken ct)
     {
         var request = context.Request;
+        if (request.FindingId == Uuid.Empty)
+            return Result<FindingRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A finding requires its own identity."));
         var actor = OperationsActor.From(context.Actor, request.TenantId);
+        var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        var selected = await reader.HydrateAsync(new FindingAggregate(request.TenantId, request.ProgramId,
-            context.RequestId, context.RequestId), ct).ConfigureAwait(false);
-        if (selected.HasSelectedReceipt)
+        var snapshot = await reader.HydrateAsync(new FindingAggregate(request.TenantId, request.ProgramId,
+            request.FindingId, request.FindingId), ct).ConfigureAwait(false);
+        var provenance = FindingContent.Provenance(request.FindingId, "RaiseFinding", snapshot.Stream, actorReference,
+            null, FindingCommands.Digest(request), now);
+        var binding = AcceptedOperationBinding.Of(provenance);
+
+        FindingRaiseTerms? terms = null;
+        ImmutableContentRef? links = null;
+        FirstResponseDescriptor? response = null;
+        ImmutableContentRef? result = null;
+        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
         {
-            var failure = selected.Raise(context.RequestId, request.Source, request.Title, request.Description,
-                request.Severity, request.AffectedScope, request.OwnerMemberId, request.DueOn, request.Links ?? [],
-                ActorReference.ForMember(actor.MemberId, actor.Display), now);
-            return failure is null ? Result<FindingRegistration>.Success(new FindingRegistration(context.RequestId, 1))
-                : Result<FindingRegistration>.Failure(failure.ToRequestError());
+            var failure = FindingRules.ValidateRaise(request.Source, request.Title, request.Description, request.Severity,
+                request.AffectedScope, request.OwnerMemberId, request.DueOn, request.Links ?? []);
+            if (failure is not null)
+                return Result<FindingRegistration>.Failure(failure.ToRequestError());
+            var prepared = snapshot.PrepareRaise();
+            if (!prepared.IsSuccess)
+                return Result<FindingRegistration>.Failure(prepared.Error!);
+            if (await SourceErrorAsync(request, ct).ConfigureAwait(false) is { } sourceError)
+                return Result<FindingRegistration>.Failure(sourceError);
+            if (!await FindingCommands.IsActiveMemberAsync(reader, request.TenantId, request.OwnerMemberId, ct)
+                    .ConfigureAwait(false))
+                return Result<FindingRegistration>.Failure(FindingCommands.InactiveOwner());
+            terms = new FindingRaiseTerms(request.Source, request.Title.Trim(), request.Description.Trim(),
+                request.Severity, request.AffectedScope.Trim(), request.OwnerMemberId, request.DueOn, actorReference,
+                now, "manual", null);
+            links = await FindingContent.WriteAsync(content, request.TenantId, FindingContent.LinksSchema,
+                FindingRules.Trimmed(request.Links ?? []), ct).ConfigureAwait(false);
+            (response, result) = await FindingContent.FreezeAsync(content, request.TenantId,
+                FindingContent.RegistrationSchema, new FindingRegistration(request.FindingId, 1), ct)
+                .ConfigureAwait(false);
         }
-        if (await SourceErrorAsync(request, ct).ConfigureAwait(false) is { } sourceError)
-            return Result<FindingRegistration>.Failure(sourceError);
-        if (!await RemediationCommands.IsActiveMemberAsync(reader, request.TenantId,
-                request.OwnerMemberId, ct).ConfigureAwait(false))
-            return Result<FindingRegistration>.Failure(RemediationCommands.InactiveOwner());
-        var ready = await FindingStreamRouting.EnsureReadyAsync(executor, reader, events, context,
-            request.TenantId, request.ProgramId, now, ct).ConfigureAwait(false);
-        if (!ready.IsSuccess)
-            return Result<FindingRegistration>.Failure(ready.Error);
-        return await executor.ExecuteAsync(new FindingAggregate(request.TenantId,
-                request.ProgramId, context.RequestId, context.RequestId),
-            finding =>
-            {
-                var failure = finding.Raise(context.RequestId, request.Source, request.Title,
-                    request.Description, request.Severity, request.AffectedScope,
-                    request.OwnerMemberId, request.DueOn, request.Links ?? [],
-                    ActorReference.ForMember(actor.MemberId, actor.Display), now);
-                return CommandFailureRequestAdapter.ToOutcome(failure,
-                    new FindingRegistration(context.RequestId, 1));
-            }, context, ct).ConfigureAwait(false);
+
+        var outcome = await operations.ExecuteAsync(new NativeOperation<FindingAggregate>(binding,
+            () => new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.FindingId),
+            finding => finding.Acceptance, finding => FindingCommands.Prepared(finding.PrepareRaise(), response),
+            (FindingAggregate finding, ImmutableContentRef frozen) =>
+                finding.Raise(provenance, terms!, links!, frozen, result!, null)), context, ct).ConfigureAwait(false);
+        return await FindingContent.ResponseAsync<FindingRegistration>(content, request.TenantId, outcome, ct)
+            .ConfigureAwait(false);
     }
 
     async ValueTask<RequestError?> SourceErrorAsync(RaiseFinding request, CancellationToken ct)
@@ -60,15 +82,13 @@ public sealed class RaiseFindingHandler(IAggregateExecutor executor, IAggregateR
             case "readiness_gap":
                 if (!Uuid.TryParse(source.Version, null, out var assessmentId))
                     return missing;
-                var readiness = await reader.HydrateAsync(new ReadinessLedger(request.TenantId,
-                    request.ProgramId), ct).ConfigureAwait(false);
-                return readiness.ReadGaps(assessmentId)?.Any(gap => gap.GapId == recordId) == true
-                    ? null
-                    : missing;
-            case "control_occurrence" or "occurrence_review":
-                var operations = await operatingReader.ReadAsync(request.TenantId, request.ProgramId, ct)
+                var readiness = await reader.HydrateAsync(new ReadinessLedger(request.TenantId, request.ProgramId), ct)
                     .ConfigureAwait(false);
-                return operations.OccurrenceControlId(recordId) is null ? missing : null;
+                return readiness.ReadGaps(assessmentId)?.Any(gap => gap.GapId == recordId) == true ? null : missing;
+            case "control_occurrence" or "occurrence_review":
+                var snapshot = await operatingReader.ReadAsync(request.TenantId, request.ProgramId, ct)
+                    .ConfigureAwait(false);
+                return snapshot.OccurrenceControlId(recordId) is null ? missing : null;
             default:
                 return null;
         }

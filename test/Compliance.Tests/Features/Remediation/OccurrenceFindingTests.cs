@@ -173,6 +173,38 @@ public sealed class OccurrenceFindingTests
             item.FindingId == findingId);
     }
 
+    [Fact]
+    public async Task ShouldAdmitDefaultActionAtomicallyAndMaterializeItGivenManagementRequestedAction()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await fixture.PlanAsync();
+        var missed = (await fixture.OccurrencesAsync("missed"))[0];
+        var submitted = await fixture.AsAsync(fixture.OwnerUserId, fixture.Attest(missed));
+        var reviewed = await fixture.AsAsync(fixture.ReviewerUserId,
+            fixture.Review(submitted, "action_requested", ["Automate leaver removal."]));
+        var decisionId = reviewed.Reviews[0].DecisionId;
+        var findingId = Uuid.CreateVersion5(decisionId, "requested-action-0");
+        await RequestScenario.For(fixture.Provider).GivenActor(RequestActor.System)
+            .When(new RaiseOccurrenceFinding(fixture.TenantId, fixture.ProgramId, findingId, fixture.ControlId,
+                reviewed.OccurrenceId, decisionId.ToString(), "occurrence_review", "Automate leaver removal."))
+            .ExpectSuccess();
+
+        // Act
+        var stream = await fixture.FindingStreamAsync(findingId);
+        var before = await fixture.GetFindingAsync(findingId);
+        await fixture.MaterializeAsync(findingId);
+        var after = await fixture.GetFindingAsync(findingId);
+
+        // Assert
+        Assert.Equal(2, stream.Revision);
+        Assert.Equal(["FindingRaisedV2", "CorrectiveActionAdmitted"], stream.Facts.Select(fact => fact.GetType().Name));
+        Assert.Equal(FindingRules.RoutedActionId(findingId), Assert.Single(stream.Admitted).Operation.LogicalId);
+        Assert.Equal(0, Assert.Single(before.CorrectiveActions).Revision);
+        Assert.Equal(1, Assert.Single(after.CorrectiveActions).Revision);
+        Assert.Equal("system_process", Assert.Single(after.CorrectiveActions).AddedBy.Kind);
+    }
+
     static async Task<ControlOccurrenceAttested> AttestedAsync(ControlAttestationView attestation, long revision)
     {
         var content = await ControlOperatingContent.WriteAsync(Content, TenantId,

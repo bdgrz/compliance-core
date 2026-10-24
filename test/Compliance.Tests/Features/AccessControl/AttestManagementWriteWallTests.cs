@@ -61,7 +61,7 @@ public sealed class AttestManagementWriteWallTests
                 1, Uuid.CreateVersion4(), "accept", "Review rationale"), Actor)).Error,
             "evaluation" => (await bus.SendAsync(new StartControlEvaluation(Tenant, Program, control,
                 Uuid.CreateVersion4()), Actor)).Error,
-            "corrective" => (await bus.SendAsync(new CompleteCorrectiveAction(Tenant, Program,
+            "corrective" => (await bus.SendAsync(new CompleteCorrectiveAction(Uuid.CreateVersion4(), Tenant, Program,
                 Uuid.CreateVersion4(), 1, Uuid.CreateVersion4(), "Completed work", []), Actor)).Error,
             _ => throw new InvalidOperationException()
         };

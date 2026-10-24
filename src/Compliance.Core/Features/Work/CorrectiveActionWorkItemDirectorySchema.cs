@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-using Bdgrz.Compliance.Features.Remediation;
 
 namespace Bdgrz.Compliance.Features.Work;
 
@@ -10,11 +9,6 @@ static class CorrectiveActionWorkItemDirectorySchema
             ComplianceCoreJsonContext.Default.AccountableWorkItemProjectionRevision,
             static revision => revision.ProjectorName,
             static projectorName => [projectorName], []);
-
-    public static readonly KvDirectory<CorrectiveActionFindingContext, Uuid> FindingContexts =
-        new("finding_contexts", ComplianceCoreJsonContext.Default.CorrectiveActionFindingContext,
-            static finding => FindingKey(finding.ProgramId, finding.FindingId),
-            static key => [key.ToString()], []);
 
     public static readonly KvDirectoryIndex<AccountableWorkItemView> ByProgram = new(
         "by_program", 1, static item =>
@@ -28,9 +22,6 @@ static class CorrectiveActionWorkItemDirectorySchema
         "accountable_work_items", ComplianceCoreJsonContext.Default.AccountableWorkItemView,
         static item => WorkItemKey(item.ProgramId, item.WorkItemId),
         static key => [key.ToString()], [ByProgram, ByFinding]);
-
-    public static Uuid FindingKey(Uuid programId, Uuid findingId) =>
-        FindingAggregate.StreamId(programId, findingId);
 
     public static Uuid WorkItemKey(Uuid programId, Uuid workItemId) =>
         Uuid.CreateVersion5(programId, $"accountable-work-item:{workItemId}");

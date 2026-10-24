@@ -10,4 +10,7 @@ namespace Bdgrz.Compliance.Features.Evaluations;
 [Discriminator("bdgrz.finding.raise_from_evaluation_deviation", 1)]
 public sealed record RaiseEvaluationDeviationFinding(Uuid TenantId, Uuid ProgramId,
     Uuid FindingId, Uuid ControlId, Uuid EvaluationId, Uuid DeviationId)
-    : IRequest, IOperationsReactionRequest, ICallable;
+    : IRequest, IOperationsReactionRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => FindingId;
+}

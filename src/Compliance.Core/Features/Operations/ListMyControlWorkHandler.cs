@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     materiality, then creation, then source ID (M0-D15).
 /// </summary>
 public sealed class ListMyControlWorkHandler(IAggregateReader reader,
-    ControlOperationsReader operations, IDomainEventReader events, OperatingAuthority authority, TimeProvider clock)
+    ControlOperationsReader operations, FindingReader findings, OperatingAuthority authority, TimeProvider clock)
     : IRequestHandler<ListMyControlWork, MyControlWorkView>
 {
     const int DefaultHorizonDays = 30;
@@ -65,18 +65,18 @@ public sealed class ListMyControlWorkHandler(IAggregateReader reader,
                         occurrence.DueOn, today, null), opened));
             }
         }
-        var remediation = await new FindingReadSource(reader, events).ReadAsync(request.TenantId,
+        var remediation = await findings.ReadAsync(request.TenantId,
             request.ProgramId, clock.GetUtcNow(), ct).ConfigureAwait(false);
         if (!remediation.IsSuccess)
             return Result<MyControlWorkView>.Failure(remediation.Error);
         foreach (var finding in remediation.Value.Findings
-                     .Where(static finding => finding.Status != RemediationLedger.Closed))
+                     .Where(static finding => finding.Status != FindingStates.Closed))
             foreach (var action in finding.CorrectiveActions.Where(action =>
                          action.OwnerMemberId == actor.MemberId &&
-                         action.Status == RemediationLedger.Open))
+                         action.Status == FindingStates.Open))
                 items.Add((Item("corrective_action", action.ActionId, null, finding.FindingId,
                     action.Description, action.DueOn, today,
-                    RemediationLedger.Materiality(finding.Severity)), action.AddedAt));
+                    FindingStates.Materiality(finding.Severity)), action.AddedAt));
         var ordered = items
             .OrderBy(static entry => entry.Item.DueOn ?? DateOnly.MaxValue)
             .ThenBy(static entry => MaterialityRank(entry.Item.Materiality))

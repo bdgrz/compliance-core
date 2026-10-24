@@ -18,11 +18,7 @@ using Microsoft.OpenApi;
 var hostMode = ComplianceHostModeParser.Parse(
     Environment.GetEnvironmentVariable("COMPLIANCE_HOST_MODE"));
 
-if (FindingHistoryMigrationCli.IsRequested(args))
-{
-    Environment.ExitCode = await FindingHistoryMigrationCli.RunAsync(args);
-}
-else if (hostMode.RunsApi())
+if (hostMode.RunsApi())
 {
     await RunApiAsync(args, hostMode);
 }
@@ -1458,8 +1454,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/cancellations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Evidence requests");
-    app.MapPortiaPost<RaiseFinding, FindingRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings")
+    app.MapPortiaPut<RaiseFinding, FindingRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
     app.MapPortiaGet<ListFindings, Page<FindingView>>(
@@ -1470,28 +1466,48 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
-    app.MapPortiaPost<ReviseFinding, FindingView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions")
+    app.MapPortiaPut<ReviseFinding, FindingView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
-    app.MapPortiaPost<AddCorrectiveAction, FindingView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions")
+    app.MapPortiaPut<AddCorrectiveAction, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
-    app.MapPortiaPost<CompleteCorrectiveAction, FindingView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions")
+    app.MapPortiaPut<CompleteCorrectiveAction, FindingView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
-    app.MapPortiaPost<LinkFindingAcceptance, FindingView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances")
+    app.MapPortiaPut<LinkFindingAcceptance, FindingView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
-    app.MapPortiaPost<CloseFinding, FindingView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures")
+    app.MapPortiaPut<CloseFinding, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures/{command_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
-    app.MapPortiaPost<ReopenFinding, FindingView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings")
+    app.MapPortiaPut<ReopenFinding, FindingView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
     app.MapPortiaPut<OpenAccessPopulation, AccessPopulationRegistration>(

@@ -1,24 +1,71 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Operations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Remediation;
 
-/// <summary>Records an attributable severity, ownership, due-date, scope, or root-cause change.</summary>
-public sealed class ReviseFindingHandler(IAggregateExecutor executor, IAggregateReader reader,
-    IDomainEventReader events, TimeProvider clock) : IRequestHandler<ReviseFinding, FindingView>
+/// <summary>
+///     Records an attributable severity, ownership, due-date, scope, or root-cause change. The frozen first response is
+///     the complete finding view after the fact, so an exact retry returns the original view even after later changes.
+/// </summary>
+public sealed class ReviseFindingHandler(NativeOperationExecutor operations, IAggregateReader reader,
+    FindingReader findings, IImmutableContentStore content, TimeProvider clock)
+    : IRequestHandler<ReviseFinding, FindingView>
 {
-    public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<ReviseFinding> context,
-        CancellationToken ct)
+    public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<ReviseFinding> context, CancellationToken ct)
     {
         var request = context.Request;
+        if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
+            return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A revision requires a command id and a non-negative expected revision."));
         var actor = OperationsActor.From(context.Actor, request.TenantId);
+        var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
-        return await RemediationCommands.ExecuteAsync(executor, reader, events, context, request.TenantId,
-            request.ProgramId, request.FindingId, now, (finding, _) => finding.Revise(context.RequestId,
-                request.ExpectedRevision, request.Severity, request.OwnerMemberId, request.DueOn,
-                request.AffectedScope, request.RootCause, request.Reason,
-                ActorReference.ForMember(actor.MemberId, actor.Display), now), ct, async token =>
-                await RemediationCommands.IsActiveMemberAsync(reader, request.TenantId,
-                    request.OwnerMemberId, token).ConfigureAwait(false) ? null : RemediationCommands.InactiveOwner())
+        var snapshot = await reader.HydrateAsync(new FindingAggregate(request.TenantId, request.ProgramId,
+            request.FindingId, request.CommandId), ct).ConfigureAwait(false);
+        var provenance = FindingContent.Provenance(request.CommandId, "ReviseFinding", snapshot.Stream, actorReference,
+            (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now);
+        var binding = AcceptedOperationBinding.Of(provenance);
+
+        FindingRevision? revision = null;
+        FirstResponseDescriptor? response = null;
+        ImmutableContentRef? result = null;
+        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        {
+            var prepared = snapshot.PrepareWrite(request.ExpectedRevision);
+            if (!prepared.IsSuccess)
+                return Result<FindingView>.Failure(prepared.Error!);
+            var failure = FindingRules.ValidateRevision(request.Severity, request.OwnerMemberId, request.DueOn,
+                request.AffectedScope, request.RootCause, request.Reason);
+            if (failure is not null)
+                return Result<FindingView>.Failure(failure.ToRequestError());
+            var cause = FindingRules.Clean(request.RootCause);
+            if (snapshot.Severity == request.Severity && snapshot.OwnerMemberId == request.OwnerMemberId &&
+                snapshot.DueOn == request.DueOn && snapshot.AffectedScope == request.AffectedScope.Trim() &&
+                snapshot.RootCause == cause)
+                return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Validation,
+                    "The finding revision changes nothing."));
+            if (!await FindingCommands.IsActiveMemberAsync(reader, request.TenantId, request.OwnerMemberId, ct)
+                    .ConfigureAwait(false))
+                return Result<FindingView>.Failure(FindingCommands.InactiveOwner());
+            revision = new FindingRevision(request.Severity, request.OwnerMemberId, request.DueOn,
+                request.AffectedScope.Trim(), cause, request.Reason.Trim(), actorReference, now);
+            var current = await findings.ComposeAsync(snapshot, now, ct).ConfigureAwait(false);
+            (response, result) = await FindingContent.FreezeAsync(content, request.TenantId, FindingContent.ViewSchema,
+                FindingViews.WithRevision(current!, revision, snapshot.Revision + 1, now), ct).ConfigureAwait(false);
+        }
+
+        var outcome = await operations.ExecuteAsync(new NativeOperation<FindingAggregate>(binding,
+            () => new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.CommandId),
+            finding => finding.Acceptance,
+            finding => FindingCommands.Prepared(finding.PrepareWrite(request.ExpectedRevision), response),
+            (FindingAggregate finding, ImmutableContentRef frozen) =>
+                finding.Revise(provenance, revision!, frozen, result!)), context, ct).ConfigureAwait(false);
+        return await FindingContent.ResponseAsync<FindingView>(content, request.TenantId, outcome, ct)
             .ConfigureAwait(false);
     }
 }
