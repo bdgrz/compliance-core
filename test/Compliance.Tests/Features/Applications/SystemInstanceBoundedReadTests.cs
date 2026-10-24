@@ -14,32 +14,6 @@ public sealed class SystemInstanceBoundedReadTests
     const int Backlog = 1_000;
 
     [Fact]
-    public async Task ShouldStopFenceScanAndReportTransientLagGivenBacklogBeyondScanLimit()
-    {
-        // Arrange
-        var fixture = await Fixture.CreateAsync();
-        await fixture.AppendBacklogAsync(Backlog);
-        var executor = new RejectingExecutor();
-        var handler = new DeclareSystemInstanceHandler(executor,
-            new SourceReader(fixture.Source), fixture.Directory, fixture.Reader,
-            TimeProvider.System);
-        var context = new RequestContext<DeclareSystemInstance>(new DeclareSystemInstance(
-            fixture.TenantId, fixture.ApplicationId, 1, "Production", "production"),
-            Actor());
-
-        // Act
-        var result = await handler.HandleAsync(context, CancellationToken.None);
-
-        // Assert
-        var error = Assert.IsType<RequestError>(result.Error);
-        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
-        Assert.True(error.IsTransient);
-        Assert.False(executor.Called);
-        // One record past the limit proves the backlog is larger than the scan.
-        Assert.Equal(ApplicationDirectoryBacklog.ScanLimit + 1, fixture.Reader.PatternRecords);
-    }
-
-    [Fact]
     public async Task ShouldStopListScanAndReportTransientLagGivenUnrelatedBacklogBeyondScanLimit()
     {
         // Arrange
@@ -193,7 +167,7 @@ public sealed class SystemInstanceBoundedReadTests
                 "Manager", fixture._now).IsSuccess);
             await fixture.AppendApplicationAsync(new ApplicationDeclared(tenantId,
                 applicationId, "Payroll", "Run payroll", null, fixture._actorId, "Manager",
-                fixture._now));
+                fixture._now, ApplicationFacts.Application(tenantId, applicationId), null));
             return fixture;
         }
 
@@ -215,7 +189,7 @@ public sealed class SystemInstanceBoundedReadTests
             [
                 DomainEventSeed.Attach(new SystemInstanceRegistered(TenantId, ApplicationId,
                     instanceId, 1, "Winner", "production", null, null, _actorId, "Writer",
-                    _now), instanceId, 1),
+                    _now, ApplicationFacts.SystemInstance(TenantId, instanceId), null), instanceId, 1),
             ]);
 
         public async Task AppendForeignLegacyAsync(Uuid applicationId, Uuid instanceId) =>
@@ -223,7 +197,7 @@ public sealed class SystemInstanceBoundedReadTests
                 "applications", applicationId.ToString()), 0,
             [
                 DomainEventSeed.Attach(new ApplicationDeclared(TenantId, applicationId,
-                    "Other", "Other", null, _actorId, "Manager", _now), applicationId, 1),
+                    "Other", "Other", null, _actorId, "Manager", _now, ApplicationFacts.Application(TenantId, applicationId), null), applicationId, 1),
                 DomainEventSeed.Attach(new SystemInstanceDeclared(TenantId, applicationId,
                     instanceId, 2, "Loser", "production", null, null, _actorId, "Old writer",
                     _now), applicationId, 2),
@@ -238,7 +212,7 @@ public sealed class SystemInstanceBoundedReadTests
                     "applications", otherId.ToString()), 0,
                 [
                     DomainEventSeed.Attach(new ApplicationDeclared(TenantId, otherId,
-                        "Other", "Other", null, _actorId, "Manager", _now), otherId, 1),
+                        "Other", "Other", null, _actorId, "Manager", _now, ApplicationFacts.Application(TenantId, otherId), null), otherId, 1),
                 ]);
             }
         }

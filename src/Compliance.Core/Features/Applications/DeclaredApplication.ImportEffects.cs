@@ -136,6 +136,12 @@ public sealed partial class DeclaredApplication
     }
 
     /// <summary>
+    ///     Replays one recorded stream fact into this instance, in stream order. Read composition only: the fixed-cut
+    ///     reader rebuilds the application from the facts below its cut; nothing is raised or appended.
+    /// </summary>
+    public void Replay(DomainEvent recorded) => Apply(recorded);
+
+    /// <summary>
     ///     Read composition only: the in-memory application as a published batch shows it, before the target hold
     ///     settles. It never raises a fact and never touches a stream.
     /// </summary>

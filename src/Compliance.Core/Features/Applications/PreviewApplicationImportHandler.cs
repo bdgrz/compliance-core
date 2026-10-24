@@ -5,7 +5,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 
 public sealed class PreviewApplicationImportHandler(
     IApplicationImportDirectoryReader directory, ApplicationImportReadConsistency consistency,
-    IAggregateReader reader, IImmutableContentStore content)
+    IAggregateReader reader, IImmutableContentStore content, ApplicationPublicationReader publication)
     : IRequestHandler<PreviewApplicationImport, Page<ApplicationImportPreviewRow>>
 {
     public async ValueTask<Result<Page<ApplicationImportPreviewRow>>> HandleAsync(
@@ -15,6 +15,10 @@ public sealed class PreviewApplicationImportHandler(
         if (request.Limit is < 1 or > 200)
             return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The import preview limit must be between 1 and 200."));
+        var unwrapped = ApplicationPublicationCursor.Unwrap(request.Cursor);
+        if (!unwrapped.IsSuccess)
+            return Result<Page<ApplicationImportPreviewRow>>.Failure(unwrapped.Error);
+        var (carried, innerCursor) = unwrapped.Value;
         var fresh = await consistency.GetFreshAsync(request.TenantId, request.BatchId,
             request.MinimumRevision, ct).ConfigureAwait(false);
         if (!fresh.IsSuccess)
@@ -31,7 +35,7 @@ public sealed class PreviewApplicationImportHandler(
         var claims = view.Claims.ToDictionary(claim => claim.Observation.SourceRecordId, StringComparer.Ordinal);
         var sourcePosition = view.Source.CommittedStreamPosition;
         var cursorError = ApplicationImportPaging.Decode(request.TenantId, request.BatchId,
-            fresh.Value.Revision, request.Cursor, out var rowsCursor, sourcePosition);
+            fresh.Value.Revision, innerCursor, out var rowsCursor, sourcePosition);
         if (cursorError is not null)
             return Result<Page<ApplicationImportPreviewRow>>.Failure(cursorError);
         Page<ApplicationImportRowView> page;
@@ -45,16 +49,17 @@ public sealed class PreviewApplicationImportHandler(
             return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The import preview cursor is invalid."));
         }
-        var legacyError = ApplicationImportPaging.CheckLegacyRevision(fresh.Value.Revision, request.Cursor, sourcePosition);
+        var legacyError = ApplicationImportPaging.CheckLegacyRevision(fresh.Value.Revision, innerCursor, sourcePosition);
         if (legacyError is not null)
             return Result<Page<ApplicationImportPreviewRow>>.Failure(legacyError);
         if (page.Items.Any(row => row.TenantId != request.TenantId ||
                                   row.BatchId != request.BatchId) ||
-            (request.Cursor is null && page.Items.Count == 0 && fresh.Value.RowCount > 0))
+            (innerCursor is null && page.Items.Count == 0 && fresh.Value.RowCount > 0))
             return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "The import row projection is incomplete.",
                 isTransient: true));
         var items = new List<ApplicationImportPreviewRow>();
+        var cut = await publication.OpenAsync(carried, ct).ConfigureAwait(false);
         foreach (var row in page.Items)
         {
             var choice = source.GetCorrelation(row.RowId);
@@ -87,7 +92,7 @@ public sealed class PreviewApplicationImportHandler(
                 }
                 if (claim is not null || choice is { Decision: "link_existing" })
                 {
-                    var target = await reader.HydrateApplicationAsync(request.TenantId, targetId!.Value, ct)
+                    var target = await cut.ReadAsync(request.TenantId, targetId!.Value, ct)
                         .ConfigureAwait(false);
                     var expected = choice?.ExpectedApplicationRevision ?? claim!.Observation.ExpectedApplicationRevision ?? 1;
                     if (!target.IsCreated || target.IsRetired || target.Id != targetId ||
@@ -113,8 +118,9 @@ public sealed class PreviewApplicationImportHandler(
                 .ConfigureAwait(false))
             return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(
                 RequestErrorKind.Conflict, "The import source changed while reading the preview.", isTransient: true));
-        var nextCursor = ApplicationImportPaging.Encode(request.TenantId, request.BatchId,
-            fresh.Value.Revision, page.NextCursor, sourcePosition);
+        var nextCursor = ApplicationPublicationCursor.Wrap(cut.Cut.GlobalWatermarkExclusive,
+            ApplicationImportPaging.Encode(request.TenantId, request.BatchId,
+                fresh.Value.Revision, page.NextCursor, sourcePosition));
         return Result<Page<ApplicationImportPreviewRow>>.Success(new Page<ApplicationImportPreviewRow>(items, nextCursor));
     }
 }

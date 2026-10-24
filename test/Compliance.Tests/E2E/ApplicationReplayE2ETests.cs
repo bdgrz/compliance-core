@@ -51,19 +51,21 @@ public sealed class ApplicationReplayE2ETests(BrokerStackFixture broker)
                 // Act: revise each application and register a system instance while its projector is stopped.
                 foreach (var scope in new[] { first, second })
                 {
-                    using var revised = await owner.PutAsJsonAsync(scope.Path, new
-                    {
-                        expected_revision = 1,
-                        name = scope.Label + " after worker restart",
-                        purpose = "Updated while the Application projection worker is stopped",
-                    });
+                    using var revised = await owner.PutAsJsonAsync(
+                        $"/api/v1/tenants/{scope.TenantId}/applications/revise-application/{Guid.NewGuid()}", new
+                        {
+                            application_id = scope.ApplicationId,
+                            expected_revision = 1,
+                            name = scope.Label + " after worker restart",
+                            purpose = "Updated while the Application projection worker is stopped",
+                        });
                     Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
 
                     using var stale = await owner.GetAsync(scope.Path + "?minimum_revision=2");
                     Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
 
-                    using var registered = await owner.PostAsJsonAsync(
-                        scope.Path + "/system-instances", new
+                    using var registered = await owner.PutAsJsonAsync(
+                        scope.Path + $"/system-instances/{Guid.NewGuid()}", new
                         {
                             expected_application_revision = 2,
                             name = scope.Label + " replay instance",
@@ -174,33 +176,34 @@ public sealed class ApplicationReplayE2ETests(BrokerStackFixture broker)
         var tenantId = Guid.Parse((await ReadAsync(tenantResponse))
             .GetProperty("tenant_id").GetString()!);
         var applicationsPath = $"/api/v1/tenants/{tenantId}/applications";
-        using var applicationResponse = await PostUntilAuthorizedAsync(owner, applicationsPath,
-            new { name = label, purpose = "Prove replay after worker restart" });
+        using var applicationResponse = await PostUntilAuthorizedAsync(owner,
+            $"{applicationsPath}/{Guid.NewGuid()}",
+            new { name = label, purpose = "Prove replay after worker restart" }, HttpMethod.Put);
         var applicationId = Guid.Parse((await ReadAsync(applicationResponse))
             .GetProperty("application_id").GetString()!);
         var applicationPath = applicationsPath + "/" + applicationId;
         _ = await WaitForHttpAsync(owner, applicationPath + "?minimum_revision=1",
             document => document.GetProperty("revision").GetInt64() == 1);
         using var instanceResponse = await PostUntilAuthorizedAsync(owner,
-            applicationPath + "/system-instances", new
+            applicationPath + $"/system-instances/{Guid.NewGuid()}", new
             {
                 expected_application_revision = 1,
                 name = label + " initial instance",
                 kind = "production",
                 source_identifier = label + "-initial-instance",
-            });
+            }, HttpMethod.Put);
         var instanceId = Guid.Parse((await ReadAsync(instanceResponse))
             .GetProperty("system_instance_id").GetString()!);
         return new ReplayScope(label, tenantId, applicationId, applicationPath, instanceId);
     }
 
     static async Task<HttpResponseMessage> PostUntilAuthorizedAsync(HttpClient client,
-        string path, object body)
+        string path, object body, HttpMethod? method = null)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            var response = await client.PostAsJsonAsync(path, body);
+            var response = await client.SendAsync(new HttpRequestMessage(method ?? HttpMethod.Post, path) { Content = JsonContent.Create(body) });
             if (response.StatusCode == HttpStatusCode.OK)
                 return response;
             Assert.True(response.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.NotFound,

@@ -24,11 +24,11 @@ public sealed class ApplicationListContractTests
         DomainEvent[] events =
         [
             new ApplicationDeclared(tenantId, publicFirstId, "A Payroll", "Run payroll",
-                null, memberId, "Manager", now),
+                null, memberId, "Manager", now, ApplicationFacts.Application(tenantId, publicFirstId), null),
             new ApplicationDeclared(tenantId, restrictedId, "B Secret", "Run secret payroll",
-                null, memberId, "Manager", now, IsRestricted: true),
+                null, memberId, "Manager", now, ApplicationFacts.Application(tenantId, restrictedId), null, IsRestricted: true),
             new ApplicationDeclared(tenantId, publicLastId, "C Finance", "Close books",
-                null, memberId, "Manager", now),
+                null, memberId, "Manager", now, ApplicationFacts.Application(tenantId, publicLastId), null),
         ];
         var directory = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectAsync(directory, tenantId, events);
@@ -65,7 +65,7 @@ public sealed class ApplicationListContractTests
         var source = Declare(tenantId, applicationId, "Secrets", true, memberId, now);
         var directory = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectAsync(directory, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Secrets", "Run secrets", null, memberId, "Manager", now,
+            applicationId, "Secrets", "Run secrets", null, memberId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null,
             IsRestricted: true));
         var sourceReader = new SourceMapReader(source);
         var handler = new GetApplicationHandler(directory, sourceReader,
@@ -156,12 +156,12 @@ public sealed class ApplicationListContractTests
         var directory = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectAsync(directory, firstTenantId,
             new ApplicationDeclared(firstTenantId, Uuid.CreateVersion4(), "Payroll",
-                "Run payroll", null, actorId, "Manager", now),
+                "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(firstTenantId, Uuid.CreateVersion4()), null),
             new ApplicationDeclared(firstTenantId, Uuid.CreateVersion4(), "Benefits",
-                "Administer benefits", null, actorId, "Manager", now));
+                "Administer benefits", null, actorId, "Manager", now, ApplicationFacts.Application(firstTenantId, Uuid.CreateVersion4()), null));
         await ProjectAsync(directory, secondTenantId,
             new ApplicationDeclared(secondTenantId, Uuid.CreateVersion4(), "Finance",
-                "Close books", null, actorId, "Manager", now));
+                "Close books", null, actorId, "Manager", now, ApplicationFacts.Application(secondTenantId, Uuid.CreateVersion4()), null));
         var firstPage = await directory.ListAsync(firstTenantId, 1, null);
         var visibility = RestrictedApplicationVisibilityFixture.Create(
             new SourceReader(new DeclaredApplication(secondTenantId, Uuid.CreateVersion4())));
@@ -200,10 +200,10 @@ public sealed class ApplicationListContractTests
         await using var batch = await directory.BeginAsync(
             new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId,
-            "Payroll", "Run payroll", null, actorId, "Manager", now));
+            "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await directory.ApplyAsync(new SystemInstanceRegistered(tenantId, applicationId,
             instanceId, 1, "Production", "production", null, "payroll-prod",
-            actorId, "Manager", now));
+            actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, instanceId), null));
         await batch.CommitAsync(ProjectionCheckpoint.Start);
         return new Scenario(tenantId, applicationId, source, directory);
     }

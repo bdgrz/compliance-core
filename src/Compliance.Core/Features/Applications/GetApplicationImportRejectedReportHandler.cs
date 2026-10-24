@@ -3,7 +3,8 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
 
-public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader reader, IImmutableContentStore content)
+public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader reader, IImmutableContentStore content,
+    ApplicationPublicationReader publication)
     : IRequestHandler<GetApplicationImportRejectedReport, ApplicationImportRejectedReport>
 {
     public async ValueTask<Result<ApplicationImportRejectedReport>> HandleAsync(IRequestContext<GetApplicationImportRejectedReport> context,
@@ -17,6 +18,7 @@ public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader r
         var batch = loaded.Value;
         var state = batch.State;
         var rejected = new List<ApplicationImportRejectedRow>();
+        var cut = await publication.BeginAsync(ct).ConfigureAwait(false);
         var batchFindings = new List<string>();
         var omissions = await ApplicationImportOmissionSources.LoadAsync(reader, content, request.TenantId,
             request.BatchId, ct).ConfigureAwait(false);
@@ -52,7 +54,7 @@ public sealed class GetApplicationImportRejectedReportHandler(IAggregateReader r
                 {
                     var targetId = choice?.ApplicationId ?? claim!.Observation.ApplicationId;
                     var expectedRevision = choice?.ExpectedApplicationRevision ?? claim?.Observation.ExpectedApplicationRevision ?? 1;
-                    var target = await reader.HydrateApplicationAsync(request.TenantId, targetId, ct).ConfigureAwait(false);
+                    var target = await cut.ReadAsync(request.TenantId, targetId, ct).ConfigureAwait(false);
                     if (!target.IsCreated || target.Id != targetId || target.Stream.Realm != request.TenantId.ToString())
                         findings.Add("target_unavailable");
                     else if (target.IsRetired)

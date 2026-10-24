@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Applications;
@@ -9,7 +11,8 @@ namespace Bdgrz.Compliance.Features.Applications;
 public sealed record ApplicationRetired(Uuid TenantId, Uuid ApplicationId, long Revision,
     DateTimeOffset EffectiveAt, string Reason, Uuid? MergedIntoApplicationId,
     Uuid ActorMemberId, string ActorDisplay, DateTimeOffset ChangedAt,
-    long? MergedIntoApplicationRevision = null) : DomainEvent
+    OperationProvenance Operation, ImmutableContentRef? FirstResponse,
+    long? MergedIntoApplicationRevision = null) : DomainEvent, INativeOperationFact
 {
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }

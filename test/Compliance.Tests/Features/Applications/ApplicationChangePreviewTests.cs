@@ -85,7 +85,7 @@ public sealed class ApplicationChangePreviewTests
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Application", "Purpose", null, actorId, "Manager", now));
+            tenantId, applicationId, "Application", "Purpose", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
             controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
@@ -151,7 +151,7 @@ public sealed class ApplicationChangePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+            targetId, "Target", "Purpose", null, actorId, "Owner", now, ApplicationFacts.Application(tenantId, targetId), null));
         var relationshipDirectory = new FitzApplicationIncomingRelationshipDirectory(kv);
         var relationshipId = RelationshipId(visibleSourceId, "depends_on", targetId);
         var approvedRelationshipId = RelationshipId(approvedSourceId, "replaces", targetId);
@@ -238,7 +238,7 @@ public sealed class ApplicationChangePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+            targetId, "Target", "Purpose", null, actorId, "Owner", now, ApplicationFacts.Application(tenantId, targetId), null));
         var relationshipDirectory = new FitzApplicationIncomingRelationshipDirectory(kv);
         var relationshipEvents = sourceIds.Select(sourceId => (DomainEvent)
             new ApplicationRelationshipRecorded(tenantId,
@@ -301,7 +301,7 @@ public sealed class ApplicationChangePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+            targetId, "Target", "Purpose", null, actorId, "Owner", now, ApplicationFacts.Application(tenantId, targetId), null));
         var incoming = new StubIncomingRelationshipDirectory(
             new Page<ApplicationRelationshipView>(incomingRows, null));
         var events = new InMemoryEventStore();
@@ -341,7 +341,7 @@ public sealed class ApplicationChangePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+            targetId, "Target", "Purpose", null, actorId, "Owner", now, ApplicationFacts.Application(tenantId, targetId), null));
         var relationshipDirectory = new FitzApplicationIncomingRelationshipDirectory(kv);
         var events = new InMemoryEventStore();
         var relationshipId = RelationshipId(sourceId, "depends_on", targetId);
@@ -405,7 +405,7 @@ public sealed class ApplicationChangePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+            targetId, "Target", "Purpose", null, actorId, "Owner", now, ApplicationFacts.Application(tenantId, targetId), null));
         var relationshipDirectory = new FitzApplicationIncomingRelationshipDirectory(kv);
         var events = new InMemoryEventStore();
         var relationshipId = RelationshipId(sourceId, "depends_on", targetId);
@@ -451,7 +451,7 @@ public sealed class ApplicationChangePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            targetId, "Target", "Purpose", null, actorId, "Owner", now));
+            targetId, "Target", "Purpose", null, actorId, "Owner", now, ApplicationFacts.Application(tenantId, targetId), null));
         var relationshipId = RelationshipId(sourceId, "depends_on", targetId);
         var corruptRow = new ApplicationRelationshipView(relationshipId, targetId,
             "depends_on", actorId, "Owner", now)
@@ -516,7 +516,7 @@ public sealed class ApplicationChangePreviewTests
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Application", "Purpose", null, actorId, "Manager", now));
+            tenantId, applicationId, "Application", "Purpose", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var handler = new PreviewApplicationChangeHandler(aggregateReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
             controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),
@@ -557,7 +557,7 @@ public sealed class ApplicationChangePreviewTests
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(new InMemoryKvClient());
         var events = new InMemoryEventStore();
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Application", "Purpose", null, actorId, "Manager", now));
+            tenantId, applicationId, "Application", "Purpose", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var controls = new ControlReferenceDirectory
         {
             OnListAsync = _ =>
@@ -606,10 +606,10 @@ public sealed class ApplicationChangePreviewTests
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
-            null, null, actorId, "Manager", now));
+            null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         DomainEvent control = new ControlDraftCreated(tenantId, programId, controlId,
             Uuid.CreateVersion4(), "AC-01", new ControlDraftContent("Access control",
                 "Restrict payroll access", "Payroll access control",
@@ -688,10 +688,10 @@ public sealed class ApplicationChangePreviewTests
         var source = DeclaredApplicationForTest(tenantId, applicationId, actorId, now);
         var applications = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Payroll", "Purpose", null, actorId, "Manager", now));
+            tenantId, applicationId, "Payroll", "Purpose", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
-            null, null, actorId, "Manager", now));
+            null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         var controlReference = new ApplicationControlDraftReferenceView(tenantId,
             "system_instance", systemInstanceId, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             "AC-01", 1, Uuid.CreateVersion4(), "Payroll production", "Current control draft.");
@@ -749,10 +749,10 @@ public sealed class ApplicationChangePreviewTests
         var source = DeclaredApplicationForTest(tenantId, applicationId, actorId, now);
         var applications = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Payroll", "Purpose", null, actorId, "Manager", now));
+            tenantId, applicationId, "Payroll", "Purpose", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
-            null, null, actorId, "Manager", now));
+            null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         var corrupted = new ApplicationControlDraftReferenceView(
             crossTenant ? Uuid.CreateVersion4() : tenantId, "system_instance",
             crossTenant ? systemInstanceId : Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(),
@@ -803,7 +803,7 @@ public sealed class ApplicationChangePreviewTests
         var references = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var events = new InMemoryEventStore();
         var stream = new EventStreamAddress(tenantId.ToString(), "controls", controlId.ToString());
         DomainEvent control = new ControlDraftCreated(tenantId, programId, controlId,
@@ -862,7 +862,7 @@ public sealed class ApplicationChangePreviewTests
             .IsSuccess);
         var applications = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var controls = new ControlReferenceDirectory
         {
             Page = new Page<ApplicationControlDraftReferenceView>([
@@ -903,7 +903,7 @@ public sealed class ApplicationChangePreviewTests
             .IsSuccess);
         var applications = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var controls = new ControlReferenceDirectory
         {
             Page = new Page<ApplicationControlDraftReferenceView>([
@@ -944,7 +944,7 @@ public sealed class ApplicationChangePreviewTests
             .IsSuccess);
         var applications = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
-            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var events = new InMemoryEventStore();
         DomainEvent arriving = new ControlDraftCreated(tenantId, Uuid.CreateVersion4(), controlId,
             Uuid.CreateVersion4(), "AC-01", new ControlDraftContent("Access control",
@@ -992,10 +992,10 @@ public sealed class ApplicationChangePreviewTests
             .IsSuccess);
         var projected = new FitzApplicationDirectory(new InMemoryKvClient());
         await ProjectApplicationAsync(projected, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var events = new InMemoryEventStore();
         DomainEvent arriving = new SystemInstanceRegistered(tenantId, applicationId, instanceId,
-            1, "Production", "production", null, null, actorId, "Manager", now);
+            1, "Production", "production", null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, instanceId), null);
         arriving.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), instanceId, 1, now));
         var applications = new InterleavingApplicationDirectory(projected, ct =>
             events.AppendAsync(new EventStreamAddress(tenantId.ToString(), "system-instances",
@@ -1039,10 +1039,10 @@ public sealed class ApplicationChangePreviewTests
         var references = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
-            null, null, actorId, "Manager", now));
+            null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         DomainEvent boundary = new BoundaryDraftCreated(tenantId, boundaryId, Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), new BoundaryContent("Payroll system", "readiness",
                 ["security"],
@@ -1181,7 +1181,7 @@ public sealed class ApplicationChangePreviewTests
         var lagged = await handler.HandleAsync(new RequestContext<PreviewApplicationChange>(
             request, new ClaimsPrincipal()), CancellationToken.None);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var ready = await handler.HandleAsync(new RequestContext<PreviewApplicationChange>(
             request, new ClaimsPrincipal()), CancellationToken.None);
         Assert.Null(source.Revise(1, "Payroll v2", "Run payroll", null,
@@ -1222,7 +1222,7 @@ public sealed class ApplicationChangePreviewTests
         var references = new FitzApplicationBoundaryReferenceDirectory(kv);
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var events = new InMemoryEventStore();
         var stream = new EventStreamAddress(tenantId.ToString(), "boundaries",
             boundaryId.ToString());
@@ -1284,10 +1284,10 @@ public sealed class ApplicationChangePreviewTests
         var kv = new InMemoryKvClient();
         var applications = new FitzApplicationDirectory(kv);
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(
-            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now));
+            tenantId, applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await ProjectApplicationAsync(applications, tenantId, new SystemInstanceRegistered(
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
-            null, null, actorId, "Manager", now));
+            null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
         var events = new InMemoryEventStore();
         var handler = new PreviewApplicationChangeHandler(sourceReader, applications,

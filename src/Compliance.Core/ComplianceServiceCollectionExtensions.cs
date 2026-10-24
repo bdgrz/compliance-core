@@ -718,6 +718,11 @@ public static class ComplianceServiceCollectionExtensions
         // it before then and the pin bump makes the receivers and the process factory work without further changes.
         services.TryAddScoped<ISourceFactResolver>(provider => new FitzSourceFactResolver(
             provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>()));
+        // Like ISourceFactResolver, the fixed-cut reader resolves IStreamClient lazily, so nothing resolves it before Portia publishes it.
+        services.TryAddScoped<IAuthoritativeSnapshotReader>(provider => new FitzAuthoritativeSnapshotReader(
+            provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>(),
+            provider.GetService<TimeProvider>()));
+        services.AddScoped<ApplicationPublicationReader>();
         services.AddScoped<FitzActualStaffEngagementLocator>();
         services.AddScoped<IActualStaffEngagementLocatorProjection>(provider =>
             provider.GetRequiredService<FitzActualStaffEngagementLocator>());

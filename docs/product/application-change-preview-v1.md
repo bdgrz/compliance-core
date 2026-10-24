@@ -204,9 +204,9 @@ The preview also returns up to 200 projected `system_instance_references`, and a
 `system_instance_references_over_limit` when there are more. It rejects a retired Application
 with a 409.
 
-`POST .../applications/{application_id}/retirements` (`bdgrz.application.retire`) records an
+`PUT .../applications/{application_id}/retirements/{command_id}` (`bdgrz.application.retire`) records an
 effective-dated `ApplicationRetired` with a reason and an optional active `merged_into_application_id`.
-`POST .../system-instances/{system_instance_id}/retirements` (`bdgrz.system_instance.retire`)
+`PUT .../system-instances/{system_instance_id}/retirements/{command_id}` (`bdgrz.system_instance.retire`)
 retires one registered instance. Retirement keeps all revisions, instances, and scope history.
 A retired record rejects later revisions, new instances, and new scope decisions. Directory and
 revision views carry `lifecycle` and `retirement`.

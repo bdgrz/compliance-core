@@ -5,6 +5,7 @@ using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -39,6 +40,7 @@ sealed class ApplicationImportHost : IAsyncDisposable
         var events = new InMemoryEventStore();
         services.AddSingleton<IEventStore>(events);
         services.AddSingleton<IDomainEventReader>(events);
+        services.AddSingleton<IAuthoritativeSnapshotReader>(new EventStoreSnapshotReader(events));
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPlatformUserDirectoryReader>(new ExistingUsers());
         Clock = new ManualClock(StartedAt);
@@ -127,6 +129,15 @@ sealed class ApplicationImportHost : IAsyncDisposable
 
     public Task<ApplicationImportSource> SourceAsync(string key = "manual", string ns = "applications") =>
         HydrateAsync(new ApplicationImportSource(TenantId, key, ns));
+
+    /// <summary>The application as a fixed-cut read composes it: a batch publication shows before its targets settle.</summary>
+    public async Task<DeclaredApplication> PublishedApplicationAsync(Uuid applicationId)
+    {
+        var cut = await Services.GetRequiredService<ApplicationPublicationReader>().BeginAsync();
+        return await cut.ReadAsync(TenantId, applicationId);
+    }
+
+    public DeclaredApplication NewApplication(Uuid applicationId) => new(TenantId, applicationId);
 
     public Task<DeclaredApplication> ApplicationAsync(Uuid applicationId) =>
         HydrateAsync(new DeclaredApplication(TenantId, applicationId));

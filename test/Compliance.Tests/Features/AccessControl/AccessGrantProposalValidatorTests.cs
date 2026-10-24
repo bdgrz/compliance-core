@@ -6,6 +6,7 @@ using Bdgrz.Compliance.Features.TechnologyInventory;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 
@@ -239,7 +240,7 @@ public sealed class AccessGrantProposalValidatorTests
         Assert.True(application.Declare("Payroll", "Run payroll", null, actorId,
             "Org Admin", now, isRestricted: true).IsSuccess);
         var applicationDeclared = new ApplicationDeclared(tenantId, applicationId, "Payroll",
-            "Run payroll", null, actorId, "Org Admin", now, IsRestricted: true);
+            "Run payroll", null, actorId, "Org Admin", now, ApplicationFacts.Application(tenantId, applicationId), null, IsRestricted: true);
         var declared = new SystemInstanceDeclared(tenantId, applicationId, instanceId, 2,
             "Production", "production", null, "payroll-prod", actorId, "Org Admin", now);
         var events = new InMemoryEventStore();

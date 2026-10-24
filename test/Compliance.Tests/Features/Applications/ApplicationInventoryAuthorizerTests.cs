@@ -42,7 +42,7 @@ public sealed class ApplicationInventoryAuthorizerTests
             "cancel" => new CancelApplicationImport(Uuid.CreateVersion4(), tenantId, batchId, 1, "Canceled by lead"),
             "correlate" => new CorrelateApplicationImportRow(Uuid.CreateVersion4(), tenantId, batchId,
                 Uuid.CreateVersion4(), 1, "create_new", null, null, "Reviewed identity"),
-            _ => new DeclareApplication(tenantId, "Payroll", "Run payroll"),
+            _ => new DeclareApplication(Uuid.CreateVersion4(), tenantId, "Payroll", "Run payroll"),
         };
         var permissions = new ImportStagingPermissions();
         var userId = Uuid.CreateVersion4();
@@ -256,8 +256,7 @@ public sealed class ApplicationInventoryAuthorizerTests
         var scopedPermissions = new FixedScopedPermissions(true);
         var authorizer = new ApplicationInventoryAuthorizer(new FixedMembershipDirectory(true),
             new ActiveTenant(), permissions, scopedPermissions);
-        var context = new RequestContext<IApplicationInventoryRequest>(new DeclareApplication(
-            tenantId, "Payroll", "Run payroll"), BdgrzActor(Uuid.CreateVersion4()));
+        var context = new RequestContext<IApplicationInventoryRequest>(new DeclareApplication(Uuid.CreateVersion4(), tenantId, "Payroll", "Run payroll"), BdgrzActor(Uuid.CreateVersion4()));
 
         // Act
         var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);

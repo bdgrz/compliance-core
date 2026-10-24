@@ -192,7 +192,7 @@ public sealed class ApplicationEvidenceSourceReferencePreviewTests
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
             ProjectionCheckpoint.Start));
         await directory.ApplyAsync(new ApplicationDeclared(tenantId, applicationId, "Payroll",
-            "Run payroll", null, Uuid.CreateVersion4(), "Manager", now));
+            "Run payroll", null, Uuid.CreateVersion4(), "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 

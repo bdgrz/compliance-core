@@ -4,7 +4,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Applications;
 
 public sealed class PreviewMissingApplicationImportRowsHandler(
-    ApplicationImportReadConsistency consistency, IAggregateReader reader, IImmutableContentStore content)
+    ApplicationImportReadConsistency consistency, IAggregateReader reader, IImmutableContentStore content,
+    ApplicationPublicationReader publication)
     : IRequestHandler<PreviewMissingApplicationImportRows, Page<ApplicationImportMissingRow>>
 {
     public async ValueTask<Result<Page<ApplicationImportMissingRow>>> HandleAsync(
@@ -14,6 +15,10 @@ public sealed class PreviewMissingApplicationImportRowsHandler(
         if (request.Limit is < 1 or > 200)
             return Result<Page<ApplicationImportMissingRow>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The missing-row preview limit must be between 1 and 200."));
+        var unwrapped = ApplicationPublicationCursor.Unwrap(request.Cursor);
+        if (!unwrapped.IsSuccess)
+            return Result<Page<ApplicationImportMissingRow>>.Failure(unwrapped.Error);
+        var (carried, innerCursor) = unwrapped.Value;
         var fresh = await consistency.GetFreshAsync(request.TenantId, request.BatchId,
             request.MinimumRevision, ct).ConfigureAwait(false);
         if (!fresh.IsSuccess)
@@ -28,18 +33,19 @@ public sealed class PreviewMissingApplicationImportRowsHandler(
         var missing = source.Missing(batch, rows);
         var position = source.Source.CommittedStreamPosition;
         var decoded = ApplicationImportMissingPaging.Decode(request.TenantId, request.BatchId,
-            fresh.Value.Revision, position, request.Cursor);
+            fresh.Value.Revision, position, innerCursor);
         if (!decoded.IsSuccess)
             return Result<Page<ApplicationImportMissingRow>>.Failure(decoded.Error);
         var offset = decoded.Value;
-        if (request.Cursor is not null && offset >= missing.Count)
+        if (innerCursor is not null && offset >= missing.Count)
             return Result<Page<ApplicationImportMissingRow>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The missing-row preview cursor is outside its source claims."));
         var limit = request.Limit ?? 50;
         var items = new List<ApplicationImportMissingRow>();
+        var cut = await publication.OpenAsync(carried, ct).ConfigureAwait(false);
         foreach (var claim in missing.Skip(offset).Take(limit))
         {
-            var target = await reader.HydrateApplicationAsync(request.TenantId, claim.Observation.ApplicationId, ct)
+            var target = await cut.ReadAsync(request.TenantId, claim.Observation.ApplicationId, ct)
                 .ConfigureAwait(false);
             var expected = claim.Observation.ExpectedApplicationRevision ?? 1;
             var blockers = new List<string> { "missing_source_retirement_unavailable", "retirement_impact_unavailable" };
@@ -62,7 +68,8 @@ public sealed class PreviewMissingApplicationImportRowsHandler(
             return Result<Page<ApplicationImportMissingRow>>.Failure(Changed());
         var nextOffset = offset + items.Count;
         var nextCursor = nextOffset < missing.Count
-            ? ApplicationImportMissingPaging.Encode(request.TenantId, request.BatchId, fresh.Value.Revision, position, nextOffset)
+            ? ApplicationPublicationCursor.Wrap(cut.Cut.GlobalWatermarkExclusive, ApplicationImportMissingPaging.Encode(
+                request.TenantId, request.BatchId, fresh.Value.Revision, position, nextOffset))
             : null;
         return Result<Page<ApplicationImportMissingRow>>.Success(new(items, nextCursor));
     }

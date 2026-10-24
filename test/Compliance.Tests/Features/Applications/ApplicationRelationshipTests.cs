@@ -3,6 +3,7 @@ using Bdgrz.Compliance.Features.Applications;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.Applications;
 

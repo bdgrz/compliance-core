@@ -526,7 +526,7 @@ public sealed class ApplicationRevisionGovernanceTests
             await Writer.SaveAsync(person, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
         }
 
-        public ReviseApplication Request() => new(Tenant, Application, 1,
+        public ReviseApplication Request() => new(Uuid.CreateVersion4(), Tenant, Application, 1,
             "Revised", "Revised purpose", null);
 
         public ReviseApplication CompleteRequest() => Request() with
@@ -587,6 +587,20 @@ public sealed class ApplicationRevisionGovernanceTests
             Func<TAggregate, AggregateOutcome> operation, IExecutionContext context,
             CancellationToken ct = default) where TAggregate : Aggregate
         {
+            await TransitionAsync(aggregate);
+            return await inner.ExecuteAsync(aggregate, operation, context, ct);
+        }
+
+        public async ValueTask<Result<TOut>> ExecuteAsync<TAggregate, TOut>(TAggregate aggregate,
+            Func<TAggregate, AggregateOutcome<TOut>> operation, IExecutionContext context,
+            CancellationToken ct = default) where TAggregate : Aggregate
+        {
+            await TransitionAsync(aggregate);
+            return await inner.ExecuteAsync(aggregate, operation, context, ct);
+        }
+
+        async ValueTask TransitionAsync(Aggregate aggregate)
+        {
             if (aggregate is DeclaredApplication && BeforeApplicationExecution is { } transition)
             {
                 BeforeApplicationExecution = null;
@@ -594,13 +608,7 @@ public sealed class ApplicationRevisionGovernanceTests
                 await transition();
                 Transitioned = true;
             }
-            return await inner.ExecuteAsync(aggregate, operation, context, ct);
         }
-
-        public ValueTask<Result<TOut>> ExecuteAsync<TAggregate, TOut>(TAggregate aggregate,
-            Func<TAggregate, AggregateOutcome<TOut>> operation, IExecutionContext context,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            inner.ExecuteAsync(aggregate, operation, context, ct);
     }
 
     sealed class FixedClock : TimeProvider

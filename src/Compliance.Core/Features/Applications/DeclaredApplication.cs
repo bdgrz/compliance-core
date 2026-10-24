@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -42,6 +43,10 @@ public sealed partial class DeclaredApplication : Aggregate
         RegisterImportEffectEvents();
         On<ApplicationDeclared>(ev =>
         {
+            Acceptance.Observe(ev);
+            RequireOwnOperation(ev.Operation);
+            if (_created)
+                throw new InvalidOperationException("The application is already declared.");
             _created = true;
             _revision = 1;
             _initialName = ev.Name;
@@ -62,6 +67,8 @@ public sealed partial class DeclaredApplication : Aggregate
         });
         On<ApplicationRevised>(ev =>
         {
+            Acceptance.Observe(ev);
+            RequireOwnOperation(ev.Operation);
             _revision = ev.Revision;
             _classification = ev.Classification;
             _systemOwnerPersonId = ev.SystemOwnerPersonId;
@@ -72,6 +79,8 @@ public sealed partial class DeclaredApplication : Aggregate
         });
         On<ApplicationRetired>(ev =>
         {
+            Acceptance.Observe(ev);
+            RequireOwnOperation(ev.Operation);
             if (ev.MergedIntoApplicationRevision is { } targetRevision &&
                 (ev.MergedIntoApplicationId is not { } successorId || targetRevision < 1 ||
                  Relationship(ApplicationRelationshipIdentity.Replaces, successorId)?.Approval
@@ -88,54 +97,69 @@ public sealed partial class DeclaredApplication : Aggregate
         RegisterGovernedRelationshipEvents();
     }
 
-    public Result<ApplicationRegistration> Declare(string name, string purpose,
-        string? ownerReference, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset changedAt, string? classification = null,
-        Uuid? systemOwnerPersonId = null, Uuid? accessOwnerPersonId = null,
-        bool isRestricted = false, string? applicationKind = null,
-        string? criticality = null, bool governedDeclarationsEnabled = false)
+    /// <summary>
+    ///     Checks the creation guards against hydrated state without raising anything: the identity must be free
+    ///     (not created, not reserved by an import plan) and the content valid. An exact retry never reaches this
+    ///     check; it resolves from the accepted fact of the same logical id.
+    /// </summary>
+    public Result PrepareDeclare(string name, string purpose, string? ownerReference, string? classification,
+        Uuid? systemOwnerPersonId, Uuid? accessOwnerPersonId, string? applicationKind, string? criticality,
+        bool governedDeclarationsEnabled = false)
     {
-        var normalizedOwner = NormalizeOptional(ownerReference);
         var normalizedClassification = NormalizeOptional(classification);
         var normalizedKind = NormalizeOptional(applicationKind);
         var normalizedCriticality = NormalizeOptional(criticality);
         if (!_created && ReservesIdentity)
-            return Result<ApplicationRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The application identity is reserved by an import plan."));
         if (_created)
-            return _initialName == name?.Trim() && _initialPurpose == purpose?.Trim() &&
-                   _initialOwnerReference == normalizedOwner &&
-                   _initialClassification == normalizedClassification &&
-                   _initialApplicationKind == normalizedKind &&
-                   _initialCriticality == normalizedCriticality &&
-                   _initialSystemOwner == systemOwnerPersonId &&
-                   _initialAccessOwner == accessOwnerPersonId &&
-                   _initialIsRestricted == isRestricted
-                ? Result<ApplicationRegistration>.Success(new ApplicationRegistration(Id))
-                : Result<ApplicationRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The application already exists with different content."));
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The application already exists with different content."));
         var validation = Validate(name, purpose, ownerReference, classification);
         if (validation is not null)
-            return Result<ApplicationRegistration>.Failure(validation);
+            return Result.Failure(validation);
         if (applicationKind is { Length: > 200 } || criticality is { Length: > 200 })
-            return Result<ApplicationRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "Application kind and criticality cannot exceed 200 characters each."));
         if (governedDeclarationsEnabled && (normalizedClassification is null ||
             systemOwnerPersonId is null || systemOwnerPersonId == Uuid.Empty ||
             accessOwnerPersonId is null || accessOwnerPersonId == Uuid.Empty ||
             normalizedKind is null || normalizedCriticality is null))
-            return Result<ApplicationRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "An application requires classification, system and access owners, application kind and criticality."));
+        return Result.Success;
+    }
+
+    /// <summary>Accepts the creation as the native fact of <paramref name="operation" />.</summary>
+    public Result Declare(OperationProvenance operation, ImmutableContentRef firstResponse, string name,
+        string purpose, string? ownerReference, Uuid actorMemberId, string actorDisplay,
+        DateTimeOffset changedAt, string? classification = null,
+        Uuid? systemOwnerPersonId = null, Uuid? accessOwnerPersonId = null,
+        bool isRestricted = false, string? applicationKind = null,
+        string? criticality = null, bool governedDeclarationsEnabled = false)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        var owned = CheckOwnOperation(operation);
+        if (!owned.IsSuccess)
+            return owned;
+        var prepared = PrepareDeclare(name, purpose, ownerReference, classification, systemOwnerPersonId,
+            accessOwnerPersonId, applicationKind, criticality, governedDeclarationsEnabled);
+        if (!prepared.IsSuccess)
+            return prepared;
         RaiseEvent(new ApplicationDeclared(_tenantId, Id, name.Trim(), purpose.Trim(),
-            normalizedOwner, actorMemberId, actorDisplay, changedAt, normalizedClassification,
-            systemOwnerPersonId, accessOwnerPersonId, isRestricted, normalizedKind, normalizedCriticality)
+            NormalizeOptional(ownerReference), actorMemberId, actorDisplay, changedAt, operation, firstResponse,
+            NormalizeOptional(classification), systemOwnerPersonId, accessOwnerPersonId, isRestricted,
+            NormalizeOptional(applicationKind), NormalizeOptional(criticality))
         {
             StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
         });
-        return Result<ApplicationRegistration>.Success(new ApplicationRegistration(Id));
+        return Result.Success;
     }
 
-    public CommandFailure? Revise(long expectedRevision, string name, string purpose,
+    /// <summary>Accepts the revision as the native fact of <paramref name="operation" />.</summary>
+    public CommandFailure? Revise(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, string name, string purpose,
         string? ownerReference, Uuid actorMemberId, string actorDisplay,
         DateTimeOffset changedAt, string? classification = null,
         Uuid? systemOwnerPersonId = null, Uuid? accessOwnerPersonId = null,
@@ -145,6 +169,11 @@ public sealed partial class DeclaredApplication : Aggregate
         ApplicationRevisionField systemOwnerIntent = default,
         ApplicationRevisionField accessOwnerIntent = default)
     {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        var owned = CheckOwnOperation(operation);
+        if (!owned.IsSuccess)
+            return CommandFailure.InvalidContent(owned.Error!.Message!);
         var check = ResolveRevisionContent(expectedRevision, name, purpose, ownerReference,
             classification, systemOwnerPersonId, accessOwnerPersonId, isRestricted,
             applicationKind, criticality, governedRevisionsEnabled, classificationIntent,
@@ -153,7 +182,7 @@ public sealed partial class DeclaredApplication : Aggregate
             return check;
         RaiseEvent(new ApplicationRevised(_tenantId, Id, _revision + 1, content.Name,
             content.Purpose, content.OwnerReference, actorMemberId,
-            actorDisplay, changedAt, content.Classification, content.SystemOwnerPersonId,
+            actorDisplay, changedAt, operation, firstResponse, content.Classification, content.SystemOwnerPersonId,
             content.AccessOwnerPersonId, content.IsRestricted, content.ApplicationKind, content.Criticality)
         {
             StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
@@ -186,11 +215,14 @@ public sealed partial class DeclaredApplication : Aggregate
             : content.Validate(governed);
     }
 
-    /// <summary>Retires the application from an effective date without deleting its history.</summary>
-    public CommandFailure? Retire(long expectedRevision, DateTimeOffset effectiveAt,
-        string reason, Uuid? mergedIntoApplicationId, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset changedAt)
+    /// <summary>
+    ///     Checks the retirement guards against hydrated state without raising anything: the application exists, is
+    ///     current and unheld, the reason is bounded and a successor merge matches its approved relationship.
+    /// </summary>
+    public CommandFailure? PrepareRetire(long expectedRevision, string reason, Uuid? mergedIntoApplicationId,
+        out long? mergedIntoApplicationRevision)
     {
+        mergedIntoApplicationRevision = null;
         var check = CheckChange(expectedRevision);
         if (check is not null)
             return check;
@@ -200,7 +232,6 @@ public sealed partial class DeclaredApplication : Aggregate
         if (mergedIntoApplicationId == Id || mergedIntoApplicationId == Uuid.Empty)
             return CommandFailure.InvalidContent(
                 "An application cannot be merged into itself or an empty identity.");
-        long? mergedIntoApplicationRevision = null;
         if (mergedIntoApplicationId is { } successorId)
         {
             var relationship = Relationship(ApplicationRelationshipIdentity.Replaces, successorId);
@@ -211,13 +242,42 @@ public sealed partial class DeclaredApplication : Aggregate
                     "Merging an application requires an approved successor relationship for the current revision.");
             mergedIntoApplicationRevision = approval.TargetApplicationRevision;
         }
+        return null;
+    }
+
+    /// <summary>Retires the application from an effective date as the native fact of <paramref name="operation" />.</summary>
+    public CommandFailure? Retire(OperationProvenance operation, ImmutableContentRef firstResponse,
+        long expectedRevision, DateTimeOffset effectiveAt,
+        string reason, Uuid? mergedIntoApplicationId, Uuid actorMemberId, string actorDisplay,
+        DateTimeOffset changedAt)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        var owned = CheckOwnOperation(operation);
+        if (!owned.IsSuccess)
+            return CommandFailure.InvalidContent(owned.Error!.Message!);
+        var check = PrepareRetire(expectedRevision, reason, mergedIntoApplicationId, out var mergedRevision);
+        if (check is not null)
+            return check;
         RaiseEvent(new ApplicationRetired(_tenantId, Id, _revision + 1, effectiveAt,
-            reason.Trim(), mergedIntoApplicationId, actorMemberId, actorDisplay, changedAt,
-            mergedIntoApplicationRevision)
+            reason.Trim(), mergedIntoApplicationId, actorMemberId, actorDisplay, changedAt, operation, firstResponse,
+            mergedRevision)
         {
             StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
         });
         return null;
+    }
+
+    Result CheckOwnOperation(OperationProvenance operation) => operation.LogicalId == Uuid.Empty ||
+        operation.Owner != Stream
+        ? Result.Failure(new RequestError(RequestErrorKind.Validation,
+            "An application operation requires its own logical operation."))
+        : Result.Success;
+
+    void RequireOwnOperation(OperationProvenance operation)
+    {
+        if (!CheckOwnOperation(operation).IsSuccess)
+            throw new InvalidOperationException("The application fact does not carry an operation of this owner.");
     }
 
     CommandFailure? CheckChange(long expectedRevision) => !_created

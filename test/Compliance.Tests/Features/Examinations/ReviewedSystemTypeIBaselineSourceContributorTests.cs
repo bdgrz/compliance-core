@@ -52,7 +52,7 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributorTests
         var registration = Registered(DayOne);
         var retirement = new SystemInstanceRetired(TenantId, ApplicationId, InstanceId, 2,
             new DateTimeOffset(2026, 7, 15, 12, 0, 0, TimeSpan.Zero), "Migration planned",
-            AuthorId, "Examiner", DayOne.AddDays(10));
+            AuthorId, "Examiner", DayOne.AddDays(10), ApplicationFacts.SystemInstance(TenantId, InstanceId), null);
         var fixture = await Fixture([registration, retirement]);
 
         // Act
@@ -173,7 +173,7 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributorTests
     {
         var events = new InMemoryEventStore();
         var applicationEvent = DomainEventSeed.Attach(new ApplicationDeclared(TenantId,
-            ApplicationId, "Payroll", "Run payroll", null, AuthorId, "Examiner", DayOne,
+            ApplicationId, "Payroll", "Run payroll", null, AuthorId, "Examiner", DayOne, ApplicationFacts.Application(TenantId, ApplicationId), null,
             IsRestricted: restrictedApplication),
             ApplicationId, 1);
         var legacyDeclaration = legacy
@@ -285,12 +285,13 @@ public sealed class ReviewedSystemTypeIBaselineSourceContributorTests
 
     static SystemInstanceRegistered Registered(DateTimeOffset changedAt) =>
         new(TenantId, ApplicationId, InstanceId, 1, "Production", "production",
-            "Boundary v1", "payroll-prod", AuthorId, "Examiner", changedAt);
+            "Boundary v1", "payroll-prod", AuthorId, "Examiner", changedAt,
+            ApplicationFacts.SystemInstance(TenantId, InstanceId), null);
 
     static SystemInstanceRevised Revised(DateTimeOffset changedAt) =>
         new(TenantId, ApplicationId, InstanceId, 2, "Production east", "production",
             "Boundary v2", "payroll-prod-east", "Moved to the east network zone.",
-            AuthorId, "Examiner", changedAt);
+            AuthorId, "Examiner", changedAt, ApplicationFacts.SystemInstance(TenantId, InstanceId), null);
 
     static IReadOnlyList<string> InstanceGaps(string? accessBoundary, string? sourceIdentifier) =>
     [accessBoundary is null ? "access_boundary_missing" : "access_boundary_unverified",

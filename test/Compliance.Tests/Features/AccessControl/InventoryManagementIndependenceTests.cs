@@ -16,17 +16,17 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 public sealed class InventoryManagementIndependenceTests
 {
     [Fact]
-    public async Task ShouldReuseOriginalDeclarationGivenSameWireKeyAndFreshRequestContexts()
+    public async Task ShouldReuseOriginalDeclarationGivenSameApplicationIdAndFreshRequestContexts()
     {
         // Arrange
         await using var fixture = new Fixture("client_personnel", governedDeclarationsEnabled: true);
         await fixture.SeedPersonAsync();
         var key = Uuid.CreateVersion4();
         var json = $$"""
-            {"tenant_id":"{{fixture.Tenant}}","name":"Governed application","purpose":"Business purpose",
+            {"application_id":"{{key}}","tenant_id":"{{fixture.Tenant}}","name":"Governed application","purpose":"Business purpose",
              "classification":"internal","system_owner_person_id":"{{fixture.PersonId}}",
              "access_owner_person_id":"{{fixture.PersonId}}","is_restricted":false,
-             "application_kind":"service","criticality":"critical","declaration_key":"{{key}}"}
+             "application_kind":"service","criticality":"critical"}
             """;
         var firstRequest = JsonSerializer.Deserialize(json, ComplianceCoreJsonContext.Default.DeclareApplication)!;
         var retryRequest = JsonSerializer.Deserialize(json, ComplianceCoreJsonContext.Default.DeclareApplication)!;
@@ -61,10 +61,10 @@ public sealed class InventoryManagementIndependenceTests
         // Arrange
         await using var fixture = new Fixture("client_personnel", governedDeclarationsEnabled: true);
         await fixture.SeedPersonAsync();
-        var request = new DeclareApplication(fixture.Tenant, "Governed application", "Business purpose",
+        var request = new DeclareApplication(Uuid.CreateVersion4(), fixture.Tenant, "Governed application", "Business purpose",
             Classification: "internal", SystemOwnerPersonId: fixture.PersonId,
             AccessOwnerPersonId: fixture.PersonId, IsRestricted: true,
-            ApplicationKind: "service", Criticality: "critical", DeclarationKey: Uuid.CreateVersion4());
+            ApplicationKind: "service", Criticality: "critical");
         Assert.Empty(await fixture.ApplicationEventsAsync(fixture.Tenant));
         Assert.Empty(await fixture.ApplicationEventsAsync(fixture.ForeignTenant));
         var authorized = await fixture.Bus.SendAsync(request, fixture.Actor);
@@ -110,13 +110,12 @@ public sealed class InventoryManagementIndependenceTests
     }
 
     [Fact]
-    public async Task ShouldKeepDeclarationsSeparateGivenSameKeyAndDifferentMembersOrTenants()
+    public async Task ShouldConflictGivenSameApplicationIdAndDifferentMemberAndKeepTenantsSeparate()
     {
         // Arrange
         await using var fixture = new Fixture("client_personnel");
         fixture.Memberships.AllowUserInForeignTenant = true;
-        var request = new DeclareApplication(fixture.Tenant, "Application", "Purpose",
-            DeclarationKey: Uuid.CreateVersion4());
+        var request = new DeclareApplication(Uuid.CreateVersion4(), fixture.Tenant, "Application", "Purpose");
         var first = await fixture.Bus.DispatchAsync(request, fixture.Context(false));
         Assert.True(first.IsSuccess, first.Error?.Message);
         var original = Assert.Single(await fixture.ApplicationEventsAsync(fixture.Tenant));
@@ -128,15 +127,11 @@ public sealed class InventoryManagementIndependenceTests
         var foreignTenantEvents = await fixture.ApplicationEventsAsync(fixture.ForeignTenant);
 
         // Assert
-        Assert.True(otherMember.IsSuccess, otherMember.Error?.Message);
+        Assert.False(otherMember.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, otherMember.Error!.Kind);
         Assert.True(otherTenant.IsSuccess, otherTenant.Error?.Message);
-        Assert.NotEqual(first.Value!.ApplicationId, otherMember.Value!.ApplicationId);
-        Assert.NotEqual(first.Value.ApplicationId, otherTenant.Value!.ApplicationId);
-        Assert.NotEqual(otherMember.Value.ApplicationId, otherTenant.Value.ApplicationId);
-        Assert.Contains(original, originalTenantEvents);
-        Assert.Collection(originalTenantEvents,
-            ev => Assert.Equal(first.Value.ApplicationId, Assert.IsType<ApplicationDeclared>(ev).ApplicationId),
-            ev => Assert.Equal(otherMember.Value.ApplicationId, Assert.IsType<ApplicationDeclared>(ev).ApplicationId));
+        Assert.Equal(first.Value!.ApplicationId, otherTenant.Value!.ApplicationId);
+        Assert.Equal(original, Assert.Single(originalTenantEvents));
         var foreign = Assert.IsType<ApplicationDeclared>(Assert.Single(foreignTenantEvents));
         Assert.Equal(fixture.ForeignTenant, foreign.TenantId);
         Assert.Equal(otherTenant.Value.ApplicationId, foreign.ApplicationId);
@@ -146,19 +141,19 @@ public sealed class InventoryManagementIndependenceTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ShouldHideRestrictedDeclarationWithoutAppendGivenMatchingOrChangedKeyedRetry(bool changedContent)
+    public async Task ShouldHideRestrictedDeclarationWithoutAppendGivenMatchingOrChangedRetry(bool changedContent)
     {
         // Arrange
         await using var fixture = new Fixture("client_personnel", governedDeclarationsEnabled: true);
         await fixture.SeedPersonAsync();
-        fixture.Permissions.RestrictedReadAllowed = false;
-        var key = Uuid.CreateVersion4();
-        var targetId = fixture.DeclarationTarget(key);
-        var original = new DeclareApplication(fixture.Tenant, "Restricted application", "Private purpose",
+        var targetId = Uuid.CreateVersion4();
+        var original = new DeclareApplication(targetId, fixture.Tenant, "Restricted application", "Private purpose",
             Classification: "confidential", SystemOwnerPersonId: fixture.PersonId,
             AccessOwnerPersonId: fixture.PersonId, IsRestricted: true,
-            ApplicationKind: "service", Criticality: "critical", DeclarationKey: key);
-        await fixture.SeedApplicationAsync(targetId, original);
+            ApplicationKind: "service", Criticality: "critical");
+        var created = await fixture.Bus.DispatchAsync(original, fixture.Context(false));
+        Assert.True(created.IsSuccess, created.Error?.Message);
+        fixture.Permissions.RestrictedReadAllowed = false;
         Assert.Null(await fixture.Applications.GetAsync(fixture.Tenant, targetId));
         var before = await fixture.ApplicationEventsAsync(fixture.Tenant);
         var retry = changedContent ? original with { Name = "Different private application" } : original;
@@ -181,40 +176,24 @@ public sealed class InventoryManagementIndependenceTests
         Assert.Empty(await fixture.ApplicationEventsAsync(fixture.ForeignTenant));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ShouldDenyRestrictedDeclarationGivenTargetChangesAfterEarlierVisibilityRead(bool initiallyExists)
+    [Fact]
+    public async Task ShouldDenyRestrictedDeclarationGivenTargetAppearsAfterEarlierVisibilityRead()
     {
         // Arrange
         await using var fixture = new Fixture("client_personnel", governedDeclarationsEnabled: true);
         await fixture.SeedPersonAsync();
         fixture.Permissions.RestrictedReadAllowed = false;
-        var key = Uuid.CreateVersion4();
-        var targetId = fixture.DeclarationTarget(key);
-        var request = new DeclareApplication(fixture.Tenant, "Application", "Purpose",
+        var targetId = Uuid.CreateVersion4();
+        var request = new DeclareApplication(targetId, fixture.Tenant, "Application", "Purpose",
             Classification: "internal", SystemOwnerPersonId: fixture.PersonId,
-            AccessOwnerPersonId: fixture.PersonId, IsRestricted: !initiallyExists,
-            ApplicationKind: "service", Criticality: "critical", DeclarationKey: key);
-        if (initiallyExists)
-        {
-            await fixture.SeedApplicationAsync(targetId, request);
-            await fixture.ProjectRecordsAsync();
-            Assert.False((await fixture.Applications.GetAsync(fixture.Tenant, targetId))!.IsRestricted);
-        }
-        else
-        {
-            Assert.Null(await fixture.Applications.GetAsync(fixture.Tenant, targetId));
-        }
-        Assert.Equal(initiallyExists, await fixture.Visibility.CanReadApplicationAsync(
-            fixture.Tenant, fixture.User, targetId));
+            AccessOwnerPersonId: fixture.PersonId, IsRestricted: true,
+            ApplicationKind: "service", Criticality: "critical");
+        Assert.Null(await fixture.Applications.GetAsync(fixture.Tenant, targetId));
+        Assert.False(await fixture.Visibility.CanReadApplicationAsync(fixture.Tenant, fixture.User, targetId));
         List<DomainEvent>? atExecution = null;
         fixture.ExecutionGate.BeforeApplicationExecution = async () =>
         {
-            if (initiallyExists)
-                await fixture.RestrictApplicationAsync(targetId, request);
-            else
-                await fixture.SeedApplicationAsync(targetId, request);
+            await fixture.SeedApplicationAsync(targetId, request);
             atExecution = await fixture.ApplicationEventsAsync(fixture.Tenant);
         };
 
@@ -232,17 +211,8 @@ public sealed class InventoryManagementIndependenceTests
         Assert.Equal(RequestErrorKind.NotFound, refused.Error!.Kind);
         Assert.Equal("The application was not found.", refused.Error.Message);
         Assert.Equal(atExecution, after);
-        if (initiallyExists)
-        {
-            Assert.Collection(after, ev => Assert.IsType<ApplicationDeclared>(ev),
-                ev => Assert.IsType<ApplicationRevised>(ev));
-            Assert.False((await fixture.Applications.GetAsync(fixture.Tenant, targetId))!.IsRestricted);
-        }
-        else
-        {
-            Assert.Single(after);
-            Assert.Null(await fixture.Applications.GetAsync(fixture.Tenant, targetId));
-        }
+        Assert.Single(after);
+        Assert.Null(await fixture.Applications.GetAsync(fixture.Tenant, targetId));
     }
 
     [Theory]
@@ -264,8 +234,8 @@ public sealed class InventoryManagementIndependenceTests
         var context = fixture.Context(mcp);
 
         // Act
-        var declare = await fixture.Bus.DispatchAsync(new DeclareApplication(fixture.Tenant, "Attempted", "Purpose"), context);
-        var revise = await fixture.Bus.DispatchAsync(new ReviseApplication(fixture.Tenant, fixture.ApplicationId,
+        var declare = await fixture.Bus.DispatchAsync(new DeclareApplication(Uuid.CreateVersion4(), fixture.Tenant, "Attempted", "Purpose"), context);
+        var revise = await fixture.Bus.DispatchAsync(new ReviseApplication(Uuid.CreateVersion4(), fixture.Tenant, fixture.ApplicationId,
             1, "Attempted", "Purpose", null), context);
         var record = await fixture.Bus.DispatchAsync(new RecordTechnologyComponent(fixture.Tenant, "repository",
             "Attempted", fixture.PersonId), context);
@@ -302,7 +272,7 @@ public sealed class InventoryManagementIndependenceTests
                 history == "other_client" ? Uuid.CreateVersion4() : fixture.Tenant, true);
 
         // Act
-        var application = await fixture.Bus.SendAsync(new ReviseApplication(fixture.Tenant, fixture.ApplicationId,
+        var application = await fixture.Bus.SendAsync(new ReviseApplication(Uuid.CreateVersion4(), fixture.Tenant, fixture.ApplicationId,
             1, "Allowed revision", "Purpose", null), fixture.Actor);
         var component = await fixture.Bus.SendAsync(new ReviseTechnologyComponent(fixture.Tenant,
             fixture.ComponentId, 1, "Allowed revision", fixture.PersonId, "active"), fixture.Actor);
@@ -344,7 +314,7 @@ public sealed class InventoryManagementIndependenceTests
         fixture.Permissions.Allowed = false;
 
         // Act
-        var application = await fixture.Bus.SendAsync(new DeclareApplication(fixture.Tenant, "Attempted", "Purpose"), fixture.Actor);
+        var application = await fixture.Bus.SendAsync(new DeclareApplication(Uuid.CreateVersion4(), fixture.Tenant, "Attempted", "Purpose"), fixture.Actor);
         var component = await fixture.Bus.SendAsync(new RecordTechnologyComponent(fixture.Tenant,
             "repository", "Attempted", Uuid.CreateVersion4()), fixture.Actor);
 
@@ -410,9 +380,6 @@ public sealed class InventoryManagementIndependenceTests
             ? new McpInvocation("synthetic-inventory-command")
             : new HttpInvocation("POST", "/synthetic", "/synthetic", "synthetic-inventory-command"));
 
-        public Uuid DeclarationTarget(Uuid key) => Uuid.CreateVersion5(Tenant,
-            $"application_declaration_v1:{RbacIds.Member(Tenant, User)}:{key}");
-
         public async Task SeedApplicationAsync(Uuid applicationId, DeclareApplication request)
         {
             var application = new DeclaredApplication(Tenant, applicationId);
@@ -436,7 +403,7 @@ public sealed class InventoryManagementIndependenceTests
         {
             await SeedPersonAsync();
             var admin = PersonalActor(_administrator);
-            var application = await Bus.SendAsync(new DeclareApplication(Tenant, "Original application", "Purpose"), admin);
+            var application = await Bus.SendAsync(new DeclareApplication(Uuid.CreateVersion4(), Tenant, "Original application", "Purpose"), admin);
             Assert.True(application.IsSuccess, application.Error?.Message);
             ApplicationId = application.Value!.ApplicationId;
             var component = await Bus.SendAsync(new RecordTechnologyComponent(Tenant, "repository", "Original component", PersonId), admin);

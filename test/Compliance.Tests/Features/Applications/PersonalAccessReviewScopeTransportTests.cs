@@ -187,7 +187,7 @@ public sealed class PersonalAccessReviewScopeTransportTests
             fixture.Application = await fixture.DeclareApplicationAsync(personId);
             await using var scope = fixture._provider.CreateAsyncScope();
             var instance = await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(
-                new DeclareSystemInstance(fixture.Tenant, fixture.Application, 1, "Production", "production"),
+                new DeclareSystemInstance(Uuid.CreateVersion4(), fixture.Tenant, fixture.Application, 1, "Production", "production"),
                 ProgramManagementServices.Actor(fixture.Registrant));
             Assert.True(instance.IsSuccess, instance.Error?.Message);
             fixture.Instance = instance.Value.SystemInstanceId;
@@ -197,7 +197,7 @@ public sealed class PersonalAccessReviewScopeTransportTests
         {
             await using var scope = _provider.CreateAsyncScope();
             var application = await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(
-                new DeclareApplication(Tenant, "Payroll", "Run payroll", AccessOwnerPersonId: owner),
+                new DeclareApplication(Uuid.CreateVersion4(), Tenant, "Payroll", "Run payroll", AccessOwnerPersonId: owner),
                 ProgramManagementServices.Actor(Registrant));
             Assert.True(application.IsSuccess, application.Error?.Message);
             return application.Value.ApplicationId;

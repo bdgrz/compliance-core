@@ -151,11 +151,11 @@ public sealed class ApplicationImportProcessTests
 
         // Act
         var replayed = await host.ApplicationAsync(a);
-        var composed = await host.Reader.HydrateApplicationAsync(host.TenantId, a);
+        var composed = await host.PublishedApplicationAsync(a);
         var write = replayed.Revise(0, "Alpha", "Edited", null, host.ActorMemberId, "Import manager", host.Clock.GetUtcNow());
 
-        // Assert: the target stream alone replays its own provisional facts; only the read composition shows the
-        // published candidate, and a local write waits for the hold to settle.
+        // Assert: the target stream alone replays its own provisional facts; only the fixed-cut read composition
+        // shows the published candidate, and a local write waits for the hold to settle.
         Assert.True(commit.IsSuccess, commit.Error?.Message);
         Assert.False(replayed.IsCreated);
         Assert.Equal(0, replayed.Revision);
@@ -330,6 +330,8 @@ public sealed class ApplicationImportProcessTests
             Assert.Equal(ApplicationImportDisposition.Canceled, hold.Settled!.Disposition);
             Assert.False(application.IsCreated);
             Assert.False(composed.IsCreated);
+            Assert.Equal(0, application.Revision);
+            Assert.Equal(0, composed.Revision);
         }
     }
 

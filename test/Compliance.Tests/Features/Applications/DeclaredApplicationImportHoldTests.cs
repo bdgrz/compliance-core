@@ -38,7 +38,7 @@ public sealed class DeclaredApplicationImportHoldTests
         Assert.True(held.CheckPendingImportChanges()!.IsTransient);
         Assert.NotNull(revise);
         Assert.NotNull(retire);
-        Assert.True(declare.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, declare.Error?.Kind);
         Assert.Equal(ProcessState.Completed, run.State);
         Assert.Null(released.CheckPendingImportChanges());
         Assert.Null(write);

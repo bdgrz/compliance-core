@@ -58,7 +58,7 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
         HttpStatusCode? lastStatus = null;
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(applicationsPath, new
+            using var response = await owner.PutAsJsonAsync($"{applicationsPath}/{Guid.NewGuid()}", new
             {
                 name = "Payroll",
                 purpose = "Run payroll",
@@ -145,8 +145,8 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
             var structured = Assert.IsType<JsonElement>(pendingReferences.Error);
             Assert.True(structured.GetProperty("isTransient").GetBoolean());
         }
-        using var unprojectedInstanceResponse = await owner.PostAsJsonAsync(
-            $"{applicationsPath}/{first.ApplicationId}/system-instances", new
+        using var unprojectedInstanceResponse = await owner.PutAsJsonAsync(
+            $"{applicationsPath}/{first.ApplicationId}/system-instances/{Guid.NewGuid()}", new
             {
                 expected_application_revision = 1,
                 name = "Payroll production",
@@ -452,7 +452,7 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
                         ["cursor"] = "not-a-cursor",
                     }).ExpectFailure();
             }
-            using var secondResponse = await owner.PostAsJsonAsync(applicationsPath, new
+            using var secondResponse = await owner.PutAsJsonAsync($"{applicationsPath}/{Guid.NewGuid()}", new
             {
                 name = "Benefits",
                 purpose = "Administer benefits",
@@ -477,8 +477,8 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
             Assert.Equal(1, projected?.Revision);
             using var persisted = await owner.GetAsync($"{applicationsPath}/{first.ApplicationId}");
             Assert.Equal(HttpStatusCode.OK, persisted.StatusCode);
-            using var instanceResponse = await owner.PostAsJsonAsync(
-                $"{applicationsPath}/{second.ApplicationId}/system-instances", new
+            using var instanceResponse = await owner.PutAsJsonAsync(
+                $"{applicationsPath}/{second.ApplicationId}/system-instances/{Guid.NewGuid()}", new
                 {
                     expected_application_revision = 1,
                     name = "Benefits production",
@@ -656,7 +656,7 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
         HttpStatusCode? lastStatus = null;
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(applicationsPath, new
+            using var response = await owner.PutAsJsonAsync($"{applicationsPath}/{Guid.NewGuid()}", new
             {
                 name = "Payroll",
                 purpose = "Run payroll",
@@ -734,6 +734,7 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
             }).ExpectSuccess();
             _ = await mcp.When("bdgrz.application.declare", new Dictionary<string, object?>
             {
+                ["application_id"] = Guid.NewGuid(),
                 ["tenant_id"] = tenant.TenantId,
                 ["name"] = "Benefits",
                 ["purpose"] = "Administer benefits",
@@ -811,20 +812,21 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
             }).ExpectFailure();
             _ = await mcp.When("bdgrz.application.declare", new Dictionary<string, object?>
             {
+                ["application_id"] = Guid.NewGuid(),
                 ["tenant_id"] = tenant.TenantId,
                 ["name"] = "Hidden",
                 ["purpose"] = "Should be denied",
             }).ExpectFailure();
         }
-        var productionTask = owner.PostAsJsonAsync(
-            $"{applicationPath}/system-instances", new
+        var productionTask = owner.PutAsJsonAsync(
+            $"{applicationPath}/system-instances/{Guid.NewGuid()}", new
             {
                 expected_application_revision = 1,
                 name = "Production",
                 kind = "production",
                 source_identifier = "payroll-prod",
             });
-        var stagingTask = owner.PostAsJsonAsync($"{applicationPath}/system-instances", new
+        var stagingTask = owner.PutAsJsonAsync($"{applicationPath}/system-instances/{Guid.NewGuid()}", new
         {
             expected_application_revision = 1,
             name = "Staging",
@@ -900,14 +902,16 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
         using var noInstanceMetadataRevision = await owner.GetAsync(
             $"{applicationPath}/revisions/2");
         Assert.Equal(HttpStatusCode.Conflict, noInstanceMetadataRevision.StatusCode);
-        using var revisedResponse = await owner.PutAsJsonAsync(applicationPath, new
-        {
-            expected_revision = 1,
-            name = "Payroll",
-            purpose = "Run monthly payroll",
-            owner_reference = "Finance",
-            classification = "restricted",
-        });
+        using var revisedResponse = await owner.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenant.TenantId}/applications/revise-application/{Guid.NewGuid()}", new
+            {
+                application_id = registration.ApplicationId,
+                expected_revision = 1,
+                name = "Payroll",
+                purpose = "Run monthly payroll",
+                owner_reference = "Finance",
+                classification = "restricted",
+            });
         Assert.Equal(HttpStatusCode.NoContent, revisedResponse.StatusCode);
         ApplicationRevisionDocument? revisedRevision = null;
         deadline = DateTimeOffset.UtcNow.AddSeconds(120);
@@ -926,8 +930,8 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
         Assert.Equal("revised", revisedRevision?.ChangeKind);
         Assert.Equal("Run monthly payroll", revisedRevision?.Purpose);
         Assert.Equal("restricted", revisedRevision?.Classification);
-        using var afterMetadataEdit = await owner.PostAsJsonAsync(
-            $"{applicationPath}/system-instances", new
+        using var afterMetadataEdit = await owner.PutAsJsonAsync(
+            $"{applicationPath}/system-instances/{Guid.NewGuid()}", new
             {
                 expected_application_revision = 1,
                 name = "Recovery",
@@ -1030,6 +1034,7 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
             }).ExpectSuccess();
             _ = await mcp.When("bdgrz.system_instance.declare", new Dictionary<string, object?>
             {
+                ["system_instance_id"] = Guid.NewGuid(),
                 ["tenant_id"] = tenant.TenantId,
                 ["application_id"] = registration.ApplicationId,
                 ["expected_application_revision"] = 1,
@@ -1062,7 +1067,7 @@ public sealed class ApplicationInventoryE2ETests(BrokerStackFixture broker)
         deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await owner.PostAsJsonAsync(otherApplicationsPath, new
+            using var response = await owner.PutAsJsonAsync($"{otherApplicationsPath}/{Guid.NewGuid()}", new
             {
                 name = "Other system",
                 purpose = "Establish second tenant access",

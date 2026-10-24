@@ -14,6 +14,13 @@ application's derived `has_system_instances` view but creates no application rev
 
 ## V1 HTTP and MCP contract
 
+Declaration is `PUT .../applications/{application_id}/system-instances/{system_instance_id}`: the
+client-chosen `system_instance_id` is the logical identity of the creation, an exact retry replays the
+original registration after any later change, and a changed declaration conflicts. Revision and
+retirement are identified by `command_id` (`PUT .../system-instances/{system_instance_id}/retirements/{command_id}`);
+each is one native operation on the instance's own stream and replays exactly under the same actor and
+authored intent. A revision that would leave the recorded content unchanged records nothing.
+
 The existing `expected_application_revision` field remains required on declaration.
 It now means the parent application source must have reached **at least** that
 revision. A metadata revision beyond the supplied value does not reject the

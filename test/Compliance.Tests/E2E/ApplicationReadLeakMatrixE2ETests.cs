@@ -302,15 +302,16 @@ public sealed class ApplicationReadLeakMatrixE2ETests(BrokerStackFixture broker)
                 slug = $"app-matrix-{Guid.NewGuid():N}"[..24],
             })).GetProperty("tenant_id").GetString()!);
         var applicationsPath = $"/api/v1/tenants/{tenantId}/applications";
-        var applicationId = Guid.Parse((await PostUntilAuthorizedAsync(owner, applicationsPath,
-            new { name = "Payroll " + label, purpose = "Run payroll " + label }))
+        var applicationId = Guid.Parse((await PostUntilAuthorizedAsync(owner,
+            $"{applicationsPath}/{Guid.NewGuid()}",
+            new { name = "Payroll " + label, purpose = "Run payroll " + label }, HttpMethod.Put))
             .GetProperty("application_id").GetString()!);
         var applicationPath = $"{applicationsPath}/{applicationId}";
         _ = await WaitForOkAsync(() => owner.GetAsync(applicationPath));
         var instances = new Guid[2];
         for (var index = 0; index < instances.Length; index++)
         {
-            using var declared = await owner.PostAsJsonAsync(applicationPath + "/system-instances",
+            using var declared = await owner.PutAsJsonAsync(applicationPath + $"/system-instances/{Guid.NewGuid()}",
                 new
                 {
                     expected_application_revision = 1,
@@ -325,13 +326,15 @@ public sealed class ApplicationReadLeakMatrixE2ETests(BrokerStackFixture broker)
         // Instance declarations no longer revise the application; build metadata history directly.
         for (var revision = 1; revision <= 2; revision++)
         {
-            using var revised = await owner.PutAsJsonAsync(applicationPath, new
-            {
-                expected_revision = revision,
-                name = "Payroll " + label,
-                purpose = "Run payroll " + label,
-                owner_reference = $"Payroll owner {label} {revision + 1}",
-            });
+            using var revised = await owner.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/applications/revise-application/{Guid.NewGuid()}", new
+                {
+                    application_id = applicationId,
+                    expected_revision = revision,
+                    name = "Payroll " + label,
+                    purpose = "Run payroll " + label,
+                    owner_reference = $"Payroll owner {label} {revision + 1}",
+                });
             Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
         }
         _ = await WaitForOkAsync(() => owner.GetAsync(applicationPath + "/revisions/3"));
@@ -510,8 +513,8 @@ public sealed class ApplicationReadLeakMatrixE2ETests(BrokerStackFixture broker)
     static async Task<Guid> AddApplicationAsync(HttpClient owner, Seed seed, string label)
     {
         var path = $"/api/v1/tenants/{seed.TenantId}/applications";
-        var applicationId = Guid.Parse((await PostUntilAuthorizedAsync(owner, path,
-            new { name = "Payroll " + label, purpose = "Run payroll " + label }))
+        var applicationId = Guid.Parse((await PostUntilAuthorizedAsync(owner, $"{path}/{Guid.NewGuid()}",
+            new { name = "Payroll " + label, purpose = "Run payroll " + label }, HttpMethod.Put))
             .GetProperty("application_id").GetString()!);
         _ = await WaitForOkAsync(() => owner.GetAsync(path + "/" + applicationId));
         return applicationId;
@@ -860,12 +863,12 @@ public sealed class ApplicationReadLeakMatrixE2ETests(BrokerStackFixture broker)
     }
 
     static async Task<JsonElement> PostUntilAuthorizedAsync(HttpClient client, string path,
-        object body)
+        object body, HttpMethod? method = null)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var response = await client.PostAsJsonAsync(path, body);
+            using var response = await client.SendAsync(new HttpRequestMessage(method ?? HttpMethod.Post, path) { Content = JsonContent.Create(body) });
             if (response.StatusCode == HttpStatusCode.OK)
                 return await ReadAsync(response);
             Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,

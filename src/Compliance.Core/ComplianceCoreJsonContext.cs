@@ -922,6 +922,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(AccessReviewCampaignImpactSummaryView))]
 [JsonSerializable(typeof(ApplicationFieldChange))]
 [JsonSerializable(typeof(ApplicationRegistration))]
+[JsonSerializable(typeof(ApplicationUpdateAuthoredIntent))]
 [JsonSerializable(typeof(StageApplicationImport))]
 [JsonSerializable(typeof(CancelApplicationImport))]
 [JsonSerializable(typeof(AcceptApplicationImport))]
