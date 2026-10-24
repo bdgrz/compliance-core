@@ -39,10 +39,10 @@ const sources = walk(path.join(root, 'src'));
 const tests = walk(path.join(root, 'test'));
 const rel = file => path.relative(root, file).split(path.sep).join('/');
 
-// Parses `record|class Name[(params)] : Base1, Base2 ...` declarations with balanced parameter lists.
+// Parses `record|class|interface Name[(params)] : Base1, Base2 ...` declarations with balanced parameter lists.
 const declarations = content => {
     const found = [];
-    const pattern = /\b(record|class)\s+([A-Z]\w*)\b/g;
+    const pattern = /\b(record|class|interface)\s+([A-Z]\w*)\b/g;
     let match;
     while ((match = pattern.exec(content)) !== null) {
         let index = pattern.lastIndex;
@@ -96,13 +96,43 @@ const mcpTools = new Set();
 const literals = new Set(); // string literals in Core (process names)
 const ulongExpected = []; // { request, field, file }
 
-for (const file of sources) {
+// Resolve marker interfaces across files and declaration order. Generic arguments do not make their
+// containing interface a request: only the outer base types participate in inheritance.
+const baseTypes = bases => {
+    const parts = [];
+    let start = 0;
+    let depth = 0;
+    for (let index = 0; index <= bases.length; index++) {
+        const char = bases[index];
+        if (char === '<' || char === '(') depth++;
+        else if (char === '>' || char === ')') depth--;
+        if (index === bases.length || char === ',' && depth === 0) {
+            const outer = bases.slice(start, index).trim().split(/[<(]/)[0].trim();
+            if (outer) parts.push(outer.split(/[.:]/).at(-1));
+            start = index + 1;
+        }
+    }
+    return parts;
+};
+const scannedSources = sources.map(file => {
     const content = fs.readFileSync(file, 'utf8');
-    for (const d of declarations(content)) {
+    return { file, content, declared: declarations(content) };
+});
+const interfaces = new Map(scannedSources.flatMap(source => source.declared
+    .filter(declaration => declaration.kind === 'interface')
+    .map(declaration => [declaration.name, baseTypes(declaration.bases)])));
+const isRequestInterface = (name, visited = new Set()) => {
+    if (name === 'IRequest' || name === 'IIdentifiedRequest') return true;
+    if (visited.has(name)) return false;
+    visited.add(name);
+    return (interfaces.get(name) ?? []).some(parent => isRequestInterface(parent, visited));
+};
+for (const { file, content, declared } of scannedSources) {
+    for (const d of declared) {
         typeNames.set(d.name, [...(typeNames.get(d.name) ?? []), rel(file)]);
         if (/(^|[\s,])Aggregate\b/.test(d.bases)) aggregates.set(d.name, rel(file));
         if (/(^|[\s,])DomainEvent\b/.test(d.bases) && d.kind === 'record') domainEvents.set(d.name, { file: rel(file), discriminator: d.discriminator, params: d.params });
-        if (/\bI(?:Identified)?Request\b/.test(d.bases) && d.kind === 'record') {
+        if (d.kind === 'record' && baseTypes(d.bases).some(name => isRequestInterface(name))) {
             requests.set(d.name, { file: rel(file), params: d.params, bases: d.bases });
             for (const [name, type] of paramTypes(d.params)) if (type === 'ulong' && /^Expected\w*(Revision|Generation|Epoch|Version)$/.test(name)) ulongExpected.push({ request: d.name, field: name, file: rel(file) });
         }
@@ -126,7 +156,17 @@ for (const entry of allowlist.deferred) {
 }
 for (const name of allowlist.ulongExpectedRevision) if (!requests.has(name)) fail(`Allowlist ulong exception names a missing request type: ${name}`);
 const ulongAllowed = new Set(allowlist.ulongExpectedRevision);
-for (const hit of ulongExpected) if (!ulongAllowed.has(hit.request)) fail(`Unsigned public expected value outside the shipped allowlist: ${hit.request}.${hit.field} (${hit.file})`);
+// A catalog's trusted, unexposed receiver may pin an unsigned source position. Exposing that same
+// contract over HTTP/MCP restores the public signed-revision rule; this is not a blanket marker exemption.
+const internalUnsigned = new Set(reactorCatalog.reactors
+    .filter(receiver => receiver.http === false && receiver.mcp === false)
+    .flatMap(receiver => receiver.fields.filter(field => field.type === 'ulong')
+        .map(field => `${receiver.command}.${field.name}`)));
+for (const hit of ulongExpected) {
+    const internal = internalUnsigned.has(`${hit.request}.${hit.field}`) &&
+        !mappedRoutes.has(hit.request) && !mcpTools.has(hit.request);
+    if (!ulongAllowed.has(hit.request) && !internal) fail(`Unsigned public expected value outside the shipped allowlist: ${hit.request}.${hit.field} (${hit.file})`);
+}
 
 // ---------- events ----------
 const eventStatus = new Map();
