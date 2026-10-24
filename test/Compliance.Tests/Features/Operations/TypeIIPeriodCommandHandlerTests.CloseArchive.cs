@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Tests.Features.Changes;
+using Bdgrz.Compliance.Tests.Testing;
 using System.IO.Compression;
 using System.Security.Claims;
 using System.Text;
@@ -16,18 +19,36 @@ namespace Bdgrz.Compliance.Tests.Features.Operations;
 public sealed partial class TypeIIPeriodCommandHandlerTests
 {
     [Fact]
-    public async Task ShouldArchiveExactPublishedNativeCloseSourceGivenReconciliationApprovalAndFreeze()
+    public Task ShouldArchiveExactPublishedNativeCloseSourceGivenReconciliationApprovalAndFreeze() => ArchiveAsync(includeChange: false);
+
+    [Fact]
+    public Task ShouldArchiveExactVerifiedChangeBodiesGivenNativeCloseHistoryWithGovernedReferences() => ArchiveAsync(includeChange: true);
+
+    static async Task ArchiveAsync(bool includeChange)
     {
         // Arrange
         await using var fixture = new Fixture();
         await fixture.RegisterActorAsync();
         await fixture.SeedCoveredCloseReadyPeriodAsync();
+        SignificantChangeRules? change = null;
+        if (includeChange)
+        {
+            change = new SignificantChangeRules(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4());
+            Assert.Null(change.Record(new SignificantChangeContent(null, null, null, "Exact source-byte history", "A governed change body in the close archive.",
+                fixture.PeriodStart, null, fixture.ProposerMemberId, Enumerable.Range(0, 1000).Select(index => Uuid.CreateVersion5(change.Id, "system:" + index)).ToArray(),
+                "high", "confidential", []), fixture.ProposerMemberId, "Recorder", StartedAt));
+            Assert.Null(change.Assess(1, new SignificantChangeImpactContent("not_significant", "No key boundary or control changes.",
+                false, false, false, false, ["other"], [], [], [], [], [], false), fixture.ActorMemberId, "Assessor", StartedAt.AddHours(1)));
+            await ChangeSeeds.WriteAsync(fixture.Writer, fixture.Host.Content, change);
+        }
         var root = Path.Combine(Path.GetTempPath(), "bdgrz-type-ii-close-source-" + Guid.NewGuid().ToString("N"));
         try
         {
             var artifacts = new LocalArtifactContentStore(new ArtifactContentStoreOptions(root, new byte[32], ArtifactContentLimits.MaxContentLength), fixture.CloseClock);
             var publisher = new TypeIIPeriodCloseSourcePublication(artifacts, fixture.Host.Content);
-            var sources = new PublishingCloseSources(publisher);
+            var sources = new PublishingCloseSources(publisher, includeChange ? new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events,
+                new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true)),
+                new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content), fixture.Host.Content) : null);
             var request = await CloseRequestAsync(fixture);
             var validator = Uuid.CreateVersion4();
             var actor = new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss", "bdgrz"), new Claim("sub", validator.ToString()),
@@ -86,6 +107,21 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             Assert.Equal(manifest.RecordedThrough, body.RootElement.GetProperty("recorded_through").GetDateTimeOffset());
             Assert.Equal(request.CommandId, manifest.CloseOperationId);
             Assert.True(body.RootElement.GetProperty("records").GetArrayLength() > 0);
+            if (includeChange)
+            {
+                var recorded = body.RootElement.GetProperty("records").EnumerateArray().Single(item =>
+                    item.GetProperty("payload").TryGetProperty("header", out var header) &&
+                    header.TryGetProperty("significant_change_id", out var changeId) && changeId.GetString() == change!.Id.ToString() &&
+                    header.GetProperty("revision").GetInt64() == 1);
+                var blob = recorded.GetProperty("content_blobs")[0];
+                var exact = Convert.FromBase64String(blob.GetProperty("base64").GetString()!);
+                Assert.Equal(blob.GetProperty("reference").GetProperty("bytes").GetInt64(), exact.LongLength);
+                Assert.Equal(blob.GetProperty("reference").GetProperty("sha256").GetString(), Bdgrz.Compliance.Features.Kernel.ContentDigest.Sha256(exact));
+                var reconstructed = JsonSerializer.Deserialize(exact, Bdgrz.Compliance.ComplianceCoreJsonContext.Default.SignificantChangeView);
+                Assert.Equal("Exact source-byte history", reconstructed!.Current!.Content.Title);
+                Assert.Equal(1000, reconstructed.Current.Content.AffectedSystemIds.Count);
+                Assert.Equal(change!.Current!.Current!.ContentSha256, reconstructed.Current.ContentSha256);
+            }
         }
         finally
         {
@@ -94,13 +130,20 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         }
     }
 
-    sealed class PublishingCloseSources(TypeIIPeriodCloseSourcePublication publication) : ITypeIIPeriodCloseReconciliation
+    sealed class PublishingCloseSources(TypeIIPeriodCloseSourcePublication publication, TypeIIPeriodCloseHistory? history = null) : ITypeIIPeriodCloseReconciliation
     {
         public async ValueTask<Result<TypeIIPeriodCloseValidationContent>> ReadAsync(TypeIIPeriodReadSnapshot period, ClaimsPrincipal actor,
             Uuid requesterUserId, OperationProvenance operation, CancellationToken ct)
         {
             var current = period.View!;
-            var facts = period.OccurrenceGenerations.Select(fact => TypeIIPeriodCloseHistory.Capture(period.Stream, fact)).ToArray();
+            var native = period.OccurrenceGenerations.Select(fact => TypeIIPeriodCloseHistory.Capture(period.Stream, fact)).ToList();
+            if (history is not null)
+            {
+                var captured = await history.ReadAsync(current, actor, operation.AcceptedAt, ct);
+                Assert.Empty(captured.Blockers);
+                native.AddRange(captured.Records);
+            }
+            var facts = native.ToArray();
             var published = await publication.PublishAsync(current, operation, "type_ii_native_history", facts, [], ct);
             var manifest = await publication.SealAsync(current, operation, [published.Published], ct,
                 TypeIBaselineSourceFamilies.Required.Select(family => TypeIBaselineContentIdentity.Coverage(family, [])).ToArray());

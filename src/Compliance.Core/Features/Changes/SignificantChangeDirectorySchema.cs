@@ -9,8 +9,8 @@ static class SignificantChangeDirectorySchema
         "by_program_updated_at", 1, static change => [change.ProgramId.ToString(),
             UpdatedAtSortKey(change.UpdatedAt), change.SignificantChangeId.ToString()]);
 
-    public static readonly KvDirectory<SignificantChangeView, Uuid> Details = new(
-        "significant_change_details", ComplianceCoreJsonContext.Default.SignificantChangeView,
+    public static readonly KvDirectory<SignificantChangeDirectoryEntry, Uuid> Details = new(
+        "significant_change_authority", ComplianceCoreJsonContext.Default.SignificantChangeDirectoryEntry,
         static change => change.SignificantChangeId,
         static changeId => [changeId.ToString()], []);
 

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
@@ -29,6 +30,9 @@ sealed class TypedReactionBus(IRequestBus inner) : IRequestBus
     public static void FailWith<TRequest>(ReactorScenario scenario, RequestError error) =>
         ((TypedReactionBus)For(scenario))._failures[typeof(TRequest)] = error;
 
+    public static void Succeed<TRequest>(ReactorScenario scenario) =>
+        ((TypedReactionBus)For(scenario))._failures.Remove(typeof(TRequest));
+
     /// <summary>Every command the reactor sent, in order, with typed commands unwrapped.</summary>
     public static IReadOnlyList<IRequestBase> Sent(ReactorScenario scenario) => scenario.SentRequests
         .Select(request => request is TypedRequest typed ? typed.Request : request).ToList();
@@ -49,6 +53,8 @@ sealed class TypedReactionBus(IRequestBus inner) : IRequestBus
         await inner.DispatchAsync(new TypedRequest(request), context, ct);
         if (_failures.TryGetValue(request.GetType(), out var error))
             return Result<TOut>.Failure(error);
+        if (typeof(TOut) == typeof(UnitResult))
+            return Result<TOut>.Success((TOut)(object)new UnitResult());
         if (typeof(TOut) != typeof(AdministratorTransitionResponse))
             throw new NotSupportedException($"No scripted response for {typeof(TOut).Name}.");
         return Result<TOut>.Success((TOut)(object)new AdministratorTransitionResponse(Uuid.CreateVersion4(),

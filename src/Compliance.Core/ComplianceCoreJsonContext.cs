@@ -6,6 +6,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance;
 
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Changes.SignificantChangeAuthorityHeader))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Changes.SignificantChangeDirectoryEntry))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Changes.SignificantChangeMutation))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseContentBlob))]
+[JsonSerializable(typeof(IReadOnlyList<Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseContentBlob>))]
+
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodAuthorityHeader))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodMutationContent))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Operations.TypeIIPeriodCloseMaterialProof))]

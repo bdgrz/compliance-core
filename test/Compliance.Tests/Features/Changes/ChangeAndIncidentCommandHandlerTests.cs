@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Changes;
 using Cntryl.Portia;
@@ -34,19 +36,19 @@ public sealed class ChangeAndIncidentCommandHandlerTests
             [EvidenceId], false);
 
         // Act
-        var recorded = await new RecordSignificantChangeHandler(scenario.Executor, scenario.Clock).HandleAsync(
+        var recorded = await new RecordSignificantChangeHandler(scenario.ChangeOperations).HandleAsync(
             Scenario.Context(new RecordSignificantChange(TenantId, ProgramId, changeId, content), author),
             CancellationToken.None);
-        var revised = await new ReviseSignificantChangeHandler(scenario.Executor, scenario.Clock).HandleAsync(
-            Scenario.Context(new ReviseSignificantChange(TenantId, ProgramId, changeId, 1, revision,
+        var revised = await new ReviseSignificantChangeHandler(scenario.ChangeOperations).HandleAsync(
+            Scenario.Context(new ReviseSignificantChange(Uuid.CreateVersion4(), TenantId, ProgramId, changeId, 1, revision,
                 "Clarified the privileged access impact."), author), CancellationToken.None);
-        var assessed = await new AssessSignificantChangeHandler(scenario.Executor, scenario.Clock).HandleAsync(
-            Scenario.Context(new AssessSignificantChange(TenantId, ProgramId, changeId, 2, assessment), reviewer),
+        var assessed = await new AssessSignificantChangeHandler(scenario.ChangeOperations).HandleAsync(
+            Scenario.Context(new AssessSignificantChange(Uuid.CreateVersion4(), TenantId, ProgramId, changeId, 2, assessment), reviewer),
             CancellationToken.None);
-        var staleAssessment = await new AssessSignificantChangeHandler(scenario.Executor, scenario.Clock).HandleAsync(
-            Scenario.Context(new AssessSignificantChange(TenantId, ProgramId, changeId, 1,
+        var staleAssessment = await new AssessSignificantChangeHandler(scenario.ChangeOperations).HandleAsync(
+            Scenario.Context(new AssessSignificantChange(Uuid.CreateVersion4(), TenantId, ProgramId, changeId, 1,
                 assessment with { Rationale = "A conflicting stale assessment." }), reviewer), CancellationToken.None);
-        var aggregate = await scenario.Reader.HydrateAsync(new SignificantChange(TenantId, ProgramId, changeId));
+        var aggregate = await scenario.Changes.RulesAsync(TenantId, ProgramId, changeId);
 
         // Assert
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
@@ -69,14 +71,21 @@ public sealed class ChangeAndIncidentCommandHandlerTests
         public Scenario()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var events = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(events);
+            services.AddSingleton<IDomainEventReader>(events);
             services.AddPortia();
             _services = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _services.CreateAsyncScope();
             Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+            Changes = new SignificantChangeReader(Reader, events, Content);
+            ChangeOperations = new SignificantChangeOperations(new NativeOperationExecutor(Reader, Executor, Content), Changes, Content, Clock);
         }
 
+        public IImmutableContentStore Content { get; } = ChangeSeeds.Content();
+        public SignificantChangeReader Changes { get; }
+        public SignificantChangeOperations ChangeOperations { get; }
         public TimeProvider Clock { get; } = new FixedTimeProvider(Now);
         public IAggregateExecutor Executor { get; }
         public IAggregateReader Reader { get; }

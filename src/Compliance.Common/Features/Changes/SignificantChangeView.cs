@@ -32,7 +32,7 @@ public sealed record SignificantChangeView(
 
     [JsonIgnore]
     public bool PeriodCloseEligible => CurrentAssessment is { } assessment &&
-        assessment.RelatedReviewWorkIds.All(id => ReviewWorkLinks.Any(link =>
+        assessment.RelatedReviewWorkIds.Concat(assessment.RelatedCorrectiveActionIds).All(id => ReviewWorkLinks.Any(link =>
             link.ContentVersion == CurrentVersionNumber && link.WorkId == id)) &&
         (!assessment.RequiresSystemDescriptionReview || CurrentSystemDescriptionDecision is not null);
 }

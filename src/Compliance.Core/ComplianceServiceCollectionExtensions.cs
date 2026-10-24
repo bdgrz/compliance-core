@@ -584,6 +584,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<FitzExaminationEngagementDirectory>();
         services.AddScoped<IExaminationEngagementDirectoryReader>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
+        services.AddScoped<SignificantChangeReader>();
+        services.AddScoped<SignificantChangeOperations>();
+        services.AddScoped<SignificantChangeDirectoryReadConsistency>();
         services.AddScoped<FitzSignificantChangeDirectory>();
         services.AddScoped<ISignificantChangeDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzSignificantChangeDirectory>());

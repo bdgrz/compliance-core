@@ -4,14 +4,14 @@ namespace Bdgrz.Compliance.Features.Changes;
 
 public sealed partial class SignificantChangeDirectoryProjector(
     ISignificantChangeDirectoryProjection projection)
-    : Projector(projection, EventStreamPattern.ForTenant(), ProjectorName),
+    : Projector(projection, EventStreamPattern.ForTenant(SignificantChange.Area), ProjectorName),
       IProjectorHandler<SignificantChangeRecorded>,
       IProjectorHandler<SignificantChangeRevised>,
       IProjectorHandler<SignificantChangeImpactAssessed>,
       IProjectorHandler<ImpactReviewWorkLinked>,
       IProjectorHandler<SignificantChangeSystemDescriptionDecisionRecorded>
 {
-    public const string ProjectorName = "SignificantChangeDirectoryV1";
+    public const string ProjectorName = "SignificantChangeDirectoryV2";
 
     public ValueTask HandleAsync(SignificantChangeRecorded ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);

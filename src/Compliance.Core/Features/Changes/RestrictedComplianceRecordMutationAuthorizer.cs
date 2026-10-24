@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Incidents;
 using Cntryl.Portia;
 using IncidentAggregate = Bdgrz.Compliance.Features.Incidents.ComplianceIncident;
@@ -6,7 +7,7 @@ namespace Bdgrz.Compliance.Features.Changes;
 
 /// <summary>Applies the T2-07 restricted handling rule to change and incident mutations.</summary>
 sealed class RestrictedComplianceRecordMutationAuthorizer(
-    IAggregateReader reader,
+    IAggregateReader reader, SignificantChangeReader changes,
     RestrictedComplianceRecordVisibility visibility)
     : IRequestAuthorizer<IRestrictedComplianceRecordMutationRequest>
 {
@@ -41,10 +42,15 @@ sealed class RestrictedComplianceRecordMutationAuthorizer(
         Uuid[] currentAssessorIds;
         if (target.IsChange)
         {
-            var aggregate = await reader.HydrateAsync(
-                new SignificantChange(request.TenantId, request.ProgramId, target.Id), ct)
-                .ConfigureAwait(false);
-            var current = aggregate.Current;
+            SignificantChangeView? current;
+            try
+            {
+                current = (await changes.ReadAsync(request.TenantId, request.ProgramId, target.Id, ct).ConfigureAwait(false)).View;
+            }
+            catch (ImmutableContentIntegrityException exception)
+            {
+                return Result.Failure(SignificantChangeOperations.ContentFailure(exception));
+            }
             if (current is not null && (current.TenantId != request.TenantId ||
                 current.ProgramId != request.ProgramId || current.SignificantChangeId != target.Id))
                 return HiddenRecord();

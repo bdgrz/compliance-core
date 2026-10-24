@@ -1,10 +1,11 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Changes;
 
 public sealed class ListSignificantChangesHandler(ISignificantChangeDirectoryReader directory,
-    RestrictedComplianceRecordVisibility visibility)
+    RestrictedComplianceRecordVisibility visibility, SignificantChangeDirectoryReadConsistency consistency)
     : IRequestHandler<ListSignificantChanges, Page<SignificantChangeSummaryView>>
 {
     public async ValueTask<Result<Page<SignificantChangeSummaryView>>> HandleAsync(
@@ -18,6 +19,9 @@ public sealed class ListSignificantChangesHandler(ISignificantChangeDirectoryRea
             return Result<Page<SignificantChangeSummaryView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The significant-change list limit must be between 1 and 200."));
 
+        var fence = await consistency.CaptureAsync(request.TenantId, ct).ConfigureAwait(false);
+        if (!fence.IsSuccess)
+            return Result<Page<SignificantChangeSummaryView>>.Failure(fence.Error!);
         var items = new List<SignificantChangeSummaryView>(request.Limit ?? 50);
         var cursor = request.Cursor;
         string? nextCursor = null;
@@ -54,7 +58,8 @@ public sealed class ListSignificantChangesHandler(ISignificantChangeDirectoryRea
                         current.Content.HandlingClass,
                         detail.Assessments.Select(static assessment => assessment.AssessedByMemberId).ToArray(), ct)
                     .ConfigureAwait(false))
-                    items.Add(summary);
+                    items.Add(new SignificantChangeSummaryView(detail.TenantId, detail.ProgramId, detail.SignificantChangeId,
+                        current.Content.Title, detail.Status, detail.UpdatedAt));
 
                 cursor = sourcePage.NextCursor;
                 if (cursor is not null && !seenCursors.Add(cursor))
@@ -64,19 +69,37 @@ public sealed class ListSignificantChangesHandler(ISignificantChangeDirectoryRea
                     break;
             }
         }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<Page<SignificantChangeSummaryView>>.Failure(SignificantChangeOperations.ContentFailure(exception));
+        }
         catch (KvDirectoryQueryException)
         {
             return Result<Page<SignificantChangeSummaryView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The significant-change cursor is invalid."));
         }
 
-        if (items.Count == (request.Limit ?? 50) && nextCursor is not null &&
-            !await HasVisibleAfterAsync(request.TenantId, request.ProgramId, context.Actor,
-                nextCursor, ct).ConfigureAwait(false))
-            nextCursor = null;
+        try
+        {
+            if (items.Count == (request.Limit ?? 50) && nextCursor is not null &&
+                !await HasVisibleAfterAsync(request.TenantId, request.ProgramId, context.Actor,
+                    nextCursor, ct).ConfigureAwait(false))
+                nextCursor = null;
 
-        return Result<Page<SignificantChangeSummaryView>>.Success(
-            new Page<SignificantChangeSummaryView>(items, nextCursor));
+            var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(request.TenantId, fence.Value, ct).ConfigureAwait(false);
+            if (!confirmed.IsSuccess)
+                return Result<Page<SignificantChangeSummaryView>>.Failure(confirmed.Error!);
+            return Result<Page<SignificantChangeSummaryView>>.Success(
+                new Page<SignificantChangeSummaryView>(items, nextCursor));
+        }
+        catch (KvDirectoryQueryException)
+        {
+            return Result<Page<SignificantChangeSummaryView>>.Failure(new RequestError(RequestErrorKind.Validation, "The significant-change cursor is invalid."));
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<Page<SignificantChangeSummaryView>>.Failure(SignificantChangeOperations.ContentFailure(exception));
+        }
     }
 
     async ValueTask<bool> HasVisibleAfterAsync(Uuid tenantId, Uuid programId,
@@ -93,12 +116,12 @@ public sealed class ListSignificantChangesHandler(ISignificantChangeDirectoryRea
                 throw new InvalidOperationException("A one-row significant-change read returned multiple rows.");
             var summary = page.Items[0];
             if (summary.TenantId != tenantId || summary.ProgramId != programId)
-                return false;
+                throw new ImmutableContentIntegrityException("The change discovery lookahead returned another scope.");
             var detail = await directory.GetAsync(tenantId, summary.SignificantChangeId, ct)
                 .ConfigureAwait(false);
             if (detail is not { Current: { } current } || detail.TenantId != tenantId ||
                 detail.ProgramId != programId || detail.SignificantChangeId != summary.SignificantChangeId)
-                return false;
+                throw new ImmutableContentUnavailableException("A listed native change is not readable yet.");
             if (await visibility.CanReadAsync(tenantId, actor, current.Content.HandlingClass,
                     detail.Assessments.Select(static assessment => assessment.AssessedByMemberId).ToArray(), ct)
                 .ConfigureAwait(false))

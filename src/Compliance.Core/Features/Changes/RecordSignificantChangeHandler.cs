@@ -1,19 +1,19 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Changes;
 
-public sealed class RecordSignificantChangeHandler(IAggregateExecutor executor, TimeProvider clock)
-    : IRequestHandler<RecordSignificantChange>
+public sealed class RecordSignificantChangeHandler(SignificantChangeOperations operations)
+    : IRequestHandler<RecordSignificantChange, UnitResult>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<RecordSignificantChange> context,
-        CancellationToken ct)
+    public ValueTask<Result<UnitResult>> HandleAsync(IRequestContext<RecordSignificantChange> context, CancellationToken ct)
     {
         var request = context.Request;
-        var (actorMemberId, actorDisplay) = ClientServiceActor.Snapshot(context);
-        return executor.ExecuteAsync(new SignificantChange(request.TenantId, request.ProgramId,
-                request.ChangeId), change => CommandFailureRequestAdapter.ToOutcome(
-                change.Record(request.Content, actorMemberId, actorDisplay, clock.GetUtcNow())), context, ct);
+        var (member, display) = ClientServiceActor.Snapshot(context);
+        return operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.ChangeId,
+            request.ChangeId, nameof(RecordSignificantChange), null, ActorReference.ForMember(member, display),
+            (snapshot, operation, token) => ValueTask.FromResult(SignificantChangeOperations.Outcome(snapshot.Rules.Record(request.Content, member, display, operation.AcceptedAt))), ct);
     }
 }

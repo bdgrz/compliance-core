@@ -4,6 +4,8 @@ namespace Bdgrz.Compliance.Features.Changes;
 
 public interface ISignificantChangeDirectoryReader
 {
+    ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default);
+
     ValueTask<SignificantChangeView?> GetAsync(Uuid tenantId, Uuid changeId,
         CancellationToken ct = default);
 

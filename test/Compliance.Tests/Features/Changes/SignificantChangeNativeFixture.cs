@@ -1,0 +1,87 @@
+using System.Security.Claims;
+using Bdgrz.Compliance.Features.Changes;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Bdgrz.Compliance.Tests.Features.Changes;
+
+sealed class SignificantChangeNativeFixture : IAsyncDisposable
+{
+    readonly ServiceProvider _provider;
+    readonly AsyncServiceScope _scope;
+    public SignificantChangeNativeFixture()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventStore>(Events);
+        services.AddPortia();
+        _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        _scope = _provider.CreateAsyncScope();
+        Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+        var executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+        Changes = new SignificantChangeReader(Reader, Events, Content);
+        Operations = new SignificantChangeOperations(new NativeOperationExecutor(Reader, executor, Content), Changes, Content, Clock);
+    }
+    public Uuid Tenant { get; } = Uuid.CreateVersion4();
+    public Uuid Program { get; } = Uuid.CreateVersion4();
+    public Uuid Change { get; } = Uuid.CreateVersion4();
+    public Uuid User { get; } = Uuid.CreateVersion4();
+    public InMemoryEventStore Events { get; } = new();
+    public HookedContent Content { get; } = new(ChangeSeeds.Content());
+    public MutableClock Clock { get; } = new();
+    public IAggregateReader Reader { get; }
+    public IAggregateWriter Writer { get; }
+    public SignificantChangeReader Changes { get; }
+    public SignificantChangeOperations Operations { get; }
+    public SignificantChangeContent Body(string title = "Production migration") => new(null, null, null, title, "Move the governed service.",
+        new DateOnly(2026, 10, 18), null, RbacIds.Member(Tenant, User), [Uuid.CreateVersion4()], "high", "confidential", []);
+    public RequestContext<T> Context<T>(T request, Uuid? user = null) where T : IRequestBase => new(request,
+        new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss","bdgrz"),new Claim("sub",(user ?? User).ToString()),
+            new Claim("name","Change recorder")], "UnitTest")));
+    public async Task RecordAsync(SignificantChangeContent? body = null)
+    {
+        var result = await new RecordSignificantChangeHandler(Operations).HandleAsync(Context(new RecordSignificantChange(Tenant, Program, Change, body ?? Body())), CancellationToken.None);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+    }
+    public async Task<IReadOnlyList<DomainEvent>> FactsAsync()
+    {
+        var facts = new List<DomainEvent>();
+        await foreach (var record in Events.ReadAsync(EventStreamPattern.ForPattern(Tenant.ToString(), SignificantChange.Area, Change.ToString()), EventCursor.Start, CancellationToken.None))
+            if (!record.Event.Metadata.IsAudit)
+                facts.Add(record.Event);
+        return facts;
+    }
+    public async ValueTask DisposeAsync()
+    {
+        await _scope.DisposeAsync();
+        await _provider.DisposeAsync();
+    }
+    internal sealed class MutableClock : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = new(2026, 10, 24, 12, 0, 0, TimeSpan.Zero);
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
+    internal sealed class HookedContent(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        public Func<Task>? BeforeRead { get; set; }
+        public Func<ImmutableContentRef, Exception?>? Failure { get; set; }
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid id, string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
+            inner.WriteVerifiedAsync(realm, id, schema, mediaType, bytes, ct);
+        public async Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference, CancellationToken ct = default)
+        {
+            if (BeforeRead is { } before)
+            {
+                BeforeRead = null;
+                await before();
+                throw new ImmutableContentUnavailableException("The original preparation raced an equal winner and temporarily lost its body.");
+            }
+            if (Failure?.Invoke(reference) is { } failure)
+                throw failure;
+            return await inner.ReadVerifiedAsync(realm, reference, ct);
+        }
+    }
+}

@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Changes;
 
-public sealed class GetSignificantChangeHandler(ISignificantChangeDirectoryReader directory,
+public sealed class GetSignificantChangeHandler(SignificantChangeReader changes,
     RestrictedComplianceRecordVisibility visibility)
     : IRequestHandler<GetSignificantChange, SignificantChangeView>
 {
@@ -15,16 +16,22 @@ public sealed class GetSignificantChangeHandler(ISignificantChangeDirectoryReade
             return Result<SignificantChangeView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "Tenant, program, and significant-change identities are required."));
 
-        var change = await directory.GetAsync(request.TenantId, request.ChangeId, ct)
-            .ConfigureAwait(false);
-        return change is { Current: { } current } view && view.TenantId == request.TenantId &&
-               view.ProgramId == request.ProgramId && view.SignificantChangeId == request.ChangeId &&
-               await visibility.CanReadAsync(request.TenantId, context.Actor,
-                   current.Content.HandlingClass,
-                   view.Assessments.Select(static assessment => assessment.AssessedByMemberId).ToArray(), ct)
-                   .ConfigureAwait(false)
-            ? Result<SignificantChangeView>.Success(view)
-            : Result<SignificantChangeView>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The significant change was not found."));
+        try
+        {
+            var change = (await changes.ReadAsync(request.TenantId, request.ProgramId, request.ChangeId, ct).ConfigureAwait(false)).View;
+            return change is { Current: { } current } view && view.TenantId == request.TenantId &&
+                   view.ProgramId == request.ProgramId && view.SignificantChangeId == request.ChangeId &&
+                   await visibility.CanReadAsync(request.TenantId, context.Actor,
+                       current.Content.HandlingClass,
+                       view.Assessments.Select(static assessment => assessment.AssessedByMemberId).ToArray(), ct)
+                       .ConfigureAwait(false)
+                ? Result<SignificantChangeView>.Success(view)
+                : Result<SignificantChangeView>.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The significant change was not found."));
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            return Result<SignificantChangeView>.Failure(SignificantChangeOperations.ContentFailure(exception));
+        }
     }
 }

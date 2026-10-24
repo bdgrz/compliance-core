@@ -31,23 +31,55 @@ public sealed class ComplianceImpactReactionHandlerTests
             Now.AddHours(-2), [workItemId]);
         await scenario.SaveAsync(change);
         var ownership = new WorkOwnershipReader([workItemId]);
-        var handler = new LinkImpactReviewWorkHandler(scenario.Executor, scenario.Reader,
-            ownership, new FixedTimeProvider(Now));
-        var request = new LinkImpactReviewWork(tenantId, programId, changeId, 1);
+        var handler = new LinkImpactReviewWorkHandler(scenario.ChangeOperations,
+            ownership);
+        var request = new LinkImpactReviewWork(Uuid.CreateVersion4(), tenantId, programId, changeId, 1);
         var context = SystemContext(request);
 
         // Act
         var linked = await handler.HandleAsync(context, CancellationToken.None);
         var replay = await handler.HandleAsync(context, CancellationToken.None);
-        var saved = await scenario.Reader.HydrateAsync(new SignificantChange(tenantId,
-            programId, changeId));
+        var saved = await scenario.Changes.RulesAsync(tenantId,
+            programId, changeId);
 
         // Assert
         Assert.True(linked.IsSuccess, linked.Error?.Message);
         Assert.True(replay.IsSuccess, replay.Error?.Message);
-        Assert.Equal(2, ownership.Calls);
+        Assert.Equal(1, ownership.Calls);
         Assert.Equal(3, saved.Revision);
         Assert.Equal(workItemId, Assert.Single(saved.Current!.ReviewWorkLinks).WorkId);
+    }
+
+    [Fact]
+    public async Task ShouldPersistOriginalUnitGivenDistinctIdentifiedCallbackAlreadyLinkedSameWork()
+    {
+        // Arrange
+        await using var scenario = new Scenario();
+        var tenant = Uuid.CreateVersion4();
+        var program = Uuid.CreateVersion4();
+        var id = Uuid.CreateVersion4();
+        var work = Uuid.CreateVersion4();
+        await scenario.SaveAsync(AssessedChange(tenant, program, id, Uuid.CreateVersion4(), Now.AddHours(-2), [work]));
+        var ownership = new WorkOwnershipReader([work]);
+        var handler = new LinkImpactReviewWorkHandler(scenario.ChangeOperations, ownership);
+        var first = new LinkImpactReviewWork(Uuid.CreateVersion4(), tenant, program, id, 1);
+        var second = first with { CommandId = Uuid.CreateVersion4() };
+        Assert.True((await handler.HandleAsync(SystemContext(first), CancellationToken.None)).IsSuccess);
+
+        // Act
+        var acceptedNoOp = await handler.HandleAsync(SystemContext(second), CancellationToken.None);
+        var replay = await handler.HandleAsync(SystemContext(second), CancellationToken.None);
+        var collision = await handler.HandleAsync(SystemContext(second with { ContentVersion = 9 }), CancellationToken.None);
+        var current = await scenario.Changes.ReadAsync(tenant, program, id);
+
+        // Assert
+        Assert.True(acceptedNoOp.IsSuccess, acceptedNoOp.Error?.Message);
+        Assert.True(replay.IsSuccess, replay.Error?.Message);
+        Assert.False(collision.IsSuccess);
+        Assert.Equal(2, ownership.Calls);
+        Assert.Equal(3, current.View!.Revision);
+        Assert.Equal(4, current.Owner.NativeSequence);
+        Assert.Single(current.View.ReviewWorkLinks);
     }
 
     [Fact]
@@ -66,15 +98,15 @@ public sealed class ComplianceImpactReactionHandlerTests
             Description = "The migration scope changed after the first assessment.",
         }, "A newer version supersedes the first assessment.", assessor, "Assessor", Now.AddHours(-1)));
         await scenario.SaveAsync(change);
-        var handler = new LinkImpactReviewWorkHandler(scenario.Executor, scenario.Reader,
-            new WorkOwnershipReader([workItemId]), new FixedTimeProvider(Now));
+        var handler = new LinkImpactReviewWorkHandler(scenario.ChangeOperations,
+            new WorkOwnershipReader([workItemId]));
 
         // Act
         var superseded = await handler.HandleAsync(
-            SystemContext(new LinkImpactReviewWork(tenantId, programId, changeId, 1)), CancellationToken.None);
+            SystemContext(new LinkImpactReviewWork(Uuid.CreateVersion4(), tenantId, programId, changeId, 1)), CancellationToken.None);
         var notVisible = await handler.HandleAsync(
-            SystemContext(new LinkImpactReviewWork(tenantId, programId, changeId, 9)), CancellationToken.None);
-        var saved = await scenario.Reader.HydrateAsync(new SignificantChange(tenantId, programId, changeId));
+            SystemContext(new LinkImpactReviewWork(Uuid.CreateVersion4(), tenantId, programId, changeId, 9)), CancellationToken.None);
+        var saved = await scenario.Changes.RulesAsync(tenantId, programId, changeId);
 
         // Assert
         Assert.True(ImpactReactionOutcomes.IsSuperseded(superseded.Error!));
@@ -93,12 +125,12 @@ public sealed class ComplianceImpactReactionHandlerTests
         var workItemId = Uuid.CreateVersion4();
         await scenario.SaveAsync(AssessedChange(tenantId, programId, changeId,
             RbacIds.Member(tenantId, Uuid.CreateVersion4()), Now.AddHours(-2), [workItemId]));
-        var handler = new LinkImpactReviewWorkHandler(scenario.Executor, scenario.Reader,
-            new LaggingOwnershipReader(), new FixedTimeProvider(Now));
+        var handler = new LinkImpactReviewWorkHandler(scenario.ChangeOperations,
+            new LaggingOwnershipReader());
 
         // Act
         var lagging = await handler.HandleAsync(
-            SystemContext(new LinkImpactReviewWork(tenantId, programId, changeId, 1)), CancellationToken.None);
+            SystemContext(new LinkImpactReviewWork(Uuid.CreateVersion4(), tenantId, programId, changeId, 1)), CancellationToken.None);
 
         // Assert
         Assert.True(lagging.Error!.IsTransient);
@@ -126,8 +158,8 @@ public sealed class ComplianceImpactReactionHandlerTests
             approver);
         await scenario.SaveAsync(description);
         var handler = new RecordSignificantChangeSystemDescriptionDecisionHandler(
-            scenario.Executor, scenario.Reader);
-        var wrongVersion = new RecordSignificantChangeSystemDescriptionDecision(tenantId,
+            scenario.ChangeOperations, scenario.Reader);
+        var wrongVersion = new RecordSignificantChangeSystemDescriptionDecision(Uuid.CreateVersion4(), tenantId,
             programId, changeId, 1, descriptionId, Uuid.CreateVersion4(), versionId,
             "approved_successor", SignificantChange.AssessmentSha256(
                 change.Current!.CurrentAssessment!));
@@ -140,8 +172,8 @@ public sealed class ComplianceImpactReactionHandlerTests
             CancellationToken.None);
         var recorded = await handler.HandleAsync(SystemContext(valid), CancellationToken.None);
         var replayed = await handler.HandleAsync(SystemContext(valid), CancellationToken.None);
-        var saved = await scenario.Reader.HydrateAsync(new SignificantChange(tenantId,
-            programId, changeId));
+        var saved = await scenario.Changes.RulesAsync(tenantId,
+            programId, changeId);
 
         // Assert
         Assert.False(rejected.IsSuccess);
@@ -231,8 +263,8 @@ public sealed class ComplianceImpactReactionHandlerTests
             RbacIds.Member(tenantId, Uuid.CreateVersion4()),
             RbacIds.Member(tenantId, Uuid.CreateVersion4())));
         var handler = new RecordSignificantChangeSystemDescriptionDecisionHandler(
-            scenario.Executor, scenario.Reader);
-        var request = new RecordSignificantChangeSystemDescriptionDecision(tenantId,
+            scenario.ChangeOperations, scenario.Reader);
+        var request = new RecordSignificantChangeSystemDescriptionDecision(Uuid.CreateVersion4(), tenantId,
             programId, changeId, 2, descriptionId, versionId, versionId,
             "approved_successor", SignificantChange.AssessmentSha256(
                 change.Current!.CurrentAssessment!));
@@ -244,8 +276,8 @@ public sealed class ComplianceImpactReactionHandlerTests
         // Act
         var unauthorized = await handler.HandleAsync(userContext, CancellationToken.None);
         var stale = await handler.HandleAsync(SystemContext(request), CancellationToken.None);
-        var saved = await scenario.Reader.HydrateAsync(new SignificantChange(tenantId,
-            programId, changeId));
+        var saved = await scenario.Changes.RulesAsync(tenantId,
+            programId, changeId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, unauthorized.Error!.Kind);
@@ -253,10 +285,10 @@ public sealed class ComplianceImpactReactionHandlerTests
         Assert.Null(saved.Current!.CurrentSystemDescriptionDecision);
     }
 
-    internal static SignificantChange AssessedChange(Uuid tenantId, Uuid programId, Uuid changeId,
+    internal static SignificantChangeRules AssessedChange(Uuid tenantId, Uuid programId, Uuid changeId,
         Uuid assessor, DateTimeOffset assessedAt, IReadOnlyList<Uuid> workIds)
     {
-        var change = new SignificantChange(tenantId, programId, changeId);
+        var change = new SignificantChangeRules(tenantId, programId, changeId);
         Assert.Null(change.Record(new SignificantChangeContent(null, null, null,
             "A production service migration", "Move the service into the approved boundary.",
             new DateOnly(2026, 10, 18), null, RbacIds.Member(tenantId, Uuid.CreateVersion4()),
@@ -371,8 +403,13 @@ public sealed class ComplianceImpactReactionHandlerTests
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
             Operations = new NativeOperationExecutor(Reader, Executor, Content);
+            Changes = new SignificantChangeReader(Reader, events, Content);
+            ChangeOperations = new SignificantChangeOperations(Operations, Changes, Content, new FixedTimeProvider(Now));
         }
 
+        public SignificantChangeReader Changes { get; }
+        public SignificantChangeOperations ChangeOperations { get; }
+        public ValueTask<SignificantChange> SaveAsync(SignificantChangeRules rules) => ChangeSeeds.WriteAsync(Writer, Content, rules);
         public IImmutableContentStore Content { get; }
         public NativeOperationExecutor Operations { get; }
         public IAggregateExecutor Executor { get; }

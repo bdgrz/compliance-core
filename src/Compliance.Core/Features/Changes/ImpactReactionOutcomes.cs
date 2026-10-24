@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Changes;
@@ -27,6 +28,13 @@ public static class ImpactReactionOutcomes
         ArgumentNullException.ThrowIfNull(bus);
         ArgumentNullException.ThrowIfNull(command);
         ArgumentNullException.ThrowIfNull(context);
+        var result = await bus.SendAsync(command, context, ct).ConfigureAwait(false);
+        if (!result.IsSuccess && !IsSuperseded(result.Error!))
+            throw new ReactionCommandFailedException(result.Error!);
+    }
+
+    public static async ValueTask SendAsync(IRequestBus bus, IRequest<UnitResult> command, IReactorContext context, CancellationToken ct)
+    {
         var result = await bus.SendAsync(command, context, ct).ConfigureAwait(false);
         if (!result.IsSuccess && !IsSuperseded(result.Error!))
             throw new ReactionCommandFailedException(result.Error!);
