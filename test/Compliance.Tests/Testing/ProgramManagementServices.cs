@@ -46,6 +46,9 @@ static class ProgramManagementServices
         collection.AddScoped<ControlMappingReader>();
         collection.AddScoped<ApplicabilityReader>();
         collection.AddScoped<ControlEvaluationReader>();
+        collection.AddScoped<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>();
+        collection.AddScoped<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>();
+        collection.AddScoped<Bdgrz.Compliance.Features.Readiness.ReadinessReader>();
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });

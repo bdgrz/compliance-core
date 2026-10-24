@@ -433,11 +433,6 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzCorrectiveActionWorkItemDirectory>());
         services.AddScoped<IAccountableWorkItemDirectoryReader>(
             provider => provider.GetRequiredService<FitzCorrectiveActionWorkItemDirectory>());
-        services.AddScoped<FitzRiskGovernanceWorkItemDirectory>();
-        services.AddScoped<IRiskGovernanceWorkItemProjection>(
-            provider => provider.GetRequiredService<FitzRiskGovernanceWorkItemDirectory>());
-        services.AddScoped<IAccountableWorkItemDirectoryReader>(
-            provider => provider.GetRequiredService<FitzRiskGovernanceWorkItemDirectory>());
         services.AddScoped<FitzControlEvaluationWorkItemDirectory>();
         services.AddScoped<IControlEvaluationWorkItemProjection>(
             provider => provider.GetRequiredService<FitzControlEvaluationWorkItemDirectory>());
@@ -566,11 +561,6 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IControlImpactContributor, ReadinessControlImpactContributor>();
         services.AddScoped<IControlImpactContributor, EvidenceControlImpactContributor>();
         services.AddScoped<IControlImpactContributor, WorkControlImpactContributor>();
-        services.AddScoped<FitzReadinessDirectory>();
-        services.AddScoped<IReadinessDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzReadinessDirectory>());
-        services.AddScoped<IReadinessDirectoryProjection>(provider =>
-            provider.GetRequiredService<FitzReadinessDirectory>());
         services.AddScoped<FitzExaminationEngagementDirectory>();
         services.AddScoped<IExaminationEngagementDirectoryReader>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
@@ -615,7 +605,11 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ITypeIBaselineSourceContributor, FindingTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselineSourceContributor, WorkforceTypeIBaselineSourceContributor>();
         services.AddScoped<ITypeIBaselinePreviewReader, TypeIBaselinePreviewReader>();
-        services.AddScoped<IReadinessReadModel, FitzReadinessReadModel>();
+        services.AddScoped<ReadinessReader>();
+        services.AddScoped<ReadinessVerifier>();
+        services.AddScoped<ReadinessDecisionFences>();
+        services.AddScoped<ReadinessDecisionAdmission>();
+        services.AddScoped<ReadinessDecisionCompleter>();
         services.AddScoped<ReadinessProjectionReadConsistency>();
         services.AddScoped<IApplicationReadinessImpactReader, ApplicationReadinessImpactReader>();
         services.AddScoped<IReadinessSourceReader, DirectoryReadinessSourceReader>();
@@ -653,6 +647,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<IAdvisorHandoffDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzAdvisorHandoffDirectory>());
         services.AddScoped<AdvisorHandoffListReadConsistency>();
+        services.AddScoped<AdvisorHandoffReader>();
+        services.AddScoped<AdvisorUnitOperation>();
+        services.AddSingleton<IChildMaterializationReceiver, AdvisorFeedbackMaterializationReceiver>();
         services.AddScoped<FitzAdvisorFeedbackWorkItemDirectory>();
         services.AddScoped<IAdvisorFeedbackWorkItemProjection>(provider =>
             provider.GetRequiredService<FitzAdvisorFeedbackWorkItemDirectory>());
@@ -705,11 +702,16 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(ProfessionalDutyChangeProcess.Definition());
         services.AddSingleton(TypeIIRangeProcess.Definition());
         services.AddSingleton(ControlOccurrenceFanOut.Definition());
+        services.AddSingleton(ReadinessRunProcess.Definition());
+        services.AddSingleton(ReadinessDecisionProcess.Definition());
         services.AddSingleton(ApplicationImportExecutionProcess.Definition());
         services.AddScoped<ApplicationImportVerifier>();
         services.AddScoped<ApplicationImportReceivers>();
         services.AddSingleton(AccessReviewLaunchFanOut.Definition());
         services.AddSingleton(AccessReviewCompletionProcess.Definition());
+        services.AddSingleton(BulkAccessDecisionProcess.Definition());
+        services.AddScoped<AccessReviewBulkVerifier>();
+        services.AddScoped<AccessReviewBulkFences>();
         services.AddSingleton<AccessReviewManifests>();
         services.AddScoped<AccessReviewReader>();
         services.AddScoped<AccessReviewCompletionVerifier>();
@@ -717,6 +719,13 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(FindingClosureProcess.Definition());
         services.AddSingleton<IChildMaterializationReceiver, Features.Remediation.IndependentChildMaterialization>();
         services.AddSingleton<IChildMaterializationReceiver, Features.PolicyDistribution.IndependentChildMaterialization>();
+        services.AddSingleton(AuditorRequestResolutionProcess.Definition());
+        services.AddSingleton<IChildMaterializationReceiver, AuditorResponseMaterializationReceiver>();
+        services.AddSingleton<IChildMaterializationReceiver, AuditorCommentMaterializationReceiver>();
+        services.AddSingleton<IChildMaterializationReceiver, AuditorSampleSelectionMaterializationReceiver>();
+        services.AddScoped<AuditorRequestResolutionVerifier>();
+        services.AddScoped<AuditorRequestResolutionFences>();
+        services.AddScoped<SampleSelectionAdmission>();
         services.AddScoped<FindingClosureVerifier>();
         services.AddScoped<FindingClosureFences>();
         services.AddSingleton(PolicyCampaignClosureProcess.Definition());
@@ -730,6 +739,11 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzTrainingRequirementDirectory>());
         services.AddScoped<ITrainingRequirementDirectoryReader>(provider =>
             provider.GetRequiredService<FitzTrainingRequirementDirectory>());
+        services.AddSingleton(RiskActionCompletionReviewProcess.Definition());
+        services.AddScoped<RiskActionReviewVerifier>();
+        services.AddScoped<RiskActionReviewFences>();
+        services.AddScoped<RiskGovernanceReader>();
+        services.AddScoped<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>();
         services.AddScoped<ControlOperationsReader>();
         services.AddScoped<ControlMappingReader>();
         services.AddScoped<ApplicabilityReader>();
@@ -1122,6 +1136,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListAdvisorRequestsHandler>()
             .AddRequestHandler<ListAdvisorFeedbackHandler>()
             .AddRequestHandler<CorrectAdvisorFeedbackHandler>()
+            .AddRequestHandler<MaterializeAdvisorFeedbackHandler>()
+            .AddRequestAuthorizer<AdvisorReceiverAuthorizer>()
             .AddRequestHandler<CreateProgramHandler>()
             .AddRequestHandler<ListCriteriaCatalogEditionsHandler>()
             .AddRequestHandler<GetCriteriaCatalogEditionHandler>()
@@ -1164,6 +1180,14 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<DecideReadinessHandler>()
             .AddRequestHandler<DecideTypeIEntryHandler>()
             .AddRequestHandler<ListTypeIEntryDecisionsHandler>()
+            .AddRequestHandler<ComputeReadinessAssessmentHandler>()
+            .AddRequestHandler<AdoptReadinessAssessmentHandler>()
+            .AddRequestHandler<AuthorizeReadinessGapPlanReadinessDecisionUseHandler>()
+            .AddRequestHandler<CompleteReadinessDecisionHandler>()
+            .AddRequestHandler<CompleteTypeIEntryDecisionHandler>()
+            .AddRequestHandler<SettleReadinessGapPlanReadinessDecisionUseHandler>()
+            .AddRequestHandler<AbortReadinessDecisionHandler>()
+            .AddRequestAuthorizer<ReadinessReceiverAuthorizer>()
             .AddRequestHandler<CreateExaminationEngagementHandler>()
             .AddRequestHandler<ReviseExaminationEngagementHandler>()
             .AddRequestHandler<GetExaminationEngagementHandler>()
@@ -1219,6 +1243,14 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReopenAuditorRequestHandler>()
             .AddRequestHandler<RecordSampleSelectionHandler>()
             .AddRequestHandler<AmendSampleSelectionHandler>()
+            .AddRequestHandler<MaterializeAuditorResponseHandler>()
+            .AddRequestHandler<MaterializeAuditorCommentHandler>()
+            .AddRequestHandler<MaterializeAuditorSampleSelectionHandler>()
+            .AddRequestHandler<AuthorizeAuditorResponseRequestResolutionUseHandler>()
+            .AddRequestHandler<CompleteAuditorRequestResolutionHandler>()
+            .AddRequestHandler<SettleAuditorResponseRequestResolutionUseHandler>()
+            .AddRequestHandler<AbortAuditorRequestResolutionHandler>()
+            .AddRequestAuthorizer<AuditorRequestReceiverAuthorizer>()
             .AddRequestHandler<RecordSignificantChangeHandler>()
             .AddRequestHandler<ReviseSignificantChangeHandler>()
             .AddRequestHandler<AssessSignificantChangeHandler>()
@@ -1350,6 +1382,15 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<SettleAccessReviewItemCampaignCompletionUseHandler>()
             .AddRequestHandler<CompleteAccessReviewCampaignClosureHandler>()
             .AddRequestHandler<AbortAccessReviewCampaignCompletionHandler>()
+            .AddRequestHandler<RecordBulkAccessDecisionHandler>()
+            .AddRequestHandler<MaterializeAccessReviewDecisionBatchHandler>()
+            .AddRequestHandler<ReserveAccessReviewItemDecisionHandler>()
+            .AddRequestHandler<ApplyAccessReviewItemDecisionHandler>()
+            .AddRequestHandler<PublishAccessReviewDecisionBatchHandler>()
+            .AddRequestHandler<SettleAccessReviewItemDecisionHandler>()
+            .AddRequestHandler<FenceAccessReviewItemDecisionHandler>()
+            .AddRequestHandler<CompleteAccessReviewDecisionBatchCancellationHandler>()
+            .AddRequestHandler<CancelAccessReviewDecisionBatchHandler>()
             .AddRequestHandler<VerifyAccessRemediationHandler>()
             .AddRequestAuthorizer<AccessReviewAuthorizer>()
             .AddRequestHandler<DefineControlEvaluationPlanHandler>()
@@ -1445,6 +1486,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviewRiskTreatmentActionCompletionHandler>()
             .AddRequestHandler<RaiseRiskReassessmentTriggersHandler>()
             .AddRequestAuthorizer<RiskReassessmentReactionAuthorizer>()
+            .AddRequestHandler<CompleteRiskTreatmentActionReviewHandler>()
+            .AddRequestHandler<AbortRiskTreatmentActionReviewHandler>()
+            .AddRequestAuthorizer<RiskActionReceiverAuthorizer>()
+            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.AuthorizeEvidenceRequestActionCompletionUseHandler>()
+            .AddRequestHandler<Bdgrz.Compliance.Features.Evidence.SettleEvidenceRequestActionCompletionUseHandler>()
+            .AddRequestAuthorizer<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReceiverAuthorizer>()
             .AddRequestHandler<CreateMethodologyTemplateHandler>()
             .AddRequestHandler<ReviseMethodologyTemplateDraftHandler>()
             .AddRequestHandler<ReviewMethodologyTemplateHandler>()
@@ -1610,6 +1657,10 @@ public static class ComplianceServiceCollectionExtensions
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<ControlOccurrenceFanOutReactor>(ControlOccurrenceFanOutReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<ReadinessRunReactor>(ReadinessRunReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<ReadinessDecisionReactor>(ReadinessDecisionReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AccessReviewLaunchFanOutReactor>(AccessReviewLaunchFanOutReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AccessReviewCompletionReactor>(AccessReviewCompletionReactor.WorkloadName, WorkloadScope.PerTenant,
@@ -1618,12 +1669,29 @@ public static class ComplianceServiceCollectionExtensions
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FindingClosureReactor>(FindingClosureReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
-            .AddReactor<CorrectiveActionMaterializationReactor>(CorrectiveActionMaterializationReactor.WorkloadName,
-                WorkloadScope.PerTenant,
+            .AddReactor<AuditorRequestResolutionReactor>(AuditorRequestResolutionReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AuditorResponseMaterializationReactor>(AuditorResponseMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AuditorCommentMaterializationReactor>(AuditorCommentMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AuditorSampleSelectionMaterializationReactor>(AuditorSampleSelectionMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<CorrectiveActionMaterializationReactor>(CorrectiveActionMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<PolicyParticipantResultReactor>(PolicyParticipantResultReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<PolicyCampaignClosureReactor>(PolicyCampaignClosureReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AccessReviewBulkAdmissionReactor>(AccessReviewBulkAdmissionReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AccessReviewBulkCancellationReactor>(AccessReviewBulkCancellationReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AccessReviewBulkCancellationCompletionReactor>(AccessReviewBulkCancellationCompletionReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AccessReviewBulkSettlementReactor>(AccessReviewBulkSettlementReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<AdvisorFeedbackMaterializationReactor>(AdvisorFeedbackMaterializationReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
@@ -1634,10 +1702,15 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<ImportCancellationReactor>(ImportCancellationReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<TenantSlugReactor>("TenantSlug", WorkloadScope.Global)
-            .AddReactor<RiskMethodReassessmentReactor>("RiskMethodReassessmentV1",
-                WorkloadScope.PerTenant)
-            .AddReactor<BoundaryRiskReassessmentReactor>("BoundaryRiskReassessmentV1",
-                WorkloadScope.PerTenant)
+            .AddReactor<RiskMethodReassessmentReactor>(RiskMethodReassessmentReactor.WorkloadName,
+                WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<BoundaryRiskReassessmentReactor>(BoundaryRiskReassessmentReactor.WorkloadName,
+                WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<RiskActionCompletionReviewReactor>(RiskActionCompletionReviewReactor.WorkloadName,
+                WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<TeamCleanupReactor>("TeamCleanup", WorkloadScope.PerTenant)
             .AddReactor<ProviderChangeAcceptedReactor>("ProviderChangeAcceptedV1", WorkloadScope.PerTenant,
                 options => options.FailureAttemptLimit = int.MaxValue)
@@ -1788,8 +1861,6 @@ public static class ComplianceServiceCollectionExtensions
                 FitzFindingClosureWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<CorrectiveActionWorkItemProjector>(
                 FitzCorrectiveActionWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
-            .AddProjector<RiskGovernanceWorkItemProjector>(
-                FitzRiskGovernanceWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ControlEvaluationWorkItemProjector>(
                 FitzControlEvaluationWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ControlOperatingPlanWorkItemProjector>(
@@ -1805,8 +1876,6 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<AccessGrantProjector>("AccessGrantsV1", WorkloadScope.PerTenant)
             .AddProjector<SnapshotDirectoryProjector>("SnapshotDirectory", WorkloadScope.PerTenant)
             .AddProjector<PopulationSnapshotDirectoryProjector>("PopulationSnapshotDirectoryV2",
-                WorkloadScope.PerTenant)
-            .AddProjector<ReadinessDirectoryProjector>(FitzReadinessDirectory.ProjectorName,
                 WorkloadScope.PerTenant)
             .AddProjector<CriteriaTextOverlayDirectoryProjector>(
                 FitzCriteriaTextOverlayDirectory.ProjectorName, WorkloadScope.PerTenant)

@@ -32,7 +32,8 @@ static class WorkSource
 
     /// <summary>Loads open work; <paramref name="workItemId" /> narrows the result to one item.</summary>
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, FindingReader? findings, ControlOperationsReader? operatingReader,
+        IAggregateReader reader, FindingReader? findings, RiskGovernanceReader? riskGovernance,
+        EvidenceRequestReader? evidenceRequests, ControlOperationsReader? operatingReader,
         ControlMappingReader? mappingReader, ApplicabilityReader? applicabilityReader,
         ControlEvaluationReader? evaluationReader,
         Uuid tenantId, Uuid programId, DateOnly today, DateOnly horizon, DateTimeOffset now,
@@ -113,11 +114,12 @@ static class WorkSource
             !projectedKinds.Contains(RiskTreatmentActionReview) ||
             !projectedKinds.Contains(RiskControlTreatmentReview))
         {
-            var governance = await reader.HydrateAsync(new RiskGovernanceLedger(tenantId, programId),
-                ct).ConfigureAwait(false);
+            var governance = await (riskGovernance ?? throw new InvalidOperationException(
+                "Risk work requires the risk governance reader.")).ReadAsync(tenantId, programId, ct)
+                .ConfigureAwait(false);
             if (!projectedKinds.Contains(RiskTreatmentAction))
                 foreach (var action in governance.Actions().Where(action =>
-                             action.Status == RiskGovernanceLedger.ActionOpen &&
+                             action.Status == RiskStates.ActionOpen &&
                              WantedRiskAction(action.RiskId, action.ActionId,
                                  RiskTreatmentAction)))
                     candidates.Add(new WorkCandidate(
@@ -132,7 +134,7 @@ static class WorkSource
                         null, new HashSet<Uuid>(), action.CreatedAt));
             if (!projectedKinds.Contains(RiskTreatmentActionReview))
                 foreach (var action in governance.Actions().Where(action =>
-                             action.Status == RiskGovernanceLedger.ActionSubmitted))
+                             action.Status == RiskStates.ActionSubmitted))
                 {
                     var completion = action.Completions.LastOrDefault(static item =>
                         item.ReviewOutcome is null);
@@ -179,10 +181,11 @@ static class WorkSource
         }
         if (!projectedKinds.Contains(EvidenceRequest))
         {
-            var evidence = await reader.HydrateAsync(new EvidenceRequestLedger(tenantId, programId), ct)
+            var evidence = await (evidenceRequests ?? throw new InvalidOperationException(
+                "Evidence work requires the evidence request reader.")).ReadAsync(tenantId, programId, ct)
                 .ConfigureAwait(false);
             foreach (var request in evidence.ReadAll().Where(request =>
-                         request.Status == EvidenceRequestLedger.Open &&
+                         request.Status == Bdgrz.Compliance.Features.Evidence.EvidenceRequest.Open &&
                          Wanted(request.EvidenceRequestId, EvidenceRequest)))
                 candidates.Add(new WorkCandidate(
                     WorkCandidate.IdFor(request.EvidenceRequestId, EvidenceRequest), EvidenceRequest,

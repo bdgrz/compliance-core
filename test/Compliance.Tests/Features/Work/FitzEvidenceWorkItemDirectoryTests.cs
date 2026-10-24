@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Work;
@@ -28,9 +29,7 @@ public sealed class FitzEvidenceWorkItemDirectoryTests
         await using (var batch = await directory.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new EvidenceRequestOpened(tenantId, programId, requestId,
-                "Q3 access export", "Upload the signed access export.", ownerId, dueOn,
-                controlId, ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), openedAt));
+            await directory.ApplyAsync(Opened(tenantId, programId, requestId, "Q3 access export", "Upload the signed access export.", ownerId, dueOn, controlId, ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), openedAt));
             await batch.CommitAsync(checkpoint);
         }
 
@@ -68,10 +67,8 @@ public sealed class FitzEvidenceWorkItemDirectoryTests
         var directory = new FitzEvidenceWorkItemDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzEvidenceWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "evidence-requests"));
-        var fulfilled = new EvidenceRequestOpened(tenantId, programId, fulfilledId, "Export",
-            "Upload export.", Uuid.CreateVersion4(), new DateOnly(2026, 10, 9), null, actor, now);
-        var cancelled = new EvidenceRequestOpened(tenantId, programId, cancelledId, "Roster",
-            "Upload roster.", Uuid.CreateVersion4(), new DateOnly(2026, 10, 9), null, actor, now);
+        var fulfilled = Opened(tenantId, programId, fulfilledId, "Export", "Upload export.", Uuid.CreateVersion4(), new DateOnly(2026, 10, 9), null, actor, now);
+        var cancelled = Opened(tenantId, programId, cancelledId, "Roster", "Upload roster.", Uuid.CreateVersion4(), new DateOnly(2026, 10, 9), null, actor, now);
 
         // Act
         await using (var batch = await directory.BeginAsync(
@@ -79,10 +76,8 @@ public sealed class FitzEvidenceWorkItemDirectoryTests
         {
             await directory.ApplyAsync(fulfilled);
             await directory.ApplyAsync(cancelled);
-            await directory.ApplyAsync(new EvidenceRequestFulfilled(tenantId, programId,
-                fulfilledId, 2, Uuid.CreateVersion4(), actor, now.AddMinutes(1)));
-            await directory.ApplyAsync(new EvidenceRequestCancelled(tenantId, programId,
-                cancelledId, 2, "No longer required.", actor, now.AddMinutes(2)));
+            await directory.ApplyAsync(Fulfilled(tenantId, programId, fulfilledId, 2, Uuid.CreateVersion4(), actor, now.AddMinutes(1)));
+            await directory.ApplyAsync(Cancelled(tenantId, programId, cancelledId, 2, "No longer required.", actor, now.AddMinutes(2)));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -113,9 +108,7 @@ public sealed class FitzEvidenceWorkItemDirectoryTests
         await using (var batch = await directory.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(new EvidenceRequestOpened(tenantId, programId, requestId,
-                "Export", "Upload export.", Uuid.CreateVersion4(), new DateOnly(2026, 10, 9),
-                null, ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), now));
+            await directory.ApplyAsync(Opened(tenantId, programId, requestId, "Export", "Upload export.", Uuid.CreateVersion4(), new DateOnly(2026, 10, 9), null, ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), now));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -141,9 +134,7 @@ public sealed class FitzEvidenceWorkItemDirectoryTests
         var directory = new FitzEvidenceWorkItemDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzEvidenceWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "evidence-requests"));
-        var fulfilled = new EvidenceRequestFulfilled(tenantId, programId, requestId, 2,
-            Uuid.CreateVersion4(), ActorReference.ForMember(Uuid.CreateVersion4(), "Owner"),
-            new DateTimeOffset(2026, 10, 4, 12, 0, 0, TimeSpan.Zero));
+        var fulfilled = Fulfilled(tenantId, programId, requestId, 2, Uuid.CreateVersion4(), ActorReference.ForMember(Uuid.CreateVersion4(), "Owner"), new DateTimeOffset(2026, 10, 4, 12, 0, 0, TimeSpan.Zero));
 
         // Act
         await using (var batch = await directory.BeginAsync(
@@ -159,4 +150,20 @@ public sealed class FitzEvidenceWorkItemDirectoryTests
         Assert.Empty(result.Value);
         Assert.Equal(0, await directory.LoadRevisionAsync(tenantId));
     }
+
+    static EvidenceRequestOpened Opened(Uuid tenant, Uuid program, Uuid request, string title, string instructions,
+        Uuid owner, DateOnly due, Uuid? control, ActorReference actor, DateTimeOffset at) =>
+        new(tenant, program, request, title, instructions, owner, due, control, actor, at,
+            RiskSeeds.Operation(new EvidenceRequest(tenant, program, request), request, 0, actor, at,
+                nameof(OpenEvidenceRequest), "seed"), null, null);
+
+    static EvidenceRequestFulfilled Fulfilled(Uuid tenant, Uuid program, Uuid request, long revision, Uuid artifact,
+        ActorReference actor, DateTimeOffset at) => new(tenant, program, request, revision, artifact, actor, at,
+            RiskSeeds.Operation(new EvidenceRequest(tenant, program, request), Uuid.CreateVersion4(),
+                (ulong)revision - 1, actor, at, nameof(FulfilEvidenceRequest), "seed"), null, null);
+
+    static EvidenceRequestCancelled Cancelled(Uuid tenant, Uuid program, Uuid request, long revision, string rationale,
+        ActorReference actor, DateTimeOffset at) => new(tenant, program, request, revision, rationale, actor, at,
+            RiskSeeds.Operation(new EvidenceRequest(tenant, program, request), Uuid.CreateVersion4(),
+                (ulong)revision - 1, actor, at, nameof(CancelEvidenceRequest), "seed"), null, null);
 }

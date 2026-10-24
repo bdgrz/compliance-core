@@ -28,7 +28,7 @@ public sealed class ReadinessAssessmentHandlerTests
         await fixture.MapAsync("CC6.1", fixture.ReviewedAt);
 
         // Act
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
 
         // Assert
         Assert.Equal(ReadinessRules.Version, assessment.RuleVersion);
@@ -73,7 +73,7 @@ public sealed class ReadinessAssessmentHandlerTests
         });
 
         // Act
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
         var stored = await fixture.GetAsync(assessment.AssessmentId);
 
         // Assert
@@ -93,8 +93,8 @@ public sealed class ReadinessAssessmentHandlerTests
         await fixture.MapAsync("CC6.1", fixture.ReviewedAt);
 
         // Act
-        var earlier = await fixture.RunAsync(0, fixture.ReviewedAt.AddMinutes(-5));
-        var later = await fixture.RunAsync(1, fixture.ReviewedAt.AddMinutes(5));
+        var earlier = await fixture.RunAsync(fixture.ReviewedAt.AddMinutes(-5));
+        var later = await fixture.RunAsync(fixture.ReviewedAt.AddMinutes(5));
 
         // Assert
         Assert.Equal("gap", Assert.Single(earlier.Findings, f => f.CriterionIdentifier ==
@@ -115,7 +115,7 @@ public sealed class ReadinessAssessmentHandlerTests
         await fixture.MapAsync("CC6.1", fixture.ReviewedAt);
 
         // Act
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
 
         // Assert
         var finding = Assert.Single(assessment.Findings, f => f.CriterionIdentifier == "CC6.1" &&
@@ -131,7 +131,7 @@ public sealed class ReadinessAssessmentHandlerTests
         var fixture = await Fixture.CreateAsync(selectEdition: false);
 
         // Act
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
 
         // Assert
         Assert.Null(assessment.EditionId);
@@ -145,15 +145,15 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        await fixture.RunAsync(0);
+        await fixture.RunAsync();
 
         await fixture.Scenario(fixture.RunnerUserId)
             // Act
-            .When(new RunReadinessAssessment(fixture.TenantId, fixture.ProgramId, 0))
+            .When(new RunReadinessAssessment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, 0))
             // Assert
             .ExpectFailure(RequestErrorKind.Conflict);
         await fixture.Scenario(fixture.RunnerUserId)
-            .When(new RunReadinessAssessment(fixture.TenantId, fixture.ProgramId, 1,
+            .When(new RunReadinessAssessment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, 1,
                 DateTimeOffset.UtcNow.AddDays(1)))
             .ExpectFailure(RequestErrorKind.Validation);
     }
@@ -163,11 +163,10 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
 
         // Act
-        var result = await PersonalReadinessClosureTransportTests.DecideHttpAsync(fixture.Provider, fixture.RunnerUserId, new DecideReadiness(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, 1, "do_not_proceed", "Too many gaps."), RequestErrorKind.Forbidden);
+        var result = await PersonalReadinessClosureTransportTests.DecideHttpAsync(fixture.Provider, fixture.RunnerUserId, new DecideReadiness(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, await fixture.RevisionAsync(), "do_not_proceed", "Too many gaps."), RequestErrorKind.Forbidden);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -178,22 +177,18 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var assessment = await fixture.RunAsync(0);
-        var decide = new DecideReadiness(fixture.TenantId, fixture.ProgramId,
-            assessment.AssessmentId, 1, "proceed", "Gaps have owners and dates.");
+        var assessment = await fixture.RunAsync();
+        var decide = new DecideReadiness(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, await fixture.RevisionAsync(), "proceed", "Gaps have owners and dates.");
         await PersonalReadinessClosureTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, decide, RequestErrorKind.Conflict);
-        var revision = 1L;
         foreach (var gap in assessment.Gaps)
         {
             await fixture.Scenario(fixture.RunnerUserId)
-                .When(new PlanReadinessGap(fixture.TenantId, fixture.ProgramId, gap.GapId,
-                    revision, fixture.OwnerMemberId, new DateOnly(2027, 3, 31), "Close it."))
+                .When(new PlanReadinessGap(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, gap.GapId, await fixture.PlanRevisionAsync(gap.GapId), fixture.OwnerMemberId, new DateOnly(2027, 3, 31), "Close it."))
                 .ExpectSuccess();
-            revision++;
         }
 
         // Act
-        var decision = await PersonalReadinessClosureTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, decide with { ExpectedRevision = revision });
+        var decision = await PersonalReadinessClosureTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, decide with { ExpectedRevision = await fixture.RevisionAsync() });
 
         // Assert
         Assert.Equal("proceed", decision.Value.Outcome);
@@ -204,7 +199,7 @@ public sealed class ReadinessAssessmentHandlerTests
             new ListReadinessGaps(fixture.TenantId, fixture.ProgramId, assessment.AssessmentId,
                 "unplanned"));
         Assert.Empty(unplanned.Items);
-        await PersonalReadinessClosureTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, decide with { ExpectedRevision = revision + 1, Outcome = "do_not_proceed" }, RequestErrorKind.Conflict);
+        await PersonalReadinessClosureTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, decide with { ExpectedRevision = await fixture.RevisionAsync(), Outcome = "do_not_proceed" }, RequestErrorKind.Conflict);
         var list = await fixture.QueryAsync<ListReadinessAssessments,
             Page<ReadinessAssessmentSummaryView>>(new ListReadinessAssessments(fixture.TenantId,
             fixture.ProgramId));
@@ -216,13 +211,11 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        await fixture.RunAsync(0);
+        await fixture.RunAsync();
 
         await fixture.Scenario(fixture.RunnerUserId)
             // Act
-            .When(new PlanReadinessGap(fixture.TenantId, fixture.ProgramId,
-                Uuid.CreateVersion4(), 1, fixture.OwnerMemberId, new DateOnly(2027, 1, 1),
-                "Plan."))
+            .When(new PlanReadinessGap(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4(), await fixture.PlanRevisionAsync(Uuid.CreateVersion4()), fixture.OwnerMemberId, new DateOnly(2027, 1, 1), "Plan."))
             // Assert
             .ExpectFailure(RequestErrorKind.NotFound);
     }
@@ -232,7 +225,7 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
 
         await fixture.Scenario(fixture.DeciderUserId)
             // Act
@@ -256,28 +249,27 @@ public sealed class ReadinessAssessmentHandlerTests
         var asOf = DateTimeOffset.UtcNow.AddMinutes(-1);
         var evaluation = ReadinessRules.Evaluate(fixture.ProgramId, asOf, null, [], [],
             new Dictionary<Uuid, ControlVersionView?>());
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new ReadinessLedger(foreignTenantId, fixture.ProgramId), ledger =>
-                Command(ledger.Record(0, foreignAssessmentId, asOf, null, evaluation,
-                    RbacIds.Member(foreignTenantId, Uuid.CreateVersion4()), "Foreign runner",
-                    DateTimeOffset.UtcNow)));
-        var foreignLedger = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ReadinessLedger(foreignTenantId, fixture.ProgramId));
-        Assert.NotNull(foreignLedger.Read(foreignAssessmentId));
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var content = scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Content.IImmutableContentStore>();
+        await ReadinessSeed.AdoptAsync(reader, scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), content,
+            foreignTenantId, fixture.ProgramId, foreignAssessmentId, evaluation, asOf,
+            RbacIds.Member(foreignTenantId, Uuid.CreateVersion4()), DateTimeOffset.UtcNow);
+        Assert.NotNull(await new ReadinessReader(reader, content).ReadViewAsync(foreignTenantId,
+            fixture.ProgramId, foreignAssessmentId));
 
         // Act
         await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider,
-            fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId,
-                foreignAssessmentId, 0, "defer", "The source belongs to another tenant."),
+            fixture.DeciderUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, foreignAssessmentId, await fixture.RevisionAsync(), "defer", "The source belongs to another tenant."),
             RequestErrorKind.NotFound);
 
         // Assert
         var localAfter = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ReadinessLedger(fixture.TenantId, fixture.ProgramId));
+            new ProgramReadiness(fixture.TenantId, fixture.ProgramId));
         var foreignAfter = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ReadinessLedger(foreignTenantId, fixture.ProgramId));
-        Assert.Empty(localAfter.TypeIEntryDecisions());
-        Assert.Empty(foreignAfter.TypeIEntryDecisions());
+            new ProgramReadiness(foreignTenantId, fixture.ProgramId));
+        Assert.Empty(localAfter.EntryDecisions);
+        Assert.Empty(foreignAfter.EntryDecisions);
     }
 
     [Fact]
@@ -285,14 +277,12 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var assessment = await fixture.RunAsync(0);
-        var revision = await fixture.PlanAllAndProceedAsync(assessment);
+        var assessment = await fixture.RunAsync();
+        await fixture.PlanAllAndProceedAsync(assessment);
         var gapIds = assessment.Gaps.Select(static g => g.GapId).ToArray();
 
         // Act
-        var decision = await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, revision, "approve_with_exceptions",
-                "Gaps are owned and acknowledged.", gapIds));
+        var decision = await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, await fixture.RevisionAsync(), "approve_with_exceptions", "Gaps are owned and acknowledged.", gapIds));
 
         // Assert
         var view = decision.Value;
@@ -310,9 +300,8 @@ public sealed class ReadinessAssessmentHandlerTests
             Page<TypeIEntryDecisionView>>(new ListTypeIEntryDecisions(fixture.TenantId,
             fixture.ProgramId));
         Assert.Single(list.Items);
-        var later = await fixture.RunAsync(revision + 1);
-        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId, later.AssessmentId,
-                revision + 2, "defer", "Second try."), RequestErrorKind.Conflict);
+        var later = await fixture.RunAsync();
+        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, later.AssessmentId, await fixture.RevisionAsync(), "defer", "Second try."), RequestErrorKind.Conflict);
     }
 
     [Fact]
@@ -320,20 +309,15 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var assessment = await fixture.RunAsync(0);
-        var revision = await fixture.PlanAllAndProceedAsync(assessment);
+        var assessment = await fixture.RunAsync();
+        await fixture.PlanAllAndProceedAsync(assessment);
         var partial = assessment.Gaps.Skip(1).Select(static g => g.GapId).ToArray();
 
         // Act
         // Assert
-        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, revision, "approve_with_exceptions", "Partial.",
-                partial), RequestErrorKind.Conflict);
-        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, revision, "approve", "Ignore gaps."), RequestErrorKind.Conflict);
-        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, revision, "approve_with_exceptions", "Unknown.",
-                [Uuid.CreateVersion4()]), RequestErrorKind.Validation);
+        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, await fixture.RevisionAsync(), "approve_with_exceptions", "Partial.", partial), RequestErrorKind.Conflict);
+        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, await fixture.RevisionAsync(), "approve", "Ignore gaps."), RequestErrorKind.Conflict);
+        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, await fixture.RevisionAsync(), "approve_with_exceptions", "Unknown.", [Uuid.CreateVersion4()]), RequestErrorKind.Validation);
     }
 
     [Fact]
@@ -341,18 +325,15 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
         var all = assessment.Gaps.Select(static g => g.GapId).ToArray();
 
         // Act
         // Assert
-        var denied = await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.RunnerUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, 1, "defer", "Self sign."), RequestErrorKind.Forbidden);
+        var denied = await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.RunnerUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, await fixture.RevisionAsync(), "defer", "Self sign."), RequestErrorKind.Forbidden);
         Assert.Equal("The member who ran an assessment cannot sign its Type I entry decision.", denied.Error!.Message);
-        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, 1, "approve_with_exceptions", "No proceed.", all), RequestErrorKind.Conflict);
-        var deferred = await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, 1, "defer", "Not ready yet."));
+        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, await fixture.RevisionAsync(), "approve_with_exceptions", "No proceed.", all), RequestErrorKind.Conflict);
+        var deferred = await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, await fixture.RevisionAsync(), "defer", "Not ready yet."));
         Assert.Equal("defer", deferred.Value.Outcome);
         Assert.All(deferred.Value.UnresolvedItems, item => Assert.False(item.Acknowledged));
     }
@@ -362,13 +343,12 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var first = await fixture.RunAsync(0);
-        await fixture.RunAsync(1);
+        var first = await fixture.RunAsync();
+        await fixture.RunAsync();
 
         // Act
         // Assert
-        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(fixture.TenantId, fixture.ProgramId, first.AssessmentId,
-                2, "defer", "Stale."), RequestErrorKind.Conflict);
+        await PersonalTypeIEntryTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideTypeIEntry(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, first.AssessmentId, await fixture.RevisionAsync(), "defer", "Stale."), RequestErrorKind.Conflict);
     }
 
     [Fact]
@@ -376,13 +356,12 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
         var gap = assessment.Gaps[0];
 
         // Act
-        var annotation = await PersonalReadinessAnnotationTransportTests.HttpAsync(fixture.Provider, fixture.DeciderUserId, new AnnotateReadinessGap(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, gap.GapId, 1, "Consider a quarterly review."));
-        await fixture.RunAsync(2);
+        var annotation = await PersonalReadinessAnnotationTransportTests.HttpAsync(fixture.Provider, fixture.DeciderUserId, new AnnotateReadinessGap(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, gap.GapId, await fixture.PlanRevisionAsync(gap.GapId), "Consider a quarterly review."));
+        await fixture.RunAsync();
 
         // Assert
         Assert.Equal(gap.GapId, annotation.Value.GapId);
@@ -392,8 +371,7 @@ public sealed class ReadinessAssessmentHandlerTests
         var stored = Assert.Single(list.Items);
         Assert.False(stored.Current);
         Assert.Equal("Consider a quarterly review.", stored.Body);
-        await PersonalReadinessAnnotationTransportTests.HttpAsync(fixture.Provider, fixture.DeciderUserId, new AnnotateReadinessGap(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, Uuid.CreateVersion4(), 3, "Unknown gap."), RequestErrorKind.NotFound);
+        await PersonalReadinessAnnotationTransportTests.HttpAsync(fixture.Provider, fixture.DeciderUserId, new AnnotateReadinessGap(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, Uuid.CreateVersion4(), await fixture.PlanRevisionAsync(Uuid.CreateVersion4()), "Unknown gap."), RequestErrorKind.NotFound);
     }
 
     [Fact]
@@ -401,11 +379,10 @@ public sealed class ReadinessAssessmentHandlerTests
     {
         // Arrange
         var fixture = await Fixture.CreateAsync();
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
         var planned = assessment.Gaps[0];
         await fixture.Scenario(fixture.RunnerUserId)
-            .When(new PlanReadinessGap(fixture.TenantId, fixture.ProgramId, planned.GapId, 1,
-                fixture.OwnerMemberId, new DateOnly(2027, 3, 31), "Close it."))
+            .When(new PlanReadinessGap(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, planned.GapId, await fixture.PlanRevisionAsync(planned.GapId), fixture.OwnerMemberId, new DateOnly(2027, 3, 31), "Close it."))
             .ExpectSuccess();
 
         // Act
@@ -435,7 +412,7 @@ public sealed class ReadinessAssessmentHandlerTests
             });
 
         // Act
-        var assessment = await fixture.RunAsync(0);
+        var assessment = await fixture.RunAsync();
         var gaps = await fixture.QueryAsync<ListReadinessGaps, Page<ReadinessGapView>>(
             new ListReadinessGaps(fixture.TenantId, fixture.ProgramId, assessment.AssessmentId,
                 Kind: "catalog_support_gap", RuleId: "catalog_support_declared"));
@@ -482,13 +459,12 @@ public sealed class ReadinessAssessmentHandlerTests
                     "Admin", remappedAt)));
 
         // Act
-        var earlier = await fixture.RunAsync(0, remappedAt.AddMinutes(-1));
+        var earlier = await fixture.RunAsync(remappedAt.AddMinutes(-1));
         var earlierGap = Assert.Single(earlier.Gaps, gap => gap.Kind == "catalog_support_gap");
         await fixture.Scenario(fixture.RunnerUserId)
-            .When(new PlanReadinessGap(fixture.TenantId, fixture.ProgramId, earlierGap.GapId, 1,
-                fixture.OwnerMemberId, new DateOnly(2027, 3, 31), "Track the earlier edition."))
+            .When(new PlanReadinessGap(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, earlierGap.GapId, await fixture.PlanRevisionAsync(earlierGap.GapId), fixture.OwnerMemberId, new DateOnly(2027, 3, 31), "Track the earlier edition."))
             .ExpectSuccess();
-        var later = await fixture.RunAsync(2, remappedAt.AddMinutes(1));
+        var later = await fixture.RunAsync(remappedAt.AddMinutes(1));
         var recordedEarlier = await fixture.GetAsync(earlier.AssessmentId);
 
         // Assert
@@ -524,17 +500,15 @@ public sealed class ReadinessAssessmentHandlerTests
                     program, ["security"], DateTimeOffset.UtcNow.AddHours(-4))],
             });
         var asOf = DateTimeOffset.UtcNow.AddHours(-2);
-        var first = await fixture.RunAsync(0, asOf);
+        var first = await fixture.RunAsync(asOf);
         var gap = Assert.Single(first.Gaps, item => item.Kind == "catalog_support_gap");
         await fixture.Scenario(fixture.RunnerUserId)
-            .When(new PlanReadinessGap(fixture.TenantId, fixture.ProgramId, gap.GapId, 1,
-                fixture.OwnerMemberId, new DateOnly(2027, 3, 31), "Track the limitation."))
+            .When(new PlanReadinessGap(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, gap.GapId, await fixture.PlanRevisionAsync(gap.GapId), fixture.OwnerMemberId, new DateOnly(2027, 3, 31), "Track the limitation."))
             .ExpectSuccess();
-        await PersonalReadinessAnnotationTransportTests.HttpAsync(fixture.Provider, fixture.DeciderUserId, new AnnotateReadinessGap(fixture.TenantId, fixture.ProgramId,
-                first.AssessmentId, gap.GapId, 2, "Acknowledged; declaration remains."));
+        await PersonalReadinessAnnotationTransportTests.HttpAsync(fixture.Provider, fixture.DeciderUserId, new AnnotateReadinessGap(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, first.AssessmentId, gap.GapId, await fixture.PlanRevisionAsync(gap.GapId), "Acknowledged; declaration remains."));
 
         // Act
-        var repeated = await fixture.RunAsync(3, asOf);
+        var repeated = await fixture.RunAsync(asOf);
         var retained = Assert.Single(repeated.Gaps, item => item.Kind == "catalog_support_gap");
 
         // Assert
@@ -544,8 +518,7 @@ public sealed class ReadinessAssessmentHandlerTests
         Assert.Equal(fixture.OwnerMemberId, retained.Plan.OwnerMemberId);
         Assert.Equal(first.InputFingerprint, repeated.InputFingerprint);
         Assert.DoesNotContain(repeated.Findings, finding => finding.RuleId == "catalog_support_declared");
-        await PersonalReadinessClosureTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideReadiness(fixture.TenantId, fixture.ProgramId, repeated.AssessmentId,
-                4, "proceed", "Other gaps remain unplanned."), RequestErrorKind.Conflict);
+        await PersonalReadinessClosureTransportTests.DecideHttpAsync(fixture.Provider, fixture.DeciderUserId, new DecideReadiness(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, repeated.AssessmentId, await fixture.RevisionAsync(), "proceed", "Other gaps remain unplanned."), RequestErrorKind.Conflict);
     }
 
     [Fact]
@@ -568,15 +541,14 @@ public sealed class ReadinessAssessmentHandlerTests
         await fixture.MapAsync("CC6.1", fixture.ReviewedAt);
         await fixture.MapAsync("CC6.2", fixture.ReviewedAt);
         var asOf = DateTimeOffset.UtcNow;
-        var assessment = await fixture.RunAsync(0, asOf);
+        var assessment = await fixture.RunAsync(asOf);
         var gap = Assert.Single(assessment.Gaps, item => item.Kind == "catalog_support_gap");
-        await PersonalReadinessAnnotationTransportTests.HttpAsync(fixture.Provider, fixture.DeciderUserId, new AnnotateReadinessGap(fixture.TenantId, fixture.ProgramId,
-                assessment.AssessmentId, gap.GapId, 1, "Acknowledged limitation."));
+        await PersonalReadinessAnnotationTransportTests.HttpAsync(fixture.Provider, fixture.DeciderUserId, new AnnotateReadinessGap(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, assessment.AssessmentId, gap.GapId, await fixture.PlanRevisionAsync(gap.GapId), "Acknowledged limitation."));
 
         // Act
-        var revision = await fixture.PlanAllAndProceedAsync(await fixture.GetAsync(assessment.AssessmentId));
+        await fixture.PlanAllAndProceedAsync(await fixture.GetAsync(assessment.AssessmentId));
         var acknowledged = await fixture.GetAsync(assessment.AssessmentId);
-        var reassessed = await fixture.RunAsync(revision, asOf);
+        var reassessed = await fixture.RunAsync(asOf);
 
         // Assert
         Assert.Equal(4, assessment.Findings.Count);
@@ -653,14 +625,14 @@ public sealed class ReadinessAssessmentHandlerTests
             effectiveFrom: DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-2));
         await fixture.MapAsync("CC6.1", fixture.ReviewedAt.AddMinutes(-10));
         var asOf = fixture.ReviewedAt;
-        var before = await fixture.RunAsync(0, asOf);
+        var before = await fixture.RunAsync(asOf);
         var decision = asOf.AddMinutes(30);
         var effectiveDate = DateOnly.FromDateTime(asOf.UtcDateTime);
         await fixture.AdvanceControlAsync(retire, decision, effectiveDate);
 
         // Act
-        var repeated = await fixture.RunAsync(1, asOf);
-        var atDecision = await fixture.RunAsync(2, decision.ToOffset(TimeSpan.FromHours(-4)));
+        var repeated = await fixture.RunAsync(asOf);
+        var atDecision = await fixture.RunAsync(decision.ToOffset(TimeSpan.FromHours(-4)));
         var stored = await fixture.GetAsync(before.AssessmentId);
 
         // Assert
@@ -695,24 +667,8 @@ public sealed class ReadinessAssessmentHandlerTests
             Func<Uuid, Uuid, DateTimeOffset, ReadinessSourceSet>? sourceFactory = null,
             DateTimeOffset? approvedAt = null)
         {
-            var provider = ProgramManagementServices.Build(
-                new RecordingPermissionAuthorizer(allowed: true),
-                portia => portia.AddRequestHandler<RunReadinessAssessmentHandler>()
-                    .AddRequestHandler<DecideTypeIEntryHandler>()
-                    .AddRequestHandler<ListTypeIEntryDecisionsHandler>()
-                    .AddRequestHandler<AnnotateReadinessGapHandler>()
-                    .AddRequestHandler<ListReadinessAnnotationsHandler>()
-                    .AddRequestHandler<GetReadinessAssessmentHandler>()
-                    .AddRequestHandler<ListReadinessAssessmentsHandler>()
-                    .AddRequestHandler<ListReadinessGapsHandler>()
-                    .AddRequestHandler<PlanReadinessGapHandler>()
-                    .AddRequestHandler<DecideReadinessHandler>(),
-                services => services.AddSingleton<ICriteriaCatalog>(
-                        catalog ?? ControlCriterionMappingHandlerTests.TestCatalog())
-                    .AddSingleton<IReadinessSourceReader>(new EmptyReadinessSources(sourceFactory))
-                    .AddScoped<IReadinessReadModel>(provider =>
-                        new EventSourcedReadinessReadModel(
-                            provider.GetRequiredService<IAggregateReader>())));
+            var provider = ReadinessTestServices.Build(catalog ?? ControlCriterionMappingHandlerTests.TestCatalog(),
+                new EmptyReadinessSources(sourceFactory));
             var fixture = new Fixture { Provider = provider };
             var now = approvedAt is { } approved && approved < DateTimeOffset.UtcNow.AddDays(-1)
                 ? approved.AddDays(-1) : DateTimeOffset.UtcNow.AddDays(-1);
@@ -792,31 +748,37 @@ public sealed class ReadinessAssessmentHandlerTests
 
         public async Task<long> PlanAllAndProceedAsync(ReadinessAssessmentView assessment)
         {
-            var revision = assessment.Revision;
             foreach (var gap in assessment.Gaps)
             {
                 await Scenario(RunnerUserId)
-                    .When(new PlanReadinessGap(TenantId, ProgramId, gap.GapId, revision,
-                        OwnerMemberId, new DateOnly(2027, 3, 31), "Close it."))
+                    .When(new PlanReadinessGap(Uuid.CreateVersion4(), TenantId, ProgramId, gap.GapId, await PlanRevisionAsync(gap.GapId), OwnerMemberId, new DateOnly(2027, 3, 31), "Close it."))
                     .ExpectSuccess();
-                revision++;
             }
-            await PersonalReadinessClosureTransportTests.DecideHttpAsync(Provider, DeciderUserId, new DecideReadiness(TenantId, ProgramId, assessment.AssessmentId,
-                    revision, "proceed", "Owned."));
-            return revision + 1;
+            await PersonalReadinessClosureTransportTests.DecideHttpAsync(Provider, DeciderUserId, new DecideReadiness(Uuid.CreateVersion4(), TenantId, ProgramId, assessment.AssessmentId, await RevisionAsync(), "proceed", "Owned."));
+            return await RevisionAsync();
         }
 
         public RequestScenario Scenario(Uuid userId) => RequestScenario.For(Provider)
             .GivenActor(ProgramManagementServices.Actor(userId));
 
-        public async Task<ReadinessAssessmentView> RunAsync(long expectedRevision,
-            DateTimeOffset? asOf = null)
+        public async Task<ReadinessAssessmentView> RunAsync(DateTimeOffset? asOf = null)
         {
+            var assessmentId = Uuid.CreateVersion4();
+            var revision = await RevisionAsync();
             var result = await Scenario(RunnerUserId)
-                .When(new RunReadinessAssessment(TenantId, ProgramId, expectedRevision, asOf))
+                .When(new RunReadinessAssessment(assessmentId, TenantId, ProgramId, revision, asOf))
                 .ExpectSuccess();
-            return await GetAsync(result.Value.AssessmentId);
+            Assert.Equal(assessmentId, result.Value.OperationId);
+            var process = await ReadinessProcesses.RunRunAsync(Provider, TenantId, ProgramId, assessmentId);
+            Assert.Equal(Bdgrz.Compliance.Features.Processes.ProcessState.Completed, process.State);
+            return await GetAsync(assessmentId);
         }
+
+        public async Task<long> PlanRevisionAsync(Uuid gapId) => (await ProgramManagementServices.HydrateAsync(Provider,
+            new ReadinessGapPlan(TenantId, ProgramId, gapId))).Revision;
+
+        public async Task<long> RevisionAsync() => (await ProgramManagementServices.HydrateAsync(Provider,
+            new ProgramReadiness(TenantId, ProgramId))).Revision;
 
         public Task<ReadinessAssessmentView> GetAsync(Uuid assessmentId) =>
             QueryAsync<GetReadinessAssessment, ReadinessAssessmentView>(
@@ -838,74 +800,4 @@ public sealed class ReadinessAssessmentHandlerTests
             ValueTask.FromResult(Result<ReadinessSourceSet>.Success(
                 sourceFactory?.Invoke(tenantId, programId, asOf) ?? ReadinessSourceSet.Empty));
     }
-}
-
-sealed class EventSourcedReadinessReadModel(IAggregateReader reader) : IReadinessReadModel
-{
-    public async ValueTask<Result<ReadinessAssessmentView>> GetAssessmentAsync(
-        GetReadinessAssessment request, CancellationToken ct)
-    {
-        var ledger = await LoadAsync(request.TenantId, request.ProgramId, ct)
-            .ConfigureAwait(false);
-        return ledger.Read(request.AssessmentId) is { } assessment
-            ? Result<ReadinessAssessmentView>.Success(assessment)
-            : Result<ReadinessAssessmentView>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The readiness assessment was not found."));
-    }
-
-    public async ValueTask<Result<Page<ReadinessAssessmentSummaryView>>> ListAssessmentsAsync(
-        ListReadinessAssessments request, CancellationToken ct)
-    {
-        var ledger = await LoadAsync(request.TenantId, request.ProgramId, ct)
-            .ConfigureAwait(false);
-        return ControlActivationSource.Paginate(ledger.Summaries(), request.Limit,
-            request.Cursor, "readiness assessments");
-    }
-
-    public async ValueTask<Result<Page<ReadinessGapView>>> ListGapsAsync(
-        ListReadinessGaps request, CancellationToken ct)
-    {
-        if (request.PlanState is not (null or "planned" or "unplanned"))
-            return Result<Page<ReadinessGapView>>.Failure(new RequestError(
-                RequestErrorKind.Validation,
-                "The plan state filter must be planned or unplanned."));
-        var ledger = await LoadAsync(request.TenantId, request.ProgramId, ct)
-            .ConfigureAwait(false);
-        if (ledger.ReadGaps(request.AssessmentId) is not { } gaps)
-            return Result<Page<ReadinessGapView>>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The readiness assessment was not found."));
-        var items = gaps.Where(gap =>
-            (request.PlanState is null ||
-             (gap.Plan is not null) == (request.PlanState == "planned")) &&
-            (request.OwnerMemberId is not { } owner || gap.Plan?.OwnerMemberId == owner) &&
-            (request.Kind is null || gap.Kind == request.Kind) &&
-            (request.RuleId is null || gap.RuleId == request.RuleId) &&
-            (request.Subject is null || gap.Subject == request.Subject)).ToArray();
-        return ControlActivationSource.Paginate(items, request.Limit, request.Cursor,
-            "readiness gaps");
-    }
-
-    public async ValueTask<Result<Page<ReadinessAnnotationView>>> ListAnnotationsAsync(
-        ListReadinessAnnotations request, CancellationToken ct)
-    {
-        var ledger = await LoadAsync(request.TenantId, request.ProgramId, ct)
-            .ConfigureAwait(false);
-        if (ledger.Annotations(request.AssessmentId) is not { } annotations)
-            return Result<Page<ReadinessAnnotationView>>.Failure(new RequestError(
-                RequestErrorKind.NotFound, "The readiness assessment was not found."));
-        return ControlActivationSource.Paginate(annotations, request.Limit, request.Cursor,
-            "readiness annotations");
-    }
-
-    public async ValueTask<Result<Page<TypeIEntryDecisionView>>> ListTypeIEntryDecisionsAsync(
-        ListTypeIEntryDecisions request, CancellationToken ct)
-    {
-        var ledger = await LoadAsync(request.TenantId, request.ProgramId, ct)
-            .ConfigureAwait(false);
-        return ControlActivationSource.Paginate(ledger.TypeIEntryDecisions(), request.Limit,
-            request.Cursor, "Type I entry decisions");
-    }
-
-    ValueTask<ReadinessLedger> LoadAsync(Uuid tenantId, Uuid programId,
-        CancellationToken ct) => reader.HydrateAsync(new ReadinessLedger(tenantId, programId), ct);
 }

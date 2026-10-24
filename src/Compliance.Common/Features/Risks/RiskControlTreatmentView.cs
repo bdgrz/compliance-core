@@ -13,4 +13,8 @@ public sealed record RiskControlTreatmentView(Uuid TreatmentId, Uuid RiskId, Uui
     Uuid ControlVersionId, string Status, string Rationale, ActorReference ProposedBy,
     DateTimeOffset ProposedAt, Uuid? ReviewDecisionId, ActorReference? ReviewedBy,
     string? ReviewRationale, DateTimeOffset? ReviewedAt, Uuid? SeparationOfDutiesWaiverId,
-    ActorReference? RetiredBy, string? RetirementRationale, DateTimeOffset? RetiredAt);
+    ActorReference? RetiredBy, string? RetirementRationale, DateTimeOffset? RetiredAt)
+{
+    /// <summary>The revision of the (risk, control) assertion line after this treatment's latest fact; the expected revision of the next write on the line.</summary>
+    public long Revision { get; init; }
+}

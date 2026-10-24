@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Readiness;
+using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
@@ -16,22 +17,22 @@ public sealed class PersonalTypeIEntryTransportTests
         // Arrange
         var source = await ReadinessAssessmentHandlerTests.Fixture.CreateAsync();
         await using var sourceProvider = source.Provider;
-        var assessment = await source.RunAsync(0);
+        var assessment = await source.RunAsync();
         await using var provider = await PersonalReadinessClosureTransportTests.ComposeAsync(source.Provider, source.TenantId, source.ProgramId);
-        var before = await ProgramManagementServices.HydrateAsync(provider, new ReadinessLedger(source.TenantId, source.ProgramId));
+        var before = await ProgramManagementServices.HydrateAsync(provider, new ProgramReadiness(source.TenantId, source.ProgramId));
         await using var scope = provider.CreateAsyncScope();
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(
-            new DecideTypeIEntry(source.TenantId, source.ProgramId, assessment.AssessmentId,
+            new DecideTypeIEntry(Uuid.CreateVersion4(), source.TenantId, source.ProgramId, assessment.AssessmentId,
                 assessment.Revision, "defer", "Continue remediating before entry."),
             PersonalReadinessClosureTransportTests.Context(source.DeciderUserId, transport), CancellationToken.None);
-        var after = await ProgramManagementServices.HydrateAsync(provider, new ReadinessLedger(source.TenantId, source.ProgramId));
+        var after = await ProgramManagementServices.HydrateAsync(provider, new ProgramReadiness(source.TenantId, source.ProgramId));
 
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
-        Assert.Empty(after.TypeIEntryDecisions());
+        Assert.Empty(after.EntryDecisions);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
     }
 
@@ -41,17 +42,22 @@ public sealed class PersonalTypeIEntryTransportTests
         // Arrange
         var source = await ReadinessAssessmentHandlerTests.Fixture.CreateAsync();
         await using var sourceProvider = source.Provider;
-        var assessment = await source.RunAsync(0);
+        var assessment = await source.RunAsync();
         await using var provider = await PersonalReadinessClosureTransportTests.ComposeAsync(source.Provider, source.TenantId, source.ProgramId);
 
         // Act
         var result = await DecideHttpAsync(provider, source.DeciderUserId,
-            new DecideTypeIEntry(source.TenantId, source.ProgramId, assessment.AssessmentId,
+            new DecideTypeIEntry(Uuid.CreateVersion4(), source.TenantId, source.ProgramId, assessment.AssessmentId,
                 assessment.Revision, "defer", "Continue remediation."));
-        var retained = await ProgramManagementServices.HydrateAsync(provider, new ReadinessLedger(source.TenantId, source.ProgramId));
+        var retained = await ProgramManagementServices.HydrateAsync(provider, new ProgramReadiness(source.TenantId, source.ProgramId));
 
         // Assert
-        Assert.Equal(result.Value, retained.FindTypeIEntryDecision(result.Value.DecisionId));
+        await using var scope = provider.CreateAsyncScope();
+        var stored = await scope.ServiceProvider.GetRequiredService<ReadinessReader>()
+            .ReadEntryDecisionAsync(source.TenantId, retained, assessment.AssessmentId);
+        Assert.NotNull(stored);
+        Assert.Equal(result.Value.UnresolvedItems, stored.UnresolvedItems);
+        Assert.Equal(result.Value, stored with { UnresolvedItems = result.Value.UnresolvedItems });
         Assert.Equal(RbacIds.Member(source.TenantId, source.DeciderUserId), result.Value.DeciderMemberId);
     }
 
@@ -62,9 +68,17 @@ public sealed class PersonalTypeIEntryTransportTests
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
             PersonalReadinessClosureTransportTests.Context(actor, "http"), CancellationToken.None);
         if (expectedFailure is { } error)
+        {
             Assert.Equal(error, result.Error?.Kind);
-        else
-            Assert.True(result.IsSuccess, result.Error?.Message);
-        return result;
+            return Result<TypeIEntryDecisionView>.Failure(result.Error!);
+        }
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var process = await ReadinessProcesses.RunDecisionAsync(provider, request.TenantId, request.ProgramId,
+            request.CommandId);
+        Assert.Equal(ProcessState.Completed, process.State);
+        var readiness = scope.ServiceProvider.GetRequiredService<ReadinessReader>();
+        var program = await readiness.ReadProgramAsync(request.TenantId, request.ProgramId);
+        var view = await readiness.ReadEntryDecisionAsync(request.TenantId, program, request.AssessmentId);
+        return Result<TypeIEntryDecisionView>.Success(Assert.IsType<TypeIEntryDecisionView>(view));
     }
 }

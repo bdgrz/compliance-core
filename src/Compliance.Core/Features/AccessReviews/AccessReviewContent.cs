@@ -53,8 +53,17 @@ static class AccessReviewContent
     /// <summary>Schema of the source use requirements a completion intent pins.</summary>
     public const string SourceUseItemSchema = "source-use-requirement.v1";
 
-    /// <summary>Schema of the admitted children a completion intent drains (none until bulk batches exist).</summary>
+    /// <summary>Schema of the admitted bulk decision batches a completion intent drains.</summary>
     public const string AdmittedChildrenSchema = "access-review-decision-batch-admission.v1";
+
+    /// <summary>Schema of the typed result of a published bulk decision.</summary>
+    public const string BulkResultSchema = "BulkAccessDecisionResult";
+
+    /// <summary>Schema of the provisional decision list an apply keeps.</summary>
+    public const string BulkDecisionsSchema = "AccessDecisionsRecorded.BulkDecisionsManifest.v1";
+
+    /// <summary>Schema of the failure proof that cancels a bulk decision batch.</summary>
+    public const string BulkFailureProofSchema = "access-review-bulk-decision-failure-proof.v1";
 
     /// <summary>Schema of the authored decision a decision fact keeps as its intent.</summary>
     public const string DecisionIntentSchema = "access-decision-intent.v1";

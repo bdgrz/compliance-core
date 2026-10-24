@@ -140,8 +140,8 @@ for (const { file, content, declared } of scannedSources) {
             for (const [name, type] of paramTypes(d.params)) if (type === 'ulong' && /^Expected\w*(Revision|Generation|Epoch|Version)$/.test(name)) ulongExpected.push({ request: d.name, field: name, file: rel(file) });
         }
     }
-    for (const m of content.matchAll(/AddRequestHandler<(\w+)>/g)) registeredHandlers.add(m[1]);
-    for (const m of content.matchAll(/AddRequestAuthorizer<(\w+)>/g)) registeredAuthorizers.add(m[1]);
+    for (const m of content.matchAll(/AddRequestHandler<([\w.]+)>/g)) registeredHandlers.add(m[1].split('.').at(-1));
+    for (const m of content.matchAll(/AddRequestAuthorizer<([\w.]+)>/g)) registeredAuthorizers.add(m[1].split('.').at(-1));
     for (const m of content.matchAll(/AddReactor<(\w+)>\(\s*(?:"(\w+)")?/g)) registeredReactors.set(m[1], m[2] ?? null);
     for (const m of content.matchAll(/MapPortia(Put|Post|Delete)<(\w+)\s*[,>][^;]*?"([^"]*)"/gs)) mappedRoutes.set(m[2], [...(mappedRoutes.get(m[2]) ?? []), { verb: m[1].toUpperCase(), path: m[3] }]);
     for (const m of content.matchAll(/AddMcpTool<(\w+)>/g)) mcpTools.add(m[1]);

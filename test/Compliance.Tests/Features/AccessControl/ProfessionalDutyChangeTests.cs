@@ -479,6 +479,28 @@ public sealed class ProfessionalDutyChangeTests
     }
 
     [Fact]
+    public void ShouldKeepOtherOwnerUseActiveGivenSameRootAndGeneration()
+    {
+        // Arrange
+        var target = new FirmStaffRecord(Uuid.CreateVersion4()).Stream;
+        var uses = new SourceUseReservations(target);
+        var first = new ReservationKey(Uuid.CreateVersion4(), target, 1, target, "professional_duty_recording");
+        var second = first with { FirstOwner = new FirmStaffRecord(Uuid.CreateVersion4()).Stream };
+        uses.ApplyGranted(SourceUsePurpose.ProfessionalDutyRecording, Granted(target, first));
+        Assert.Null(uses.Find(second));
+        uses.ApplyGranted(SourceUsePurpose.ProfessionalDutyRecording, Granted(target, second));
+
+        // Act
+        uses.ApplySettled(SourceUsePurpose.ProfessionalDutyRecording, Settled(target, first));
+
+        // Assert
+        Assert.True(uses.Find(second)!.IsActive);
+        Assert.False(uses.Find(first)!.IsActive);
+        Assert.Equal(2UL, uses.Generation);
+        Assert.Single(uses.ActiveUses);
+    }
+
+    [Fact]
     public async Task ShouldRegisterOneProcessDefinitionEqualToCatalogGivenComposition()
     {
         // Arrange
@@ -544,7 +566,7 @@ public sealed class ProfessionalDutyChangeTests
     static OperationProvenance UseProvenance(EventStreamAddress owner, ReservationKey key) => new(
         Uuid.CreateVersion4(), key.RootOperationId, null, "Synthetic",
         ActorReference.ForPlatformOperator(Operator, "Synthetic operator"), owner, "initial", 0, new string('b', 64),
-        DateTimeOffset.UtcNow, owner, owner);
+        DateTimeOffset.UtcNow, owner, owner, key.FirstOwner);
 
     static ClaimsPrincipal ActorFor(Uuid userId) => new(new ClaimsIdentity([
         new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));

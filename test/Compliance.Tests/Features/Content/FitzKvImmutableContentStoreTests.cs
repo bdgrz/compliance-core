@@ -151,7 +151,7 @@ public sealed class FitzKvImmutableContentStoreTests
         var failure = await Record.ExceptionAsync(() => store.ReadVerifiedAsync(Realm, reference));
 
         // Assert
-        Assert.IsType<ImmutableContentIntegrityException>(failure);
+        Assert.IsType<ImmutableContentUnavailableException>(failure);
     }
 
     [Theory]
@@ -176,7 +176,10 @@ public sealed class FitzKvImmutableContentStoreTests
         var failure = await Record.ExceptionAsync(() => store.ReadVerifiedAsync(Realm, wrong));
 
         // Assert
-        Assert.IsType<ImmutableContentIntegrityException>(failure);
+        if (mismatch == "missing")
+            Assert.IsType<ImmutableContentUnavailableException>(failure);
+        else
+            Assert.IsType<ImmutableContentIntegrityException>(failure);
     }
 
     [Fact]
@@ -190,7 +193,7 @@ public sealed class FitzKvImmutableContentStoreTests
         var failure = await Record.ExceptionAsync(() => store.ReadVerifiedAsync("tenant-b", reference));
 
         // Assert
-        Assert.IsType<ImmutableContentIntegrityException>(failure);
+        Assert.IsType<ImmutableContentUnavailableException>(failure);
     }
 
     [Fact]

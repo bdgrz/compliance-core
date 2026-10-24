@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Boundaries;
@@ -43,7 +46,7 @@ public sealed class AdvisorRecordVersionResolverTests
         var selected = AdvisorRecordVersion.ControlDraft(control.Id, control.DraftVersionId,
             control.Revision);
         var reader = new AdvisorSharedSourceReader(fixture.Reader, fixture.Resolver(),
-            fixture.Metadata, new BoundaryReader(null), new ReadinessReader(null, null));
+            fixture.Metadata, new BoundaryReader(null), fixture.Readiness);
         var handoffId = Uuid.CreateVersion4();
 
         // Act
@@ -259,7 +262,7 @@ public sealed class AdvisorRecordVersionResolverTests
             assessmentId, 4, "rules-v1", Now, null, fingerprint, [], [],
             [new(gapId, "control", "AC-01", "rule-1", "The control is missing", [])],
             0, 1, ActorReference.ForMember(fixture.MemberId, "Lead"), Now, null);
-        var reader = new ReadinessReader(assessmentId, assessment);
+        var reader = await fixture.SeedReadinessAsync(assessmentId, assessment);
         var selection = AdvisorRecordVersion.ReadinessGap(gapId, assessmentId, fingerprint);
 
         // Act
@@ -283,7 +286,7 @@ public sealed class AdvisorRecordVersionResolverTests
             assessmentId, 4, "rules-v1", Now, null, fingerprint, [], [],
             [new(gapId, "control", "AC-01", "rule-1", "The control is missing", [])],
             0, 1, ActorReference.ForMember(fixture.MemberId, "Lead"), Now, null);
-        var reader = new ReadinessReader(latestAssessmentId, assessment);
+        var reader = await fixture.SeedReadinessAsync(latestAssessmentId, assessment);
         var selection = AdvisorRecordVersion.ReadinessGap(gapId, assessmentId, fingerprint);
 
         // Act
@@ -370,6 +373,7 @@ public sealed class AdvisorRecordVersionResolverTests
         public IAggregateWriter Writer { get; }
         public IDomainEventReader Events { get; }
         public EvidenceArtifactMetadataRead Metadata { get; }
+        public ReadinessReader Readiness { get; }
         public RequestDispatchContext SystemDispatch { get; } =
             new(RequestActor.System);
 
@@ -379,6 +383,8 @@ public sealed class AdvisorRecordVersionResolverTests
             var store = new InMemoryEventStore();
             services.AddSingleton<IEventStore>(store);
             services.AddSingleton<IDomainEventReader>(store);
+            services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+                new PersistenceKvClient(new InMemoryKvClient())));
             services.AddPortia();
             _provider = services.BuildServiceProvider(new ServiceProviderOptions
             {
@@ -389,12 +395,28 @@ public sealed class AdvisorRecordVersionResolverTests
             Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Events = _scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
             Metadata = new EvidenceArtifactMetadataRead(Reader, Events);
+            Readiness = new ReadinessReader(Reader, _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         }
 
         public AdvisorRecordVersionResolver Resolver(IBoundaryDirectoryReader? boundaries = null,
-            IReadinessDirectoryReader? readiness = null) => new(Reader, Metadata,
+            ReadinessReader? readiness = null) => new(Reader, Metadata,
             new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events), EmptyOperations.Evaluations(Reader, Events)), boundaries ?? new BoundaryReader(null),
-            readiness ?? new ReadinessReader(null, null));
+            readiness ?? Readiness);
+
+        public async Task<ReadinessReader> SeedReadinessAsync(Uuid latest, ReadinessAssessmentView assessment)
+        {
+            var content = _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+            var executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+            var evaluation = new ReadinessEvaluation(assessment.Inputs, assessment.Findings, assessment.Gaps,
+                assessment.InputFingerprint)
+            { AccessReviewScopes = assessment.AccessReviewScopes };
+            await ReadinessSeed.AdoptAsync(Reader, executor, content, TenantId, ProgramId,
+                assessment.AssessmentId, evaluation, assessment.AsOf, MemberId, Now);
+            if (latest != assessment.AssessmentId)
+                await ReadinessSeed.AdoptAsync(Reader, executor, content, TenantId, ProgramId,
+                    latest, evaluation, assessment.AsOf, MemberId, Now.AddMinutes(1));
+            return Readiness;
+        }
 
         public async Task<ControlDraft> SeedControlAsync()
         {
@@ -559,34 +581,4 @@ public sealed class AdvisorRecordVersionResolverTests
             CancellationToken ct = default) => throw new NotSupportedException();
     }
 
-    sealed class ReadinessReader(Uuid? latest, ReadinessAssessmentView? assessment)
-        : IReadinessDirectoryReader
-    {
-        public ValueTask<Result<Uuid?>> GetLatestAssessmentIdAsync(Uuid tenantId, Uuid programId,
-            CancellationToken ct = default) => ValueTask.FromResult(Result<Uuid?>.Success(latest));
-
-        public ValueTask<ReadinessAssessmentView?> GetAssessmentAsync(Uuid tenantId,
-            Uuid programId, Uuid assessmentId, CancellationToken ct = default) =>
-            ValueTask.FromResult(assessment);
-
-        public ValueTask<Result<Page<ReadinessAssessmentSummaryView>>> ListAssessmentsAsync(
-            Uuid tenantId, Uuid programId, int? limit, string? cursor,
-            CancellationToken ct = default) => throw new NotSupportedException();
-
-        public ValueTask<Result<Page<ReadinessGapView>>> ListGapsAsync(Uuid tenantId,
-            Uuid programId, Uuid assessmentId, string? planState, int? limit, string? cursor,
-            Uuid? ownerMemberId, string? kind, string? ruleId, string? subject,
-            CancellationToken ct = default) => throw new NotSupportedException();
-
-        public ValueTask<Result<Page<ReadinessAnnotationView>>> ListAnnotationsAsync(Uuid tenantId,
-            Uuid programId, Uuid assessmentId, int? limit, string? cursor,
-            CancellationToken ct = default) => throw new NotSupportedException();
-
-        public ValueTask<Result<Page<TypeIEntryDecisionView>>> ListTypeIEntryDecisionsAsync(
-            Uuid tenantId, Uuid programId, int? limit, string? cursor,
-            CancellationToken ct = default) => throw new NotSupportedException();
-
-        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-            CancellationToken ct = default) => throw new NotSupportedException();
-    }
 }

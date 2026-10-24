@@ -220,7 +220,9 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 

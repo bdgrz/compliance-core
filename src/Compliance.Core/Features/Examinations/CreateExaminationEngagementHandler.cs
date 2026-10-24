@@ -5,7 +5,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Examinations;
 
 sealed class CreateExaminationEngagementHandler(IAggregateReader reader,
-    IAggregateExecutor executor, TimeProvider clock)
+    IAggregateExecutor executor, ReadinessReader readiness, TimeProvider clock)
     : IRequestHandler<CreateExaminationEngagement>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<CreateExaminationEngagement> context,
@@ -16,11 +16,22 @@ sealed class CreateExaminationEngagementHandler(IAggregateReader reader,
                 out var memberId, out var display))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "An examination engagement requires a personal HTTP actor."));
-        var readiness = await reader.HydrateAsync(new ReadinessLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
-        var entryDecisions = readiness.TypeIEntryDecisions();
+        IReadOnlyList<TypeIEntryDecisionView> entryDecisions;
+        try
+        {
+            var program = await readiness.ReadProgramAsync(request.TenantId, request.ProgramId, ct)
+                .ConfigureAwait(false);
+            entryDecisions = await readiness.ReadEntryDecisionsAsync(request.TenantId, program, ct)
+                .ConfigureAwait(false);
+        }
+        catch (Content.ImmutableContentIntegrityException exception)
+        {
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The Type I entry decision cannot be verified yet: {exception.Message}", true));
+        }
+
         if (entryDecisions.Count == 0 || entryDecisions[0].Outcome is not
-            (ReadinessLedger.Approve or ReadinessLedger.ApproveWithExceptions))
+            (ProgramReadiness.Approve or ProgramReadiness.ApproveWithExceptions))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "A Type I engagement requires an approved Type I entry decision."));
         var contacts = request.ManagementContactMemberIds ?? [];

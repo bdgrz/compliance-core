@@ -1,54 +1,34 @@
-using System.Security.Claims;
 using Bdgrz.Compliance.Features.Readiness;
-using Cntryl.Fitz.Extensions;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Readiness;
 
 public sealed class ReadinessProjectionReadTests
 {
     [Fact]
-    public async Task ShouldDelegateAssessmentListToReadModelGivenRequest()
+    public async Task ShouldExposeAssessmentOnlyAfterAdoptionGivenAdmittedRun()
     {
         // Arrange
-        var readModel = new RecordingReadinessReadModel();
-        var handler = new ListReadinessAssessmentsHandler(readModel);
-        var request = new ListReadinessAssessments(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var fixture = await ReadinessAssessmentHandlerTests.Fixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        var assessmentId = Uuid.CreateVersion4();
+        await fixture.Scenario(fixture.RunnerUserId)
+            .When(new RunReadinessAssessment(assessmentId, fixture.TenantId, fixture.ProgramId, 0))
+            .ExpectSuccess();
+        var before = await fixture.QueryAsync<ListReadinessAssessments, Cntryl.Fitz.Extensions.Page<ReadinessAssessmentSummaryView>>(
+            new ListReadinessAssessments(fixture.TenantId, fixture.ProgramId));
 
         // Act
-        var result = await handler.HandleAsync(new RequestContext<ListReadinessAssessments>(request,
-            new ClaimsPrincipal()), CancellationToken.None);
+        var process = await ReadinessProcesses.RunRunAsync(provider, fixture.TenantId, fixture.ProgramId, assessmentId);
+        var after = await fixture.QueryAsync<ListReadinessAssessments, Cntryl.Fitz.Extensions.Page<ReadinessAssessmentSummaryView>>(
+            new ListReadinessAssessments(fixture.TenantId, fixture.ProgramId));
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Same(request, readModel.AssessmentListRequest);
-    }
-
-    sealed class RecordingReadinessReadModel : IReadinessReadModel
-    {
-        public ListReadinessAssessments? AssessmentListRequest { get; private set; }
-
-        public ValueTask<Result<Page<ReadinessAssessmentSummaryView>>> ListAssessmentsAsync(
-            ListReadinessAssessments request, CancellationToken ct)
-        {
-            AssessmentListRequest = request;
-            return ValueTask.FromResult(Result<Page<ReadinessAssessmentSummaryView>>.Success(
-                new Page<ReadinessAssessmentSummaryView>([], null)));
-        }
-
-        public ValueTask<Result<ReadinessAssessmentView>> GetAssessmentAsync(
-            GetReadinessAssessment request, CancellationToken ct) =>
-            throw new NotSupportedException();
-
-        public ValueTask<Result<Page<ReadinessGapView>>> ListGapsAsync(ListReadinessGaps request,
-            CancellationToken ct) => throw new NotSupportedException();
-
-        public ValueTask<Result<Page<ReadinessAnnotationView>>> ListAnnotationsAsync(
-            ListReadinessAnnotations request, CancellationToken ct) =>
-            throw new NotSupportedException();
-
-        public ValueTask<Result<Page<TypeIEntryDecisionView>>> ListTypeIEntryDecisionsAsync(
-            ListTypeIEntryDecisions request, CancellationToken ct) =>
-            throw new NotSupportedException();
+        Assert.Empty(before.Items);
+        Assert.Equal(ProcessState.Completed, process.State);
+        Assert.Equal(assessmentId, Assert.Single(after.Items).AssessmentId);
     }
 }

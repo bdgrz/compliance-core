@@ -4,8 +4,13 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-/// <summary>Reads the complete attributed feedback history owned by one handoff stream.</summary>
-public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader,
+/// <summary>
+///     Reads the complete attributed feedback history of one handoff. The handoff lists the feedback it admitted in
+///     admission order and each admitted contribution is read from its own thread; a contribution whose thread is not
+///     materialized yet is listed once its independent materialization completes. A contribution is current only while
+///     its exact source version is still selected and current.
+/// </summary>
+public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader, AdvisorHandoffReader handoffs,
     IAdvisorRecordVersionResolver versions)
     : IRequestHandler<ListAdvisorFeedback, Page<AdvisorFeedbackView>>
 {
@@ -31,21 +36,38 @@ public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader,
             cursorId = parsed;
         }
 
-        var handoff = await reader.HydrateAsync(new AdvisorHandoff(request.TenantId,
-            request.ProgramId, request.HandoffId), ct).ConfigureAwait(false);
+        var handoff = await handoffs.ReadAsync(request.TenantId, request.ProgramId, request.HandoffId, ct)
+            .ConfigureAwait(false);
         if (!handoff.IsCreated || handoff.ProgramId != request.ProgramId)
             return Result<Page<AdvisorFeedbackView>>.Failure(new RequestError(
                 RequestErrorKind.NotFound,
                 "The advisor handoff was not found in the requested program."));
 
-        var feedback = handoff.ReadFeedback();
+        var admitted = handoff.Handoff.Admitted.Select(static fact => fact.Operation.LogicalId).ToArray();
+        var start = 0;
+        if (cursorId is { } after)
+        {
+            var cursorIndex = Array.IndexOf(admitted, after);
+            if (cursorIndex < 0)
+                return Invalid("The advisor feedback cursor is invalid for this handoff.");
+            start = cursorIndex + 1;
+        }
+
+        var limit = request.Limit ?? DefaultLimit;
+        var threads = new List<AdvisorFeedbackThread>(limit + 1);
+        for (var index = start; index < admitted.Length && threads.Count <= limit; index++)
+        {
+            var thread = await reader.HydrateAsync(new AdvisorFeedbackThread(request.TenantId, request.ProgramId,
+                request.HandoffId, admitted[index]), ct).ConfigureAwait(false);
+            if (thread.IsMaterialized)
+                threads.Add(thread);
+        }
+
+        var hasMore = threads.Count > limit;
+        var pageThreads = threads.Take(limit).ToArray();
         var currentSources = new HashSet<AdvisorRecordVersion>();
-        foreach (var source in feedback
-                     .Where(static item => item.Disposition == AdvisorFeedbackDisposition.Current)
-                     .Select(static item => item.SourceVersion ??
-                         new AdvisorRecordVersion(item.RecordId, item.RecordVersionId))
-                     .Where(static source => source.IsSupported)
-                     .Distinct())
+        foreach (var source in pageThreads.Select(thread => SourceOf(thread.Recorded!))
+                     .Where(source => handoff.Selection.Contains(source) && source.IsSupported).Distinct())
         {
             var current = await versions.RequireCurrentAsync(request.TenantId,
                 request.ProgramId, [source], ct).ConfigureAwait(false);
@@ -55,37 +77,30 @@ public sealed class ListAdvisorFeedbackHandler(IAggregateReader reader,
                 return Result<Page<AdvisorFeedbackView>>.Failure(current.Error);
         }
 
-        var start = 0;
-        if (cursorId is { } after)
+        var pageItems = pageThreads.Select(thread =>
         {
-            var cursorIndex = Array.FindIndex(feedback.ToArray(), item => item.FeedbackId == after);
-            if (cursorIndex < 0)
-                return Invalid("The advisor feedback cursor is invalid for this handoff.");
-            start = cursorIndex + 1;
-        }
-
-        var limit = request.Limit ?? DefaultLimit;
-        var candidates = feedback.Skip(start).Take(limit + 1).ToArray();
-        var hasMore = candidates.Length > limit;
-        var pageItems = candidates.Take(limit).Select(item => new AdvisorFeedbackView(
-            request.TenantId, request.ProgramId, item.FeedbackId, request.HandoffId,
-            item.RecordId, item.RecordVersionId, item.Kind, item.Body, item.Author,
-            item.CreatedAt,
-            item.Corrections?.Select(correction => new AdvisorFeedbackCorrectionView(
-                correction.CorrectionId, correction.Body, correction.Reason, correction.Actor,
-                correction.CorrectedAt)).ToArray() ?? [],
-            item.Responses?.Select(response => new AdvisorFeedbackResponseView(response.Body,
-                response.Actor, response.RespondedAt)).ToArray() ?? [],
-            item.ResolvedAt, item.Disposition == AdvisorFeedbackDisposition.Current &&
-                currentSources.Contains(item.SourceVersion ??
-                    new AdvisorRecordVersion(item.RecordId, item.RecordVersionId)),
-            item.SourceVersion, item.ResolvedBy)).ToArray();
+            var recorded = thread.Recorded!;
+            var source = SourceOf(recorded);
+            return new AdvisorFeedbackView(request.TenantId, request.ProgramId, thread.FeedbackId,
+                request.HandoffId, recorded.RecordId, recorded.RecordVersionId, recorded.Kind, recorded.Body,
+                recorded.Author, recorded.CreatedAt,
+                thread.Corrections.Select(correction => new AdvisorFeedbackCorrectionView(correction.CorrectionId,
+                    correction.CorrectedBody, correction.CorrectionReason, correction.CorrectedBy,
+                    correction.CorrectedAt)).ToArray(),
+                thread.Responses.Select(response => new AdvisorFeedbackResponseView(response.Response,
+                    response.RespondedBy, response.RespondedAt)).ToArray(),
+                thread.Resolved?.ResolvedAt, handoff.Selection.Contains(source) &&
+                    currentSources.Contains(source),
+                recorded.SelectedSource, thread.Resolved?.ResolvedBy);
+        }).ToArray();
         var nextCursor = hasMore && pageItems.Length > 0
             ? pageItems[^1].AdvisorFeedbackId.ToString()
             : null;
-        return Result<Page<AdvisorFeedbackView>>.Success(new Page<AdvisorFeedbackView>(pageItems,
-            nextCursor));
+        return Result<Page<AdvisorFeedbackView>>.Success(new Page<AdvisorFeedbackView>(pageItems, nextCursor));
     }
+
+    static AdvisorRecordVersion SourceOf(AdvisorFeedbackRecorded recorded) =>
+        recorded.SelectedSource ?? new AdvisorRecordVersion(recorded.RecordId, recorded.RecordVersionId);
 
     static Result<Page<AdvisorFeedbackView>> Invalid(string message) =>
         Result<Page<AdvisorFeedbackView>>.Failure(new RequestError(RequestErrorKind.Validation,

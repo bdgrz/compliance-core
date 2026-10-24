@@ -17,7 +17,8 @@ public sealed partial class AccessReviewCampaignWorkItemProjector(
       IProjectorHandler<AccessRemediationVerified>,
       IProjectorHandler<AccessRemediationExceptionRecorded>,
       IProjectorHandler<AccessReviewResponsibilityReassigned>,
-      IProjectorHandler<AccessReviewItemCampaignCompletionUseSettled>
+      IProjectorHandler<AccessReviewItemCampaignCompletionUseSettled>,
+      IProjectorHandler<AccessReviewItemDecisionSettled>
 {
     public ValueTask HandleAsync(AccessReviewItemOpened ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
@@ -38,5 +39,8 @@ public sealed partial class AccessReviewCampaignWorkItemProjector(
         IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(ev, ct);
 
     public ValueTask HandleAsync(AccessReviewItemCampaignCompletionUseSettled ev, IProjectorContext context,
+        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+
+    public ValueTask HandleAsync(AccessReviewItemDecisionSettled ev, IProjectorContext context,
         CancellationToken ct) => projection.ApplyAsync(ev, ct);
 }

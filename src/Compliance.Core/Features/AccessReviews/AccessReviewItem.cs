@@ -13,7 +13,10 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     business facts of this item (the materialization is revision 1); a held campaign completion does not advance it
 ///     but refuses every change while the use is active, and a closed campaign keeps the item closed. The rules over
 ///     decision and remediation content are decided by the caller from <see cref="AccessReviewItemState" /> and
-///     re-checked here against the revision.
+///     re-checked here against the revision. A bulk decision batch holds the item through the same source-use
+///     reservations (purpose <c>bulk_decision</c>), applies its decision as a provisional fact that stays hidden until
+///     the batch's publication settles the use, and a cancellation fence refuses every delayed hold or apply of the
+///     batch.
 /// </summary>
 public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
 {
@@ -24,6 +27,9 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     readonly Uuid _campaignId;
     readonly Uuid _itemId;
     readonly List<DomainEvent> _facts = [];
+    readonly Dictionary<Uuid, AccessDecisionsRecorded> _provisional = [];
+    readonly HashSet<Uuid> _published = [];
+    readonly Dictionary<Uuid, AccessReviewItemDecisionCanceled> _fenced = [];
     AccessReviewItemOpened? _opened;
     long _revision;
     bool _closed;
@@ -47,8 +53,47 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
             _revision = 1;
             _facts.Add(ev);
         });
-        On<AccessDecisionsRecorded>(ev => Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision,
-            ev.Operation));
+        On<AccessDecisionsRecorded>(ev =>
+        {
+            Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision, ev.Operation);
+            if (ev.DecisionBatchId is not { } batchId)
+            {
+                if (ev.PublicationRequired)
+                    throw new InvalidOperationException("Only a bulk decision awaits a publication.");
+                return;
+            }
+
+            if (!ev.PublicationRequired || ev.Operation.RootOperationId != batchId || _fenced.ContainsKey(batchId) ||
+                Uses.Find(BulkKey(batchId)) is not { IsActive: true } || !_provisional.TryAdd(batchId, ev))
+                throw new InvalidOperationException(
+                    "A provisional bulk decision is applied once, under the batch's active hold, before any fence.");
+        });
+        On<AccessReviewItemDecisionAuthorized>(granted =>
+        {
+            Acceptance.Observe(granted);
+            if (_opened is null || granted.Revision != _revision || granted.CampaignId != _campaignId ||
+                granted.ItemId != _itemId || _closed || _fenced.ContainsKey(granted.Operation.RootOperationId))
+                throw new InvalidOperationException(
+                    "A bulk decision hold is granted on an open, unfenced item at its held revision.");
+            Uses.ApplyGranted(SourceUsePurpose.BulkDecision, granted);
+        });
+        On<AccessReviewItemDecisionSettled>(settled =>
+        {
+            Acceptance.Observe(settled);
+            if (settled.CampaignId != _campaignId || settled.ItemId != _itemId)
+                throw new InvalidOperationException("A bulk decision use settles on the item it names.");
+            Uses.ApplySettled(SourceUsePurpose.BulkDecision, settled);
+            if (settled.Disposition == SourceUseSettlementDisposition.IrreversibleDecision)
+                _published.Add(settled.Operation.RootOperationId);
+        });
+        On<AccessReviewItemDecisionCanceled>(fence =>
+        {
+            Acceptance.Observe(fence);
+            if (_opened is null || fence.CampaignId != _campaignId || fence.ItemId != _itemId ||
+                fence.Owner != Stream || !_fenced.TryAdd(fence.Operation.RootOperationId, fence) ||
+                _published.Contains(fence.Operation.RootOperationId))
+                throw new InvalidOperationException("An item is fenced once against a batch it did not publish.");
+        });
         On<AccessRemediationChangeRecorded>(ev => Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision,
             ev.Operation));
         On<AccessRemediationVerified>(ev => Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision,
@@ -103,6 +148,42 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     /// <summary>The latest business fact, whose revision a campaign completion pins.</summary>
     public DomainEvent? Latest => _facts.Count == 0 ? null : _facts[^1];
 
+    /// <summary>The reservation key of a bulk decision batch's use of this item.</summary>
+    public ReservationKey BulkKey(Uuid decisionBatchId) => AccessReviewEffects.BulkUseKey(decisionBatchId,
+        AccessReviewEffects.CampaignStream(_tenantId, _campaignId), Stream);
+
+    /// <summary>True once the item was fenced against the batch.</summary>
+    public bool IsFenced(Uuid decisionBatchId) => _fenced.ContainsKey(decisionBatchId);
+
+    /// <summary>The fence fact that refuses the batch on this item, once installed.</summary>
+    public AccessReviewItemDecisionCanceled? FenceFor(Uuid decisionBatchId) => _fenced.GetValueOrDefault(decisionBatchId);
+
+    /// <summary>The provisional decision fact the batch applied to this item, if any.</summary>
+    public AccessDecisionsRecorded? ProvisionalFor(Uuid decisionBatchId) =>
+        _provisional.GetValueOrDefault(decisionBatchId);
+
+    /// <summary>True once the batch's publication made its decision of this item visible.</summary>
+    public bool IsPublished(Uuid decisionBatchId) => _published.Contains(decisionBatchId);
+
+    /// <summary>A decision fact is visible unless it is a bulk decision whose batch has not published it to this item.</summary>
+    public bool IsVisible(AccessDecisionsRecorded decision) =>
+        decision.DecisionBatchId is not { } batchId || _published.Contains(batchId);
+
+    /// <summary>
+    ///     True when the item is still exactly at a pinned head: that fact is the latest one, or the only facts after it
+    ///     are bulk decision facts (a batch admitted before the completion seal that drained since).
+    /// </summary>
+    public bool MatchesPin(Uuid pinnedEventId, ulong pinnedRevision)
+    {
+        if (Latest is not { } latest)
+            return false;
+        if (latest.Metadata!.EventId == pinnedEventId)
+            return (ulong)_revision == pinnedRevision;
+        var index = _facts.FindIndex(fact => fact.Metadata!.EventId == pinnedEventId);
+        return index >= 0 && (ulong)_revision > pinnedRevision && _facts.Skip(index + 1)
+            .All(static fact => fact is AccessDecisionsRecorded { DecisionBatchId: not null });
+    }
+
     /// <summary>Checks the guards every change shares without raising anything.</summary>
     public Result PrepareChange(long expectedRevision)
     {
@@ -113,7 +194,7 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "A completed campaign cannot change."));
         if (Uses.HasActiveUse)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "A campaign completion holds this item; retry after it settles.", true));
+                "A campaign completion or a bulk decision holds this item; retry after it settles.", true));
         return expectedRevision == _revision
             ? Result.Success
             : Result.Failure(VersionedRecordRules.StaleRevision("access review item", _revision).ToRequestError());
@@ -191,6 +272,79 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
             return prepared;
         RaiseEvent(new AccessReviewResponsibilityReassigned(_tenantId, _campaignId, _itemId, _revision + 1,
             reassignment, operation, firstResponse, operationResult));
+        return Result.Success;
+    }
+
+    /// <summary>Checks that a bulk decision may hold this item and that the item is not held by another operation.</summary>
+    public Result PrepareBulkHold(Uuid decisionBatchId)
+    {
+        if (_opened is null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The review item has not been materialized yet; retry shortly.", true));
+        if (_closed)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "A completed campaign cannot change."));
+        if (_fenced.ContainsKey(decisionBatchId))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The bulk decision was canceled."));
+        return Uses.HasActiveUse
+            ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Another operation holds this item; retry after it settles.", true))
+            : Result.Success;
+    }
+
+    /// <summary>Holds this item for a bulk decision batch at its current revision. The caller verified the frozen head.</summary>
+    public Result AuthorizeBulkDecision(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        var prepared = PrepareBulkHold(operation.RootOperationId);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new AccessReviewItemDecisionAuthorized(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
+            intent, null, operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Applies the batch's decision as a provisional fact under its active hold; it stays hidden until published.</summary>
+    public Result ApplyBulkDecision(OperationProvenance operation, ImmutableContentRef decisions,
+        ImmutableContentRef intent)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(decisions);
+        ArgumentNullException.ThrowIfNull(intent);
+        var batchId = operation.RootOperationId;
+        if (_opened is null || _closed || _fenced.ContainsKey(batchId) ||
+            Uses.Find(BulkKey(batchId)) is not { IsActive: true })
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The bulk decision no longer holds this item.", false));
+        if (_provisional.ContainsKey(batchId))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The bulk decision was already applied to this item."));
+        RaiseEvent(new AccessDecisionsRecorded(_tenantId, _campaignId, _itemId, _revision + 1, decisions, operation,
+            batchId, true, intent, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Settles the batch's use of this item with the disposition its terminal batch fact requires.</summary>
+    public Result SettleBulkDecision(OperationProvenance operation, ImmutableContentRef intent, long generation,
+        SourceUseSettlementDisposition disposition)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        RaiseEvent(new AccessReviewItemDecisionSettled(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
+            intent, null, disposition, operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Fences the item against a canceled batch, whether or not it was ever held.</summary>
+    public Result FenceBulkDecision(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (_opened is null)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The review item has not been materialized yet.", true));
+        RaiseEvent(new AccessReviewItemDecisionCanceled(_tenantId, _campaignId, _itemId, Stream, _revision, generation,
+            intent, null, operation, null, null));
         return Result.Success;
     }
 

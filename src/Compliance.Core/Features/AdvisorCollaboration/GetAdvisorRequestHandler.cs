@@ -3,7 +3,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>Reads one handoff from its owning stream and verifies the requested program scope.</summary>
-public sealed class GetAdvisorRequestHandler(IAggregateReader reader)
+public sealed class GetAdvisorRequestHandler(AdvisorHandoffReader handoffs)
     : IRequestHandler<GetAdvisorRequest, AdvisorRequestView>
 {
     public async ValueTask<Result<AdvisorRequestView>> HandleAsync(
@@ -15,8 +15,8 @@ public sealed class GetAdvisorRequestHandler(IAggregateReader reader)
             return Result<AdvisorRequestView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "An advisor handoff read requires tenant, program, and handoff identities."));
 
-        var handoff = await reader.HydrateAsync(new AdvisorHandoff(request.TenantId,
-            request.ProgramId, request.AdvisorRequestId), ct).ConfigureAwait(false);
+        var handoff = await handoffs.ReadAsync(request.TenantId, request.ProgramId,
+            request.AdvisorRequestId, ct).ConfigureAwait(false);
         if (!handoff.IsCreated || handoff.ProgramId != request.ProgramId)
             return Result<AdvisorRequestView>.Failure(new RequestError(RequestErrorKind.NotFound,
                 "The advisor handoff was not found in the requested program."));

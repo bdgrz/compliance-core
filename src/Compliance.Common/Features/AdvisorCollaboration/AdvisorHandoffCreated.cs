@@ -1,11 +1,17 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-/// <summary>Opens one bounded advisor handoff with its exact selected record versions.</summary>
+/// <summary>
+///     Opens one bounded advisor handoff. <paramref name="RecordVersionsManifest" /> is the complete exact selection
+///     as verified content (<c>AdvisorHandoffCreated.RecordVersionsManifest.v1</c>); readers verify it before use.
+/// </summary>
 [Discriminator("bdgrz.advisor-handoff.created", 1)]
 public sealed record AdvisorHandoffCreated(
-    Uuid TenantId, Uuid ProgramId, Uuid HandoffId, IReadOnlyList<AdvisorRecordVersion> RecordVersions,
+    Uuid TenantId, Uuid ProgramId, Uuid HandoffId, ImmutableContentRef RecordVersionsManifest,
     string Purpose, DateOnly ExpiresOn, ActorReference CreatedBy, DateTimeOffset CreatedAt,
-    Uuid? ComparedToHandoffId = null) : DomainEvent;
+    Uuid? ComparedToHandoffId, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

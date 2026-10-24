@@ -98,7 +98,16 @@ sealed class AccessReviewFixture : IAsyncDisposable
                 .AddRequestHandler<AuthorizeAccessReviewItemCampaignCompletionUseHandler>()
                 .AddRequestHandler<SettleAccessReviewItemCampaignCompletionUseHandler>()
                 .AddRequestHandler<CompleteAccessReviewCampaignClosureHandler>()
-                .AddRequestHandler<AbortAccessReviewCampaignCompletionHandler>(),
+                .AddRequestHandler<AbortAccessReviewCampaignCompletionHandler>()
+                .AddRequestHandler<RecordBulkAccessDecisionHandler>()
+                .AddRequestHandler<MaterializeAccessReviewDecisionBatchHandler>()
+                .AddRequestHandler<ReserveAccessReviewItemDecisionHandler>()
+                .AddRequestHandler<ApplyAccessReviewItemDecisionHandler>()
+                .AddRequestHandler<PublishAccessReviewDecisionBatchHandler>()
+                .AddRequestHandler<SettleAccessReviewItemDecisionHandler>()
+                .AddRequestHandler<FenceAccessReviewItemDecisionHandler>()
+                .AddRequestHandler<CompleteAccessReviewDecisionBatchCancellationHandler>()
+                .AddRequestHandler<CancelAccessReviewDecisionBatchHandler>(),
             services =>
             {
                 var store = new InMemoryEventStore();
@@ -110,6 +119,8 @@ sealed class AccessReviewFixture : IAsyncDisposable
                 services.AddScoped<AccessReviewReader>();
                 services.AddScoped<AccessReviewCompletionVerifier>();
                 services.AddScoped<AccessReviewCompletionFences>();
+                services.AddScoped<AccessReviewBulkVerifier>();
+                services.AddScoped<AccessReviewBulkFences>();
                 services.AddSingleton<TimeProvider>(clock);
                 services.AddSingleton<IProcessRecordStore>(processStore?.Invoke(new FitzKvProcessRecordStore(
                     new PersistenceKvClient(new InMemoryKvClient()))) ?? new FitzKvProcessRecordStore(
@@ -117,6 +128,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
                 services.AddScoped<ProcessRootReaction>();
                 services.AddSingleton(AccessReviewLaunchFanOut.Definition());
                 services.AddSingleton(AccessReviewCompletionProcess.Definition());
+                services.AddSingleton(BulkAccessDecisionProcess.Definition());
                 services.AddSingleton<ProcessCatalog>(provider =>
                     new ProcessCatalog(provider.GetServices<ProcessDefinition>()));
                 services.AddScoped<ProcessDriver>();
@@ -457,6 +469,69 @@ sealed class AccessReviewFixture : IAsyncDisposable
             .Get(AccessReviewEffects.CompletionProcessName);
         return (await definition.CreateReceiver(new ProcessStep(record, stage, receiver, target,
             AccessReviewCompletionProcess.ReceiverCommandId(record.Source.EventId, receiver, target, record.Episode)),
+            scope.ServiceProvider, CancellationToken.None))!;
+    }
+
+    public Task<ProcessKey> BulkKey(Uuid decisionBatchId) =>
+        ProcessKeys.FindAsync(Provider, AccessReviewEffects.BulkProcessName, TenantId.ToString(), decisionBatchId);
+
+    public async Task<AccessReviewDecisionBatch> BatchAsync(Uuid campaignId, Uuid decisionBatchId,
+        Uuid? selectedLogicalId = null) => await ProgramManagementServices.HydrateAsync(Provider,
+        new AccessReviewDecisionBatch(TenantId, campaignId, decisionBatchId, selectedLogicalId ?? Uuid.Empty));
+
+    public RecordBulkAccessDecision BulkRequest(Uuid campaignId, IReadOnlyList<Uuid> itemIds, string previewToken,
+        long expectedCampaignRevision, string decision = "keep", string rationale = "Still needed.",
+        Uuid? decisionBatchId = null) => new(decisionBatchId ?? Uuid.CreateVersion4(), TenantId, campaignId, itemIds,
+        decision, rationale, previewToken, expectedCampaignRevision);
+
+    /// <summary>Previews and admits a bulk decision as the reviewer; returns the request and its acknowledgment.</summary>
+    public async Task<(RecordBulkAccessDecision Request, OperationAcceptedResponse Acknowledgment)> AdmitBulkAsync(
+        Uuid userId, Uuid campaignId, IReadOnlyList<Uuid> itemIds, string decision = "keep",
+        string rationale = "Still needed.", Uuid? decisionBatchId = null)
+    {
+        var preview = await SendAsync(userId, new PreviewBulkAccessDecision(TenantId, campaignId, itemIds, decision));
+        var request = BulkRequest(campaignId, itemIds, preview.PreviewToken,
+            (await CampaignAggregateAsync(campaignId)).Revision, decision, rationale, decisionBatchId);
+        return (request, await SendAsync(userId, request));
+    }
+
+    /// <summary>Starts (if absent) the bulk decision process of an admitted batch, as the root reactor would.</summary>
+    public async Task<ProcessRecord> StartBulkAsync(Uuid campaignId, Uuid decisionBatchId)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var campaign = await services.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new AccessReviewCampaign(TenantId, campaignId));
+        var admitted = campaign.AdmittedFor(decisionBatchId) ?? throw new InvalidOperationException("Not admitted.");
+        var intent = await services.GetRequiredService<IImmutableContentStore>()
+            .ReadJsonAsync<BulkAccessDecisionIntent>(TenantId.ToString(), admitted.Intent);
+        var items = await services.GetRequiredService<AccessReviewManifests>()
+            .BulkItemsAsync(TenantId.ToString(), intent.Items);
+        return await services.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(
+            ProcessRecord.Start(await BulkKey(decisionBatchId), NativeFactReference.Of(campaign.Stream, admitted),
+                admitted.Operation.Episode, admitted.Intent,
+                items.Values.Select(item => AccessReviewCompletionTarget.Of(TenantId, campaignId, item.ItemId)
+                    .ToString()), DateTimeOffset.UtcNow));
+    }
+
+    /// <summary>Starts (if absent) and drives the bulk decision process of an admitted batch.</summary>
+    public async Task<ProcessRecord> RunBulkAsync(Uuid campaignId, Uuid decisionBatchId)
+    {
+        var started = await StartBulkAsync(campaignId, decisionBatchId);
+        await using var scope = Provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(started.Key, "test-worker",
+            new RequestDispatchContext(RequestActor.System));
+    }
+
+    /// <summary>The receiver command the bulk process builds for a step, with the driver's deterministic command id.</summary>
+    public async Task<IRequest<ReceiverOutcome>> BulkStepAsync(ProcessRecord record, string stage, string receiver,
+        string? target = null)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var definition = scope.ServiceProvider.GetRequiredService<ProcessCatalog>()
+            .Get(AccessReviewEffects.BulkProcessName);
+        return (await definition.CreateReceiver(new ProcessStep(record, stage, receiver, target,
+            BulkAccessDecisionProcess.ReceiverCommandId(record.Source.EventId, receiver, target, record.Episode)),
             scope.ServiceProvider, CancellationToken.None))!;
     }
 

@@ -1,12 +1,21 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
 /// <summary>
-///     Records one shared-rationale decision on exactly the previewed eligible items. HTTP-only;
-///     it is not registered as an MCP tool.
+///     Records one shared-rationale decision on exactly the previewed eligible items as one atomic batch.
+///     <paramref name="DecisionBatchId" /> is the logical operation identity and the batch identity;
+///     <paramref name="ExpectedCampaignRevision" /> is the revision of the campaign that first admits the complete
+///     preview and selection (never the revision of the batch, which starts at zero). The request returns the fixed
+///     202 acknowledgment; the independent batch owner then holds every selected item at the head the preview froze
+///     and publishes all decisions at once. HTTP-only; it is not registered as an MCP tool.
 /// </summary>
-[Discriminator("bdgrz.access_review.decision.bulk_record", 1)]
-public sealed record RecordBulkAccessDecision(Uuid TenantId, Uuid CampaignId,
-    IReadOnlyList<Uuid> ItemIds, string Decision, string Rationale, string PreviewToken)
-    : IRequest<BulkAccessDecisionResult>, IAccessReviewParticipantRequest, IAccessReviewMutationRequest, ICallable;
+[Discriminator("bdgrz.access_review.decision.bulk_record", 2)]
+public sealed record RecordBulkAccessDecision(Uuid DecisionBatchId, Uuid TenantId, Uuid CampaignId,
+    IReadOnlyList<Uuid> ItemIds, string Decision, string Rationale, string PreviewToken, long ExpectedCampaignRevision)
+    : IRequest<OperationAcceptedResponse>, IAccessReviewParticipantRequest, IAccessReviewMutationRequest,
+        IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => DecisionBatchId;
+}

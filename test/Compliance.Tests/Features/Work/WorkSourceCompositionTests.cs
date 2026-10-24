@@ -46,18 +46,11 @@ public sealed class WorkSourceCompositionTests
         var now = DateTimeOffset.UtcNow.AddMinutes(-2);
         var manager = ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead");
         var advisor = ActorReference.ForMember(Uuid.CreateVersion4(), "Assigned Advisor");
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new AdvisorHandoff(fixture.TenantId, fixture.ProgramId, handoffId), handoff =>
-            {
-                Assert.True(handoff.Create("Review control ownership",
-                    [new AdvisorRecordVersion(recordId, recordVersionId)], fixture.Today.AddDays(30),
-                    manager, now).IsSuccess);
-                Assert.True(handoff.MarkReadyForReview(1, manager, now.AddMinutes(1)).IsSuccess);
-                Assert.True(handoff.RecordFeedback(feedbackId, recordId, recordVersionId,
-                    "change_request", "Clarify control ownership.", advisor,
-                    now.AddMinutes(2)).IsSuccess);
-                return Result.Success;
-            });
+        var source = new AdvisorRecordVersion(recordId, recordVersionId);
+        await AdvisorSeed.HandoffAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, handoffId, [source],
+            manager, now, fixture.Today.AddDays(30), purpose: "Review control ownership");
+        await AdvisorSeed.FeedbackAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, handoffId, feedbackId,
+            source, "change_request", "Clarify control ownership.", advisor, now.AddMinutes(2));
 
         await using var provider = CreateProvider(fixture);
         RequestScenario Scenario() => RequestScenario.For(provider)
@@ -74,8 +67,8 @@ public sealed class WorkSourceCompositionTests
             fixture.ProgramId, feedbackWork.WorkItemId)).ExpectSuccess();
         await using var resolutionScope = provider.CreateAsyncScope();
         var bus = resolutionScope.ServiceProvider.GetRequiredService<IRequestBus>();
-        var resolve = new ResolveAdvisorFeedback(fixture.TenantId, fixture.ProgramId,
-            handoffId, feedbackId);
+        var resolve = new ResolveAdvisorFeedback(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+            handoffId, feedbackId, 1);
         var outsiderResolution = await bus.DispatchAsync(resolve,
             new RequestDispatchContext(ProgramManagementServices.Actor(fixture.OutsiderUserId),
                 new HttpInvocation("POST", "/synthetic/advisor-feedback/resolution",
@@ -112,7 +105,7 @@ public sealed class WorkSourceCompositionTests
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today.AddDays(-7));
         var remediated = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today);
         var verified = await fixture.AsAsync(fixture.OwnerUserId, fixture.Complete(remediated, Assert.Single(remediated.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport));
-        var evidenceRequest = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(
+        var evidenceRequest = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, "Quarterly evidence", "Reviewed export", fixture.OwnerMemberId,
             fixture.Today));
         var (reviewCampaignId, reviewItemId, _) = await SeedReviewCampaignAsync(fixture);
@@ -166,7 +159,7 @@ public sealed class WorkSourceCompositionTests
         await Scenario().When(new GetWorkItem(fixture.TenantId, fixture.ProgramId,
             reviewItem.WorkItemId)).ExpectFailure(RequestErrorKind.NotFound);
 
-        await Scenario().When(new CancelEvidenceRequest(fixture.TenantId, fixture.ProgramId,
+        await Scenario().When(new CancelEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             evidenceRequest.EvidenceRequestId, evidenceRequest.Revision, "No longer required")).ExpectSuccess();
         var changed = await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
         await CatchUpAsync(provider, fixture.TenantId);
@@ -443,7 +436,7 @@ public sealed class WorkSourceCompositionTests
         var completedAction = Assert.Single(completed.CorrectiveActions);
         await fixture.AsAsync(fixture.OwnerUserId, fixture.Complete(completed, completedAction.ActionId, "Removed the unsafe behavior.", OperationsFixture.FullSupport));
 
-        return await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId,
+        return await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, "Quarterly evidence", "Upload the approved export.",
             fixture.OwnerMemberId, fixture.Today.AddDays(7)));
     }
@@ -466,46 +459,18 @@ public sealed class WorkSourceCompositionTests
         var now = DateTimeOffset.UtcNow.AddMinutes(-2);
         var actionRiskId = Uuid.CreateVersion4();
         var actionId = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.AddTreatmentAction(actionRiskId, 0, actionId, "mitigate",
-                    "Enforce MFA", "MFA is required", "Identity provider export.",
-                    fixture.Today.AddDays(10), fixture.OwnerMemberId, [],
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now));
-                return Result.Success;
-            });
+        await RiskSeeds.AddActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, actionRiskId, actionId, "Enforce MFA", "MFA is required", "Identity provider export.", fixture.Today.AddDays(10), fixture.OwnerMemberId, [], ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now);
 
         var reviewRiskId = Uuid.CreateVersion4();
         var reviewActionId = Uuid.CreateVersion4();
         var submissionId = Uuid.CreateVersion4();
         var evidenceId = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.AddTreatmentAction(reviewRiskId, 0, reviewActionId, "mitigate",
-                    "Rotate credentials", "Credentials are rotated quarterly",
-                    "The credential rotation record.", fixture.Today.AddDays(10),
-                    fixture.OwnerMemberId, [], ActorReference.ForMember(fixture.LeadMemberId,
-                        "Lead"), now));
-                Assert.Null(ledger.SubmitActionCompletion(reviewRiskId, reviewActionId, 1,
-                    submissionId, "Rotated all active credentials.", [evidenceId],
-                    new HashSet<Uuid> { evidenceId }, fixture.OwnerMemberId,
-                    ActorReference.ForMember(fixture.OwnerMemberId, "Owner"), now.AddMinutes(1)));
-                return Result.Success;
-            });
+        await RiskSeeds.AddActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, reviewRiskId, reviewActionId, "Rotate credentials", "Credentials are rotated quarterly", "The credential rotation record.", fixture.Today.AddDays(10), fixture.OwnerMemberId, [], ActorReference.ForMember(fixture.LeadMemberId,
+                        "Lead"), now);
+        await RiskSeeds.SubmitActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, reviewRiskId, reviewActionId, submissionId, "Rotated all active credentials.", [evidenceId], fixture.OwnerMemberId, ActorReference.ForMember(fixture.OwnerMemberId, "Owner"), now.AddMinutes(1));
 
         var treatmentRiskId = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.ProposeControlTreatment(treatmentRiskId, 0,
-                    Uuid.CreateVersion4(), "mitigate", fixture.ControlId,
-                    fixture.ControlVersionId, "This control treats the risk.",
-                    fixture.LeadMemberId,
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now));
-                return Result.Success;
-            });
+        await RiskSeeds.ProposeTreatmentAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, treatmentRiskId, Uuid.CreateVersion4(), fixture.ControlId, fixture.ControlVersionId, "This control treats the risk.", fixture.LeadMemberId, ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now);
     }
 
     static async Task SeedRiskAcceptanceWorkAsync(OperationsFixture fixture)
@@ -521,14 +486,7 @@ public sealed class WorkSourceCompositionTests
                     .IsSuccess);
                 return Result.Success;
             });
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), governance =>
-            {
-                Assert.Null(governance.AssignOwner(riskId, 0, fixture.PersonId,
-                    fixture.OwnerMemberId, "Owns the service risk.",
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now));
-                return Result.Success;
-            });
+        await RiskSeeds.AssignOwnerAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, fixture.PersonId, fixture.OwnerMemberId, "Owns the service risk.", ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now);
         RiskMethodVersionView? method = null;
         await ProgramManagementServices.SeedAsync(fixture.Provider,
             new RiskMethod(fixture.TenantId, fixture.ProgramId), riskMethod =>
@@ -1260,7 +1218,9 @@ public sealed class WorkSourceCompositionTests
         await using var scope = provider.CreateAsyncScope();
         var projectedKinds = scope.ServiceProvider.GetServices<IAccountableWorkItemDirectoryReader>()
             .SelectMany(reader => reader.ProjectedKinds).ToArray();
-        var kinds = projectedKinds.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal);
+        var kinds = projectedKinds.Concat(
+                [WorkSource.RiskTreatmentAction, WorkSource.RiskTreatmentActionReview, WorkSource.RiskControlTreatmentReview])
+            .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal);
 
         // Act
         var mapped = WorkSourceManagement.SourceRequests.Keys.Order(StringComparer.Ordinal);
@@ -1304,19 +1264,12 @@ public sealed class WorkSourceCompositionTests
         var advisorVersionId = Uuid.CreateVersion4();
         var advisorNow = DateTimeOffset.UtcNow.AddMinutes(-2);
         var lead = ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead");
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new AdvisorHandoff(fixture.TenantId, fixture.ProgramId, advisorHandoffId), handoff =>
-            {
-                Assert.True(handoff.Create("Review control ownership",
-                    [new AdvisorRecordVersion(advisorRecordId, advisorVersionId)],
-                    fixture.Today.AddDays(30), lead, advisorNow).IsSuccess);
-                Assert.True(handoff.MarkReadyForReview(1, lead, advisorNow.AddMinutes(1)).IsSuccess);
-                Assert.True(handoff.RecordFeedback(advisorFeedbackId, advisorRecordId,
-                    advisorVersionId, "change_request", "Clarify control ownership.",
-                    ActorReference.ForMember(Uuid.CreateVersion4(), "Assigned Advisor"),
-                    advisorNow.AddMinutes(2)).IsSuccess);
-                return Result.Success;
-            });
+        var advisorSource = new AdvisorRecordVersion(advisorRecordId, advisorVersionId);
+        await AdvisorSeed.HandoffAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, advisorHandoffId,
+            [advisorSource], lead, advisorNow, fixture.Today.AddDays(30), purpose: "Review control ownership");
+        await AdvisorSeed.FeedbackAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, advisorHandoffId,
+            advisorFeedbackId, advisorSource, "change_request", "Clarify control ownership.",
+            ActorReference.ForMember(Uuid.CreateVersion4(), "Assigned Advisor"), advisorNow.AddMinutes(2));
         await SeedPolicyCampaignWorkAsync(fixture, "policy");
         await SeedPolicyCampaignWorkAsync(fixture, "training");
         await CatchUpRiskDraftProjectionAsync(provider, fixture.TenantId);
@@ -1342,7 +1295,7 @@ public sealed class WorkSourceCompositionTests
             Assert.Contains(item, search.Value.Items);
             Assert.Equal(CountsFor(search.Value), search.Value.Counts);
         }
-        await Scenario().When(new CancelEvidenceRequest(fixture.TenantId, fixture.ProgramId,
+        await Scenario().When(new CancelEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             openEvidence.EvidenceRequestId, openEvidence.Revision, "Evidence is no longer required."))
             .ExpectSuccess();
         var lag = await Scenario().When(request).ExpectFailure(RequestErrorKind.Conflict);

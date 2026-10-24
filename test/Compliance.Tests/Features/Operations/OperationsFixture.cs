@@ -133,6 +133,9 @@ sealed class OperationsFixture
             {
                 services.AddScoped<OperatingAuthority>();
                 services.AddScoped<ControlOperationsReader>();
+                services.AddScoped<RiskGovernanceReader>();
+                services.AddScoped<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>();
+                services.AddScoped<Bdgrz.Compliance.Features.Readiness.ReadinessReader>();
                 services.AddScoped<FindingReader>();
                 services.AddScoped<FindingClosureVerifier>();
                 services.AddScoped<FindingClosureFences>();

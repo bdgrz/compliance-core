@@ -21,7 +21,7 @@ public sealed class WorkQueueSearchTests
         var fixture = await OperationsFixture.CreateAsync();
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today.AddDays(-7));
-        var evidence = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(
+        var evidence = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, "Quarterly access evidence", "Signed export.",
             fixture.OwnerMemberId, fixture.Today.AddDays(4)));
 
@@ -48,7 +48,7 @@ public sealed class WorkQueueSearchTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today);
-        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId,
+        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, "Quarterly access evidence", "Signed export.",
             fixture.OwnerMemberId, fixture.Today.AddDays(4)));
 
@@ -94,7 +94,7 @@ public sealed class WorkQueueSearchTests
         var fixture = await OperationsFixture.CreateAsync();
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today.AddDays(-7));
-        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId,
+        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, "Future evidence", "No corrective action match.",
             fixture.OwnerMemberId, fixture.Today.AddDays(4)));
 
@@ -115,7 +115,7 @@ public sealed class WorkQueueSearchTests
         var fixture = await OperationsFixture.CreateAsync();
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today.AddDays(-7));
-        var evidence = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(
+        var evidence = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, "Quarterly access evidence", "Signed export.",
             fixture.OwnerMemberId, fixture.Today));
         var before = await fixture.AsAsync(fixture.OwnerUserId, new ListWork(fixture.TenantId,
@@ -125,7 +125,7 @@ public sealed class WorkQueueSearchTests
             new GetWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId));
 
         // Act
-        await fixture.AsAsync(fixture.LeadUserId, new CancelEvidenceRequest(fixture.TenantId,
+        await fixture.AsAsync(fixture.LeadUserId, new CancelEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, evidence.EvidenceRequestId, evidence.Revision, "No longer required."));
         var after = await fixture.AsAsync(fixture.OwnerUserId, new ListWork(fixture.TenantId,
             fixture.ProgramId, Search: "evidence_request"));
@@ -148,7 +148,7 @@ public sealed class WorkQueueSearchTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId,
+        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, "Quarterly access evidence", "Signed export.",
             fixture.OwnerMemberId, fixture.Today));
 
@@ -211,7 +211,7 @@ public sealed class WorkQueueSearchTests
         var remediated = await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today);
         await fixture.AsAsync(fixture.OwnerUserId, fixture.Complete(remediated, Assert.Single(remediated.CorrectiveActions).ActionId, "Removed.", OperationsFixture.FullSupport));
-        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId,
+        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, "Review export", "Capture proof.", fixture.OwnerMemberId, fixture.Today));
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var client = new InMemoryKvClient();
@@ -233,7 +233,9 @@ public sealed class WorkQueueSearchTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var handler = new ListWorkHandler(queue);
         var context = new RequestContext<ListWork>(new ListWork(fixture.TenantId,
                 fixture.ProgramId, "all", Search: search),
@@ -273,7 +275,7 @@ public sealed class WorkQueueSearchTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId,
+        await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, "Review export", "Capture proof.", fixture.OwnerMemberId, fixture.Today));
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var evidence = new FitzEvidenceWorkItemDirectory(new InMemoryKvClient());
@@ -286,7 +288,9 @@ public sealed class WorkQueueSearchTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var context = new RequestContext<ListWork>(new ListWork(fixture.TenantId,
                 fixture.ProgramId, "all", Search: "no such visible work"),
             ProgramManagementServices.Actor(fixture.ApproverUserId));

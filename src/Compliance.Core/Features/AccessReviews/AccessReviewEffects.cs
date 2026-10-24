@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessReviews;
@@ -12,6 +13,9 @@ static class AccessReviewEffects
 
     /// <summary>The ordered process that holds every item, closes the campaign and settles the holds.</summary>
     public const string CompletionProcessName = "AccessReviewCampaignCompletionProcess";
+
+    /// <summary>The ordered process that materializes a bulk decision batch, holds its items, applies and publishes.</summary>
+    public const string BulkProcessName = "BulkAccessDecisionProcess";
 
     /// <summary>The only episode of a campaign and of each of its items.</summary>
     public const string InitialEpisode = "initial";
@@ -30,6 +34,20 @@ static class AccessReviewEffects
     /// <summary>The stream of one campaign.</summary>
     public static EventStreamAddress CampaignStream(Uuid tenantId, Uuid campaignId) =>
         new(tenantId.ToString(), AccessReviewCampaign.Area, campaignId.ToString());
+
+    /// <summary>The identity of a decision batch: derived from the tenant, campaign and batch ids.</summary>
+    public static Uuid BatchStreamId(Uuid tenantId, Uuid campaignId, Uuid decisionBatchId) =>
+        AggregateIdentity.Create(nameof(AccessReviewDecisionBatch), tenantId, campaignId, decisionBatchId);
+
+    /// <summary>The stream of one decision batch.</summary>
+    public static EventStreamAddress BatchStream(Uuid tenantId, Uuid campaignId, Uuid decisionBatchId) =>
+        new(tenantId.ToString(), AccessReviewDecisionBatch.Area,
+            BatchStreamId(tenantId, campaignId, decisionBatchId).ToString());
+
+    /// <summary>The key of an item's bulk decision use: one per batch (its root operation), campaign owner and item.</summary>
+    public static ReservationKey BulkUseKey(Uuid decisionBatchId, EventStreamAddress campaign, EventStreamAddress item) =>
+        new(decisionBatchId, campaign, (ulong)Generation, item,
+            SourceUseReservations.PurposeName(SourceUsePurpose.BulkDecision));
 
     /// <summary>The reviewer responsibility episode an item opens with.</summary>
     public static Uuid ReviewerEpisode(Uuid campaignId, Uuid itemId) =>

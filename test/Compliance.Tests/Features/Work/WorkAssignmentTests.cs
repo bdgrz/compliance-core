@@ -100,33 +100,10 @@ public sealed class WorkAssignmentTests
         var submissionId = Uuid.CreateVersion4();
         var lead = ActorReference.ForMember(fixture.LeadMemberId, "Lead");
         var now = DateTimeOffset.UtcNow;
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new EvidenceRequestLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.OpenRequest(evidenceId, "MFA export", "Upload the policy.",
-                    fixture.OwnerMemberId, fixture.Today.AddDays(5), null, lead, now));
-                return Result.Success;
-            });
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new EvidenceRequestLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Fulfil(evidenceId, 1, Uuid.CreateVersion4(), lead, now));
-                return Result.Success;
-            });
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.AddTreatmentAction(riskId, 0, actionId, "mitigate",
-                    "Enforce MFA", "MFA is required for every administrator.",
-                    "Identity provider policy export.", fixture.Today.AddDays(9),
-                    fixture.OwnerMemberId, [evidenceId], lead, now));
-                Assert.Null(ledger.SubmitActionCompletion(riskId, actionId, 1, submissionId,
-                    "MFA enforced on all administrators.", [evidenceId], new HashSet<Uuid>
-                    {
-                        evidenceId,
-                    }, fixture.LeadMemberId, lead, now));
-                return Result.Success;
-            });
+        await EvidenceSeeds.OpenAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, evidenceId, "MFA export", "Upload the policy.", fixture.OwnerMemberId, fixture.Today.AddDays(5), null, lead, now);
+        await EvidenceSeeds.FulfilAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, evidenceId, Uuid.CreateVersion4(), lead, now);
+        await RiskSeeds.AddActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, actionId, "Enforce MFA", "MFA is required for every administrator.", "Identity provider policy export.", fixture.Today.AddDays(9), fixture.OwnerMemberId, [evidenceId], lead, now);
+        await RiskSeeds.SubmitActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, actionId, submissionId, "MFA enforced on all administrators.", [evidenceId], fixture.LeadMemberId, lead, now);
         var managerQueue = await fixture.AsAsync(fixture.LeadUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId, "all"));
         var review = Assert.Single(managerQueue.Items,
@@ -146,16 +123,7 @@ public sealed class WorkAssignmentTests
             fixture.ApproverMemberId, "Independent completion review."));
         var reviewerQueue = await fixture.AsAsync(fixture.ApproverUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId));
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.ReviewActionCompletion(riskId, actionId, 2,
-                    Uuid.CreateVersion4(), "accept", "Evidence proves the target state.",
-                    fixture.ApproverMemberId,
-                    ActorReference.ForMember(fixture.ApproverMemberId, "Approver"),
-                    DateTimeOffset.UtcNow, new HashSet<Uuid> { evidenceId }));
-                return Result.Success;
-            });
+        await RiskSeeds.ReviewActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, actionId, "accept", "Evidence proves the target state.", ActorReference.ForMember(fixture.ApproverMemberId, "Approver"), DateTimeOffset.UtcNow);
         var afterReview = await fixture.AsAsync(fixture.ApproverUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId));
 

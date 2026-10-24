@@ -1,376 +1,356 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>
-/// Owns one handoff stream: selected exact record versions, access state, and feedback history.
-/// Feedback stays in this stream so revocation and feedback admission share one consistency boundary.
+///     One handoff: its small selection and readiness state, its revocation and closure, and the admission authority
+///     for feedback. The logical revision counts every fact of this handoff stream and the generation starts at one
+///     and advances on every selection revision. Feedback is admitted here, against an exactly selected version while
+///     the handoff is ready, unrevoked and unclosed, and materialized as its own <see cref="AdvisorFeedbackThread" />;
+///     revocation, closure and feedback admission share this one stream, so an admission either precedes a revocation
+///     or is refused by it. The selection is verified content referenced by the latest selection fact; reducers never
+///     read content or another owner.
 /// </summary>
 public sealed class AdvisorHandoff : Aggregate
 {
+    /// <summary>Stream area of every handoff (the realm is the tenant).</summary>
+    public const string Area = "advisor-handoffs";
+
+    /// <summary>The largest selection one handoff can hold.</summary>
     public const int MaximumSelectionCount = 100;
 
-    static readonly HashSet<string> FeedbackKinds = new(StringComparer.Ordinal)
-        { "comment", "change_request", "validated" };
+    /// <summary>The handoff status vocabulary.</summary>
+    public const string Draft = "draft";
+    public const string ReadyForReview = "ready_for_review";
+    public const string Closed = "closed";
+    public const string Revoked = "revoked";
 
     readonly Uuid _tenantId;
+    readonly Uuid _handoffId;
+    readonly List<AdvisorFeedbackAdmitted> _admitted = [];
+    readonly HashSet<Uuid> _admittedIds = [];
+    readonly List<DomainEvent> _facts = [];
+    AdvisorHandoffCreated? _createdFact;
+    ImmutableContentRef? _manifest;
     Uuid _programId;
-    readonly List<AdvisorRecordVersion> _selection = [];
-    readonly List<AdvisorFeedbackEntry> _feedback = [];
-    bool _created;
-    string? _purpose;
-    DateOnly _expiresOn;
-    ActorReference? _createdBy;
-    DateTimeOffset? _createdAt;
-    DateTimeOffset? _updatedAt;
-    Uuid? _comparedToHandoffId;
     string _status = "missing";
     long _revision;
+    long _generation;
+    DateTimeOffset? _updatedAt;
     bool _wasReadyForReview;
 
-    public bool IsCreated => _created;
+    /// <summary>Opens one handoff, selecting the logical operation to resolve.</summary>
+    public AdvisorHandoff(Uuid tenantId, Uuid programId, Uuid handoffId, Uuid selectedLogicalId = default)
+        : base(handoffId, new EventStreamAddress(tenantId.ToString(), Area, handoffId.ToString()))
+    {
+        (_tenantId, _programId, _handoffId) = (tenantId, programId, handoffId);
+        Acceptance = new NativeAcceptance(selectedLogicalId);
+        On<AdvisorHandoffCreated>(Apply);
+        On<AdvisorHandoffSelectionRevised>(Apply);
+        On<AdvisorHandoffReadiedForReview>(Apply);
+        On<AdvisorHandoffClosed>(Apply);
+        On<AdvisorHandoffRevoked>(Apply);
+        On<AdvisorFeedbackAdmitted>(Apply);
+    }
+
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
+    /// <summary>True once the handoff was created.</summary>
+    public bool IsCreated => _createdFact is not null;
+
+    /// <summary>The program the handoff belongs to.</summary>
     public Uuid ProgramId => _programId;
+
+    /// <summary>The current status: draft, ready for review, closed or revoked.</summary>
     public string Status => _status;
+
+    /// <summary>The logical revision: the number of facts of this handoff.</summary>
     public long Revision => _revision;
-    public string? Purpose => _purpose;
-    public DateOnly ExpiresOn => _expiresOn;
-    public ActorReference? CreatedBy => _createdBy;
-    public DateTimeOffset? CreatedAt => _createdAt;
+
+    /// <summary>The selection generation: one at creation, plus one for every selection revision.</summary>
+    public long Generation => _generation;
+
+    /// <summary>The purpose stated at creation.</summary>
+    public string? Purpose => _createdFact?.Purpose;
+
+    /// <summary>The last day the handoff stays shared.</summary>
+    public DateOnly ExpiresOn => _createdFact?.ExpiresOn ?? default;
+
+    /// <summary>Who created the handoff.</summary>
+    public ActorReference? CreatedBy => _createdFact?.CreatedBy;
+
+    /// <summary>When the handoff was created.</summary>
+    public DateTimeOffset? CreatedAt => _createdFact?.CreatedAt;
+
+    /// <summary>When the latest fact was recorded.</summary>
     public DateTimeOffset? UpdatedAt => _updatedAt;
-    public Uuid? ComparedToHandoffId => _comparedToHandoffId;
+
+    /// <summary>The ended handoff this selection is compared with.</summary>
+    public Uuid? ComparedToHandoffId => _createdFact?.ComparedToHandoffId;
+
+    /// <summary>True once the handoff was opened for review at least once.</summary>
     public bool WasReadyForReview => _wasReadyForReview;
-    public IReadOnlyList<AdvisorRecordVersion> Selection => _selection.ToArray();
 
-    public AdvisorHandoff(Uuid tenantId, Uuid programId, Uuid handoffId)
-        : base(handoffId, new EventStreamAddress(tenantId.ToString(), "advisor-handoffs",
-            handoffId.ToString()))
+    /// <summary>The verified content of the current selection, once created.</summary>
+    public ImmutableContentRef? SelectionManifest => _manifest;
+
+    /// <summary>The feedback admitted so far, in admission order.</summary>
+    public IReadOnlyList<AdvisorFeedbackAdmitted> Admitted => _admitted;
+
+    /// <summary>Every fact in order.</summary>
+    public IReadOnlyList<DomainEvent> Facts => _facts;
+
+    /// <summary>True when feedback with this id was admitted.</summary>
+    public bool HasAdmitted(Uuid feedbackId) => _admittedIds.Contains(feedbackId);
+
+    /// <summary>The fact with this event id.</summary>
+    public DomainEvent? FactById(Uuid eventId) => _facts.FirstOrDefault(fact => fact.Metadata?.EventId == eventId);
+
+    /// <summary>True while the handoff can still change: it was created and is neither closed nor revoked.</summary>
+    public bool IsOpen => IsCreated && _status is Draft or ReadyForReview;
+
+    /// <summary>Checks that the handoff does not exist yet.</summary>
+    public Result PrepareCreate() => IsCreated
+        ? Result.Failure(new RequestError(RequestErrorKind.Conflict, "The handoff already exists with different content."))
+        : Result.Success;
+
+    /// <summary>Checks that the selection of an open handoff can be revised at the expected revision.</summary>
+    public Result PrepareRevise(long expectedRevision)
     {
-        _tenantId = tenantId;
-        _programId = programId;
-        On<AdvisorHandoffCreated>(ev =>
-        {
-            if (ev.ComparedToHandoffId is { } comparedTo &&
-                (comparedTo == Uuid.Empty || comparedTo == Id))
-                throw new InvalidOperationException(
-                    "An advisor handoff cannot compare its selection to itself or an empty handoff.");
-            _created = true;
-            _programId = ev.ProgramId;
-            _revision = 1;
-            _purpose = ev.Purpose;
-            _expiresOn = ev.ExpiresOn;
-            _createdBy = ev.CreatedBy;
-            _createdAt = ev.CreatedAt;
-            _updatedAt = ev.CreatedAt;
-            _comparedToHandoffId = ev.ComparedToHandoffId;
-            _selection.AddRange(ev.RecordVersions);
-            _status = "draft";
-        });
-        On<AdvisorHandoffSelectionRevised>(ev =>
-        {
-            _revision = ev.Revision;
-            _updatedAt = ev.RevisedAt;
-            _selection.Clear();
-            _selection.AddRange(ev.RecordVersions);
-            _status = "draft";
-        });
-        On<AdvisorHandoffReadiedForReview>(ev =>
-        {
-            _revision = ev.Revision;
-            _updatedAt = ev.ReadiedAt;
-            _status = "ready_for_review";
-            _wasReadyForReview = true;
-        });
-        On<AdvisorHandoffClosed>(ev =>
-        {
-            _revision = ev.Revision;
-            _updatedAt = ev.ClosedAt;
-            _status = "closed";
-        });
-        On<AdvisorHandoffRevoked>(ev =>
-        {
-            _revision = ev.Revision;
-            _updatedAt = ev.RevokedAt;
-            _status = "revoked";
-        });
-        On<AdvisorFeedbackRecorded>(ApplyFeedbackRecorded);
-        On<AdvisorFeedbackCorrected>(ev =>
-        {
-            _revision++;
-            _updatedAt = ev.CorrectedAt;
-            var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
-            if (index >= 0)
-                _feedback[index] = _feedback[index] with
-                {
-                    Corrections = [.. _feedback[index].Corrections ?? [],
-                        new AdvisorFeedbackCorrection(ev.CorrectionId, ev.CorrectedBody,
-                            ev.CorrectionReason, ev.CorrectedBy, ev.CorrectedAt)],
-                };
-        });
-        On<AdvisorFeedbackResponded>(ev =>
-        {
-            _revision++;
-            _updatedAt = ev.RespondedAt;
-            var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
-            if (index >= 0)
-                _feedback[index] = _feedback[index] with
-                {
-                    Responses = [.. _feedback[index].Responses ?? [],
-                        new AdvisorFeedbackResponse(ev.Response, ev.RespondedBy, ev.RespondedAt)],
-                };
-        });
-        On<AdvisorFeedbackResolved>(ev =>
-        {
-            RequireFeedbackScope(ev.TenantId, ev.ProgramId, ev.HandoffId);
-            var index = _feedback.FindIndex(item => item.FeedbackId == ev.FeedbackId);
-            if (ev.FeedbackId == Uuid.Empty || !ValidActor(ev.ResolvedBy) ||
-                ev.ResolvedAt == default || index < 0 || _feedback[index].ResolvedAt is not null)
-                throw new InvalidOperationException("The advisor feedback resolution event is invalid.");
-            _revision++;
-            _updatedAt = ev.ResolvedAt;
-            _feedback[index] = _feedback[index] with
-            {
-                ResolvedAt = ev.ResolvedAt,
-                ResolvedBy = ev.ResolvedBy,
-            };
-        });
+        if (!IsCreated)
+            return Missing();
+        if (!IsOpen)
+            return Conflict("Only an open handoff can be revised.");
+        return expectedRevision == _revision ? Result.Success : Stale();
     }
 
-    public Result<bool> Create(string purpose, IReadOnlyList<AdvisorRecordVersion> recordVersions,
-        DateOnly expiresOn, ActorReference createdBy, DateTimeOffset createdAt,
-        Uuid? comparedToHandoffId = null)
+    /// <summary>Checks that a draft handoff can be opened for review at the expected revision.</summary>
+    public Result PrepareReady(long expectedRevision, DateOnly today)
     {
-        if (_tenantId == Uuid.Empty || _programId == Uuid.Empty || Id == Uuid.Empty ||
-            string.IsNullOrWhiteSpace(purpose) || !ValidSelection(recordVersions) ||
-            !ValidActor(createdBy) || expiresOn < DateOnly.FromDateTime(createdAt.UtcDateTime) ||
-            comparedToHandoffId is { } compareId &&
-            (compareId == Uuid.Empty || compareId == Id))
-            return Failure(RequestErrorKind.Validation, "A handoff requires purpose, exact selected versions, an actor, and a valid expiry.");
-        if (_created)
-            return _purpose == purpose.Trim() && _expiresOn == expiresOn &&
-                   _selection.SequenceEqual(recordVersions) &&
-                   _comparedToHandoffId == comparedToHandoffId
-                ? Result<bool>.Success(true)
-                : Failure(RequestErrorKind.Conflict, "The handoff already exists with different content.");
-
-        RaiseEvent(new AdvisorHandoffCreated(_tenantId, _programId, Id, recordVersions.ToArray(),
-            purpose.Trim(), expiresOn, createdBy, createdAt, comparedToHandoffId));
-        return Result<bool>.Success(true);
-    }
-
-    public Result<bool> ReviseSelection(long expectedRevision,
-        IReadOnlyList<AdvisorRecordVersion> recordVersions, string changeReason,
-        ActorReference revisedBy, DateTimeOffset revisedAt)
-    {
-        if (!IsOpen())
-            return Failure(RequestErrorKind.Conflict, "Only an open handoff can be revised.");
+        if (!IsCreated)
+            return Missing();
+        if (!IsOpen || _status != Draft)
+            return Conflict("Only a draft handoff can be marked ready for review.");
         if (expectedRevision != _revision)
-            return Failure(RequestErrorKind.Conflict, "The handoff revision is stale.");
-        if (!ValidSelection(recordVersions) || string.IsNullOrWhiteSpace(changeReason) ||
-            !ValidActor(revisedBy))
-            return Failure(RequestErrorKind.Validation, "A selection revision requires exact versions, a reason, and an actor.");
-        if (_selection.SequenceEqual(recordVersions))
-            return Failure(RequestErrorKind.Validation, "The revised selection must change the handoff selection.");
-
-        RaiseEvent(new AdvisorHandoffSelectionRevised(_tenantId, _programId, Id,
-            _revision + 1, recordVersions.ToArray(), changeReason.Trim(), revisedBy, revisedAt));
-        return Result<bool>.Success(true);
+            return Stale();
+        return ExpiresOn < today
+            ? Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A handoff requires an active exact selection and valid actor before it can be shared."))
+            : Result.Success;
     }
 
-    public Result<bool> MarkReadyForReview(long expectedRevision, ActorReference readiedBy,
-        DateTimeOffset readiedAt)
+    /// <summary>Checks that an open handoff can be closed or revoked at the expected revision.</summary>
+    public Result PrepareEnd(long expectedRevision)
     {
-        if (!IsOpen() || _status != "draft")
-            return Failure(RequestErrorKind.Conflict, "Only a draft handoff can be marked ready for review.");
+        if (!IsCreated)
+            return Missing();
+        if (!IsOpen)
+            return Conflict("Only an open handoff can be closed or revoked.");
+        return expectedRevision == _revision ? Result.Success : Stale();
+    }
+
+    /// <summary>
+    ///     Checks that feedback can be admitted at the expected revision: the handoff is ready, unrevoked, unclosed and
+    ///     unexpired, and the feedback identity was not admitted before. The caller proves the source is selected at
+    ///     exactly this revision.
+    /// </summary>
+    public Result PrepareAdmit(long expectedRevision, DateOnly today)
+    {
+        if (!IsCreated)
+            return Missing();
         if (expectedRevision != _revision)
-            return Failure(RequestErrorKind.Conflict, "The handoff revision is stale.");
-        if (!ValidActor(readiedBy) || _selection.Count == 0 ||
-            _expiresOn < DateOnly.FromDateTime(readiedAt.UtcDateTime))
-            return Failure(RequestErrorKind.Validation, "A handoff requires an active exact selection and valid actor before it can be shared.");
-
-        RaiseEvent(new AdvisorHandoffReadiedForReview(_tenantId, _programId, Id,
-            _revision + 1, readiedBy, readiedAt));
-        return Result<bool>.Success(true);
+            return Stale();
+        if (_status != ReadyForReview || !IsOpen)
+            return Conflict("Feedback is accepted only while the handoff is ready for review.");
+        return ExpiresOn < today
+            ? Conflict("Feedback is accepted only while the handoff is shared and unexpired.")
+            : Result.Success;
     }
 
-    public Result<bool> RecordFeedback(Uuid feedbackId, Uuid recordId, Uuid recordVersionId,
-        string kind, string body, ActorReference author, DateTimeOffset createdAt)
-        => RecordFeedback(feedbackId, new AdvisorRecordVersion(recordId, recordVersionId),
-            kind, body, author, createdAt);
-
-    public Result<bool> RecordFeedback(Uuid feedbackId, AdvisorRecordVersion sourceVersion,
-        string kind, string body, ActorReference author, DateTimeOffset createdAt)
+    /// <summary>Creates the handoff as the root native fact of its operation.</summary>
+    public Result Create(OperationProvenance operation, ImmutableContentRef manifest, string purpose,
+        DateOnly expiresOn, ActorReference createdBy, DateTimeOffset createdAt, Uuid? comparedToHandoffId,
+        ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
-        var existing = _feedback.Find(item => item.FeedbackId == feedbackId);
-        var recordId = sourceVersion?.RecordId ?? Uuid.Empty;
-        var recordVersionId = sourceVersion?.VersionId ?? Uuid.Empty;
-        if (existing is not null)
-            return (existing.SourceVersion ?? new AdvisorRecordVersion(existing.RecordId,
-                       existing.RecordVersionId)) == sourceVersion &&
-                   existing.Kind == kind && existing.Body == body && existing.Author == author
-                ? Result<bool>.Success(true)
-                : Failure(RequestErrorKind.Conflict, "The feedback identifier already has different content.");
-        if (_status != "ready_for_review" || !IsOpen())
-            return Failure(RequestErrorKind.Conflict, "Feedback is accepted only while the handoff is ready for review.");
-        if (feedbackId == Uuid.Empty || sourceVersion is null || !sourceVersion.HasValidIdentity ||
-            !_selection.Contains(sourceVersion) ||
-            !FeedbackKinds.Contains(kind) || string.IsNullOrWhiteSpace(body) || !ValidActor(author))
-            return Failure(RequestErrorKind.Validation, "Feedback must target a selected exact version and include a supported kind, body, and author.");
-
-        RaiseEvent(new AdvisorFeedbackRecorded(_tenantId, _programId, Id, feedbackId, recordId,
-            recordVersionId, kind, body.Trim(), author, createdAt)
-        {
-            SelectedSource = sourceVersion.IsSupported ? sourceVersion : null,
-        });
-        return Result<bool>.Success(true);
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(manifest);
+        if (operation.Owner != Stream || operation.LogicalId != _handoffId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A creation is the logical operation of its own handoff."));
+        var prepared = PrepareCreate();
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new AdvisorHandoffCreated(_tenantId, _programId, _handoffId, manifest, purpose, expiresOn,
+            createdBy, createdAt, comparedToHandoffId, operation, firstResponse, operationResult));
+        return Result.Success;
     }
 
-    public Result<bool> CorrectFeedback(Uuid feedbackId, Uuid correctionId,
-        string correctedBody, string correctionReason, ActorReference correctedBy,
-        DateTimeOffset correctedAt)
+    /// <summary>Revises the selection as the root native fact of its operation; the generation advances.</summary>
+    public Result ReviseSelection(OperationProvenance operation, ImmutableContentRef manifest, string changeReason,
+        ActorReference revisedBy, DateTimeOffset revisedAt, ImmutableContentRef firstResponse,
+        ImmutableContentRef operationResult)
     {
-        var feedback = _feedback.Find(item => item.FeedbackId == feedbackId);
-        if (feedback is null)
-            return Failure(RequestErrorKind.Validation, "The feedback to correct was not found.");
-        var existing = feedback.Corrections?.FirstOrDefault(item => item.CorrectionId == correctionId);
-        if (existing is not null)
-            return existing.Body == correctedBody && existing.Reason == correctionReason
-                ? Result<bool>.Success(true)
-                : Failure(RequestErrorKind.Conflict, "The correction identifier already has different content.");
-        if (correctionId == Uuid.Empty || string.IsNullOrWhiteSpace(correctedBody) ||
-            string.IsNullOrWhiteSpace(correctionReason) || !ValidActor(correctedBy))
-            return Failure(RequestErrorKind.Validation, "A feedback correction requires content, a reason, and an actor.");
-
-        RaiseEvent(new AdvisorFeedbackCorrected(_tenantId, _programId, Id, feedbackId,
-            correctionId, correctedBody.Trim(), correctionReason.Trim(), correctedBy, correctedAt));
-        return Result<bool>.Success(true);
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(manifest);
+        var prepared = PrepareOwn(operation, PrepareRevise);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new AdvisorHandoffSelectionRevised(_tenantId, _programId, _handoffId, _revision + 1, manifest,
+            changeReason, revisedBy, revisedAt, operation, firstResponse, operationResult));
+        return Result.Success;
     }
 
-    public Result<bool> RespondToFeedback(Uuid feedbackId, string response,
-        ActorReference respondedBy, DateTimeOffset respondedAt)
+    /// <summary>Opens the draft handoff for review as the root native fact of its operation.</summary>
+    public Result MarkReady(OperationProvenance operation, ActorReference readiedBy, DateTimeOffset readiedAt,
+        ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
-        if (!_feedback.Exists(item => item.FeedbackId == feedbackId))
-            return Failure(RequestErrorKind.Validation, "The feedback to respond to was not found.");
-        if (string.IsNullOrWhiteSpace(response) || !ValidActor(respondedBy))
-            return Failure(RequestErrorKind.Validation, "A feedback response requires content and an actor.");
-
-        RaiseEvent(new AdvisorFeedbackResponded(_tenantId, _programId, Id, feedbackId,
-            response.Trim(), respondedBy, respondedAt));
-        return Result<bool>.Success(true);
+        ArgumentNullException.ThrowIfNull(operation);
+        var prepared = PrepareOwn(operation, expected => PrepareReady(expected, DateOnly.FromDateTime(readiedAt.UtcDateTime)));
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new AdvisorHandoffReadiedForReview(_tenantId, _programId, _handoffId, _revision + 1, readiedBy,
+            readiedAt, operation, firstResponse, operationResult));
+        return Result.Success;
     }
 
-    public Result<bool> ResolveFeedback(Uuid feedbackId, ActorReference resolvedBy,
-        DateTimeOffset resolvedAt)
+    /// <summary>Closes the handoff as the root native fact of its operation.</summary>
+    public Result Close(OperationProvenance operation, string rationale, ActorReference closedBy,
+        DateTimeOffset closedAt, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
-        if (feedbackId == Uuid.Empty || !ValidActor(resolvedBy) || resolvedAt == default)
-            return Failure(RequestErrorKind.Validation,
-                "Resolving advisor feedback requires a feedback identity, actor, and time.");
-        var feedback = _feedback.Find(item => item.FeedbackId == feedbackId);
-        if (feedback is null)
-            return Failure(RequestErrorKind.NotFound, "The advisor feedback to resolve was not found.");
-        if (feedback.ResolvedAt is not null)
-            return Result<bool>.Success(true);
-
-        RaiseEvent(new AdvisorFeedbackResolved(_tenantId, _programId, Id, feedbackId,
-            resolvedBy, resolvedAt));
-        return Result<bool>.Success(true);
+        ArgumentNullException.ThrowIfNull(operation);
+        var prepared = PrepareOwn(operation, PrepareEnd);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new AdvisorHandoffClosed(_tenantId, _programId, _handoffId, _revision + 1, rationale, closedBy,
+            closedAt, operation, firstResponse, operationResult));
+        return Result.Success;
     }
 
-    public Result<bool> Close(string rationale, ActorReference closedBy, DateTimeOffset closedAt) =>
-        End(rationale, closedBy, closedAt, revoke: false);
-
-    public Result<bool> Revoke(string rationale, ActorReference revokedBy, DateTimeOffset revokedAt) =>
-        End(rationale, revokedBy, revokedAt, revoke: true);
-
-    public bool IsValidationCurrent(Uuid recordId) =>
-        _feedback.Any(feedback => feedback.RecordId == recordId && feedback.Kind == "validated" &&
-            _selection.Contains(feedback.SourceVersion ??
-                new AdvisorRecordVersion(feedback.RecordId, feedback.RecordVersionId)));
-
-    public IReadOnlyList<AdvisorFeedbackEntry> ReadFeedback() => _feedback.Select(feedback =>
-        feedback with
-        {
-            Corrections = feedback.Corrections?.ToArray(),
-            Responses = feedback.Responses?.ToArray(),
-            Disposition = _selection.Contains(feedback.SourceVersion ??
-                new AdvisorRecordVersion(feedback.RecordId, feedback.RecordVersionId))
-                ? AdvisorFeedbackDisposition.Current :
-                AdvisorFeedbackDisposition.Historical,
-        }).ToArray();
-
-    Result<bool> End(string rationale, ActorReference actor, DateTimeOffset occurredAt, bool revoke)
+    /// <summary>Revokes the handoff as the root native fact of its operation.</summary>
+    public Result Revoke(OperationProvenance operation, string rationale, ActorReference revokedBy,
+        DateTimeOffset revokedAt, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
-        if (!IsOpen())
-            return Failure(RequestErrorKind.Conflict, "Only an open handoff can be closed or revoked.");
-        if (string.IsNullOrWhiteSpace(rationale) || !ValidActor(actor))
-            return Failure(RequestErrorKind.Validation, "Ending a handoff requires a rationale and actor.");
-        if (revoke)
-            RaiseEvent(new AdvisorHandoffRevoked(_tenantId, _programId, Id, _revision + 1,
-                rationale.Trim(), actor, occurredAt));
-        else
-            RaiseEvent(new AdvisorHandoffClosed(_tenantId, _programId, Id, _revision + 1,
-                rationale.Trim(), actor, occurredAt));
-        return Result<bool>.Success(true);
+        ArgumentNullException.ThrowIfNull(operation);
+        var prepared = PrepareOwn(operation, PrepareEnd);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new AdvisorHandoffRevoked(_tenantId, _programId, _handoffId, _revision + 1, rationale, revokedBy,
+            revokedAt, operation, firstResponse, operationResult));
+        return Result.Success;
     }
 
-    bool IsOpen() => _created && _status is "draft" or "ready_for_review";
-
-    void ApplyFeedbackRecorded(AdvisorFeedbackRecorded ev)
+    /// <summary>Admits one feedback contribution for the current generation as the root native fact of its operation.</summary>
+    public Result AdmitFeedback(OperationProvenance operation, ImmutableContentRef intent, DateOnly today,
+        ImmutableContentRef firstResponse)
     {
-        var sourceVersion = ev.SelectedSource ?? new AdvisorRecordVersion(ev.RecordId,
-            ev.RecordVersionId);
-        if (ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.HandoffId != Id ||
-            ev.FeedbackId == Uuid.Empty || ev.RecordId == Uuid.Empty ||
-            sourceVersion.RecordId != ev.RecordId || sourceVersion.VersionId != ev.RecordVersionId ||
-            !sourceVersion.HasValidIdentity || !FeedbackKinds.Contains(ev.Kind) ||
-            string.IsNullOrWhiteSpace(ev.Body) || ev.Body.Trim() != ev.Body ||
-            !ValidActor(ev.Author) || ev.CreatedAt == default ||
-            !_selection.Contains(sourceVersion) || _feedback.Any(item => item.FeedbackId == ev.FeedbackId))
-            throw new InvalidOperationException("The advisor feedback event is invalid.");
-        _revision++;
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        var prepared = PrepareOwn(operation, expected => PrepareAdmit(expected, today));
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (_admittedIds.Contains(operation.LogicalId))
+            return Conflict("The feedback identifier already has different content.");
+        RaiseEvent(new AdvisorFeedbackAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
+            firstResponse, null));
+        return Result.Success;
+    }
+
+    void Apply(AdvisorHandoffCreated ev)
+    {
+        Acceptance.Observe(ev);
+        if (_createdFact is not null || ev.TenantId != _tenantId || ev.HandoffId != _handoffId ||
+            ev.ProgramId == Uuid.Empty || ev.Operation.Owner != Stream || ev.Operation.LogicalId != _handoffId ||
+            ev.ComparedToHandoffId is { } comparedTo && (comparedTo == Uuid.Empty || comparedTo == _handoffId))
+            throw new InvalidOperationException("A handoff stream is created once, by its own operation.");
+        _createdFact = ev;
+        _programId = ev.ProgramId;
+        _manifest = ev.RecordVersionsManifest;
+        _revision = 1;
+        _generation = 1;
+        _status = Draft;
         _updatedAt = ev.CreatedAt;
-        _feedback.Add(new AdvisorFeedbackEntry(ev.FeedbackId, ev.RecordId,
-            ev.RecordVersionId, ev.Kind, ev.Body, ev.Author, ev.CreatedAt,
-            SourceVersion: ev.SelectedSource));
+        _facts.Add(ev);
     }
 
-    static bool ValidSelection(IReadOnlyList<AdvisorRecordVersion>? selection) =>
-        selection is { Count: > 0 and <= MaximumSelectionCount } &&
-        selection.All(item => item is not null &&
-            item.HasValidIdentity) &&
-        selection.Select(item => (item.SourceFamily, item.RecordId, item.EntryId))
-            .Distinct().Count() == selection.Count;
-
-    static bool ValidActor(ActorReference? actor) => actor is not null &&
-        !string.IsNullOrWhiteSpace(actor.Kind) && !string.IsNullOrWhiteSpace(actor.Id) &&
-        !string.IsNullOrWhiteSpace(actor.Display);
-
-    void RequireFeedbackScope(Uuid tenantId, Uuid programId, Uuid handoffId)
+    void Apply(AdvisorHandoffSelectionRevised ev)
     {
-        if (tenantId != _tenantId || programId != _programId || handoffId != Id)
-            throw new InvalidOperationException(
-                "Advisor feedback event scope does not match its handoff stream.");
+        Acceptance.Observe(ev);
+        EnsureOpen(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.Revision, ev.Operation);
+        _manifest = ev.RecordVersionsManifest;
+        _generation++;
+        _status = Draft;
+        Advance(ev, ev.RevisedAt);
     }
 
-    static Result<bool> Failure(RequestErrorKind kind, string message) =>
-        Result<bool>.Failure(new RequestError(kind, message));
+    void Apply(AdvisorHandoffReadiedForReview ev)
+    {
+        Acceptance.Observe(ev);
+        EnsureOpen(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.Revision, ev.Operation);
+        if (_status != Draft)
+            throw new InvalidOperationException("Only a draft handoff is readied for review.");
+        _status = ReadyForReview;
+        _wasReadyForReview = true;
+        Advance(ev, ev.ReadiedAt);
+    }
+
+    void Apply(AdvisorHandoffClosed ev)
+    {
+        Acceptance.Observe(ev);
+        EnsureOpen(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.Revision, ev.Operation);
+        _status = Closed;
+        Advance(ev, ev.ClosedAt);
+    }
+
+    void Apply(AdvisorHandoffRevoked ev)
+    {
+        Acceptance.Observe(ev);
+        EnsureOpen(ev.TenantId, ev.ProgramId, ev.HandoffId, ev.Revision, ev.Operation);
+        _status = Revoked;
+        Advance(ev, ev.RevokedAt);
+    }
+
+    void Apply(AdvisorFeedbackAdmitted ev)
+    {
+        Acceptance.Observe(ev);
+        if (!IsCreated || _status != ReadyForReview || ev.Owner != Stream || ev.Revision != _revision + 1 ||
+            ev.Generation != _generation || ev.Operation.Owner != Stream || !_admittedIds.Add(ev.Operation.LogicalId))
+            throw new InvalidOperationException(
+                "Feedback is admitted once, for the current ready generation, at the next revision.");
+        _admitted.Add(ev);
+        Advance(ev, ev.Operation.AcceptedAt);
+    }
+
+    void EnsureOpen(Uuid tenantId, Uuid programId, Uuid handoffId, long revision, OperationProvenance operation)
+    {
+        if (!IsOpen || tenantId != _tenantId || programId != _programId || handoffId != _handoffId ||
+            revision != _revision + 1 || operation.Owner != Stream)
+            throw new InvalidOperationException("A handoff fact follows the creation at the next revision of an open handoff.");
+    }
+
+    void Advance(DomainEvent fact, DateTimeOffset occurredAt)
+    {
+        _revision++;
+        _updatedAt = occurredAt;
+        _facts.Add(fact);
+    }
+
+    Result PrepareOwn(OperationProvenance operation, Func<long, Result> prepare)
+    {
+        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A handoff write is a root operation of its own handoff with an expected revision."));
+        return prepare((long)expected);
+    }
+
+    static Result Missing() => Result.Failure(new RequestError(RequestErrorKind.NotFound,
+        "The advisor handoff was not found in the requested program."));
+
+    static Result Conflict(string message) => Result.Failure(new RequestError(RequestErrorKind.Conflict, message));
+
+    Result Stale() => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+        $"The handoff revision is stale; the current revision is {_revision}."));
 }
-
-public enum AdvisorFeedbackDisposition { Current, Historical }
-
-public sealed record AdvisorFeedbackEntry(Uuid FeedbackId, Uuid RecordId, Uuid RecordVersionId,
-    string Kind, string Body, ActorReference Author, DateTimeOffset CreatedAt,
-    IReadOnlyList<AdvisorFeedbackCorrection>? Corrections = null,
-    IReadOnlyList<AdvisorFeedbackResponse>? Responses = null,
-    DateTimeOffset? ResolvedAt = null,
-    AdvisorFeedbackDisposition Disposition = AdvisorFeedbackDisposition.Current,
-    AdvisorRecordVersion? SourceVersion = null)
-{
-    public ActorReference? ResolvedBy { get; init; }
-}
-
-public sealed record AdvisorFeedbackCorrection(Uuid CorrectionId, string Body, string Reason,
-    ActorReference Actor, DateTimeOffset CorrectedAt);
-
-public sealed record AdvisorFeedbackResponse(string Body, ActorReference Actor,
-    DateTimeOffset RespondedAt);

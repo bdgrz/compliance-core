@@ -4,6 +4,11 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-/// <summary>Records the mark advisor handoff ready for review intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.advisor-collaboration.mark-advisor-handoff-ready-for-review", 1)]
-public sealed record MarkAdvisorHandoffReadyForReview(Uuid TenantId, Uuid ProgramId, Uuid HandoffId, long ExpectedRevision) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Opens the exact selected versions of a draft handoff to the assigned advisor at the expected handoff revision.</summary>
+[Discriminator("bdgrz.advisor-collaboration.mark-advisor-handoff-ready-for-review", 2)]
+public sealed record MarkAdvisorHandoffReadyForReview(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid HandoffId,
+    long ExpectedRevision) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest,
+    IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

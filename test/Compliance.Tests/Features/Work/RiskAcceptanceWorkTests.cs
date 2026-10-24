@@ -171,8 +171,7 @@ public sealed class RiskAcceptanceWorkTests
 
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var source = await RiskAcceptanceWork.LoadAsync(reader, fixture.Risks, null,
-            fixture.TenantId, fixture.ProgramId, now, null, CancellationToken.None);
+        var source = await RiskAcceptanceWork.LoadAsync(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, fixture.TenantId, fixture.ProgramId, now, null, CancellationToken.None);
         var candidate = Assert.Single(source.Value);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var projected = new ProjectedRiskAcceptanceWorkItems(candidate,
@@ -184,7 +183,9 @@ public sealed class RiskAcceptanceWorkTests
             operatingReader: scope.ServiceProvider.GetRequiredService<ControlOperationsReader>(),
             mappingReader: scope.ServiceProvider.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: scope.ServiceProvider.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: scope.ServiceProvider.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: scope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 
@@ -216,8 +217,7 @@ public sealed class RiskAcceptanceWorkTests
         await ProjectRiskEvaluationsAsync(evaluations, events, fixture.TenantId);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var workItems = new RiskAcceptanceWorkItemDirectory(reader, fixture.Risks, null,
-            evaluations);
+        var workItems = new RiskAcceptanceWorkItemDirectory(reader, scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, evaluations);
         Assert.Equal(await ReadRiskEvaluationCheckpointAsync(events, fixture.TenantId),
             await workItems.LoadCheckpointAsync(fixture.TenantId));
 
@@ -252,9 +252,7 @@ public sealed class RiskAcceptanceWorkTests
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var evaluations = new FitzRiskEvaluationDirectory(new InMemoryKvClient());
         await using var scope = fixture.Provider.CreateAsyncScope();
-        var workItems = new RiskAcceptanceWorkItemDirectory(
-            scope.ServiceProvider.GetRequiredService<IAggregateReader>(), fixture.Risks, null,
-            evaluations);
+        var workItems = new RiskAcceptanceWorkItemDirectory(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(), fixture.Risks, null, evaluations);
         var consistency = new WorkQueueReadConsistency(events, [workItems]);
 
         // Act
@@ -285,14 +283,7 @@ public sealed class RiskAcceptanceWorkTests
 
     static Task SeedRiskOwnerAsync(OperationsFixture fixture, Uuid riskId,
         DateTimeOffset now) =>
-        ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), governance =>
-            {
-                Assert.Null(governance.AssignOwner(riskId, 0, fixture.PersonId,
-                    fixture.OwnerMemberId, "Owns the service risk.",
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now));
-                return Result.Success;
-            });
+        RiskSeeds.AssignOwnerAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, fixture.PersonId, fixture.OwnerMemberId, "Owns the service risk.", ActorReference.ForMember(fixture.LeadMemberId, "Lead"), now);
 
     static Task SeedPendingAcceptanceAsync(OperationsFixture fixture, Uuid riskId,
         Uuid residualAssessmentId, RiskMethodVersionView method, DateTimeOffset now,

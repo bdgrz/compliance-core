@@ -4,17 +4,20 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Risks;
 
 /// <summary>
-///     Raises M0-D10 boundary-change reassessment triggers when a successor boundary version is
-///     approved. The initial approval defines scope rather than changing it, so it is skipped.
+///     Raises M0-D10 boundary-change reassessment triggers when a successor boundary version is approved, one command
+///     per assessed risk of the program. The initial approval defines scope rather than changing it, so it is skipped.
 /// </summary>
 public sealed partial class BoundaryRiskReassessmentReactor(
     IProjectionCheckpointStore checkpoints,
     IRequestBus bus,
-    IAggregateReader reader)
-    : Reactor(checkpoints, EventStreamPattern.ForTenant("boundaries"),
-            "BoundaryRiskReassessmentV1"),
+    IAggregateReader reader,
+    IRiskDraftDirectoryReader risks,
+    RiskDraftListReadConsistency consistency)
+    : Reactor(checkpoints, EventStreamPattern.ForTenant("boundaries"), WorkloadName),
       IReactorHandler<BoundaryApproved>
 {
+    public const string WorkloadName = "BoundaryRiskReassessmentV1";
+
     public async ValueTask HandleAsync(IReactorContext<BoundaryApproved> context,
         CancellationToken ct)
     {
@@ -23,9 +26,8 @@ public sealed partial class BoundaryRiskReassessmentReactor(
             approved.BoundaryId), ct).ConfigureAwait(false);
         if (!boundary.IsCreated || boundary.FirstApprovedVersionId == approved.DraftVersionId)
             return;
-        await bus.SendReactionAsync(new RaiseRiskReassessmentTriggers(approved.TenantId,
-                boundary.ProgramId, RiskGovernanceLedger.BoundaryChanged,
-                approved.DraftVersionId.ToString(), approved.DecidedAt, null),
-            context, ct).ConfigureAwait(false);
+        await RiskReassessmentFanOut.SendAsync(bus, reader, risks, consistency, context, approved.Metadata.EventId,
+            approved.TenantId, boundary.ProgramId, RiskStates.BoundaryChanged, approved.DraftVersionId.ToString(),
+            approved.DecidedAt, null, ct).ConfigureAwait(false);
     }
 }

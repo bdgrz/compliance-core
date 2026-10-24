@@ -675,16 +675,11 @@ public sealed class ControlLifecycleHandlerTests
             var treatmentId = Uuid.CreateVersion4();
             var proposer = Uuid.CreateVersion4();
             var reviewer = Uuid.CreateVersion4();
-            await ProgramManagementServices.SeedAsync(Provider,
-                new RiskGovernanceLedger(TenantId, ProgramId), ledger =>
-                {
-                    Assert.Null(ledger.ProposeControlTreatment(riskId, 0, treatmentId,
-                        "mitigate", ControlId, InitialVersionId, "Treats the risk.", proposer,
-                        ActorReference.ForMember(proposer, "Proposer"), now));
-                    return CommandResult(ledger.ReviewControlTreatment(riskId, treatmentId, 1,
-                        Uuid.CreateVersion4(), "accept", "Ok.", reviewer,
-                        ActorReference.ForMember(reviewer, "Reviewer"), now));
-                });
+            await RiskSeeds.ProposeTreatmentAsync(Provider, TenantId, ProgramId, riskId, treatmentId,
+                ControlId, InitialVersionId, "Treats the risk.", proposer,
+                ActorReference.ForMember(proposer, "Proposer"), now);
+            await RiskSeeds.ReviewTreatmentAsync(Provider, TenantId, ProgramId, riskId, ControlId,
+                treatmentId, "accept", "Ok.", ActorReference.ForMember(reviewer, "Reviewer"), now);
             return treatmentId;
         }
 
@@ -705,25 +700,21 @@ public sealed class ControlLifecycleHandlerTests
             var requestId = Uuid.CreateVersion4();
             var now = DateTimeOffset.UtcNow;
             var actor = ActorReference.ForMember(OwnerMemberId, "Owner");
-            await ProgramManagementServices.SeedAsync(Provider,
-                new EvidenceRequestLedger(tenantId ?? TenantId, programId ?? ProgramId), ledger =>
-                {
-                    Assert.Null(ledger.OpenRequest(requestId, "Access review evidence",
-                        "Retain the review record.", OwnerMemberId,
-                        DateOnly.FromDateTime(now.UtcDateTime).AddDays(30),
-                        controlId ?? ControlId, actor, now));
-                    return CommandResult(artifactId is { } artifact
-                        ? ledger.Fulfil(requestId, 1, artifact, actor, now)
-                        : cancel ? ledger.Cancel(requestId, 1, "Not required.", actor, now) : null);
-                });
+            var tenant = tenantId ?? TenantId;
+            var program = programId ?? ProgramId;
+            await EvidenceSeeds.OpenAsync(Provider, tenant, program, requestId, "Access review evidence",
+                "Retain the review record.", OwnerMemberId, DateOnly.FromDateTime(now.UtcDateTime).AddDays(30),
+                controlId ?? ControlId, actor, now);
+            if (artifactId is { } artifact)
+                await EvidenceSeeds.FulfilAsync(Provider, tenant, program, requestId, artifact, actor, now);
+            else if (cancel)
+                await EvidenceSeeds.CancelAsync(Provider, tenant, program, requestId, "Not required.", actor, now);
             return requestId;
         }
 
         public Task CancelEvidenceRequestAsync(Uuid requestId) =>
-            ProgramManagementServices.SeedAsync(Provider,
-                new EvidenceRequestLedger(TenantId, ProgramId), ledger =>
-                    CommandResult(ledger.Cancel(requestId, 1, "No longer required.",
-                        ActorReference.ForMember(OwnerMemberId, "Owner"), DateTimeOffset.UtcNow)));
+            EvidenceSeeds.CancelAsync(Provider, TenantId, ProgramId, requestId, "No longer required.",
+                ActorReference.ForMember(OwnerMemberId, "Owner"), DateTimeOffset.UtcNow);
 
         public async Task<Uuid> SeedOperatingPlanAsync(bool approve = true,
             DateOnly? effectiveFrom = null)

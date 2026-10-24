@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Risks;
 ///     an active program grant; the aggregate then applies M0-D10 appetite and expiry rules.
 /// </summary>
 public sealed class AcceptRiskHandler(IAggregateExecutor executor, IAggregateReader reader,
-    IAccessGrantPermissionAuthorizer permissions, TimeProvider clock)
+    IAccessGrantPermissionAuthorizer permissions, RiskGovernanceReader governanceReader, TimeProvider clock)
     : IRequestHandler<AcceptRisk, RiskAcceptanceView>
 {
     public async ValueTask<Result<RiskAcceptanceView>> HandleAsync(
@@ -39,8 +39,8 @@ public sealed class AcceptRiskHandler(IAggregateExecutor executor, IAggregateRea
         var held = permission is not null && await permissions.IsAllowedAsync(request.TenantId,
             actor.UserId, actor.MemberId, request.ProgramId, permission, ct).ConfigureAwait(false);
         // The owner's correlated member at assignment and now are both bound by owner SoD.
-        var governance = await reader.HydrateAsync(new RiskGovernanceLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
+        var governance = await governanceReader.ReadRiskAsync(request.TenantId, request.ProgramId,
+            request.RiskId, ct).ConfigureAwait(false);
         Uuid? ownerMemberId = null;
         if (governance.OwnerOf(request.RiskId) is { } owner)
         {

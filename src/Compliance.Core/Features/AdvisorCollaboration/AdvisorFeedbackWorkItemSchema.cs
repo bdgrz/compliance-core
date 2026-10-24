@@ -12,7 +12,7 @@ static class AdvisorFeedbackWorkItemSchema
         static entry => entry.FeedbackId,
         static feedbackId => [feedbackId.ToString()], [ByProgram]);
 
-    public static readonly KvDirectory<AdvisorFeedbackWorkItemProjectionState, Uuid> Handoffs =
-        new("handoffs", ComplianceCoreJsonContext.Default.AdvisorFeedbackWorkItemProjectionState,
-            static state => state.HandoffId, static handoffId => [handoffId.ToString()], []);
+    public static readonly KvDirectory<AdvisorFeedbackWorkItemProjectionState, Uuid> Threads =
+        new("threads", ComplianceCoreJsonContext.Default.AdvisorFeedbackWorkItemProjectionState,
+            static state => state.FeedbackId, static feedbackId => [feedbackId.ToString()], []);
 }

@@ -10,6 +10,68 @@ public sealed class EvidenceRequestHandlerTests
 {
     const string Sha256 = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
 
+    [Theory]
+    [InlineData(" ", "Upload the export.", 0)]
+    [InlineData("Access export", " ", 0)]
+    [InlineData("Access export", "Upload the export.", -1)]
+    public async Task ShouldPreserveRequestAbsenceGivenInvalidOpeningContent(string title, string instructions,
+        int dueOffsetDays)
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var request = new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, title,
+            instructions, fixture.OwnerMemberId, fixture.Today.AddDays(dueOffsetDays));
+
+        // Act
+        await fixture.Scenario(fixture.LeadUserId).When(request).ExpectFailure(RequestErrorKind.Validation);
+        var retained = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new EvidenceRequest(fixture.TenantId, fixture.ProgramId, request.EvidenceRequestId));
+
+        // Assert
+        Assert.False(retained.IsOpened);
+        Assert.Equal(0UL, retained.CommittedStreamPosition);
+    }
+
+    [Fact]
+    public async Task ShouldReplayOpenWithoutAppendingGivenSameCommandIdentity()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var request = new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+            "Q3 export", "Upload the export.", fixture.OwnerMemberId, fixture.Today.AddDays(7));
+        var first = await fixture.AsAsync(fixture.LeadUserId, request);
+
+        // Act
+        var replay = await fixture.AsAsync(fixture.LeadUserId, request);
+        await fixture.Scenario(fixture.LeadUserId).When(request with { Title = "Changed" })
+            .ExpectFailure(RequestErrorKind.Conflict);
+        var retained = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new EvidenceRequest(fixture.TenantId, fixture.ProgramId, request.EvidenceRequestId));
+
+        // Assert
+        Assert.Equal(first, replay);
+        Assert.Equal(1, retained.Revision);
+        Assert.Equal(1UL, retained.CommittedStreamPosition);
+    }
+
+    [Fact]
+    public async Task ShouldPreserveOpenRequestGivenEmptyCancellationRationale()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var opened = await OpenAsync(fixture);
+
+        // Act
+        await fixture.Scenario(fixture.LeadUserId).When(new CancelEvidenceRequest(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.ProgramId, opened.EvidenceRequestId, opened.Revision, " "))
+            .ExpectFailure(RequestErrorKind.Validation);
+        var retained = await fixture.AsAsync(fixture.LeadUserId, new GetEvidenceRequest(fixture.TenantId,
+            fixture.ProgramId, opened.EvidenceRequestId));
+
+        // Assert
+        Assert.Equal(opened, retained);
+    }
+
     [Fact]
     public async Task ShouldOpenAndLetTheOwnerFulfilGivenAnAvailableArtifact()
     {
@@ -19,16 +81,16 @@ public sealed class EvidenceRequestHandlerTests
         var artifactId = await ArtifactAsync(fixture, EvidenceInspectionOutcome.Clean);
 
         // Act
-        var fulfilled = await fixture.AsAsync(fixture.OwnerUserId, new FulfilEvidenceRequest(fixture.TenantId,
+        var fulfilled = await fixture.AsAsync(fixture.OwnerUserId, new FulfilEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, opened.EvidenceRequestId, opened.Revision, artifactId));
 
         // Assert
-        Assert.Equal(EvidenceRequestLedger.Open, opened.Status);
+        Assert.Equal(EvidenceRequest.Open, opened.Status);
         Assert.Equal(fixture.ControlId, opened.ControlId);
-        Assert.Equal(EvidenceRequestLedger.Fulfilled, fulfilled.Status);
+        Assert.Equal(EvidenceRequest.Fulfilled, fulfilled.Status);
         Assert.Equal(artifactId, fulfilled.ArtifactId);
         var listed = await fixture.AsAsync(fixture.LeadUserId, new ListEvidenceRequests(fixture.TenantId,
-            fixture.ProgramId, EvidenceRequestLedger.Fulfilled));
+            fixture.ProgramId, EvidenceRequest.Fulfilled));
         Assert.Equal(opened.EvidenceRequestId, Assert.Single(listed.Items).EvidenceRequestId);
     }
 
@@ -41,7 +103,7 @@ public sealed class EvidenceRequestHandlerTests
         var artifactId = await ArtifactAsync(fixture, EvidenceInspectionOutcome.Clean);
 
         // Act
-        var result = fixture.Scenario(fixture.ReviewerUserId).When(new FulfilEvidenceRequest(fixture.TenantId,
+        var result = fixture.Scenario(fixture.ReviewerUserId).When(new FulfilEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, opened.EvidenceRequestId, opened.Revision, artifactId));
 
         // Assert
@@ -57,7 +119,7 @@ public sealed class EvidenceRequestHandlerTests
         var artifactId = await ArtifactAsync(fixture, EvidenceInspectionOutcome.SecretDetected);
 
         // Act
-        var result = fixture.Scenario(fixture.OwnerUserId).When(new FulfilEvidenceRequest(fixture.TenantId,
+        var result = fixture.Scenario(fixture.OwnerUserId).When(new FulfilEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, opened.EvidenceRequestId, opened.Revision, artifactId));
 
         // Assert
@@ -73,14 +135,14 @@ public sealed class EvidenceRequestHandlerTests
         var artifactId = await ArtifactAsync(fixture, null);
 
         // Act
-        var result = fixture.Scenario(fixture.OwnerUserId).When(new FulfilEvidenceRequest(fixture.TenantId,
+        var result = fixture.Scenario(fixture.OwnerUserId).When(new FulfilEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, opened.EvidenceRequestId, opened.Revision, artifactId));
 
         // Assert
         await result.ExpectFailure(RequestErrorKind.Conflict);
         var unchanged = await fixture.AsAsync(fixture.LeadUserId, new GetEvidenceRequest(fixture.TenantId,
             fixture.ProgramId, opened.EvidenceRequestId));
-        Assert.Equal(EvidenceRequestLedger.Open, unchanged.Status);
+        Assert.Equal(EvidenceRequest.Open, unchanged.Status);
         Assert.Equal(opened.Revision, unchanged.Revision);
         Assert.Null(unchanged.ArtifactId);
     }
@@ -94,14 +156,14 @@ public sealed class EvidenceRequestHandlerTests
         var artifactId = await ArtifactAsync(fixture, EvidenceInspectionOutcome.Malware);
 
         // Act
-        var result = fixture.Scenario(fixture.OwnerUserId).When(new FulfilEvidenceRequest(fixture.TenantId,
+        var result = fixture.Scenario(fixture.OwnerUserId).When(new FulfilEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, opened.EvidenceRequestId, opened.Revision, artifactId));
 
         // Assert
         await result.ExpectFailure(RequestErrorKind.Conflict);
         var unchanged = await fixture.AsAsync(fixture.LeadUserId, new GetEvidenceRequest(fixture.TenantId,
             fixture.ProgramId, opened.EvidenceRequestId));
-        Assert.Equal(EvidenceRequestLedger.Open, unchanged.Status);
+        Assert.Equal(EvidenceRequest.Open, unchanged.Status);
         Assert.Equal(opened.Revision, unchanged.Revision);
         Assert.Null(unchanged.ArtifactId);
     }
@@ -113,7 +175,7 @@ public sealed class EvidenceRequestHandlerTests
         var fixture = await OperationsFixture.CreateAsync();
 
         // Act
-        var result = fixture.Scenario(fixture.LeadUserId).When(new OpenEvidenceRequest(fixture.TenantId,
+        var result = fixture.Scenario(fixture.LeadUserId).When(new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, "Export", "Upload it.", Uuid.CreateVersion4(), fixture.Today.AddDays(7)));
 
         // Assert
@@ -127,7 +189,7 @@ public sealed class EvidenceRequestHandlerTests
         var fixture = await OperationsFixture.CreateAsync();
 
         // Act
-        var result = fixture.Scenario(fixture.OwnerUserId).When(new OpenEvidenceRequest(fixture.TenantId,
+        var result = fixture.Scenario(fixture.OwnerUserId).When(new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, "Export", "Upload it.", fixture.OwnerMemberId, fixture.Today.AddDays(7)));
 
         // Assert
@@ -142,16 +204,16 @@ public sealed class EvidenceRequestHandlerTests
         var opened = await OpenAsync(fixture);
 
         // Act
-        var cancelled = await fixture.AsAsync(fixture.LeadUserId, new CancelEvidenceRequest(fixture.TenantId,
+        var cancelled = await fixture.AsAsync(fixture.LeadUserId, new CancelEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, opened.EvidenceRequestId, opened.Revision, "Superseded by the Q4 request"));
 
         // Assert
-        Assert.Equal(EvidenceRequestLedger.Cancelled, cancelled.Status);
+        Assert.Equal(EvidenceRequest.Cancelled, cancelled.Status);
         Assert.Equal("Superseded by the Q4 request", cancelled.CancellationRationale);
     }
 
     static Task<EvidenceRequestView> OpenAsync(OperationsFixture fixture) =>
-        fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId, fixture.ProgramId,
+        fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             "Q3 access review export", "Upload the signed review record.", fixture.OwnerMemberId,
             fixture.Today.AddDays(14), fixture.ControlId));
 

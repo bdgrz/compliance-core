@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "newGitHubIssuesPermitted": false,
+  "completionTarget": "Accepted aggregate/command/reactor design; all unblocked implementation and file-review findings.",
+  "blocked": [
+    {
+      "id": "operation-only-routes",
+      "status": "blocked",
+      "existingIssues": [
+        1042,
+        1055
+      ],
+      "evidence": "Installed Portia one-stream append does not provide the accepted realm-wide binding assertion. Per-first-owner admission can proceed; bare-operation routes and cross-route deduplication remain disabled.",
+      "nextWork": "Implement remaining owner and receiver slices independently."
+    }
+  ],
+  "remainingSlices": [
+    "S29",
+    "S31",
+    "S32",
+    "S33",
+    "S34",
+    "S35"
+  ],
+  "triageArtifacts": [
+    "implementation-file-reviews.json"
+  ],
+  "reviewSignalsAwaitingTriage": 73
+}

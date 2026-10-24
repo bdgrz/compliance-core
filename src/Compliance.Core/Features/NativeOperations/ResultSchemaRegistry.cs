@@ -67,6 +67,7 @@ public static class ResultSchemaRegistry
         [AccessReviewContent.ReassignmentViewSchema] =
             ComplianceCoreJsonContext.Default.AccessReviewResponsibilityReassignmentView,
         [AccessReviewContent.CompletionViewSchema] = ComplianceCoreJsonContext.Default.AccessReviewCampaignCompletionView,
+        [AccessReviewContent.BulkResultSchema] = ComplianceCoreJsonContext.Default.BulkAccessDecisionResult,
         ["PolicyCampaignLaunched.Registration.v1"] = ComplianceCoreJsonContext.Default.CampaignRegistration,
         ["PolicyCampaignAudienceAmended.Reconciliation.v1"] =
             ComplianceCoreJsonContext.Default.CampaignReconciliationView,

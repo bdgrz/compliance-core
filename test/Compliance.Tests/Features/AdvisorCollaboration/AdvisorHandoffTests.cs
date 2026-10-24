@@ -1,281 +1,221 @@
 using System.Text.Json;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.AdvisorCollaboration;
 
+/// <summary>The handoff and thread state machines, their selection invariants and their serialized facts.</summary>
 public sealed class AdvisorHandoffTests
 {
-    static readonly Uuid TenantId = Uuid.CreateVersion4();
-    static readonly Uuid ProgramId = Uuid.CreateVersion4();
-    static readonly Uuid HandoffId = Uuid.CreateVersion4();
-    static readonly Uuid LeadId = Uuid.CreateVersion4();
-    static readonly Uuid AdvisorId = Uuid.CreateVersion4();
-    static readonly DateTimeOffset Now = new(2026, 10, 17, 12, 0, 0, TimeSpan.Zero);
-
     [Fact]
-    public void ShouldCreateHandoffWithNativeNumericPolicyVersionGivenApprovedPolicy()
+    public async Task ShouldCreateHandoffWithNativeNumericPolicyVersionGivenApprovedPolicy()
     {
         // Arrange
-        var selected = AdvisorRecordVersion.PolicyVersion(Uuid.CreateVersion4(), version: 2,
-            revision: 5);
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
+        await using var host = new AdvisorHost();
+        var selected = AdvisorRecordVersion.PolicyVersion(Uuid.CreateVersion4(), version: 2, revision: 5);
+        var handoffId = Uuid.CreateVersion4();
 
         // Act
-        var result = handoff.Create("Review the approved policy", [selected],
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now);
+        var result = await host.CreateAsync(handoffId, [selected], "Review the approved policy");
+        var saved = await host.SnapshotAsync(handoffId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal([selected], handoff.Selection);
+        Assert.Equal([selected], saved.Selection);
     }
 
     [Fact]
-    public void ShouldRetainComparisonBaselineGivenARepeatedHandoff()
+    public async Task ShouldSelectMultipleQuestionsFromOneBoundaryGivenExactBoundaryVersion()
     {
         // Arrange
-        var comparisonId = Uuid.CreateVersion4();
-        var selected = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
-
-        // Act
-        var created = handoff.Create("Review changed controls", [selected],
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now,
-            comparisonId);
-        Assert.True(created.IsSuccess, created.Error?.Message);
-        Assert.True(handoff.MarkReadyForReview(1, ActorReference.ForMember(LeadId, "Lead"),
-            Now.AddMinutes(1)).IsSuccess);
-        var replay = new AggregateScenario<AdvisorHandoff>(new AdvisorHandoff(TenantId,
-            ProgramId, HandoffId)).Given(new AggregateScenario<AdvisorHandoff>(handoff)
-            .PendingEvents.ToArray()).Aggregate;
-
-        // Assert
-        Assert.Equal(comparisonId, handoff.ComparedToHandoffId);
-        Assert.True(handoff.WasReadyForReview);
-        Assert.Equal(comparisonId, replay.ComparedToHandoffId);
-        Assert.True(replay.WasReadyForReview);
-    }
-
-    [Fact]
-    public void ShouldSelectMultipleQuestionsFromOneBoundaryGivenExactBoundaryVersion()
-    {
-        // Arrange
+        await using var host = new AdvisorHost();
         var boundaryId = Uuid.CreateVersion4();
         var versionId = Uuid.CreateVersion4();
         var selected = new[]
         {
-            AdvisorRecordVersion.BoundaryQuestion(boundaryId, Uuid.CreateVersion4(),
-                versionId, revision: 3),
-            AdvisorRecordVersion.BoundaryQuestion(boundaryId, Uuid.CreateVersion4(),
-                versionId, revision: 3),
+            AdvisorRecordVersion.BoundaryQuestion(boundaryId, Uuid.CreateVersion4(), versionId, revision: 3),
+            AdvisorRecordVersion.BoundaryQuestion(boundaryId, Uuid.CreateVersion4(), versionId, revision: 3),
         };
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
+        var handoffId = Uuid.CreateVersion4();
 
         // Act
-        var result = handoff.Create("Review the open boundary questions", selected,
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now);
+        var result = await host.CreateAsync(handoffId, selected, "Review the open boundary questions");
+        var saved = await host.SnapshotAsync(handoffId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(selected, handoff.Selection);
+        Assert.Equal(selected, saved.Selection);
     }
 
     [Fact]
-    public void ShouldRejectUnboundedSelectionGivenMoreThanOneHundredExactSources()
+    public async Task ShouldRejectUnboundedSelectionGivenMoreThanOneHundredExactSources()
     {
         // Arrange
+        await using var host = new AdvisorHost();
         var selected = Enumerable.Range(0, 101).Select(_ =>
-            AdvisorRecordVersion.ControlDraft(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1))
-            .ToArray();
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
+            AdvisorRecordVersion.ControlDraft(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1)).ToArray();
+        var handoffId = Uuid.CreateVersion4();
 
         // Act
-        var result = handoff.Create("Review selected work", selected,
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now);
+        var result = await host.CreateAsync(handoffId, selected, "Review selected work");
+        var saved = await host.HandoffAsync(handoffId);
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
-        Assert.False(handoff.IsCreated);
-        Assert.Empty(new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents);
+        Assert.False(saved.IsCreated);
+        Assert.Empty(await host.EventsAsync<AdvisorHandoffCreated>(saved.Stream));
     }
 
     [Fact]
-    public void ShouldRetainValidationAsHistoricalGivenASelectedRecordAdvancesToANewVersion()
+    public async Task ShouldRejectDuplicateLogicalSourceGivenSelection()
     {
         // Arrange
+        await using var host = new AdvisorHost();
         var recordId = Uuid.CreateVersion4();
-        var firstVersion = Uuid.CreateVersion4();
-        var successorVersion = Uuid.CreateVersion4();
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
-
-        Assert.True(handoff.Create("Type I controls", [new(recordId, firstVersion)],
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now).IsSuccess);
-        Assert.True(handoff.MarkReadyForReview(1,
-            ActorReference.ForMember(LeadId, "Lead"), Now.AddMinutes(1)).IsSuccess);
-        Assert.True(handoff.RecordFeedback(Uuid.CreateVersion4(), recordId, firstVersion,
-            "validated", "Reviewed against the evidence", ActorReference.ForMember(AdvisorId,
-                "Advisor"), Now.AddMinutes(2)).IsSuccess);
+        var handoffId = Uuid.CreateVersion4();
 
         // Act
-        Assert.True(handoff.IsValidationCurrent(recordId));
-        Assert.True(handoff.ReviseSelection(3, [new(recordId, successorVersion)],
-            "The control draft was revised", ActorReference.ForMember(LeadId, "Lead"),
-            Now.AddMinutes(3)).IsSuccess);
+        var result = await host.CreateAsync(handoffId,
+        [
+            new AdvisorRecordVersion(recordId, Uuid.CreateVersion4()),
+            new AdvisorRecordVersion(recordId, Uuid.CreateVersion4()),
+        ]);
 
         // Assert
-        Assert.False(handoff.IsValidationCurrent(recordId));
-        var feedback = Assert.Single(handoff.ReadFeedback());
-        Assert.Equal(firstVersion, feedback.RecordVersionId);
-        Assert.Equal(AdvisorFeedbackDisposition.Historical, feedback.Disposition);
-
-        var replay = new AggregateScenario<AdvisorHandoff>(
-            new AdvisorHandoff(TenantId, ProgramId, HandoffId)).Given(
-                new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents.ToArray());
-        Assert.False(replay.Aggregate.IsValidationCurrent(recordId));
-        Assert.Equal(firstVersion, Assert.Single(replay.Aggregate.ReadFeedback()).RecordVersionId);
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
     }
 
     [Fact]
-    public void ShouldRejectFeedbackForAnUnselectedVersionGivenAnOpenReviewHandoff()
+    public async Task ShouldRetainComparisonBaselineAndReadinessGivenReplayOfARepeatedHandoff()
     {
         // Arrange
-        var recordId = Uuid.CreateVersion4();
-        var selectedVersion = Uuid.CreateVersion4();
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
-        Assert.True(handoff.Create("Review", [new(recordId, selectedVersion)],
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now).IsSuccess);
-        Assert.True(handoff.MarkReadyForReview(1,
-            ActorReference.ForMember(LeadId, "Lead"), Now.AddMinutes(1)).IsSuccess);
-        var pendingBefore = new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents.Count;
+        await using var host = new AdvisorHost();
+        var (previousId, source) = await host.SeedReadyAsync();
+        Assert.True((await host.EndAsync(previousId, 2, revoke: true)).IsSuccess);
+        var handoffId = Uuid.CreateVersion4();
+        var changed = new AdvisorRecordVersion(source.RecordId, Uuid.CreateVersion4());
+        Assert.True((await host.CreateAsync(handoffId, [changed], "Review changed controls", previousId)).IsSuccess);
+        Assert.True((await host.ReadyAsync(handoffId, 1)).IsSuccess);
 
         // Act
-        var result = handoff.RecordFeedback(Uuid.CreateVersion4(), recordId,
-            Uuid.CreateVersion4(), "validated", "Reviewed",
-            ActorReference.ForMember(AdvisorId, "Advisor"), Now.AddMinutes(2));
+        var live = await host.HandoffAsync(handoffId);
+        var replay = new AggregateScenario<AdvisorHandoff>(new AdvisorHandoff(host.TenantId, host.ProgramId, handoffId))
+            .Given(live.Facts.ToArray()).Aggregate;
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(pendingBefore,
-            new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents.Count);
-        Assert.Empty(handoff.ReadFeedback());
+        Assert.Equal(previousId, live.ComparedToHandoffId);
+        Assert.True(live.WasReadyForReview);
+        Assert.Equal(previousId, replay.ComparedToHandoffId);
+        Assert.True(replay.WasReadyForReview);
+        Assert.Equal(live.SelectionManifest, replay.SelectionManifest);
+        Assert.Equal(live.Revision, replay.Revision);
     }
 
     [Fact]
-    public void ShouldRecordFeedbackAgainstNativePolicyVersionGivenSelectedVersion()
+    public async Task ShouldRetainValidationAsHistoricalGivenASelectedRecordAdvancesToANewVersion()
+    {
+        // Arrange
+        await using var host = new AdvisorHost();
+        var (handoffId, source) = await host.SeedReadyAsync();
+        var feedbackId = Uuid.CreateVersion4();
+        Assert.True((await host.RecordAsync(host.Feedback(handoffId, feedbackId, source, 2,
+            "Reviewed against the evidence", "validated"))).IsSuccess);
+        await host.MaterializeAsync(handoffId);
+        var successor = new AdvisorRecordVersion(source.RecordId, Uuid.CreateVersion4());
+        host.Resolver.Checked.Clear();
+
+        // Act
+        var listedBefore = await host.ListFeedbackHandler.HandleAsync(AdvisorHost.System(new ListAdvisorFeedback(
+            host.TenantId, host.ProgramId, handoffId)), CancellationToken.None);
+        Assert.True((await host.ReviseAsync(handoffId, 3, [successor], "The control draft was revised")).IsSuccess);
+        var listedAfter = await host.ListFeedbackHandler.HandleAsync(AdvisorHost.System(new ListAdvisorFeedback(
+            host.TenantId, host.ProgramId, handoffId)), CancellationToken.None);
+        var thread = await host.ThreadAsync(handoffId, feedbackId);
+
+        // Assert
+        Assert.Equal(source.VersionId, Assert.Single(listedAfter.Value.Items).RecordVersionId);
+        Assert.False(Assert.Single(listedAfter.Value.Items).IsCurrent);
+        Assert.Equal("validated", thread.Recorded!.Kind);
+        Assert.Equal(source.VersionId, thread.Recorded.RecordVersionId);
+        Assert.Single(listedBefore.Value.Items);
+    }
+
+    [Fact]
+    public void ShouldKeepNativeSelectedSourceGivenSerializedFeedbackFact()
     {
         // Arrange
         var selected = AdvisorRecordVersion.PolicyVersion(Uuid.CreateVersion4(), 3, 7);
-        var feedbackId = Uuid.CreateVersion4();
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
-        Assert.True(handoff.Create("Review policy", [selected], new DateOnly(2026, 12, 31),
-            ActorReference.ForMember(LeadId, "Lead"), Now).IsSuccess);
-        Assert.True(handoff.MarkReadyForReview(1,
-            ActorReference.ForMember(LeadId, "Lead"), Now.AddMinutes(1)).IsSuccess);
+        var tenantId = Uuid.CreateVersion4();
+        var programId = Uuid.CreateVersion4();
+        var handoffId = Uuid.CreateVersion4();
+        var recorded = AdvisorEvents.Recorded(tenantId, programId, handoffId, Uuid.CreateVersion4(), selected,
+            "change_request", "Clarify this policy requirement.", ActorReference.ForMember(Uuid.CreateVersion4(),
+                "Advisor"), AdvisorHost.Start) with
+        {
+            SelectedSource = selected,
+        };
 
         // Act
-        var result = handoff.RecordFeedback(feedbackId, selected, "change_request",
-            "Clarify this policy requirement.", ActorReference.ForMember(AdvisorId, "Advisor"),
-            Now.AddMinutes(2));
+        var json = JsonSerializer.Serialize(recorded, ComplianceCoreJsonContext.Default.AdvisorFeedbackRecorded);
+        var replay = JsonSerializer.Deserialize(json, ComplianceCoreJsonContext.Default.AdvisorFeedbackRecorded);
 
         // Assert
-        Assert.True(result.IsSuccess, result.Error?.Message);
-        var feedback = Assert.Single(handoff.ReadFeedback());
-        Assert.Equal(selected, feedback.SourceVersion);
-        Assert.Equal(selected.RecordId, feedback.RecordId);
-        Assert.Equal(Uuid.Empty, feedback.RecordVersionId);
-        var recorded = Assert.IsType<AdvisorFeedbackRecorded>(
-            Assert.Single(new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents.Skip(2)));
-        Assert.Equal(selected, recorded.SelectedSource);
-        var json = JsonSerializer.Serialize(recorded,
-            ComplianceCoreJsonContext.Default.AdvisorFeedbackRecorded);
-        var replay = JsonSerializer.Deserialize(json,
-            ComplianceCoreJsonContext.Default.AdvisorFeedbackRecorded);
         Assert.Equal(selected, replay!.SelectedSource);
+        Assert.Equal(selected.RecordId, replay.RecordId);
+        Assert.Equal(Uuid.Empty, replay.RecordVersionId);
+        Assert.Equal(recorded.Operation, replay.Operation);
+        Assert.Equal(recorded.Intent, replay.Intent);
     }
 
     [Fact]
-    public void ShouldAppendFeedbackCorrectionAndResponseGivenExistingImmutableFeedback()
+    public void ShouldRoundTripAdmissionFactGivenSerializedHandoffStream()
     {
         // Arrange
-        var recordId = Uuid.CreateVersion4();
-        var versionId = Uuid.CreateVersion4();
-        var feedbackId = Uuid.CreateVersion4();
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
-        Assert.True(handoff.Create("Review", [new(recordId, versionId)],
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now).IsSuccess);
-        Assert.True(handoff.MarkReadyForReview(1,
-            ActorReference.ForMember(LeadId, "Lead"), Now.AddMinutes(1)).IsSuccess);
-        Assert.True(handoff.RecordFeedback(feedbackId, recordId, versionId,
-            "change_request", "Clarify responsibility", ActorReference.ForMember(AdvisorId,
-                "Advisor"), Now.AddMinutes(2)).IsSuccess);
+        var admitted = AdvisorEvents.Admitted(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(), 3,
+            2, ActorReference.ForMember(Uuid.CreateVersion4(), "Advisor"), AdvisorHost.Start);
 
         // Act
-        Assert.True(handoff.CorrectFeedback(feedbackId, Uuid.CreateVersion4(),
-            "Clarify the control owner's responsibility", "The original comment was ambiguous",
-            ActorReference.ForMember(AdvisorId, "Advisor"), Now.AddMinutes(3)).IsSuccess);
-        Assert.True(handoff.RespondToFeedback(feedbackId, "Updated the draft",
-            ActorReference.ForMember(LeadId, "Lead"), Now.AddMinutes(4)).IsSuccess);
+        var json = JsonSerializer.Serialize(admitted, ComplianceCoreJsonContext.Default.AdvisorFeedbackAdmitted);
+        var replay = JsonSerializer.Deserialize(json, ComplianceCoreJsonContext.Default.AdvisorFeedbackAdmitted);
 
         // Assert
-        var feedback = Assert.Single(handoff.ReadFeedback());
-        Assert.Equal("Clarify responsibility", feedback.Body);
-        Assert.Equal("Clarify the control owner's responsibility",
-            Assert.Single(feedback.Corrections!).Body);
-        Assert.Equal("Updated the draft", Assert.Single(feedback.Responses!).Body);
+        Assert.Equal(admitted.Owner, replay!.Owner);
+        Assert.Equal(3, replay.Revision);
+        Assert.Equal(2, replay.Generation);
+        Assert.Equal(admitted.Intent, replay.Intent);
+        Assert.Equal(admitted.Operation, replay.Operation);
     }
 
     [Fact]
-    public void ShouldRejectEmptyFeedbackIdentityGivenResolution()
+    public async Task ShouldReplayThreadGivenItsFactsAndNotLoadTheHandoff()
     {
         // Arrange
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
-        Assert.True(handoff.Create("Review", [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())],
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now).IsSuccess);
-        var eventCount = new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents.Count;
+        await using var host = new AdvisorHost();
+        var (handoffId, feedbackId, _) = await host.SeedFeedbackAsync();
+        Assert.True((await host.CorrectHandler.HandleAsync(host.Http(new CorrectAdvisorFeedback(host.TenantId,
+            host.ProgramId, handoffId, feedbackId, Uuid.CreateVersion4(), "Clarified.", "Ambiguous.", 1)),
+            CancellationToken.None)).IsSuccess);
+        Assert.True((await host.RespondHandler.HandleAsync(host.Http(new RespondToAdvisorFeedback(
+            Uuid.CreateVersion4(), host.TenantId, host.ProgramId, handoffId, feedbackId, "Updated.", 2)),
+            CancellationToken.None)).IsSuccess);
+        Assert.True((await host.ResolveHandler.HandleAsync(host.Http(new ResolveAdvisorFeedback(
+            Uuid.CreateVersion4(), host.TenantId, host.ProgramId, handoffId, feedbackId, 3)),
+            CancellationToken.None)).IsSuccess);
 
         // Act
-        var result = handoff.ResolveFeedback(Uuid.Empty,
-            ActorReference.ForMember(LeadId, "Lead"), Now.AddMinutes(1));
-        var pending = new AggregateScenario<AdvisorHandoff>(handoff).PendingEvents;
+        var live = await host.ThreadAsync(handoffId, feedbackId);
+        var replay = new AggregateScenario<AdvisorFeedbackThread>(new AdvisorFeedbackThread(host.TenantId,
+            host.ProgramId, handoffId, feedbackId)).Given([live.Recorded!, live.Corrections[0], live.Responses[0],
+            live.Resolved!]).Aggregate;
 
         // Assert
-        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
-        Assert.Equal(eventCount, pending.Count);
-    }
-
-    [Theory]
-    [InlineData("closed")]
-    [InlineData("revoked")]
-    public void ShouldKeepFeedbackHistoryButRejectNewFeedbackGivenHandoffAccessEnds(string ending)
-    {
-        // Arrange
-        var recordId = Uuid.CreateVersion4();
-        var versionId = Uuid.CreateVersion4();
-        var handoff = new AdvisorHandoff(TenantId, ProgramId, HandoffId);
-        Assert.True(handoff.Create("Review", [new(recordId, versionId)],
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(LeadId, "Lead"), Now).IsSuccess);
-        Assert.True(handoff.MarkReadyForReview(1,
-            ActorReference.ForMember(LeadId, "Lead"), Now.AddMinutes(1)).IsSuccess);
-        Assert.True(handoff.RecordFeedback(Uuid.CreateVersion4(), recordId, versionId,
-            "comment", "Please clarify the control owner", ActorReference.ForMember(AdvisorId,
-                "Advisor"), Now.AddMinutes(2)).IsSuccess);
-
-        // Act
-        var ended = ending == "closed"
-            ? handoff.Close("Review complete", ActorReference.ForMember(LeadId, "Lead"),
-                Now.AddMinutes(3))
-            : handoff.Revoke("Access removed", ActorReference.ForMember(LeadId, "Lead"),
-                Now.AddMinutes(3));
-        Assert.True(ended.IsSuccess);
-
-        var rejected = handoff.RecordFeedback(Uuid.CreateVersion4(), recordId, versionId,
-            "comment", "Late comment", ActorReference.ForMember(AdvisorId, "Advisor"),
-            Now.AddMinutes(4));
-
-        // Assert
-        Assert.False(rejected.IsSuccess);
-        Assert.Single(handoff.ReadFeedback());
+        Assert.Equal(4, live.Revision);
+        Assert.Equal(live.Revision, replay.Revision);
+        Assert.Equal(live.Recorded, replay.Recorded);
+        Assert.Equal(live.Resolved, replay.Resolved);
+        Assert.Equal("Please clarify the control owner.", replay.Recorded!.Body);
     }
 }

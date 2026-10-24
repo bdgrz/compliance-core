@@ -173,7 +173,7 @@ These remain the actionable design risks from the full source review. “Split�
 | ControlEvaluationPlan | Evaluations | narrow | OPS-13 (pending) | 0.52 | [source](../../../../src/Compliance.Core/Features/Evaluations/ControlEvaluationPlan.cs) |
 | EvidenceArtifact | Evidence | narrow | ASSURE-08 (pending) | 0.76 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceArtifact.cs) |
 | EvidenceRedaction | Evidence | narrow | ASSURE-06 (pending), ASSURE-07 (pending) | 0.85 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs) |
-| EvidenceRequestLedger | Evidence | split | ASSURE-01 (pending), ASSURE-11 (pending) | 0.82 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceRequestLedger.cs) |
+| EvidenceRequestLedger | Evidence | split | ASSURE-01 (pending), ASSURE-11 (pending) | 0.82 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/Evidence/EvidenceRequestLedger.cs) |
 | EvidenceSupport | Evidence | retain | — | 0.11 | [source](../../../../src/Compliance.Core/Features/Evidence/EvidenceSupport.cs) |
 | AuditObservation | Examinations | retain | — | 0.26 | [source](../../../../src/Compliance.Core/Features/Examinations/AuditObservation.cs) |
 | AuditOutcome | Examinations | retain | CORE-01 (complete) | 0.12 | [source](../../../../src/Compliance.Core/Features/Examinations/AuditOutcome.cs) |
@@ -198,7 +198,7 @@ These remain the actionable design risks from the full source review. “Split�
 | ProgramRollover | Programs | process | ASSURE-15 (pending), ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.78 | [source](../../../../src/Compliance.Core/Features/Programs/ProgramRollover.cs) |
 | ProviderAssuranceRegister | Providers | split | ROOTTECH-03 (split into ProviderAssuranceReport, ProviderAssuranceReview, ProviderAssuranceGap and ProviderRiskAcceptance), ROOTTECH-04 (split into ProviderAssuranceGap and ProviderRiskAcceptance) | 0.90 | `ProviderAssuranceRegister.cs` (removed by the provider assurance split, #1022) |
 | ProviderRegister | Providers | split | ROOTTECH-01 (pending) | 0.89 | source retired by S18 (`Providers/ProviderRegister.cs`) |
-| ReadinessLedger | Readiness | split | OPS-08 (pending), OPS-11 (pending), OPS-16 (pending) | 0.93 | [source](../../../../src/Compliance.Core/Features/Readiness/ReadinessLedger.cs) |
+| ReadinessLedger | Readiness | split | OPS-08 (pending), OPS-11 (pending), OPS-16 (pending) | 0.93 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/Readiness/ReadinessLedger.cs) |
 | FindingAggregate | Remediation | split | OPS-06 (pending), OPS-11 (pending), OPS-12 (pending) | 0.90 | source |
 | FindingMigrationAggregate | Remediation | process | OPS-12 (pending) | 0.18 | retired by the finding and corrective action split (#1022) |
 | RemediationLedger | Remediation | legacy | — | 0.19 | retired by the finding and corrective action split (#1022) |
@@ -210,7 +210,7 @@ These remain the actionable design risks from the full source review. “Split�
 | EvidenceHandlingPolicy | Retention | narrow | ASSURE-05 (pending), ASSURE-10 (pending) | 0.67 | [source](../../../../src/Compliance.Core/Features/Retention/EvidenceHandlingPolicy.cs) |
 | RiskDraft | Risks | retain | OPS-14 (not in active ledger), OPS-15 (pending) | 0.24 | [source](../../../../src/Compliance.Core/Features/Risks/RiskDraft.cs) |
 | RiskEvaluation | Risks | narrow | OPS-11 (pending), OPS-13 (pending), OPS-16 (pending) | 0.78 | [source](../../../../src/Compliance.Core/Features/Risks/RiskEvaluation.cs) |
-| RiskGovernanceLedger | Risks | split | OPS-04 (pending), OPS-11 (pending), OPS-15 (pending), OPS-16 (pending) | 0.93 | [source](../../../../src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs) |
+| RiskGovernanceLedger | Risks | split | OPS-04 (pending), OPS-11 (pending), OPS-15 (pending), OPS-16 (pending) | 0.93 | [source](https://github.com/bdgrz/compliance-core/blob/b7a2bd02cc90c6734c94391399a55c0da1621521/src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs) |
 | RiskMethod | Risks | narrow | OPS-13 (pending), OPS-15 (pending) | 0.39 | [source](../../../../src/Compliance.Core/Features/Risks/RiskMethod.cs) |
 | ImmutableSnapshot | Snapshots | retain | ASSURE-13 (pending) | 0.35 | [source](../../../../src/Compliance.Core/Features/Snapshots/ImmutableSnapshot.cs) |
 | PopulationSnapshot | Snapshots | retain | ASSURE-13 (pending) | 0.28 | [source](../../../../src/Compliance.Core/Features/Snapshots/PopulationSnapshot.cs) |

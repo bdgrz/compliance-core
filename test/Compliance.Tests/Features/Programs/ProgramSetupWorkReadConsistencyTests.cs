@@ -12,7 +12,8 @@ public sealed class ProgramSetupWorkReadConsistencyTests
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
-        var directory = new FitzProgramDirectory(new InMemoryKvClient());
+        var directory = new FitzProgramDirectory(new InMemoryKvClient(),
+            new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(new InMemoryKvClient()));
         var identity = new CheckpointIdentity("ProgramDirectory",
             EventStreamPattern.ForPattern(tenantId.ToString()));
         var checkpoint = new ProjectionCheckpoint(new EventCursor("1"));

@@ -98,19 +98,8 @@ public sealed class RiskControlTreatmentWorkTests
         var before = await fixture.AsAsync(fixture.ApproverUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
         var now = DateTimeOffset.UtcNow;
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.ReviewControlTreatment(acceptedRiskId, acceptedTreatmentId,
-                    1, Uuid.CreateVersion4(), "accept", "The control treats this risk.",
-                    fixture.ApproverMemberId,
-                    ActorReference.ForMember(fixture.ApproverMemberId, "Approver"), now));
-                Assert.Null(ledger.ReviewControlTreatment(rejectedRiskId, rejectedTreatmentId,
-                    1, Uuid.CreateVersion4(), "reject", "The control does not treat this risk.",
-                    fixture.ApproverMemberId,
-                    ActorReference.ForMember(fixture.ApproverMemberId, "Approver"), now));
-                return Result.Success;
-            });
+        await RiskSeeds.ReviewTreatmentAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, acceptedRiskId, acceptedTreatmentId, "accept", "The control treats this risk.", ActorReference.ForMember(fixture.ApproverMemberId, "Approver"), now);
+        await RiskSeeds.ReviewTreatmentAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, rejectedRiskId, rejectedTreatmentId, "reject", "The control does not treat this risk.", ActorReference.ForMember(fixture.ApproverMemberId, "Approver"), now);
 
         // Act
         var after = await fixture.AsAsync(fixture.ApproverUserId,
@@ -156,18 +145,8 @@ public sealed class RiskControlTreatmentWorkTests
             StringComparison.Ordinal));
     }
 
-    static async Task SeedPendingTreatmentAsync(OperationsFixture fixture, Uuid riskId,
-        Uuid treatmentId)
-    {
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.ProposeControlTreatment(riskId, 0, treatmentId, "mitigate",
-                    fixture.ControlId, fixture.ControlVersionId,
-                    "This approved control treats the risk.", fixture.LeadMemberId,
-                    ActorReference.ForMember(fixture.LeadMemberId, "Lead"),
-                    DateTimeOffset.UtcNow));
-                return Result.Success;
-            });
-    }
+    static Task SeedPendingTreatmentAsync(OperationsFixture fixture, Uuid riskId, Uuid treatmentId) =>
+        RiskSeeds.ProposeTreatmentAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, treatmentId,
+            fixture.ControlId, fixture.ControlVersionId, "This approved control treats the risk.", fixture.LeadMemberId,
+            ActorReference.ForMember(fixture.LeadMemberId, "Lead"), DateTimeOffset.UtcNow);
 }

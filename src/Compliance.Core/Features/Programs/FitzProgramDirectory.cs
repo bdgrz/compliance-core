@@ -1,11 +1,12 @@
 using System.Globalization;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Readiness;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Programs;
 
-sealed class FitzProgramDirectory(IKvClient client)
+sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client, "kv://bdgrz/program-directory/projection", "ProgramDirectory"),
         IProgramDirectoryReader, IProgramDirectoryProjection
 {
@@ -79,22 +80,25 @@ sealed class FitzProgramDirectory(IKvClient client)
                         CriteriaEditionId = selected.EditionId,
                     }, ct).ConfigureAwait(false);
                 break;
-            case TypeIEntryDecisionRecorded entry
-                when entry.Decision.Outcome != ReadinessLedger.Defer:
+            case TypeIEntryDecisionRecorded recorded:
                 // Only an approved Type I entry decision advances the stage; a target date,
                 // scope approval, or deferral never does. Replay rewrites the same values.
+                var entry = await content.ReadJsonAsync<TypeIEntryDecisionView>(recorded.TenantId.ToString(),
+                    recorded.DecisionContent, ct).ConfigureAwait(false);
+                if (entry.Outcome == ProgramReadiness.Defer)
+                    break;
                 var beforeEntry = await ProgramDirectorySchema.Directory.GetAsync(Transaction,
-                    entry.ProgramId, ct).ConfigureAwait(false);
-                if (beforeEntry is null || beforeEntry.StageDecisionId == entry.Decision.DecisionId)
+                    recorded.ProgramId, ct).ConfigureAwait(false);
+                if (beforeEntry is null || beforeEntry.StageDecisionId == entry.DecisionId)
                     break;
                 await ProgramDirectorySchema.Directory.ReplaceAsync(Transaction, beforeEntry,
                     beforeEntry with
                     {
                         Stage = "type_i",
                         NextStage = "type_ii",
-                        StageDecisionId = entry.Decision.DecisionId,
-                        StageEnteredBy = entry.Decision.DecidedBy,
-                        StageEnteredAt = entry.Decision.DecidedAt,
+                        StageDecisionId = entry.DecisionId,
+                        StageEnteredBy = entry.DecidedBy,
+                        StageEnteredAt = entry.DecidedAt,
                     }, ct).ConfigureAwait(false);
                 break;
         }

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Testing;
@@ -84,6 +85,8 @@ public sealed class ProgramCriteriaProjectionTests
         });
         builder.Services.AddSingleton(reader);
         builder.Services.AddSingleton<IKvClient, InMemoryKvClient>();
+        builder.Services.AddSingleton<IImmutableContentStore>(provider =>
+            new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>()));
         builder.Services.AddSingleton<ITenantDirectory>(new StaticTenantDirectory(
             new TenantId(tenant.ToString())));
         builder.Services.AddScoped<FitzProgramDirectory>();

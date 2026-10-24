@@ -11,8 +11,7 @@ namespace Bdgrz.Compliance.Features.Applications;
 /// assessment keeps the full readiness impact context pending.
 /// </summary>
 sealed class ApplicationReadinessImpactReader(IProgramDirectoryReader programs,
-    IReadinessDirectoryReader readiness, ProgramDirectoryReadConsistency programConsistency,
-    ReadinessProjectionReadConsistency readinessConsistency) : IApplicationReadinessImpactReader
+    ReadinessReader readiness, ProgramDirectoryReadConsistency programConsistency) : IApplicationReadinessImpactReader
 {
     const int MaximumPrograms = 200;
     const int MaximumReferences = 200;
@@ -25,10 +24,6 @@ sealed class ApplicationReadinessImpactReader(IProgramDirectoryReader programs,
             .ConfigureAwait(false);
         if (!programFence.IsSuccess)
             return Result<ApplicationReadinessImpact>.Failure(programFence.Error);
-        var readinessFence = await readinessConsistency.CaptureReadinessDirectoryAsync(tenantId,
-            ct).ConfigureAwait(false);
-        if (!readinessFence.IsSuccess)
-            return Result<ApplicationReadinessImpact>.Failure(readinessFence.Error);
 
         var programPage = await programs.ListAsync(tenantId, MaximumPrograms, null, ct)
             .ConfigureAwait(false);
@@ -47,14 +42,22 @@ sealed class ApplicationReadinessImpactReader(IProgramDirectoryReader programs,
         var stop = false;
         foreach (var program in programPage.Items)
         {
-            var latestAssessmentId = await readiness.GetLatestAssessmentIdAsync(tenantId,
-                program.ProgramId, ct).ConfigureAwait(false);
-            if (!latestAssessmentId.IsSuccess)
-                return Result<ApplicationReadinessImpact>.Failure(latestAssessmentId.Error);
-            if (latestAssessmentId.Value is not { } assessmentId)
-                continue;
-            var assessment = await readiness.GetAssessmentAsync(tenantId, program.ProgramId,
-                assessmentId, ct).ConfigureAwait(false);
+            ReadinessAssessmentView? assessment;
+            Uuid assessmentId;
+            try
+            {
+                if (await readiness.GetLatestAssessmentIdAsync(tenantId, program.ProgramId, ct)
+                        .ConfigureAwait(false) is not { } latestAssessmentId)
+                    continue;
+                assessmentId = latestAssessmentId;
+                assessment = await readiness.ReadViewAsync(tenantId, program.ProgramId, assessmentId, ct)
+                    .ConfigureAwait(false);
+            }
+            catch (Content.ImmutableContentIntegrityException exception)
+            {
+                return BehindSource($"The readiness content cannot be verified yet: {exception.Message}");
+            }
+
             if (assessment is null || assessment.TenantId != tenantId ||
                 assessment.ProgramId != program.ProgramId ||
                 assessment.AssessmentId != assessmentId || assessment.Revision < 1 ||
@@ -92,12 +95,6 @@ sealed class ApplicationReadinessImpactReader(IProgramDirectoryReader programs,
             programFence.Value, ct).ConfigureAwait(false);
         if (!programConfirmed.IsSuccess)
             return Result<ApplicationReadinessImpact>.Failure(programConfirmed.Error);
-        var readinessConfirmed = await readinessConsistency
-            .ConfirmReadinessDirectoryUnchangedAndCaughtUpAsync(tenantId, readinessFence.Value,
-                ct).ConfigureAwait(false);
-        if (!readinessConfirmed.IsSuccess)
-            return Result<ApplicationReadinessImpact>.Failure(readinessConfirmed.Error);
-
         return Result<ApplicationReadinessImpact>.Success(new ApplicationReadinessImpact(
             references.OrderBy(static item => item.ProgramId.ToString(), StringComparer.Ordinal)
                 .ThenBy(static item => item.AssessmentId.ToString(), StringComparer.Ordinal)

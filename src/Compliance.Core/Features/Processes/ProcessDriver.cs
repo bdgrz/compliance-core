@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.SourceFacts;
@@ -64,6 +65,18 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                     Lease = null,
                     NextDueAt = now + RetryDelay,
                     Note = $"{step.Receiver}: source not provable yet: {exception.Message}",
+                }, record.Version, ct).ConfigureAwait(false);
+            }
+            catch (ImmutableContentIntegrityException exception)
+            {
+                var unavailable = exception is ImmutableContentUnavailableException;
+                return await store.ReplaceAsync(record with
+                {
+                    Attempts = record.Attempts + 1,
+                    Lease = null,
+                    State = unavailable ? record.State : ProcessState.Quarantined,
+                    NextDueAt = unavailable ? now + RetryDelay : record.NextDueAt,
+                    Note = $"{step.Receiver}: content cannot be verified: {exception.Message}",
                 }, record.Version, ct).ConfigureAwait(false);
             }
 

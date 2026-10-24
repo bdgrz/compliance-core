@@ -1,9 +1,14 @@
-using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Programs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AuditorRequests;
 
-/// <summary>Records the revise audit response draft intent required by the owning feature workflow.</summary>
-[Discriminator("bdgrz.auditor-requests.revise-audit-response-draft", 1)]
-public sealed record ReviseAuditResponseDraft(Uuid TenantId, Uuid ProgramId, Uuid RequestId, Uuid ResponseId, long ExpectedRevision, string Summary, IReadOnlyList<Uuid> EvidenceArtifactIds) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+/// <summary>Revises a draft or rejected response at the revision of that response owner.</summary>
+[Discriminator("bdgrz.auditor-requests.revise-audit-response-draft", 2)]
+public sealed record ReviseAuditResponseDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid RequestId,
+    Uuid ResponseId, long ExpectedRevision, string Summary, IReadOnlyList<Uuid> EvidenceArtifactIds)
+    : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

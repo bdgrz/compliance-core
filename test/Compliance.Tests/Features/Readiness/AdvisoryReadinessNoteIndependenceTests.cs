@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Readiness;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -89,15 +91,9 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         var actor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant,
             Uuid.CreateVersion4()), "Compliance Lead");
         var createdAt = fixture.Clock.GetUtcNow().AddDays(-1);
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
-            {
-                Assert.True(handoff.Create("Guest review", [new(recordId, versionId)],
-                    DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime).AddDays(7),
-                    actor, createdAt).IsSuccess);
-                Assert.True(handoff.MarkReadyForReview(1, actor, createdAt.AddMinutes(1)).IsSuccess);
-                return Result.Success;
-            });
+        await AdvisorSeed.HandoffAsync(fixture.Provider, fixture.Tenant, fixture.Program, handoffId,
+            [new(recordId, versionId)], actor, createdAt,
+            DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime).AddDays(7), purpose: "Guest review");
         await using var scope = fixture.Provider.CreateAsyncScope();
         var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
             scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
@@ -191,25 +187,15 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         var createdAt = fixture.Clock.GetUtcNow().AddDays(-2);
         var expiresOn = DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime)
             .AddDays(expired ? -1 : 30);
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
-            {
-                Assert.True(handoff.Create("Readiness review",
-                    [new(recordId, recordVersionId)], expiresOn,
-                    actor, createdAt).IsSuccess);
-                if (status is "ready_for_review" or "closed")
-                {
-                    Assert.True(handoff.MarkReadyForReview(1, actor,
-                        createdAt.AddMinutes(1)).IsSuccess);
-                    Assert.True(handoff.RecordFeedback(feedbackId, recordId, recordVersionId,
-                        "comment", "Clarify the control owner.", advisorAuthor,
-                        createdAt.AddMinutes(2)).IsSuccess);
-                }
-                if (status == "closed")
-                    Assert.True(handoff.Close("Review complete", actor,
-                        createdAt.AddMinutes(2)).IsSuccess);
-                return Result.Success;
-            });
+        var selected = new AdvisorRecordVersion(recordId, recordVersionId);
+        await AdvisorSeed.HandoffAsync(fixture.Provider, fixture.Tenant, fixture.Program, handoffId, [selected],
+            actor, createdAt, expiresOn, ready: status is "ready_for_review" or "closed", purpose: "Readiness review");
+        if (status is "ready_for_review" or "closed")
+            await AdvisorSeed.FeedbackAsync(fixture.Provider, fixture.Tenant, fixture.Program, handoffId, feedbackId,
+                selected, "comment", "Clarify the control owner.", advisorAuthor, createdAt.AddMinutes(2));
+        if (status == "closed")
+            await AdvisorSeed.EndAsync(fixture.Provider, fixture.Tenant, fixture.Program, handoffId, actor,
+                createdAt.AddMinutes(3));
         await using var scope = fixture.Provider.CreateAsyncScope();
         var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
             scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
@@ -225,13 +211,13 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             fixture.Program, handoffId);
         var correctionRequest = new CorrectAdvisorFeedback(fixture.Tenant,
             fixture.Program, handoffId, feedbackId, Uuid.CreateVersion4(), "Corrected wording.",
-            "The original wording was incomplete.");
+            "The original wording was incomplete.", 1);
         var feedbackPostRequest = new RecordAdvisorFeedback(fixture.Tenant, fixture.Program,
             handoffId, Uuid.CreateVersion4(), recordId, recordVersionId, "comment",
-            "Please clarify the control owner.");
+            "Please clarify the control owner.", 2);
         var feedbackOutsideSelectionRequest = new RecordAdvisorFeedback(fixture.Tenant,
             fixture.Program, handoffId, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), "comment", "This version was not shared.");
+            Uuid.CreateVersion4(), "comment", "This version was not shared.", 2);
 
         // Act
         var principal = ProgramManagementServices.Actor(fixture.User);
@@ -297,17 +283,11 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             Uuid.CreateVersion4()), "Compliance lead");
         var otherAuthor = ActorReference.ForMember(RbacIds.Member(fixture.Tenant,
             Uuid.CreateVersion4()), "Another Advisor");
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
-            {
-                Assert.True(handoff.Create("Readiness review",
-                    [new(recordId, recordVersionId)], DateOnly.FromDateTime(at.UtcDateTime).AddDays(30),
-                    lead, at).IsSuccess);
-                Assert.True(handoff.MarkReadyForReview(1, lead, at.AddMinutes(1)).IsSuccess);
-                Assert.True(handoff.RecordFeedback(feedbackId, recordId, recordVersionId,
-                    "comment", "Clarify the control owner.", otherAuthor, at.AddMinutes(2)).IsSuccess);
-                return Result.Success;
-            });
+        var other = new AdvisorRecordVersion(recordId, recordVersionId);
+        await AdvisorSeed.HandoffAsync(fixture.Provider, fixture.Tenant, fixture.Program, handoffId, [other], lead, at,
+            DateOnly.FromDateTime(at.UtcDateTime).AddDays(30), purpose: "Readiness review");
+        await AdvisorSeed.FeedbackAsync(fixture.Provider, fixture.Tenant, fixture.Program, handoffId, feedbackId,
+            other, "comment", "Clarify the control owner.", otherAuthor, at.AddMinutes(2));
         await using var scope = fixture.Provider.CreateAsyncScope();
         var authorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
             scope.ServiceProvider.GetRequiredService<IAccessGrantPermissionAuthorizer>(),
@@ -319,7 +299,7 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>());
         var request = new CorrectAdvisorFeedback(fixture.Tenant,
             fixture.Program, handoffId, feedbackId, Uuid.CreateVersion4(), "Corrected wording.",
-            "The original wording was incomplete.");
+            "The original wording was incomplete.", 1);
 
         // Act
         var result = await authorizer.AuthorizeAsync(new RequestContext<IProgramManagementRequest>(
@@ -353,17 +333,11 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
         var lead = ActorReference.ForMember(RbacIds.Member(fixture.Tenant, Uuid.CreateVersion4()),
             "Compliance lead");
         var at = fixture.Clock.GetUtcNow().AddDays(-1);
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new AdvisorHandoff(fixture.Tenant, fixture.Program, handoffId), handoff =>
-            {
-                Assert.True(handoff.Create("Readiness review", [new(recordId, recordVersionId)],
-                    DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime).AddDays(30),
-                    lead, at).IsSuccess);
-                Assert.True(handoff.MarkReadyForReview(1, lead, at.AddMinutes(1)).IsSuccess);
-                Assert.True(handoff.RecordFeedback(feedbackId, recordId, recordVersionId,
-                    "comment", "Please clarify the control owner.", author, at.AddMinutes(2)).IsSuccess);
-                return Result.Success;
-            });
+        var shared = new AdvisorRecordVersion(recordId, recordVersionId);
+        await AdvisorSeed.HandoffAsync(fixture.Provider, fixture.Tenant, fixture.Program, handoffId, [shared], lead, at,
+            DateOnly.FromDateTime(fixture.Clock.GetUtcNow().UtcDateTime).AddDays(30), purpose: "Readiness review");
+        await AdvisorSeed.FeedbackAsync(fixture.Provider, fixture.Tenant, fixture.Program, handoffId, feedbackId,
+            shared, "comment", "Please clarify the control owner.", author, at.AddMinutes(2));
         await using var scope = fixture.Provider.CreateAsyncScope();
         var advisoryRead = scope.ServiceProvider.GetRequiredService<ProfessionalAdvisoryReadAccess>();
         var programAuthorizer = new ProgramManagementAuthorizer(fixture.Memberships, fixture.Tenants,
@@ -374,10 +348,10 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             fixture.Memberships, advisoryRead);
         var feedbackPostRequest = new RecordAdvisorFeedback(fixture.Tenant, fixture.Program,
             handoffId, Uuid.CreateVersion4(), recordId, recordVersionId, "comment",
-            "Please clarify the evidence owner.");
+            "Please clarify the evidence owner.", 2);
         var correctionRequest = new CorrectAdvisorFeedback(fixture.Tenant, fixture.Program,
             handoffId, feedbackId, Uuid.CreateVersion4(), "Corrected wording.",
-            "The original wording was incomplete.");
+            "The original wording was incomplete.", 1);
         var principal = ProgramManagementServices.Actor(fixture.User);
 
         // Act
@@ -710,15 +684,26 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
                 return Result.Success;
             });
             var gap = new ReadinessGapView(Uuid.CreateVersion4(), "missing_input", "risk", "risk_reviewed", "Shared management gap", []);
-            await ProgramManagementServices.SeedAsync(fixture.Provider, new ReadinessLedger(fixture.Tenant, fixture.Program), ledger =>
-            {
-                Assert.Null(ledger.Record(0, fixture.Assessment, now, null,
-                    new ReadinessEvaluation([], [], [gap], new string('a', 64)), member, "Client runner", now));
-                Assert.Null(ledger.Annotate(fixture.Assessment, gap.GapId, 1, Uuid.CreateVersion4(),
-                    "Advisor working feedback", member, "Attributed feedback author", now));
-                return Result.Success;
-            });
-            await fixture.ProjectAsync();
+            await using var scope = fixture.Provider.CreateAsyncScope();
+            var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+            var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
+            var content = scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+            await ReadinessSeed.AdoptAsync(reader, executor, content, fixture.Tenant, fixture.Program,
+                fixture.Assessment, new ReadinessEvaluation([], [], [gap], new string('a', 64)), now, member, now);
+            var annotationId = Uuid.CreateVersion4();
+            var actor = ActorReference.ForMember(member, "Attributed feedback author");
+            var plan = new ReadinessGapPlan(fixture.Tenant, fixture.Program, gap.GapId, annotationId);
+            var annotation = new ReadinessAnnotationView(annotationId, fixture.Assessment, gap.GapId,
+                "Advisor working feedback", member, actor, now);
+            var body = await ReadinessContent.WriteAsync(content, fixture.Tenant, ReadinessContent.AnnotationSchema,
+                annotation, CancellationToken.None);
+            var (response, result) = await ReadinessContent.FreezeAsync(content, fixture.Tenant,
+                ReadinessContent.AnnotationViewSchema, annotation, CancellationToken.None);
+            var first = await FirstResponses.FreezeAsync(content, fixture.Tenant.ToString(), response);
+            var operation = ReadinessContent.Provenance(annotationId, "AnnotateReadinessGap", plan.Stream, actor, 0,
+                new string('b', 64), now);
+            await ProgramManagementServices.SeedAsync(fixture.Provider, plan,
+                item => item.Annotate(operation, body, first, result));
             return fixture;
         }
 
@@ -816,23 +801,6 @@ public sealed class AdvisoryReadinessNoteIndependenceTests
             var context = new RequestDispatchContext(ProgramManagementServices.Actor(User),
                 mcp ? new McpInvocation("synthetic.readiness.read") : new HttpInvocation("GET", "/synthetic/readiness", "/synthetic/readiness", "synthetic"));
             return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request, context, CancellationToken.None);
-        }
-
-        async Task ProjectAsync()
-        {
-            await using var scope = Provider.CreateAsyncScope();
-            var services = scope.ServiceProvider;
-            var projection = services.GetRequiredService<IReadinessDirectoryProjection>();
-            var identity = new CheckpointIdentity(FitzReadinessDirectory.ProjectorName,
-                EventStreamPattern.ForPattern(Tenant.ToString(), ReadinessLedger.Area));
-            await using var batch = await projection.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
-            var cursor = ProjectionCheckpoint.Start.Cursor;
-            await foreach (var record in services.GetRequiredService<IDomainEventReader>().ReadAsync(identity.Pattern, cursor, CancellationToken.None))
-            {
-                await projection.ApplyAsync(record.Event, CancellationToken.None);
-                cursor = record.NextCursor;
-            }
-            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
 
         public ValueTask DisposeAsync() => Provider.DisposeAsync();

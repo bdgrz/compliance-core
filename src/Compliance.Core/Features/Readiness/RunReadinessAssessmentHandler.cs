@@ -1,38 +1,83 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Readiness;
 
 /// <summary>
-///     Reads the program's criteria edition selected at the requested time, mapping lines, and
-///     mapped controls, evaluates the current readiness rules as of that time, and records the
-///     exact inputs and results.
-///     A missing input is recorded as an acknowledged gap; it never blocks the run.
+///     Admits a readiness run on the program readiness owner at <c>ExpectedProgramRevision</c>. Admission reads the
+///     program's criteria edition selected at the requested time, mapping ledger, mapped controls and canonical source
+///     records once, freezes those complete inputs and the as-of time (the server time when the caller omitted it)
+///     as immutable content, and reserves the one pending latest-adoption generation before any computation. The 202
+///     acknowledgment is frozen on the admission, so an exact retry replays it after the run completed and after later
+///     runs. A source that is not readable or consistent yet fails the admission as transient; a missing business input
+///     is recorded as an explicit gap by the computation, never as a partial assessment.
 /// </summary>
-public sealed class RunReadinessAssessmentHandler(IAggregateExecutor executor,
-    IAggregateReader reader, ControlMappingReader mappingReader, ICriteriaCatalog catalog,
-    IReadinessSourceReader sources, TimeProvider clock)
-    : IRequestHandler<RunReadinessAssessment, ReadinessAssessmentRegistration>
+public sealed class RunReadinessAssessmentHandler(NativeOperationExecutor operations, IAggregateReader reader,
+    ControlMappingReader mappingReader, ICriteriaCatalog catalog, IReadinessSourceReader sources,
+    IImmutableContentStore content, TimeProvider clock)
+    : IRequestHandler<RunReadinessAssessment, OperationAcceptedResponse>
 {
-    public async ValueTask<Result<ReadinessAssessmentRegistration>> HandleAsync(
+    const string CommandKind = "RunReadinessAssessment";
+
+    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(
         IRequestContext<RunReadinessAssessment> context, CancellationToken ct)
     {
         var request = context.Request;
+        if (request.AssessmentId == Uuid.Empty || request.ExpectedProgramRevision < 0)
+            return Failure(RequestErrorKind.Validation,
+                "A readiness run requires its own assessment identity and a non-negative expected program revision.");
+        var actor = ReadinessActor.From(context, request.TenantId);
+        var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
+        var snapshot = await reader.HydrateAsync(new ProgramReadiness(request.TenantId, request.ProgramId,
+            request.AssessmentId), ct).ConfigureAwait(false);
+        var provenance = ReadinessContent.Provenance(request.AssessmentId, CommandKind, snapshot.Stream, actorReference,
+            (ulong)request.ExpectedProgramRevision, AuthoredIntentDigest.Compute(request), now);
+        var binding = AcceptedOperationBinding.Of(provenance);
+
+        ImmutableContentRef? intent = null;
+        FirstResponseDescriptor? response = null;
+        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)
+        {
+            var frozen = await FreezeAsync(request, snapshot, provenance, actor, now, ct).ConfigureAwait(false);
+            if (!frozen.IsSuccess)
+                return Result<OperationAcceptedResponse>.Failure(frozen.Error!);
+            (intent, response) = frozen.Value;
+        }
+
+        var outcome = await operations.ExecuteAsync(new NativeOperation<ProgramReadiness>(binding,
+            () => new ProgramReadiness(request.TenantId, request.ProgramId, request.AssessmentId),
+            readiness => readiness.Acceptance,
+            readiness => ReadinessCommands.Prepared(readiness.PrepareRun(request.ExpectedProgramRevision), response),
+            (ProgramReadiness readiness, ImmutableContentRef acknowledgment) =>
+                readiness.RequestRun(provenance, intent!, acknowledgment)), context, ct).ConfigureAwait(false);
+        return await ReadinessContent.ResponseAsync<OperationAcceptedResponse>(content, request.TenantId, outcome, ct)
+            .ConfigureAwait(false);
+    }
+
+    async ValueTask<Result<(ImmutableContentRef Intent, FirstResponseDescriptor Response)>> FreezeAsync(
+        RunReadinessAssessment request, ProgramReadiness readiness, OperationProvenance provenance, ReadinessActor actor,
+        DateTimeOffset now, CancellationToken ct)
+    {
         var asOf = request.AsOf ?? now;
         if (asOf > now)
-            return Result<ReadinessAssessmentRegistration>.Failure(new RequestError(
-                RequestErrorKind.Validation, "A readiness assessment cannot be as of a future time."));
-        var program = await reader.HydrateAsync(new ComplianceProgram(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
+            return Fail(RequestErrorKind.Validation, "A readiness assessment cannot be as of a future time.");
+        var prepared = readiness.PrepareRun(request.ExpectedProgramRevision);
+        if (!prepared.IsSuccess)
+            return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(prepared.Error!);
+        var tenant = request.TenantId;
+        var program = await reader.HydrateAsync(new ComplianceProgram(tenant, request.ProgramId), ct)
+            .ConfigureAwait(false);
         if (!program.IsCreated)
-            return Result<ReadinessAssessmentRegistration>.Failure(new RequestError(
-                RequestErrorKind.NotFound, "The program was not found."));
+            return Fail(RequestErrorKind.NotFound, "The program was not found.");
         var selectedEditionId = program.CriteriaEditionAt(asOf);
         var catalogEdition = selectedEditionId is { } selected ? catalog.GetEdition(selected) : null;
         var editionId = catalogEdition is not null ? selectedEditionId : null;
@@ -41,35 +86,50 @@ public sealed class RunReadinessAssessmentHandler(IAggregateExecutor executor,
             : [];
         var mappings = (await mappingReader.ReadProgramAsync(request.TenantId, request.ProgramId, ct)
                 .ConfigureAwait(false)).Mappings.Where(mapping => mapping.EditionId == editionId).ToArray();
-        var controls = new Dictionary<Uuid, ControlVersionView?>();
+        var controls = new List<ReadinessEffectiveControl>();
         foreach (var controlId in mappings
                      .Where(mapping => ReadinessRules.ActiveAt(mapping, asOf) is not null)
                      .Select(static mapping => mapping.ControlId).Distinct())
         {
-            var control = await reader.HydrateAsync(new ControlDraft(request.TenantId,
-                controlId), ct).ConfigureAwait(false);
-            controls[controlId] = control.IsVisible && control.ProgramId == request.ProgramId
-                ? ReadinessControlSelection.EffectiveVersionAt(control, asOf)
-                : null;
+            var control = await reader.HydrateAsync(new ControlDraft(tenant, controlId), ct).ConfigureAwait(false);
+            controls.Add(new ReadinessEffectiveControl(controlId,
+                control.IsVisible && control.ProgramId == request.ProgramId
+                    ? ReadinessControlSelection.EffectiveVersionAt(control, asOf)
+                    : null));
         }
-        var sourceResult = await sources.ReadAsync(request.TenantId, request.ProgramId, asOf, ct)
-            .ConfigureAwait(false);
+
+        var sourceResult = await sources.ReadAsync(tenant, request.ProgramId, asOf, ct).ConfigureAwait(false);
         if (!sourceResult.IsSuccess)
-            return Result<ReadinessAssessmentRegistration>.Failure(sourceResult.Error);
-        var evaluation = ReadinessRules.Evaluate(request.ProgramId, asOf, editionId, criteria,
-            mappings, controls, sourceResult.Value, catalogEdition);
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
-        return await executor.ExecuteAsync(new ReadinessLedger(request.TenantId,
-                request.ProgramId),
-            readiness =>
-            {
-                var failure = readiness.Record(request.ExpectedRevision, context.RequestId, asOf,
-                    editionId, evaluation, RbacIds.Member(request.TenantId, userId),
-                    UserIdentityClaims.BdgrzDisplay(context.Actor, userId), now);
-                return CommandFailureRequestAdapter.ToOutcome(failure,
-                    new ReadinessAssessmentRegistration(context.RequestId, readiness.Revision));
-            }, context, ct).ConfigureAwait(false);
+            return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(sourceResult.Error);
+
+        var catalogReference = catalogEdition is null
+            ? null
+            : await ReadinessContent.WriteAsync(content, tenant, "readiness-input-snapshot.catalog-edition.v1",
+                catalogEdition, ct).ConfigureAwait(false);
+        var cuts = await ImmutableSelectionManifests.WriteAsync<AuthoritativeReadCut>(content, tenant.ToString(),
+            Uuid.CreateVersion4(), "authoritative-read-cut.v1", [], SelectionOrder.Authored, ct).ConfigureAwait(false);
+        var inputs = await ReadinessContent.WriteAsync(content, tenant, ReadinessInputSnapshot.Schema,
+            new ReadinessInputSnapshot(request.ProgramId, asOf, editionId, catalogReference,
+                await ReadinessContent.WriteAsync<IReadOnlyList<Criterion>>(content, tenant,
+                    "readiness-input-snapshot.criteria.v1", criteria, ct).ConfigureAwait(false),
+                await ReadinessContent.WriteAsync<IReadOnlyList<ControlCriterionMappingView>>(content, tenant,
+                    "readiness-input-snapshot.mappings.v1", mappings, ct).ConfigureAwait(false),
+                await ReadinessContent.WriteAsync<IReadOnlyList<ReadinessEffectiveControl>>(content, tenant,
+                    "readiness-input-snapshot.effective-controls.v1", controls, ct).ConfigureAwait(false),
+                await ReadinessContent.WriteAsync(content, tenant, "readiness-input-snapshot.sources.v1",
+                    sourceResult.Value, ct).ConfigureAwait(false), cuts), ct).ConfigureAwait(false);
+        var intent = await ReadinessContent.WriteAsync(content, tenant, ReadinessRunIntent.Schema,
+            new ReadinessRunIntent(ReadinessContent.Header(provenance, now), request.ProgramId, request.AssessmentId,
+                (ulong)request.ExpectedProgramRevision, (ulong)readiness.AdoptionGeneration + 1,
+                ReadinessRules.Version, asOf, inputs, actor.MemberId), ct).ConfigureAwait(false);
+        var acknowledgment = await ReadinessContent.AcceptedResponseAsync(content, tenant, request.AssessmentId,
+            RegisterFirmStaffHandler.StatusUrlTemplate, now, ct).ConfigureAwait(false);
+        return Result<(ImmutableContentRef, FirstResponseDescriptor)>.Success((intent, acknowledgment));
     }
+
+    static Result<(ImmutableContentRef, FirstResponseDescriptor)> Fail(RequestErrorKind kind, string message) =>
+        Result<(ImmutableContentRef, FirstResponseDescriptor)>.Failure(new RequestError(kind, message));
+
+    static Result<OperationAcceptedResponse> Failure(RequestErrorKind kind, string message) =>
+        Result<OperationAcceptedResponse>.Failure(new RequestError(kind, message));
 }

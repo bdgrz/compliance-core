@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 sealed class AdvisorSharedSourceReader(IAggregateReader aggregates,
     IAdvisorRecordVersionResolver versions, EvidenceArtifactMetadataRead evidence,
-    IBoundaryDirectoryReader boundaries, IReadinessDirectoryReader readiness)
+    IBoundaryDirectoryReader boundaries, ReadinessReader readiness)
     : IAdvisorSharedSourceReader
 {
     public async ValueTask<Result<AdvisorSharedSourceView>> GetAsync(Uuid tenantId,
@@ -106,8 +106,18 @@ sealed class AdvisorSharedSourceReader(IAggregateReader aggregates,
     async ValueTask<Result<AdvisorSharedSourceView>> ReadReadinessGapAsync(Uuid tenantId,
         Uuid programId, Uuid handoffId, AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var assessment = await readiness.GetAssessmentAsync(tenantId, programId,
-            selected.AssessmentId!.Value, ct).ConfigureAwait(false);
+        ReadinessAssessmentView? assessment;
+        try
+        {
+            assessment = await readiness.ReadViewAsync(tenantId, programId, selected.AssessmentId!.Value, ct)
+                .ConfigureAwait(false);
+        }
+        catch (Content.ImmutableContentIntegrityException exception)
+        {
+            return Result<AdvisorSharedSourceView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                $"The readiness content cannot be verified yet: {exception.Message}", true));
+        }
+
         var gap = assessment?.Gaps.FirstOrDefault(item => item.GapId == selected.RecordId);
         return gap is not null
             ? Success(tenantId, programId, handoffId, selected, readinessGap: gap)

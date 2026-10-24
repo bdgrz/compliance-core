@@ -16,6 +16,9 @@ public sealed record RiskTreatmentActionView(Uuid ActionId, Uuid RiskId, string 
     ActorReference CreatedBy, DateTimeOffset CreatedAt,
     IReadOnlyList<RiskTreatmentActionCompletionView> Completions)
 {
+    /// <summary>The revision of the action owner; the expected revision of the next write on the action.</summary>
+    public long Revision { get; init; }
+
     public string? CancellationRationale { get; init; }
     public ActorReference? CancelledBy { get; init; }
     public DateTimeOffset? CancelledAt { get; init; }

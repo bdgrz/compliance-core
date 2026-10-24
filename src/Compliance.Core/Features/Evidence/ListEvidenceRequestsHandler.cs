@@ -4,20 +4,20 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evidence;
 
-public sealed class ListEvidenceRequestsHandler(IAggregateReader reader)
+/// <summary>Lists the program's evidence requests in the order opened, composed from their own owner streams.</summary>
+public sealed class ListEvidenceRequestsHandler(EvidenceRequestReader requests)
     : IRequestHandler<ListEvidenceRequests, Page<EvidenceRequestView>>
 {
     public async ValueTask<Result<Page<EvidenceRequestView>>> HandleAsync(
         IRequestContext<ListEvidenceRequests> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (request.Status is not (null or EvidenceRequestLedger.Open or EvidenceRequestLedger.Fulfilled or
-            EvidenceRequestLedger.Cancelled))
+        if (request.Status is not (null or EvidenceRequest.Open or EvidenceRequest.Fulfilled or
+            EvidenceRequest.Cancelled))
             return Result<Page<EvidenceRequestView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The status filter must be open, fulfilled, or cancelled."));
-        var ledger = await reader.HydrateAsync(new EvidenceRequestLedger(request.TenantId, request.ProgramId), ct)
-            .ConfigureAwait(false);
-        var items = ledger.ReadAll().Where(item => request.Status is null || item.Status == request.Status)
+        var snapshot = await requests.ReadAsync(request.TenantId, request.ProgramId, ct).ConfigureAwait(false);
+        var items = snapshot.ReadAll().Where(item => request.Status is null || item.Status == request.Status)
             .ToArray();
         return ControlActivationSource.Paginate(items, request.Limit, request.Cursor, "evidence requests");
     }

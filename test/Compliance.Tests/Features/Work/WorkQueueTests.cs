@@ -95,7 +95,7 @@ public sealed class WorkQueueTests
                 draftVersionId, 1, content, "draft", null, fixture.LeadMemberId, "Lead",
                 now.AddMinutes(-5)), null, null, 1));
         var evidence = await fixture.AsAsync(fixture.LeadUserId,
-            new OpenEvidenceRequest(fixture.TenantId, fixture.ProgramId, "Future evidence",
+            new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, "Future evidence",
                 "Keep dated work before undated work.", fixture.ReviewerMemberId,
                 DateOnly.MaxValue));
 
@@ -128,7 +128,7 @@ public sealed class WorkQueueTests
             fixture.Today.AddDays(-7), fixture.Today.AddDays(-6), fixture.Today);
         var dueOn = DateOnly.MaxValue.AddDays(-daysBeforeMaximum);
         var evidence = await fixture.AsAsync(fixture.LeadUserId,
-            new OpenEvidenceRequest(fixture.TenantId, fixture.ProgramId, "Future evidence",
+            new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, "Future evidence",
                 "Keep its source action available.", fixture.OwnerMemberId, dueOn,
                 fixture.ControlId));
 
@@ -168,13 +168,13 @@ public sealed class WorkQueueTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        var request = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(fixture.TenantId,
+        var request = await fixture.AsAsync(fixture.LeadUserId, new OpenEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId,
             fixture.ProgramId, "Q3 access review export", "Upload the signed record.", fixture.OwnerMemberId,
             fixture.Today.AddDays(5), fixture.ControlId));
 
         // Act
         var before = await fixture.AsAsync(fixture.OwnerUserId, new ListWork(fixture.TenantId, fixture.ProgramId));
-        await fixture.AsAsync(fixture.LeadUserId, new CancelEvidenceRequest(fixture.TenantId, fixture.ProgramId,
+        await fixture.AsAsync(fixture.LeadUserId, new CancelEvidenceRequest(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
             request.EvidenceRequestId, request.Revision, "Not needed"));
         var after = await fixture.AsAsync(fixture.OwnerUserId, new ListWork(fixture.TenantId, fixture.ProgramId));
 
@@ -368,7 +368,9 @@ public sealed class WorkQueueTests
             operatingReader: scope.ServiceProvider.GetRequiredService<ControlOperationsReader>(),
             mappingReader: scope.ServiceProvider.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: scope.ServiceProvider.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: scope.ServiceProvider.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: scope.ServiceProvider.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: scope.ServiceProvider.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
         var actor = new OperationsActor(fixture.ReviewerUserId, fixture.ReviewerMemberId,
             "Reviewer");
 
@@ -519,7 +521,9 @@ public sealed class WorkQueueTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
 
         // Act
         var stale = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId,
@@ -562,7 +566,9 @@ public sealed class WorkQueueTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
 
         // Act
         var stale = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId,
@@ -585,14 +591,7 @@ public sealed class WorkQueueTests
         fixture.Policies.OnList = async _ =>
         {
             fixture.Policies.OnList = null;
-            await ProgramManagementServices.SeedAsync(fixture.Provider,
-                new EvidenceRequestLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-                {
-                    Assert.Null(ledger.OpenRequest(evidenceId, "Access export", "Upload the export.",
-                        fixture.OwnerMemberId, fixture.Today.AddDays(5), null, lead,
-                        DateTimeOffset.UtcNow));
-                    return Result.Success;
-                });
+            await EvidenceSeeds.OpenAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, evidenceId, "Access export", "Upload the export.", fixture.OwnerMemberId, fixture.Today.AddDays(5), null, lead, DateTimeOffset.UtcNow);
         };
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         var evidence = new ProjectedEvidenceWorkItemDirectory(ProjectionCheckpoint.Start);
@@ -605,7 +604,9 @@ public sealed class WorkQueueTests
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
             mappingReader: services.GetRequiredService<ControlMappingReader>(),
             applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
-            evaluationReader: services.GetRequiredService<ControlEvaluationReader>());
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>());
 
         // Act
         var stale = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId,
@@ -665,42 +666,14 @@ public sealed class WorkQueueTests
         var actionId = Uuid.CreateVersion4();
         var evidenceId = Uuid.CreateVersion4();
         var lead = ActorReference.ForMember(fixture.LeadMemberId, "Lead");
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new EvidenceRequestLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.OpenRequest(evidenceId, "Export", "Upload.",
-                    fixture.OwnerMemberId, fixture.Today.AddDays(5), null, lead,
-                    DateTimeOffset.UtcNow));
-                return Result.Success;
-            });
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.AddTreatmentAction(riskId, 0, actionId, "mitigate",
-                    "Enforce MFA", "MFA everywhere.", "Policy export.", fixture.Today.AddDays(9),
-                    fixture.OwnerMemberId, [evidenceId], lead, DateTimeOffset.UtcNow));
-                return Result.Success;
-            });
+        await EvidenceSeeds.OpenAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, evidenceId, "Export", "Upload.", fixture.OwnerMemberId, fixture.Today.AddDays(5), null, lead, DateTimeOffset.UtcNow);
+        await RiskSeeds.AddActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, actionId, "Enforce MFA", "MFA everywhere.", "Policy export.", fixture.Today.AddDays(9), fixture.OwnerMemberId, [evidenceId], lead, DateTimeOffset.UtcNow);
 
         // Act
         var before = await fixture.AsAsync(fixture.OwnerUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId));
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new EvidenceRequestLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.Fulfil(evidenceId, 1, Uuid.CreateVersion4(), lead,
-                    DateTimeOffset.UtcNow));
-                return Result.Success;
-            });
-        await ProgramManagementServices.SeedAsync(fixture.Provider,
-            new RiskGovernanceLedger(fixture.TenantId, fixture.ProgramId), ledger =>
-            {
-                Assert.Null(ledger.SubmitActionCompletion(riskId, actionId, 1,
-                    Uuid.CreateVersion4(), "Done.", [evidenceId],
-                    new HashSet<Uuid> { evidenceId }, fixture.OwnerMemberId, lead,
-                    DateTimeOffset.UtcNow));
-                return Result.Success;
-            });
+        await EvidenceSeeds.FulfilAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, evidenceId, Uuid.CreateVersion4(), lead, DateTimeOffset.UtcNow);
+        await RiskSeeds.SubmitActionAsync(fixture.Provider, fixture.TenantId, fixture.ProgramId, riskId, actionId, Uuid.CreateVersion4(), "Done.", [evidenceId], fixture.OwnerMemberId, lead, DateTimeOffset.UtcNow);
         var after = await fixture.AsAsync(fixture.OwnerUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId));
 

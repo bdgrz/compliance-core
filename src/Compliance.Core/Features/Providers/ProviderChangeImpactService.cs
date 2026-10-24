@@ -17,6 +17,7 @@ namespace Bdgrz.Compliance.Features.Providers;
 /// cross-stream transaction.
 /// </summary>
 public sealed class ProviderChangeImpactService(IAggregateReader reader, ProviderSource providers,
+    EvidenceRequestReader evidenceRequests,
     ProviderReferences references, ITechnologyInventoryReader inventory,
     TechnologyInventoryReadConsistency inventoryConsistency,
     TechnologyInventoryRestrictedVisibility inventoryVisibility,
@@ -595,8 +596,7 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader, Provide
         {
             if (scanLimitReached)
                 break;
-            var ledger = await reader.HydrateAsync(new EvidenceRequestLedger(tenantId,
-                programId), ct).ConfigureAwait(false);
+            var ledger = await evidenceRequests.ReadAsync(tenantId, programId, ct).ConfigureAwait(false);
             var snapshot = ledger.ReadAll();
             ledgerSnapshots.Add(programId, snapshot);
             foreach (var item in snapshot)
@@ -632,8 +632,7 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader, Provide
             throw new ProviderImpactReadException(SourceChangedError("provider assurance evidence"));
         foreach (var (programId, snapshot) in ledgerSnapshots)
         {
-            var currentLedger = await reader.HydrateAsync(new EvidenceRequestLedger(tenantId,
-                programId), ct).ConfigureAwait(false);
+            var currentLedger = await evidenceRequests.ReadAsync(tenantId, programId, ct).ConfigureAwait(false);
             if (!snapshot.SequenceEqual(currentLedger.ReadAll()))
                 throw new ProviderImpactReadException(SourceChangedError("evidence requests"));
         }

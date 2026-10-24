@@ -1,5 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 
@@ -19,19 +20,17 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
         var source = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
         var additionalSource = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var created = WithMetadata(new AdvisorHandoffCreated(tenantId, programId, handoffId,
-            [source], "Readiness review", new DateOnly(2026, 12, 31), actor, Now), handoffId, 1);
+        var created = WithMetadata(AdvisorEvents.Created(tenantId, programId, handoffId, "Readiness review",
+            new DateOnly(2026, 12, 31), actor, Now), handoffId, 1);
         var revisedAt = Now.AddMinutes(1);
-        var revised = WithMetadata(new AdvisorHandoffSelectionRevised(tenantId, programId,
-            handoffId, 2, [source, additionalSource], "Clarify the review scope", actor,
-            revisedAt), handoffId, 2);
+        var revised = WithMetadata(AdvisorEvents.Revised(tenantId, programId, handoffId, 2,
+            "Clarify the review scope", actor, revisedAt), handoffId, 2);
         var readiedAt = Now.AddMinutes(2);
-        var readied = WithMetadata(new AdvisorHandoffReadiedForReview(tenantId, programId,
-            handoffId, 3, actor, readiedAt), handoffId, 3);
+        var readied = WithMetadata(AdvisorEvents.Readied(tenantId, programId, handoffId, 3, actor, readiedAt),
+            handoffId, 3);
         var feedbackAt = Now.AddMinutes(3);
-        var feedback = WithMetadata(new AdvisorFeedbackRecorded(tenantId, programId, handoffId,
-            Uuid.CreateVersion4(), source.RecordId, source.VersionId, "comment",
-            "Clarify ownership.", actor, feedbackAt), handoffId, 4);
+        var feedback = WithMetadata(AdvisorEvents.Admitted(tenantId, handoffId, Uuid.CreateVersion4(), 4, 2, actor,
+            feedbackAt), handoffId, 4);
         var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
@@ -40,11 +39,11 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(created);
-            await directory.ApplyAsync(created);
-            await directory.ApplyAsync(revised);
-            await directory.ApplyAsync(readied);
-            await directory.ApplyAsync(feedback);
+            await directory.ApplyAsync(created, [source]);
+            await directory.ApplyAsync(created, [source]);
+            await directory.ApplyAsync(revised, [source, additionalSource]);
+            await directory.ApplyAsync(readied, null);
+            await directory.ApplyAsync(feedback, null);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var page = await directory.ListProgramAsync(tenantId, programId, 25, null);
@@ -71,10 +70,9 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         var programId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
         var comparedToId = Uuid.CreateVersion4();
-        var created = WithMetadata(new AdvisorHandoffCreated(tenantId, programId, handoffId,
-            [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Follow-up review",
-            new DateOnly(2026, 12, 31), ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"),
-            Now, comparedToId), handoffId, 1);
+        var created = WithMetadata(AdvisorEvents.Created(tenantId, programId, handoffId, "Follow-up review",
+            new DateOnly(2026, 12, 31), ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), Now, comparedToId),
+            handoffId, 1);
         var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
@@ -83,7 +81,7 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(created);
+            await directory.ApplyAsync(created, [AnySource()]);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var page = await directory.ListProgramAsync(tenantId, programId, 25, null);
@@ -102,8 +100,7 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
-        var revised = WithMetadata(new AdvisorHandoffSelectionRevised(tenantId, programId, handoffId, 2,
-            [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Changed selection",
+        var revised = WithMetadata(AdvisorEvents.Revised(tenantId, programId, handoffId, 2, "Changed selection",
             ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), Now), handoffId, 2);
 
         // Act
@@ -111,7 +108,7 @@ public sealed class FitzAdvisorHandoffDirectoryTests
             ProjectionCheckpoint.Start));
 
         // Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => directory.ApplyAsync(revised).AsTask());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => directory.ApplyAsync(revised, [AnySource()]).AsTask());
     }
 
     [Fact]
@@ -123,12 +120,10 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
         var earlierId = Uuid.CreateVersion4();
         var laterId = Uuid.CreateVersion4();
-        var earlier = WithMetadata(new AdvisorHandoffCreated(tenantId, programId, earlierId,
-            [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Earlier", new DateOnly(2026, 12, 31),
-            actor, Now), earlierId, 1);
-        var later = WithMetadata(new AdvisorHandoffCreated(tenantId, programId, laterId,
-            [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Later", new DateOnly(2026, 12, 31),
-            actor, Now.AddMinutes(1)), laterId, 1);
+        var earlier = WithMetadata(AdvisorEvents.Created(tenantId, programId, earlierId, "Earlier",
+            new DateOnly(2026, 12, 31), actor, Now), earlierId, 1);
+        var later = WithMetadata(AdvisorEvents.Created(tenantId, programId, laterId, "Later",
+            new DateOnly(2026, 12, 31), actor, Now.AddMinutes(1)), laterId, 1);
         var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
@@ -137,8 +132,8 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(earlier);
-            await directory.ApplyAsync(later);
+            await directory.ApplyAsync(earlier, [AnySource()]);
+            await directory.ApplyAsync(later, [AnySource()]);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var first = await directory.ListProgramAsync(tenantId, programId, 1, null);
@@ -161,19 +156,16 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         var draftId = Uuid.CreateVersion4();
         var expiredId = Uuid.CreateVersion4();
         var currentId = Uuid.CreateVersion4();
-        var draftCreated = WithMetadata(new AdvisorHandoffCreated(tenantId, programId,
-            draftId, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Unshared draft",
+        var draftCreated = WithMetadata(AdvisorEvents.Created(tenantId, programId, draftId, "Unshared draft",
             new DateOnly(2026, 12, 31), actor, Now.AddDays(-1)), draftId, 1);
-        var expiredCreated = WithMetadata(new AdvisorHandoffCreated(tenantId, programId,
-            expiredId, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Expired handoff",
+        var expiredCreated = WithMetadata(AdvisorEvents.Created(tenantId, programId, expiredId, "Expired handoff",
             new DateOnly(2026, 10, 18), actor, Now.AddDays(-1)), expiredId, 1);
-        var expiredReady = WithMetadata(new AdvisorHandoffReadiedForReview(tenantId,
-            programId, expiredId, 2, actor, Now.AddMinutes(2)), expiredId, 2);
-        var currentCreated = WithMetadata(new AdvisorHandoffCreated(tenantId, programId,
-            currentId, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Current handoff",
+        var expiredReady = WithMetadata(AdvisorEvents.Readied(tenantId, programId, expiredId, 2, actor,
+            Now.AddMinutes(2)), expiredId, 2);
+        var currentCreated = WithMetadata(AdvisorEvents.Created(tenantId, programId, currentId, "Current handoff",
             new DateOnly(2026, 12, 31), actor, Now.AddDays(-1)), currentId, 1);
-        var currentReady = WithMetadata(new AdvisorHandoffReadiedForReview(tenantId,
-            programId, currentId, 2, actor, Now.AddMinutes(1)), currentId, 2);
+        var currentReady = WithMetadata(AdvisorEvents.Readied(tenantId, programId, currentId, 2, actor,
+            Now.AddMinutes(1)), currentId, 2);
         var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
@@ -182,11 +174,11 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(draftCreated);
-            await directory.ApplyAsync(expiredCreated);
-            await directory.ApplyAsync(expiredReady);
-            await directory.ApplyAsync(currentCreated);
-            await directory.ApplyAsync(currentReady);
+            await directory.ApplyAsync(draftCreated, [AnySource()]);
+            await directory.ApplyAsync(expiredCreated, [AnySource()]);
+            await directory.ApplyAsync(expiredReady, null);
+            await directory.ApplyAsync(currentCreated, [AnySource()]);
+            await directory.ApplyAsync(currentReady, null);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var page = await directory.ListSharedProgramAsync(tenantId, programId,
@@ -206,12 +198,11 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         var handoffId = Uuid.CreateVersion4();
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
         var source = new AdvisorRecordVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4());
-        var created = WithMetadata(new AdvisorHandoffCreated(tenantId, programId, handoffId,
-            [source], "Expired review", DateOnly.FromDateTime(Now.UtcDateTime), actor, Now),
-            handoffId, 1);
+        var created = WithMetadata(AdvisorEvents.Created(tenantId, programId, handoffId, "Expired review",
+            DateOnly.FromDateTime(Now.UtcDateTime), actor, Now), handoffId, 1);
         var readyAt = Now.AddDays(1);
-        var ready = WithMetadata(new AdvisorHandoffReadiedForReview(tenantId, programId,
-            handoffId, 2, actor, readyAt), handoffId, 2);
+        var ready = WithMetadata(AdvisorEvents.Readied(tenantId, programId, handoffId, 2, actor, readyAt),
+            handoffId, 2);
         var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
@@ -219,10 +210,10 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         // Act
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
             ProjectionCheckpoint.Start));
-        await directory.ApplyAsync(created);
+        await directory.ApplyAsync(created, [source]);
 
         // Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => directory.ApplyAsync(ready).AsTask());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => directory.ApplyAsync(ready, null).AsTask());
     }
 
     [Fact]
@@ -233,11 +224,10 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         var programId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Lead");
-        var created = WithMetadata(new AdvisorHandoffCreated(tenantId, programId, handoffId,
-            [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())], "Readiness review",
+        var created = WithMetadata(AdvisorEvents.Created(tenantId, programId, handoffId, "Readiness review",
             new DateOnly(2026, 12, 31), actor, Now), handoffId, 1);
-        var ready = WithMetadata(new AdvisorHandoffReadiedForReview(tenantId, programId,
-            handoffId, 2, actor, Now.AddMinutes(1)), handoffId, 2);
+        var ready = WithMetadata(AdvisorEvents.Readied(tenantId, programId, handoffId, 2, actor,
+            Now.AddMinutes(1)), handoffId, 2);
         var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
@@ -245,11 +235,11 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         // Act
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
             ProjectionCheckpoint.Start));
-        await directory.ApplyAsync(created);
-        await directory.ApplyAsync(ready);
+        await directory.ApplyAsync(created, [AnySource()]);
+        await directory.ApplyAsync(ready, null);
 
         // Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => directory.ApplyAsync(created).AsTask());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => directory.ApplyAsync(created, [AnySource()]).AsTask());
     }
 
     [Fact]
@@ -260,10 +250,8 @@ public sealed class FitzAdvisorHandoffDirectoryTests
         var foreignTenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var handoffId = Uuid.CreateVersion4();
-        var created = WithMetadata(new AdvisorHandoffCreated(foreignTenantId, programId,
-            handoffId, [new(Uuid.CreateVersion4(), Uuid.CreateVersion4())],
-            "Foreign handoff", new DateOnly(2026, 12, 31),
-            ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), Now), handoffId, 1);
+        var created = WithMetadata(AdvisorEvents.Created(foreignTenantId, programId, handoffId, "Foreign handoff",
+            new DateOnly(2026, 12, 31), ActorReference.ForMember(Uuid.CreateVersion4(), "Lead"), Now), handoffId, 1);
         var directory = new FitzAdvisorHandoffDirectory(new InMemoryKvClient());
         var identity = new CheckpointIdentity(FitzAdvisorHandoffDirectory.ProjectorName,
             EventStreamPattern.ForPattern(tenantId.ToString(), "advisor-handoffs"));
@@ -274,9 +262,11 @@ public sealed class FitzAdvisorHandoffDirectoryTests
 
         // Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => directory.ApplyAsync(created).AsTask());
+            () => directory.ApplyAsync(created, [AnySource()]).AsTask());
         Assert.Contains("tenant projection batch", exception.Message, StringComparison.Ordinal);
     }
+
+    static AdvisorRecordVersion AnySource() => new(Uuid.CreateVersion4(), Uuid.CreateVersion4());
 
     static T WithMetadata<T>(T domainEvent, Uuid aggregateId, ulong version) where T : DomainEvent
     {

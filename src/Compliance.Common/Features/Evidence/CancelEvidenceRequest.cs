@@ -4,8 +4,12 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evidence;
 
-/// <summary>Cancels an open request with a rationale.</summary>
-[Discriminator("bdgrz.evidence.request.cancel", 1)]
-public sealed record CancelEvidenceRequest(Uuid TenantId, Uuid ProgramId, Uuid EvidenceRequestId,
+/// <summary>Cancels an open request with a rationale. <paramref name="ExpectedRevision" /> is the request's revision.</summary>
+[Discriminator("bdgrz.evidence.request.cancel", 2)]
+public sealed record CancelEvidenceRequest(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid EvidenceRequestId,
     long ExpectedRevision, string Rationale)
-    : IRequest<EvidenceRequestView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+    : IRequest<EvidenceRequestView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest,
+        ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

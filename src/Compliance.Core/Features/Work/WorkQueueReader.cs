@@ -4,6 +4,7 @@ using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Evaluations;
+using Bdgrz.Compliance.Features.Evidence;
 using Bdgrz.Compliance.Features.PolicyDistribution;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Remediation;
@@ -41,7 +42,9 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
     CampaignSource? campaignSource = null,
     ControlMappingReader? mappingReader = null,
     ApplicabilityReader? applicabilityReader = null,
-    ControlEvaluationReader? evaluationReader = null)
+    ControlEvaluationReader? evaluationReader = null,
+    RiskGovernanceReader? riskGovernance = null,
+    EvidenceRequestReader? evidenceRequests = null)
 {
     public const int SystemEscalationDays = 7;
     public const int DefaultHorizonDays = 30;
@@ -93,7 +96,8 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
         var today = todayOverride ?? DateOnly.FromDateTime(now.UtcDateTime);
         var projectedKinds = _accountableWorkItems.SelectMany(static reader =>
                 reader.ProjectedKinds).ToHashSet(StringComparer.Ordinal);
-        var work = await WorkSource.LoadAsync(reader, findings, operatingReader, mappingReader, applicabilityReader, evaluationReader, tenantId, programId, today,
+        var work = await WorkSource.LoadAsync(reader, findings, riskGovernance, evidenceRequests, operatingReader,
+            mappingReader, applicabilityReader, evaluationReader, tenantId, programId, today,
             today.AddDays(horizonDays), now, workItemId, boundaries,
             projectedKinds, ct)
             .ConfigureAwait(false);
@@ -156,7 +160,9 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
         }
         if (risks is not null && !RiskAcceptanceWork.IsFullyProjected(projectedKinds))
         {
-            var decisions = await RiskAcceptanceWork.LoadAsync(reader, risks, riskConsistency,
+            var decisions = await RiskAcceptanceWork.LoadAsync(reader,
+                riskGovernance ?? throw new InvalidOperationException("Risk work requires the risk governance reader."),
+                risks, riskConsistency,
                 tenantId, programId, now, workItemId, ct).ConfigureAwait(false);
             if (!decisions.IsSuccess)
                 return Result<WorkQueueSnapshot>.Failure(decisions.Error);
