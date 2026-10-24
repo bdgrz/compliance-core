@@ -5,6 +5,8 @@ using Bdgrz.Compliance.Features.UserIdentities;
 using Bdgrz.Compliance.Tests.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -611,6 +613,7 @@ public sealed class ServiceEngagementAcceptanceTests
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(configurationValues).Build();
         services.AddCompliance(configuration, developerAuthentication: true);
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(true));
         services.AddSingleton<ITenantActivity>(new ActiveTenant());
         services.AddSingleton<ITenantMembershipDirectoryReader>(new FixedMembershipDirectory(true));
@@ -697,8 +700,7 @@ public sealed class ServiceEngagementAcceptanceTests
         var assignedUserId = Uuid.CreateVersion4();
         await SeedCurrentStaffAsync(provider, assignedStaffId, assignedUserId);
         var before = await reader.HydrateAsync(new IndependenceLedger(Tenant), CancellationToken.None);
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), CancellationToken.None);
-        var expectedStaff = directory.Get(assignedStaffId)!;
+        var expectedStaff = await StaffAsync(provider, assignedStaffId);
         var effectiveFrom = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
         var request = new AssignServiceEngagementStaff(Tenant, seeded.Proof.EngagementId,
             assignedStaffId, before.Sequence, effectiveFrom);
@@ -842,9 +844,7 @@ public sealed class ServiceEngagementAcceptanceTests
         var additionalStaffId = Uuid.CreateVersion4();
         var additionalUserId = Uuid.CreateVersion4();
         await SeedCurrentStaffAsync(provider, additionalStaffId, additionalUserId);
-        var directory = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new FirmStaffDirectory(), CancellationToken.None);
-        var additionalStaff = directory.View().Staff.Single(item => item.StaffMemberId == additionalStaffId);
+        var additionalStaff = await StaffAsync(provider, additionalStaffId);
         var additionalEngagementId = Uuid.CreateVersion4();
         var created = await scope.ServiceProvider.GetRequiredService<IAggregateExecutor>().ExecuteAsync(
             new IndependenceLedger(Tenant), ledger => AggregateOutcome.CommitOnSuccess(ledger.CreateEngagement(
@@ -1295,6 +1295,7 @@ public sealed class ServiceEngagementAcceptanceTests
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(configurationValues).Build();
         services.AddCompliance(configuration, developerAuthentication: true);
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(true));
         var tenants = new TestTenantActivity();
         services.AddSingleton(tenants);
@@ -1327,19 +1328,13 @@ public sealed class ServiceEngagementAcceptanceTests
         foreach (var staff in proof.CurrentStaff.Append(proof.CurrentPartner)
                      .DistinctBy(member => member.StaffMemberId))
         {
-            var directorySeeded = await executor.ExecuteAsync(new FirmStaffDirectory(), directory =>
-                AggregateOutcome.CommitOnSuccess(directory.Register(Uuid.CreateVersion4(), staff.StaffMemberId,
-                    staff.UserId, staff.Practice, staff.SourceReference, directory.Sequence,
-                    staff.Actor, staff.RecordedAt)), new RequestDispatchContext(RequestActor.System),
-                CancellationToken.None);
-            Assert.True(directorySeeded.IsSuccess, directorySeeded.Error?.Message);
+            await FirmStaffFacts.RegisterAsync(scope.ServiceProvider, staff.StaffMemberId, staff.UserId,
+                staff.Practice, staff.SourceReference, staff.Actor, staff.RecordedAt);
         }
         var users = scope.ServiceProvider.GetRequiredService<TestPlatformUserDirectoryReader>();
         users.Add(proof.PartnerUserId);
         var operatorActor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic registrar");
-        var directory = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new FirmStaffDirectory(), CancellationToken.None);
-        var partnerStaff = directory.View().Staff.Single(item => item.StaffMemberId == proof.PartnerStaffMemberId);
+        var partnerStaff = await StaffAsync(scope.ServiceProvider, proof.PartnerStaffMemberId);
         var authorityIssuedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
         var authorityExpiresAt = DateTimeOffset.UtcNow.AddMinutes(30);
         var partnerDesignationId = Uuid.CreateVersion4();
@@ -1355,16 +1350,9 @@ public sealed class ServiceEngagementAcceptanceTests
 
         var ratifierUser = Uuid.CreateVersion4();
         var ratifierStaffId = Uuid.CreateVersion4();
-        var ratifierRegistration = await executor.ExecuteAsync(new FirmStaffDirectory(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Register(Uuid.CreateVersion4(), ratifierStaffId,
-                ratifierUser, "attest", "Synthetic ratifier directory source", catalog.Sequence,
-                operatorActor, Now.AddMinutes(-3))), new RequestDispatchContext(RequestActor.System),
-            CancellationToken.None);
-        Assert.True(ratifierRegistration.IsSuccess, ratifierRegistration.Error?.Message);
+        var ratifier = await FirmStaffFacts.RegisterAsync(scope.ServiceProvider, ratifierStaffId, ratifierUser,
+            "attest", "Synthetic ratifier directory source", operatorActor, Now.AddMinutes(-3));
         users.Add(ratifierUser);
-        directory = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new FirmStaffDirectory(), CancellationToken.None);
-        var ratifier = directory.View().Staff.Single(item => item.StaffMemberId == ratifierStaffId);
         var ratifierDesignationId = Uuid.CreateVersion4();
         var ratifierAssertion = ProfessionalDutyAssertionTestIssuer.Issue(ratifierDesignationId,
             ratifierUser, FirmProfessionalDuty.RuleRatifier, null, 1, "active", null,
@@ -1423,26 +1411,22 @@ public sealed class ServiceEngagementAcceptanceTests
     static async Task SeedCurrentStaffAsync(IServiceProvider provider, Uuid staffMemberId, Uuid userId)
     {
         await using var scope = provider.CreateAsyncScope();
-        var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-        var recordedAt = Now;
-        await executor.ExecuteAsync(new FirmStaffDirectory(), directory => AggregateOutcome.CommitOnSuccess(
-            directory.Register(Uuid.CreateVersion4(), staffMemberId, userId, "attest",
-                "Synthetic current staff directory source", directory.Sequence,
-                ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator"), recordedAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        await FirmStaffFacts.RegisterAsync(provider, staffMemberId, userId, "attest",
+            "Synthetic current staff directory source",
+            ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator"), Now);
         scope.ServiceProvider.GetRequiredService<TestPlatformUserDirectoryReader>().Add(userId);
     }
 
     static async Task SetFirmStaffStatusAsync(IServiceProvider provider, Uuid staffMemberId, bool isActive)
     {
+        await FirmStaffFacts.SetStatusAsync(provider, staffMemberId, isActive,
+            isActive ? "Synthetic reactivation" : "Synthetic deactivation", Now.AddSeconds(1));
+    }
+
+    static async Task<FirmStaffMemberView> StaffAsync(IServiceProvider provider, Uuid staffMemberId)
+    {
         await using var scope = provider.CreateAsyncScope();
-        var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-        var result = await executor.ExecuteAsync(new FirmStaffDirectory(), directory => AggregateOutcome.CommitOnSuccess(
-            directory.SetStatus(Uuid.CreateVersion4(), staffMemberId, isActive,
-                isActive ? "Synthetic reactivation" : "Synthetic deactivation", directory.Sequence,
-                ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic operator"), Now.AddSeconds(1))),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(result.IsSuccess, result.Error?.Message);
+        return (await scope.ServiceProvider.GetRequiredService<FirmStaffViews>().GetAsync(staffMemberId))!;
     }
 
     static ClaimsPrincipal ActorFor(Uuid userId) => new(new ClaimsIdentity([

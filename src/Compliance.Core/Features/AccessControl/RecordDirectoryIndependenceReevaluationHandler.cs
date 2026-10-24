@@ -1,10 +1,11 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Tenants;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 sealed class RecordDirectoryIndependenceReevaluationHandler(IDomainEventReader events,
-    IAggregateReader reader, IAggregateExecutor executor, ITenantActivity tenants, TimeProvider clock)
+    IAggregateReader reader, FirmStaffViews staffViews, IAggregateExecutor executor, ITenantActivity tenants, TimeProvider clock)
     : IRequestHandler<RecordDirectoryIndependenceReevaluation>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<RecordDirectoryIndependenceReevaluation> context, CancellationToken ct)
@@ -16,36 +17,45 @@ sealed class RecordDirectoryIndependenceReevaluationHandler(IDomainEventReader e
         var request = context.Request;
         if (request.TenantId == Uuid.Empty || request.StaffMemberId == Uuid.Empty || request.UserId == Uuid.Empty)
             return RefuseSource();
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
+        var directory = await reader.HydrateAsync(new FirmStaffRecord(request.StaffMemberId), ct).ConfigureAwait(false);
         var directoryPosition = directory.CommittedStreamPosition;
         var client = await reader.HydrateAsync(new IndependenceLedger(request.TenantId), ct).ConfigureAwait(false);
         var clientPosition = client.CommittedStreamPosition;
         if (request.DirectoryResourceOffset >= directoryPosition || request.AcceptanceResourceOffset >= clientPosition)
             return RefuseSource();
-        var directoryRecord = await ReadRecordAsync(new FirmStaffDirectory().Stream, request.DirectoryResourceOffset, ct).ConfigureAwait(false);
+        var directoryRecord = await ReadRecordAsync(directory.Stream, request.DirectoryResourceOffset, ct).ConfigureAwait(false);
         var acceptedRecord = await ReadRecordAsync(new IndependenceLedger(request.TenantId).Stream,
             request.AcceptanceResourceOffset, ct).ConfigureAwait(false);
-        if (directoryRecord?.Event is not FirmStaffChangeRecorded change ||
+        if (directoryRecord?.Event is not FirmStaffChangeRecorded { ChangeKind: "status" } change ||
             acceptedRecord?.Event is not ServiceEngagementAcceptanceRecorded original ||
             directoryRecord.Event.Metadata.EventId != request.DirectoryEventId ||
             acceptedRecord.Event.Metadata.EventId != request.AcceptanceEventId ||
             original.RequestId != request.AcceptanceRequestId || original.TenantId != request.TenantId ||
             IndependenceSourceDigest.DirectoryEvent(change) != request.DirectoryPayloadSha256 ||
             IndependenceSourceDigest.AcceptanceEvent(original) != request.AcceptancePayloadSha256 ||
-            change.ExpectedSequence is < 0 or long.MaxValue ||
-            change.Staff.StaffMemberId != request.StaffMemberId || change.Staff.UserId != request.UserId ||
             context.CausationId != (process == "reactor:FirmStaffStatusReevaluationV1"
                 ? request.DirectoryEventId : request.AcceptanceEventId))
             return RefuseSource();
-        if (!directory.MatchesRetainedStatus(change) || !client.MatchesAcceptanceSource(original))
+        if (!directory.MatchesRetainedChange(change) || !client.MatchesAcceptanceSource(original))
+            return RefuseSource();
+        FirmStaffMemberView staff;
+        try
+        {
+            staff = await staffViews.ReadAsync(change, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException)
+        {
+            return RefuseSource();
+        }
+
+        if (staff.StaffMemberId != request.StaffMemberId || staff.UserId != request.UserId)
             return RefuseSource();
         if (!await tenants.IsActiveAsync(request.TenantId, ct).ConfigureAwait(false))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The owning client is inactive; reconciliation remains pending.", isTransient: true));
-        var source = new DirectoryStatusSourceView(request.DirectoryEventId, change.RequestId,
-            change.ExpectedSequence + 1, directoryRecord.ResourceOffset, request.DirectoryPayloadSha256,
-            change.Staff.StaffMemberId, change.Staff.UserId, change.Staff.Practice,
-            change.Staff.Revision, change.Staff.IsActive, change.Staff.RecordedAt);
+        var source = new DirectoryStatusSourceView(request.DirectoryEventId, change.OperationId,
+            (long)change.Revision, directoryRecord.ResourceOffset, request.DirectoryPayloadSha256,
+            staff.StaffMemberId, staff.UserId, staff.Practice, staff.Revision, staff.IsActive, staff.RecordedAt);
         return await executor.ExecuteAsync(new IndependenceLedger(request.TenantId), ledger =>
         {
             var result = ledger.RecordDirectoryReevaluation(source, original,

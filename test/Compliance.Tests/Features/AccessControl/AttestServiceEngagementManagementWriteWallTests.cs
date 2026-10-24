@@ -64,14 +64,9 @@ public sealed class AttestServiceEngagementManagementWriteWallTests
         var historyTenant = historyBelongsToTenant ? Tenant : OtherTenant;
         var prior = await AttestAssignmentHistoryFixture.SeedAndReturnAsync(provider, historyTenant, User,
             revoked: true, practice);
-        await ProgramManagementServices.SeedAsync(provider, new FirmStaffDirectory(), directory =>
-        {
-            var staff = directory.Register(Uuid.CreateVersion4(), prior.StaffMemberId, User, prior.Practice,
-                "Synthetic staff directory source", 0,
-                ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic directory operator"), Now);
-            Assert.True(staff.IsSuccess, staff.Error?.Message);
-            return Result.Success;
-        });
+        await FirmStaffFacts.RegisterAsync(provider, prior.StaffMemberId, User, prior.Practice,
+            "Synthetic staff directory source",
+            ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic directory operator"), Now);
         var ledger = await ProgramManagementServices.HydrateAsync(provider, new IndependenceLedger(Tenant));
         await using var scope = provider.CreateAsyncScope();
         var engagementId = Uuid.CreateVersion4();

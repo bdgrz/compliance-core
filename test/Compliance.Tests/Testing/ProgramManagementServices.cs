@@ -1,5 +1,10 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Programs;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -28,6 +33,10 @@ static class ProgramManagementServices
         collection.AddSingleton<ITenantActivity, ActiveTenant>();
         collection.AddSingleton<ITenantMembershipDirectoryReader, AlwaysMemberDirectory>();
         collection.AddSingleton(TimeProvider.System);
+        collection.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+            new PersistenceKvClient(new InMemoryKvClient())));
+        collection.AddScoped<FirmStaffViews>();
+        collection.AddScoped<NativeOperationExecutor>();
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });

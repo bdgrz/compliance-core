@@ -5,7 +5,7 @@ using Bdgrz.Compliance.Features.UserIdentities;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 sealed class AcceptServiceEngagementHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IServiceEngagementAcceptanceEvidenceReader evidenceReader,
+    IAggregateReader reader, FirmStaffViews staffViews, IServiceEngagementAcceptanceEvidenceReader evidenceReader,
     IPlatformUserDirectoryReader platformUsers, ITenantActivity tenants,
     ProfessionalDutyAuthorityReader duties, CurrentRatifiedIndependenceRulesReader rulesReader,
     TimeProvider clock)
@@ -64,18 +64,19 @@ sealed class AcceptServiceEngagementHandler(IAggregateExecutor executor,
             return Result<ServiceEngagementAcceptanceView>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Only the currently designated partner may accept this engagement."));
 
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
-        var currentDirectoryStaff = directory.View().Staff;
-        var identities = currentDirectoryStaff.Where(staff => staff.UserId == actorUserId).ToArray();
-        if (identities.Length != 1 || !identities[0].IsActive || identities[0] != currentPartner ||
+        var identity = await staffViews.FindByUserAsync(actorUserId, ct).ConfigureAwait(false);
+        if (identity is not { IsActive: true } || identity != currentPartner ||
             proof.PartnerStaffMemberId != currentPartner.StaffMemberId || proof.PartnerDutyRevision <= 0)
             return Result<ServiceEngagementAcceptanceView>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The partner identity or directory source changed; reload before accepting this engagement.", true));
 
-        if (proof.CurrentStaff is null || proof.CurrentStaff.Any(assigned =>
-                !MatchesCurrentDirectoryAssignment(assigned, currentDirectoryStaff)))
+        if (proof.CurrentStaff is null)
             return Result<ServiceEngagementAcceptanceView>.Failure(new RequestError(RequestErrorKind.Conflict,
                 "An assigned team member no longer matches the same active current directory record; acceptance was not recorded.", true));
+        foreach (var assigned in proof.CurrentStaff)
+            if (!await MatchesCurrentAssignmentAsync(assigned, ct).ConfigureAwait(false))
+                return Result<ServiceEngagementAcceptanceView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "An assigned team member no longer matches the same active current directory record; acceptance was not recorded.", true));
 
         var activeRules = await rulesReader.ReadActiveAsync(ct).ConfigureAwait(false);
         if (activeRules is null || activeRules.Version != current.RatifiedRules.Version ||
@@ -96,15 +97,7 @@ sealed class AcceptServiceEngagementHandler(IAggregateExecutor executor,
             .ConfigureAwait(false);
     }
 
-    static bool MatchesCurrentDirectoryAssignment(FirmStaffMemberView? assigned,
-        IReadOnlyList<FirmStaffMemberView> currentDirectoryStaff)
-    {
-        if (assigned is null)
-            return false;
-
-        var matches = currentDirectoryStaff.Where(directoryStaff =>
-            directoryStaff.StaffMemberId == assigned.StaffMemberId || directoryStaff.UserId == assigned.UserId)
-            .ToArray();
-        return matches.Length == 1 && matches[0].IsActive && matches[0] == assigned;
-    }
+    async ValueTask<bool> MatchesCurrentAssignmentAsync(FirmStaffMemberView? assigned, CancellationToken ct) =>
+        assigned is not null && await staffViews.GetAsync(assigned.StaffMemberId, ct).ConfigureAwait(false)
+            is { IsActive: true } current && current == assigned;
 }

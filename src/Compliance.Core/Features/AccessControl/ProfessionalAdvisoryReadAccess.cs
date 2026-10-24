@@ -7,7 +7,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Checks the existing accepted assignment path for advisory-note reads.</summary>
-sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActivity tenants,
+sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, FirmStaffViews staffViews, ITenantActivity tenants,
     IProgramResourceScopeResolver programScopes, TimeProvider clock,
     ITenantMembershipDirectoryReader memberships,
     IAccessGrantPermissionAuthorizer scopedPermissions)
@@ -21,13 +21,10 @@ sealed class ProfessionalAdvisoryReadAccess(IAggregateReader reader, ITenantActi
             !await programScopes.IsTenantProgramAsync(tenantId, programId, ct).ConfigureAwait(false))
             return false;
 
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
-        var identities = directory.View().Staff.Where(staff => staff.UserId == userId).ToArray();
-        if (identities.Length != 1 || !identities[0].IsActive || identities[0].Practice != "advisory" ||
-            identities[0].StaffMemberId == Uuid.Empty || identities[0].Revision <= 0)
+        if (await staffViews.FindByUserAsync(userId, ct).ConfigureAwait(false) is not { IsActive: true, Practice: "advisory" } staff ||
+            staff.StaffMemberId == Uuid.Empty || staff.Revision <= 0)
             return false;
 
-        var staff = identities[0];
         var ledger = await reader.HydrateAsync(new IndependenceLedger(tenantId), ct).ConfigureAwait(false);
         var effectiveAt = clock.GetUtcNow();
         foreach (var engagement in ledger.Engagements)

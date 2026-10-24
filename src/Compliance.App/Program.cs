@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.UserIdentities;
 using Cntryl.Portia;
@@ -630,12 +631,22 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Criteria");
-    app.MapPortiaPut<RegisterFirmStaff, FirmStaffMemberView>(
-            "/api/v1/platform/firm-staff/{staff_member_id}")
+    app.MapPortiaPut<RegisterFirmStaff, OperationAcceptedResponse>(
+            "/api/v1/platform/firm-staff/{staff_member_id}/register-firm-staff",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
     app.MapPortiaPut<SetFirmStaffStatus, FirmStaffMemberView>(
-            "/api/v1/platform/firm-staff/{staff_member_id}/status")
+            "/api/v1/platform/firm-staff/{staff_member_id}/set-firm-staff-status/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
     app.MapPortiaPut<RecordFirmProfessionalDutyDesignation, FirmProfessionalDutyDesignationView>(

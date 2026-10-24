@@ -17,6 +17,7 @@ public static class ResultSchemaRegistry
         ["operation-status-response.v1"] = ComplianceCoreJsonContext.Default.OperationStatusResponse,
         ["mutation-result-content.v1"] = ComplianceCoreJsonContext.Default.MutationResultContent,
         [AdministratorTransitionResponse.Schema] = ComplianceCoreJsonContext.Default.AdministratorTransitionResponse,
+        ["FirmStaffChangeRecorded.StaffContent.v1"] = ComplianceCoreJsonContext.Default.FirmStaffMemberView,
     };
 
     /// <summary>Registered schema names.</summary>

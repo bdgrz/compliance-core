@@ -5,7 +5,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 sealed class AssignServiceEngagementStaffHandler(IAggregateExecutor executor, IAggregateReader reader,
-    ProfessionalDutyAuthorityReader duties, ITenantActivity tenants,
+    FirmStaffViews staffViews, ProfessionalDutyAuthorityReader duties, ITenantActivity tenants,
     IPlatformUserDirectoryReader platformUsers, TimeProvider clock)
     : IRequestHandler<AssignServiceEngagementStaff, ServiceEngagementAcceptanceView>
 {
@@ -41,9 +41,7 @@ sealed class AssignServiceEngagementStaffHandler(IAggregateExecutor executor, IA
             return Refuse(RequestErrorKind.Forbidden,
                 "The actor no longer has a current partner designation for this client.");
 
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
-        var matches = directory.View().Staff.Where(staff => staff.StaffMemberId == request.StaffMemberId).ToArray();
-        if (matches is not [{ IsActive: true } staff] ||
+        if (await staffViews.GetAsync(request.StaffMemberId, ct).ConfigureAwait(false) is not { IsActive: true } staff ||
             staff.Practice != engagement.Content.Practice ||
             !await platformUsers.ExistsAsync(staff.UserId, ct).ConfigureAwait(false))
             return Refuse(RequestErrorKind.Conflict,
@@ -51,12 +49,10 @@ sealed class AssignServiceEngagementStaffHandler(IAggregateExecutor executor, IA
 
         var confirmedPartner = await duties.ReadCurrentAsync(actorUserId,
             FirmProfessionalDuty.EngagementPartner, request.TenantId, ct).ConfigureAwait(false);
-        var confirmedDirectory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
-        var confirmedStaff = confirmedDirectory.View().Staff.Where(item =>
-            item.StaffMemberId == request.StaffMemberId).ToArray();
+        var confirmedStaff = await staffViews.GetAsync(request.StaffMemberId, ct).ConfigureAwait(false);
         var confirmedLedger = await reader.HydrateAsync(new IndependenceLedger(request.TenantId), ct)
             .ConfigureAwait(false);
-        if (confirmedPartner != currentPartner || confirmedStaff is not [{ IsActive: true } current] ||
+        if (confirmedPartner != currentPartner || confirmedStaff is not { IsActive: true } current ||
             current != staff ||
             !await tenants.IsActiveAsync(request.TenantId, ct).ConfigureAwait(false) ||
             !await platformUsers.ExistsAsync(actorUserId, ct).ConfigureAwait(false) ||

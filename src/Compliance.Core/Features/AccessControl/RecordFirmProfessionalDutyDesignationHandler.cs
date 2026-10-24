@@ -3,7 +3,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 sealed class RecordFirmProfessionalDutyDesignationHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IPlatformUserDirectoryReader users,
+    FirmStaffViews staffViews, IPlatformUserDirectoryReader users,
     IFirmProfessionalDutyAssertionVerifier assertions, TimeProvider clock)
     : IRequestHandler<RecordFirmProfessionalDutyDesignation, FirmProfessionalDutyDesignationView>
 {
@@ -16,9 +16,7 @@ sealed class RecordFirmProfessionalDutyDesignationHandler(IAggregateExecutor exe
             evidence.Status != "active" || evidence.DesignationId != request.DesignationId)
             return Failure(RequestErrorKind.Forbidden,
                 "A valid, current signed active-duty assertion from the configured issuer is required.");
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
-        var staffMatches = directory.View().Staff.Where(item => item.UserId == evidence.UserId).ToArray();
-        if (staffMatches is not [{ IsActive: true } staff])
+        if (await staffViews.FindByUserAsync(evidence.UserId, ct).ConfigureAwait(false) is not { IsActive: true } staff)
             return Failure(RequestErrorKind.Conflict,
                 "The firm-staff identity is missing or inactive; reload before designating a professional duty.", true);
         if (!await users.ExistsAsync(staff.UserId, ct).ConfigureAwait(false))

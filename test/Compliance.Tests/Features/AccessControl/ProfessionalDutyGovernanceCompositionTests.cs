@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.Configuration;
@@ -24,8 +26,8 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var http = new RequestDispatchContext(Actor,
             new HttpInvocation("PUT", "/synthetic/duty", "/synthetic/duty", "synthetic"));
-        var staffRegistered = await bus.SendAsync(new RegisterFirmStaff(Staff, User, "attest",
-            "Synthetic staff source", 0), Actor);
+        var staffRegistered = await FirmStaffFacts.RegisterThroughProcessAsync(provider, Actor,
+            new RegisterFirmStaff(Staff, User, "attest", "Synthetic staff source", 0));
         Assert.True(staffRegistered.IsSuccess, staffRegistered.Error?.Message);
         var noDesignation = await bus.DispatchAsync(new RatifyIndependenceRuleVersion(Uuid.CreateVersion4(),
             1, 1, 0, new string('a', 64), "Synthetic ratification source"), http, CancellationToken.None);
@@ -66,8 +68,8 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var duties = scope.ServiceProvider.GetRequiredService<ProfessionalDutyAuthorityReader>();
         var http = new RequestDispatchContext(Actor,
             new HttpInvocation("PUT", "/synthetic/duty", "/synthetic/duty", "synthetic"));
-        var staffRegistered = await bus.SendAsync(new RegisterFirmStaff(Staff, User, "attest",
-            "Synthetic staff source", 0), Actor);
+        var staffRegistered = await FirmStaffFacts.RegisterThroughProcessAsync(provider, Actor,
+            new RegisterFirmStaff(Staff, User, "attest", "Synthetic staff source", 0));
         Assert.True(staffRegistered.IsSuccess, staffRegistered.Error?.Message);
         var designationId = Uuid.CreateVersion4();
         var issuedAt = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds()).AddMinutes(-1);
@@ -225,23 +227,13 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         await using var scope = provider.CreateAsyncScope();
         var source = await SeedRatifiedRulesAsync(scope.ServiceProvider, at, at.AddMinutes(59));
         Assert.NotNull(await source.RulesReader.ReadActiveAsync(CancellationToken.None));
-        var directoryExecutor = source.Executor;
 
         // Act
         var deactivatedAt = at.AddMinutes(1);
-        var deactivated = await directoryExecutor.ExecuteAsync(new FirmStaffDirectory(), directory =>
-            AggregateOutcome.CommitOnSuccess(directory.SetStatus(Uuid.CreateVersion4(), Staff, false,
-                "Synthetic deactivation", directory.Sequence, source.OperatorActor, deactivatedAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(deactivated.IsSuccess, deactivated.Error?.Message);
+        await FirmStaffFacts.SetStatusAsync(provider, Staff, false, "Synthetic deactivation", deactivatedAt);
         var reactivatedAt = at.AddMinutes(2);
-        var reactivated = await directoryExecutor.ExecuteAsync(new FirmStaffDirectory(), directory =>
-            AggregateOutcome.CommitOnSuccess(directory.SetStatus(Uuid.CreateVersion4(), Staff, true,
-                "Synthetic reactivation", directory.Sequence, source.OperatorActor, reactivatedAt)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(reactivated.IsSuccess, reactivated.Error?.Message);
-        var updatedStaff = (await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new FirmStaffDirectory(), CancellationToken.None)).Get(Staff)!;
+        var updatedStaff = await FirmStaffFacts.SetStatusAsync(provider, Staff, true, "Synthetic reactivation",
+            reactivatedAt);
         clock.UtcNow = reactivatedAt;
         var dutyBeforeRenewal = await scope.ServiceProvider.GetRequiredService<ProfessionalDutyAuthorityReader>()
             .ReadCurrentAsync(User, FirmProfessionalDuty.RuleRatifier, null, CancellationToken.None);
@@ -273,12 +265,8 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var operatorActor = ActorReference.ForPlatformOperator(User, "Synthetic operator");
-        var seededStaff = await executor.ExecuteAsync(new FirmStaffDirectory(), directory =>
-            AggregateOutcome.CommitOnSuccess(directory.Register(Uuid.CreateVersion4(), Staff, User, "attest",
-                "Synthetic staff source", directory.Sequence, operatorActor, Now)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(seededStaff.IsSuccess, seededStaff.Error?.Message);
-        var staff = (await reader.HydrateAsync(new FirmStaffDirectory(), CancellationToken.None)).Get(Staff)!;
+        var staff = await FirmStaffFacts.RegisterAsync(provider, Staff, User, "attest", "Synthetic staff source",
+            operatorActor, Now);
         var designationId = Uuid.CreateVersion4();
         var assertion = ProfessionalDutyAssertionTestIssuer.Issue(designationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 1, "active", null, Now, Now.AddHours(1));
@@ -340,12 +328,8 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var executor = services.GetRequiredService<IAggregateExecutor>();
         var reader = services.GetRequiredService<IAggregateReader>();
         var operatorActor = ActorReference.ForPlatformOperator(User, "Synthetic operator");
-        var seededStaff = await executor.ExecuteAsync(new FirmStaffDirectory(), directory =>
-            AggregateOutcome.CommitOnSuccess(directory.Register(Uuid.CreateVersion4(), Staff, User, "attest",
-                "Synthetic staff source", directory.Sequence, operatorActor, at)),
-            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
-        Assert.True(seededStaff.IsSuccess, seededStaff.Error?.Message);
-        var staff = (await reader.HydrateAsync(new FirmStaffDirectory(), CancellationToken.None)).Get(Staff)!;
+        var staff = await FirmStaffFacts.RegisterAsync(services, Staff, User, "attest", "Synthetic staff source",
+            operatorActor, at);
         var designationId = Uuid.CreateVersion4();
         var assertion = ProfessionalDutyAssertionTestIssuer.Issue(designationId, User,
             FirmProfessionalDuty.RuleRatifier, null, 1, "active", null, at, expiresAt);
@@ -384,6 +368,7 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(configurationValues).Build();
         services.AddCompliance(configuration, developerAuthentication: true);
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPlatformOperatorAccess>(new OperatorAccess(true));
         services.AddSingleton<IPlatformUserDirectoryReader>(new UserDirectory());
         if (clock is not null)

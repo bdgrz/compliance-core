@@ -1753,7 +1753,8 @@ These 140 requirement-backed event contracts have been added since the existing-
 #### AccessControl
 
 - [AccessGrant](../../src/Compliance.Core/Features/AccessControl/AccessGrant.cs#L5)
-- [FirmStaffDirectory](../../src/Compliance.Core/Features/AccessControl/FirmStaffDirectory.cs#L8)
+- [FirmStaffRecord](../../src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs#L12)
+- [FirmStaffIdentityClaim](../../src/Compliance.Core/Features/AccessControl/FirmStaffIdentityClaim.cs#L11)
 - [FirmProfessionalDutyCatalog](../../src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs#L10)
 - [IndependenceLedger](../../src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs#L7)
 - [IndependenceRuleRatificationCatalog](../../src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs#L8)
@@ -2913,8 +2914,8 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries` | `ListCriteriaCatalogEntries` | [registration](../../src/Compliance.App/Program.cs#L612) |
 | GET | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/export` | `ExportCriteriaCatalogEntries` | [registration](../../src/Compliance.App/Program.cs#L616) |
 | GET | `/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/entries/{identifier}` | `GetCriteriaCatalogEntry` | [registration](../../src/Compliance.App/Program.cs#L620) |
-| PUT | `/api/v1/platform/firm-staff/{staff_member_id}` | `RegisterFirmStaff` | [registration](../../src/Compliance.App/Program.cs#L624) |
-| PUT | `/api/v1/platform/firm-staff/{staff_member_id}/status` | `SetFirmStaffStatus` | [registration](../../src/Compliance.App/Program.cs#L628) |
+| PUT | `/api/v1/platform/firm-staff/{staff_member_id}/register-firm-staff` | `RegisterFirmStaff` | [registration](../../src/Compliance.App/Program.cs#L624) |
+| PUT | `/api/v1/platform/firm-staff/{staff_member_id}/set-firm-staff-status/{command_id}` | `SetFirmStaffStatus` | [registration](../../src/Compliance.App/Program.cs#L628) |
 | PUT | `/api/v1/platform/firm-professional-duties/{designation_id}` | `RecordFirmProfessionalDutyDesignation` | [registration](../../src/Compliance.App/Program.cs#L632) |
 | POST | `/api/v1/platform/firm-professional-duties/{designation_id}/revocation` | `RevokeFirmProfessionalDutyDesignation` | [registration](../../src/Compliance.App/Program.cs#L636) |
 | GET | `/api/v1/platform/firm-professional-duties` | `GetFirmProfessionalDutyCatalog` | [registration](../../src/Compliance.App/Program.cs#L640) |

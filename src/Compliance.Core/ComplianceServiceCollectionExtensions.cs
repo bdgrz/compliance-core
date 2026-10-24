@@ -665,6 +665,14 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ProcessRootReaction>();
         // ProcessSweep is a hosted service of the worker roles (AddWorkers); it resumes overdue process records.
         services.AddSingleton(AdministratorTransitionProcess.Definition);
+        services.AddSingleton(FirmStaffRegistrationProcess.Definition());
+        services.AddScoped<FirmStaffViews>();
+        services.AddScoped<FirmStaffRegistrationReceivers>();
+        services.AddScoped<FitzFirmStaffDirectory>();
+        services.AddScoped<IFirmStaffDirectoryProjection>(
+            provider => provider.GetRequiredService<FitzFirmStaffDirectory>());
+        services.AddScoped<IFirmStaffDirectoryReader>(
+            provider => provider.GetRequiredService<FitzFirmStaffDirectory>());
         // ISourceFactResolver cannot be resolved by the production container until Portia publishes the shared
         // connection's IStreamClient (AddStreamClient, Portia 0.9.1); the registration is lazy, so nothing resolves
         // it before then and the pin bump makes the receivers and the process factory work without further changes.
@@ -722,6 +730,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RecordDirectoryIndependenceReevaluationHandler>()
             .AddRequestHandler<RegisterFirmStaffHandler>()
             .AddRequestHandler<SetFirmStaffStatusHandler>()
+            .AddRequestHandler<ClaimFirmStaffIdentityHandler>()
+            .AddRequestHandler<CompleteFirmStaffRegistrationHandler>()
+            .AddRequestHandler<RejectFirmStaffRegistrationHandler>()
             .AddRequestHandler<GetFirmStaffDirectoryHandler>()
             .AddRequestHandler<RecordFirmProfessionalDutyDesignationHandler>()
             .AddRequestHandler<RevokeFirmProfessionalDutyDesignationHandler>()
@@ -746,6 +757,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<IndependenceRuleRatificationAuthorizer>()
             .AddRequestAuthorizer<ProfessionalEngagementPartnerAuthorizer>()
             .AddRequestAuthorizer<FirmStaffAdministrationAuthorizer>()
+            .AddRequestAuthorizer<FirmStaffRegistrationReceiverAuthorizer>()
             .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
             .AddRequestAuthorizer<ServiceEngagementAcceptanceAuthorizer>()
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
@@ -1380,6 +1392,8 @@ public static class ComplianceServiceCollectionExtensions
                     options.MaximumFailureDelay = TimeSpan.FromSeconds(2);
                     options.FailureAttemptLimit = TenantActivationPolicy.WorkloadFailureAttemptLimit;
                 })
+            .AddReactor<FirmStaffRegistrationReactor>(FirmStaffRegistrationReactor.WorkloadName, WorkloadScope.Global,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<AcceptedStaffDirectoryReconciliationReactor>(AcceptedStaffDirectoryReconciliationReactor.WorkloadName, WorkloadScope.PerTenant,
@@ -1427,6 +1441,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<RolePermissionDirectoryProjector>("RolePermissionDirectory", WorkloadScope.PerTenant)
             .AddProjector<RoleTeamDirectoryProjector>("RoleTeamDirectory", WorkloadScope.PerTenant)
             .AddProjector<TeamRoleDirectoryProjector>("TeamRoleDirectory", WorkloadScope.PerTenant)
+            .AddProjector<FirmStaffDirectoryProjector>(FitzFirmStaffDirectory.ProjectorName, WorkloadScope.Global)
             .AddProjector<TenantDirectoryProjector>("TenantDirectory", WorkloadScope.Global)
             .AddProjector<TenantMembershipProjector>("TenantMembership", WorkloadScope.PerTenant)
             .AddProjector<TenantInvitationDirectoryProjector>("TenantInvitationDirectory",

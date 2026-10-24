@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.Configuration;
@@ -98,10 +100,12 @@ public sealed class FirmOperationsCompositionTests
         var http = new RequestDispatchContext(Actor, new HttpInvocation("POST", "/synthetic", "/synthetic", "synthetic"));
 
         // Act
-        Assert.True((await bus.SendAsync(new RegisterFirmStaff(lead, Uuid.CreateVersion4(), "attest", "Synthetic staff source", 0), Actor)).IsSuccess);
-        Assert.True((await bus.SendAsync(new RegisterFirmStaff(other, Uuid.CreateVersion4(), "attest", "Synthetic staff source", 1), Actor)).IsSuccess);
-        Assert.True((await bus.SendAsync(new SetFirmStaffStatus(other, false, "Synthetic disable", 2), Actor)).IsSuccess);
-        Assert.True((await bus.SendAsync(new SetFirmStaffStatus(other, true, "Synthetic enable", 3), Actor)).IsSuccess);
+        Assert.True((await FirmStaffFacts.RegisterThroughProcessAsync(provider, Actor,
+            new RegisterFirmStaff(lead, Uuid.CreateVersion4(), "attest", "Synthetic staff source", 0))).IsSuccess);
+        Assert.True((await FirmStaffFacts.RegisterThroughProcessAsync(provider, Actor,
+            new RegisterFirmStaff(other, Uuid.CreateVersion4(), "attest", "Synthetic staff source", 0))).IsSuccess);
+        Assert.True((await bus.SendAsync(new SetFirmStaffStatus(Uuid.CreateVersion4(), other, false, "Synthetic disable", 1), Actor)).IsSuccess);
+        Assert.True((await bus.SendAsync(new SetFirmStaffStatus(Uuid.CreateVersion4(), other, true, "Synthetic enable", 2), Actor)).IsSuccess);
         Assert.True((await bus.SendAsync(new ReviseIndependenceRules(0, new IndependenceRuleContent(12,
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")], "Synthetic rule source")), Actor)).IsSuccess);
         Assert.True((await bus.SendAsync(new CreateServiceEngagement(Tenant, engagement, 0, content), Actor)).IsSuccess);
@@ -115,6 +119,7 @@ public sealed class FirmOperationsCompositionTests
         Assert.True((await bus.SendAsync(new WithdrawServiceEngagementStaffProposal(Tenant, engagement, other, 6,
             "Synthetic withdrawal"), Actor)).IsSuccess);
         Assert.True((await bus.SendAsync(new CloseServiceEngagement(Tenant, engagement, 7, "Synthetic cancellation"), Actor)).IsSuccess);
+        await FirmStaffFacts.ProjectDirectoryAsync(provider);
         var directory = await bus.SendAsync(new GetFirmStaffDirectory(), Actor);
         var roster = await bus.SendAsync(new ListAssignableFirmStaff(Tenant), Actor);
         var rules = await bus.SendAsync(new GetIndependenceRuleVersions(), Actor);
@@ -155,6 +160,7 @@ public sealed class FirmOperationsCompositionTests
         }).Build();
         services.AddCompliance(configuration, developerAuthentication: true);
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(permitted));
         services.AddSingleton<ITenantActivity>(new ActiveTenant());
         services.AddSingleton<ITenantMembershipDirectoryReader>(new OwningMembershipDirectory(member, affiliation));

@@ -3,7 +3,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessControl;
 
 /// <summary>Resolves professional authority only from explicit current duty evidence and the active canonical directory.</summary>
-sealed class ProfessionalDutyAuthorityReader(IAggregateReader reader,
+sealed class ProfessionalDutyAuthorityReader(IAggregateReader reader, FirmStaffViews staffViews,
     IPlatformUserDirectoryReader users, IFirmProfessionalDutyAssertionVerifier assertions, TimeProvider clock)
 {
     public async ValueTask<CurrentProfessionalDuty?> ReadCurrentAsync(Uuid userId, string duty,
@@ -11,9 +11,7 @@ sealed class ProfessionalDutyAuthorityReader(IAggregateReader reader,
     {
         if (userId == Uuid.Empty || !await users.ExistsAsync(userId, ct).ConfigureAwait(false))
             return null;
-        var directory = await reader.HydrateAsync(new FirmStaffDirectory(), ct).ConfigureAwait(false);
-        var identities = directory.View().Staff.Where(item => item.UserId == userId).ToArray();
-        if (identities is not [{ IsActive: true } staff])
+        if (await staffViews.FindByUserAsync(userId, ct).ConfigureAwait(false) is not { IsActive: true } staff)
             return null;
         var catalog = await reader.HydrateAsync(new FirmProfessionalDutyCatalog(), ct).ConfigureAwait(false);
         var now = clock.GetUtcNow();
