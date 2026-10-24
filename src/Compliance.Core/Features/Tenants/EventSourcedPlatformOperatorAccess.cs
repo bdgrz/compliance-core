@@ -1,9 +1,10 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
 sealed class EventSourcedPlatformOperatorAccess(IAggregateReader reader,
-    PlatformOperatorAuthority configuration) : IPlatformOperatorAccess
+    PlatformOperatorAuthority configuration, IImmutableContentStore content) : IPlatformOperatorAccess
 {
     public async ValueTask<bool> IsOperatorAsync(Uuid userId, CancellationToken ct = default)
     {
@@ -12,6 +13,7 @@ sealed class EventSourcedPlatformOperatorAccess(IAggregateReader reader,
         if (configuration.DeveloperAuthentication)
             return true;
         var roster = await reader.HydrateAsync(new PlatformOperatorRoster(), ct).ConfigureAwait(false);
-        return roster.IsOperator(userId);
+        var authority = await PlatformOperatorRosterContent.ReadAsync(content, roster, ct).ConfigureAwait(false);
+        return authority.Operators.Any(entry => entry.UserId == userId);
     }
 }

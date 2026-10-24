@@ -1,5 +1,12 @@
 using System.Globalization;
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Tests.Hosting.Persistence;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -36,8 +43,7 @@ public sealed class PlatformOperatorRosterTests
 
         // Act
         var result = await bus.DispatchAsync(grant, bus.CreateContext(Actor(First), identity));
-        var roster = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new PlatformOperatorRoster());
+        var roster = await ReadRosterAsync(scope.ServiceProvider);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -217,7 +223,7 @@ public sealed class PlatformOperatorRosterTests
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var grant = new GrantPlatformOperator(Second, "Cover operations", Uuid.CreateVersion4(), 1);
         Assert.True((await bus.SendAsync(grant, Actor(First))).IsSuccess);
-        var roster = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperatorRoster());
+        var roster = await ReadRosterAsync(scope.ServiceProvider);
         Assert.True((await bus.SendAsync(new RevokePlatformOperator(First, "Handed over", Uuid.CreateVersion4(), 2,
             roster.AssignmentId(First)!.Value), Actor(Third))).IsSuccess);
 
@@ -289,11 +295,10 @@ public sealed class PlatformOperatorRosterTests
         await using var provider = EventPersistenceFrameTests.Compose();
         var serializer = provider.GetRequiredService<IDomainEventSerializer>();
         var id = Uuid.CreateVersion4();
-        var owner = new PlatformOperatorRoster(id);
-        var facts = new DomainEvent[] { Seeded(First), Granted(id), Revoked(Uuid.CreateVersion4(), id) };
-        var restored = facts.Select((fact, index) => serializer.Deserialize(serializer.Serialize(
-            DomainEventSeed.Attach(fact, owner.Id, (ulong)index + 1)))).ToArray();
-        var scenario = new AggregateScenario<PlatformOperatorRoster>(owner).Given(restored);
+        var native = Given(id, Seeded(First), Granted(id), Revoked(Uuid.CreateVersion4(), id));
+        var restored = native.Facts.Select(fact => serializer.Deserialize(serializer.Serialize(fact))).ToArray();
+        var scenario = RosterFixture.Restore(id, restored, native.State);
+        var owner = scenario.Aggregate;
 
         // Act
         var result = owner.Grant(id, 1, First, Second, "Cover operations", Provenance(First), Now);
@@ -329,16 +334,15 @@ public sealed class PlatformOperatorRosterTests
         await using var provider = Services(store: store);
         await SeedAsync(provider, First, Second);
         await using var scope = provider.CreateAsyncScope();
-        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-        var initial = await reader.HydrateAsync(new PlatformOperatorRoster());
+        var initial = await ReadRosterAsync(scope.ServiceProvider);
 
         // Act
         var results = await Task.WhenAll(RevokeAsync(First, Second), RevokeAsync(Second, First));
-        var current = await reader.HydrateAsync(new PlatformOperatorRoster());
+        var current = await ReadRosterAsync(scope.ServiceProvider);
 
         // Assert
         Assert.Single(results, result => result.IsSuccess);
-        Assert.Equal(RequestErrorKind.Conflict, Assert.Single(results, result => !result.IsSuccess).Error!.Kind);
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.Single(results, result => !result.IsSuccess).Error!.Kind);
         Assert.Single(current.Operators);
         Assert.Equal(2UL, current.Version);
 
@@ -371,7 +375,7 @@ public sealed class PlatformOperatorRosterTests
         // Act
         await Task.WhenAll(firstHost.StartAsync(CancellationToken.None), secondHost.StartAsync(CancellationToken.None));
         await using var scope = provider.CreateAsyncScope();
-        var roster = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperatorRoster());
+        var roster = await ReadRosterAsync(scope.ServiceProvider);
 
         // Assert
         Assert.Equal(1UL, roster.Version);
@@ -390,7 +394,7 @@ public sealed class PlatformOperatorRosterTests
         // Act
         await host.StartAsync(CancellationToken.None);
         await using var scope = provider.CreateAsyncScope();
-        var roster = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperatorRoster());
+        var roster = await ReadRosterAsync(scope.ServiceProvider);
 
         // Assert
         Assert.Equal(1UL, roster.Version);
@@ -438,7 +442,7 @@ public sealed class PlatformOperatorRosterTests
 
         // Act
         var retry = await bus.SendAsync(command, actor);
-        var current = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperatorRoster());
+        var current = await ReadRosterAsync(scope.ServiceProvider);
 
         // Assert
         Assert.True(retry.IsSuccess);
@@ -448,11 +452,190 @@ public sealed class PlatformOperatorRosterTests
             Assert.Equal(next, current.AssignmentId(Second));
     }
 
-    static ServiceProvider Services(ExistingUsers? users = null, IEventStore? store = null)
+    [Fact]
+    public async Task ShouldKeepAcceptingFactBoundedGivenLargeLegalBootstrapRoster()
+    {
+        // Arrange
+        await using var provider = Services();
+        var users = Enumerable.Range(0, 4096).Select(_ => Uuid.CreateVersion4()).ToArray();
+        await using var scope = provider.CreateAsyncScope();
+
+        // Act
+        var accepted = await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(
+            new SeedPlatformOperatorRoster(PlatformOperatorRoster.CreationId, users), RequestActor.System);
+        var facts = new List<DomainEvent>();
+        var stream = new PlatformOperatorRoster().Stream;
+        await foreach (var record in provider.GetRequiredService<IEventStore>().ReadAsync(stream, 0))
+            facts.Add(record.Event);
+
+        // Assert
+        Assert.True(accepted.IsSuccess);
+        var fact = Assert.IsType<PlatformOperatorRosterSeeded>(Assert.Single(facts));
+        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(fact, ComplianceCoreJsonContext.Default.PlatformOperatorRosterSeeded);
+        Assert.True(bytes.Length <= 48 * 1024, $"The legal bootstrap roster emitted {bytes.Length} event payload bytes.");
+    }
+
+    [Fact]
+    public async Task ShouldRetainOriginalNativeUnitResultGivenExactRetryAfterLaterProgress()
+    {
+        // Arrange
+        await using var provider = Services();
+        await SeedAsync(provider, First);
+        await using var scope = provider.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var request = new GrantPlatformOperator(Second, " Cover operations ", Uuid.CreateVersion4(), 1);
+        Assert.True((await bus.SendAsync(request, Actor(First))).IsSuccess);
+        var original = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new PlatformOperatorRoster(request.CommandId));
+        var accepted = Assert.IsType<PlatformOperatorGranted>(original.Acceptance.SelectedFact);
+        var content = provider.GetRequiredService<IImmutableContentStore>();
+        var descriptor = await FirstResponses.ReplayAsync(content, "bdgrz", accepted.FirstResponse!);
+        var body = Assert.IsType<StandardResponseBody>(descriptor.Body);
+        var bytes = await content.ReadVerifiedAsync("bdgrz", body.Content);
+        Assert.True((await bus.SendAsync(new RevokePlatformOperator(Second, "Ended", Uuid.CreateVersion4(), 2,
+            request.CommandId), Actor(First))).IsSuccess);
+        var displayChanged = Actor(First);
+        ((ClaimsIdentity)displayChanged.Identity!).AddClaim(new Claim("email", "updated@example.test"));
+
+        // Act
+        var retry = await bus.SendAsync(request with { Reason = "Cover operations" }, displayChanged);
+        var current = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new PlatformOperatorRoster(request.CommandId));
+        var history = await PlatformOperatorRosterContent.ReadHistoryAsync(content,
+            provider.GetRequiredService<IEventStore>(), current);
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(accepted.FirstResponse, ((IPlatformOperatorFact)current.Acceptance.SelectedFact!).FirstResponse);
+        Assert.Equal(200, descriptor.HttpStatus);
+        Assert.Equal(UnitResult.Schema, descriptor.ResultSchema);
+        Assert.Equal(accepted.OperationResult, body.Content);
+        Assert.Equal("{}", System.Text.Encoding.UTF8.GetString(bytes.Span));
+        Assert.Equal(3, history.Count);
+        Assert.Equal(accepted.Operation.Actor, history[1].Actor);
+        Assert.False((await ReadRosterAsync(scope.ServiceProvider)).IsOperator(Second));
+    }
+
+    [Theory]
+    [InlineData("actor")]
+    [InlineData("issuer")]
+    [InlineData("subject")]
+    [InlineData("reason")]
+    [InlineData("revision")]
+    [InlineData("kind")]
+    public async Task ShouldConflictGivenChangedNativeBindingUnderAcceptedGrantIdentity(string change)
+    {
+        // Arrange
+        await using var provider = Services();
+        await SeedAsync(provider, First, Third);
+        await using var scope = provider.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var request = new GrantPlatformOperator(Second, "Cover operations", Uuid.CreateVersion4(), 1);
+        Assert.True((await bus.SendAsync(request, Actor(First))).IsSuccess);
+        var actor = change == "actor" ? Actor(Third) : change == "issuer" ? new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("iss", "bdgrz"), new Claim("sub", First.ToString(), ClaimValueTypes.String, "other")], "BdgrzSession")) : Actor(First);
+        IRequest candidate = change == "kind" ? new RevokePlatformOperator(Second, "Cover operations", request.CommandId, 1, request.CommandId) :
+            request with
+            {
+                UserId = change == "subject" ? Uuid.CreateVersion4() : Second,
+                Reason = change == "reason" ? "Changed" : request.Reason,
+                ExpectedRevision = change == "revision" ? 2UL : 1
+            };
+
+        // Act
+        var result = await bus.SendAsync(candidate, actor);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
+        Assert.Equal(2UL, (await ReadRosterAsync(scope.ServiceProvider)).Version);
+    }
+
+    [Theory]
+    [InlineData(PlatformOperatorRosterContent.AuthoritySchema)]
+    [InlineData(FirstResponses.Schema)]
+    [InlineData(UnitResult.Schema)]
+    public async Task ShouldFailClosedGivenUnavailableOriginalAuthorityOrResponseOnRetry(string schema)
+    {
+        // Arrange
+        var content = new RejectingContent(new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient())));
+        await using var provider = Services(content: content);
+        await SeedAsync(provider, First);
+        await using var scope = provider.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+        var request = new GrantPlatformOperator(Second, "Cover operations", Uuid.CreateVersion4(), 1);
+        Assert.True((await bus.SendAsync(request, Actor(First))).IsSuccess);
+        content.RejectedSchema = schema;
+
+        // Act
+        // Assert
+        await Assert.ThrowsAsync<ImmutableContentIntegrityException>(async () => await bus.SendAsync(request, Actor(First)));
+        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperatorRoster());
+        Assert.Equal(2UL, owner.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectChangedPreparedAuthorityGivenAnOtherwiseValidNativeAppend()
+    {
+        // Arrange
+        await using var provider = Services();
+        await SeedAsync(provider, First, Third);
+        await using var scope = provider.CreateAsyncScope();
+        var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperatorRoster());
+        var content = provider.GetRequiredService<IImmutableContentStore>();
+        var before = await PlatformOperatorRosterContent.ReadAsync(content, owner);
+        var id = Uuid.CreateVersion4();
+        var mutation = new PlatformOperatorMutationContent(nameof(GrantPlatformOperator), id, 1, First, Second, Uuid.Empty, [],
+            "Cover operations", Provenance(First), ActorReference.ForPlatformOperator(First, "One"), Now);
+        var after = PlatformOperatorRosterRules.Apply(before, mutation).Value!;
+        var authority = await content.WriteJsonAsync("bdgrz", Uuid.CreateVersion4(), PlatformOperatorRosterContent.AuthoritySchema, after);
+        var change = await content.WriteJsonAsync("bdgrz", Uuid.CreateVersion4(), PlatformOperatorRosterContent.ChangeSchema, mutation);
+        var response = await UnitResponses.FreezeAsync(content, "bdgrz");
+        var first = await FirstResponses.FreezeAsync(content, "bdgrz", response);
+        var operation = OwnerProvenance.For(owner, id, mutation.CommandKind, mutation.Actor, owner.Id.ToString(), 1,
+            PlatformOperatorRosterContent.IntentDigest(mutation), Now);
+        var fact = PlatformOperatorRosterContent.Fact(mutation, operation, change, authority, first,
+            ((StandardResponseBody)response.Body).Content, after);
+        var changedBefore = before with { Operators = [before.Operators[0]] };
+
+        // Act
+        var result = owner.Append(fact, owner.Revision, owner.CommittedStreamPosition, mutation, changedBefore, after, response);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind);
+        Assert.Equal(1UL, owner.Revision);
+    }
+
+    sealed class RejectingContent(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        public string? RejectedSchema { get; set; }
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
+            inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference, CancellationToken ct = default) =>
+            reference.Schema == RejectedSchema ? throw new ImmutableContentIntegrityException("Unavailable or corrupt immutable source.") :
+                inner.ReadVerifiedAsync(realm, reference, ct);
+    }
+
+    [Fact]
+    public void ShouldFailClosedGivenRetainedLegacyRosterWithoutTrustedNativeAuthority()
+    {
+        // Arrange
+        var owner = new PlatformOperatorRoster();
+        var legacy = DomainEventSeed.Attach(Seeded(First), owner.Id, 1);
+
+        // Act
+        // Assert
+        Assert.Throws<InvalidOperationException>(() => new AggregateScenario<PlatformOperatorRoster>(owner).Given(legacy));
+    }
+
+    static ServiceProvider Services(ExistingUsers? users = null, IEventStore? store = null, IImmutableContentStore? content = null)
     {
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(store ?? new InMemoryEventStore());
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IImmutableContentStore>(content ?? new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient())));
+        services.AddScoped<NativeOperationExecutor>();
+        services.AddScoped<PlatformOperatorRosterOperations>();
         services.AddSingleton(new PlatformOperatorAuthority([First]));
         services.AddScoped<IPlatformOperatorAccess, EventSourcedPlatformOperatorAccess>();
         services.AddSingleton<IPlatformUserDirectoryReader>(users ?? new ExistingUsers());
@@ -479,11 +662,120 @@ public sealed class PlatformOperatorRosterTests
         new(id, revision, First, Second, Provenance(First), Now, "Cover operations", "Operator One");
     static PlatformOperatorRevoked Revoked(Uuid id, Uuid assignment, ulong revision = 2) =>
         new(id, revision, First, Second, assignment, Provenance(First), Now, "Coverage ended", "Operator One");
-    static AggregateScenario<PlatformOperatorRoster> Given(Uuid selected, params DomainEvent[] facts)
+    static RosterFixture Given(Uuid selected, params DomainEvent[] facts) => RosterFixture.Create(selected, facts);
+
+    static async Task<RosterFixture> ReadRosterAsync(IServiceProvider services)
     {
-        var owner = new PlatformOperatorRoster(selected);
-        return new AggregateScenario<PlatformOperatorRoster>(owner).Given(facts.Select((fact, index) =>
-            DomainEventSeed.Attach(fact, owner.Id, (ulong)index + 1)).ToArray());
+        var owner = await services.GetRequiredService<IAggregateReader>().HydrateAsync(new PlatformOperatorRoster());
+        var state = await PlatformOperatorRosterContent.ReadAsync(services.GetRequiredService<IImmutableContentStore>(), owner);
+        return RosterFixture.Restore(Uuid.Empty, [], state, owner);
+    }
+
+    /// <summary>Transient test fold: every fixture fact is a real native receipt before the runtime owner sees it.</summary>
+    sealed class RosterFixture
+    {
+        readonly PlatformOperatorRoster _owner;
+        readonly AggregateScenario<PlatformOperatorRoster> _scenario;
+        public PlatformOperatorAuthorityContent State { get; private set; }
+        public RosterFixture Aggregate => this;
+        public DomainEvent[] Facts { get; }
+        public IReadOnlyList<DomainEvent> PendingEvents => _scenario.PendingEvents.ToArray();
+        public ulong Version => _owner.Version;
+        public IReadOnlyList<PlatformOperatorAssignmentView> Operators => State.Operators;
+        public bool IsOperator(Uuid user) => State.Operators.Any(item => item.UserId == user);
+        public Uuid? AssignmentId(Uuid user) => State.Operators.FirstOrDefault(item => item.UserId == user)?.AssignmentId;
+
+        RosterFixture(PlatformOperatorRoster owner, AggregateScenario<PlatformOperatorRoster> scenario,
+            PlatformOperatorAuthorityContent state, DomainEvent[] facts)
+        {
+            _owner = owner;
+            _scenario = scenario;
+            State = state;
+            Facts = facts;
+        }
+
+        public static RosterFixture Restore(Uuid selected, DomainEvent[] facts, PlatformOperatorAuthorityContent state,
+            PlatformOperatorRoster? hydrated = null)
+        {
+            var owner = hydrated ?? new PlatformOperatorRoster(selected);
+            var scenario = new AggregateScenario<PlatformOperatorRoster>(owner);
+            if (hydrated is null)
+                scenario.Given(facts);
+            return new(owner, scenario, state, facts);
+        }
+
+        public static RosterFixture Create(Uuid selected, DomainEvent[] inputs)
+        {
+            var state = PlatformOperatorRosterContent.Empty;
+            var facts = new List<DomainEvent>();
+            var owner = new PlatformOperatorRoster(selected);
+            foreach (var input in inputs)
+            {
+                var mutation = input switch
+                {
+                    PlatformOperatorRosterSeeded seed => SeedMutation(seed.RosterId, seed.UserIds, seed.Actor, seed.OccurredAt),
+                    PlatformOperatorGranted grant => Change(nameof(GrantPlatformOperator), grant.CommandId, grant.ExpectedRevision,
+                        grant.ActorUserId, grant.SubjectUserId, Uuid.Empty, grant.Reason, grant.Actor, grant.OccurredAt, grant.ActorDisplay),
+                    PlatformOperatorRevoked revoke => Change(nameof(RevokePlatformOperator), revoke.CommandId, revoke.ExpectedRevision,
+                        revoke.ActorUserId, revoke.SubjectUserId, revoke.AssignmentId, revoke.Reason, revoke.Actor, revoke.OccurredAt, revoke.ActorDisplay),
+                    _ => throw new InvalidOperationException()
+                };
+                var next = PlatformOperatorRosterRules.Apply(state, mutation);
+                Assert.True(next.IsSuccess);
+                state = next.Value!;
+                facts.Add(DomainEventSeed.Attach(Fact(owner, mutation, state), owner.Id, (ulong)facts.Count + 1));
+            }
+            return Restore(selected, facts.ToArray(), state);
+        }
+
+        public Result Seed(Uuid id, IEnumerable<Uuid> users, ActorAttribution actor, DateTimeOffset at) =>
+            Admit(SeedMutation(id, users, actor, at));
+        public Result Grant(Uuid id, ulong revision, Uuid actorUserId, Uuid subject, string reason,
+            ActorAttribution actor, DateTimeOffset at, string? display = null) => Admit(Change(nameof(GrantPlatformOperator),
+            id, revision, actorUserId, subject, Uuid.Empty, reason, actor, at, display));
+        public Result Revoke(Uuid id, ulong revision, Uuid actorUserId, Uuid subject, Uuid assignment, string reason,
+            ActorAttribution actor, DateTimeOffset at, string? display = null) => Admit(Change(nameof(RevokePlatformOperator),
+            id, revision, actorUserId, subject, assignment, reason, actor, at, display));
+
+        Result Admit(PlatformOperatorMutationContent mutation)
+        {
+            var operation = Provenance(_owner, mutation);
+            var binding = _owner.Acceptance.Decide(AcceptedOperationBinding.Of(operation));
+            if (binding == NativeAcceptanceDecision.Replayed)
+                return Result.Success;
+            if (binding == NativeAcceptanceDecision.Conflict)
+                return Result.Failure(AcceptedAppendResult.ConflictError);
+            var next = PlatformOperatorRosterRules.Apply(State, mutation);
+            if (!next.IsSuccess)
+                return Result.Failure(next.Error!);
+            var result = _owner.Append(Fact(_owner, mutation, next.Value!), _owner.Revision,
+                _owner.CommittedStreamPosition, mutation, State, next.Value!, Response());
+            if (result.IsSuccess)
+                State = next.Value!;
+            return result;
+        }
+
+        static PlatformOperatorMutationContent SeedMutation(Uuid id, IEnumerable<Uuid> users, ActorAttribution actor,
+            DateTimeOffset at) => new(nameof(SeedPlatformOperatorRoster), id, null, Uuid.Empty, Uuid.Empty, Uuid.Empty,
+            PlatformOperatorRosterRules.CanonicalUsers(users), string.Empty, actor,
+            ActorReference.ForSystemProcess("platform-operator-bootstrap", "Platform operator bootstrap"), at);
+        static PlatformOperatorMutationContent Change(string kind, Uuid id, ulong revision, Uuid actorUserId,
+            Uuid subject, Uuid assignment, string reason, ActorAttribution actor, DateTimeOffset at, string? display) =>
+            new(kind, id, revision, actorUserId, subject, assignment, [], reason.Trim(), actor,
+                ActorReference.ForPlatformOperator(actorUserId, string.IsNullOrWhiteSpace(display) ? actorUserId.ToString() : display.Trim()), at);
+        static OperationProvenance Provenance(PlatformOperatorRoster owner, PlatformOperatorMutationContent mutation) =>
+            OwnerProvenance.For(owner, mutation.CommandId, mutation.CommandKind, mutation.Actor, owner.Id.ToString(),
+                mutation.ExpectedRevision, PlatformOperatorRosterContent.IntentDigest(mutation), mutation.AcceptedAt);
+        static ImmutableContentRef Reference<T>(T value, string schema) where T : notnull =>
+            new(Uuid.CreateVersion4(), ContentDigest.OfJson(value),
+                System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!).Length,
+                "application/json", schema);
+        static readonly ImmutableContentRef UnitReference = Reference(new UnitResult(), UnitResult.Schema);
+        static FirstResponseDescriptor Response() => new(200, "application/json", UnitResult.Schema, new StandardResponseBody(UnitReference));
+        static DomainEvent Fact(PlatformOperatorRoster owner, PlatformOperatorMutationContent mutation,
+            PlatformOperatorAuthorityContent state) => PlatformOperatorRosterContent.Fact(mutation, Provenance(owner, mutation),
+                Reference(mutation, PlatformOperatorRosterContent.ChangeSchema), Reference(state, PlatformOperatorRosterContent.AuthoritySchema),
+                Reference(Response(), FirstResponses.Schema), UnitReference, state);
     }
 
     sealed class ExistingUsers : IPlatformUserDirectoryReader

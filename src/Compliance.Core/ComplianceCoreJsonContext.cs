@@ -2110,6 +2110,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(SuspendTenant))]
 [JsonSerializable(typeof(ReactivateTenant))]
 [JsonSerializable(typeof(OffboardTenant))]
+[JsonSerializable(typeof(PlatformOperatorAuthorityContent))]
+[JsonSerializable(typeof(PlatformOperatorMutationContent))]
 [JsonSerializable(typeof(SeedPlatformOperatorRoster))]
 [JsonSerializable(typeof(GrantPlatformOperator))]
 [JsonSerializable(typeof(RevokePlatformOperator))]

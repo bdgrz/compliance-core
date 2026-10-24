@@ -1,0 +1,34 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Compact global operator roster, native seed/grant/revoke and current access/read authority.",
+  "validation": {
+    "redFailed": 1,
+    "redBootstrapUsers": 4096,
+    "oldEventPayloadBytes": 159912,
+    "strictBuildWarnings": 0,
+    "focusedPassed": 93,
+    "backendUnitPassed": 5797,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 18,
+    "signalsTriaged": 1,
+    "mergeProbability": 0.82,
+    "adopted": "merge scoped repair; continue queues"
+  },
+  "parentRefinements": [
+    "Explicit non-null operation/actor pattern preserves fail-closed legacy/native validation while satisfying nullable analysis.",
+    "Competing revocation reprepare checks current actor membership before stale gate: revoked loser is Forbidden; exactly one operation succeeds, one operator remains and public revision advances once. Existing stale revision Conflict assertions remain.",
+    "Preserved already-merged native HTTP Unit200 expectations when migrating current authority reads."
+  ],
+  "qualification": [
+    "Legacy roster frames without trusted native authority/result/response fail closed; no implicit converter or reset.",
+    "Source-backed current access, last-operator invariant, exact revision/assignment episode and original actor/Unit responses retained.",
+    "No deployment or retained-store qualification claimed."
+  ]
+}

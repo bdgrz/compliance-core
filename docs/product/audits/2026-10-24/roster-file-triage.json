@@ -1,0 +1,19 @@
+{
+  "reviewed": 18,
+  "blockedReviews": 0,
+  "signalsTriaged": 1,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Tenants/PlatformOperatorRosterBootstrap.cs",
+      "sha256": "e87347f55ab77bb0d2a66804be815c84ee84c6010cdd732cfa261aa71adf026f",
+      "signals": {
+        "authority_gap": 0.46,
+        "invariant_gap": 0.47,
+        "recovery_gap": 0.82,
+        "incomplete_path": 0.61
+      },
+      "classification": "verified_fail_closed_bootstrap_and_native_recovery",
+      "evidence": "Initialized bootstrap verifies current immutable native authority and never reapplies configuration over an existing roster. Concurrent same-seed API/worker starts use the native executor selected-root replay and OCC retry; a conflicting initial intent refuses startup. Missing/corrupt authority refuses startup instead of inferring operators from config. A lost transport outcome may fail that startup; the next startup re-reads committed authority. Actual native unknown-append/equal-winner/OCC and concurrent host seed tests pass, including original Unit receipts. This is not deployment or retained legacy conversion qualification."
+    }
+  ]
+}

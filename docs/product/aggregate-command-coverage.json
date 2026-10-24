@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "da6c705607749771e9837f91bcd19d2e23aca8d7",
+  "sourceCommit": "d544bb3f53fc97b27f8b4bc1364acab010b78872",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 446,
+    "factsWithAggregateEmitter": 443,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 41,
+    "legacyReducerOnlyFacts": 44,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 120,
+    "aggregateTypesWithCommandPath": 119,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -5302,15 +5302,13 @@
           "source": "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorTransportTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PlatformOperatorRevoked",
@@ -5321,15 +5319,13 @@
           "source": "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorTransportTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PlatformOperatorRosterSeeded",
@@ -5340,14 +5336,12 @@
           "source": "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "PolicyAcknowledgementRecorded",
@@ -10959,11 +10953,7 @@
         "PlatformOperatorRevoked",
         "PlatformOperatorRosterSeeded"
       ],
-      "commandRequests": [
-        "GrantPlatformOperator",
-        "RevokePlatformOperator",
-        "SeedPlatformOperatorRoster"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/OperatorPortfolioE2ETests.cs",
@@ -10972,7 +10962,9 @@
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorTransportTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "Policy",
@@ -20910,12 +20902,8 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "PlatformOperatorRoster"
-      ],
-      "aggregateTargets": [
-        "PlatformOperatorRoster"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs"
@@ -29922,12 +29910,8 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "PlatformOperatorRoster"
-      ],
-      "aggregateTargets": [
-        "PlatformOperatorRoster"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Tenants/PlatformOperatorRosterTests.cs",
@@ -30107,12 +30091,8 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "PlatformOperatorRoster"
-      ],
-      "aggregateTargets": [
-        "PlatformOperatorRoster"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/FirmStaffTransportTests.cs",
