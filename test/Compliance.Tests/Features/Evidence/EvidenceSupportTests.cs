@@ -19,9 +19,9 @@ public sealed class EvidenceSupportTests
     public void ShouldRecordExactAttributableSupportRelationshipGivenValidLink()
     {
         // Arrange
-        var request = new LinkEvidenceSupport(TenantId, ProgramId, ArtifactId, "control", ControlId,
+        var request = new LinkEvidenceSupport(Uuid.CreateVersion4(), TenantId, ProgramId, ArtifactId, "control", ControlId,
             7, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), "Design review",
-            "The evidence demonstrates the configured approval control.");
+            "The evidence demonstrates the configured approval control.", 0);
         var supportId = EvidenceSupport.IdFor(request);
         var support = new EvidenceSupport(TenantId, ProgramId, supportId);
 
@@ -59,8 +59,8 @@ public sealed class EvidenceSupportTests
     public void ShouldAcceptExactReplayAndRejectChangedRelationshipGivenStableSupportIdentity()
     {
         // Arrange
-        var request = new LinkEvidenceSupport(TenantId, ProgramId, ArtifactId, "control", ControlId,
-            7, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), "Design review", "Rationale");
+        var request = new LinkEvidenceSupport(Uuid.CreateVersion4(), TenantId, ProgramId, ArtifactId, "control", ControlId,
+            7, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), "Design review", "Rationale", 0);
         var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
         Assert.Null(support.Link(request, 2, new string('a', 64),
             ActorReference.ForMember(MemberId, "Evidence lead"), Now));
@@ -85,8 +85,8 @@ public sealed class EvidenceSupportTests
         int endYear, int endMonth, int endDay)
     {
         // Arrange
-        var request = new LinkEvidenceSupport(TenantId, ProgramId, ArtifactId, "control", ControlId,
-            revision, new DateOnly(2026, 1, 1), new DateOnly(endYear, endMonth, endDay), "Review", "Rationale");
+        var request = new LinkEvidenceSupport(Uuid.CreateVersion4(), TenantId, ProgramId, ArtifactId, "control", ControlId,
+            revision, new DateOnly(2026, 1, 1), new DateOnly(endYear, endMonth, endDay), "Review", "Rationale", 0);
         var support = new EvidenceSupport(TenantId, ProgramId, EvidenceSupport.IdFor(request));
 
         // Act

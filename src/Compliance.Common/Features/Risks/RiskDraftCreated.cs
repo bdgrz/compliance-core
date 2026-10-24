@@ -9,6 +9,9 @@ public sealed record RiskDraftCreated(Uuid TenantId, Uuid ProgramId, Uuid RiskId
     Uuid CreateRequestId, string Identifier, RiskDraftContent Content, Uuid ActorMemberId,
     string ActorDisplay, DateTimeOffset ChangedAt) : DomainEvent
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? AuthoredIntentSha256 { get; init; }
+
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }
 

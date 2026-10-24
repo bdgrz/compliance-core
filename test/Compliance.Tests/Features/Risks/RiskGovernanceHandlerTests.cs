@@ -616,13 +616,13 @@ public sealed class RiskGovernanceHandlerTests
         public Task<RiskTreatmentAction> ActionAsync(Uuid actionId) => ProgramManagementServices.HydrateAsync(Provider,
             new RiskTreatmentAction(TenantId, ProgramId, RiskId, actionId));
 
-        public RecordRiskAssessment Residual(long revision) => new(TenantId, ProgramId, RiskId,
+        public RecordRiskAssessment Residual(long revision) => new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId,
             revision, 1, "residual", 2, 2, "After treatment.");
 
         public ReviewRiskControlTreatment ReviewTreatment(Uuid treatmentId, string outcome) =>
             new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId, treatmentId, 1, outcome, "Independently reviewed.");
 
-        public AcceptRisk Accept(Uuid residualId, Uuid? waiverId) => new(TenantId, ProgramId,
+        public AcceptRisk Accept(Uuid residualId, Uuid? waiverId) => new(Uuid.CreateVersion4(), TenantId, ProgramId,
             RiskId, 3, residualId, "executive", DateTimeOffset.UtcNow.AddMonths(6),
             "Accepted within tolerance.", waiverId);
 

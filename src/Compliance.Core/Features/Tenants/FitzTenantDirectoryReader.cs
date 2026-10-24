@@ -52,6 +52,7 @@ sealed class FitzTenantDirectoryReader(IKvClient client)
                 TenantReactivated ev => ev.TenantId,
                 TenantOffboardingStarted ev => ev.TenantId,
                 TenantActivated ev => ev.TenantId,
+                TenantActivatedV2 ev => ev.TenantId,
                 _ => Uuid.Empty,
             };
             if (tenantId != Uuid.Empty)

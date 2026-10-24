@@ -1,5 +1,5 @@
-using System.Globalization;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -29,24 +29,43 @@ public sealed class EvidenceSupport : Aggregate
         On<EvidenceSupportLinked>(Apply);
     }
 
-    /// <summary>Derives a stable relationship identity from the exact artifact, target and covered period.</summary>
+    /// <summary>The authored command identity is the immutable support assertion identity.</summary>
     public static Uuid IdFor(LinkEvidenceSupport request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var recordType = NormalizeType(request.SupportedRecordType);
-        var identity = string.Join('\n', "evidence-support-v1", request.ProgramId,
-            request.ArtifactId, recordType, request.SupportedRecordId,
-            request.SupportedRecordRevision.ToString(CultureInfo.InvariantCulture),
-            request.PeriodStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            request.PeriodEnd.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-        return Uuid.CreateVersion5(request.TenantId, identity);
+        return request.CommandId;
     }
+
+    /// <summary>Replays the accepted assertion before selecting mutable artifact or target facts.</summary>
+    public Result<EvidenceSupportView>? Replay(LinkEvidenceSupport request, ActorReference actor)
+    {
+        if (Current is not { } original)
+            return null;
+        return request.CommandId == Id && request.TenantId == _tenantId && request.ProgramId == _programId &&
+               original.OriginalExpectedRevision == request.ExpectedRevision &&
+               original.AuthoredIntentSha256 == AuthoredIntentDigest.Compute(request) &&
+               actor.Kind == "member" && actor.Id == original.ActorMemberId!.Value.ToString()
+            ? Result<EvidenceSupportView>.Success(View()!)
+            : Result<EvidenceSupportView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The support identity already accepted another actor or authored intent."));
+    }
+
+    /// <summary>The frozen original assertion view, including its original source, actor display and time.</summary>
+    public EvidenceSupportView? View() => Current is not { } value ? null : new(value.TenantId, value.ProgramId,
+        value.SubjectId, value.ArtifactId, value.ArtifactRevision, value.ArtifactContentSha256!,
+        value.SupportedRecordType!, value.SupportedRecordId, value.SupportedRecordRevision,
+        value.PeriodStart, value.PeriodEnd, value.Purpose!, value.SufficiencyRationale!,
+        value.ActorMemberId!.Value, value.ActorDisplay!, value.OccurredAt);
 
     public CommandFailure? Link(LinkEvidenceSupport request, long artifactRevision,
         string artifactContentSha256, ActorReference actor, DateTimeOffset occurredAt)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(actor);
+        if (Replay(request, actor) is { } original)
+            return original.IsSuccess ? null : CommandFailure.StateConflict(original.Error!.Message!);
+        if (request.ExpectedRevision != Revision)
+            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("evidence support", Revision));
         var recordType = NormalizeType(request.SupportedRecordType);
         var purpose = request.Purpose?.Trim() ?? string.Empty;
         var rationale = request.SufficiencyRationale?.Trim() ?? string.Empty;
@@ -64,15 +83,10 @@ public sealed class EvidenceSupport : Aggregate
             return CommandFailure.InvalidContent(
                 "Evidence support requires an exact source revision, valid covered period, and attributed rationale.");
 
-        if (Current is { } existing)
-            return SameRelationship(existing, request, artifactRevision, artifactContentSha256,
-                    recordType, purpose, rationale, actorMemberId, actor.Display.Trim())
-                ? null
-                : CommandFailure.StateConflict(
-                    "The evidence support identity is already linked with different facts.");
-
         RaiseEvent(new EvidenceSupportLinked(_tenantId, Id, 1, actorMemberId, occurredAt)
         {
+            OriginalExpectedRevision = request.ExpectedRevision,
+            AuthoredIntentSha256 = AuthoredIntentDigest.Compute(request),
             ProgramId = _programId,
             ArtifactId = request.ArtifactId,
             ArtifactRevision = artifactRevision,
@@ -106,19 +120,6 @@ public sealed class EvidenceSupport : Aggregate
             throw new InvalidOperationException("The evidence support link event is invalid.");
         Current = ev;
     }
-
-    static bool SameRelationship(EvidenceSupportLinked existing, LinkEvidenceSupport request,
-        long artifactRevision, string artifactContentSha256, string recordType, string purpose,
-        string rationale, Uuid actorMemberId, string actorDisplay) =>
-        existing.TenantId == request.TenantId && existing.ProgramId == request.ProgramId &&
-        existing.ArtifactId == request.ArtifactId && existing.ArtifactRevision == artifactRevision &&
-        existing.ArtifactContentSha256 == artifactContentSha256 &&
-        existing.SupportedRecordType == recordType &&
-        existing.SupportedRecordId == request.SupportedRecordId &&
-        existing.SupportedRecordRevision == request.SupportedRecordRevision &&
-        existing.PeriodStart == request.PeriodStart && existing.PeriodEnd == request.PeriodEnd &&
-        existing.Purpose == purpose && existing.SufficiencyRationale == rationale &&
-        existing.ActorMemberId == actorMemberId && existing.ActorDisplay == actorDisplay;
 
     static string NormalizeType(string? value) => value?.Trim().ToLowerInvariant() ?? string.Empty;
 

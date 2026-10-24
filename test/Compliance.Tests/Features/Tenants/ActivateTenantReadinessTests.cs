@@ -17,6 +17,10 @@ public sealed class ActivateTenantReadinessTests
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
         services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships { Ready = true });
         services.AddSingleton<IPermissionAuthorizer>(new Permissions { Ready = true });
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(
+            new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient()));
+        services.AddScoped<Bdgrz.Compliance.Features.NativeOperations.NativeOperationExecutor>();
         services.AddPortia()
             .AddRequestHandler<ActivateTenantHandler>()
             .AddRequestAuthorizer<ActivateTenantAuthorizer>();
@@ -37,7 +41,7 @@ public sealed class ActivateTenantReadinessTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>()
-            .SendAsync(new ActivateTenant(tenantId, creatorId), RequestActor.System);
+            .SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, creatorId), RequestActor.System);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -57,6 +61,10 @@ public sealed class ActivateTenantReadinessTests
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
         services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships());
         services.AddSingleton<IPermissionAuthorizer>(new Permissions());
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(
+            new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient()));
+        services.AddScoped<Bdgrz.Compliance.Features.NativeOperations.NativeOperationExecutor>();
         services.AddPortia()
             .AddRequestHandler<ActivateTenantHandler>()
             .AddRequestAuthorizer<ActivateTenantAuthorizer>();
@@ -72,7 +80,7 @@ public sealed class ActivateTenantReadinessTests
 
         // Act
         var recovery = await scope.ServiceProvider.GetRequiredService<IRequestBus>()
-            .SendAsync(new ActivateTenant(tenantId, Uuid.CreateVersion4(), "recovery@example.com"),
+            .SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, Uuid.CreateVersion4(), "recovery@example.com"),
                 RequestActor.System);
 
         // Assert
@@ -91,6 +99,10 @@ public sealed class ActivateTenantReadinessTests
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
         services.AddSingleton<ITenantMembershipDirectoryReader>(new Memberships());
         services.AddSingleton<IPermissionAuthorizer>(new Permissions());
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(
+            new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient()));
+        services.AddScoped<Bdgrz.Compliance.Features.NativeOperations.NativeOperationExecutor>();
         services.AddPortia()
             .AddRequestHandler<ActivateTenantHandler>()
             .AddRequestAuthorizer<ActivateTenantAuthorizer>();
@@ -105,7 +117,7 @@ public sealed class ActivateTenantReadinessTests
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>()
-            .SendAsync(new ActivateTenant(tenantId, creatorId), RequestActor.System);
+            .SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, creatorId), RequestActor.System);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -126,6 +138,10 @@ public sealed class ActivateTenantReadinessTests
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
         services.AddSingleton<ITenantMembershipDirectoryReader>(memberships);
         services.AddSingleton<IPermissionAuthorizer>(permissions);
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<Bdgrz.Compliance.Features.Content.IImmutableContentStore>(
+            new Bdgrz.Compliance.Features.Content.FitzKvImmutableContentStore(new Cntryl.Fitz.Testing.InMemoryKvClient()));
+        services.AddScoped<Bdgrz.Compliance.Features.NativeOperations.NativeOperationExecutor>();
         services.AddPortia()
             .AddRequestHandler<ActivateTenantHandler>()
             .AddRequestAuthorizer<ActivateTenantAuthorizer>();
@@ -147,10 +163,10 @@ public sealed class ActivateTenantReadinessTests
         await writer.SaveAsync(teamMember, new RequestDispatchContext(RequestActor.System));
 
         // Act: event streams exist, but the two authorization projections have not caught up.
-        var before = await bus.SendAsync(new ActivateTenant(tenantId, creatorId), RequestActor.System);
+        var before = await bus.SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, creatorId), RequestActor.System);
         memberships.Ready = true;
         permissions.Ready = true;
-        var after = await bus.SendAsync(new ActivateTenant(tenantId, creatorId), RequestActor.System);
+        var after = await bus.SendAsync(new ActivateTenant(Uuid.CreateVersion4(), tenantId, creatorId), RequestActor.System);
 
         // Assert
         Assert.False(before.IsSuccess);

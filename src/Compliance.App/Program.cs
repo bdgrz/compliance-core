@@ -806,8 +806,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/platform/independence/rules")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
-    app.MapPortiaPost<RatifyIndependenceRuleVersion, IndependenceRuleRatificationView>(
-            "/api/v1/platform/independence/rules/{rule_version}/ratification")
+    app.MapPortiaPut<RatifyIndependenceRuleVersion, IndependenceRuleRatificationView>(
+            "/api/v1/platform/independence/rules/{rule_version}/ratification/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Firm independence");
     app.MapPortiaPut<RecordNonattestService, NonattestServiceView>(
@@ -1217,8 +1217,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
                 }))
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Policy distribution");
-    app.MapPortiaPost<CreateRiskDraft, RiskRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks")
+    app.MapPortiaPut<CreateRiskDraft, RiskRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Risks");
     app.MapPortiaPut<ReviseRiskDraft>(
@@ -1253,16 +1253,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/risk-method/versions/{version}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Risks");
-    app.MapPortiaPost<RecordRiskAssessment, RiskAssessmentView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/assessments")
+    app.MapPortiaPut<RecordRiskAssessment, RiskAssessmentView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/assessments/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Risks");
     app.MapPortiaPut<ChooseRiskTreatment>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Risks");
-    app.MapPortiaPost<AcceptRisk, RiskAcceptanceView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/acceptances")
+    app.MapPortiaPut<AcceptRisk, RiskAcceptanceView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/acceptances/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Risks");
     app.MapPortiaGet<GetRiskEvaluation, RiskEvaluationView>(
@@ -1519,8 +1519,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithSummary("Release malware-quarantined evidence after a clean rescan")
         .WithTags("Evidence artifacts");
-    app.MapPortiaPost<LinkEvidenceSupport, EvidenceSupportView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports")
+    app.MapPortiaPut<LinkEvidenceSupport, EvidenceSupportView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Evidence artifacts");
     app.MapPortiaGet<GetEvidenceRequest, EvidenceRequestView>(

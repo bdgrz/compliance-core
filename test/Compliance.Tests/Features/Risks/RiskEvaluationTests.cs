@@ -14,6 +14,30 @@ public sealed class RiskEvaluationTests
     static readonly Uuid ApproverId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
 
+    [Theory]
+    [InlineData("rationale")]
+    [InlineData("actor")]
+    [InlineData("revision")]
+    public void ShouldConflictGivenAssessmentRetryWithChangedOriginalAuthoredBinding(string change)
+    {
+        // Arrange
+        var evaluation = new RiskEvaluation(TenantId, Uuid.CreateVersion4());
+        var method = Method(12);
+        var id = Uuid.CreateVersion4();
+        var actor = Uuid.CreateVersion4();
+        Assert.Null(evaluation.RecordAssessment(ProgramId, 0, id, method, "inherent", 2, 2,
+            "Original assessment", actor, "Assessor", Now));
+
+        // Act
+        var result = evaluation.RecordAssessment(ProgramId, change == "revision" ? 1 : 0, id, method,
+            "inherent", 2, 2, change == "rationale" ? "Changed assessment" : "Original assessment",
+            change == "actor" ? Uuid.CreateVersion4() : actor, "Assessor", Now.AddMinutes(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, result?.Code);
+        Assert.Equal(1, evaluation.Revision);
+    }
+
     [Fact]
     public void ShouldDeriveScoreAndKeepAttributableHistoryGivenInherentAndTarget()
     {
@@ -137,10 +161,10 @@ public sealed class RiskEvaluationTests
             ApproverId);
         var mismatched = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId,
             method, "executive", true, Now.AddMonths(3), "Owner accepts", ApproverId, "CEO",
-            Now, ApproverId, otherScope);
+            Now, ApproverId, Proof(otherScope));
         var waived = evaluation.Accept(ProgramId, 3, Uuid.CreateVersion4(), residualId, method,
             "executive", true, Now.AddMonths(3), "Owner accepts", ApproverId, "CEO", Now,
-            ApproverId, waiver);
+            ApproverId, Proof(waiver));
 
         // Assert
         Assert.Equal(CommandFailureCode.ActorProhibited, unwaived!.Code);
@@ -335,6 +359,15 @@ public sealed class RiskEvaluationTests
         Assert.Null(evaluation.RecordAssessment(ProgramId, 2, residualId, method, "residual",
             likelihood, impact, "As accepted", AssessorId, "Assessor", Now));
         return (evaluation, residualId);
+    }
+
+    static SeparationOfDutiesWaiverProof Proof(SeparationOfDutiesWaiver waiver)
+    {
+        var scope = waiver.Scope!;
+        return new(waiver.TenantId, waiver.Id, waiver.BeneficiaryMemberId, waiver.BeneficiaryMemberId,
+            scope.Action, scope.RecordType, scope.RecordId, scope.VersionId, scope.Revision,
+            new Bdgrz.Compliance.Features.Proofs.SourceFactLocator(waiver.Stream, Uuid.CreateVersion4(), 1, 10001,
+                1000001, 2, new string('a', 64)), waiver.ApprovedAt!.Value, waiver.ExpiresAt);
     }
 
     static RiskMethodVersionView Method(int? appetite)

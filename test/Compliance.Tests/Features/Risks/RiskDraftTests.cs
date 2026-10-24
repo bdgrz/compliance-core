@@ -13,6 +13,22 @@ public sealed class RiskDraftTests
     static readonly DateTimeOffset Now = new(2026, 9, 20, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public void ShouldConflictGivenCreateRetryWithChangedOriginalActor()
+    {
+        // Arrange
+        var requestId = Uuid.CreateVersion4();
+        var risk = new RiskDraft(TenantId, RiskDraft.IdFor(TenantId, ProgramId, "R-01"));
+        Assert.True(risk.Create(ProgramId, requestId, "R-01", Content(), ActorId, "Original author", Now).IsSuccess);
+
+        // Act
+        var result = risk.Create(ProgramId, requestId, "R-01", Content(), Uuid.CreateVersion4(), "Different author", Now);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(1, risk.Revision);
+    }
+
+    [Fact]
     public void ShouldKeepIdentifierUniqueWithinProgramGivenNormalizedCase()
     {
         // Arrange

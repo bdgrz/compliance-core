@@ -304,9 +304,9 @@ public sealed class AdvisorRecordVersionResolverTests
         await using var fixture = new Fixture();
         var control = await fixture.SeedControlAsync();
         var artifact = await fixture.SeedArtifactAsync();
-        var request = new LinkEvidenceSupport(fixture.TenantId, fixture.ProgramId, artifact.Id,
+        var request = new LinkEvidenceSupport(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, artifact.Id,
             "control", control.Id, control.Revision, new DateOnly(2026, 1, 1),
-            new DateOnly(2026, 12, 31), "Design review", "Supports the control design.");
+            new DateOnly(2026, 12, 31), "Design review", "Supports the control design.", 0);
         var linkedArtifactRevision = artifact.Revision;
         var support = new EvidenceSupport(fixture.TenantId, fixture.ProgramId,
             EvidenceSupport.IdFor(request));

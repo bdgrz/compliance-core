@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.Evidence;
 
 sealed class LinkEvidenceSupportHandler(EvidenceArtifactDownloadAccess access,
     EvidenceArtifactMetadataRead metadata, EvidenceSupportTargetSource targets,
-    IAggregateExecutor executor, TimeProvider clock)
+    IAggregateExecutor executor, TimeProvider clock, IAggregateReader reader)
     : IRequestHandler<LinkEvidenceSupport, EvidenceSupportView>
 {
     public async ValueTask<Result<EvidenceSupportView>> HandleAsync(
@@ -17,7 +17,8 @@ sealed class LinkEvidenceSupportHandler(EvidenceArtifactDownloadAccess access,
         if (!PersonalHttpActor(context.Actor, context.Invocation, request.TenantId, out var actor))
             return Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Evidence support links require a personal HTTP request."));
-        if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
+        if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0 ||
+            request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
             request.ArtifactId == Uuid.Empty || request.SupportedRecordId == Uuid.Empty ||
             request.SupportedRecordRevision <= 0 || request.PeriodStart == default ||
             request.PeriodEnd == default || request.PeriodStart > request.PeriodEnd ||
@@ -29,6 +30,10 @@ sealed class LinkEvidenceSupportHandler(EvidenceArtifactDownloadAccess access,
             .ConfigureAwait(false);
         if (!allowed.IsSuccess)
             return Failure(allowed.Error);
+        var original = await reader.HydrateAsync(new EvidenceSupport(request.TenantId, request.ProgramId,
+            request.CommandId), ct).ConfigureAwait(false);
+        if (original.Replay(request, actor) is { } retry)
+            return retry;
         var captured = await metadata.GetCapturedAsync(request.TenantId, request.ArtifactId, ct)
             .ConfigureAwait(false);
         if (!captured.IsSuccess)

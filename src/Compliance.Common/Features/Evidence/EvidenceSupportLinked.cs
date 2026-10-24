@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Evidence;
@@ -11,6 +12,10 @@ public sealed record EvidenceSupportLinked(
     Uuid? ActorMemberId,
     DateTimeOffset OccurredAt) : DomainEvent
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public long? OriginalExpectedRevision { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? AuthoredIntentSha256 { get; init; }
     public Uuid ProgramId { get; init; }
     public Uuid ArtifactId { get; init; }
     public long ArtifactRevision { get; init; }

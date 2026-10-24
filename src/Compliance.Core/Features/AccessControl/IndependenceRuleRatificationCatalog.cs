@@ -80,8 +80,8 @@ public sealed class IndependenceRuleRatificationCatalog : Aggregate, ISourceUseO
             return Failure(RequestErrorKind.Validation,
                 "Rule ratification requires an active, explicitly designated professional and exact immutable draft digest.");
 
-        var request = new RatifyIndependenceRuleVersion(ratificationId, ruleVersion,
-            observedRuleCatalogSequence, expectedRatificationSequence, ruleContentDigest, sourceReference);
+        var request = new RatifyIndependenceRuleVersion(requestId, ratificationId, ruleVersion,
+            observedRuleCatalogSequence, expectedRatificationSequence, ruleContentDigest, sourceReference, expectedRatificationSequence);
         if (Retry(requestId, request, actor) is { } retry)
             return retry;
         if (Uses.HasActiveUse)
@@ -112,8 +112,8 @@ public sealed class IndependenceRuleRatificationCatalog : Aggregate, ISourceUseO
                 existing.RuleVersion == item.RuleVersion))
             throw new InvalidOperationException("A personal rule ratification must retain its exact source and advance the sequence.");
 
-        var request = new RatifyIndependenceRuleVersion(item.RatificationId, item.RuleVersion,
-            item.ObservedRuleCatalogSequence, ev.ExpectedSequence, item.RuleContentDigest, item.SourceReference);
+        var request = new RatifyIndependenceRuleVersion(ev.RequestId, item.RatificationId, item.RuleVersion,
+            item.ObservedRuleCatalogSequence, ev.ExpectedSequence, item.RuleContentDigest, item.SourceReference, ev.ExpectedSequence);
         _ratifications.Add(item);
         _latest = ev;
         _decisions.Add(ev.RequestId, (Intent(request), item.Actor, item));
@@ -146,9 +146,13 @@ public sealed class IndependenceRuleRatificationCatalog : Aggregate, ISourceUseO
         return Result.Success;
     }
 
+    /// <summary>Resolves a complete original authored ratification without reselecting the mutable draft.</summary>
+    public Result<IndependenceRuleRatificationView>? Replay(RatifyIndependenceRuleVersion request, ActorReference actor) =>
+        Retry(request.CommandId, request, actor);
+
     Result<IndependenceRuleRatificationView>? Retry(Uuid requestId, object request, ActorReference actor) =>
         _decisions.TryGetValue(requestId, out var previous)
-            ? previous.Intent == Intent(request) && previous.Actor == actor
+            ? previous.Intent == Intent(request) && previous.Actor.Kind == actor.Kind && previous.Actor.Id == actor.Id
                 ? Result<IndependenceRuleRatificationView>.Success(previous.Response)
                 : Failure(RequestErrorKind.Conflict,
                     "The request identity already retains another ratification intent or professional actor.")

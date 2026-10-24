@@ -68,7 +68,7 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
             await AssignAsync(context, BuiltInRbac.AdministratorsTeamId(accepted.TenantId), memberId, episodeId, ct)
                 .ConfigureAwait(false);
             await _policy.SendActivationAsync(bus,
-                new ActivateTenant(accepted.TenantId, accepted.UserId, accepted.EmailAddress), context, logger, ct);
+                TenantActivationEffects.Activate(accepted.Metadata.EventId, accepted.TenantId, accepted.UserId, accepted.EmailAddress), context, logger, ct);
         }
     }
 

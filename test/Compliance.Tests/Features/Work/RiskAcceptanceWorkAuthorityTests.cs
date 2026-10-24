@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Independence;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Risks;
@@ -18,6 +20,30 @@ namespace Bdgrz.Compliance.Tests.Features.Work;
 
 public sealed class RiskAcceptanceWorkAuthorityTests
 {
+    [Fact]
+    public async Task ShouldDenyOriginalAcceptanceReplayGivenCurrentAcceptanceGrantRevoked()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync(false);
+        var user = fixture.Operations.ApproverUserId;
+        var member = fixture.Operations.ApproverMemberId;
+        fixture.Permissions.Managers.Add(member);
+        fixture.Permissions.Acceptors.Add((member, RbacPermissions.RiskAcceptComplianceLead));
+        var pending = await fixture.SeedAsync(false);
+        var request = fixture.Accept(pending, false);
+        Assert.True((await fixture.AcceptHttpAsync(request, user)).IsSuccess);
+        fixture.Permissions.Acceptors.Remove((member, RbacPermissions.RiskAcceptComplianceLead));
+
+        // Act
+        var result = await fixture.AcceptHttpAsync(request, user, RequestErrorKind.Forbidden);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        var evaluation = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new RiskEvaluation(fixture.Operations.TenantId, pending.RiskId));
+        Assert.Equal(4, evaluation.Revision);
+    }
+
     [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]
@@ -234,6 +260,8 @@ public sealed class RiskAcceptanceWorkAuthorityTests
             {
                 services.AddSingleton(events);
                 services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
+                services.AddSingleton<ISourceFactResolver>(new EventStoreSourceFactResolver((IDomainEventReader)events));
+                services.AddScoped<ISeparationOfDutiesWaiverProofResolver, SeparationOfDutiesWaiverProofResolver>();
                 services.AddScoped<ITenantMembershipDirectoryReader, MembershipDirectory>();
                 services.AddScoped<OperatingAuthority>();
                 services.AddScoped<WorkQueueReader>();
@@ -298,7 +326,7 @@ public sealed class RiskAcceptanceWorkAuthorityTests
         public RequestScenario Scenario(Uuid? userId = null) => RequestScenario.For(Provider)
             .GivenActor(ProgramManagementServices.Actor(userId ?? GuestUserId));
 
-        public AcceptRisk Accept(Pending pending, bool executive) => new(Operations.TenantId,
+        public AcceptRisk Accept(Pending pending, bool executive) => new(Uuid.CreateVersion4(), Operations.TenantId,
             Operations.ProgramId, pending.RiskId, 3, pending.ResidualId,
             executive ? "executive" : "compliance_lead", DateTimeOffset.UtcNow.AddMonths(6),
             "Independently accepted within recorded authority.");

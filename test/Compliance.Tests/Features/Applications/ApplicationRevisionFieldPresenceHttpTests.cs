@@ -639,17 +639,33 @@ public sealed class ApplicationRevisionFieldPresenceHttpTests
                 "Author", now, "internal", Owner, Owner, applicationKind: "service", criticality: "critical").IsSuccess);
             await writer.SaveAsync(application, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
             var directory = scope.ServiceProvider.GetRequiredService<FitzApplicationDirectory>();
-            await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
+            await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
                 new CheckpointIdentity("ApplicationDirectoryV2", EventStreamPattern.ForPattern(Tenant.ToString())),
-                ProjectionCheckpoint.Start));
-            foreach (var record in await EventsAsync())
-                await directory.ApplyAsync(record.Event);
-            var cursor = EventCursor.Start;
-            await foreach (var record in _events.ReadAsync(
-                               EventStreamPattern.ForPattern(Tenant.ToString()), cursor,
-                               CancellationToken.None))
-                cursor = record.NextCursor;
-            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
+                ProjectionCheckpoint.Start)))
+            {
+                foreach (var record in await EventsAsync())
+                    await directory.ApplyAsync(record.Event);
+                var cursor = EventCursor.Start;
+                await foreach (var record in _events.ReadAsync(
+                                   EventStreamPattern.ForPattern(Tenant.ToString()), cursor,
+                                   CancellationToken.None))
+                    cursor = record.NextCursor;
+                await batch.CommitAsync(new ProjectionCheckpoint(cursor));
+            }
+            var incoming = scope.ServiceProvider.GetRequiredService<FitzApplicationIncomingRelationshipDirectory>();
+            var pattern = EventStreamPattern.ForPattern(Tenant.ToString(), "applications");
+            await using (var incomingBatch = await incoming.BeginAsync(new ProjectionBatchContext(
+                new CheckpointIdentity(ApplicationIncomingRelationshipProjector.ProjectorName, pattern),
+                ProjectionCheckpoint.Start)))
+            {
+                var cursor = EventCursor.Start;
+                await foreach (var record in _events.ReadAsync(pattern, cursor, CancellationToken.None))
+                {
+                    await incoming.ApplyAsync(record.Event);
+                    cursor = record.NextCursor;
+                }
+                await incomingBatch.CommitAsync(new ProjectionCheckpoint(cursor));
+            }
         }
 
         public async Task<HttpResponseMessage> ReviseAsync(long revision, string fields = "")

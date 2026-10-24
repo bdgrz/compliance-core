@@ -10,14 +10,14 @@ public sealed class ReviseRiskDraftHandler(IAggregateExecutor executor,
         CancellationToken ct)
     {
         var request = context.Request;
+        if (request.CommandId == Uuid.Empty)
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A risk revision requires its typed command identity.")));
         var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
             ? subject
             : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
-        RiskDraftContent content = new(request.Title, request.Scenario,
-            request.PotentialEffect, request.SourceNote);
-        return executor.ExecuteAsync(new RiskDraft(request.TenantId, request.RiskId),
-            risk => CommandFailureRequestAdapter.ToOutcome(risk.Revise(request.ProgramId,
-                request.ExpectedRevision, content,
+        return executor.ExecuteAsync(new RiskDraft(request.TenantId, request.RiskId, request.CommandId),
+            risk => CommandFailureRequestAdapter.ToOutcome(risk.Revise(request,
                 RbacIds.Member(request.TenantId, userId),
                 UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow())),
             context, ct);

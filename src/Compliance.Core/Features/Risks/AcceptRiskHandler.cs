@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Independence;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
@@ -9,7 +10,8 @@ namespace Bdgrz.Compliance.Features.Risks;
 ///     an active program grant; the aggregate then applies M0-D10 appetite and expiry rules.
 /// </summary>
 public sealed class AcceptRiskHandler(IAggregateExecutor executor, IAggregateReader reader,
-    IAccessGrantPermissionAuthorizer permissions, RiskGovernanceReader governanceReader, TimeProvider clock)
+    IAccessGrantPermissionAuthorizer permissions, RiskGovernanceReader governanceReader, TimeProvider clock,
+    ISeparationOfDutiesWaiverProofResolver waivers)
     : IRequestHandler<AcceptRisk, RiskAcceptanceView>
 {
     public async ValueTask<Result<RiskAcceptanceView>> HandleAsync(
@@ -20,6 +22,20 @@ public sealed class AcceptRiskHandler(IAggregateExecutor executor, IAggregateRea
             return Result<RiskAcceptanceView>.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Risk acceptance requires a personal HTTP invocation."));
         var request = context.Request;
+        if (request.CommandId == Uuid.Empty)
+            return Result<RiskAcceptanceView>.Failure(new RequestError(RequestErrorKind.Validation,
+                "Risk acceptance requires its command identity."));
+        var actor = RiskActor.From(context.Actor, request.TenantId);
+        var permission = RbacPermissions.RiskAcceptanceFor(request.ApproverAuthority);
+        var held = permission is not null && await permissions.IsAllowedAsync(request.TenantId,
+            actor.UserId, actor.MemberId, request.ProgramId, permission, ct).ConfigureAwait(false);
+        if (!held)
+            return Result<RiskAcceptanceView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "The current actor does not hold the requested risk acceptance authority."));
+        var replay = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId, request.CommandId), ct)
+            .ConfigureAwait(false);
+        if (replay.ReplayAcceptance(request, actor.MemberId) is { } original)
+            return original;
         var risk = await reader.HydrateAsync(new RiskDraft(request.TenantId, request.RiskId), ct)
             .ConfigureAwait(false);
         if (!risk.IsCreated || risk.ProgramId != request.ProgramId)
@@ -34,10 +50,6 @@ public sealed class AcceptRiskHandler(IAggregateExecutor executor, IAggregateRea
             request.ProgramId), ct).ConfigureAwait(false);
         var method = methods.Find(residual.MethodVersionId)
                      ?? throw new InvalidOperationException("A residual assessment must cite a published method.");
-        var actor = RiskActor.From(context.Actor, request.TenantId);
-        var permission = RbacPermissions.RiskAcceptanceFor(request.ApproverAuthority);
-        var held = permission is not null && await permissions.IsAllowedAsync(request.TenantId,
-            actor.UserId, actor.MemberId, request.ProgramId, permission, ct).ConfigureAwait(false);
         // The owner's correlated member at assignment and now are both bound by owner SoD.
         var governance = await governanceReader.ReadRiskAsync(request.TenantId, request.ProgramId,
             request.RiskId, ct).ConfigureAwait(false);
@@ -51,19 +63,26 @@ public sealed class AcceptRiskHandler(IAggregateExecutor executor, IAggregateRea
                 ? actor.MemberId
                 : currentMemberId ?? owner.CorrelatedMemberId;
         }
-        SeparationOfDutiesWaiver? waiver = null;
+        SeparationOfDutiesWaiverProof? waiver = null;
         if (request.SeparationOfDutiesWaiverId is { } waiverId)
-            waiver = await reader.HydrateAsync(new SeparationOfDutiesWaiver(request.TenantId,
-                waiverId), ct).ConfigureAwait(false);
-        return await executor.ExecuteAsync(new RiskEvaluation(request.TenantId, request.RiskId),
+        {
+            var scope = new SeparationOfDutiesWaiverProofScope(request.TenantId, waiverId,
+                actor.MemberId, actor.MemberId, SeparationOfDutiesActions.Approve, SeparationOfDutiesRecordTypes.Risk,
+                request.RiskId, request.ResidualAssessmentId, request.ExpectedRevision);
+            var proof = await waivers.ResolveAsync(scope, clock.GetUtcNow(), ct).ConfigureAwait(false);
+            if (!proof.IsSuccess)
+                return Result<RiskAcceptanceView>.Failure(proof.Error!);
+            waiver = proof.Value;
+        }
+        return await executor.ExecuteAsync(new RiskEvaluation(request.TenantId, request.RiskId, request.CommandId),
             evaluation =>
             {
                 var failure = evaluation.Accept(request.ProgramId, request.ExpectedRevision,
-                    context.RequestId, request.ResidualAssessmentId, method,
+                    request.CommandId, request.ResidualAssessmentId, method,
                     request.ApproverAuthority, held, request.ExpiresAt, request.Rationale,
                     actor.MemberId, actor.Display, clock.GetUtcNow(), ownerMemberId, waiver);
                 return CommandFailureRequestAdapter.ToOutcome(failure,
-                    evaluation.FindAcceptance(context.RequestId)!);
+                    evaluation.FindAcceptance(request.CommandId)!);
             }, context, ct).ConfigureAwait(false);
     }
 }
