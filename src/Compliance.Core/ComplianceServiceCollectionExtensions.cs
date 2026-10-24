@@ -678,6 +678,8 @@ public static class ComplianceServiceCollectionExtensions
             EventSourcedServiceEngagementAcceptanceEvidenceReader>();
         services.AddSingleton<IImmutableContentStore>(provider =>
             new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>()));
+        services.AddSingleton(ProtectedResponseKeyRing.FromConfiguration(configuration));
+        services.AddSingleton<IProtectedResponseContentStore, AesProtectedResponseContentStore>();
         services.AddScoped<NativeOperationExecutor>();
         services.AddScoped<MethodologyTemplateContributionOperations>();
         services.AddScoped<FitzMethodologyTemplateDirectory>();

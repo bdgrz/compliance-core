@@ -1,0 +1,240 @@
+{
+  "version": "implementation-file-review-v1",
+  "total": 5,
+  "reviewed": 5,
+  "blocked": 0,
+  "calls": 5,
+  "cached": 0,
+  "usage": {
+    "input_tokens": 52697,
+    "output_tokens": 390
+  },
+  "records": [
+    {
+      "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "17b7eaefe077fc86605cb37c20e97a51b7d7e4c640c764796f34a1336f313a64",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/AdministratorReceiverSupport.cs",
+          "sha256": "a0e0b97ca55ea6fd34d10a417e8db53ae1d74e8117713962dfe938634a76148f"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/EngagementUseVerifier.cs",
+          "sha256": "faa888d0165584ff349b879dcb9af94c088df080c5a6c200ceb2603a348c9d4c"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/IFirmProfessionalDutyAssertionVerifier.cs",
+          "sha256": "420205f08670a2d71fa0a7c7647321da5ef3b921c79e1b1ee4bf84cd2d352761"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessControl/ProfessionalDutyChangeVerifier.cs",
+          "sha256": "be6f3c783eaaa5ef1cbfbaa8d1da4d2a057d36c3ccbed4f1b39b65339aea494a"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Tenants/TenantRegistered.cs",
+          "sha256": "888d59d0e91e78d2eebdb51c22181b298498b1cb43923d663db6c4d440cc7e26"
+        }
+      ],
+      "review_key": "c44cfe38cd20534a1cf010570cb862b130d8074784e13aa77b520a45acec6b1b",
+      "reviewed_at": "2026-10-24T18:46:24.751Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.28
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.23
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.3
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.25
+        }
+      },
+      "usage": {
+        "input_tokens": 44708,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Content/AesProtectedResponseContentStore.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "a6ca5298371a1b95ffa3cd4a9bcb9b06114e4e1c95e6306ab749e8e9ab333fb2",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ImmutableContentRef.cs",
+          "sha256": "51f9cfddb14e3232e6904ed401cfe5e9cf75848c896e4fce5cb187fb4be75039"
+        },
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ProtectedResponseContentRef.cs",
+          "sha256": "14dc9d9ca521d4c5fa939b2aec349955d70ce57d869620791c23b0bfc99b7f09"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/IImmutableContentStore.cs",
+          "sha256": "954bf85c5b85c2cddb862349b0476c87835aa06236dffc58989f6cbdc19fcfec"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/ImmutableContentIntegrityException.cs",
+          "sha256": "6b6b040d848d20ca6b5a000b6a6999f196db61075fe71a8d18dab7eb313efa3d"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/ImmutableContentUnavailableException.cs",
+          "sha256": "c38a452468099b283a679e6f6ba936ca87e812f017a57d31a0129b832249901e"
+        }
+      ],
+      "review_key": "e0ff87704d4f28e48818d3ba21d7ee275f23330552e408941a764c326e8794e0",
+      "reviewed_at": "2026-10-24T18:46:24.641Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.41
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.39
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.45
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.12
+        }
+      },
+      "usage": {
+        "input_tokens": 4031,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Content/IProtectedResponseContentStore.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "77a59af8da3c7c8ed2222a5178e15d4ca1523bf938bb4fabc7ec5f964ccec345",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/Proofs/ProtectedResponseContentRef.cs",
+          "sha256": "14dc9d9ca521d4c5fa939b2aec349955d70ce57d869620791c23b0bfc99b7f09"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Content/ProtectedResponseScope.cs",
+          "sha256": "737e0f2e89974b16653455fc8bf20e11de74fd528fb61971d419eeca2a01d202"
+        }
+      ],
+      "review_key": "5590e83c704cffbbcd4923d8af7e518648f9bf957a676d60f3063ccbeb5ccb2b",
+      "reviewed_at": "2026-10-24T18:46:24.840Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.1
+        }
+      },
+      "usage": {
+        "input_tokens": 1327,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Content/ProtectedResponseKeyRing.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "75158f0976f5d9421421067af09823c507f7357f74191cbbdfecf07469ee098c",
+      "dependency_sha256": [],
+      "review_key": "5df9f6af4926d6ca98a2abf3404fdb403244d3d2569afd42b2b2ec9452f45f58",
+      "reviewed_at": "2026-10-24T18:46:25.097Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.11
+        }
+      },
+      "usage": {
+        "input_tokens": 1372,
+        "output_tokens": 78
+      }
+    },
+    {
+      "path": "src/Compliance.Core/Features/Content/ProtectedResponseScope.cs",
+      "kinds": [
+        "dependency"
+      ],
+      "sha256": "737e0f2e89974b16653455fc8bf20e11de74fd528fb61971d419eeca2a01d202",
+      "dependency_sha256": [
+        {
+          "path": "src/Compliance.Common/Features/AccessControl/ActorReference.cs",
+          "sha256": "7d69dde8730c70e17541c471d18106c8c463f6699a13a32535b6506bb19566b6"
+        }
+      ],
+      "review_key": "e4ed0a0ea539c8fdf5770e8c2f8b6d7f44ec6c2b3e5af0ba647119eb110e4807",
+      "reviewed_at": "2026-10-24T18:46:25.335Z",
+      "status": "reviewed",
+      "model": "jev-1.14.0",
+      "answers": {
+        "authority_gap": {
+          "type": "noul",
+          "noul": 0.16
+        },
+        "invariant_gap": {
+          "type": "noul",
+          "noul": 0.05
+        },
+        "recovery_gap": {
+          "type": "noul",
+          "noul": 0.05
+        },
+        "incomplete_path": {
+          "type": "noul",
+          "noul": 0.07
+        }
+      },
+      "usage": {
+        "input_tokens": 1259,
+        "output_tokens": 78
+      }
+    }
+  ]
+}
