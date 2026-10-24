@@ -691,6 +691,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<FirmStaffRegistrationReceivers>();
         services.AddSingleton(ProfessionalDutyChangeProcess.Definition());
         services.AddSingleton(TypeIIRangeProcess.Definition());
+        services.AddSingleton(ControlOccurrenceFanOut.Definition());
+        services.AddScoped<ControlOperationsReader>();
+        services.AddScoped<TypeIIOccurrenceCoverage>();
         services.AddScoped<TypeIIRangeVerifier>();
         services.AddScoped<TypeIIRangeReceivers>();
         services.AddScoped<ProfessionalDutyAdmission>();
@@ -844,6 +847,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<EngagementPersonalDecisionReceiverAuthorizer>()
             .AddRequestAuthorizer<EngagementAcceptanceReceiverAuthorizer>()
             .AddRequestAuthorizer<TypeIIRangeReceiverAuthorizer>()
+            .AddRequestAuthorizer<ControlOccurrenceReceiverAuthorizer>()
             .AddRequestAuthorizer<ProfessionalDutyAdministrationAuthorizer>()
             .AddRequestAuthorizer<ServiceEngagementAcceptanceAuthorizer>()
             .AddRequestAuthorizer<IndependenceAdministrationAuthorizer>()
@@ -1150,6 +1154,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<AmendTypeIIObservationPeriodHandler>()
             .AddRequestHandler<CancelTypeIIPeriodAmendmentHandler>()
             .AddRequestHandler<AcquireTypeIIPeriodRangeHandler>()
+            .AddRequestHandler<MaterializeControlOccurrenceHandler>()
             .AddRequestHandler<ApplyTypeIIPeriodRangeHandler>()
             .AddRequestHandler<SettleTypeIIPeriodRangeHandler>()
             .AddRequestHandler<RejectTypeIIPeriodOpeningHandler>()
@@ -1502,6 +1507,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<TypeIIRangeReactor>(TypeIIRangeReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<TypeIIRangeReleaseReactor>(TypeIIRangeReleaseReactor.WorkloadName, WorkloadScope.PerTenant,
+                options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
+            .AddReactor<ControlOccurrenceFanOutReactor>(ControlOccurrenceFanOutReactor.WorkloadName, WorkloadScope.PerTenant,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })
             .AddReactor<FirmStaffStatusReevaluationReactor>(FirmStaffStatusReevaluationReactor.WorkloadName, WorkloadScope.Global,
                 options => { options.FailureAttemptLimit = int.MaxValue; options.MaximumFailureDelay = TimeSpan.FromSeconds(2); })

@@ -32,7 +32,8 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
     RiskDraftListReadConsistency? riskConsistency = null,
     CampaignDirectoryReadConsistency? campaignConsistency = null,
     IEnumerable<IAccountableWorkItemDirectoryReader>? accountableWorkItems = null,
-    AccessReviewQueueEligibility? accessReviewQueueEligibility = null)
+    AccessReviewQueueEligibility? accessReviewQueueEligibility = null,
+    ControlOperationsReader? operatingReader = null)
 {
     public const int SystemEscalationDays = 7;
     public const int DefaultHorizonDays = 30;
@@ -84,7 +85,7 @@ public sealed class WorkQueueReader(IAggregateReader reader, OperatingAuthority 
         var today = todayOverride ?? DateOnly.FromDateTime(now.UtcDateTime);
         var projectedKinds = _accountableWorkItems.SelectMany(static reader =>
                 reader.ProjectedKinds).ToHashSet(StringComparer.Ordinal);
-        var work = await WorkSource.LoadAsync(reader, queueConsistency.EventReader, tenantId, programId, today,
+        var work = await WorkSource.LoadAsync(reader, queueConsistency.EventReader, operatingReader, tenantId, programId, today,
             today.AddDays(horizonDays), now, workItemId, boundaries,
             projectedKinds, ct)
             .ConfigureAwait(false);

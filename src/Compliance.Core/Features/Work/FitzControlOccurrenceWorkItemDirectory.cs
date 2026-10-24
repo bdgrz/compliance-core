@@ -1,10 +1,12 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Work;
 
-sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregateReader sourceReader)
+sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregateReader sourceReader,
+    IImmutableContentStore content)
     : FitzKvProjectionStore(client,
         "kv://bdgrz/accountable-work-items/control-occurrences-v1", ProjectorName),
       IAccountableWorkItemDirectoryReader, IControlOccurrenceWorkItemProjection
@@ -25,7 +27,7 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
         [WorkSource.ControlOccurrence, WorkSource.OccurrenceReview];
 
     public EventStreamPattern SourcePattern(Uuid tenantId) =>
-        EventStreamPattern.ForPattern(tenantId.ToString(), "control-operations");
+        EventStreamPattern.ForPattern(tenantId.ToString());
 
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
         CancellationToken ct = default) => base.LoadCheckpointAsync(new CheckpointIdentity(
@@ -185,8 +187,8 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
                 foreach (var period in ControlCadenceSchedule.Periods(plan.Cadence,
                              plan.EffectiveFrom, until, horizon))
                 {
-                    var occurrenceId = ControlCadenceSchedule.OccurrenceId(controlId,
-                        period.Start);
+                    var occurrenceId = ControlOccurrenceIdentity.Of(tenantId, programId, controlId,
+                        ControlOccurrenceIdentity.WindowOf(period));
                     if (occurrences.ContainsKey(occurrenceId) ||
                         !generatedOccurrenceIds.Add(occurrenceId) ||
                         !Wants(occurrenceId, WorkSource.ControlOccurrence, workItemId))
@@ -221,8 +223,8 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
                 await ApplyOccurrenceReviewedAsync(reviewed, ct).ConfigureAwait(false);
                 break;
             default:
-                throw new InvalidOperationException(
-                    $"The control occurrence projector cannot apply {domainEvent.GetType().Name}.");
+                // The projection reads the plan and occurrence areas of the tenant; any other fact is not its input.
+                return;
         }
 
         await IncrementRevisionAsync(ct).ConfigureAwait(false);
@@ -231,7 +233,8 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
     async ValueTask ApplyPlanProposalAsync(ControlOperatingPlanProposed proposed,
         CancellationToken ct)
     {
-        var plan = proposed.Plan;
+        var plan = await content.ReadJsonAsync<ControlOperatingPlanView>(proposed.TenantId.ToString(),
+            proposed.PlanContent, ct).ConfigureAwait(false);
         if (proposed.TenantId == Uuid.Empty || proposed.ProgramId == Uuid.Empty ||
             proposed.ControlId == Uuid.Empty || proposed.Revision < 1 ||
             plan is null || plan.TenantId != proposed.TenantId ||
@@ -291,10 +294,11 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
         if (approved.TenantId == Uuid.Empty || approved.ProgramId == Uuid.Empty ||
             approved.ControlId == Uuid.Empty || approved.PlanVersionId == Uuid.Empty ||
             approved.ApproverMemberId == Uuid.Empty ||
-            !HasMemberActor(approved.ApprovedBy, approved.ApproverMemberId) ||
-            approved.Reassignments is null)
+            !HasMemberActor(approved.ApprovedBy, approved.ApproverMemberId))
             throw new InvalidOperationException(
                 "A control operating-plan approval must preserve its source and approver.");
+        var reassignments = await content.ReadJsonAsync<IReadOnlyList<OccurrenceReassignmentView>>(
+            approved.TenantId.ToString(), approved.ReassignmentsManifest, ct).ConfigureAwait(false);
 
         var lineKey = ControlOccurrenceWorkItemDirectorySchema.LineKey(approved.ProgramId,
             approved.ControlId);
@@ -337,7 +341,7 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
         await ControlOccurrenceWorkItemDirectorySchema.Plans.ReplaceAsync(Transaction, pending,
             approvedPlan, ct).ConfigureAwait(false);
 
-        foreach (var reassignment in approved.Reassignments)
+        foreach (var reassignment in reassignments)
             await ApplyReassignmentAsync(approved, approvedPlan, reassignment, ct)
                 .ConfigureAwait(false);
 
@@ -357,17 +361,16 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
     {
         if (reassignment is null || reassignment.OccurrenceId == Uuid.Empty ||
             reassignment.PlanVersionId != approved.PlanVersionId ||
-            reassignment.To != plan.Owner || reassignment.From is null)
+            reassignment.To != plan.Owner)
             throw new InvalidOperationException(
                 "A plan approval reassignment must target its approved owner and plan.");
         var key = ControlOccurrenceWorkItemDirectorySchema.OccurrenceKey(approved.ProgramId,
             reassignment.OccurrenceId);
         var occurrence = await ControlOccurrenceWorkItemDirectorySchema.Occurrences.GetAsync(
             Transaction, key, ct).ConfigureAwait(false) ?? throw new InvalidOperationException(
-            "An occurrence reassignment must refer to a projected open occurrence.");
+            "An occurrence reassignment must refer to a projected occurrence.");
         if (occurrence.TenantId != approved.TenantId || occurrence.ProgramId != approved.ProgramId ||
-            occurrence.ControlId != approved.ControlId ||
-            occurrence.Assignee != reassignment.From || occurrence.State is not (Open or Returned))
+            occurrence.ControlId != approved.ControlId)
             throw new InvalidOperationException(
                 "An occurrence reassignment cannot change work outside its current source scope.");
         await ControlOccurrenceWorkItemDirectorySchema.Occurrences.ReplaceAsync(Transaction,
@@ -414,7 +417,8 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
             attested.OccurrenceId);
         var current = await ControlOccurrenceWorkItemDirectorySchema.Occurrences.GetAsync(
             Transaction, key, ct).ConfigureAwait(false);
-        var attestation = attested.Attestation;
+        var attestation = await content.ReadJsonAsync<ControlAttestationView>(attested.TenantId.ToString(),
+            attested.AttestationContent, ct).ConfigureAwait(false);
         if (current is null || current.TenantId != attested.TenantId ||
             current.ProgramId != attested.ProgramId || current.ControlId != attested.ControlId ||
             attested.Revision != checked(current.Revision + 1) || attestation is null ||
@@ -448,7 +452,8 @@ sealed class FitzControlOccurrenceWorkItemDirectory(IKvClient client, IAggregate
             reviewed.OccurrenceId);
         var current = await ControlOccurrenceWorkItemDirectorySchema.Occurrences.GetAsync(
             Transaction, key, ct).ConfigureAwait(false);
-        var decision = reviewed.Review;
+        var decision = await content.ReadJsonAsync<ControlOccurrenceReviewView>(reviewed.TenantId.ToString(),
+            reviewed.ReviewContent, ct).ConfigureAwait(false);
         if (current is null || current.TenantId != reviewed.TenantId ||
             current.ProgramId != reviewed.ProgramId || current.ControlId != reviewed.ControlId ||
             reviewed.Revision != checked(current.Revision + 1) ||

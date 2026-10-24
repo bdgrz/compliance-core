@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AdvisorCollaboration;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Controls;
@@ -392,7 +393,7 @@ public sealed class AdvisorRecordVersionResolverTests
 
         public AdvisorRecordVersionResolver Resolver(IBoundaryDirectoryReader? boundaries = null,
             IReadinessDirectoryReader? readiness = null) => new(Reader, Metadata,
-            new EvidenceSupportTargetSource(Reader), boundaries ?? new BoundaryReader(null),
+            new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events)), boundaries ?? new BoundaryReader(null),
             readiness ?? new ReadinessReader(null, null));
 
         public async Task<ControlDraft> SeedControlAsync()

@@ -48,8 +48,8 @@ public sealed class EventPersistenceFrameTests
             Beginning = () => ids.AddRange(Enumerable.Range(0, 2000).Select(_ => Uuid.CreateVersion4())),
         };
         var store = Guard(new FitzEventStore(streams, serializer), serializer);
-        var ev = new DueControlOccurrencesGenerated(Uuid.CreateVersion4(), _aggregate, 1,
-            "window", new DateOnly(2026, 10, 22), ids, Uuid.CreateVersion4(), "Lead", Now);
+        var ev = new TenantMemberInvited(Uuid.CreateVersion4(), "lead@example.test", "client_personnel", false,
+            "hash", Now.AddDays(7), Uuid.CreateVersion4(), GuestProgramIds: ids, InvitedAt: Now);
         ev.AttachMetadata(Event("metadata", 1).Metadata);
         var checkedBytes = serializer.Serialize(ev).ToArray();
 
@@ -59,7 +59,7 @@ public sealed class EventPersistenceFrameTests
         // Assert
         Assert.Equal(2001, ids.Count);
         Assert.Equal(checkedBytes, Assert.Single(streams.Bodies));
-        Assert.Single(Assert.IsType<DueControlOccurrencesGenerated>(serializer.Deserialize(streams.Bodies[0])).OccurrenceIds);
+        Assert.Single(Assert.IsType<TenantMemberInvited>(serializer.Deserialize(streams.Bodies[0])).GuestProgramIds!);
     }
 
     [Fact]

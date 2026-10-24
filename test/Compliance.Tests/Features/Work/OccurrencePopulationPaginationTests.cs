@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Work;
@@ -78,7 +79,7 @@ public sealed class OccurrencePopulationPaginationTests
         Assert.Equal(target.PeriodEnd, recorded.PeriodEnd);
         Assert.Equal(target.PlanVersionId, recorded.PlanVersionId);
         Assert.Equal(target.ControlVersionId, recorded.ControlVersionId);
-        Assert.Equal(submitted.Value.Attestations[0], Assert.Single(recorded.Attestations));
+        Assert.Equal(WireJson.Of(submitted.Value.Attestations[0]), WireJson.Of(Assert.Single(recorded.Attestations)));
         Assert.Single(fresh, item => item.State == "submitted");
         Assert.Equal(fresh.Select(item => (item.OccurrenceId, item.State, item.Revision)),
             replayedPopulation.Select(item => (item.OccurrenceId, item.State, item.Revision)));
@@ -135,6 +136,7 @@ public sealed class OccurrencePopulationPaginationTests
         services.AddSingleton(events);
         services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        services.AddSingleton(source.Provider.GetRequiredService<IImmutableContentStore>());
         services.AddSingleton<TimeProvider>(new FixedClock(now));
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(source.Permissions));
         services.AddSingleton<IProgramResourceScopeResolver, TestProgramResourceScopeResolver>();

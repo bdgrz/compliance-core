@@ -590,6 +590,7 @@ public sealed class ControlLifecycleHandlerTests
                     .AddSingleton(new ControlActivationReleaseGate(true))
                     .AddSingleton(new ControlLifecycleReleaseGate(lifecycleEnabled))
                     .AddScoped<ControlActivationSource>()
+                    .AddScoped<ControlOperationsReader>()
                     .AddScoped<ControlImpactService>()
                     .AddScoped<IControlImpactContributor, ApplicabilityControlImpactContributor>()
                     .AddScoped<IControlImpactContributor, ResponsibilityControlImpactContributor>()
@@ -736,54 +737,36 @@ public sealed class ControlLifecycleHandlerTests
             var control = await ProgramManagementServices.HydrateAsync(Provider,
                 new ControlDraft(TenantId, ControlId));
             var now = DateTimeOffset.UtcNow;
-            await ProgramManagementServices.SeedAsync(Provider,
-                new ControlOperationsLedger(TenantId, ProgramId), ledger =>
-                {
-                    var revision = ledger.PlanRevision(ControlId);
-                    Assert.Null(ledger.ProposePlan(ControlId, revision, planId,
-                        control.ApprovedVersion!, new OperatingHolder("member", OwnerMemberId),
-                        null, RbacIds.Member(TenantId, ReviewerUserId), false,
-                        new ControlCadence("ad_hoc", DueWithinDays: 1),
-                        effectiveFrom ?? EffectiveFrom, "Operate when triggered.",
-                        RbacIds.Member(TenantId, AuthorUserId), "Author", now, null));
-                    return CommandResult(approve
-                        ? ledger.ApprovePlan(ControlId, revision + 1, planId,
-                            "Independently approved.", RbacIds.Member(TenantId, ApproverUserId),
-                            "Approver", now, null)
-                        : null);
-                });
+            await ControlOperatingSeed.ProposeAsync(Provider, TenantId, ProgramId, ControlId,
+                control.ApprovedVersion!.VersionId, control.ApprovedVersion.Content.ExpectedEvidenceDescriptions, planId, new OperatingHolder("member", OwnerMemberId), null,
+                RbacIds.Member(TenantId, ReviewerUserId), new ControlCadence("ad_hoc", DueWithinDays: 1),
+                effectiveFrom ?? EffectiveFrom, "Operate when triggered.",
+                RbacIds.Member(TenantId, AuthorUserId), "Author", now);
+            if (approve)
+                await ControlOperatingSeed.ApproveAsync(Provider, TenantId, ProgramId, ControlId, planId,
+                    RbacIds.Member(TenantId, ApproverUserId), "Approver", now);
             return planId;
         }
 
         public async Task<Uuid> SeedOccurrenceAsync(bool complete = false,
             Uuid? artifactId = null, string? evidenceReference = null)
         {
-            var occurrenceId = Uuid.CreateVersion4();
             var now = DateTimeOffset.UtcNow;
-            await ProgramManagementServices.SeedAsync(Provider,
-                new ControlOperationsLedger(TenantId, ProgramId), ledger =>
-                {
-                    var windows = new Dictionary<Uuid, DateOnly?> { [InitialVersionId] = null };
-                    Assert.Null(ledger.OpenOccurrence(ControlId, occurrenceId, "Review access.",
-                        DateOnly.FromDateTime(now.UtcDateTime), windows, OwnerMemberId, "Owner", now));
-                    if (!complete && artifactId is null && evidenceReference is null)
-                        return Result.Success;
-                    Assert.Null(ledger.Attest(ControlId, occurrenceId, 1,
-                        new AttestationInput("complete", now, null, null, "Reviewed.", null,
-                            [new EvidenceReference(0, "artifact",
-                                evidenceReference ?? (artifactId ?? Uuid.CreateVersion4()).ToString())],
-                            new OperatingHolder("member", OwnerMemberId)), windows,
-                        OwnerMemberId, "Owner", now));
-                    var occurrence = ledger.ReadOccurrence(ControlId, occurrenceId, windows,
-                        DateOnly.FromDateTime(now.UtcDateTime))!;
-                    return CommandResult(complete
-                        ? ledger.Review(ControlId, occurrenceId, 2,
-                            occurrence.Attestations[0].AttestationId, Uuid.CreateVersion4(),
-                            "approved", "Checked.", [], RbacIds.Member(TenantId, ReviewerUserId),
-                            "Reviewer", now, null)
-                        : null);
-                });
-            return occurrenceId;
+            var plan = await ControlOperatingSeed.CurrentPlanAsync(Provider, TenantId, ProgramId, ControlId);
+            var opened = await ControlOperatingSeed.OpenAsync(Provider, TenantId, ProgramId, ControlId, plan,
+                new ControlEventWindow("test", Uuid.CreateVersion4().ToString()), "Review access.",
+                DateOnly.FromDateTime(now.UtcDateTime), OwnerMemberId, "Owner", now);
+            if (!complete && artifactId is null && evidenceReference is null)
+                return opened.OccurrenceId;
+            var attested = await ControlOperatingSeed.AttestAsync(Provider, opened, plan,
+                new AttestationInput("complete", now, null, null, "Reviewed.", null,
+                    [new EvidenceReference(0, "artifact",
+                        evidenceReference ?? (artifactId ?? Uuid.CreateVersion4()).ToString())],
+                    new OperatingHolder("member", OwnerMemberId)), OwnerMemberId, "Owner", now);
+            if (complete)
+                await ControlOperatingSeed.ReviewAsync(Provider, attested, "approved", [],
+                    RbacIds.Member(TenantId, ReviewerUserId), "Reviewer", now);
+            return opened.OccurrenceId;
         }
 
         public async Task<Uuid> SeedCorrectiveActionAsync(bool complete = false,

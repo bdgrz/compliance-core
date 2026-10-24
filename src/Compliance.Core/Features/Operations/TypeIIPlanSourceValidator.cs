@@ -14,8 +14,8 @@ namespace Bdgrz.Compliance.Features.Operations;
 static class TypeIIPlanSourceValidator
 {
     public static async ValueTask<Result<TypeIIPlanSourceValidation>> ValidateAsync(
-        IAggregateReader reader, IDomainEventReader events, Uuid tenantId, Uuid programId, Uuid examinationId,
-        TypeIIPlanContent content, DateTimeOffset proposedAt, CancellationToken ct)
+        IAggregateReader reader, IDomainEventReader events, ControlOperationsReader operating, Uuid tenantId,
+        Uuid programId, Uuid examinationId, TypeIIPlanContent content, DateTimeOffset proposedAt, CancellationToken ct)
     {
         if (content is null || content.ExaminationId != examinationId ||
             content.CarryForwardInputs is null || content.Controls is null ||
@@ -68,7 +68,7 @@ static class TypeIIPlanSourceValidator
             content, proposedAt, ct).ConfigureAwait(false);
         if (!findings.IsSuccess)
             return Result<TypeIIPlanSourceValidation>.Failure(findings.Error!);
-        if (!await ControlPlansMatchAsync(reader, tenantId, programId, content, baseline,
+        if (!await ControlPlansMatchAsync(reader, operating, tenantId, programId, content, baseline,
                 proposedAt, ct).ConfigureAwait(false))
             return Failure(RequestErrorKind.Conflict,
                 "Every planned control must match its exact approved control version, operating owner, cadence, and effective period.");
@@ -175,7 +175,8 @@ static class TypeIIPlanSourceValidator
         return Result.Success;
     }
 
-    static async ValueTask<bool> ControlPlansMatchAsync(IAggregateReader reader, Uuid tenantId,
+    static async ValueTask<bool> ControlPlansMatchAsync(IAggregateReader reader, ControlOperationsReader operating,
+        Uuid tenantId,
         Uuid programId, TypeIIPlanContent content, TypeIBaselineView baseline,
         DateTimeOffset proposedAt, CancellationToken ct)
     {
@@ -184,8 +185,6 @@ static class TypeIIPlanSourceValidator
         if (content.Controls.Count != baselineControls.Length)
             return false;
 
-        var operations = await reader.HydrateAsync(new ControlOperationsLedger(tenantId, programId), ct)
-            .ConfigureAwait(false);
         foreach (var source in baselineControls)
         {
             var control = await reader.HydrateAsync(new ControlDraft(tenantId, source.RecordId), ct)
@@ -202,7 +201,8 @@ static class TypeIIPlanSourceValidator
                 version.EffectiveUntil is { } versionUntil && versionUntil <= content.PeriodStart)
                 return false;
 
-            var plan = operations.PlanOn(source.RecordId, content.PeriodStart);
+            var plan = (await operating.ReadLineAsync(tenantId, programId, source.RecordId, Uuid.Empty, ct)
+                .ConfigureAwait(false)).Line.PlanOn(content.PeriodStart);
             if (plan is not { Status: "approved" or "superseded", Owner: not null } ||
                 plan.Cadence is null || ControlCadenceSchedule.Validate(plan.Cadence) is not null ||
                 plan.ControlVersionId != source.VersionId || plan.ApprovedAt is not { } approvedAt ||

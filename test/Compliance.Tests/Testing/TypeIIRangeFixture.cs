@@ -49,6 +49,15 @@ sealed class TypeIIRangeFixture : IAsyncDisposable
 
     public Uuid FirstPeriodId { get; } = Uuid.CreateVersion4();
 
+    /// <summary>The control the period plan observes, planned quarterly from the start of the first period.</summary>
+    public Uuid ControlId { get; } = Uuid.CreateVersion4();
+
+    public Uuid ControlVersionId { get; } = Uuid.CreateVersion4();
+
+    public Uuid OwnerMemberId { get; } = Uuid.CreateVersion4();
+
+    public Uuid ReviewerMemberId { get; } = Uuid.CreateVersion4();
+
     public DateOnly FirstStart { get; } = new(2026, 10, 1);
 
     public DateOnly FirstEnd { get; } = new(2027, 9, 30);
@@ -134,6 +143,18 @@ sealed class TypeIIRangeFixture : IAsyncDisposable
         return id;
     }
 
+    /// <summary>Seeds the approved quarterly operating plan of the period's control, effective from the period start.</summary>
+    public async Task<ControlOperatingPlanView> SeedOperatingPlanAsync()
+    {
+        var planId = Uuid.CreateVersion4();
+        await ControlOperatingSeed.ProposeAsync(Host.Provider, TenantId, ProgramId, ControlId, ControlVersionId,
+            ["Dated review record"], planId, new OperatingHolder("member", OwnerMemberId), null, ReviewerMemberId,
+            new ControlCadence(ControlCadenceSchedule.Recurring, "quarterly", FirstStart, 0), FirstStart,
+            "Operate quarterly.", ActorMemberId, "Compliance lead", StartedAt.AddDays(-2));
+        return await ControlOperatingSeed.ApproveAsync(Host.Provider, TenantId, ProgramId, ControlId, planId,
+            Uuid.CreateVersion4(), "Approver", StartedAt.AddDays(-1));
+    }
+
     /// <summary>Records, approves and freezes the close of a period, as the executive handlers leave it.</summary>
     public async Task FreezeCloseAsync(Uuid periodId)
     {
@@ -158,8 +179,8 @@ sealed class TypeIIRangeFixture : IAsyncDisposable
         Uuid.CreateVersion4(), new string('a', 64), Uuid.CreateVersion4(), start, end, "Audit Firm",
         ["security", "availability"], Uuid.CreateVersion4(), Uuid.CreateVersion4(),
         [Reference("policy"), Reference("risk"), Reference("vendor"), Reference("finding"), Reference("change")],
-        [new TypeIIControlPlanEntry(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "Quarterly access review",
-            Uuid.CreateVersion4(), "quarterly", 4, start, null,
+        [new TypeIIControlPlanEntry(ControlId, ControlVersionId, "Quarterly access review",
+            OwnerMemberId, "quarterly", 4, start, null,
             ExpectedEvidenceDescriptions: ["Dated review record"])],
         [new TypeIICarriedForwardGap("finding", gap, Uuid.CreateVersion4(), 1, new string('b', 64), "carry")],
         [new TypeIIPlanGapAcknowledgement(gap, "Open control gap", "acknowledged",

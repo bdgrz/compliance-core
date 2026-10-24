@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Work;
 using Bdgrz.Compliance.Tests.Features.Operations;
@@ -27,9 +28,10 @@ public sealed class ConcurrentOccurrenceSubmissionTests
         var occurrence = (await source.OccurrencesAsync("missed"))[0];
         Assert.Equal(0, occurrence.Revision);
         var events = source.Provider.GetRequiredService<IEventStore>();
-        var ledger = new ControlOperationsLedger(source.TenantId, source.ProgramId);
-        var before = await ProgramManagementServices.HydrateAsync(source.Provider, ledger);
-        var barrier = new CompetingAppendStore(events, ledger.Stream, before.CommittedStreamPosition);
+        var target = new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId,
+            occurrence.OccurrenceId);
+        var before = await ProgramManagementServices.HydrateAsync(source.Provider, target);
+        var barrier = new CompetingAppendStore(events, target.Stream, before.CommittedStreamPosition);
         await using var provider = Compose(source, barrier);
         var owner = source.Attest(occurrence) with { Notes = "Owner submission" };
         var backup = source.Attest(occurrence) with { Notes = "Backup submission" };
@@ -39,9 +41,9 @@ public sealed class ConcurrentOccurrenceSubmissionTests
             SubmitAsync(provider, source.OwnerUserId, owner),
             SubmitAsync(provider, source.BackupUserId, backup));
         var after = await ProgramManagementServices.HydrateAsync(provider,
-            new ControlOperationsLedger(source.TenantId, source.ProgramId));
+            new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, occurrence.OccurrenceId));
         var records = new List<DomainEventRecord>();
-        await foreach (var record in events.ReadAsync(ledger.Stream, before.CommittedStreamPosition, CancellationToken.None))
+        await foreach (var record in events.ReadAsync(target.Stream, before.CommittedStreamPosition, CancellationToken.None))
             records.Add(record);
         await ProjectAsync(provider, source.TenantId);
         var queue = await ReviewWorkAsync(provider, source, source.ReviewerUserId);
@@ -54,9 +56,8 @@ public sealed class ConcurrentOccurrenceSubmissionTests
 
         // Assert
         var winner = Assert.Single(results, result => result.Result is { IsSuccess: true }).Result!.Value;
-        var loser = Assert.Single(results, result => result.Conflict is not null);
-        Assert.Null(loser.Result);
-        Assert.IsType<EventStreamConcurrencyException>(loser.Conflict);
+        var loser = Assert.Single(results, result => result.Result is { IsSuccess: false }).Result!.Value;
+        Assert.Equal(RequestErrorKind.Conflict, loser.Error!.Kind);
         Assert.Equal(2, barrier.Arrivals);
         Assert.All(barrier.ExpectedPositions, position => Assert.Equal(before.CommittedStreamPosition, position));
         Assert.All(barrier.BatchSizes, count => Assert.Equal(2, count));
@@ -65,7 +66,7 @@ public sealed class ConcurrentOccurrenceSubmissionTests
         var opened = Assert.IsType<ControlOccurrenceOpened>(records[0].Event);
         var retained = Assert.IsType<ControlOccurrenceAttested>(records[1].Event);
         var attestation = Assert.Single(winner.Value.Attestations);
-        Assert.Equal(retained.Attestation, attestation);
+        Assert.Equal(retained.OccurrenceId, occurrence.OccurrenceId);
         var winningMember = results[0].Result is { IsSuccess: true } ? source.OwnerMemberId : source.BackupMemberId;
         Assert.Equal(winningMember.ToString(), opened.OpenedBy.Id);
         var winningUser = results[0].Result is { IsSuccess: true } ? source.OwnerUserId : source.BackupUserId;
@@ -77,7 +78,7 @@ public sealed class ConcurrentOccurrenceSubmissionTests
         Assert.Equal(1, attestation.Version);
         var current = Assert.Single(population.Value.Items, item => item.OccurrenceId == occurrence.OccurrenceId);
         Assert.Equal("submitted", current.State);
-        Assert.Equal(attestation, Assert.Single(current.Attestations));
+        Assert.Equal(WireJson.Of(attestation), WireJson.Of(Assert.Single(current.Attestations)));
         var item = Assert.Single(queue.Value.Items);
         Assert.Equal(occurrence.OccurrenceId, item.SourceId);
         Assert.Equal(1, queue.Value.Counts.Total);
@@ -143,6 +144,7 @@ public sealed class ConcurrentOccurrenceSubmissionTests
         services.AddSingleton(events);
         services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        services.AddSingleton(source.Provider.GetRequiredService<IImmutableContentStore>());
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(source.Permissions));
         services.AddSingleton<IProgramResourceScopeResolver, TestProgramResourceScopeResolver>();
         services.AddSingleton<ITenantActivity, ActiveTenant>();

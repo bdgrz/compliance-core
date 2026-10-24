@@ -285,7 +285,8 @@ public sealed class PolicyDecisionWorkTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            policies: fixture.Policies, accountableWorkItems: [projected]);
+            policies: fixture.Policies, accountableWorkItems: [projected],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
             "Approver");
 

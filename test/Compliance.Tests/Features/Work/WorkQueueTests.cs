@@ -364,7 +364,8 @@ public sealed class WorkQueueTests
         var consistency = new WorkQueueReadConsistency(events, [projected]);
         var queue = new WorkQueueReader(sourceReader,
             scope.ServiceProvider.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
-            consistency, boundaries: fixture.Boundaries, accountableWorkItems: [projected]);
+            consistency, boundaries: fixture.Boundaries, accountableWorkItems: [projected],
+            operatingReader: scope.ServiceProvider.GetRequiredService<ControlOperationsReader>());
         var actor = new OperationsActor(fixture.ReviewerUserId, fixture.ReviewerMemberId,
             "Reviewer");
 
@@ -511,7 +512,8 @@ public sealed class WorkQueueTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [projection]);
+            accountableWorkItems: [projection],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
 
         // Act
         var stale = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId,
@@ -550,7 +552,8 @@ public sealed class WorkQueueTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            accountableWorkItems: [projection]);
+            accountableWorkItems: [projection],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
 
         // Act
         var stale = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId,
@@ -589,7 +592,8 @@ public sealed class WorkQueueTests
         var services = scope.ServiceProvider;
         var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
-            policies: fixture.Policies, accountableWorkItems: [evidence]);
+            policies: fixture.Policies, accountableWorkItems: [evidence],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>());
 
         // Act
         var stale = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId,

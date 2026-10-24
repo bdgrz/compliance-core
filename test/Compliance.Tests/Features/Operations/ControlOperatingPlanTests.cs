@@ -17,7 +17,7 @@ public sealed class ControlOperatingPlanTests
 
         // Act
         var approved = await fixture.AsAsync(fixture.ApproverUserId,
-            new ApproveControlOperatingPlan(fixture.TenantId, fixture.ProgramId,
+            new ApproveControlOperatingPlan(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, proposed.Revision, proposed.PlanVersionId, "Looks right."));
 
         // Assert
@@ -41,7 +41,7 @@ public sealed class ControlOperatingPlanTests
 
         // Act
         var denied = await PersonalOperatingPlanApprovalTransportTests.HttpAsync(fixture.Provider, fixture.LeadUserId,
-            new ApproveControlOperatingPlan(fixture.TenantId, fixture.ProgramId,
+            new ApproveControlOperatingPlan(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, proposed.Revision, proposed.PlanVersionId, "Mine."), RequestErrorKind.Forbidden);
 
         // Assert
@@ -186,13 +186,9 @@ public sealed class ControlOperatingPlanTests
         var fixture = await OperationsFixture.CreateAsync();
         var adHoc = new ControlCadence("ad_hoc", DueWithinDays: 10);
         await fixture.PlanAsync(cadence: adHoc);
-        var performed = await fixture.AsAsync(fixture.OwnerUserId, new OpenControlOccurrence(
-            fixture.TenantId, fixture.ProgramId, fixture.ControlId, "New hire batch",
-            fixture.Today.AddDays(-2)));
+        var performed = await fixture.AsAsync(fixture.OwnerUserId, fixture.Open("New hire batch", fixture.Today.AddDays(-2)));
         performed = await fixture.AsAsync(fixture.OwnerUserId, fixture.Attest(performed));
-        var open = await fixture.AsAsync(fixture.OwnerUserId, new OpenControlOccurrence(
-            fixture.TenantId, fixture.ProgramId, fixture.ControlId, "Contractor batch",
-            fixture.Today.AddDays(-1)));
+        var open = await fixture.AsAsync(fixture.OwnerUserId, fixture.Open("Contractor batch", fixture.Today.AddDays(-1)));
         var preview = await fixture.AsAsync(fixture.LeadUserId, new PreviewControlOperatingPlan(
             fixture.TenantId, fixture.ProgramId, fixture.ControlId, fixture.ControlVersionId,
             new OperatingHolder("member", fixture.BackupMemberId), null, fixture.ReviewerMemberId,

@@ -187,7 +187,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | MethodologyTemplate | MethodologyTemplates | narrow | ROOTASSURE-02 (pending), ROOTASSURE-04 (pending), CORE-01 (complete) | 0.86 | [source](../../../../src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs) |
 | MethodologyTemplateContribution | MethodologyTemplates | retain | ROOTASSURE-04 (pending), CORE-01 (complete) | 0.16 | [source](../../../../src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs) |
 | TemplateApplication | MethodologyTemplates | process | ROOTASSURE-03 (pending), ROOTASSURE-04 (pending), CORE-01 (complete) | 0.88 | [source](../../../../src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs) |
-| ControlOperationsLedger | Operations | split | OPS-03 (pending), OPS-11 (pending), OPS-15 (pending), OPS-16 (pending) | 0.88 | [source](../../../../src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs) |
+| ControlOperationsLedger | Operations | split | OPS-03 (pending), OPS-11 (pending), OPS-15 (pending), OPS-16 (pending) | 0.88 | retired by the plan/occurrence split (#1022) |
 | TypeIIObservationCalendar | Operations | narrow | OPS-09 (pending), OPS-10 (pending), OPS-16 (pending) | 0.87 | [source](../../../../src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs) |
 | TypeIIPeriod | Operations | narrow | OPS-09 (pending), OPS-10 (pending), OPS-12 (pending), OPS-17 (pending), CORE-01 (complete) | 0.91 | [source](../../../../src/Compliance.Core/Features/Operations/TypeIIPeriod.cs) |
 | Policy | Policies | narrow | OPS-11 (pending), OPS-13 (pending), OPS-15 (pending) | 0.78 | [source](../../../../src/Compliance.Core/Features/Policies/Policy.cs) |

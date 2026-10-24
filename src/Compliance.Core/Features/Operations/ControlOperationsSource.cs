@@ -1,8 +1,9 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
-/// <summary>Loads the control and program ledger an operations request acts on.</summary>
+/// <summary>Loads the control and operating state an operations request acts on.</summary>
 static class ControlOperationsSource
 {
     public static async ValueTask<ControlDraft?> LoadControlAsync(IAggregateReader reader,
@@ -18,14 +19,14 @@ static class ControlOperationsSource
     ///     starting on or before the horizon.
     /// </summary>
     public static async ValueTask<IReadOnlyList<PlannedControlOccurrences>> ReadPlannedAsync(
-        IAggregateReader reader, ControlOperationsLedger ledger, Uuid tenantId, Uuid programId,
+        IAggregateReader reader, ControlOperationsSnapshot snapshot, Uuid tenantId, Uuid programId,
         DateOnly today, DateOnly horizon, CancellationToken ct)
     {
-        ArgumentNullException.ThrowIfNull(ledger);
+        ArgumentNullException.ThrowIfNull(snapshot);
         var planned = new List<PlannedControlOccurrences>();
-        foreach (var controlId in ledger.PlannedControlIds.ToArray())
+        foreach (var controlId in snapshot.PlannedControlIds.ToArray())
         {
-            if (ledger.CurrentPlan(controlId) is not { } plan)
+            if (snapshot.CurrentPlan(controlId) is not { } plan)
                 continue;
             var control = await LoadControlAsync(reader, tenantId, programId, controlId, ct)
                 .ConfigureAwait(false);
@@ -33,11 +34,20 @@ static class ControlOperationsSource
                 continue;
             planned.Add(new PlannedControlOccurrences(controlId, plan,
                 control.ApprovedVersion?.Identifier ?? controlId.ToString(),
-                ledger.ReadOccurrences(controlId, OperatingAuthority.VersionWindows(control),
+                snapshot.ReadOccurrences(controlId, OperatingAuthority.VersionWindows(control),
                     today, horizon)));
         }
         return planned;
     }
+
+    /// <summary>The episode of every first-owner operating operation.</summary>
+    public const string InitialEpisode = "initial";
+
+    /// <summary>The provenance of a root operating operation on its own owner stream.</summary>
+    public static OperationProvenance Provenance(Uuid logicalId, string commandKind, EventStreamAddress owner,
+        OperationsActor actor, long expectedRevision, string intentDigest, DateTimeOffset acceptedAt) => new(
+        logicalId, logicalId, null, commandKind, ActorReference.ForMember(actor.MemberId, actor.Display), owner,
+        InitialEpisode, (ulong)expectedRevision, intentDigest, acceptedAt, owner, owner);
 
     public static RequestError ControlNotFound() =>
         new(RequestErrorKind.NotFound, "The control was not found.");

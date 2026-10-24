@@ -1,185 +1,127 @@
-using System.Security.Claims;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Operations;
-using Cntryl.Portia;
-using Cntryl.Portia.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using TypeIIPlanAggregate = Bdgrz.Compliance.Features.Examinations.TypeIIPlan;
 using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Operations;
 
 public sealed class GenerateDueControlOccurrencesHandlerTests
 {
-    static readonly DateTimeOffset StartedAt = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
-    static readonly DateTimeOffset GeneratedAt = StartedAt.AddDays(1);
-
     [Fact]
-    public async Task ShouldRecordExactDuePeriodOccurrencesAndRetryOnceGivenPersonalCommand()
+    public async Task ShouldSelectCompleteManifestAndReplayExactRetryGivenPersonalCommand()
     {
         // Arrange
-        await using var fixture = new Fixture();
-        await fixture.SeedStartedPeriodAsync();
-        var request = new GenerateDueControlOccurrences(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, new DateOnly(2027, 3, 1), "period-generation-001");
+        await using var fixture = new TypeIIRangeFixture();
+        var (period, plan) = await StartAsync(fixture);
+        var request = Request(fixture, period, "generation-001");
 
         // Act
-        var first = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
-        var retry = await fixture.Handler.HandleAsync(fixture.Context(request), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var first = await Generate(fixture, request);
+        var retried = await Generate(fixture, request);
+        var changed = await Generate(fixture, request with { ThroughDate = fixture.FirstEnd.AddDays(-1) });
+        var selected = Assert.Single(await fixture.Host.EventsAsync<DueControlOccurrencesGenerated>(
+            fixture.StreamOf(period)));
+        var ids = await fixture.Host.Content.ReadJsonAsync<IReadOnlyList<Uuid>>(fixture.TenantId.ToString(),
+            selected.OccurrenceIdsManifest);
+        var manifest = await fixture.Host.Content.ReadJsonAsync<ControlOccurrenceSelectionManifest>(
+            fixture.TenantId.ToString(), selected.CreationIntentManifest);
 
         // Assert
         Assert.True(first.IsSuccess, first.Error?.Message);
-        Assert.True(retry.IsSuccess, retry.Error?.Message);
-        Assert.Equal(2, saved.Revision);
-        var batch = Assert.Single(saved.OccurrenceGenerationBatches);
-        var current = Assert.IsType<TypeIIPeriodView>(saved.Current);
-        Assert.Equal("period-generation-001", batch.GenerationKey);
-        Assert.Equal(request.ThroughDate, batch.ThroughDate);
-        Assert.Equal(current.ExpectedOccurrences.Where(item => item.DueOn <= request.ThroughDate)
-                .Select(item => item.OccurrenceId).OrderBy(static id => id.ToString()),
-            batch.OccurrenceIds);
-        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.ActorUserId), batch.ActorMemberId);
-        Assert.Equal(GeneratedAt, batch.GeneratedAt);
+        Assert.True(retried.IsSuccess, retried.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Equal(4, ids.Count);
+        Assert.Equal(ids, manifest.Selections.Select(selection => selection.OccurrenceId));
+        Assert.Equal(ids.OrderBy(static id => id.ToString(), StringComparer.Ordinal), ids);
+        var windows = new List<ControlCalendarWindow>();
+        foreach (var selection in manifest.Selections)
+        {
+            var intent = await fixture.Host.Content.ReadJsonAsync<ControlOccurrenceCreationIntent>(
+                fixture.TenantId.ToString(), selection.Intent);
+            var window = Assert.IsType<ControlCalendarWindow>(intent.Window);
+            windows.Add(window);
+            Assert.Equal(ControlOccurrenceIdentity.Of(fixture.TenantId, fixture.ProgramId, fixture.ControlId, window),
+                intent.OccurrenceId);
+            Assert.Equal(plan.PlanVersionId, intent.PlanVersionId);
+            Assert.Equal(plan.Owner, intent.Owner);
+            Assert.Equal(plan.ReviewerMemberId, intent.ReviewerMemberId);
+            Assert.Equal(ControlOccurrenceCreationIntent.RecurringTrigger, intent.Trigger);
+            Assert.Equal(selected.Operation.RootOperationId, intent.Header.RootOperationId);
+        }
+
+        Assert.Equal([new DateOnly(2026, 10, 1), new DateOnly(2027, 1, 1), new DateOnly(2027, 4, 1),
+            new DateOnly(2027, 7, 1)], windows.Select(window => window.From).Order());
+        Assert.Equal(2, (await fixture.PeriodAsync(period)).Revision);
     }
 
     [Fact]
-    public async Task ShouldRejectGenerationKeyReuseWithDifferentThroughDateGivenPriorBatch()
+    public async Task ShouldSelectOnlyNewlyDueOccurrencesGivenSecondGenerationKey()
     {
         // Arrange
-        await using var fixture = new Fixture();
-        await fixture.SeedStartedPeriodAsync();
-        var request = new GenerateDueControlOccurrences(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, new DateOnly(2027, 3, 1), "period-generation-001");
-        Assert.True((await fixture.Handler.HandleAsync(fixture.Context(request),
-            CancellationToken.None)).IsSuccess);
-        var changed = request with { ThroughDate = new DateOnly(2027, 4, 1) };
+        await using var fixture = new TypeIIRangeFixture();
+        var (period, _) = await StartAsync(fixture);
+        var firstQuarter = new GenerateDueControlOccurrences(fixture.TenantId, fixture.ProgramId, period,
+            new DateOnly(2026, 12, 31), "generation-q1");
 
         // Act
-        var result = await fixture.Handler.HandleAsync(fixture.Context(changed), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var first = await Generate(fixture, firstQuarter);
+        var second = await Generate(fixture, Request(fixture, period, "generation-rest"));
+        var selections = new List<int>();
+        foreach (var selected in await fixture.Host.EventsAsync<DueControlOccurrencesGenerated>(fixture.StreamOf(period)))
+            selections.Add((await fixture.Host.Content.ReadJsonAsync<IReadOnlyList<Uuid>>(fixture.TenantId.ToString(),
+                selected.OccurrenceIdsManifest)).Count);
+
+        // Assert
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        Assert.True(second.IsSuccess, second.Error?.Message);
+        Assert.Equal([1, 3], selections);
+    }
+
+    [Fact]
+    public async Task ShouldFailClosedGivenDueRecurringControlWithoutApprovedPlan()
+    {
+        // Arrange
+        await using var fixture = new TypeIIRangeFixture();
+        var period = await fixture.StartPeriodAsync();
+
+        // Act
+        var result = await Generate(fixture, Request(fixture, period, "generation-001"));
 
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
-        Assert.Equal(2, saved.Revision);
-        Assert.Single(saved.OccurrenceGenerationBatches);
+        Assert.Empty(await fixture.Host.EventsAsync<DueControlOccurrencesGenerated>(fixture.StreamOf(period)));
+        Assert.Equal(1, (await fixture.PeriodAsync(period)).Revision);
     }
 
     [Fact]
-    public async Task ShouldRejectSystemDispatchGivenOccurrenceGenerationCommand()
+    public async Task ShouldRejectGenerationGivenThroughDateOutsidePeriodOrMissingPeriod()
     {
         // Arrange
-        await using var fixture = new Fixture();
-        await fixture.SeedStartedPeriodAsync();
-        var request = new GenerateDueControlOccurrences(fixture.TenantId, fixture.ProgramId,
-            fixture.PeriodId, new DateOnly(2027, 3, 1), "period-generation-001");
+        await using var fixture = new TypeIIRangeFixture();
+        var (period, _) = await StartAsync(fixture);
 
         // Act
-        var result = await fixture.Handler.HandleAsync(new RequestContext<GenerateDueControlOccurrences>(
-            request, RequestActor.System), CancellationToken.None);
-        var saved = await fixture.Reader.HydrateAsync(new TypeIIPeriod(fixture.TenantId,
-            fixture.ProgramId, fixture.PeriodId));
+        var outside = await Generate(fixture, Request(fixture, period, "outside") with
+        {
+            ThroughDate = fixture.FirstEnd.AddDays(1),
+        });
+        var missing = await Generate(fixture, Request(fixture, Uuid.CreateVersion4(), "missing"));
 
         // Assert
-        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
-        Assert.Equal(1, saved.Revision);
-        Assert.Empty(saved.OccurrenceGenerationBatches);
+        Assert.Equal(RequestErrorKind.Validation, outside.Error?.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, missing.Error?.Kind);
+        Assert.Empty(await fixture.Host.EventsAsync<DueControlOccurrencesGenerated>(fixture.StreamOf(period)));
     }
 
-    sealed class Fixture : IAsyncDisposable
+    static async Task<(Uuid Period, ControlOperatingPlanView Plan)> StartAsync(TypeIIRangeFixture fixture)
     {
-        readonly ServiceProvider _provider;
-        readonly AsyncServiceScope _scope;
-        readonly ClaimsPrincipal _actor;
-
-        public Uuid TenantId { get; } = Uuid.CreateVersion4();
-        public Uuid ProgramId { get; } = Uuid.CreateVersion4();
-        public Uuid ExaminationId { get; } = Uuid.CreateVersion4();
-        public Uuid PlanId { get; } = Uuid.CreateVersion4();
-        public Uuid PeriodId { get; } = Uuid.CreateVersion4();
-        public Uuid ActorUserId { get; } = Uuid.CreateVersion4();
-        public Uuid ProposerMemberId { get; } = Uuid.CreateVersion4();
-        public Uuid ReviewerMemberId { get; } = Uuid.CreateVersion4();
-        public Uuid ApproverMemberId { get; } = Uuid.CreateVersion4();
-        public Uuid ControlOwnerId { get; } = Uuid.CreateVersion4();
-        public Uuid GapId { get; } = Uuid.CreateVersion4();
-        public IAggregateExecutor Executor { get; }
-        public IAggregateWriter Writer { get; }
-        public IAggregateReader Reader { get; }
-        public GenerateDueControlOccurrencesHandler Handler { get; }
-        public TimeProvider Clock { get; } = new FixedTimeProvider(GeneratedAt);
-
-        public Fixture()
-        {
-            _actor = new ClaimsPrincipal(new ClaimsIdentity(
-                [new Claim("iss", "bdgrz"), new Claim("sub", ActorUserId.ToString()),
-                    new Claim("name", "Period manager")], "BdgrzSession"));
-            var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
-            services.AddPortia();
-            _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-            _scope = _provider.CreateAsyncScope();
-            Executor = _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-            Writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
-            Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-            Handler = new GenerateDueControlOccurrencesHandler(Executor, Clock);
-        }
-
-        public Cntryl.Portia.RequestContext<GenerateDueControlOccurrences> Context(
-            GenerateDueControlOccurrences request) => new(request,
-            new RequestDispatchContext(_actor, new HttpInvocation("POST",
-                "/type-ii-periods/generate-occurrences", "/type-ii-periods/generate-occurrences",
-                "period-occurrence-generation-test")));
-
-        public async Task SeedStartedPeriodAsync()
-        {
-            var plan = new TypeIIPlanAggregate(TenantId, ProgramId, PlanId);
-            Assert.Null(plan.Propose(PlanContent(), ProposerMemberId, "Plan proposer", StartedAt.AddDays(-3)));
-            Assert.Null(plan.Review(plan.Revision, 1, "approve", "Exact controls and opening gaps reviewed.",
-                ReviewerMemberId, "Independent reviewer", StartedAt.AddDays(-2)));
-            Assert.Null(plan.Approve(plan.Revision, 1, "Approved for observation.", ApproverMemberId,
-                "CISO", "Executive approver", StartedAt.AddDays(-1)));
-            await Writer.SaveAsync(plan, new RequestDispatchContext(RequestActor.System));
-
-            var period = new TypeIIPeriod(TenantId, ProgramId, PeriodId);
-            Assert.Null(period.Start(plan.Current!, Opening(), ProposerMemberId, "Compliance lead", StartedAt));
-            await Writer.SaveAsync(period, new RequestDispatchContext(RequestActor.System));
-        }
-
-        TypeIIPlanContent PlanContent() => new(ExaminationId, Uuid.CreateVersion4(), new string('a', 64),
-            Uuid.CreateVersion4(), new DateOnly(2026, 10, 1), new DateOnly(2027, 9, 30),
-            "Audit Firm", ["security", "availability"], Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-            [Reference("policy"), Reference("risk"), Reference("vendor"), Reference("finding"),
-                Reference("change")],
-            [new TypeIIControlPlanEntry(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
-                "Quarterly access review", ControlOwnerId, "quarterly", 4, new DateOnly(2026, 10, 1), null,
-                ExpectedEvidenceDescriptions: ["Dated review record"])],
-            [new TypeIICarriedForwardGap("finding", GapId, Uuid.CreateVersion4(), 1,
-                new string('b', 64), "carry")],
-            [new TypeIIPlanGapAcknowledgement(GapId, "Open control gap", "acknowledged",
-                "The control owner and due date were confirmed.")], []);
-
-        TypeIIPeriodOpeningContent Opening() => new(ExaminationId, Uuid.CreateVersion4(),
-            new string('c', 64), [Reference("boundary"), Reference("inventory"), Reference("control"),
-                Reference("policy"), Reference("provider"), Reference("finding")], [GapId]);
-
-        static ExaminationContentReference Reference(string sourceType) => new(sourceType,
-            Uuid.CreateVersion5(Uuid.Empty, "type-ii-period-source-record:" + sourceType),
-            Uuid.CreateVersion5(Uuid.Empty, "type-ii-period-source-version:" + sourceType), 1,
-            new string('d', 64));
-
-        public async ValueTask DisposeAsync()
-        {
-            await _scope.DisposeAsync();
-            await _provider.DisposeAsync();
-        }
+        var period = await fixture.StartPeriodAsync();
+        return (period, await fixture.SeedOperatingPlanAsync());
     }
 
-    sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
+    static GenerateDueControlOccurrences Request(TypeIIRangeFixture fixture, Uuid period, string key) =>
+        new(fixture.TenantId, fixture.ProgramId, period, fixture.FirstEnd, key);
+
+    static ValueTask<Result> Generate(TypeIIRangeFixture fixture, GenerateDueControlOccurrences request) =>
+        fixture.Host.GenerateHandler(fixture.Clock).HandleAsync(fixture.Context(request), CancellationToken.None);
 }

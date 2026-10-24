@@ -31,7 +31,7 @@ public sealed class PersonalOccurrenceProofTransportTests
             occurrence = await source.AsAsync(source.ReviewerUserId, source.Review(occurrence, "returned"));
         await using var provider = await PersonalReadinessClosureTransportTests.ComposeAsync(source.Provider,
             source.TenantId, source.ProgramId, source.Permissions);
-        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, occurrence.OccurrenceId));
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var actor = operation == "review" ? source.ReviewerUserId : source.OwnerUserId;
@@ -42,12 +42,12 @@ public sealed class PersonalOccurrenceProofTransportTests
         {
             "attest" => await bus.DispatchAsync(source.Attest(occurrence), context, CancellationToken.None),
             "review" => await bus.DispatchAsync(source.Review(occurrence, "approved"), context, CancellationToken.None),
-            _ => await bus.DispatchAsync(new CorrectControlAttestation(source.TenantId, source.ProgramId,
-                source.ControlId, occurrence.OccurrenceId, occurrence.Revision, "complete",
+            _ => await bus.DispatchAsync(new CorrectControlAttestation(Uuid.CreateVersion4(), source.TenantId,
+                source.ProgramId, source.ControlId, occurrence.OccurrenceId, occurrence.Revision, "complete",
                 DateTimeOffset.UtcNow.AddMinutes(-1), null, null, "Added missing support.", null,
                 OperationsFixture.FullSupport, "Reviewer requested support."), context, CancellationToken.None)
         };
-        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, occurrence.OccurrenceId));
 
         // Assert
         if (transport == "http")
@@ -76,11 +76,11 @@ public sealed class PersonalOccurrenceProofTransportTests
         var submitted = await source.AsAsync(source.LeadUserId, source.Attest(occurrence, personId: source.PersonId));
         await using var provider = await PersonalReadinessClosureTransportTests.ComposeAsync(source.Provider,
             source.TenantId, source.ProgramId, source.Permissions);
-        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, occurrence.OccurrenceId));
 
         // Act
         var result = await HttpAsync(provider, source.LeadUserId, source.Review(submitted, "approved"), RequestErrorKind.Forbidden);
-        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, occurrence.OccurrenceId));
 
         // Assert
         Assert.Equal("The member who performed or recorded an attestation cannot review it.", result.Error!.Message);
@@ -97,11 +97,11 @@ public sealed class PersonalOccurrenceProofTransportTests
         var occurrence = (await source.OccurrencesAsync("missed"))[0];
         await using var provider = await PersonalReadinessClosureTransportTests.ComposeAsync(source.Provider,
             source.TenantId, source.ProgramId, source.Permissions);
-        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var before = await ProgramManagementServices.HydrateAsync(provider, new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, occurrence.OccurrenceId));
 
         // Act
         var result = await HttpAsync(provider, source.OutsiderUserId, source.Attest(occurrence), RequestErrorKind.Forbidden);
-        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOperationsLedger(source.TenantId, source.ProgramId));
+        var after = await ProgramManagementServices.HydrateAsync(provider, new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, occurrence.OccurrenceId));
 
         // Assert
         Assert.Equal("Only the control owner or backup owner may perform and attest to this occurrence.", result.Error!.Message);

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Features.Evaluations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
@@ -33,6 +34,7 @@ sealed class OperationsFixture
     public required ProgramPolicies Policies { get; init; }
     public required ProgramCommitments Commitments { get; init; }
     public required ProgramRisks Risks { get; init; }
+    public IImmutableContentStore Content => Provider.GetRequiredService<IImmutableContentStore>();
     public Uuid TenantId { get; } = Uuid.CreateVersion4();
     public Uuid ProgramId { get; } = Uuid.CreateVersion4();
     public Uuid LeadUserId { get; } = Uuid.CreateVersion4();
@@ -116,6 +118,7 @@ sealed class OperationsFixture
             services =>
             {
                 services.AddScoped<OperatingAuthority>();
+                services.AddScoped<ControlOperationsReader>();
                 services.AddScoped<WorkQueueReader>();
                 services.AddScoped<WorkQueueReadConsistency>();
                 services.AddSingleton<IDomainEventReader>(provider =>
@@ -314,7 +317,8 @@ sealed class OperationsFixture
 
     public ProposeControlOperatingPlan Propose(long expectedRevision, OperatingHolder? owner = null,
         OperatingHolder? backup = null, Uuid? reviewer = null, ControlCadence? cadence = null,
-        DateOnly? effectiveFrom = null, Uuid? waiverId = null) => new(TenantId, ProgramId,
+        DateOnly? effectiveFrom = null, Uuid? waiverId = null, Uuid? planVersionId = null) =>
+        new(planVersionId ?? Uuid.CreateVersion4(), TenantId, ProgramId,
         ControlId, expectedRevision, ControlVersionId, owner ?? OwnerHolder, backup,
         reviewer ?? ReviewerMemberId, cadence ?? Monthly, effectiveFrom ?? ControlEffectiveFrom,
         "Owner runs the review monthly.", waiverId);
@@ -326,8 +330,8 @@ sealed class OperationsFixture
         var revision = (await GetPlansAsync()).Revision;
         var proposed = await ProposeAsync(revision, owner, backup, cadence: cadence,
             effectiveFrom: effectiveFrom);
-        return await AsAsync(ApproverUserId, new ApproveControlOperatingPlan(TenantId, ProgramId,
-            ControlId, proposed.Revision, proposed.PlanVersionId, "Independent approval."));
+        return await AsAsync(ApproverUserId, new ApproveControlOperatingPlan(Uuid.CreateVersion4(), TenantId,
+            ProgramId, ControlId, proposed.Revision, proposed.PlanVersionId, "Independent approval."));
     }
 
     public Task<ControlOperatingPlanSetView> GetPlansAsync() => AsAsync(OutsiderUserId,
@@ -353,15 +357,21 @@ sealed class OperationsFixture
 
     public AttestControlOccurrence Attest(ControlOccurrenceView occurrence, string result = "complete",
         IReadOnlyList<EvidenceReference>? evidence = null, string? rationale = null,
-        Uuid? personId = null) => new(TenantId, ProgramId, ControlId, occurrence.OccurrenceId,
+        Uuid? personId = null) => new(Uuid.CreateVersion4(), TenantId, ProgramId, ControlId,
+        occurrence.OccurrenceId,
         occurrence.Revision, result, DateTimeOffset.UtcNow.AddMinutes(-10), null, null,
         "Reviewed all accounts.", rationale, evidence ?? FullSupport, personId);
 
     public ReviewControlOccurrence Review(ControlOccurrenceView occurrence, string outcome,
-        IReadOnlyList<string>? actions = null, Uuid? waiverId = null) => new(TenantId, ProgramId,
-        ControlId, occurrence.OccurrenceId, occurrence.Revision,
+        IReadOnlyList<string>? actions = null, Uuid? waiverId = null) => new(Uuid.CreateVersion4(),
+        TenantId, ProgramId, ControlId, occurrence.OccurrenceId, occurrence.Revision,
         occurrence.Attestations[^1].AttestationId, outcome, "Checked independently.", actions,
         waiverId);
+
+    public OpenControlOccurrence Open(string trigger, DateOnly occurredOn, ControlBusinessWindow? window = null,
+        long expectedRevision = 0, Uuid? commandId = null) => new(TenantId, ProgramId, ControlId, trigger, occurredOn,
+        expectedRevision, commandId ?? Uuid.CreateVersion4(),
+        window ?? new ControlEventWindow("test", Uuid.CreateVersion4().ToString()));
 
     public RaiseFinding Raise(Uuid ownerMemberId, DateOnly? dueOn = null) => new(TenantId,
         ProgramId, new FindingSource("manual", null, null, "Terminated users kept VPN access."),

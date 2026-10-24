@@ -130,7 +130,7 @@ These candidates make later scope concrete. They are not established public cont
 
 ### Observation periods and recurrence — T2-01/02/03
 
-- Aggregate/model candidates: TypeIIPeriod (approved opening, expected population and generation batches); TypeIIObservationCalendar (program-wide reserved ranges); ControlOperationsLedger (materialized occurrences).
+- Aggregate/model candidates: TypeIIPeriod (approved opening, expected population and generation batches); TypeIIObservationCalendar (program-wide reserved ranges); ControlOperatingPlan (one plan line per control); ControlOccurrence (one occurrence per control and business window).
 - Commands: StartTypeIIObservationPeriod; AmendTypeIIObservationPeriod; ReviseFutureControlSchedule; GenerateDueControlOccurrences; RecordMissingOccurrence; EndObservationPeriod.
 - Queries: GetObservationPeriod; ListObservationPeriods; GetControlCalendar; ListMissingOccurrences.
 - Events: ObservationPeriodStarted; ObservationPeriodAmended; ObservationPeriodReserved; ObservationPeriodAmendmentReserved; ObservationPeriodAmendmentCompleted; ObservationPeriodAmendmentCancelled; ObservationPeriodReservationReleased; FutureControlScheduleRevised; DueControlOccurrencesGenerated; MissingOccurrenceRecorded; ObservationPeriodEnded.
@@ -1865,7 +1865,8 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Operations
 
-- [ControlOperationsLedger](../../src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs#L13)
+- [ControlOperatingPlan](../../src/Compliance.Core/Features/Operations/ControlOperatingPlan.cs#L14)
+- [ControlOccurrence](../../src/Compliance.Core/Features/Operations/ControlOccurrence.cs#L15)
 - [TypeIIPeriod](../../src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L17)
 - [TypeIIObservationCalendar](../../src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs#L8)
 
@@ -3057,18 +3058,18 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/type-i-entry-decisions` | `ListTypeIEntryDecisions` | [registration](../../src/Compliance.App/Program.cs#L1221) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/gaps/{gap_id}/annotations` | `AnnotateReadinessGap` | [registration](../../src/Compliance.App/Program.cs#L1225) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/annotations` | `ListReadinessAnnotations` | [registration](../../src/Compliance.App/Program.cs#L1229) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals` | `ProposeControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1233) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}` | `ProposeControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1233) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/preview` | `PreviewControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1237) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}/approvals` | `ApproveControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1241) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}/approvals/{command_id}` | `ApproveControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1241) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan` | `GetControlOperatingPlan` | [registration](../../src/Compliance.App/Program.cs#L1245) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/operating-blockers` | `ListControlOperatingBlockers` | [registration](../../src/Compliance.App/Program.cs#L1249) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/my-work` | `ListMyControlWork` | [registration](../../src/Compliance.App/Program.cs#L1253) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences` | `OpenControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1257) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{command_id}` | `OpenControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1257) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences` | `ListControlOccurrences` | [registration](../../src/Compliance.App/Program.cs#L1261) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}` | `GetControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1265) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations` | `AttestControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1269) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections` | `CorrectControlAttestation` | [registration](../../src/Compliance.App/Program.cs#L1273) |
-| POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews` | `ReviewControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1277) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations/{command_id}` | `AttestControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1269) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections/{command_id}` | `CorrectControlAttestation` | [registration](../../src/Compliance.App/Program.cs#L1273) |
+| PUT | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews/{command_id}` | `ReviewControlOccurrence` | [registration](../../src/Compliance.App/Program.cs#L1277) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations` | `StartControlEvaluation` | [registration](../../src/Compliance.App/Program.cs#L1281) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions` | `DefineControlEvaluationPlan` | [registration](../../src/Compliance.App/Program.cs#L1285) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions` | `ListControlEvaluationPlanVersions` | [registration](../../src/Compliance.App/Program.cs#L1289) |

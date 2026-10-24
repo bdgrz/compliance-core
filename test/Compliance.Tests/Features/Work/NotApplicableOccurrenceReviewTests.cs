@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Work;
@@ -24,8 +25,7 @@ public sealed class NotApplicableOccurrenceReviewTests
         var source = await OperationsFixture.CreateAsync();
         await using var sourceProvider = source.Provider;
         await source.PlanAsync(cadence: new ControlCadence("ad_hoc", DueWithinDays: 10));
-        var opened = await source.AsAsync(source.OwnerUserId, new OpenControlOccurrence(source.TenantId,
-            source.ProgramId, source.ControlId, "No production changes", source.Today));
+        var opened = await source.AsAsync(source.OwnerUserId, source.Open("No production changes", source.Today));
         await using var provider = Compose(source);
         var attested = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.OwnerUserId,
             source.Attest(opened, "not_applicable", [], "No production changes occurred in this period."));
@@ -33,7 +33,7 @@ public sealed class NotApplicableOccurrenceReviewTests
         var work = await ReviewWorkAsync(provider, source, source.ReviewerUserId);
         var item = Assert.Single(work.Value.Items);
         var before = await ProgramManagementServices.HydrateAsync(provider,
-            new ControlOperationsLedger(source.TenantId, source.ProgramId));
+            new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, opened.OccurrenceId));
         // Give the performer ordinary manager authority so refusal proves source SoD, not a missing reviewer role.
         source.Permissions.Managers.Add(source.OwnerMemberId);
 
@@ -41,7 +41,7 @@ public sealed class NotApplicableOccurrenceReviewTests
         var denied = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.OwnerUserId,
             source.Review(attested.Value, outcome), RequestErrorKind.Forbidden);
         var afterDenied = await ProgramManagementServices.HydrateAsync(provider,
-            new ControlOperationsLedger(source.TenantId, source.ProgramId));
+            new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, opened.OccurrenceId));
         var reviewed = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.ReviewerUserId,
             source.Review(attested.Value, outcome));
         await ProjectAsync(provider, source.TenantId);
@@ -80,8 +80,7 @@ public sealed class NotApplicableOccurrenceReviewTests
         var source = await OperationsFixture.CreateAsync();
         await using var sourceProvider = source.Provider;
         await source.PlanAsync(cadence: new ControlCadence("ad_hoc", DueWithinDays: 10));
-        var opened = await source.AsAsync(source.OwnerUserId, new OpenControlOccurrence(source.TenantId,
-            source.ProgramId, source.ControlId, "Period applicability", source.Today));
+        var opened = await source.AsAsync(source.OwnerUserId, source.Open("Period applicability", source.Today));
         await using var provider = Compose(source);
         var attested = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.OwnerUserId,
             source.Attest(opened, "not_applicable", [], "No changes."));
@@ -92,20 +91,20 @@ public sealed class NotApplicableOccurrenceReviewTests
         await ProjectAsync(provider, source.TenantId);
         Assert.Empty((await ReviewWorkAsync(provider, source, source.ReviewerUserId)).Value.Items);
         var corrected = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.OwnerUserId,
-            new CorrectControlAttestation(source.TenantId, source.ProgramId, source.ControlId, opened.OccurrenceId,
+            new CorrectControlAttestation(Uuid.CreateVersion4(), source.TenantId, source.ProgramId, source.ControlId, opened.OccurrenceId,
                 returned.Value.Revision, "not_applicable", DateTimeOffset.UtcNow.AddMinutes(-1), null, null,
                 null, "No production changes; staging-only deployment excluded.", [], "Clarified the population."));
         await ProjectAsync(provider, source.TenantId);
         var correctedWork = Assert.Single((await ReviewWorkAsync(provider, source, source.ReviewerUserId)).Value.Items);
         var before = await ProgramManagementServices.HydrateAsync(provider,
-            new ControlOperationsLedger(source.TenantId, source.ProgramId));
+            new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, opened.OccurrenceId));
 
         // Act
         var stale = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.ReviewerUserId,
             source.Review(corrected.Value, "approved") with { AttestationId = attested.Value.Attestations[0].AttestationId },
             RequestErrorKind.Conflict);
         var afterDenied = await ProgramManagementServices.HydrateAsync(provider,
-            new ControlOperationsLedger(source.TenantId, source.ProgramId));
+            new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, opened.OccurrenceId));
         var approved = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.ReviewerUserId,
             source.Review(corrected.Value, "approved"));
         await using var replayProvider = Compose(source);
@@ -117,11 +116,11 @@ public sealed class NotApplicableOccurrenceReviewTests
         Assert.Equal("Review the latest attestation version.", stale.Error!.Message);
         Assert.Equal(before.CommittedStreamPosition, afterDenied.CommittedStreamPosition);
         Assert.Equal(2, approved.Value.Attestations.Count);
-        Assert.Equal(attested.Value.Attestations[0], approved.Value.Attestations[0]);
+        Assert.Equal(WireJson.Of(attested.Value.Attestations[0]), WireJson.Of(approved.Value.Attestations[0]));
         Assert.Equal(attested.Value.Attestations[0].AttestationId, approved.Value.Attestations[1].SupersedesAttestationId);
         Assert.Equal(2, approved.Value.Attestations[1].Version);
         Assert.Equal("not_applicable", approved.Value.Attestations[1].Result);
-        Assert.Equal(returned.Value.Reviews[0], approved.Value.Reviews[0]);
+        Assert.Equal(WireJson.Of(returned.Value.Reviews[0]), WireJson.Of(approved.Value.Reviews[0]));
         Assert.Equal(approved.Value.Attestations[1].AttestationId, approved.Value.Reviews[1].AttestationId);
         Assert.Equal(2, approved.Value.Reviews[1].AttestationVersion);
         Assert.Empty(final.Value.Items);
@@ -139,6 +138,7 @@ public sealed class NotApplicableOccurrenceReviewTests
         services.AddSingleton(events);
         services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
+        services.AddSingleton(source.Provider.GetRequiredService<IImmutableContentStore>());
         services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(source.Permissions));
         services.AddSingleton<IProgramResourceScopeResolver, TestProgramResourceScopeResolver>();
         services.AddSingleton<ITenantActivity, ActiveTenant>();

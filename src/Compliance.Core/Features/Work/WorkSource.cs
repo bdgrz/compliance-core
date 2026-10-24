@@ -31,7 +31,7 @@ static class WorkSource
 
     /// <summary>Loads open work; <paramref name="workItemId" /> narrows the result to one item.</summary>
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, IDomainEventReader events,
+        IAggregateReader reader, IDomainEventReader events, ControlOperationsReader? operatingReader,
         Uuid tenantId, Uuid programId, DateOnly today, DateOnly horizon, DateTimeOffset now,
         Uuid? workItemId, IBoundaryDirectoryReader? boundaries,
         IReadOnlySet<string> projectedKinds,
@@ -44,29 +44,29 @@ static class WorkSource
             RiskTreatmentWorkItemId(programId, riskId, sourceId, kind) == wanted;
         var candidates = new List<WorkCandidate>();
         var prefix = $"/api/v1/tenants/{tenantId}/programs/{programId}";
-        ControlOperationsLedger? operations = null;
+        ControlOperationsSnapshot? operations = null;
         if (!projectedKinds.Contains(ControlOccurrence) ||
             !projectedKinds.Contains(OccurrenceReview))
         {
-            operations = await reader.HydrateAsync(new ControlOperationsLedger(tenantId,
-                programId), ct).ConfigureAwait(false);
+            operations = await ControlOperations(operatingReader).ReadAsync(tenantId, programId, ct)
+                .ConfigureAwait(false);
             foreach (var (controlId, plan, identifier, occurrences) in await ControlOperationsSource
                          .ReadPlannedAsync(reader, operations, tenantId, programId, today, horizon,
                              ct).ConfigureAwait(false))
                 foreach (var occurrence in occurrences)
                 {
                     if (!projectedKinds.Contains(ControlOccurrence) &&
-                        (occurrence.State is ControlOperationsLedger.Expected or
-                            ControlOperationsLedger.Missed or ControlOperationsLedger.Open or
-                            ControlOperationsLedger.Returned) &&
+                        (occurrence.State is ControlOperationStates.Expected or
+                            ControlOperationStates.Missed or ControlOperationStates.Open or
+                            ControlOperationStates.Returned) &&
                         Wanted(occurrence.OccurrenceId, ControlOccurrence))
                         candidates.Add(ControlOccurrenceCandidate(tenantId, programId, controlId,
                             identifier, occurrence.OccurrenceId, occurrence.PeriodStart,
                             occurrence.DueOn, occurrence.Assignee, plan.BackupOwner));
 
                     if (!projectedKinds.Contains(OccurrenceReview) &&
-                        (occurrence.State is ControlOperationsLedger.Submitted or
-                            ControlOperationsLedger.Deferred) && occurrence.Attestations.Count > 0 &&
+                        (occurrence.State is ControlOperationStates.Submitted or
+                            ControlOperationStates.Deferred) && occurrence.Attestations.Count > 0 &&
                         Wanted(occurrence.OccurrenceId, OccurrenceReview))
                     {
                         var attestation = occurrence.Attestations[^1];
@@ -248,8 +248,8 @@ static class WorkSource
         }
         if (!projectedKinds.Contains(ControlOperatingPlanApproval))
         {
-            operations ??= await reader.HydrateAsync(new ControlOperationsLedger(tenantId,
-                programId), ct).ConfigureAwait(false);
+            operations ??= await ControlOperations(operatingReader).ReadAsync(tenantId, programId, ct)
+                .ConfigureAwait(false);
             foreach (var controlId in operations.PlannedControlIds)
             {
                 if (operations.PendingPlan(controlId) is not { } pending ||
@@ -260,7 +260,7 @@ static class WorkSource
                     programId, controlId, ct).ConfigureAwait(false);
                 if (control is null || control.IsRetired ||
                     control.ApprovedVersion is not
-                    { Status: ControlOperationsLedger.Approved } current ||
+                    { Status: ControlOperationStates.Approved } current ||
                     current.VersionId != pending.ControlVersionId)
                     continue;
                 candidates.Add(ControlOperatingPlanApprovalCandidate(tenantId, programId,
@@ -280,6 +280,10 @@ static class WorkSource
         }
         return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
     }
+
+    static ControlOperationsReader ControlOperations(ControlOperationsReader? operatingReader) =>
+        operatingReader ?? throw new InvalidOperationException(
+            "Control work requires read access to the operating plan and occurrence streams.");
 
     public static Uuid RiskTreatmentWorkItemId(Uuid programId, Uuid riskId, Uuid sourceId,
         string kind) => WorkCandidate.IdFor(Uuid.CreateVersion5(programId,

@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     and missed occurrences are all visible blockers.
 /// </summary>
 public sealed class ListControlOperatingBlockersHandler(IAggregateReader reader,
-    IControlDraftDirectoryReader directory, OperatingAuthority authority, TimeProvider clock)
+    ControlOperationsReader operations, IControlDraftDirectoryReader directory, OperatingAuthority authority, TimeProvider clock)
     : IRequestHandler<ListControlOperatingBlockers, Page<ControlOperatingBlockerView>>
 {
     public async ValueTask<Result<Page<ControlOperatingBlockerView>>> HandleAsync(
@@ -17,8 +17,7 @@ public sealed class ListControlOperatingBlockersHandler(IAggregateReader reader,
     {
         var request = context.Request;
         var today = ControlOperationsSource.Today(clock);
-        var ledger = await reader.HydrateAsync(new ControlOperationsLedger(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
+        var ledger = await operations.ReadAsync(request.TenantId, request.ProgramId, ct).ConfigureAwait(false);
         var controlIds = new List<Uuid>();
         string? cursor = null;
         do
@@ -37,7 +36,7 @@ public sealed class ListControlOperatingBlockersHandler(IAggregateReader reader,
             var control = await ControlOperationsSource.LoadControlAsync(reader, request.TenantId,
                 request.ProgramId, controlId, ct).ConfigureAwait(false);
             if (control is null || control.IsRetired ||
-                control.ApprovedVersion is not { Status: ControlOperationsLedger.Approved } version)
+                control.ApprovedVersion is not { Status: ControlOperationStates.Approved } version)
                 continue;
             blockers.AddRange(await EvaluateAsync(request.TenantId, ledger, control, version,
                 today, ct).ConfigureAwait(false));
@@ -47,7 +46,7 @@ public sealed class ListControlOperatingBlockersHandler(IAggregateReader reader,
     }
 
     async ValueTask<IReadOnlyList<ControlOperatingBlockerView>> EvaluateAsync(Uuid tenantId,
-        ControlOperationsLedger ledger, ControlDraft control, ControlVersionView version,
+        ControlOperationsSnapshot ledger, ControlDraft control, ControlVersionView version,
         DateOnly today, CancellationToken ct)
     {
         var identifier = version.Identifier;
@@ -81,7 +80,7 @@ public sealed class ListControlOperatingBlockersHandler(IAggregateReader reader,
             blockers.Add(Blocker("reviewer_inactive", "The reviewer is no longer an active member."));
         foreach (var missed in ledger.ReadOccurrences(control.Id,
                          OperatingAuthority.VersionWindows(control), today, today)
-                     .Where(static occurrence => occurrence.State == ControlOperationsLedger.Missed))
+                     .Where(static occurrence => occurrence.State == ControlOperationStates.Missed))
             blockers.Add(Blocker("missed_occurrence",
                 $"The occurrence due {missed.DueOn:yyyy-MM-dd} was not performed.",
                 missed.OccurrenceId));

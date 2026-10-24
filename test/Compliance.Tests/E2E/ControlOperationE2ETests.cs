@@ -7,6 +7,7 @@ using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,8 +62,9 @@ public sealed class ControlOperationE2ETests(BrokerStackFixture broker)
                 item.GetProperty("kind").GetString() == "missing_plan"));
 
         // Act
-        using var proposal = await owner.PostAsJsonAsync($"{controlPath}/operating-plan/proposals",
-            new
+        var planVersionId = Guid.NewGuid().ToString();
+        using var proposal = await owner.PutAsJsonAsync(
+            $"{controlPath}/operating-plan/proposals/{planVersionId}", new
             {
                 expected_revision = 0,
                 control_version_id = ControlVersionIds.Initial(controlId).ToString(),
@@ -79,19 +81,17 @@ public sealed class ControlOperationE2ETests(BrokerStackFixture broker)
                 rationale = "Owner runs the access review monthly.",
             });
         var proposed = await ReadAsync(proposal);
-        var planVersionId = proposed.GetProperty("plan_version_id").GetString()!;
-        using var selfApproval = await owner.PostAsJsonAsync(
-            $"{controlPath}/operating-plan/proposals/{planVersionId}/approvals",
+        using var selfApproval = await owner.PutAsJsonAsync(
+            $"{controlPath}/operating-plan/proposals/{planVersionId}/approvals/{Guid.NewGuid()}",
             new { expected_revision = 1, rationale = "Mine." });
-        await SeedAsync(factory, new ControlOperationsLedger(tenant, program), ledger =>
-            Command(ledger.ApprovePlan(controlId, 1, Uuid.Parse(planVersionId,
-                    CultureInfo.InvariantCulture), "Independent approval.", Uuid.CreateVersion4(),
-                "Approver", DateTimeOffset.UtcNow, null)));
+        await ControlOperatingSeed.ApproveAsync(factory.Services, tenant, program, controlId,
+            Uuid.Parse(planVersionId, CultureInfo.InvariantCulture), Uuid.CreateVersion4(), "Approver",
+            DateTimeOffset.UtcNow);
         using var missedResponse = await owner.GetAsync($"{controlPath}/occurrences?state=missed");
         var missed = (await ReadAsync(missedResponse)).GetProperty("items")[0];
         var occurrenceId = missed.GetProperty("occurrence_id").GetString();
-        using var attestation = await owner.PostAsJsonAsync(
-            $"{controlPath}/occurrences/{occurrenceId}/attestations", new
+        using var attestation = await owner.PutAsJsonAsync(
+            $"{controlPath}/occurrences/{occurrenceId}/attestations/{Guid.NewGuid()}", new
             {
                 expected_revision = 0,
                 result = "failed",
@@ -101,8 +101,8 @@ public sealed class ControlOperationE2ETests(BrokerStackFixture broker)
                 evidence = Array.Empty<object>(),
             });
         var attested = await ReadAsync(attestation);
-        using var selfReview = await owner.PostAsJsonAsync(
-            $"{controlPath}/occurrences/{occurrenceId}/reviews", new
+        using var selfReview = await owner.PutAsJsonAsync(
+            $"{controlPath}/occurrences/{occurrenceId}/reviews/{Guid.NewGuid()}", new
             {
                 expected_revision = 2,
                 attestation_id = attested.GetProperty("attestations")[0]

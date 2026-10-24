@@ -122,7 +122,8 @@ public sealed class FitzBoundaryDecisionWorkItemDirectoryTests
         var queueReader = new WorkQueueReader(
             queueScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
             queueScope.ServiceProvider.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
-            consistency, boundaries: fixture.Boundaries, accountableWorkItems: [directory]);
+            consistency, boundaries: fixture.Boundaries, accountableWorkItems: [directory],
+            operatingReader: queueScope.ServiceProvider.GetRequiredService<ControlOperationsReader>());
         var queueResult = await queueReader.ReadAsync(fixture.TenantId, fixture.ProgramId,
             new OperationsActor(fixture.ReviewerUserId, fixture.ReviewerMemberId, "Reviewer"), 30,
             CancellationToken.None);

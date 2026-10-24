@@ -47,20 +47,20 @@
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 1,
-    "aggregateTypes": 111,
-    "aggregateTypesWithCommandPath": 108,
-    "requestContracts": 713,
-    "commonRequestContracts": 711,
+    "aggregateTypes": 112,
+    "aggregateTypesWithCommandPath": 109,
+    "requestContracts": 714,
+    "commonRequestContracts": 712,
     "requestClassificationCounts": {
       "command": 348,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 77,
+      "internal_reaction": 78,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 654,
+    "registeredCoreHandlerRegistrations": 655,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 38,
     "unwiredAggregateProducerClassifications": {
@@ -2699,12 +2699,12 @@
       "contract": "src/Compliance.Common/Features/Operations/ControlOccurrenceAttested.cs",
       "reducers": [
         {
-          "aggregate": "ControlOperationsLedger",
-          "source": "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+          "aggregate": "ControlOccurrence",
+          "source": "src/Compliance.Core/Features/Operations/ControlOccurrence.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+        "src/Compliance.Core/Features/Operations/ControlOccurrence.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs",
@@ -2719,12 +2719,12 @@
       "contract": "src/Compliance.Common/Features/Operations/ControlOccurrenceOpened.cs",
       "reducers": [
         {
-          "aggregate": "ControlOperationsLedger",
-          "source": "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+          "aggregate": "ControlOccurrence",
+          "source": "src/Compliance.Core/Features/Operations/ControlOccurrence.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+        "src/Compliance.Core/Features/Operations/ControlOccurrence.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs",
@@ -2739,12 +2739,12 @@
       "contract": "src/Compliance.Common/Features/Operations/ControlOccurrenceReviewed.cs",
       "reducers": [
         {
-          "aggregate": "ControlOperationsLedger",
-          "source": "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+          "aggregate": "ControlOccurrence",
+          "source": "src/Compliance.Core/Features/Operations/ControlOccurrence.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+        "src/Compliance.Core/Features/Operations/ControlOccurrence.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
@@ -2758,12 +2758,12 @@
       "contract": "src/Compliance.Common/Features/Operations/ControlOperatingPlanApproved.cs",
       "reducers": [
         {
-          "aggregate": "ControlOperationsLedger",
-          "source": "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+          "aggregate": "ControlOperatingPlan",
+          "source": "src/Compliance.Core/Features/Operations/ControlOperatingPlan.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+        "src/Compliance.Core/Features/Operations/ControlOperatingPlan.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
@@ -2777,12 +2777,12 @@
       "contract": "src/Compliance.Common/Features/Operations/ControlOperatingPlanProposed.cs",
       "reducers": [
         {
-          "aggregate": "ControlOperationsLedger",
-          "source": "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+          "aggregate": "ControlOperatingPlan",
+          "source": "src/Compliance.Core/Features/Operations/ControlOperatingPlan.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs"
+        "src/Compliance.Core/Features/Operations/ControlOperatingPlan.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
@@ -9340,39 +9340,6 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "ControlOperationsLedger",
-      "source": "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs",
-      "appliedFacts": [
-        "ControlOccurrenceAttested",
-        "ControlOccurrenceOpened",
-        "ControlOccurrenceReviewed",
-        "ControlOperatingPlanApproved",
-        "ControlOperatingPlanProposed"
-      ],
-      "commandRequests": [
-        "ApproveControlOperatingPlan",
-        "AttestControlOccurrence",
-        "CorrectControlAttestation",
-        "OpenControlOccurrence",
-        "ProposeControlOperatingPlan",
-        "ReviewControlOccurrence"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/E2E/ControlOperationE2ETests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/PersonalOccurrenceProofTransportTests.cs",
-        "test/Compliance.Tests/Features/Operations/PersonalOperatingPlanApprovalTransportTests.cs",
-        "test/Compliance.Tests/Features/Operations/ProposeTypeIIOperatingPlanHandlerTests.cs",
-        "test/Compliance.Tests/Features/Operations/StartTypeIIObservationPeriodHandlerTests.cs",
-        "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlOperatingPlanWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/NotApplicableOccurrenceReviewTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "CriteriaTextOverlayLedger",
       "source": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs",
       "appliedFacts": [
@@ -11980,6 +11947,41 @@
         "test/Compliance.Tests/Testing/IdentityRecoveryHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ControlOccurrence",
+      "source": "src/Compliance.Core/Features/Operations/ControlOccurrence.cs",
+      "appliedFacts": [
+        "ControlOccurrenceAttested",
+        "ControlOccurrenceOpened",
+        "ControlOccurrenceReviewed"
+      ],
+      "commandRequests": [
+        "AttestControlOccurrence",
+        "CorrectControlAttestation",
+        "OpenControlOccurrence",
+        "ReviewControlOccurrence"
+      ],
+      "internalReactionRequests": [
+        "MaterializeControlOccurrence"
+      ],
+      "testSymbolReferences": [],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ControlOperatingPlan",
+      "source": "src/Compliance.Core/Features/Operations/ControlOperatingPlan.cs",
+      "appliedFacts": [
+        "ControlOperatingPlanApproved",
+        "ControlOperatingPlanProposed"
+      ],
+      "commandRequests": [
+        "ApproveControlOperatingPlan",
+        "ProposeControlOperatingPlan"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [],
+      "commandRouteDisposition": "registered_command_route"
     }
   ],
   "requests": [
@@ -13096,11 +13098,11 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlOperationsLedger",
+        "ControlOperatingPlan",
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "ControlOperationsLedger"
+        "ControlOperatingPlan"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -13717,12 +13719,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlOperationsLedger"
+        "ControlOccurrence"
       ],
       "aggregateTargets": [
-        "ControlOperationsLedger"
+        "ControlOccurrence"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "OccurrenceProofs"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
@@ -15020,12 +15024,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlOperationsLedger"
+        "ControlOccurrence"
       ],
       "aggregateTargets": [
-        "ControlOperationsLedger"
+        "ControlOccurrence"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "OccurrenceProofs"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/PersonalOccurrenceProofTransportTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
@@ -22289,10 +22295,10 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlOperationsLedger"
+        "ControlOccurrence"
       ],
       "aggregateTargets": [
-        "ControlOperationsLedger"
+        "ControlOccurrence"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -22986,11 +22992,11 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlOperationsLedger",
+        "ControlOperatingPlan",
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "ControlOperationsLedger"
+        "ControlOperatingPlan"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -23427,9 +23433,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlOperationsLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
         "FindingAggregate"
       ],
@@ -26374,13 +26378,15 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlOperationsLedger",
+        "ControlOccurrence",
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "ControlOperationsLedger"
+        "ControlOccurrence"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "OccurrenceProofs"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
@@ -29018,6 +29024,33 @@
         "test/Compliance.Tests/Features/Operations/TypeIIRangeProcessTests.cs"
       ],
       "note": "System-only Type II range process receiver; settles exactly the reservation named by the period fact. No HTTP/MCP route."
+    },
+    {
+      "request": "MaterializeControlOccurrence",
+      "contract": "src/Compliance.Common/Features/Operations/MaterializeControlOccurrence.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IControlOccurrenceReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "MaterializeControlOccurrenceHandler",
+          "source": "src/Compliance.Core/Features/Operations/MaterializeControlOccurrenceHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ControlOccurrence",
+        "ControlOperatingPlan",
+        "TypeIIPeriod"
+      ],
+      "aggregateTargets": [
+        "ControlOccurrence"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Operations/ControlOccurrenceFanOutTests.cs"
+      ],
+      "note": "System-only control occurrence fan-out receiver; materializes one selected business window once, verifying the frozen creation intent against the selecting period fact and the approved plan fact. No HTTP/MCP route."
     }
   ],
   "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",

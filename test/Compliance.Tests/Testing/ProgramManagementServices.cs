@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
@@ -37,6 +38,7 @@ static class ProgramManagementServices
             new PersistenceKvClient(new InMemoryKvClient())));
         collection.AddScoped<FirmStaffViews>();
         collection.AddScoped<NativeOperationExecutor>();
+        collection.AddScoped<ControlOperationsReader>();
         services?.Invoke(collection);
         handlers(collection.AddPortia().AddRequestAuthorizer<ProgramManagementAuthorizer>());
         return collection.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });

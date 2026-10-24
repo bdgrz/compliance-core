@@ -6,10 +6,13 @@ namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>
 /// Freezes the persisted, approved close reconciliation. The frozen fact names the exact live calendar reservation
-/// of the period; <see cref="TypeIIRangeReleaseReactor" /> releases that reservation from it afterwards.
+/// of the period; <see cref="TypeIIRangeReleaseReactor" /> releases that reservation from it afterwards. Close fails
+/// closed unless <see cref="TypeIIOccurrenceCoverage" /> proves from occurrence facts that every expected recurring
+/// occurrence of the admitted period revision is selected and materialized.
 /// </summary>
 public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
-    IAggregateReader reader, ManagementExecutiveAuthority executiveAuthority, TimeProvider clock)
+    IAggregateReader reader, ManagementExecutiveAuthority executiveAuthority, TypeIIOccurrenceCoverage coverage,
+    TimeProvider clock)
     : IRequestHandler<FreezeTypeIIPeriodClose>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<FreezeTypeIIPeriodClose> context,
@@ -57,6 +60,11 @@ public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
             if (period.FreezeClose(request.ExpectedRevision, content, memberId, role,
                     frozenAt) is { } freezeFailure)
                 return Result.Failure(freezeFailure.ToRequestError());
+
+            var proof = await coverage.ProveAsync(period, ct).ConfigureAwait(false);
+            if (!proof.IsComplete)
+                return Conflict(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"Closing the Type II period requires complete occurrence coverage: {proof.NotMaterialized.Count} selected occurrences are not materialized and {proof.NotSelected.Count} expected occurrences are not selected."));
 
             var freeze = await executor.ExecuteAsync(new TypeIIPeriod(request.TenantId,
                     request.ProgramId, request.PeriodId), aggregate =>

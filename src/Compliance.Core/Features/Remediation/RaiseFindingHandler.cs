@@ -8,7 +8,7 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     assessment as the source version, and a control occurrence must have been recorded.
 /// </summary>
 public sealed class RaiseFindingHandler(IAggregateExecutor executor, IAggregateReader reader,
-    IDomainEventReader events, TimeProvider clock) : IRequestHandler<RaiseFinding, FindingRegistration>
+    IDomainEventReader events, ControlOperationsReader operatingReader, TimeProvider clock) : IRequestHandler<RaiseFinding, FindingRegistration>
 {
     public async ValueTask<Result<FindingRegistration>> HandleAsync(
         IRequestContext<RaiseFinding> context, CancellationToken ct)
@@ -66,8 +66,8 @@ public sealed class RaiseFindingHandler(IAggregateExecutor executor, IAggregateR
                     ? null
                     : missing;
             case "control_occurrence" or "occurrence_review":
-                var operations = await reader.HydrateAsync(new ControlOperationsLedger(
-                    request.TenantId, request.ProgramId), ct).ConfigureAwait(false);
+                var operations = await operatingReader.ReadAsync(request.TenantId, request.ProgramId, ct)
+                    .ConfigureAwait(false);
                 return operations.OccurrenceControlId(recordId) is null ? missing : null;
             default:
                 return null;

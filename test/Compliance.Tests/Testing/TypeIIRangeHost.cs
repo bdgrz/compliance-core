@@ -84,13 +84,66 @@ sealed class TypeIIRangeHost : IAsyncDisposable
         .Get(TypeIIRangeEffects.ProcessName);
 
     public StartTypeIIObservationPeriodHandler StartHandler(TimeProvider clock) => new(
-        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Events, Content, clock);
+        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Events,
+        Services.GetRequiredService<ControlOperationsReader>(), Content, clock);
 
     public AmendTypeIIObservationPeriodHandler AmendHandler(TimeProvider clock) => new(
         Services.GetRequiredService<NativeOperationExecutor>(), Reader, Content, clock);
 
     public CancelTypeIIPeriodAmendmentHandler CancelHandler(TimeProvider clock) => new(
         Services.GetRequiredService<NativeOperationExecutor>(), Content, clock);
+
+    public GenerateDueControlOccurrencesHandler GenerateHandler(TimeProvider clock) => new(
+        Services.GetRequiredService<NativeOperationExecutor>(), Reader, Services.GetRequiredService<ControlOperationsReader>(),
+        Content, clock);
+
+    public static ProcessKey FanOutKeyOf(Uuid tenantId, Uuid operationId) =>
+        new(ControlOccurrenceFanOut.ProcessName, tenantId.ToString(), operationId);
+
+    /// <summary>Runs the fan-out root reactor on the committed selections of a period, as the worker would.</summary>
+    public async Task ReactFanOutAsync(EventStreamAddress stream)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var reactor = scope.ServiceProvider.GetRequiredService<ControlOccurrenceFanOutReactor>();
+        await foreach (var record in scope.ServiceProvider.GetRequiredService<IDomainEventReader>().ReadAsync(stream, 0))
+            if (record.Event is DueControlOccurrencesGenerated)
+                await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<DueControlOccurrencesGenerated>(record),
+                    CancellationToken.None);
+    }
+
+    public ProcessDefinition FanOutDefinition => Provider.GetRequiredService<ProcessCatalog>()
+        .Get(ControlOccurrenceFanOut.ProcessName);
+
+    /// <summary>Creates (if absent) the fan-out record of a committed selection, as the root reactor does.</summary>
+    public async Task<ProcessRecord> StartFanOutAsync(Uuid tenantId, Uuid programId, Uuid periodId,
+        DueControlOccurrencesGenerated selected)
+    {
+        var period = await HydrateAsync(new TypeIIPeriod(tenantId, programId, periodId));
+        var manifest = await Content.ReadJsonAsync<ControlOccurrenceSelectionManifest>(tenantId.ToString(),
+            selected.CreationIntentManifest);
+        return await Records.CreateIfAbsentAsync(ProcessRecord.Start(new ProcessKey(ControlOccurrenceFanOut.ProcessName,
+            tenantId.ToString(), selected.Operation.RootOperationId), NativeFactReference.Of(period.Stream, selected),
+            selected.Operation.Episode, selected.CreationIntentManifest,
+            manifest.Selections.Select(static selection => selection.OccurrenceId.ToString()),
+            DateTimeOffset.UtcNow));
+    }
+
+    /// <summary>Starts (if absent) and drives the fan-out of a committed selection to its end.</summary>
+    public async Task<ProcessRecord> RunFanOutAsync(Uuid tenantId, Uuid programId, Uuid periodId,
+        DueControlOccurrencesGenerated selected)
+    {
+        var started = await StartFanOutAsync(tenantId, programId, periodId, selected);
+        await using var scope = Provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(started.Key, "test-worker",
+            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+    }
+
+    /// <summary>The receiver command the fan-out builds for one target, with the driver's deterministic command id.</summary>
+    public async Task<MaterializeControlOccurrence> FanOutStepAsync(ProcessRecord record, string target) =>
+        (MaterializeControlOccurrence)(await FanOutDefinition.CreateReceiver(new ProcessStep(record,
+            ControlOccurrenceFanOut.Materialize, nameof(MaterializeControlOccurrence), target,
+            ControlOccurrenceFanOut.ReceiverCommandId(record.Source.EventId, target, record.Episode)), Services,
+            CancellationToken.None))!;
 
     public ValueTask<Result<ReceiverOutcome>> SendAsync(IRequest<ReceiverOutcome> command) =>
         Bus.DispatchAsync(command, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
