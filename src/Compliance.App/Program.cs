@@ -375,16 +375,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetEvidenceArtifactMetadata>(tool => tool.ReadOnly())
         .AddMcpTool<GetEvidenceRequest>(tool => tool.ReadOnly())
         .AddMcpTool<ListEvidenceRequests>(tool => tool.ReadOnly())
-        .AddMcpTool<OpenAccessPopulation>()
+        .AddMcpTool<OpenAccessPopulation>(tool => tool.Idempotent())
         .AddMcpTool<RecordAccessPopulationFacts>(tool => tool.Idempotent())
         .AddMcpTool<PreviewAccessPopulation>(tool => tool.ReadOnly())
         .AddMcpTool<GetAccessPopulation>(tool => tool.ReadOnly())
         .AddMcpTool<ListAccessPopulations>(tool => tool.ReadOnly())
         .AddMcpTool<GetAccessReviewCoverage>(tool => tool.ReadOnly())
-        .AddMcpTool<ClassifyAccessPrincipal>()
+        .AddMcpTool<ClassifyAccessPrincipal>(tool => tool.Idempotent())
         .AddMcpTool<ListAccessPrincipals>(tool => tool.ReadOnly())
         .AddMcpTool<GetAccessVariance>(tool => tool.ReadOnly())
-        .AddMcpTool<ProposeAccessExpectation>()
+        .AddMcpTool<ProposeAccessExpectation>(tool => tool.Idempotent())
         .AddMcpTool<ListAccessExpectations>(tool => tool.ReadOnly())
         .AddMcpTool<LaunchAccessReviewCampaign>()
         .AddMcpTool<GetAccessReviewCampaign>(tool => tool.ReadOnly())
@@ -1494,20 +1494,20 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
-    app.MapPortiaPost<OpenAccessPopulation, AccessPopulationRegistration>(
-            "/api/v1/tenants/{tenant_id}/access-populations")
+    app.MapPortiaPut<OpenAccessPopulation, AccessPopulationRegistration>(
+            "/api/v1/tenants/{tenant_id}/access-populations/{population_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaPut<RecordAccessPopulationFacts, AccessPopulationRegistration>(
-            "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/facts")
+            "/api/v1/tenants/{tenant_id}/access-populations/record-access-population-facts/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<PreviewAccessPopulation, AccessPopulationPreview>(
             "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/preview")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<AcceptAccessPopulation, AccessPopulationAcceptance>(
-            "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance")
+    app.MapPortiaPut<AcceptAccessPopulation, AccessPopulationAcceptance>(
+            "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<GetAccessPopulation, AccessPopulationView>(
@@ -1518,16 +1518,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-populations")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<ExemptMissingAccessPopulation, AccessPopulationExceptionView>(
-            "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions")
+    app.MapPortiaPut<ExemptMissingAccessPopulation, AccessPopulationExceptionView>(
+            "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions/{exception_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<GetAccessReviewCoverage, AccessReviewCoverageView>(
             "/api/v1/tenants/{tenant_id}/applications/{application_id}/access-review-coverage")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<ClassifyAccessPrincipal, AccessPrincipalClassificationView>(
-            "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/classifications")
+    app.MapPortiaPut<ClassifyAccessPrincipal, AccessPrincipalClassificationView>(
+            "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/classifications/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<ListAccessPrincipals, Page<AccessPrincipalView>>(
@@ -1538,16 +1538,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/variance")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<ProposeAccessExpectation, AccessExpectationView>(
-            "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations")
+    app.MapPortiaPut<ProposeAccessExpectation, AccessExpectationView>(
+            "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<ApproveAccessExpectation, AccessExpectationView>(
-            "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval")
+    app.MapPortiaPut<ApproveAccessExpectation, AccessExpectationView>(
+            "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
-    app.MapPortiaPost<ExemptAccessExpectation, AccessExpectationExceptionView>(
-            "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions")
+    app.MapPortiaPut<ExemptAccessExpectation, AccessExpectationExceptionView>(
+            "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("AccessReviews");
     app.MapPortiaGet<ListAccessExpectations, AccessExpectationsView>(

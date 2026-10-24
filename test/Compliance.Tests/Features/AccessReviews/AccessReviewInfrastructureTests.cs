@@ -20,13 +20,19 @@ public sealed class AccessReviewInfrastructureTests
         var tenantId = Uuid.CreateVersion4();
         var instanceId = Uuid.CreateVersion4();
         var populationId = Uuid.CreateVersion4();
+        var stream = new EventStreamAddress(tenantId.ToString(), AccessPopulation.Area, populationId.ToString());
         var opened = new AccessPopulationOpened(tenantId, populationId, Uuid.CreateVersion4(),
             instanceId, 1, DateTimeOffset.UtcNow.AddDays(-1), "manual_attestation", "Export", Actor,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow, AccessReviewFacts.Provenance(stream, "OpenAccessPopulation", populationId),
+            AccessReviewFacts.Response(), AccessReviewFacts.Response());
         var recorded = new AccessPopulationFactsRecorded(tenantId, populationId, 2,
-            new AccessPopulationFacts([], [], [], []), Actor, DateTimeOffset.UtcNow);
+            AccessReviewFacts.Response(), Actor, DateTimeOffset.UtcNow,
+            AccessReviewFacts.Provenance(stream, "RecordAccessPopulationFacts"), AccessReviewFacts.Response(),
+            AccessReviewFacts.Response());
         var accepted = new AccessPopulationAccepted(tenantId, populationId, 3, Uuid.CreateVersion4(),
-            new string('a', 64), Uuid.CreateVersion4(), "Attested.", Actor, DateTimeOffset.UtcNow);
+            new string('a', 64), Uuid.CreateVersion4(), "Attested.", Actor, DateTimeOffset.UtcNow,
+            AccessReviewFacts.Provenance(stream, "AcceptAccessPopulation"), AccessReviewFacts.Response(),
+            AccessReviewFacts.Response());
 
         // Act
         await ProjectAsync(directory, tenantId, opened, recorded, accepted, opened, recorded, accepted);
@@ -47,8 +53,12 @@ public sealed class AccessReviewInfrastructureTests
         // Arrange
         var directory = new FitzAccessPopulationDirectory(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
-        var recorded = new AccessPopulationFactsRecorded(tenantId, Uuid.CreateVersion4(), 2,
-            new AccessPopulationFacts([], [], [], []), Actor, DateTimeOffset.UtcNow);
+        var populationId = Uuid.CreateVersion4();
+        var stream = new EventStreamAddress(tenantId.ToString(), AccessPopulation.Area, populationId.ToString());
+        var recorded = new AccessPopulationFactsRecorded(tenantId, populationId, 2,
+            AccessReviewFacts.Response(), Actor, DateTimeOffset.UtcNow,
+            AccessReviewFacts.Provenance(stream, "RecordAccessPopulationFacts"), AccessReviewFacts.Response(),
+            AccessReviewFacts.Response());
 
         // Act
         var failure = await Record.ExceptionAsync(() => ProjectAsync(directory, tenantId, recorded));

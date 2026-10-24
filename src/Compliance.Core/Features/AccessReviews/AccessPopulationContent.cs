@@ -46,16 +46,20 @@ public static class AccessPopulationContent
     }
 
     public static (AccessPopulationHeader Header, AccessPopulationFacts Facts) Read(
-        PopulationSnapshot snapshot)
+        PopulationSnapshot snapshot) => Read((snapshot ?? throw new ArgumentNullException(nameof(snapshot))).Rows);
+
+    /// <summary>Reads the header and complete facts from verified rows, inline or chunked.</summary>
+    public static (AccessPopulationHeader Header, AccessPopulationFacts Facts) Read(
+        IEnumerable<PopulationRow> rows)
     {
-        ArgumentNullException.ThrowIfNull(snapshot);
+        ArgumentNullException.ThrowIfNull(rows);
         var json = ComplianceCoreJsonContext.Default;
         AccessPopulationHeader? header = null;
         var principals = new List<AccessPrincipalFact>();
         var entitlements = new List<AccessEntitlementFact>();
         var members = new List<AccessGroupMemberFact>();
         var assignments = new List<AccessAssignmentFact>();
-        foreach (var row in snapshot.Rows)
+        foreach (var row in rows)
         {
             if (row.Key == HeaderKey)
                 header = row.Content.Deserialize(json.AccessPopulationHeader);

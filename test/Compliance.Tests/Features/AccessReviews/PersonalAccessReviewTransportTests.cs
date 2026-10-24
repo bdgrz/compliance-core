@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Snapshots;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Bdgrz.Compliance.Tests.Testing;
@@ -73,7 +74,7 @@ public sealed class PersonalAccessReviewTransportTests
         Assert.True(result.Success, result.Message);
         Assert.Equal(before + 1, await fixture.SourcePositionAsync());
         Assert.Equal(RbacIds.Member(fixture.Source.TenantId, fixture.User).ToString(), result.Actor!.Id);
-        var snapshot = await fixture.SnapshotAsync(context.RequestId);
+        var snapshot = await fixture.SnapshotAsync(action == "population" ? await fixture.AcceptedSnapshotIdAsync() : context.RequestId);
         Assert.Equal(action is "population" or "completion", snapshot.HasIntactContent);
     }
 
@@ -147,6 +148,7 @@ public sealed class PersonalAccessReviewTransportTests
             services.AddSingleton<IEventStore>(events);
             services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
+            services.AddSingleton(source.Provider.GetRequiredService<IImmutableContentStore>());
             services.AddSingleton<IPermissionAuthorizer>(source.Permissions);
             services.AddSingleton<IAccessGrantPermissionAuthorizer>(
                 new PermissionBackedAccessGrantPermissionAuthorizer(source.Permissions));
@@ -158,26 +160,26 @@ public sealed class PersonalAccessReviewTransportTests
             { User = source.ManagerUserId, _sourceId = source.InstanceId };
             if (action == "population")
             {
-                var opened = await source.SendAsync(source.ManagerUserId, new OpenAccessPopulation(source.TenantId,
-                    source.ApplicationId, source.InstanceId, 1, AccessReviewFixture.Observed, "Observed export"));
+                var opened = await source.SendAsync(source.ManagerUserId, new OpenAccessPopulation(Uuid.CreateVersion4(),
+                    source.TenantId, source.ApplicationId, source.InstanceId, 1, AccessReviewFixture.Observed, "Observed export"));
                 var facts = AccessReviewFixture.StandardFacts();
-                var recorded = await source.SendAsync(source.ManagerUserId, new RecordAccessPopulationFacts(source.TenantId,
-                    opened.PopulationId, 1, facts.Principals, facts.Entitlements, facts.GroupMembers, facts.Assignments));
+                var recorded = await source.SendAsync(source.ManagerUserId, new RecordAccessPopulationFacts(Uuid.CreateVersion4(),
+                    source.TenantId, opened.PopulationId, 1, facts.Principals, facts.Entitlements, facts.GroupMembers, facts.Assignments));
                 fixture._sourceId = opened.PopulationId;
                 fixture._revision = recorded.Revision;
             }
             else if (action is "expectation" or "expectation_exception")
             {
-                var proposed = await source.SendAsync(source.ManagerUserId, new ProposeAccessExpectation(source.TenantId,
-                    source.ApplicationId, source.InstanceId, 0, "forbidden_principal_kind", new AccessExpectationParameters(PrincipalKind: "user_account"),
+                var proposed = await source.SendAsync(source.ManagerUserId, new ProposeAccessExpectation(Uuid.CreateVersion4(),
+                    source.TenantId, source.ApplicationId, source.InstanceId, 0, "forbidden_principal_kind", new AccessExpectationParameters(PrincipalKind: "user_account"),
                     "Governed expectation", AccessReviewFixture.Observed.AddDays(-1)));
                 fixture._expectationId = proposed.ExpectationId;
                 fixture._revision = 1;
                 fixture.User = source.ApproverUserId;
                 if (action == "expectation_exception")
                 {
-                    await source.SendAsync(source.ApproverUserId, new ApproveAccessExpectation(source.TenantId,
-                        source.InstanceId, proposed.ExpectationId, 1));
+                    await source.SendAsync(source.ApproverUserId, new ApproveAccessExpectation(Uuid.CreateVersion4(),
+                        source.TenantId, source.InstanceId, proposed.ExpectationId, 1));
                     fixture._revision = 2;
                 }
             }
@@ -227,10 +229,10 @@ public sealed class PersonalAccessReviewTransportTests
             var expires = DateTimeOffset.UtcNow.AddDays(30);
             return _action switch
             {
-                "population" => await SendAsync(new AcceptAccessPopulation(Source.TenantId, _sourceId, _revision, "Observed population attestation"), context),
-                "expectation" => await SendAsync(new ApproveAccessExpectation(Source.TenantId, Source.InstanceId, _expectationId, _revision), context),
-                "expectation_exception" => await SendAsync(new ExemptAccessExpectation(Source.TenantId, Source.InstanceId, _expectationId, _revision, "ada", "Time-bound exception", expires), context),
-                "population_exception" => await SendAsync(new ExemptMissingAccessPopulation(Source.TenantId, Source.ApplicationId, Source.InstanceId, 0, "Population collection pending", expires), context),
+                "population" => await SendAsync(new AcceptAccessPopulation(Uuid.CreateVersion4(), Source.TenantId, _sourceId, _revision, "Observed population attestation"), context),
+                "expectation" => await SendAsync(new ApproveAccessExpectation(Uuid.CreateVersion4(), Source.TenantId, Source.InstanceId, _expectationId, _revision), context),
+                "expectation_exception" => await SendAsync(new ExemptAccessExpectation(Uuid.CreateVersion4(), Source.TenantId, Source.InstanceId, _expectationId, _revision, "ada", "Time-bound exception", expires), context),
+                "population_exception" => await SendAsync(new ExemptMissingAccessPopulation(_sourceId, Source.TenantId, Source.ApplicationId, Source.InstanceId, 0, "Population collection pending", expires), context),
                 "decision" => await SendAsync(new RecordAccessDecision(Source.TenantId, _sourceId, refusal == "self" ? _selfItemId : _itemId, _revision, "keep", "Reviewed"), context),
                 "bulk" => await SendAsync(new RecordBulkAccessDecision(Source.TenantId, _sourceId, [refusal == "privileged" ? _privilegedItemId : _itemId], "keep", "Reviewed", _preview), context),
                 "remediation_exception" => await SendAsync(new ExemptAccessRemediation(Source.TenantId, _sourceId, _itemId, _revision, "Provider remediation pending", expires), context),
@@ -252,18 +254,23 @@ public sealed class PersonalAccessReviewTransportTests
                 AccessRemediationExceptionView view => view.ApprovedBy,
                 AccessReviewCampaignCompletionView view => view.CompletedBy,
                 AccessPopulationAcceptance => (await ProgramManagementServices.HydrateAsync(_provider,
-                    new AccessPopulation(Source.TenantId, _sourceId))).Acceptance!.AcceptedBy,
+                    new AccessPopulation(Source.TenantId, _sourceId))).AcceptedFact!.AcceptedBy,
                 _ => null
             };
             return (result.IsSuccess, result.Error?.Kind, result.Error?.Message, actor);
         }
 
+        public async Task<Uuid> AcceptedSnapshotIdAsync() => (await ProgramManagementServices.HydrateAsync(_provider,
+            new AccessPopulation(Source.TenantId, _sourceId))).AcceptedFact!.SnapshotId;
+
         public Task<PopulationSnapshot> SnapshotAsync(Uuid id) => ProgramManagementServices.HydrateAsync(_provider, new PopulationSnapshot(Source.TenantId, id));
         public async Task<ulong> SourcePositionAsync() => _action switch
         {
             "population" => (await ProgramManagementServices.HydrateAsync(_provider, new AccessPopulation(Source.TenantId, _sourceId))).CommittedStreamPosition,
-            "expectation" or "expectation_exception" or "population_exception" => (await ProgramManagementServices.HydrateAsync(_provider,
-                new AccessReviewSystemLedger(Source.TenantId, Source.InstanceId))).CommittedStreamPosition,
+            "expectation" or "expectation_exception" => (await ProgramManagementServices.HydrateAsync(_provider,
+                new AccessExpectation(Source.TenantId, _expectationId))).CommittedStreamPosition,
+            "population_exception" => (await ProgramManagementServices.HydrateAsync(_provider,
+                new AccessPopulationException(Source.TenantId, _sourceId))).CommittedStreamPosition,
             _ => (await ProgramManagementServices.HydrateAsync(_provider, new AccessReviewCampaign(Source.TenantId, _sourceId))).CommittedStreamPosition
         };
         public async ValueTask DisposeAsync() { await _provider.DisposeAsync(); await Source.DisposeAsync(); }

@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 /// </summary>
 public sealed class GetAccessReviewCoverageHandler(IApplicationDirectoryReader applications,
     SystemInstanceReadConsistency consistency, IAccessReviewScopeDirectoryReader scopes,
-    IAccessPopulationDirectoryReader populations, IAggregateReader reader,
+    IAccessPopulationDirectoryReader populations, AccessExpectationsReader expectations,
     IDomainEventReader events, TimeProvider clock,
     RestrictedApplicationVisibility visibility)
     : IRequestHandler<GetAccessReviewCoverage, AccessReviewCoverageView>
@@ -105,8 +105,7 @@ public sealed class GetAccessReviewCoverageHandler(IApplicationDirectoryReader a
                 new AccessReviewInstanceCoverageView(instance.SystemInstanceId, instance.Name,
                     scope, "covered", accepted.PopulationId, accepted.SnapshotId,
                     accepted.ObservedAt, null));
-        var ledger = await reader.HydrateAsync(new AccessReviewSystemLedger(tenantId,
-            instance.SystemInstanceId), ct).ConfigureAwait(false);
+        var ledger = await expectations.ReadAsync(tenantId, instance.SystemInstanceId, ct).ConfigureAwait(false);
         var exception = ledger.PopulationExceptionAt(asOf);
         return Result<AccessReviewInstanceCoverageView>.Success(
             new AccessReviewInstanceCoverageView(instance.SystemInstanceId, instance.Name, scope,

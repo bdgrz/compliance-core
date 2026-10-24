@@ -10,18 +10,12 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 /// </summary>
 public static class AccessPopulationAnalysis
 {
-    /// <summary>Rows besides the header that one inline population snapshot can hold.</summary>
-    public const int MaximumFacts = 480;
-
     public const string CalculationVersion = "effective-access-v1";
     const int MaximumPathsPerPair = 16;
     const int MaximumDepth = 32;
 
     static readonly Uuid CalculationNamespace =
         Uuid.CreateVersion5(Uuid.Empty, "bdgrz.access_review.effective_access");
-
-    public static int FactCount(AccessPopulationFacts facts) => facts.Principals.Count +
-        facts.Entitlements.Count + facts.GroupMembers.Count + facts.Assignments.Count;
 
     /// <summary>The calculation identity is the algorithm version over the frozen content identity.</summary>
     public static Uuid CalculationId(string contentSha256) =>
@@ -31,9 +25,6 @@ public static class AccessPopulationAnalysis
     {
         ArgumentNullException.ThrowIfNull(facts);
         var issues = new List<AccessPopulationIssue>();
-        if (FactCount(facts) > MaximumFacts)
-            issues.Add(new("invalid", "too_many_facts", "population",
-                $"A population currently supports at most {MaximumFacts} facts."));
         if (facts.Principals.Count == 0)
             issues.Add(new("incomplete", "no_principals", "population",
                 "No principals were attested; missing source data is never treated as zero access."));

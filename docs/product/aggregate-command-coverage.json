@@ -47,8 +47,8 @@
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 118,
-    "aggregateTypesWithCommandPath": 115,
+    "aggregateTypes": 120,
+    "aggregateTypesWithCommandPath": 117,
     "requestContracts": 740,
     "commonRequestContracts": 738,
     "requestClassificationCounts": {
@@ -95,12 +95,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessExpectationApproved.cs",
       "reducers": [
         {
-          "aggregate": "AccessReviewSystemLedger",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs"
+          "aggregate": "AccessExpectation",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributorTests.cs"
@@ -113,12 +113,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessExpectationExceptionRecorded.cs",
       "reducers": [
         {
-          "aggregate": "AccessReviewSystemLedger",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs"
+          "aggregate": "AccessExpectation",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributorTests.cs"
@@ -131,12 +131,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessExpectationProposed.cs",
       "reducers": [
         {
-          "aggregate": "AccessReviewSystemLedger",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs"
+          "aggregate": "AccessExpectation",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributorTests.cs"
@@ -212,12 +212,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessPopulationExceptionRecorded.cs",
       "reducers": [
         {
-          "aggregate": "AccessReviewSystemLedger",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs"
+          "aggregate": "AccessPopulationException",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessPopulationException.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessPopulationException.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributorTests.cs"
@@ -267,12 +267,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessPrincipalClassified.cs",
       "reducers": [
         {
-          "aggregate": "AccessPopulation",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs"
+          "aggregate": "AccessPrincipalClassification",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessPrincipalClassification.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessPrincipalClassification.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -8915,12 +8915,10 @@
       "appliedFacts": [
         "AccessPopulationAccepted",
         "AccessPopulationFactsRecorded",
-        "AccessPopulationOpened",
-        "AccessPrincipalClassified"
+        "AccessPopulationOpened"
       ],
       "commandRequests": [
         "AcceptAccessPopulation",
-        "ClassifyAccessPrincipal",
         "OpenAccessPopulation",
         "RecordAccessPopulationFacts"
       ],
@@ -8967,29 +8965,6 @@
         "test/Compliance.Tests/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
-      "aggregate": "AccessReviewSystemLedger",
-      "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs",
-      "appliedFacts": [
-        "AccessExpectationApproved",
-        "AccessExpectationExceptionRecorded",
-        "AccessExpectationProposed",
-        "AccessPopulationExceptionRecorded"
-      ],
-      "commandRequests": [
-        "ApproveAccessExpectation",
-        "ExemptAccessExpectation",
-        "ExemptMissingAccessPopulation",
-        "ProposeAccessExpectation"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCoverageTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
-        "test/Compliance.Tests/Features/Examinations/AccessExpectationsTypeIBaselineSourceContributorTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -12540,13 +12515,56 @@
         "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "AccessExpectation",
+      "source": "src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs",
+      "appliedFacts": [
+        "AccessExpectationApproved",
+        "AccessExpectationExceptionRecorded",
+        "AccessExpectationProposed"
+      ],
+      "commandRequests": [
+        "ApproveAccessExpectation",
+        "ExemptAccessExpectation",
+        "ProposeAccessExpectation"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "AccessPopulationException",
+      "source": "src/Compliance.Core/Features/AccessReviews/AccessPopulationException.cs",
+      "appliedFacts": [
+        "AccessPopulationExceptionRecorded"
+      ],
+      "commandRequests": [
+        "ExemptMissingAccessPopulation"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "AccessPrincipalClassification",
+      "source": "src/Compliance.Core/Features/AccessReviews/AccessPrincipalClassification.cs",
+      "appliedFacts": [
+        "AccessPrincipalClassified"
+      ],
+      "commandRequests": [
+        "ClassifyAccessPrincipal"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [],
+      "commandRouteDisposition": "registered_command_route"
     }
   ],
   "requests": [
     {
       "request": "AcceptAccessPopulation",
       "contract": "src/Compliance.Common/Features/AccessReviews/AcceptAccessPopulation.cs",
-      "interfaces": "IRequest<AccessPopulationAcceptance>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessPopulationAcceptance>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -13399,7 +13417,7 @@
     {
       "request": "ApproveAccessExpectation",
       "contract": "src/Compliance.Common/Features/AccessReviews/ApproveAccessExpectation.cs",
-      "interfaces": "IRequest<AccessExpectationView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessExpectationView>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -13410,11 +13428,11 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AccessReviewSystemLedger",
+        "AccessExpectation",
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "AccessReviewSystemLedger"
+        "AccessExpectation"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -14874,7 +14892,7 @@
     {
       "request": "ClassifyAccessPrincipal",
       "contract": "src/Compliance.Common/Features/AccessReviews/ClassifyAccessPrincipal.cs",
-      "interfaces": "IRequest<AccessPrincipalClassificationView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessPrincipalClassificationView>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14886,11 +14904,12 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "AccessPopulation",
+        "AccessPrincipalClassification",
         "Person",
         "ServiceIdentity"
       ],
       "aggregateTargets": [
-        "AccessPopulation"
+        "AccessPrincipalClassification"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -16734,7 +16753,7 @@
     {
       "request": "ExemptAccessExpectation",
       "contract": "src/Compliance.Common/Features/AccessReviews/ExemptAccessExpectation.cs",
-      "interfaces": "IRequest<AccessExpectationExceptionView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessExpectationExceptionView>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16745,10 +16764,10 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AccessReviewSystemLedger"
+        "AccessExpectation"
       ],
       "aggregateTargets": [
-        "AccessReviewSystemLedger"
+        "AccessExpectation"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -16787,7 +16806,7 @@
     {
       "request": "ExemptMissingAccessPopulation",
       "contract": "src/Compliance.Common/Features/AccessReviews/ExemptMissingAccessPopulation.cs",
-      "interfaces": "IRequest<AccessPopulationExceptionView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessPopulationExceptionView>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16798,10 +16817,10 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AccessReviewSystemLedger"
+        "AccessPopulationException"
       ],
       "aggregateTargets": [
-        "AccessReviewSystemLedger"
+        "AccessPopulationException"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -22820,7 +22839,7 @@
     {
       "request": "OpenAccessPopulation",
       "contract": "src/Compliance.Common/Features/AccessReviews/OpenAccessPopulation.cs",
-      "interfaces": "IRequest<AccessPopulationRegistration>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessPopulationRegistration>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -23468,7 +23487,7 @@
     {
       "request": "ProposeAccessExpectation",
       "contract": "src/Compliance.Common/Features/AccessReviews/ProposeAccessExpectation.cs",
-      "interfaces": "IRequest<AccessExpectationView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessExpectationView>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -23479,10 +23498,10 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AccessReviewSystemLedger"
+        "AccessExpectation"
       ],
       "aggregateTargets": [
-        "AccessReviewSystemLedger"
+        "AccessExpectation"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -24220,7 +24239,7 @@
     {
       "request": "RecordAccessPopulationFacts",
       "contract": "src/Compliance.Common/Features/AccessReviews/RecordAccessPopulationFacts.cs",
-      "interfaces": "IRequest<AccessPopulationRegistration>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessPopulationRegistration>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {

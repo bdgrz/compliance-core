@@ -33,7 +33,7 @@ public sealed class RestrictedAccessPopulationReadTests
             allowedScopes: hasGrant
                 ? [new AccessGrantScope(AccessGrantScopeKind.SystemInstance, instanceId)]
                 : []);
-        var handler = new PreviewAccessPopulationHandler(reader, visibility);
+        var handler = new PreviewAccessPopulationHandler(reader, AccessReviewFacts.Content(), visibility);
 
         // Act
         var result = await handler.HandleAsync(new RequestContext<PreviewAccessPopulation>(
@@ -70,7 +70,7 @@ public sealed class RestrictedAccessPopulationReadTests
             allowedScopes: hasGrant
                 ? [new AccessGrantScope(AccessGrantScopeKind.SystemInstance, instanceId)]
                 : []);
-        var handler = new GetAccessPopulationHandler(reader, visibility);
+        var handler = new GetAccessPopulationHandler(reader, AccessReviewFacts.Content(), visibility);
 
         // Act
         var result = await handler.HandleAsync(new RequestContext<GetAccessPopulation>(
@@ -105,10 +105,10 @@ public sealed class RestrictedAccessPopulationReadTests
         Assert.True(population.Open(applicationId, instanceId, 1, now, "Provider export",
             ActorReference.ForMember(memberId, "Manager"), now).IsSuccess);
         var reader = new SourceReader(application, population);
-        var handler = new RecordAccessPopulationFactsHandler(null!, TimeProvider.System, reader,
-            RestrictedApplicationVisibilityFixture.Create(reader));
+        var handler = new RecordAccessPopulationFactsHandler(null!, reader, AccessReviewFacts.Content(),
+            TimeProvider.System, RestrictedApplicationVisibilityFixture.Create(reader));
         var context = new RequestContext<RecordAccessPopulationFacts>(
-            new RecordAccessPopulationFacts(tenantId, populationId, 1, [], [], [], []),
+            new RecordAccessPopulationFacts(Uuid.CreateVersion4(), tenantId, populationId, 1, [], [], [], []),
             Actor(userId));
 
         // Act
@@ -137,10 +137,11 @@ public sealed class RestrictedAccessPopulationReadTests
         Assert.True(population.Open(applicationId, instanceId, 1, now, "Provider export",
             ActorReference.ForMember(memberId, "Manager"), now).IsSuccess);
         var reader = new SourceReader(application, population);
-        var handler = new AcceptAccessPopulationHandler(reader, null!, null!, TimeProvider.System,
-            RestrictedApplicationVisibilityFixture.Create(reader));
+        var handler = new AcceptAccessPopulationHandler(null!, reader, null!, AccessReviewFacts.Content(),
+            TimeProvider.System, RestrictedApplicationVisibilityFixture.Create(reader));
         var context = PersonalAccessReviewTransportTests.HttpContext<AcceptAccessPopulation>(
-            new AcceptAccessPopulation(tenantId, populationId, 1, "I attest to this data."),
+            new AcceptAccessPopulation(Uuid.CreateVersion4(), tenantId, populationId, 1,
+                "I attest to this data."),
             Actor(userId));
 
         // Act

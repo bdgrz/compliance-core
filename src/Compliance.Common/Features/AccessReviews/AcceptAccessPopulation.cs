@@ -4,9 +4,13 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 
 /// <summary>
 ///     The reviewer's personal attestation that the draft is the observed population. It freezes
-///     an immutable snapshot. HTTP-only; it is not registered as an MCP tool.
+///     an immutable snapshot. HTTP-only; it is not registered as an MCP tool. <paramref name="CommandId" /> is the
+///     logical operation identity and the snapshot identity.
 /// </summary>
-[Discriminator("bdgrz.access_population.accept", 1)]
-public sealed record AcceptAccessPopulation(Uuid TenantId, Uuid PopulationId,
+[Discriminator("bdgrz.access_population.accept", 2)]
+public sealed record AcceptAccessPopulation(Uuid CommandId, Uuid TenantId, Uuid PopulationId,
     long ExpectedRevision, string Attestation)
-    : IRequest<AccessPopulationAcceptance>, IAccessReviewMutationRequest, ICallable;
+    : IRequest<AccessPopulationAcceptance>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

@@ -1771,9 +1771,11 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### AccessReviews
 
-- [AccessPopulation](../../src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs#L11)
+- [AccessExpectation](../../src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs#L18)
+- [AccessPopulation](../../src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs#L16)
+- [AccessPopulationException](../../src/Compliance.Core/Features/AccessReviews/AccessPopulationException.cs#L16)
+- [AccessPrincipalClassification](../../src/Compliance.Core/Features/AccessReviews/AccessPrincipalClassification.cs#L15)
 - [AccessReviewCampaign](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs#L11)
-- [AccessReviewSystemLedger](../../src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs#L10)
 
 #### AdvisorCollaboration
 
@@ -3104,20 +3106,20 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances` | `LinkFindingAcceptance` | [registration](../../src/Compliance.App/Program.cs#L1395) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures` | `CloseFinding` | [registration](../../src/Compliance.App/Program.cs#L1399) |
 | POST | `/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings` | `ReopenFinding` | [registration](../../src/Compliance.App/Program.cs#L1403) |
-| POST | `/api/v1/tenants/{tenant_id}/access-populations` | `OpenAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1407) |
-| PUT | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/facts` | `RecordAccessPopulationFacts` | [registration](../../src/Compliance.App/Program.cs#L1411) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}` | `OpenAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1407) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-populations/record-access-population-facts/{command_id}` | `RecordAccessPopulationFacts` | [registration](../../src/Compliance.App/Program.cs#L1411) |
 | GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/preview` | `PreviewAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1415) |
-| POST | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance` | `AcceptAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1419) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance/{command_id}` | `AcceptAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1419) |
 | GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}` | `GetAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1423) |
 | GET | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-populations` | `ListAccessPopulations` | [registration](../../src/Compliance.App/Program.cs#L1427) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions` | `ExemptMissingAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1431) |
+| PUT | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions/{exception_id}` | `ExemptMissingAccessPopulation` | [registration](../../src/Compliance.App/Program.cs#L1431) |
 | GET | `/api/v1/tenants/{tenant_id}/applications/{application_id}/access-review-coverage` | `GetAccessReviewCoverage` | [registration](../../src/Compliance.App/Program.cs#L1435) |
-| POST | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/classifications` | `ClassifyAccessPrincipal` | [registration](../../src/Compliance.App/Program.cs#L1439) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/classifications/{command_id}` | `ClassifyAccessPrincipal` | [registration](../../src/Compliance.App/Program.cs#L1439) |
 | GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/principals` | `ListAccessPrincipals` | [registration](../../src/Compliance.App/Program.cs#L1443) |
 | GET | `/api/v1/tenants/{tenant_id}/access-populations/{population_id}/variance` | `GetAccessVariance` | [registration](../../src/Compliance.App/Program.cs#L1447) |
-| POST | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations` | `ProposeAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1451) |
-| POST | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval` | `ApproveAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1455) |
-| POST | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions` | `ExemptAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1459) |
+| PUT | `/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}` | `ProposeAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1451) |
+| PUT | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval/{command_id}` | `ApproveAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1455) |
+| PUT | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions/{command_id}` | `ExemptAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1459) |
 | GET | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations` | `ListAccessExpectations` | [registration](../../src/Compliance.App/Program.cs#L1463) |
 | POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns` | `LaunchAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1467) |
 | GET | `/api/v1/tenants/{tenant_id}/access-review-campaigns` | `ListAccessReviewCampaigns` | [registration](../../src/Compliance.App/Program.cs#L1471) |

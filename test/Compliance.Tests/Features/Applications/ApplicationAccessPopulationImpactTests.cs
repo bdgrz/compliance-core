@@ -103,7 +103,10 @@ public sealed class ApplicationAccessPopulationImpactTests
         var opened = new AccessPopulationOpened(tenantId, populationId, Uuid.CreateVersion4(),
             systemInstanceId, 1, DateTimeOffset.UtcNow.AddMinutes(-1), "manual_attestation",
             "Payroll export", ActorReference.ForMember(RbacIds.Member(tenantId,
-                Uuid.CreateVersion4()), "Population owner"), DateTimeOffset.UtcNow);
+                Uuid.CreateVersion4()), "Population owner"), DateTimeOffset.UtcNow,
+            AccessReviewFacts.Provenance(new EventStreamAddress(tenantId.ToString(), AccessPopulation.Area,
+                populationId.ToString()), "OpenAccessPopulation", populationId), AccessReviewFacts.Response(),
+            AccessReviewFacts.Response());
         DomainEvent domainEvent = opened;
         domainEvent.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), populationId,
             1, opened.OpenedAt));

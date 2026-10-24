@@ -37,7 +37,7 @@ public sealed class AccessReviewCampaignTests
 
         // Act
         var launched = await fixture.LaunchAsync(populationId);
-        await fixture.ClassifyAsync(populationId, "ada", AccessReviewVocabulary.Unclassified, count: 1);
+        await fixture.ClassifyAsync(populationId, "ada", AccessReviewVocabulary.Unclassified, revision: 1);
         var campaign = await fixture.CampaignAsync(launched.CampaignId);
         var snapshot = await ProgramManagementServices.HydrateAsync(fixture.Provider,
             new PopulationSnapshot(fixture.TenantId, launched.SnapshotId));
@@ -484,7 +484,7 @@ public sealed class AccessReviewCampaignTests
     {
         // Arrange
         await using var fixture = await AccessReviewFixture.CreateAsync();
-        await fixture.ApprovedExpectationAsync(0, AccessReviewVocabulary.PrivilegedEntitlement,
+        await fixture.ApprovedExpectationAsync(AccessReviewVocabulary.PrivilegedEntitlement,
             new AccessExpectationParameters(EntitlementKind: "admin_privilege"));
         var (populationId, _) = await fixture.AcceptAsync(AccessReviewFixture.StandardFacts());
         await fixture.ClassifyStandardAsync(populationId);

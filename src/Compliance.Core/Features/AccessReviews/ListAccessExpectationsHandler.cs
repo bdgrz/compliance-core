@@ -2,7 +2,7 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
-public sealed class ListAccessExpectationsHandler(IAggregateReader reader,
+public sealed class ListAccessExpectationsHandler(AccessExpectationsReader expectations,
     IApplicationDirectoryReader applications, RestrictedApplicationVisibility visibility)
     : IRequestHandler<ListAccessExpectations, AccessExpectationsView>
 {
@@ -20,8 +20,8 @@ public sealed class ListAccessExpectationsHandler(IAggregateReader reader,
             .ConfigureAwait(false))
             return AccessReviewOutcome.Failure<AccessExpectationsView>(RequestErrorKind.NotFound,
                 "The system instance was not found.");
-        var ledger = await reader.HydrateAsync(new AccessReviewSystemLedger(request.TenantId,
-            request.SystemInstanceId), ct).ConfigureAwait(false);
+        var ledger = await expectations.ReadAsync(request.TenantId, request.SystemInstanceId, ct)
+            .ConfigureAwait(false);
         return Result<AccessExpectationsView>.Success(ledger.ToView());
     }
 }
