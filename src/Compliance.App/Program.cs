@@ -1007,7 +1007,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Commitments");
     app.MapPortiaPut<ReviseCommitmentDraft>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseCommitmentDraft>()
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/draft-revisions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseCommitmentDraft>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Commitments");
     app.MapPortiaGet<GetCommitmentDraft, CommitmentDraftView>(
@@ -1037,6 +1037,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     // Approval is a separate human decision after review and stays HTTP-only.
     app.MapPortiaPut<ApproveCommitmentDraft>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/approvals/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ApproveCommitmentDraft>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Commitments");
+    app.MapPortiaPut<RetireCommitment>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitments/{commitment_id}/retirements/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RetireCommitment>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Commitments");
     app.MapPortiaGet<ListCommitmentDecisions, Page<CommitmentDecisionView>>(

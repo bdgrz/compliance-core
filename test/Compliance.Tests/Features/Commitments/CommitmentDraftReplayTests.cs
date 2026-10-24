@@ -10,6 +10,28 @@ namespace Bdgrz.Compliance.Tests.Features.Commitments;
 public sealed class CommitmentDraftReplayTests
 {
     [Fact]
+    public async Task ShouldCreateLegalLargeDraftGivenEscapedStatementAndContext()
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var program = Uuid.CreateVersion4();
+        var serviceId = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        var id = CommitmentDraft.IdFor(tenant, program, "service_commitment", "SC-LARGE");
+        await using var provider = ProgramManagementServices.Build(new RecordingPermissionAuthorizer(allowed: true),
+            portia => portia.AddRequestHandler<CreateCommitmentDraftHandler>());
+        await ProgramManagementServices.SeedAsync(provider, new ClientService(tenant, serviceId),
+            service => service.Create(program, "Service", "Purpose", "Operations", user, "Author", DateTimeOffset.UtcNow));
+        var request = new CreateCommitmentDraft(id, tenant, program, serviceId, "service_commitment", "SC-LARGE",
+            new string('<', 16000), new string('<', 16000), "Signed MSA");
+
+        // Act
+        // Assert
+        await Dispatch(provider, ProgramManagementServices.Actor(user), request, id)
+            .ExpectSuccess(new CommitmentDraftRegistration(id, "service_commitment", "SC-LARGE", 1));
+    }
+
+    [Fact]
     public async Task ShouldReplayOriginalCreateAndRejectNewDraftGivenRetiredService()
     {
         // Arrange
@@ -48,9 +70,9 @@ public sealed class CommitmentDraftReplayTests
         await Dispatch(provider, actor, original with { Statement = "Changed statement" },
             requestId).ExpectFailure(RequestErrorKind.Conflict);
         var draft = await ProgramManagementServices.HydrateAsync(provider,
-            new CommitmentDraft(tenantId, registration.DraftId));
+            new CommitmentRules(tenantId, registration.DraftId));
         var rejectedDraft = await ProgramManagementServices.HydrateAsync(provider,
-            new CommitmentDraft(tenantId,
+            new CommitmentRules(tenantId,
                 CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-02")));
         Assert.Equal(1, draft.Revision);
         Assert.False(rejectedDraft.IsCreated);

@@ -1,0 +1,35 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Native narrow CommitmentDraft authority and all existing owning/consumer reads.",
+  "validation": {
+    "originalApiRedFailed": 3,
+    "consumerRedFailed": 6,
+    "consumerRedPositiveControls": 3,
+    "strictBuildWarnings": 0,
+    "focusedPassed": 178,
+    "backendUnitPassed": 5763,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 70,
+    "signalsTriaged": 7,
+    "mergeProbability": 0.84,
+    "adopted": "merge scoped repair; continue remaining owners"
+  },
+  "parentRefinements": [
+    "Strict namespace/type/style and missing explicit shared-handler dependency fixes.",
+    "Keep original unsupported/oversized rejection test but exceed actual16000-character legal field limit; the legal large escaped body has independent positive proof.",
+    "Production HTTP uses separate canonical users: continuing another developer identity on one signed-in session intentionally links to the same user and correctly triggered self-review refusal.",
+    "GREEN consumer baseline source differences were verified as whitespace-only before taking frozen final files; preserve parent first-content type guard."
+  ],
+  "qualification": [
+    "Five Commitment facts advance to v2 immutable payloads; shared responsibility v1facts retain nullable family-specific envelope additions.",
+    "No implicit retained legacy stream converter or deployment qualification.",
+    "Verified cross-owner values are checked at admission; this does not fabricate a new held source-use protocol."
+  ]
+}

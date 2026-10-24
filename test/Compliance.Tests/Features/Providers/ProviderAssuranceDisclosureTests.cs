@@ -101,7 +101,7 @@ public sealed class ProviderAssuranceDisclosureTests
         AssuranceReferences References()
         {
             var reader = Source.GetRequiredService<IAggregateReader>();
-            return new(reader, new ProviderSource(reader, Source.GetRequiredService<IImmutableContentStore>()), null!, null!, null!);
+            return new(reader, new ProviderSource(reader, Source.GetRequiredService<IImmutableContentStore>()));
         }
 
         AssuranceReadConsistency Consistency() => new(Directory, new InMemoryEventStore());

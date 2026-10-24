@@ -5,7 +5,7 @@ namespace Bdgrz.Compliance.Features.Commitments;
 public sealed partial class CommitmentDraftHistoryDirectoryProjectorV1(
     ICommitmentDraftHistoryDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant("commitment-drafts"),
-            "CommitmentDraftHistoryDirectoryV1"),
+            FitzCommitmentDraftHistoryDirectoryV1.ProjectorName),
       IProjectorHandler<CommitmentDraftCreated>, IProjectorHandler<CommitmentDraftRevised>
 {
     public ValueTask HandleAsync(CommitmentDraftCreated ev, IProjectorContext context,

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
@@ -44,185 +45,192 @@ sealed class DirectoryReadinessSourceReader(IBoundaryDirectoryReader boundaries,
     public async ValueTask<Result<ReadinessSourceSet>> ReadAsync(Uuid tenantId, Uuid programId,
         DateTimeOffset asOf, CancellationToken ct = default)
     {
-        var programBoundaryFence = await programBoundaryConsistency.CaptureAsync(tenantId, ct)
-            .ConfigureAwait(false);
-        if (!programBoundaryFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(programBoundaryFence.Error);
-        var snapshotFence = await projectionConsistency.CaptureSnapshotsAsync(tenantId, ct)
-            .ConfigureAwait(false);
-        if (!snapshotFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(snapshotFence.Error);
-        var populationSnapshotFence = await projectionConsistency
-            .CapturePopulationSnapshotsAsync(tenantId, ct).ConfigureAwait(false);
-        if (!populationSnapshotFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(populationSnapshotFence.Error);
-        var commitmentFence = await commitmentConsistency.CaptureFenceAsync(tenantId, ct)
-            .ConfigureAwait(false);
-        if (!commitmentFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(commitmentFence.Error);
-        var riskFence = await riskConsistency.CaptureFenceAsync(tenantId, ct)
-            .ConfigureAwait(false);
-        if (!riskFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(riskFence.Error);
-        var riskHistoryFence = await projectionConsistency.CaptureRiskHistoryAsync(tenantId, ct)
-            .ConfigureAwait(false);
-        if (!riskHistoryFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(riskHistoryFence.Error);
-        var providerFence = await providerConsistency.CaptureListFenceAsync(tenantId, ct)
-            .ConfigureAwait(false);
-        if (!providerFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(providerFence.Error);
-        var assuranceFence = await assuranceConsistency.CaptureFenceAsync(tenantId, ct)
-            .ConfigureAwait(false);
-        if (!assuranceFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(assuranceFence.Error);
-        var technologyFence = await technologyConsistency.CaptureAsync(tenantId, ct)
-            .ConfigureAwait(false);
-        if (!technologyFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(technologyFence.Error);
-        var inventoryRegisterFence = await projectionConsistency.CaptureInventoryRegisterAsync(
-            tenantId, ct).ConfigureAwait(false);
-        if (!inventoryRegisterFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(inventoryRegisterFence.Error);
-        var accessReviewScopeFence = await projectionConsistency.CaptureAccessReviewScopesAsync(
-            tenantId, ct).ConfigureAwait(false);
-        if (!accessReviewScopeFence.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(accessReviewScopeFence.Error);
-
-        var truncated = new List<string>();
-        var boundaryViews = await ScanAsync("boundaries", truncated, (cursor, token) =>
-            boundaries.ListProgramAsync(tenantId, programId, PageSize, cursor, token), ct)
-            .ConfigureAwait(false);
-        var commitmentViews = await ScanAsync("commitments", truncated, (cursor, token) =>
-            commitments.ListProgramAsync(tenantId, programId, PageSize, cursor, token), ct)
-            .ConfigureAwait(false);
-        var riskViews = await ScanAsync("risks", truncated, (cursor, token) =>
-            risks.ListProgramAsync(tenantId, programId, PageSize, cursor, token), ct)
-            .ConfigureAwait(false);
-        var snapshotViews = await ScanAsync("population_snapshots", truncated, (cursor, token) =>
-            snapshots.ListProgramAsync(tenantId, programId, PageSize, cursor, token), ct)
-            .ConfigureAwait(false);
-        var workforceRosterSnapshot = await ReadWorkforceRosterSnapshotAsync(tenantId, asOf,
-            truncated, ct).ConfigureAwait(false);
-        if (!workforceRosterSnapshot.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(workforceRosterSnapshot.Error);
-        var boundaryInputs = new List<ReadinessBoundaryInput>(boundaryViews.Count);
-        foreach (var boundary in boundaryViews)
+        try
         {
-            var versions = await ReadAllAsync(async (cursor, token) =>
-                    await boundaries.ListVersionsAsync(tenantId, boundary.BoundaryId, PageSize,
-                        cursor, token).ConfigureAwait(false) ?? new Page<BoundaryVersionView>([], null),
-                ct).ConfigureAwait(false);
-            var decisions = await ReadAllAsync(async (cursor, token) =>
-                    await boundaries.ListDecisionsAsync(tenantId, boundary.BoundaryId, PageSize,
-                        cursor, token).ConfigureAwait(false) ?? new Page<BoundaryDecisionView>([], null),
-                ct).ConfigureAwait(false);
-            boundaryInputs.Add(new ReadinessBoundaryInput(boundary.BoundaryId, versions,
-                decisions));
-        }
-
-        var scopedSubjects = SubjectsAt(boundaryInputs, asOf);
-        var accessReviewScopeInputs = await ReadAccessReviewScopesAsync(tenantId,
-            scopedSubjects, truncated, ct).ConfigureAwait(false);
-        var technologyInputs = await ReadTechnologyInventoryAsync(tenantId, asOf,
-            scopedSubjects, truncated, ct).ConfigureAwait(false);
-        var providerInputs = await ReadProvidersAsync(tenantId, programId, asOf,
-            scopedSubjects, truncated, ct).ConfigureAwait(false);
-
-        var commitmentInputs = new List<ReadinessCommitmentInput>(commitmentViews.Count);
-        foreach (var commitment in commitmentViews)
-        {
-            var created = await commitments.GetRevisionAsync(tenantId, commitment.DraftId, 1, ct)
+            var programBoundaryFence = await programBoundaryConsistency.CaptureAsync(tenantId, ct)
                 .ConfigureAwait(false);
-            var versions = await ReadAllAsync((cursor, token) =>
-                commitments.ListVersionsAsync(tenantId, commitment.DraftId, PageSize, cursor,
-                    token), ct).ConfigureAwait(false);
-            commitmentInputs.Add(new ReadinessCommitmentInput(commitment.DraftId,
-                commitment.Identifier, created?.ChangedAt ?? commitment.LastChangedAt, versions));
-        }
-
-        var riskInputs = new List<ReadinessRiskInput>(riskViews.Count);
-        foreach (var risk in riskViews)
-        {
-            var revisions = await ReadAllAsync((cursor, token) =>
-                riskHistory.ListRevisionsAsync(tenantId, risk.RiskId, PageSize, cursor, token),
-                ct).ConfigureAwait(false);
-            var createdAt = revisions.Count == 0
-                ? risk.LastChangedAt
-                : revisions.Min(static revision => revision.ChangedAt);
-            var revisionAt = revisions.Where(revision => revision.ChangedAt <= asOf)
-                .Select(static revision => revision.Revision).DefaultIfEmpty(0).Max();
-            var evaluation = await evaluationConsistency.GetAsync(tenantId, programId,
-                risk.RiskId, null, ct)
+            if (!programBoundaryFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(programBoundaryFence.Error);
+            var snapshotFence = await projectionConsistency.CaptureSnapshotsAsync(tenantId, ct)
                 .ConfigureAwait(false);
-            if (!evaluation.IsSuccess)
-                return Result<ReadinessSourceSet>.Failure(evaluation.Error);
-            riskInputs.Add(new ReadinessRiskInput(risk.RiskId, risk.Identifier, createdAt,
-                revisionAt, EvaluationStatusAt(evaluation.Value, asOf)));
+            if (!snapshotFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(snapshotFence.Error);
+            var populationSnapshotFence = await projectionConsistency
+                .CapturePopulationSnapshotsAsync(tenantId, ct).ConfigureAwait(false);
+            if (!populationSnapshotFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(populationSnapshotFence.Error);
+            var commitmentFence = await commitmentConsistency.CaptureFenceAsync(tenantId, ct)
+                .ConfigureAwait(false);
+            if (!commitmentFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(commitmentFence.Error);
+            var riskFence = await riskConsistency.CaptureFenceAsync(tenantId, ct)
+                .ConfigureAwait(false);
+            if (!riskFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(riskFence.Error);
+            var riskHistoryFence = await projectionConsistency.CaptureRiskHistoryAsync(tenantId, ct)
+                .ConfigureAwait(false);
+            if (!riskHistoryFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(riskHistoryFence.Error);
+            var providerFence = await providerConsistency.CaptureListFenceAsync(tenantId, ct)
+                .ConfigureAwait(false);
+            if (!providerFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(providerFence.Error);
+            var assuranceFence = await assuranceConsistency.CaptureFenceAsync(tenantId, ct)
+                .ConfigureAwait(false);
+            if (!assuranceFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(assuranceFence.Error);
+            var technologyFence = await technologyConsistency.CaptureAsync(tenantId, ct)
+                .ConfigureAwait(false);
+            if (!technologyFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(technologyFence.Error);
+            var inventoryRegisterFence = await projectionConsistency.CaptureInventoryRegisterAsync(
+                tenantId, ct).ConfigureAwait(false);
+            if (!inventoryRegisterFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(inventoryRegisterFence.Error);
+            var accessReviewScopeFence = await projectionConsistency.CaptureAccessReviewScopesAsync(
+                tenantId, ct).ConfigureAwait(false);
+            if (!accessReviewScopeFence.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(accessReviewScopeFence.Error);
+
+            var truncated = new List<string>();
+            var boundaryViews = await ScanAsync("boundaries", truncated, (cursor, token) =>
+                boundaries.ListProgramAsync(tenantId, programId, PageSize, cursor, token), ct)
+                .ConfigureAwait(false);
+            var commitmentViews = await ScanAsync("commitments", truncated, (cursor, token) =>
+                commitments.ListProgramAsync(tenantId, programId, PageSize, cursor, token), ct)
+                .ConfigureAwait(false);
+            var riskViews = await ScanAsync("risks", truncated, (cursor, token) =>
+                risks.ListProgramAsync(tenantId, programId, PageSize, cursor, token), ct)
+                .ConfigureAwait(false);
+            var snapshotViews = await ScanAsync("population_snapshots", truncated, (cursor, token) =>
+                snapshots.ListProgramAsync(tenantId, programId, PageSize, cursor, token), ct)
+                .ConfigureAwait(false);
+            var workforceRosterSnapshot = await ReadWorkforceRosterSnapshotAsync(tenantId, asOf,
+                truncated, ct).ConfigureAwait(false);
+            if (!workforceRosterSnapshot.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(workforceRosterSnapshot.Error);
+            var boundaryInputs = new List<ReadinessBoundaryInput>(boundaryViews.Count);
+            foreach (var boundary in boundaryViews)
+            {
+                var versions = await ReadAllAsync(async (cursor, token) =>
+                        await boundaries.ListVersionsAsync(tenantId, boundary.BoundaryId, PageSize,
+                            cursor, token).ConfigureAwait(false) ?? new Page<BoundaryVersionView>([], null),
+                    ct).ConfigureAwait(false);
+                var decisions = await ReadAllAsync(async (cursor, token) =>
+                        await boundaries.ListDecisionsAsync(tenantId, boundary.BoundaryId, PageSize,
+                            cursor, token).ConfigureAwait(false) ?? new Page<BoundaryDecisionView>([], null),
+                    ct).ConfigureAwait(false);
+                boundaryInputs.Add(new ReadinessBoundaryInput(boundary.BoundaryId, versions,
+                    decisions));
+            }
+
+            var scopedSubjects = SubjectsAt(boundaryInputs, asOf);
+            var accessReviewScopeInputs = await ReadAccessReviewScopesAsync(tenantId,
+                scopedSubjects, truncated, ct).ConfigureAwait(false);
+            var technologyInputs = await ReadTechnologyInventoryAsync(tenantId, asOf,
+                scopedSubjects, truncated, ct).ConfigureAwait(false);
+            var providerInputs = await ReadProvidersAsync(tenantId, programId, asOf,
+                scopedSubjects, truncated, ct).ConfigureAwait(false);
+
+            var commitmentInputs = new List<ReadinessCommitmentInput>(commitmentViews.Count);
+            foreach (var commitment in commitmentViews)
+            {
+                var created = await commitments.GetRevisionAsync(tenantId, commitment.DraftId, 1, ct)
+                    .ConfigureAwait(false);
+                var versions = await ReadAllAsync((cursor, token) =>
+                    commitments.ListVersionsAsync(tenantId, commitment.DraftId, PageSize, cursor,
+                        token), ct).ConfigureAwait(false);
+                commitmentInputs.Add(new ReadinessCommitmentInput(commitment.DraftId,
+                    commitment.Identifier, created?.ChangedAt ?? commitment.LastChangedAt, versions));
+            }
+
+            var riskInputs = new List<ReadinessRiskInput>(riskViews.Count);
+            foreach (var risk in riskViews)
+            {
+                var revisions = await ReadAllAsync((cursor, token) =>
+                    riskHistory.ListRevisionsAsync(tenantId, risk.RiskId, PageSize, cursor, token),
+                    ct).ConfigureAwait(false);
+                var createdAt = revisions.Count == 0
+                    ? risk.LastChangedAt
+                    : revisions.Min(static revision => revision.ChangedAt);
+                var revisionAt = revisions.Where(revision => revision.ChangedAt <= asOf)
+                    .Select(static revision => revision.Revision).DefaultIfEmpty(0).Max();
+                var evaluation = await evaluationConsistency.GetAsync(tenantId, programId,
+                    risk.RiskId, null, ct)
+                    .ConfigureAwait(false);
+                if (!evaluation.IsSuccess)
+                    return Result<ReadinessSourceSet>.Failure(evaluation.Error);
+                riskInputs.Add(new ReadinessRiskInput(risk.RiskId, risk.Identifier, createdAt,
+                    revisionAt, EvaluationStatusAt(evaluation.Value, asOf)));
+            }
+
+            var programBoundaryConfirmed = await programBoundaryConsistency
+                .ConfirmUnchangedAndCaughtUpAsync(tenantId, programBoundaryFence.Value, ct)
+                .ConfigureAwait(false);
+            if (!programBoundaryConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(programBoundaryConfirmed.Error);
+            var snapshotsConfirmed = await projectionConsistency
+                .ConfirmSnapshotsUnchangedAndCaughtUpAsync(tenantId, snapshotFence.Value, ct)
+                .ConfigureAwait(false);
+            if (!snapshotsConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(snapshotsConfirmed.Error);
+            var populationSnapshotsConfirmed = await projectionConsistency
+                .ConfirmPopulationSnapshotsUnchangedAndCaughtUpAsync(tenantId,
+                    populationSnapshotFence.Value, ct).ConfigureAwait(false);
+            if (!populationSnapshotsConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(populationSnapshotsConfirmed.Error);
+            var commitmentsConfirmed = await commitmentConsistency.ConfirmUnchangedAndCaughtUpAsync(
+                tenantId, commitmentFence.Value, ct).ConfigureAwait(false);
+            if (!commitmentsConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(commitmentsConfirmed.Error);
+            var risksConfirmed = await riskConsistency.ConfirmUnchangedAndCaughtUpAsync(tenantId,
+                riskFence.Value, ct).ConfigureAwait(false);
+            if (!risksConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(risksConfirmed.Error);
+            var riskHistoryConfirmed = await projectionConsistency
+                .ConfirmRiskHistoryUnchangedAndCaughtUpAsync(tenantId, riskHistoryFence.Value, ct)
+                .ConfigureAwait(false);
+            if (!riskHistoryConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(riskHistoryConfirmed.Error);
+            var providersConfirmed = await providerConsistency.EnsureFenceHeldAsync(tenantId,
+                providerFence.Value, ct).ConfigureAwait(false);
+            if (!providersConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(providersConfirmed.Error);
+            var assuranceConfirmed = await assuranceConsistency.ConfirmUnchangedAndCaughtUpAsync(
+                tenantId, assuranceFence.Value, ct).ConfigureAwait(false);
+            if (!assuranceConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(assuranceConfirmed.Error);
+            var technologyConfirmed = await technologyConsistency
+                .ConfirmUnchangedAndCaughtUpAsync(tenantId, technologyFence.Value, ct)
+                .ConfigureAwait(false);
+            if (!technologyConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(technologyConfirmed.Error);
+            var inventoryRegisterConfirmed = await projectionConsistency
+                .ConfirmInventoryRegisterUnchangedAndCaughtUpAsync(tenantId,
+                    inventoryRegisterFence.Value, ct).ConfigureAwait(false);
+            if (!inventoryRegisterConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(inventoryRegisterConfirmed.Error);
+            var accessReviewScopesConfirmed = await projectionConsistency
+                .ConfirmAccessReviewScopesUnchangedAndCaughtUpAsync(tenantId,
+                    accessReviewScopeFence.Value, ct).ConfigureAwait(false);
+            if (!accessReviewScopesConfirmed.IsSuccess)
+                return Result<ReadinessSourceSet>.Failure(accessReviewScopesConfirmed.Error);
+
+            return Result<ReadinessSourceSet>.Success(new ReadinessSourceSet(boundaryInputs,
+                commitmentInputs, riskInputs,
+                snapshotViews)
+            {
+                AccessReviewScopes = accessReviewScopeInputs,
+                Providers = providerInputs,
+                TechnologyInventory = technologyInputs,
+                WorkforceRosterSnapshot = workforceRosterSnapshot.Value,
+                TruncatedFamilies = truncated,
+            });
         }
-
-        var programBoundaryConfirmed = await programBoundaryConsistency
-            .ConfirmUnchangedAndCaughtUpAsync(tenantId, programBoundaryFence.Value, ct)
-            .ConfigureAwait(false);
-        if (!programBoundaryConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(programBoundaryConfirmed.Error);
-        var snapshotsConfirmed = await projectionConsistency
-            .ConfirmSnapshotsUnchangedAndCaughtUpAsync(tenantId, snapshotFence.Value, ct)
-            .ConfigureAwait(false);
-        if (!snapshotsConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(snapshotsConfirmed.Error);
-        var populationSnapshotsConfirmed = await projectionConsistency
-            .ConfirmPopulationSnapshotsUnchangedAndCaughtUpAsync(tenantId,
-                populationSnapshotFence.Value, ct).ConfigureAwait(false);
-        if (!populationSnapshotsConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(populationSnapshotsConfirmed.Error);
-        var commitmentsConfirmed = await commitmentConsistency.ConfirmUnchangedAndCaughtUpAsync(
-            tenantId, commitmentFence.Value, ct).ConfigureAwait(false);
-        if (!commitmentsConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(commitmentsConfirmed.Error);
-        var risksConfirmed = await riskConsistency.ConfirmUnchangedAndCaughtUpAsync(tenantId,
-            riskFence.Value, ct).ConfigureAwait(false);
-        if (!risksConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(risksConfirmed.Error);
-        var riskHistoryConfirmed = await projectionConsistency
-            .ConfirmRiskHistoryUnchangedAndCaughtUpAsync(tenantId, riskHistoryFence.Value, ct)
-            .ConfigureAwait(false);
-        if (!riskHistoryConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(riskHistoryConfirmed.Error);
-        var providersConfirmed = await providerConsistency.EnsureFenceHeldAsync(tenantId,
-            providerFence.Value, ct).ConfigureAwait(false);
-        if (!providersConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(providersConfirmed.Error);
-        var assuranceConfirmed = await assuranceConsistency.ConfirmUnchangedAndCaughtUpAsync(
-            tenantId, assuranceFence.Value, ct).ConfigureAwait(false);
-        if (!assuranceConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(assuranceConfirmed.Error);
-        var technologyConfirmed = await technologyConsistency
-            .ConfirmUnchangedAndCaughtUpAsync(tenantId, technologyFence.Value, ct)
-            .ConfigureAwait(false);
-        if (!technologyConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(technologyConfirmed.Error);
-        var inventoryRegisterConfirmed = await projectionConsistency
-            .ConfirmInventoryRegisterUnchangedAndCaughtUpAsync(tenantId,
-                inventoryRegisterFence.Value, ct).ConfigureAwait(false);
-        if (!inventoryRegisterConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(inventoryRegisterConfirmed.Error);
-        var accessReviewScopesConfirmed = await projectionConsistency
-            .ConfirmAccessReviewScopesUnchangedAndCaughtUpAsync(tenantId,
-                accessReviewScopeFence.Value, ct).ConfigureAwait(false);
-        if (!accessReviewScopesConfirmed.IsSuccess)
-            return Result<ReadinessSourceSet>.Failure(accessReviewScopesConfirmed.Error);
-
-        return Result<ReadinessSourceSet>.Success(new ReadinessSourceSet(boundaryInputs,
-            commitmentInputs, riskInputs,
-            snapshotViews)
+        catch (ImmutableContentIntegrityException failure)
         {
-            AccessReviewScopes = accessReviewScopeInputs,
-            Providers = providerInputs,
-            TechnologyInventory = technologyInputs,
-            WorkforceRosterSnapshot = workforceRosterSnapshot.Value,
-            TruncatedFamilies = truncated,
-        });
+            return Result<ReadinessSourceSet>.Failure(CommitmentReadFailure.Of(failure));
+        }
     }
 
     async ValueTask<Result<ReadinessWorkforceRosterSnapshotInput?>>

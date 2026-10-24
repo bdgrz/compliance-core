@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Operations;
@@ -18,59 +19,65 @@ static class CommitmentDecisionWork
         ProjectedKinds.All(projectedKinds.Contains);
 
     public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, ICommitmentDraftDirectoryReader directory,
+        CommitmentReader commitments, ICommitmentDraftDirectoryReader directory,
         CommitmentDraftListReadConsistency? consistency, Uuid tenantId, Uuid programId,
         DateTimeOffset now, Uuid? workItemId, CancellationToken ct)
     {
-        var fence = ProjectionCheckpoint.Start;
-        if (consistency is not null)
+        try
         {
-            var captured = await consistency.CaptureFenceAsync(tenantId, ct).ConfigureAwait(false);
-            if (!captured.IsSuccess)
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(captured.Error);
-            fence = captured.Value;
-        }
-
-        var candidates = new List<WorkCandidate>();
-        string? cursor = null;
-        do
-        {
-            var page = await directory.ListProgramAsync(tenantId, programId, 200, cursor, ct)
-                .ConfigureAwait(false);
-            if (page.Items.Any(summary => summary.TenantId != tenantId ||
-                                          summary.ProgramId != programId))
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
-
-            foreach (var summary in page.Items)
+            var fence = ProjectionCheckpoint.Start;
+            if (consistency is not null)
             {
-                var draft = await reader.HydrateAsync(new CommitmentDraft(tenantId,
-                    summary.DraftId), ct).ConfigureAwait(false);
-                if (!draft.IsCreated || draft.ProgramId != programId ||
-                    draft.Revision != summary.Revision ||
-                    !StringComparer.Ordinal.Equals(draft.Identifier, summary.Identifier))
-                    return Result<IReadOnlyList<WorkCandidate>>.Failure(SourceChanged());
-
-                var state = FromSource(tenantId, draft, summary.LastChangedAt);
-                var work = Candidates(state, now, workItemId);
-                if (!work.IsSuccess)
-                    return Result<IReadOnlyList<WorkCandidate>>.Failure(work.Error);
-                candidates.AddRange(work.Value);
+                var captured = await consistency.CaptureFenceAsync(tenantId, ct).ConfigureAwait(false);
+                if (!captured.IsSuccess)
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(captured.Error);
+                fence = captured.Value;
             }
-            cursor = page.NextCursor;
-        } while (cursor is not null);
 
-        if (consistency is not null)
-        {
-            var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(tenantId, fence, ct)
-                .ConfigureAwait(false);
-            if (!confirmed.IsSuccess)
-                return Result<IReadOnlyList<WorkCandidate>>.Failure(confirmed.Error);
+            var candidates = new List<WorkCandidate>();
+            string? cursor = null;
+            do
+            {
+                var page = await directory.ListProgramAsync(tenantId, programId, 200, cursor, ct)
+                    .ConfigureAwait(false);
+                if (page.Items.Any(summary => summary.TenantId != tenantId ||
+                                              summary.ProgramId != programId))
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
+
+                foreach (var summary in page.Items)
+                {
+                    var draft = await commitments.ReadAsync(tenantId, programId, summary.DraftId, ct).ConfigureAwait(false);
+                    if (!draft.IsCreated || draft.ProgramId != programId ||
+                        draft.Revision != summary.Revision ||
+                        !StringComparer.Ordinal.Equals(draft.Identifier, summary.Identifier))
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(SourceChanged());
+
+                    var state = FromSource(tenantId, draft, summary.LastChangedAt);
+                    var work = Candidates(state, now, workItemId);
+                    if (!work.IsSuccess)
+                        return Result<IReadOnlyList<WorkCandidate>>.Failure(work.Error);
+                    candidates.AddRange(work.Value);
+                }
+                cursor = page.NextCursor;
+            } while (cursor is not null);
+
+            if (consistency is not null)
+            {
+                var confirmed = await consistency.ConfirmUnchangedAndCaughtUpAsync(tenantId, fence, ct)
+                    .ConfigureAwait(false);
+                if (!confirmed.IsSuccess)
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(confirmed.Error);
+            }
+            return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
         }
-        return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<IReadOnlyList<WorkCandidate>>.Failure(CommitmentReadFailure.Of(failure));
+        }
     }
 
     internal static CommitmentDecisionWorkState FromSource(Uuid tenantId,
-        CommitmentDraft draft, DateTimeOffset draftChangedAt)
+        CommitmentReadSnapshot draft, DateTimeOffset draftChangedAt)
     {
         var scope = new ResponsibilityScope(SeparationOfDutiesRecordTypes.Commitment,
             draft.Id, draft.Id, draft.Revision);

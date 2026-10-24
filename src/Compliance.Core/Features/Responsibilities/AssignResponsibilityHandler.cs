@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Responsibilities;
 
 public sealed class AssignResponsibilityHandler(IAggregateExecutor executor,
     IAggregateReader reader, ITenantMembershipDirectoryReader memberships,
-    IResponsibilityScopeValidator scopeValidator, ControlOperations controls, TimeProvider clock)
+    IResponsibilityScopeValidator scopeValidator, ControlOperations controls, CommitmentOperations commitments, TimeProvider clock)
     : IRequestHandler<AssignResponsibility>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<AssignResponsibility> context,
@@ -19,6 +19,8 @@ public sealed class AssignResponsibilityHandler(IAggregateExecutor executor,
         var request = context.Request;
         if (request.RecordType == SeparationOfDutiesRecordTypes.Control)
             return await controls.AssignResponsibilityAsync(context, memberships, scopeValidator, ct).ConfigureAwait(false);
+        if (request.RecordType == SeparationOfDutiesRecordTypes.Commitment)
+            return await commitments.AssignResponsibilityAsync(context, memberships, scopeValidator, ct).ConfigureAwait(false);
         var scopeResult = await scopeValidator.ValidateAsync(request.TenantId, request.Scope, ct)
             .ConfigureAwait(false);
         if (!scopeResult.IsSuccess)
@@ -49,13 +51,6 @@ public sealed class AssignResponsibilityHandler(IAggregateExecutor executor,
         var assignedAt = clock.GetUtcNow();
         // Responsibilities live on the aggregate that owns the exact record version, so the
         // assignment and the record's revision share one optimistic concurrency boundary.
-        if (request.RecordType == SeparationOfDutiesRecordTypes.Commitment)
-            return await executor.ExecuteAsync(new CommitmentDraft(request.TenantId,
-                request.Scope.RecordId), commitment => CommandFailureRequestAdapter.ToOutcome(
-                commitment.AssignResponsibility(request.Scope, context.RequestId, memberId,
-                    request.Type, actorMemberId, actorDisplay, assignedAt,
-                    request.EffectiveFrom, request.EffectiveUntil, waivers)),
-                context, ct).ConfigureAwait(false);
         return await executor.ExecuteAsync(new SystemBoundary(request.TenantId, request.Scope.RecordId), boundary =>
         {
             var failure = boundary.AssignResponsibility(request.Scope, context.RequestId,

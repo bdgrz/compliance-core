@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
@@ -83,7 +84,7 @@ public sealed class DraftActorSnapshotE2ETests(BrokerStackFixture broker)
                     content = ControlContent("Monthly access review"),
                 }))
                     Assert.Equal(HttpStatusCode.NoContent, controlRevision.StatusCode);
-                using (var commitmentRevision = await owner.PutAsJsonAsync(drafts[1].Current,
+                using (var commitmentRevision = await CommitmentHttpRequests.ReviseAsync(owner, drafts[1].Current,
                            new
                            {
                                expected_revision = 1,
@@ -91,7 +92,7 @@ public sealed class DraftActorSnapshotE2ETests(BrokerStackFixture broker)
                                context = "Draft context",
                                source_reference = "Contract section 5",
                            }))
-                    Assert.Equal(HttpStatusCode.NoContent, commitmentRevision.StatusCode);
+                    Assert.Equal(HttpStatusCode.OK, commitmentRevision.StatusCode);
                 using (var riskRevision = await owner.PutAsJsonAsync(drafts[2].Current, new
                 {
                     expected_revision = 1,
@@ -250,7 +251,7 @@ public sealed class DraftActorSnapshotE2ETests(BrokerStackFixture broker)
             identifier = "AC-01",
             content = ControlContent("Quarterly access review"),
         });
-        using var commitmentResponse = await owner.PostAsJsonAsync(commitments, new
+        using var commitmentResponse = await CommitmentHttpRequests.CreateAsync(owner, commitments, new
         {
             service_id = serviceId,
             kind = "service_commitment",

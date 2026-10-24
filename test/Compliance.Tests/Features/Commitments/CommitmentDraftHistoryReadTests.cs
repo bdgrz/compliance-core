@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Bdgrz.Compliance.Features.Commitments;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Extensions;
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Commitments;
@@ -13,25 +13,26 @@ public sealed class CommitmentDraftHistoryReadTests
     public async Task ShouldPreserveImmutableHistoryAndPageByDraftGivenCommittedReplay()
     {
         // Arrange
-        var directory = new FitzCommitmentDraftHistoryDirectoryV1(new InMemoryKvClient());
+        await using var native = new CommitmentProjectionScenario();
+        var directory = new FitzCommitmentDraftHistoryDirectoryV1(native.Kv, native.Commitments);
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var draftId = Uuid.CreateVersion4();
-        var otherDraftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-01");
+        var otherDraftId = CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-02");
         var actorId = Uuid.CreateVersion4();
         var now = new DateTimeOffset(2026, 9, 21, 12, 0, 0, TimeSpan.Zero);
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
                          Checkpoint(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(Created(tenantId, programId, draftId, actorId,
+            await ProjectChangeAsync(native, directory, Created(tenantId, programId, draftId, actorId,
                 "First statement", now));
-            await directory.ApplyAsync(Revised(tenantId, programId, draftId, 2, actorId,
+            await ProjectChangeAsync(native, directory, Revised(tenantId, programId, draftId, 2, actorId,
                 "Second statement", now.AddMinutes(1)));
-            await directory.ApplyAsync(Revised(tenantId, programId, draftId, 3, actorId,
+            await ProjectChangeAsync(native, directory, Revised(tenantId, programId, draftId, 3, actorId,
                 "Third statement", now.AddMinutes(2)));
-            await directory.ApplyAsync(Created(tenantId, programId, otherDraftId, actorId,
+            await ProjectChangeAsync(native, directory, Created(tenantId, programId, otherDraftId, actorId,
                 "Other first statement", now));
-            await directory.ApplyAsync(Revised(tenantId, programId, otherDraftId, 2, actorId,
+            await ProjectChangeAsync(native, directory, Revised(tenantId, programId, otherDraftId, 2, actorId,
                 "Other second statement", now.AddMinutes(1)));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -58,24 +59,25 @@ public sealed class CommitmentDraftHistoryReadTests
     public async Task ShouldRejectMalformedAndCrossRecordCursorsGivenHistoryPages()
     {
         // Arrange
-        var directory = new FitzCommitmentDraftHistoryDirectoryV1(new InMemoryKvClient());
+        await using var native = new CommitmentProjectionScenario();
+        var directory = new FitzCommitmentDraftHistoryDirectoryV1(native.Kv, native.Commitments);
         var tenantId = Uuid.CreateVersion4();
         var otherTenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var draftId = Uuid.CreateVersion4();
-        var otherDraftId = Uuid.CreateVersion4();
+        var draftId = CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-01");
+        var otherDraftId = CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-02");
         var actorId = Uuid.CreateVersion4();
         var now = new DateTimeOffset(2026, 9, 21, 12, 0, 0, TimeSpan.Zero);
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
                          Checkpoint(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(Created(tenantId, programId, draftId, actorId,
+            await ProjectChangeAsync(native, directory, Created(tenantId, programId, draftId, actorId,
                 "First statement", now));
-            await directory.ApplyAsync(Revised(tenantId, programId, draftId, 2, actorId,
+            await ProjectChangeAsync(native, directory, Revised(tenantId, programId, draftId, 2, actorId,
                 "Second statement", now.AddMinutes(1)));
-            await directory.ApplyAsync(Created(tenantId, programId, otherDraftId, actorId,
+            await ProjectChangeAsync(native, directory, Created(tenantId, programId, otherDraftId, actorId,
                 "Other first statement", now));
-            await directory.ApplyAsync(Revised(tenantId, programId, otherDraftId, 2, actorId,
+            await ProjectChangeAsync(native, directory, Revised(tenantId, programId, otherDraftId, 2, actorId,
                 "Other second statement", now.AddMinutes(1)));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -102,7 +104,7 @@ public sealed class CommitmentDraftHistoryReadTests
     public async Task ShouldRejectOutOfRangeLimitGivenDraftHistoryRequest(int limit)
     {
         // Arrange
-        var scenario = CreateScenario();
+        await using var scenario = await CreateScenarioAsync();
         var handler = Handler(scenario);
 
         // Act
@@ -118,7 +120,7 @@ public sealed class CommitmentDraftHistoryReadTests
     public async Task ShouldMapMalformedOrCrossRecordCursorToValidationGivenDraftHistoryRequest()
     {
         // Arrange
-        var scenario = CreateScenario(rejectCursor: true);
+        await using var scenario = await CreateScenarioAsync(rejectCursor: true);
         var handler = Handler(scenario);
 
         // Act
@@ -140,7 +142,7 @@ public sealed class CommitmentDraftHistoryReadTests
     public async Task ShouldReportHistoryLagGivenSourceRevisionMissingFromV1Projection()
     {
         // Arrange
-        var scenario = CreateScenario(sourceRevision: 2, projectedRevision: null);
+        await using var scenario = await CreateScenarioAsync(sourceRevision: 2, projectedRevision: null);
         var handler = Handler(scenario);
 
         // Act
@@ -159,7 +161,7 @@ public sealed class CommitmentDraftHistoryReadTests
     public async Task ShouldReportSourceLagGivenRequestedHistoryRevisionIsAhead()
     {
         // Arrange
-        var scenario = CreateScenario(sourceRevision: 1, projectedRevision: 1);
+        await using var scenario = await CreateScenarioAsync(sourceRevision: 1, projectedRevision: 1);
         var handler = Handler(scenario);
 
         // Act
@@ -178,7 +180,7 @@ public sealed class CommitmentDraftHistoryReadTests
     public async Task ShouldNotDiscloseHistoryGivenDraftBelongsToAnotherProgram()
     {
         // Arrange
-        var scenario = CreateScenario();
+        await using var scenario = await CreateScenarioAsync();
         var handler = Handler(scenario);
 
         // Act
@@ -191,26 +193,27 @@ public sealed class CommitmentDraftHistoryReadTests
     }
 
     static CheckpointIdentity Checkpoint(Uuid tenantId) => new(
-        "CommitmentDraftHistoryDirectoryV1",
+        FitzCommitmentDraftHistoryDirectoryV1.ProjectorName,
         EventStreamPattern.ForPattern(tenantId.ToString(), "commitment-drafts"));
 
-    static CommitmentDraftCreated Created(Uuid tenantId, Uuid programId, Uuid draftId,
+    static CommitmentDraftCreatedContent Created(Uuid tenantId, Uuid programId, Uuid draftId,
         Uuid actorId, string statement, DateTimeOffset changedAt) => new(tenantId, programId,
-        draftId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), "service_commitment", "SC-01",
+        draftId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), "service_commitment", draftId == CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-01") ? "SC-01" : "SC-02",
         statement, "Context", "Source A", actorId, "Author", changedAt);
 
-    static CommitmentDraftRevised Revised(Uuid tenantId, Uuid programId, Uuid draftId,
+    static CommitmentDraftRevisedContent Revised(Uuid tenantId, Uuid programId, Uuid draftId,
         long revision, Uuid actorId, string statement, DateTimeOffset changedAt) => new(tenantId,
         programId, draftId, revision, statement, "Updated context",
         revision == 3 ? "Source C" : "Source B", actorId, "Editor", changedAt);
 
-    static Scenario CreateScenario(long sourceRevision = 1, long? projectedRevision = 1,
+    static async Task<Scenario> CreateScenarioAsync(long sourceRevision = 1, long? projectedRevision = 1,
         bool rejectCursor = false)
     {
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
-        var draftId = Uuid.CreateVersion4();
-        var source = new CommitmentDraft(tenantId, draftId);
+        var draftId = CommitmentDraft.IdFor(tenantId, programId, "service_commitment", "SC-01");
+        var source = new CommitmentRules(tenantId, draftId);
+        var native = new CommitmentProjectionScenario();
         var actorId = Uuid.CreateVersion4();
         Assert.True(source.Create(programId, Uuid.CreateVersion4(), Uuid.CreateVersion4(),
             "service_commitment", "SC-01", "First statement", "Context", "Source A",
@@ -223,7 +226,8 @@ public sealed class CommitmentDraftHistoryReadTests
         var historyRevision = projectedRevision is { } value
             ? Revision(tenantId, programId, draftId, value)
             : null;
-        return new Scenario(tenantId, programId, draftId, source, new HistoryDirectory
+        await native.PublishAsync(source);
+        return new Scenario(tenantId, programId, draftId, native, new HistoryDirectory
         {
             Revision = historyRevision,
             Page = new Page<CommitmentDraftRevisionView>(historyRevision is not null
@@ -242,16 +246,31 @@ public sealed class CommitmentDraftHistoryReadTests
 
     static ListCommitmentDraftRevisionsHandler Handler(Scenario scenario) => new(
         scenario.Directory, new CommitmentDraftHistoryReadConsistency(scenario.Directory,
-            new SourceReader(scenario.Source)));
+            scenario.Native.Commitments));
 
-    sealed record Scenario(Uuid TenantId, Uuid ProgramId, Uuid DraftId, CommitmentDraft Source,
-        HistoryDirectory Directory);
-
-    sealed class SourceReader(CommitmentDraft source) : IAggregateReader
+    sealed record Scenario(Uuid TenantId, Uuid ProgramId, Uuid DraftId, CommitmentProjectionScenario Native,
+        HistoryDirectory Directory) : IAsyncDisposable
     {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult((TAggregate)(Aggregate)source);
+        public ValueTask DisposeAsync() => Native.DisposeAsync();
+    }
+
+    static async Task ProjectChangeAsync(CommitmentProjectionScenario native,
+        FitzCommitmentDraftHistoryDirectoryV1 directory, ICommitmentMutationContent change)
+    {
+        var metadata = change switch
+        {
+            CommitmentDraftCreatedContent created => (created.TenantId, created.DraftId, created.ActorMemberId,
+                created.ActorDisplay, created.ChangedAt, nameof(CreateCommitmentDraft)),
+            CommitmentDraftRevisedContent revised => (revised.TenantId, revised.DraftId, revised.ActorMemberId,
+                revised.ActorDisplay, revised.ChangedAt, nameof(ReviseCommitmentDraft)),
+            _ => throw new InvalidOperationException("The history fixture has another content change."),
+        };
+        var rules = await native.Commitments.RulesAsync(metadata.TenantId, metadata.DraftId);
+        rules.Apply(change);
+        var fact = await native.PublishExplicitAsync(rules, change, metadata.Item6,
+            change is CommitmentDraftCreatedContent ? metadata.DraftId : Uuid.CreateVersion4(), metadata.ActorMemberId,
+            metadata.ActorDisplay, metadata.Item5);
+        await directory.ApplyAsync(fact);
     }
 
     sealed class HistoryDirectory : ICommitmentDraftHistoryDirectoryReader

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Policies;
 using Bdgrz.Compliance.Features.Controls;
 using System.Security.Claims;
@@ -53,6 +54,8 @@ static class ProgramManagementServices
         collection.AddScoped<Bdgrz.Compliance.Features.Readiness.ReadinessReader>();
         collection.AddScoped<ControlReader>();
         collection.AddScoped<ControlOperations>();
+        collection.AddScoped<CommitmentReader>();
+        collection.AddScoped<CommitmentOperations>();
         collection.AddScoped<PolicyReader>();
         collection.AddScoped<PolicyOperations>();
         services?.Invoke(collection);
@@ -127,6 +130,41 @@ static class ProgramManagementServices
     {
         await using var scope = provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<PolicyReader>()
+            .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+    }
+
+    public static async Task SeedAsync(IServiceProvider provider, CommitmentRules selected,
+        Func<CommitmentRules, Result> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<CommitmentReader>()
+            .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await CommitmentSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IImmutableContentStore>(), rules, CancellationToken.None);
+    }
+
+    public static async Task SeedAsync<TOut>(IServiceProvider provider, CommitmentRules selected,
+        Func<CommitmentRules, Result<TOut>> operation)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var reader = services.GetRequiredService<IAggregateReader>();
+        var rules = await services.GetRequiredService<CommitmentReader>()
+            .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
+        var result = operation(rules);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        await CommitmentSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(),
+            services.GetRequiredService<IImmutableContentStore>(), rules, CancellationToken.None);
+    }
+
+    public static async Task<CommitmentRules> HydrateAsync(IServiceProvider provider, CommitmentRules selected)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<CommitmentReader>()
             .RulesAsync(selected.TenantId, selected.Id, CancellationToken.None);
     }
 

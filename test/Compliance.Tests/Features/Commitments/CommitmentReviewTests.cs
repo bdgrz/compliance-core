@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Commitments;
 using Bdgrz.Compliance.Features.Versioning;
@@ -17,17 +18,17 @@ public sealed class CommitmentReviewTests
     static readonly DateTimeOffset Now = new(2026, 9, 20, 12, 0, 0, TimeSpan.Zero);
     static readonly DateOnly January = new(2027, 1, 1);
 
-    static CommitmentDraft Draft(string kind = "service_commitment")
+    static CommitmentRules Draft(string kind = "service_commitment")
     {
-        var id = CommitmentDraft.IdFor(TenantId, ProgramId, kind, "SC-01");
-        var draft = new CommitmentDraft(TenantId, id);
+        var id = CommitmentRules.IdFor(TenantId, ProgramId, kind, "SC-01");
+        var draft = new CommitmentRules(TenantId, id);
         Assert.True(draft.Create(ProgramId, Uuid.CreateVersion4(), ServiceId, kind, "SC-01",
             "Statement", "Context", "Contract 4.1", AuthorId, "Author", Now).IsSuccess);
         return draft;
     }
 
-    static CommandFailure? Accept(CommitmentDraft draft, long revision, Uuid reviewer,
-        DateOnly effectiveFrom, SeparationOfDutiesWaiver? waiver = null,
+    static CommandFailure? Accept(CommitmentRules draft, long revision, Uuid reviewer,
+        DateOnly effectiveFrom, SeparationOfDutiesWaiverProof? waiver = null,
         string interpretation = "supported")
     {
         var reviewId = Uuid.CreateVersion4();
@@ -54,12 +55,12 @@ public sealed class CommitmentReviewTests
         Assert.Equal(1, draft.EffectiveVersionCount);
         Assert.Equal(1, draft.EffectiveVersionOn(January));
         Assert.Null(draft.EffectiveVersionOn(January.AddDays(-1)));
-        var events = new AggregateScenario<CommitmentDraft>(draft).PendingEvents;
-        var reviewed = Assert.IsType<CommitmentReviewed>(events[^2]);
+        var events = draft.PendingChanges;
+        var reviewed = Assert.IsType<CommitmentReviewedContent>(events[^2]);
         Assert.Null(reviewed.Version);
         Assert.Equal("Security lead", reviewed.OwnerReference);
         Assert.Equal(ReviewerId.ToString(), reviewed.Actor.Id);
-        var approved = Assert.IsType<CommitmentApproved>(events[^1]);
+        var approved = Assert.IsType<CommitmentApprovedContent>(events[^1]);
         Assert.Equal(1, approved.Version);
         Assert.Equal(reviewed.DecisionId, approved.AcceptedReviewDecisionId);
     }
@@ -101,8 +102,8 @@ public sealed class CommitmentReviewTests
         // Assert
         Assert.Equal(CommandFailureCode.ActorProhibited, Assert.IsType<CommandFailure>(denied).Code);
         Assert.Null(allowed);
-        Assert.Equal(valid.Id, Assert.IsType<CommitmentReviewed>(
-            new AggregateScenario<CommitmentDraft>(draft).PendingEvents[^2])
+        Assert.Equal(valid.WaiverId, Assert.IsType<CommitmentReviewedContent>(
+            draft.PendingChanges[^2])
             .SeparationOfDutiesWaiverId);
     }
 
@@ -136,8 +137,8 @@ public sealed class CommitmentReviewTests
 
         // Assert
         Assert.Null(failure);
-        Assert.Equal("unsupported", Assert.IsType<CommitmentReviewed>(
-            new AggregateScenario<CommitmentDraft>(draft).PendingEvents[^2]).Interpretation);
+        Assert.Equal("unsupported", Assert.IsType<CommitmentReviewedContent>(
+            draft.PendingChanges[^2]).Interpretation);
     }
 
     [Theory]
@@ -149,14 +150,14 @@ public sealed class CommitmentReviewTests
         string performedBy, bool internallyPerformed)
     {
         // Arrange
-        var normalized = CommitmentDraft.NormalizeKind(kind);
+        var normalized = CommitmentRules.NormalizeKind(kind);
 
         // Act
-        var party = CommitmentDraft.PerformedBy(normalized);
+        var party = CommitmentRules.PerformedBy(normalized);
 
         // Assert
         Assert.Equal(performedBy, party);
-        Assert.Equal(internallyPerformed, CommitmentDraft.IsInternallyPerformed(normalized));
+        Assert.Equal(internallyPerformed, CommitmentRules.IsInternallyPerformed(normalized));
     }
 
     [Fact]
@@ -202,17 +203,17 @@ public sealed class CommitmentReviewTests
         Assert.Null(failure);
         Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
         Assert.Equal(0, draft.EffectiveVersionCount);
-        Assert.Null(Assert.IsType<CommitmentReviewed>(
-            new AggregateScenario<CommitmentDraft>(draft).PendingEvents[^1]).Version);
+        Assert.Null(Assert.IsType<CommitmentReviewedContent>(
+            draft.PendingChanges[^1]).Version);
     }
 
-    static SeparationOfDutiesWaiver CreateWaiver(SeparationOfDutiesWaiverScope scope,
+    static SeparationOfDutiesWaiverProof CreateWaiver(SeparationOfDutiesWaiverScope scope,
         Uuid beneficiary)
     {
         var waiver = new SeparationOfDutiesWaiver(TenantId, Uuid.CreateVersion4());
         Assert.Null(waiver.Record(scope, beneficiary, Uuid.CreateVersion4(), "Requester",
             "No other qualified reviewer is available.", Now, Now.AddDays(1)));
         Assert.Null(waiver.Approve(Uuid.CreateVersion4(), "Approver", Now.AddMinutes(1)));
-        return waiver;
+        return ControlTestWaivers.Proof(waiver);
     }
 }

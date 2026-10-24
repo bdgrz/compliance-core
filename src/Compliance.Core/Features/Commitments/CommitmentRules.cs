@@ -1,0 +1,637 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.Versioning;
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.Commitments;
+
+public sealed class CommitmentRules
+{
+    readonly Dictionary<Type, Action<ICommitmentMutationContent>> _reducers = [];
+    readonly List<ICommitmentMutationContent> _pendingChanges = [];
+    readonly List<ICommitmentMutationContent> _appliedChanges = [];
+    readonly Dictionary<Uuid, SeparationOfDutiesWaiverProof> _waivers = [];
+    public Uuid Id { get; }
+    public Uuid TenantId => _tenantId;
+    public ulong SourcePhysicalPosition { get; internal set; }
+    public IReadOnlyList<ICommitmentMutationContent> PendingChanges => _pendingChanges.AsReadOnly();
+    internal IReadOnlyList<ICommitmentMutationContent> AppliedChanges => _appliedChanges.AsReadOnly();
+    public void ClearPendingChanges() => _pendingChanges.Clear();
+    void On<T>(Action<T> reducer) where T : ICommitmentMutationContent =>
+        _reducers.Add(typeof(T), value => reducer((T)value));
+    void RaiseEvent<T>(T value) where T : ICommitmentMutationContent
+    {
+        Apply(value);
+        _pendingChanges.Add(value);
+    }
+    public void Apply(ICommitmentMutationContent value)
+    {
+        if (!_reducers.TryGetValue(value.GetType(), out var reducer))
+            throw new InvalidOperationException("The Commitment change has another content kind.");
+        reducer(value);
+        _appliedChanges.Add(value);
+    }
+
+    // Fitz stream frames are u16; leave room for the Portia envelope and metadata.
+    public const int MaximumDraftEventPayloadBytes = 48 * 1024;
+    static readonly HashSet<string> AllowedKinds = new(StringComparer.Ordinal)
+    {
+        "service_commitment", "system_requirement", "user_entity_responsibility",
+        "subservice_responsibility",
+    };
+
+    readonly Uuid _tenantId;
+    string _statement = string.Empty;
+    string _context = string.Empty;
+    Uuid _lastContentMemberId;
+    string _lastContentDisplay = string.Empty;
+    ActorReference? _lastContentActor;
+    DateTimeOffset _lastContentAt;
+    CommitmentReviewedContent? _lastReview;
+    readonly List<CommitmentVersionView> _readVersions = [];
+    readonly List<CommitmentDecisionView> _readDecisions = [];
+    readonly List<CommitmentDraftRevisionView> _readRevisions = [];
+    bool _created;
+    long _revision;
+    Uuid _createRequestId;
+    Uuid _createActorMemberId;
+    Uuid? _providerId;
+    bool _retired;
+    Uuid? _retiredByMemberId;
+    string? _retirementRationale;
+    DateOnly? _retiredEffectiveOn;
+    DateTimeOffset? _retiredAt;
+    string? _initialStatement;
+    string? _initialContext;
+    string? _initialSourceReference;
+    readonly HashSet<Uuid> _pendingAuthors = [];
+    readonly List<(long Version, long Revision, DateOnly EffectiveFrom)> _versions = [];
+    readonly Dictionary<ResponsibilityScope, ResponsibilitySet> _responsibilitySets = [];
+    readonly Dictionary<ResponsibilityScope, List<ResponsibilityDecisionFact>> _responsibilityDecisions = [];
+    string? _sourceReference;
+    AcceptedReview? _acceptedReview;
+
+    public bool IsCreated => _created;
+    public string? SourceReference => _sourceReference;
+
+    /// <summary>The accepted review of the current revision that is waiting for approval.</summary>
+    public Uuid? AcceptedReviewDecisionId => _acceptedReview?.DecisionId;
+    public Uuid? AcceptedReviewerMemberId => _acceptedReview?.ReviewerMemberId;
+    public IReadOnlySet<Uuid> PendingAuthorMemberIds => new HashSet<Uuid>(_pendingAuthors);
+    public long Revision => _revision;
+    public Uuid ProgramId { get; private set; }
+    public Uuid ServiceId { get; private set; }
+    public Uuid? ProviderId => _providerId;
+    public string? Kind { get; private set; }
+    public string? Identifier { get; private set; }
+    public long EffectiveVersionCount => _versions.Count;
+    public long? LatestEffectiveRevision => _versions.Count == 0 ? null : _versions[^1].Revision;
+    public bool IsRetired => _retired;
+    public DateOnly? RetiredEffectiveOn => _retiredEffectiveOn;
+    public string? RetirementRationale => _retirementRationale;
+
+    /// <summary>The effective version on a date, or null before the first effective date.</summary>
+    public long? EffectiveVersionOn(DateOnly date)
+    {
+        for (var index = _versions.Count - 1; index >= 0; index--)
+            if (_versions[index].EffectiveFrom <= date)
+                return _versions[index].Version;
+        return null;
+    }
+
+    public CommitmentRules(Uuid tenantId, Uuid draftId)
+    {
+        Id = draftId;
+        _tenantId = tenantId;
+        On<CommitmentDraftCreatedContent>(ev =>
+        {
+            _created = true;
+            _revision = 1;
+            _createRequestId = ev.CreateRequestId;
+            ProgramId = ev.ProgramId;
+            ServiceId = ev.ServiceId;
+            _providerId = ev.ProviderId;
+            Kind = ev.Kind;
+            Identifier = ev.Identifier;
+            _createActorMemberId = ev.ActorMemberId;
+            _initialStatement = ev.Statement;
+            _initialContext = ev.Context;
+            _initialSourceReference = ev.SourceReference;
+            _sourceReference = ev.SourceReference;
+            _pendingAuthors.Add(ev.ActorMemberId);
+            CaptureDraft(ev.Statement, ev.Context, ev.ActorMemberId, ev.ActorDisplay, ev.Actor, ev.ChangedAt);
+        });
+        On<CommitmentDraftRevisedContent>(ev =>
+        {
+            _revision = ev.Revision;
+            _sourceReference = ev.SourceReference;
+            _acceptedReview = null;
+            if (LatestEffectiveRevision is { } effective && effective == ev.Revision - 1)
+                _pendingAuthors.Clear();
+            _pendingAuthors.Add(ev.ActorMemberId);
+            _lastReview = null;
+            CaptureDraft(ev.Statement, ev.Context, ev.ActorMemberId, ev.ActorDisplay, ev.Actor, ev.ChangedAt);
+        });
+        On<CommitmentReviewedContent>(ev =>
+        {
+            _lastReview = ev;
+            var decision = ReviewView(ev);
+            _readDecisions.Add(decision);
+            if (ev.Version is { } legacyVersion && ev.EffectiveFrom is { } legacyFrom)
+                _readVersions.Add(VersionView(legacyVersion, ev.Revision, legacyFrom, decision, null));
+            RecordResponsibilityDecision(Scope(ev.Revision), ev.ActorMemberId,
+                ResponsibilityType.AssignedReviewer, ev.DecidedAt, ev.SeparationOfDutiesWaiverId);
+            // Legacy reviews created the version directly; newer accepted reviews await approval.
+            if (ev.Version is { } version && ev.EffectiveFrom is { } effectiveFrom)
+            {
+                _versions.Add((version, ev.Revision, effectiveFrom));
+                _acceptedReview = null;
+            }
+            else
+                _acceptedReview = StringComparer.Ordinal.Equals(ev.Outcome, "accept")
+                    ? new AcceptedReview(ev.DecisionId, ev.Revision, ev.ActorMemberId)
+                    : null;
+        });
+        On<CommitmentApprovedContent>(ev =>
+        {
+            var approval = ApprovalView(ev);
+            _readDecisions.Add(approval);
+            var review = _readDecisions.LastOrDefault(item => item.DecisionId == ev.AcceptedReviewDecisionId && item.Stage == "review");
+            if (review is not null)
+                _readVersions.Add(VersionView(ev.Version, ev.Revision, ev.EffectiveFrom, review, approval));
+            RecordResponsibilityDecision(Scope(ev.Revision), ev.ActorMemberId,
+                ResponsibilityType.PolicyApprover, ev.DecidedAt, ev.SeparationOfDutiesWaiverId);
+            _versions.Add((ev.Version, ev.Revision, ev.EffectiveFrom));
+            _acceptedReview = null;
+        });
+        On<CommitmentRetiredContent>(ev =>
+        {
+            if (!_created || ev.TenantId != _tenantId || ev.ProgramId != ProgramId ||
+                ev.SubjectId != Id || ev.Revision != _revision || _retired ||
+                ev.ActorMemberId is not { } actor || actor == Uuid.Empty ||
+                string.IsNullOrWhiteSpace(ev.ActorDisplay) || ev.ActorDisplay.Length > 200 ||
+                _versions.Count == 0 || ev.EffectiveOn <= _versions[^1].EffectiveFrom ||
+                string.IsNullOrWhiteSpace(ev.Rationale) || ev.Rationale.Length > 4000 ||
+                ev.EffectiveOn == default || ev.OccurredAt == default)
+                throw new InvalidOperationException("The commitment retirement event is invalid.");
+            _retired = true;
+            _retiredByMemberId = actor;
+            _retirementRationale = ev.Rationale;
+            _retiredEffectiveOn = ev.EffectiveOn;
+            _retiredAt = ev.OccurredAt;
+        });
+        On<ResponsibilityAssigned>(ev => GetResponsibilitySet(ev.Scope).Apply(ev));
+        On<ResponsibilityRevoked>(ev => GetResponsibilitySet(ev.Scope).Apply(ev));
+    }
+
+    public static string NormalizeIdentifier(string? identifier) =>
+        identifier?.Trim().ToUpperInvariant() ?? string.Empty;
+
+    public static string NormalizeKind(string? kind) => kind?.Trim().ToLowerInvariant() ?? string.Empty;
+
+    public static Uuid IdFor(Uuid tenantId, Uuid programId, string kind, string identifier) =>
+        Uuid.CreateVersion5(Uuid.CreateVersion5(tenantId, programId.ToString()),
+            $"{NormalizeKind(kind)}:{NormalizeIdentifier(identifier)}");
+
+    public Result<CommitmentDraftRegistration> Create(Uuid programId, Uuid createRequestId,
+        Uuid serviceId, string kind, string identifier, string statement, string context,
+        string sourceReference, Uuid actorMemberId, string actorDisplay,
+        DateTimeOffset changedAt, Uuid? providerId = null)
+    {
+        var normalizedKind = NormalizeKind(kind);
+        var normalizedIdentifier = NormalizeIdentifier(identifier);
+        var error = Validate(normalizedKind, normalizedIdentifier, statement, context,
+            sourceReference, providerId);
+        if (error is not null)
+            return Result<CommitmentDraftRegistration>.Failure(error);
+        if (serviceId == Uuid.Empty)
+            return Result<CommitmentDraftRegistration>.Failure(new RequestError(
+                RequestErrorKind.Validation, "A draft requires a governed service."));
+        var cleanStatement = statement.Trim();
+        var cleanContext = context.Trim();
+        var cleanSourceReference = sourceReference.Trim();
+        if (_created)
+            return _createRequestId == createRequestId && ProgramId == programId && ServiceId == serviceId &&
+                   _createActorMemberId == actorMemberId &&
+                   StringComparer.Ordinal.Equals(Kind, normalizedKind) &&
+                   StringComparer.Ordinal.Equals(Identifier, normalizedIdentifier) &&
+                   StringComparer.Ordinal.Equals(_initialStatement, cleanStatement) &&
+                   StringComparer.Ordinal.Equals(_initialContext, cleanContext) &&
+                   StringComparer.Ordinal.Equals(_initialSourceReference, cleanSourceReference) &&
+                   _providerId == providerId
+                ? Result<CommitmentDraftRegistration>.Success(new CommitmentDraftRegistration(
+                    Id, normalizedKind, normalizedIdentifier, 1))
+                : Result<CommitmentDraftRegistration>.Failure(new RequestError(
+                    RequestErrorKind.Conflict, "The draft identifier already exists."));
+        CommitmentDraftCreatedContent created = new(_tenantId, programId, Id, createRequestId,
+            serviceId, normalizedKind, normalizedIdentifier, cleanStatement, cleanContext,
+            cleanSourceReference, actorMemberId, actorDisplay, changedAt)
+        {
+            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
+            ProviderId = providerId,
+        };
+        RaiseEvent(created);
+        return Result<CommitmentDraftRegistration>.Success(new CommitmentDraftRegistration(
+            Id, normalizedKind, normalizedIdentifier, 1));
+    }
+
+    public CommandFailure? Revise(Uuid programId, long expectedRevision, string statement,
+        string context, string sourceReference, Uuid actorMemberId, string actorDisplay,
+        DateTimeOffset changedAt)
+    {
+        if (!_created || ProgramId != programId)
+            return CommandFailure.MissingRecord("The draft was not found.");
+        if (_retired)
+            return CommandFailure.StateConflict("A retired commitment cannot be changed.");
+        if (expectedRevision != _revision)
+            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision(
+                "commitment draft", _revision));
+        var error = Validate(Kind!, Identifier!, statement, context, sourceReference);
+        if (error is not null)
+            return CommandFailure.InvalidContent(error.Message!);
+        CommitmentDraftRevisedContent revised = new(_tenantId, programId, Id, _revision + 1,
+            statement.Trim(), context.Trim(), sourceReference.Trim(), actorMemberId,
+            actorDisplay, changedAt)
+        {
+            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
+        };
+        RaiseEvent(revised);
+        return null;
+    }
+
+    /// <summary>The party that performs a commitment of this kind.</summary>
+    public static string PerformedBy(string kind) => kind switch
+    {
+        "user_entity_responsibility" => "user_entity",
+        "subservice_responsibility" => "subservice_organization",
+        _ => "service_organization",
+    };
+
+    /// <summary>CUECs and CSOCs are never internally performed.</summary>
+    public static bool IsInternallyPerformed(string kind) =>
+        StringComparer.Ordinal.Equals(PerformedBy(kind), "service_organization");
+
+    public CommandFailure? Review(Uuid programId, long expectedRevision, Uuid decisionId,
+        string outcome, string? ownerReference, string? applicability, string? interpretation,
+        string? interpretationNote, string rationale, Uuid reviewerMemberId,
+        string reviewerDisplay, DateTimeOffset decidedAt,
+        SeparationOfDutiesWaiverProof? separationOfDutiesWaiver = null,
+        string? sourceVerifiedReference = null, string? sourceEvidence = null)
+    {
+        if (CheckTarget(programId, expectedRevision) is { } target)
+            return target;
+        if (CheckSeparationOfDuties(expectedRevision, reviewerMemberId,
+                ResponsibilityType.AssignedReviewer, SeparationOfDutiesActions.Review, decidedAt,
+                separationOfDutiesWaiver, false) is { } sod)
+            return sod;
+        if (decisionId == Uuid.Empty || string.IsNullOrWhiteSpace(rationale) ||
+            rationale.Length > 4000 || interpretationNote?.Length > 4000)
+            return CommandFailure.InvalidContent("A review requires a bounded rationale.");
+        string? sourceVerification = null;
+        switch (outcome)
+        {
+            case "request_changes":
+                break;
+            case "accept":
+                if (string.IsNullOrWhiteSpace(ownerReference) || ownerReference.Length > 200)
+                    return CommandFailure.InvalidContent("Acceptance requires a verified owner.");
+                if (applicability is not ("applicable" or "not_applicable"))
+                    return CommandFailure.InvalidContent(
+                        "Applicability must be applicable or not_applicable.");
+                if (interpretation is not ("supported" or "unsupported"))
+                    return CommandFailure.InvalidContent(
+                        "Interpretation must be supported or unsupported.");
+                if (string.IsNullOrWhiteSpace(sourceVerifiedReference) ||
+                    !StringComparer.Ordinal.Equals(sourceVerifiedReference.Trim(), _sourceReference))
+                    return CommandFailure.InvalidContent(
+                        "Acceptance requires verifying the draft's exact current source reference.");
+                if (string.IsNullOrWhiteSpace(sourceEvidence) || sourceEvidence.Length > 2000)
+                    return CommandFailure.InvalidContent(
+                        "Acceptance requires bounded evidence of the source that was checked.");
+                if (LatestEffectiveRevision == _revision)
+                    return CommandFailure.StateConflict(
+                        "This revision is already effective. Revise the draft to propose a successor.");
+                sourceVerification = "verified";
+                break;
+            default:
+                return CommandFailure.InvalidContent("The outcome must be accept or request_changes.");
+        }
+        var accepted = sourceVerification is not null;
+        if (separationOfDutiesWaiver is not null)
+            _waivers[separationOfDutiesWaiver.WaiverId] = separationOfDutiesWaiver;
+        RaiseEvent(new CommitmentReviewedContent(_tenantId, programId, Id, expectedRevision,
+            decisionId, outcome, accepted ? ownerReference!.Trim() : null,
+            accepted ? applicability : null, accepted ? interpretation : null,
+            string.IsNullOrWhiteSpace(interpretationNote) ? null : interpretationNote.Trim(),
+            rationale.Trim(), null, null, null, reviewerMemberId, reviewerDisplay, decidedAt,
+            separationOfDutiesWaiver?.WaiverId, sourceVerification,
+            accepted ? sourceVerifiedReference!.Trim() : null,
+            accepted ? sourceEvidence!.Trim() : null)
+        {
+            StoredActor = ActorReference.ForMember(reviewerMemberId, reviewerDisplay),
+        });
+        return null;
+    }
+
+    /// <summary>Approves the accepted review of the exact revision into an effective version.</summary>
+    public CommandFailure? Approve(Uuid programId, long expectedRevision, Uuid decisionId,
+        Uuid acceptedReviewDecisionId, DateOnly effectiveFrom, string rationale,
+        string impactDigest, Uuid approverMemberId, string approverDisplay,
+        DateTimeOffset decidedAt, SeparationOfDutiesWaiverProof? separationOfDutiesWaiver = null)
+    {
+        if (CheckTarget(programId, expectedRevision) is { } target)
+            return target;
+        if (_acceptedReview is not { } review || review.Revision != _revision ||
+            acceptedReviewDecisionId == Uuid.Empty || acceptedReviewDecisionId != review.DecisionId)
+            return CommandFailure.StateConflict(
+                "Approval requires the latest accepted review of this exact draft revision.");
+        if (CheckSeparationOfDuties(expectedRevision, approverMemberId,
+                ResponsibilityType.PolicyApprover, SeparationOfDutiesActions.Approve, decidedAt,
+                separationOfDutiesWaiver, approverMemberId == review.ReviewerMemberId) is { } sod)
+            return sod;
+        if (decisionId == Uuid.Empty || string.IsNullOrWhiteSpace(rationale) ||
+            rationale.Length > 4000 || effectiveFrom == default)
+            return CommandFailure.InvalidContent(
+                "Approval requires an effective start date and a rationale of at most 4000 characters.");
+        if (string.IsNullOrWhiteSpace(impactDigest))
+            return CommandFailure.InvalidContent(
+                "Approval requires the acknowledged impact preview digest.");
+        if (_versions.Count > 0 && effectiveFrom <= _versions[^1].EffectiveFrom)
+            return CommandFailure.InvalidContent(
+                "A successor must become effective after the previous effective version.");
+        if (separationOfDutiesWaiver is not null)
+            _waivers[separationOfDutiesWaiver.WaiverId] = separationOfDutiesWaiver;
+        RaiseEvent(new CommitmentApprovedContent(_tenantId, programId, Id, expectedRevision, decisionId,
+            review.DecisionId, _versions.Count + 1, effectiveFrom, impactDigest,
+            rationale.Trim(), approverMemberId, approverDisplay, decidedAt,
+            separationOfDutiesWaiver?.WaiverId)
+        {
+            StoredActor = ActorReference.ForMember(approverMemberId, approverDisplay),
+        });
+        return null;
+    }
+
+    public CommandFailure? Retire(Uuid programId, long expectedRevision, DateOnly effectiveOn,
+        string rationale, Uuid actorMemberId, string actorDisplay, DateTimeOffset retiredAt)
+    {
+        rationale = rationale?.Trim() ?? string.Empty;
+        actorDisplay = actorDisplay?.Trim() ?? string.Empty;
+        if (_retired)
+            return _retiredEffectiveOn == effectiveOn && _retirementRationale == rationale &&
+                   _retiredByMemberId == actorMemberId && _retiredAt == retiredAt
+                ? null
+                : CommandFailure.StateConflict("A commitment retirement decision is immutable.");
+        if (CheckTarget(programId, expectedRevision) is { } target)
+            return target;
+        if (_versions.Count == 0)
+            return CommandFailure.StateConflict("Only an effective commitment can be retired.");
+        if (effectiveOn == default || effectiveOn <= _versions[^1].EffectiveFrom ||
+            actorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(actorDisplay) ||
+            actorDisplay.Length > 200 || string.IsNullOrWhiteSpace(rationale) || rationale.Length > 4000 ||
+            retiredAt == default)
+            return CommandFailure.InvalidContent(
+                "Retirement requires a later effective date, a bounded rationale, and a named actor.");
+
+        RaiseEvent(new CommitmentRetiredContent(_tenantId, ProgramId, Id, _revision, actorMemberId,
+            actorDisplay, effectiveOn, rationale, retiredAt)
+        {
+            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
+        });
+        return null;
+    }
+
+    CommandFailure? CheckTarget(Uuid programId, long expectedRevision)
+    {
+        if (!_created || ProgramId != programId)
+            return CommandFailure.MissingRecord("The draft was not found.");
+        if (_retired)
+            return CommandFailure.StateConflict("A retired commitment cannot be changed.");
+        return expectedRevision != _revision
+            ? CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("commitment draft",
+                _revision))
+            : null;
+    }
+
+    /// <summary>
+    ///     Authors since the last effective version may not review or approve, an approver may not be
+    ///     the accepted reviewer, and conflicting responsibilities block the decision, unless an
+    ///     approved waiver names the exact scope, action, and member. When a revision has active
+    ///     assignments of the deciding responsibility, only those assignees may decide.
+    /// </summary>
+    CommandFailure? CheckSeparationOfDuties(long revision, Uuid memberId,
+        ResponsibilityType decisionType, string action, DateTimeOffset at,
+        SeparationOfDutiesWaiverProof? waiver, bool isAcceptedReviewer)
+    {
+        var scope = Scope(revision);
+        var isAuthor = _pendingAuthors.Contains(memberId);
+        var set = GetResponsibilitySet(scope);
+        var assigned = set.ReadAssignments().Where(assignment => assignment.Type == decisionType &&
+            assignment.RevokedAt is null && assignment.EffectiveFrom <= at &&
+            (assignment.EffectiveUntil is null || assignment.EffectiveUntil > at)).ToArray();
+        if (assigned.Length > 0 && assigned.All(assignment => assignment.MemberId != memberId))
+            return CommandFailure.ActorProhibited(decisionType == ResponsibilityType.AssignedReviewer
+                ? "Only an assigned reviewer of this exact revision can review it."
+                : "Only an assigned approver of this exact revision can approve it.");
+        var failure = ResponsibilityDecisionGuard.ValidateAuthorized(set, scope, memberId, decisionType, at,
+            isAuthor || isAcceptedReviewer, waiver);
+        if (failure is not null)
+            return failure;
+        var waiverScope = new SeparationOfDutiesWaiverScope(SeparationOfDutiesRecordTypes.Commitment,
+            Id, Id, revision, action);
+        if (waiver is not null &&
+            (waiver.TenantId != _tenantId || !CommitmentWaiverProof.Allows(waiver, _tenantId, waiverScope, memberId, at)))
+            return CommandFailure.ActorProhibited(
+                "The separation-of-duties waiver is not active for this member and draft revision.");
+        if (waiver is not null)
+            return null;
+        if (isAuthor)
+            return CommandFailure.ActorProhibited(
+                "A commitment author cannot " + action + " a revision they authored.");
+        return isAcceptedReviewer
+            ? CommandFailure.ActorProhibited(
+                "The accepted reviewer cannot also approve the same revision.")
+            : null;
+    }
+
+    ResponsibilityScope Scope(long revision) =>
+        new(SeparationOfDutiesRecordTypes.Commitment, Id, Id, revision);
+
+    public ResponsibilitySet GetResponsibilitySet(ResponsibilityScope scope)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        if (!StringComparer.Ordinal.Equals(scope.RecordType, SeparationOfDutiesRecordTypes.Commitment) ||
+            scope.RecordId != Id)
+            throw new ArgumentException("The responsibility scope must belong to this commitment.",
+                nameof(scope));
+        if (!_responsibilitySets.TryGetValue(scope, out var set))
+        {
+            set = new ResponsibilitySet(_tenantId, scope);
+            _responsibilitySets.Add(scope, set);
+        }
+        return set;
+    }
+
+    /// <summary>Responsibilities target the current exact draft revision; the version ID is the draft ID.</summary>
+    public bool IsCurrentResponsibilityScope(ResponsibilityScope scope) =>
+        scope is not null && _created && !_retired &&
+        StringComparer.Ordinal.Equals(scope.RecordType, SeparationOfDutiesRecordTypes.Commitment) &&
+        scope.RecordId == Id && scope.VersionId == Id && scope.Revision == _revision &&
+        LatestEffectiveRevision != _revision;
+
+    public CommandFailure? AssignResponsibility(ResponsibilityScope scope, Uuid assignmentId,
+        Uuid memberId, ResponsibilityType type, Uuid assignedByMemberId,
+        string assignedByDisplay, DateTimeOffset assignedAt, DateTimeOffset effectiveFrom,
+        DateTimeOffset? effectiveUntil, IReadOnlyList<SeparationOfDutiesWaiverProof> waivers)
+    {
+        if (!IsCurrentResponsibilityScope(scope))
+            return CommandFailure.StateConflict(
+                "Responsibilities must target the current exact pending commitment revision.");
+        var set = GetResponsibilitySet(scope);
+        var proposed = new ResponsibilityAssignmentView(_tenantId, assignmentId, memberId,
+            type, scope, assignedAt, assignedByMemberId, effectiveFrom, effectiveUntil,
+            null, Uuid.Empty, []);
+        if (HasUnwaivedHistoricalConflict(scope, set.ReadAssignments().Append(proposed)))
+            return CommandFailure.StateConflict(
+                "The responsibility would create an unwaived conflict with a prior decision on this exact revision.");
+        foreach (var waiver in waivers)
+            _waivers[waiver.WaiverId] = waiver;
+        return set.AssignAuthorized(assignmentId, memberId, type, assignedByMemberId, assignedByDisplay,
+            assignedAt, effectiveFrom, effectiveUntil, waivers, RaiseEvent);
+    }
+
+    public CommandFailure? RevokeResponsibility(ResponsibilityScope scope, Uuid assignmentId,
+        Uuid memberId, string memberDisplay, DateTimeOffset revokedAt, string reason)
+    {
+        if (!IsCurrentResponsibilityScope(scope))
+            return CommandFailure.StateConflict(
+                "Responsibilities must target the current exact pending commitment revision.");
+        return GetResponsibilitySet(scope).Revoke(assignmentId, memberId, memberDisplay,
+            revokedAt, reason, RaiseEvent);
+    }
+
+    void RecordResponsibilityDecision(ResponsibilityScope scope, Uuid memberId,
+        ResponsibilityType type, DateTimeOffset at, Uuid? waiverId)
+    {
+        if (!_responsibilityDecisions.TryGetValue(scope, out var decisions))
+        {
+            decisions = [];
+            _responsibilityDecisions.Add(scope, decisions);
+        }
+        decisions.Add(new ResponsibilityDecisionFact(memberId, type, at, waiverId));
+    }
+
+    bool HasUnwaivedHistoricalConflict(ResponsibilityScope scope,
+        IEnumerable<ResponsibilityAssignmentView> assignments)
+    {
+        if (!_responsibilityDecisions.TryGetValue(scope, out var decisions))
+            return false;
+        var candidates = assignments.ToArray();
+        foreach (var decision in decisions.Where(static decision => decision.WaiverId is null))
+        {
+            var decidedAction = new ResponsibilityAssignmentView(_tenantId, Uuid.Empty,
+                decision.MemberId, decision.Type, scope, decision.At, Uuid.Empty,
+                decision.At, decision.At.AddTicks(1), null, Uuid.Empty, []);
+            if (ResponsibilityConflictPolicy.FindConflicts(candidates, decidedAction).Count > 0)
+                return true;
+        }
+        return false;
+    }
+
+    sealed record AcceptedReview(Uuid DecisionId, long Revision, Uuid ReviewerMemberId);
+
+    sealed record ResponsibilityDecisionFact(Uuid MemberId, ResponsibilityType Type,
+        DateTimeOffset At, Uuid? WaiverId);
+
+    internal static RequestError? Validate(string kind, string identifier, string statement,
+        string context, string sourceReference, Uuid? providerId = null)
+    {
+        if (!AllowedKinds.Contains(kind))
+            return new RequestError(RequestErrorKind.Validation,
+                "The draft kind is unsupported.");
+        if (providerId == Uuid.Empty ||
+            kind != "subservice_responsibility" && providerId is not null)
+            return new RequestError(RequestErrorKind.Validation,
+                "Only a subservice responsibility can reference a nonempty provider.");
+        if (identifier.Length is < 1 or > 80 ||
+            !identifier.All(static c => char.IsAsciiLetterUpper(c) ||
+                char.IsAsciiDigit(c) || c is '-' or '_' or '.'))
+            return new RequestError(RequestErrorKind.Validation,
+                "An identifier requires 1 to 80 ASCII letters, digits, hyphens, underscores, or periods.");
+        if (string.IsNullOrWhiteSpace(statement) || statement.Length > 16000 ||
+            context is null || context.Length > 16000 ||
+            string.IsNullOrWhiteSpace(sourceReference) || sourceReference.Length > 1024)
+            return new RequestError(RequestErrorKind.Validation,
+                "A draft requires a bounded statement and source reference.");
+        return null;
+    }
+    void CaptureDraft(string statement, string context, Uuid member, string display, ActorReference actor, DateTimeOffset at)
+    {
+        _statement = statement;
+        _context = context;
+        _lastContentMemberId = member;
+        _lastContentDisplay = display;
+        _lastContentActor = actor;
+        _lastContentAt = at;
+        _readRevisions.Add(new CommitmentDraftRevisionView(TenantId, ProgramId, Id, ServiceId, Kind!, Identifier!, Revision,
+            statement, context, _sourceReference!, member, display, at)
+        { Actor = actor, ProviderId = ProviderId });
+    }
+
+    static CommitmentDecisionView ReviewView(CommitmentReviewedContent value) => new(value.TenantId, value.ProgramId,
+        value.DraftId, value.DecisionId, value.Revision, value.Outcome, value.OwnerReference, value.Applicability,
+        value.Interpretation, value.InterpretationNote, value.Rationale, value.Version, value.EffectiveFrom,
+        value.ImpactDigest, value.ActorMemberId, value.ActorDisplay, value.DecidedAt, value.SeparationOfDutiesWaiverId,
+        "review", null, value.SourceVerification, value.SourceVerifiedReference, value.SourceEvidence)
+    { Actor = value.Actor };
+
+    static CommitmentDecisionView ApprovalView(CommitmentApprovedContent value) => new(value.TenantId, value.ProgramId,
+        value.DraftId, value.DecisionId, value.Revision, "approve", null, null, null, null, value.Rationale, value.Version,
+        value.EffectiveFrom, value.ImpactDigest, value.ActorMemberId, value.ActorDisplay, value.DecidedAt,
+        value.SeparationOfDutiesWaiverId, "approval", value.AcceptedReviewDecisionId)
+    { Actor = value.Actor };
+
+    CommitmentVersionView VersionView(long version, long revision, DateOnly effectiveFrom, CommitmentDecisionView review,
+        CommitmentDecisionView? approval) => new(TenantId, ProgramId, Id, ServiceId, Kind!, Identifier!, version, revision,
+        _statement, _context, _sourceReference!, review.OwnerReference!, review.Applicability!, review.Interpretation!,
+        review.InterpretationNote, PerformedBy(Kind!), IsInternallyPerformed(Kind!), effectiveFrom, review,
+        review.SourceVerification ?? "unverified", review.SourceEvidence, approval)
+        { ProviderId = ProviderId };
+
+    public IReadOnlyList<CommitmentVersionView> ReadVersions() => _readVersions.ToArray();
+    public IReadOnlyList<CommitmentDecisionView> ReadDecisions() => _readDecisions.ToArray();
+    public IReadOnlyList<CommitmentDraftRevisionView> ReadRevisions() => _readRevisions.ToArray();
+    public CommitmentVersionView? FindVersion(long version) => _readVersions.FirstOrDefault(value => value.Version == version);
+    public CommitmentDecisionView? FindDecision(Uuid decision) => _readDecisions.LastOrDefault(value => value.DecisionId == decision);
+    public CommitmentDraftRevisionView? FindRevision(long revision) => _readRevisions.FirstOrDefault(value => value.Revision == revision);
+    public CommitmentDraftView? DraftView() => !IsCreated || _lastContentActor is null ? null : new(TenantId, ProgramId,
+        Id, ServiceId, Kind!, Identifier!, Revision, IsRetired ? "retired" : LatestEffectiveRevision == Revision ? "effective" :
+            _lastReview?.Outcome == "accept" ? "reviewed" : _lastReview?.Outcome == "request_changes" ? "changes_requested" : "draft",
+        _lastReview?.Outcome == "accept" ? _lastReview.SourceVerification ?? "unverified" : "unverified",
+        _lastReview?.Outcome == "accept" ? "verified" : "unresolved",
+        _lastReview?.Outcome == "accept" ? _lastReview.Applicability! : "unresolved", _statement, _context, _sourceReference!,
+        _lastContentMemberId, _lastContentDisplay, _lastContentAt)
+    { LastChangedBy = _lastContentActor, ProviderId = ProviderId };
+
+    public CommitmentRetiredContent? Retirement => _appliedChanges.OfType<CommitmentRetiredContent>().LastOrDefault();
+    internal CommitmentDraftContent? CurrentContent => !IsCreated ? null : new(_statement, _context, _sourceReference!);
+    internal CommitmentAuthorityHeader Header(Bdgrz.Compliance.Features.Proofs.ImmutableContentRef content) => new(TenantId,
+        ProgramId, Id, ServiceId, ProviderId, Kind!, Identifier!, Revision, IsCreated, IsRetired, _sourceReference!,
+        EffectiveVersionCount, LatestEffectiveRevision, _versions.LastOrDefault().EffectiveFrom == default ? null : _versions[^1].EffectiveFrom,
+        AcceptedReviewDecisionId, AcceptedReviewerMemberId, RetiredEffectiveOn, content);
+    internal CommitmentAuthorityContent Authority(CommitmentAuthorityHeader header) => new(header,
+        _pendingAuthors.OrderBy(value => value.ToString(), StringComparer.Ordinal).ToArray(),
+        GetResponsibilitySet(Scope(Revision)).ReadAssignments(),
+        _responsibilityDecisions.TryGetValue(Scope(Revision), out var decisions)
+            ? decisions.Select(value => new CommitmentDecisionConstraint(value.MemberId, value.Type, value.At, value.WaiverId)).ToArray() : []);
+    internal IReadOnlyList<SeparationOfDutiesWaiverProof> WaiversFor(ICommitmentMutationContent change)
+    {
+        var ids = change switch
+        {
+            CommitmentReviewedContent { SeparationOfDutiesWaiverId: { } id } => new[] { id },
+            CommitmentApprovedContent { SeparationOfDutiesWaiverId: { } id } => new[] { id },
+            ResponsibilityAssigned assigned => assigned.SeparationOfDutiesWaiverIds,
+            _ => [],
+        };
+        return ids.Select(id => _waivers.GetValueOrDefault(id)).OfType<SeparationOfDutiesWaiverProof>().ToArray();
+    }
+}

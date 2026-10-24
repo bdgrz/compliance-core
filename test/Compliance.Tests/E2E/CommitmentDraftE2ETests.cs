@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -33,7 +34,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         using var empty = await owner.GetAsync(path);
 
         // Act
-        using var created = await owner.PostAsJsonAsync(path, new
+        using var created = await CommitmentHttpRequests.CreateAsync(owner, path, new
         {
             service_id = serviceId,
             kind = "service_commitment",
@@ -46,7 +47,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         var registration = await ReadAsync(created);
         var draftId = registration.GetProperty("draft_id").GetString();
         var draftPath = $"{path}/{draftId}";
-        using var duplicate = await owner.PostAsJsonAsync(path, new
+        using var duplicate = await CommitmentHttpRequests.CreateAsync(owner, path, new
         {
             service_id = serviceId,
             kind = "service_commitment",
@@ -55,7 +56,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
             context = "Not reviewed",
             source_reference = "Contract section 4",
         });
-        using var missingService = await owner.PostAsJsonAsync(path, new
+        using var missingService = await CommitmentHttpRequests.CreateAsync(owner, path, new
         {
             service_id = Guid.NewGuid(),
             kind = "system_requirement",
@@ -65,7 +66,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
             source_reference = "Policy section 1",
         });
         var otherProgramId = await CreateProgramAsync(owner, tenantId);
-        using var wrongProgramService = await owner.PostAsJsonAsync(
+        using var wrongProgramService = await CommitmentHttpRequests.CreateAsync(owner,
             $"/api/v1/tenants/{tenantId}/programs/{otherProgramId}/commitment-drafts", new
             {
                 service_id = serviceId,
@@ -76,14 +77,14 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
                 source_reference = "Policy section 2",
             });
         var first = await WaitForRevisionAsync(owner, draftPath, 1);
-        using var revised = await owner.PutAsJsonAsync(draftPath, new
+        using var revised = await CommitmentHttpRequests.ReviseAsync(owner, draftPath, new
         {
             expected_revision = 1,
             statement = "Revised draft promise",
             context = "Still unreviewed",
             source_reference = "Contract section 5",
         });
-        using var stale = await owner.PutAsJsonAsync(draftPath, new
+        using var stale = await CommitmentHttpRequests.ReviseAsync(owner, draftPath, new
         {
             expected_revision = 1,
             statement = "Stale draft",
@@ -116,7 +117,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         using var outsiderRead = await outsider.GetAsync(draftPath);
         using var outsiderList = await outsider.GetAsync(path);
         using var outsiderHistory = await outsider.GetAsync(historyPath);
-        using var outsiderWrite = await outsider.PutAsJsonAsync(draftPath, new
+        using var outsiderWrite = await CommitmentHttpRequests.ReviseAsync(outsider, draftPath, new
         {
             expected_revision = 2,
             statement = "Unauthorized",
@@ -246,7 +247,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         using var invalidLimit = await owner.GetAsync($"{path}?limit=201");
         using var crossProgramCursor = await owner.GetAsync(
             $"/api/v1/tenants/{tenantId}/programs/{otherProgramId}/commitment-drafts?cursor={Uri.EscapeDataString(cursor)}");
-        using var oversized = await owner.PostAsJsonAsync(path, new
+        using var oversized = await CommitmentHttpRequests.CreateAsync(owner, path, new
         {
             service_id = serviceId,
             kind = "service_commitment",
@@ -273,7 +274,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         Assert.Equal("draft", first.GetProperty("status").GetString());
         Assert.Equal("unverified", first.GetProperty("source_resolution").GetString());
         Assert.Equal("unresolved", first.GetProperty("applicability_resolution").GetString());
-        Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         Assert.Equal("Revised draft promise", second.GetProperty("statement").GetString());
         Assert.Equal("Contract section 4", (await ReadAsync(historical))
@@ -306,9 +307,11 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         Assert.Equal(6, draftEvents.Count);
         var collection = openApi.GetProperty("paths").GetProperty(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts");
-        Assert.True(collection.TryGetProperty("post", out _));
+        Assert.False(collection.TryGetProperty("post", out _));
         Assert.True(collection.TryGetProperty("get", out _));
-        Assert.True(collection.GetProperty("post").GetProperty("requestBody")
+        var createOperation = openApi.GetProperty("paths").GetProperty(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}").GetProperty("put");
+        Assert.True(createOperation.GetProperty("requestBody")
             .GetProperty("content").GetProperty("application/json").GetProperty("schema")
             .GetProperty("properties").TryGetProperty("source_reference", out _));
         var historyOperation = openApi.GetProperty("paths").GetProperty(
@@ -320,7 +323,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
             Assert.Contains(historyOperation.GetProperty("parameters").EnumerateArray(), parameter =>
                 parameter.GetProperty("name").GetString() == name &&
                 parameter.GetProperty("in").GetString() == "query");
-        using var otherDraft = await owner.PostAsJsonAsync(path, new
+        using var otherDraft = await CommitmentHttpRequests.CreateAsync(owner, path, new
         {
             service_id = serviceId,
             kind = "system_requirement",
@@ -367,7 +370,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         await worker.StopAsync();
 
         // Act
-        using var created = await owner.PostAsJsonAsync(path, new
+        using var created = await CommitmentHttpRequests.CreateAsync(owner, path, new
         {
             service_id = serviceId,
             kind = "service_commitment",
@@ -405,7 +408,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
             Assert.Equal([1L], history.GetProperty("items").EnumerateArray()
                 .Select(item => item.GetProperty("revision").GetInt64()));
             await restarted.StopAsync();
-            using var revised = await owner.PutAsJsonAsync(draftPath, new
+            using var revised = await CommitmentHttpRequests.ReviseAsync(owner, draftPath, new
             {
                 expected_revision = 1,
                 statement = "Revised while the worker is stopped",
@@ -414,7 +417,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
             });
             using var staleHistory = await owner.GetAsync(
                 $"{historyPath}?minimum_draft_revision=2");
-            Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, revised.StatusCode);
             Assert.Equal(HttpStatusCode.Conflict, staleHistory.StatusCode);
             Assert.Equal("true", staleHistory.Headers.GetValues("Portia-Transient").Single());
             using var resumed = BuildWorker(applicationName);
@@ -468,7 +471,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
             $"commitment-review-outsider-{Guid.NewGuid():N}@example.com");
         var (tenantId, programId, serviceId) = await CreateServiceAsync(owner);
         var path = $"/api/v1/tenants/{tenantId}/programs/{programId}/commitment-drafts";
-        using var created = await owner.PostAsJsonAsync(path, new
+        using var created = await CommitmentHttpRequests.CreateAsync(owner, path, new
         {
             service_id = serviceId,
             kind = "user_entity_responsibility",
@@ -483,7 +486,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         // Act
         using var preview = await owner.GetAsync($"{draftPath}/impact-preview?expected_revision=1");
         var previewBody = await ReadAsync(preview);
-        using var selfReview = await owner.PostAsJsonAsync($"{draftPath}/reviews", new
+        using var selfReview = await CommitmentHttpRequests.DecideAsync(owner, $"{draftPath}/reviews", new
         {
             expected_revision = 1,
             outcome = "accept",
@@ -494,7 +497,7 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
             source_verified_reference = "MSA 4.1",
             source_evidence = "Signed MSA v3, section 4.1",
         });
-        using var unreviewedApproval = await owner.PostAsJsonAsync($"{draftPath}/approvals", new
+        using var unreviewedApproval = await CommitmentHttpRequests.DecideAsync(owner, $"{draftPath}/approvals", new
         {
             expected_revision = 1,
             accepted_review_decision_id = Guid.NewGuid(),

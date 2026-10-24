@@ -1,8 +1,8 @@
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Commitments;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Features.Responsibilities;
 using Bdgrz.Compliance.Features.Snapshots;
@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Examinations;
 
 /// <summary>Shares exact commitment-version capture rules across baseline source families.</summary>
 public sealed class CommitmentTypeIBaselineSourceReader(
-    IAggregateReader reader, IDomainEventReader events,
+    CommitmentReader commitments, IDomainEventReader events, IImmutableContentStore content,
     CommitmentVersionReadConsistency versions, CommitmentDraftListReadConsistency consistency,
     IBoundaryDirectoryReader boundaries, ProgramSetupWorkReadConsistency boundaryConsistency)
     : IProviderCsocBaselineReader
@@ -41,8 +41,8 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         if (priorBoundaries.Length != 1 || priorBoundaries[0].RecordId != engagement.BoundaryId)
             return Result<IReadOnlySet<Uuid>>.Success(new HashSet<Uuid>());
 
-        var read = await ReadCoreAsync("commitments", ProviderCsocKinds, engagement, context,
-            includeProviderCsocReferences: true, ct).ConfigureAwait(false);
+        var read = await CommitmentSourceFailures.ClassifyAsync(() => ReadCoreAsync("commitments", ProviderCsocKinds, engagement, context,
+            includeProviderCsocReferences: true, ct)).ConfigureAwait(false);
         if (!read.IsSuccess)
             return Result<IReadOnlySet<Uuid>>.Failure(read.Error);
 
@@ -80,8 +80,8 @@ public sealed class CommitmentTypeIBaselineSourceReader(
     public ValueTask<Result<TypeIBaselineSourceContribution>> ReadAsync(
         string family, IReadOnlySet<string> includedKinds, ExaminationEngagementView engagement,
         TypeIBaselineSourceReadContext context, CancellationToken ct) =>
-        ReadCoreAsync(family, includedKinds, engagement, context,
-            includeProviderCsocReferences: false, ct);
+        CommitmentSourceFailures.ClassifyAsync(() => ReadCoreAsync(family, includedKinds, engagement, context,
+            includeProviderCsocReferences: false, ct));
 
     async ValueTask<Result<TypeIBaselineSourceContribution>> ReadCoreAsync(
         string family, IReadOnlySet<string> includedKinds, ExaminationEngagementView engagement,
@@ -159,8 +159,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         var providerCsocs = new Dictionary<Uuid, List<TypeIBaselineSourceReference>>();
         foreach (var draftId in commitmentIds)
         {
-            var draft = await reader.HydrateAsync(new CommitmentDraft(engagement.TenantId,
-                draftId), ct).ConfigureAwait(false);
+            var draft = await commitments.ReadAsync(engagement.TenantId, engagement.ProgramId, draftId, ct).ConfigureAwait(false);
             if (!draft.IsCreated)
             {
                 blockers.Add("A commitment included by the approved boundary has no source history.");
@@ -190,8 +189,12 @@ public sealed class CommitmentTypeIBaselineSourceReader(
             if (!viewResult.IsSuccess)
                 return Result<TypeIBaselineSourceContribution>.Failure(viewResult.Error);
             var view = viewResult.Value;
+            if (context.RecordedThrough is { } cutoff &&
+                (view.Approval?.DecidedAt ?? view.Decision.DecidedAt) > cutoff)
+                return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "An effective commitment changed after the frozen close receipt cutoff.", true));
             var history = await ReadHistoryAsync(engagement.TenantId, engagement.ProgramId,
-                draftId, ct).ConfigureAwait(false);
+                draftId, draft.Owner.NativeSequence, ct).ConfigureAwait(false);
             if (!history.IsSuccess)
                 return Result<TypeIBaselineSourceContribution>.Failure(history.Error);
             if (!MatchesDraft(draft, history.Value) ||
@@ -248,8 +251,13 @@ public sealed class CommitmentTypeIBaselineSourceReader(
             }
             if (retirement is null)
                 continue;
-            var through = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
+            var effectiveThrough = new DateTimeOffset(engagement.PeriodStart.ToDateTime(TimeOnly.MaxValue,
                 DateTimeKind.Utc));
+            var through = context.RecordedThrough ?? effectiveThrough;
+            if (context.RecordedThrough is { } retirementCutoff && retirement.OccurredAt > retirementCutoff &&
+                retirement.EffectiveOn <= engagement.PeriodStart)
+                return Result<TypeIBaselineSourceContribution>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "A commitment retirement changed after the frozen close receipt cutoff.", true));
             if (retirement.OccurredAt <= through || retirement.EffectiveOn <= engagement.PeriodStart)
             {
                 var retirementKind = stem + "_retirement";
@@ -302,20 +310,34 @@ public sealed class CommitmentTypeIBaselineSourceReader(
     }
 
     async ValueTask<Result<CommitmentHistory>> ReadHistoryAsync(Uuid tenantId, Uuid programId,
-        Uuid draftId, CancellationToken ct)
+        Uuid draftId, long nativeSequence, CancellationToken ct)
     {
-        var stream = new EventStreamAddress(tenantId.ToString(), "commitment-drafts",
-            draftId.ToString());
-        var eventsInStream = new List<DomainEvent>();
+        var stream = new EventStreamAddress(tenantId.ToString(), CommitmentDraft.Area, draftId.ToString());
+        var eventsInStream = new List<ICommitmentMutationContent>();
+        var sequence = 0L;
         await foreach (var record in events.ReadAsync(stream, 0, ct).ConfigureAwait(false))
         {
-            if (record.Stream != stream || !IsKnownEvent(record.Event))
+            if (record.Event.Metadata.IsAudit)
+                continue;
+            if (record.Stream != stream || record.Event is not ICommitmentFact fact ||
+                fact.NativeSequence != sequence + 1 || fact.NativeSequence > nativeSequence)
                 return InvalidHistory();
-            eventsInStream.Add(record.Event);
+            var mutation = await CommitmentFactContent.ReadChangeAsync(content, fact, ct).ConfigureAwait(false);
+            foreach (var change in mutation.Changes)
+            {
+                if (!IsKnownEvent(change))
+                    return InvalidHistory();
+                eventsInStream.Add(change);
+            }
+            sequence = fact.NativeSequence;
+            if (sequence == nativeSequence)
+                break;
         }
+        if (sequence != nativeSequence)
+            throw new ImmutableContentUnavailableException("The exact commitment native source cut is not visible yet.");
 
-        var created = eventsInStream.OfType<CommitmentDraftCreated>().ToArray();
-        if (created.Length != 1 || created[0] != eventsInStream[0] ||
+        var created = eventsInStream.OfType<CommitmentDraftCreatedContent>().ToArray();
+        if (created.Length != 1 || eventsInStream[0] is not CommitmentDraftCreatedContent ||
             !IsValid(created[0], tenantId, programId, draftId))
             return InvalidHistory();
         var revision = 1L;
@@ -323,20 +345,20 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         var acceptedReviews = new Dictionary<long, Uuid>();
         var effectiveRevisions = new HashSet<long>();
         var decisionIds = new HashSet<Uuid>();
-        CommitmentRetired? retirement = null;
+        CommitmentRetiredContent? retirement = null;
         foreach (var item in eventsInStream)
         {
             if (retirement is not null)
                 return InvalidHistory();
 
-            if (item is CommitmentDraftRevised change)
+            if (item is CommitmentDraftRevisedContent change)
             {
                 if (!IsValid(change, tenantId, programId, draftId, revision + 1))
                     return InvalidHistory();
                 revision++;
                 acceptedReviews.Clear();
             }
-            else if (item is CommitmentReviewed review)
+            else if (item is CommitmentReviewedContent review)
             {
                 if (!IsValid(review, tenantId, programId, draftId, revision) ||
                     review.Revision != revision || !decisionIds.Add(review.DecisionId) ||
@@ -356,7 +378,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
                 else
                     acceptedReviews.Remove(review.Revision);
             }
-            else if (item is CommitmentApproved approval)
+            else if (item is CommitmentApprovedContent approval)
             {
                 if (!IsValid(approval, tenantId, programId, draftId, revision) ||
                     approval.Revision != revision || !decisionIds.Add(approval.DecisionId) ||
@@ -370,7 +392,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
                 effectiveRevisions.Add(approval.Revision);
                 effectiveVersions.Add((approval.Version, approval.Revision, approval.EffectiveFrom));
             }
-            else if (item is CommitmentRetired retired)
+            else if (item is CommitmentRetiredContent retired)
             {
                 if (!IsValid(retired, tenantId, programId, draftId, revision,
                         effectiveVersions.Count == 0 ? null : effectiveVersions[^1].EffectiveFrom))
@@ -379,15 +401,15 @@ public sealed class CommitmentTypeIBaselineSourceReader(
             }
         }
 
-        var revised = eventsInStream.OfType<CommitmentDraftRevised>().ToArray();
+        var revised = eventsInStream.OfType<CommitmentDraftRevisedContent>().ToArray();
         return Result<CommitmentHistory>.Success(new CommitmentHistory(created[0], revised,
-            eventsInStream.OfType<CommitmentReviewed>().ToArray(),
-            eventsInStream.OfType<CommitmentApproved>().ToArray(), retirement,
+            eventsInStream.OfType<CommitmentReviewedContent>().ToArray(),
+            eventsInStream.OfType<CommitmentApprovedContent>().ToArray(), retirement,
             effectiveVersions.Count, revision));
     }
 
     static bool ValidateVersion(CommitmentVersionView view, long expectedVersion,
-        ExaminationEngagementView engagement, CommitmentDraft draft, CommitmentHistory history)
+        ExaminationEngagementView engagement, CommitmentReadSnapshot draft, CommitmentHistory history)
     {
         if (view is null || view.Decision is null ||
             view.TenantId != engagement.TenantId || view.ProgramId != engagement.ProgramId ||
@@ -434,7 +456,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
                MatchesApproval(approval, approved);
     }
 
-    static bool MatchesReview(CommitmentDecisionView view, CommitmentReviewed source) =>
+    static bool MatchesReview(CommitmentDecisionView view, CommitmentReviewedContent source) =>
         view.TenantId == source.TenantId && view.ProgramId == source.ProgramId &&
         view.DraftId == source.DraftId && view.DecisionId == source.DecisionId &&
         view.Revision == source.Revision && view.Outcome == source.Outcome &&
@@ -450,7 +472,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         view.SourceVerifiedReference == source.SourceVerifiedReference &&
         view.SourceEvidence == source.SourceEvidence && view.Actor == source.Actor;
 
-    static bool MatchesApproval(CommitmentDecisionView view, CommitmentApproved source) =>
+    static bool MatchesApproval(CommitmentDecisionView view, CommitmentApprovedContent source) =>
         view.TenantId == source.TenantId && view.ProgramId == source.ProgramId &&
         view.DraftId == source.DraftId && view.DecisionId == source.DecisionId &&
         view.Revision == source.Revision && view.Outcome == "approve" &&
@@ -466,7 +488,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         view.SourceVerification is null && view.SourceVerifiedReference is null &&
         view.SourceEvidence is null && view.Actor == source.Actor;
 
-    static bool MatchesDraft(CommitmentDraft draft, CommitmentHistory history) =>
+    static bool MatchesDraft(CommitmentReadSnapshot draft, CommitmentHistory history) =>
         draft.IsCreated && draft.Id == history.Created.DraftId &&
         draft.ProgramId == history.Created.ProgramId && draft.ServiceId == history.Created.ServiceId &&
         draft.Kind == history.Created.Kind && draft.Identifier == history.Created.Identifier &&
@@ -479,11 +501,11 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         draft.RetiredEffectiveOn == history.Retirement?.EffectiveOn &&
         draft.RetirementRationale == history.Retirement?.Rationale;
 
-    static bool IsKnownEvent(DomainEvent domainEvent) => domainEvent is CommitmentDraftCreated or
-        CommitmentDraftRevised or CommitmentReviewed or CommitmentApproved or CommitmentRetired or
+    static bool IsKnownEvent(ICommitmentMutationContent domainEvent) => domainEvent is CommitmentDraftCreatedContent or
+        CommitmentDraftRevisedContent or CommitmentReviewedContent or CommitmentApprovedContent or CommitmentRetiredContent or
         ResponsibilityAssigned or ResponsibilityRevoked;
 
-    static bool IsValid(CommitmentDraftCreated ev, Uuid tenantId, Uuid programId, Uuid draftId) =>
+    static bool IsValid(CommitmentDraftCreatedContent ev, Uuid tenantId, Uuid programId, Uuid draftId) =>
         ev.TenantId == tenantId && ev.ProgramId == programId && ev.DraftId == draftId &&
         ev.CreateRequestId != Uuid.Empty && ev.ServiceId != Uuid.Empty &&
         ev.Kind is not null && AllKinds.Contains(ev.Kind) && ev.Identifier is not null &&
@@ -493,14 +515,14 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         (ev.Kind == "subservice_responsibility" ? ev.ProviderId is { } provider && provider != Uuid.Empty : ev.ProviderId is null) &&
         ValidActor(ev.ActorMemberId, ev.ActorDisplay, ev.Actor, ev.ChangedAt);
 
-    static bool IsValid(CommitmentDraftRevised ev, Uuid tenantId, Uuid programId, Uuid draftId,
+    static bool IsValid(CommitmentDraftRevisedContent ev, Uuid tenantId, Uuid programId, Uuid draftId,
         long revision) => ev.TenantId == tenantId && ev.ProgramId == programId &&
         ev.DraftId == draftId && ev.Revision == revision &&
         ValidText(ev.Statement, 16000) && ev.Context is not null && ev.Context.Length <= 16000 &&
         ValidText(ev.SourceReference, 1024) &&
         ValidActor(ev.ActorMemberId, ev.ActorDisplay, ev.Actor, ev.ChangedAt);
 
-    static bool IsValid(CommitmentReviewed ev, Uuid tenantId, Uuid programId, Uuid draftId,
+    static bool IsValid(CommitmentReviewedContent ev, Uuid tenantId, Uuid programId, Uuid draftId,
         long currentRevision) => ev.TenantId == tenantId && ev.ProgramId == programId &&
         ev.DraftId == draftId && ev.Revision is >= 1 && ev.Revision <= currentRevision &&
         ev.DecisionId != Uuid.Empty && ev.Outcome is "accept" or "request_changes" &&
@@ -518,7 +540,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
               ev.SourceVerifiedReference is null && ev.SourceEvidence is null && ev.Version is null) &&
         ValidActor(ev.ActorMemberId, ev.ActorDisplay, ev.Actor, ev.DecidedAt);
 
-    static bool IsValid(CommitmentApproved ev, Uuid tenantId, Uuid programId, Uuid draftId,
+    static bool IsValid(CommitmentApprovedContent ev, Uuid tenantId, Uuid programId, Uuid draftId,
         long currentRevision) => ev.TenantId == tenantId && ev.ProgramId == programId &&
         ev.DraftId == draftId && ev.Revision is >= 1 && ev.Revision <= currentRevision &&
         ev.DecisionId != Uuid.Empty && ev.AcceptedReviewDecisionId != Uuid.Empty &&
@@ -527,7 +549,7 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         !string.IsNullOrWhiteSpace(ev.ImpactDigest) && ValidText(ev.Rationale, 4000) &&
         ValidActor(ev.ActorMemberId, ev.ActorDisplay, ev.Actor, ev.DecidedAt);
 
-    static bool IsValid(CommitmentRetired ev, Uuid tenantId, Uuid programId, Uuid draftId,
+    static bool IsValid(CommitmentRetiredContent ev, Uuid tenantId, Uuid programId, Uuid draftId,
         long currentRevision, DateOnly? lastEffective) => ev.TenantId == tenantId &&
         ev.ProgramId == programId && ev.SubjectId == draftId && ev.Revision == currentRevision &&
         lastEffective is { } last && ev.EffectiveOn > last && ev.EffectiveOn != default &&
@@ -546,9 +568,9 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         Digest($"bdgrz.snapshot.source.{stem}_version.v1\0", view,
             ComplianceCoreJsonContext.Default.CommitmentVersionView);
 
-    static string RetirementDigest(string stem, CommitmentRetired retirement) =>
+    static string RetirementDigest(string stem, CommitmentRetiredContent retirement) =>
         Digest($"bdgrz.snapshot.source.{stem}_retirement.v1\0", retirement,
-            ComplianceCoreJsonContext.Default.CommitmentRetired);
+            ComplianceCoreJsonContext.Default.CommitmentRetiredContent);
 
     static string Digest<T>(string domain, T content,
         System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo)
@@ -585,10 +607,10 @@ public sealed class CommitmentTypeIBaselineSourceReader(
         Result<TypeIBaselineSourceContribution>.Success(new TypeIBaselineSourceContribution(
             family, sources, blockers, scopeDifferences));
 
-    sealed record CommitmentHistory(CommitmentDraftCreated Created,
-        IReadOnlyList<CommitmentDraftRevised> Revisions,
-        IReadOnlyList<CommitmentReviewed> Reviews, IReadOnlyList<CommitmentApproved> Approvals,
-        CommitmentRetired? Retirement, long VersionCount, long DraftRevision);
+    sealed record CommitmentHistory(CommitmentDraftCreatedContent Created,
+        IReadOnlyList<CommitmentDraftRevisedContent> Revisions,
+        IReadOnlyList<CommitmentReviewedContent> Reviews, IReadOnlyList<CommitmentApprovedContent> Approvals,
+        CommitmentRetiredContent? Retirement, long VersionCount, long DraftRevision);
 }
 
 public sealed class CommitmentTypeIBaselineSourceContributor(
