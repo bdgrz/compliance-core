@@ -197,6 +197,50 @@ public sealed class TenantRbacBootstrapReactorTests
         Assert.DoesNotContain(TypedReactionBus.Sent(scenario), request => request is AssignTeamMember);
     }
 
+    [Theory]
+    [InlineData(typeof(DefineRole))]
+    [InlineData(typeof(DefineTeam))]
+    public async Task ShouldContinueGivenABuiltInDefinitionThatConflictsWithAcceptedContent(Type definition)
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var scenario = new ReactorScenario().Given(
+            new TenantRegistered(tenantId, Uuid.CreateVersion4(), "Acme", "acme"));
+        _ = definition == typeof(DefineRole)
+            ? scenario.RespondTo<DefineRole>(Result.Failure(new RequestError(RequestErrorKind.Conflict, "Changed.")))
+            : scenario.RespondTo<DefineTeam>(Result.Failure(new RequestError(RequestErrorKind.Conflict, "Changed.")));
+        var reactor = new TenantRbacBootstrapReactor(new InMemoryProjectionCheckpointStore(),
+            TypedReactionBus.For(scenario));
+
+        // Act
+        await scenario.RunAsync(reactor);
+
+        // Assert
+        Assert.Equal(36, TypedReactionBus.Sent(scenario).OfType<AssignRolePermission>().Count());
+        Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<DefineRole>().Count());
+        Assert.Equal(4, TypedReactionBus.Sent(scenario).OfType<DefineTeam>().Count());
+    }
+
+    [Fact]
+    public async Task ShouldRetainTheSourceCheckpointGivenAnInvalidBuiltInDefinition()
+    {
+        // Arrange
+        var tenantId = Uuid.CreateVersion4();
+        var scenario = new ReactorScenario().Given(
+            new TenantRegistered(tenantId, Uuid.CreateVersion4(), "Acme", "acme"))
+            .RespondTo<DefineTeam>(Result.Failure(new RequestError(RequestErrorKind.Validation, "Invalid.")));
+        var checkpoints = new InMemoryProjectionCheckpointStore();
+        var reactor = new TenantRbacBootstrapReactor(checkpoints, TypedReactionBus.For(scenario));
+
+        // Act
+        var error = await Assert.ThrowsAsync<ReactionCommandFailedException>(() => scenario.RunAsync(reactor));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, error.Error.Kind);
+        Assert.Equal(ProjectionCheckpoint.Start,
+            await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
+    }
+
     public static TheoryData<int> GrantCommitBoundaries()
     {
         var positions = new TheoryData<int>();

@@ -21,7 +21,7 @@ public sealed class DeleteRoleRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new DeleteRole(TenantId, RoleId))
+            .When(new DeleteRole(Uuid.CreateVersion4(), TenantId, RoleId))
             // Assert
             .ExpectAuthorized()
             .ExpectHandled()
@@ -39,7 +39,7 @@ public sealed class DeleteRoleRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new DeleteRole(TenantId, RoleId))
+            .When(new DeleteRole(Uuid.CreateVersion4(), TenantId, RoleId))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();

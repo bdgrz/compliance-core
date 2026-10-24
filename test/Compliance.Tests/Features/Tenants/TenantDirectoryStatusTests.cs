@@ -11,7 +11,7 @@ public sealed class TenantDirectoryStatusTests
         var tenantId = Uuid.CreateVersion4();
         var current = new TenantView(tenantId, "Acme", "acme", Status: "provisioning",
             RequiresActivation: true);
-        var ev = new TenantSlugConfirmed(tenantId, "acme");
+        var ev = TenantFacts.Confirmed(tenantId, "acme");
 
         // Act
         var status = TenantDirectoryStatus.After(current, ev);

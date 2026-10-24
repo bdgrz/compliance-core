@@ -15,10 +15,15 @@ static class TeamMemberEffects
         new(CommandId(sourceEventId, "team-member:assign", tenantId, teamId, memberId), tenantId, teamId, memberId,
             Uuid.Empty, -1, -1);
 
-    /// <summary>The removal command a source event causes for one member on one team.</summary>
-    public static RemoveTeamMember Remove(Uuid sourceEventId, Uuid tenantId, Uuid teamId, Uuid memberId) =>
-        new(CommandId(sourceEventId, "team-member:remove", tenantId, teamId, memberId), tenantId, teamId, memberId,
-            Uuid.Empty, -1, -1);
+    /// <summary>
+    ///     The removal a source event causes for one proven assignment. The command id names the assignment episode, and
+    ///     the command carries the exact membership episode, revision and generation the source facts proved, so the
+    ///     removal can close that assignment and never a newer one.
+    /// </summary>
+    public static RemoveTeamMember Remove(Uuid sourceEventId, Uuid tenantId, Uuid teamId, TeamAssignmentSource source) =>
+        new(EffectIdentity.CommandId(sourceEventId, "team-member:remove", $"{tenantId}:{teamId}:{source.MemberId}",
+                source.AssignmentEventId.ToString()), tenantId, teamId, source.MemberId, source.MembershipEpisodeId,
+            checked((long)source.Revision), checked((long)source.Generation));
 
     static Uuid CommandId(Uuid sourceEventId, string effectKind, Uuid tenantId, Uuid teamId, Uuid memberId) =>
         EffectIdentity.CommandId(sourceEventId, effectKind, $"{tenantId}:{teamId}:{memberId}", null);

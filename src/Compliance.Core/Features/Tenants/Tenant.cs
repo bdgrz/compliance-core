@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
@@ -20,11 +22,25 @@ public sealed class Tenant : Aggregate
     string? _pendingSlug;
     ActorReference? _pendingSlugChangeRequester;
     DateTimeOffset? _pendingSlugChangeRequestedAt;
-    readonly HashSet<string> _previousSlugs = new(StringComparer.Ordinal);
 
-    public Tenant(Uuid id)
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
+    /// <summary>The slug outcome answers a tenant that moved on; the receiver is a terminal no-op.</summary>
+    public static RequestError StaleSlugOutcome { get; } = new(RequestErrorKind.Conflict,
+        "The tenant is not waiting for that slug outcome.", false);
+
+    /// <summary>The requested slug is already the tenant's current slug; nothing changes.</summary>
+    public static RequestError SlugUnchanged { get; } = new(RequestErrorKind.Conflict,
+        "The tenant already uses that slug.", false);
+
+    /// <summary>Logical revision of the tenant: the number of facts accepted on the owner so far.</summary>
+    public ulong Revision => Version;
+
+    public Tenant(Uuid id, Uuid selectedCommandId = default)
         : base(id, new EventStreamAddress("bdgrz", "tenants", id.ToString()))
     {
+        Acceptance = new NativeAcceptance(selectedCommandId);
         On<TenantRegistered>(Apply);
         On<TenantSlugConfirmed>(Apply);
         On<TenantSlugRejected>(Apply);
@@ -37,20 +53,22 @@ public sealed class Tenant : Aggregate
         On<TenantActivated>(_ => _activated = true);
         On<TenantSlugChangeRequested>(ev =>
         {
+            Accept(ev, ev.CommandId, ev.Operation);
             _pendingSlug = ev.NewSlug;
             _pendingSlugChangeRequester = ev.RequestedBy;
             _pendingSlugChangeRequestedAt = ev.RequestedAt;
         });
         On<TenantSlugChanged>(ev =>
         {
-            _previousSlugs.Add(ev.OldSlug);
+            Accept(ev, ev.CommandId, ev.Operation);
             _slug = ev.NewSlug;
             _pendingSlug = null;
             _pendingSlugChangeRequester = null;
             _pendingSlugChangeRequestedAt = null;
         });
-        On<TenantSlugChangeRejected>(_ =>
+        On<TenantSlugChangeRejected>(ev =>
         {
+            Accept(ev, ev.CommandId, ev.Operation);
             _pendingSlug = null;
             _pendingSlugChangeRequester = null;
             _pendingSlugChangeRequestedAt = null;
@@ -130,50 +148,77 @@ public sealed class Tenant : Aggregate
         return Result.Success;
     }
 
-    public Result ConfirmSlug(string slug)
+    /// <summary>
+    ///     Checks that the tenant waits for the confirmed slug. A receiver that arrives after the tenant moved on
+    ///     reports <see cref="StaleSlugOutcome" />, which dispatchers treat as a terminal no-op.
+    /// </summary>
+    public Result PrepareConfirmSlug(string slug) =>
+        MatchesPendingChange(slug) || MatchesPending(slug) ? Result.Success : Result.Failure(StaleSlugOutcome);
+
+    /// <summary>Accepts the confirmation as the native fact of <paramref name="operation" />.</summary>
+    public Result ConfirmSlug(OperationProvenance operation, ImmutableContentRef firstResponse, string slug)
     {
-        if (_pendingSlug is null && _slugState == TenantSlugState.Confirmed && Matches(slug))
-            return Result.Success;
+        var prepared = PrepareReceiver(operation, firstResponse, PrepareConfirmSlug(slug));
+        if (!prepared.IsSuccess)
+            return prepared;
         if (_pendingSlug is not null && MatchesPendingChange(slug))
-        {
-            RaiseEvent(new TenantSlugChanged(Id, _slug!, _pendingSlug)
+            RaiseEvent(new TenantSlugChanged(Id, _slug!, _pendingSlug, operation.LogicalId, operation, firstResponse)
             {
                 RequestedBy = _pendingSlugChangeRequester,
                 RequestedAt = _pendingSlugChangeRequestedAt,
             });
-            return Result.Success;
-        }
-        if (!MatchesPending(slug))
-            return Failure(RequestErrorKind.Conflict, "The tenant is not awaiting that slug.");
-        RaiseEvent(new TenantSlugConfirmed(Id, _slug!));
+        else
+            RaiseEvent(new TenantSlugConfirmed(Id, _slug!, operation.LogicalId, operation, firstResponse));
         return Result.Success;
     }
 
-    public Result RejectSlug(string slug)
+    /// <summary>Checks that the tenant waits for the refused slug; see <see cref="PrepareConfirmSlug" />.</summary>
+    public Result PrepareRejectSlug(string slug) =>
+        MatchesPendingChange(slug) || MatchesPending(slug) ? Result.Success : Result.Failure(StaleSlugOutcome);
+
+    /// <summary>Accepts the refusal as the native fact of <paramref name="operation" />.</summary>
+    public Result RejectSlug(OperationProvenance operation, ImmutableContentRef firstResponse, string slug)
     {
+        var prepared = PrepareReceiver(operation, firstResponse, PrepareRejectSlug(slug));
+        if (!prepared.IsSuccess)
+            return prepared;
         if (_pendingSlug is not null && MatchesPendingChange(slug))
-        {
-            RaiseEvent(new TenantSlugChangeRejected(Id, _slug!, _pendingSlug));
-            return Result.Success;
-        }
-        if (!MatchesPending(slug))
-            return Failure(RequestErrorKind.Conflict, "The tenant is not awaiting that slug.");
-        RaiseEvent(new TenantSlugRejected(Id, _slug!));
+            RaiseEvent(new TenantSlugChangeRejected(Id, _slug!, _pendingSlug, operation.LogicalId, operation,
+                firstResponse));
+        else
+            RaiseEvent(new TenantSlugRejected(Id, _slug!, operation.LogicalId, operation, firstResponse));
         return Result.Success;
     }
 
-    public Result RequestSlugChange(string slug, ActorReference? requestedBy = null,
-        DateTimeOffset? requestedAt = null)
+    /// <summary>
+    ///     Checks a slug change against hydrated state without raising anything. A negative expected revision is
+    ///     unconstrained and reserved for system callers.
+    /// </summary>
+    public Result PrepareRequestSlugChange(string slug, long expectedRevision)
     {
-        if (!IsActive)
-            return Failure(RequestErrorKind.Conflict, "The tenant is not active.");
         if (!TenantSlugs.TryNormalize(slug, out var normalized, out var reason))
             return Failure(RequestErrorKind.Validation, reason);
+        if (expectedRevision >= 0 && (ulong)expectedRevision != Revision)
+            return Failure(RequestErrorKind.Conflict, "The tenant changed since it was read.");
+        if (!IsActive)
+            return Failure(RequestErrorKind.Conflict, "The tenant is not active.");
         if (normalized == _slug)
-            return Result.Success;
+            return Result.Failure(SlugUnchanged);
         if (_pendingSlug is not null)
             return Failure(RequestErrorKind.Conflict, "A slug change is already pending.");
-        RaiseEvent(new TenantSlugChangeRequested(Id, _slug!, normalized)
+        return Result.Success;
+    }
+
+    /// <summary>Accepts the slug change request as the native fact of <paramref name="operation" />.</summary>
+    public Result RequestSlugChange(OperationProvenance operation, ImmutableContentRef firstResponse, string slug,
+        long expectedRevision, ActorReference? requestedBy = null, DateTimeOffset? requestedAt = null)
+    {
+        var prepared = PrepareReceiver(operation, firstResponse, PrepareRequestSlugChange(slug, expectedRevision));
+        if (!prepared.IsSuccess)
+            return prepared;
+        TenantSlugs.TryNormalize(slug, out var normalized);
+        RaiseEvent(new TenantSlugChangeRequested(Id, _slug!, normalized, operation.LogicalId, operation,
+            firstResponse)
         {
             RequestedBy = requestedBy,
             RequestedAt = requestedAt,
@@ -181,13 +226,23 @@ public sealed class Tenant : Aggregate
         return Result.Success;
     }
 
-    public Result RequestSlugSurrender(string slug)
+    /// <summary>Checks a slug surrender against hydrated state without raising anything.</summary>
+    public Result PrepareRequestSlugSurrender(string slug)
     {
         if (_offboarding)
             return Failure(RequestErrorKind.Conflict, "The tenant is being offboarded.");
         if (_slugState != TenantSlugState.Confirmed || !Matches(slug))
             return Failure(RequestErrorKind.Conflict, "The tenant does not own that slug.");
-        RaiseEvent(new TenantSlugSurrenderRequested(Id, _slug!));
+        return Result.Success;
+    }
+
+    /// <summary>Accepts the surrender request as the native fact of <paramref name="operation" />.</summary>
+    public Result RequestSlugSurrender(OperationProvenance operation, ImmutableContentRef firstResponse, string slug)
+    {
+        var prepared = PrepareReceiver(operation, firstResponse, PrepareRequestSlugSurrender(slug));
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new TenantSlugSurrenderRequested(Id, _slug!, operation.LogicalId, operation, firstResponse));
         return Result.Success;
     }
 
@@ -244,22 +299,53 @@ public sealed class Tenant : Aggregate
         return Result.Success;
     }
 
-    public Result ConfirmSlugSurrender(string slug)
+    /// <summary>Checks that the tenant is surrendering the released slug; see <see cref="PrepareConfirmSlug" />.</summary>
+    public Result PrepareConfirmSlugSurrender(string slug) =>
+        _slugState == TenantSlugState.Surrendering && Matches(slug) ? Result.Success : Result.Failure(StaleSlugOutcome);
+
+    /// <summary>Accepts the release as the native fact of <paramref name="operation" />.</summary>
+    public Result ConfirmSlugSurrender(OperationProvenance operation, ImmutableContentRef firstResponse, string slug)
     {
-        if (_previousSlugs.Contains(slug))
-            return Result.Success;
-        if (_slugState != TenantSlugState.Surrendering || !Matches(slug))
-            return Failure(RequestErrorKind.Conflict, "The tenant is not surrendering that slug.");
-        RaiseEvent(new TenantSlugSurrenderConfirmed(Id, _slug!));
+        var prepared = PrepareReceiver(operation, firstResponse, PrepareConfirmSlugSurrender(slug));
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new TenantSlugSurrenderConfirmed(Id, _slug!, operation.LogicalId, operation, firstResponse));
         return Result.Success;
     }
 
-    public Result RejectSlugSurrender(string slug)
+    /// <summary>Checks that the tenant is surrendering the refused slug; see <see cref="PrepareConfirmSlug" />.</summary>
+    public Result PrepareRejectSlugSurrender(string slug) =>
+        _slugState == TenantSlugState.Surrendering && Matches(slug) ? Result.Success : Result.Failure(StaleSlugOutcome);
+
+    /// <summary>Accepts the refusal as the native fact of <paramref name="operation" />.</summary>
+    public Result RejectSlugSurrender(OperationProvenance operation, ImmutableContentRef firstResponse, string slug)
     {
-        if (_slugState != TenantSlugState.Surrendering || !Matches(slug))
-            return Failure(RequestErrorKind.Conflict, "The tenant is not surrendering that slug.");
-        RaiseEvent(new TenantSlugSurrenderFailed(Id, _slug!));
+        var prepared = PrepareReceiver(operation, firstResponse, PrepareRejectSlugSurrender(slug));
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new TenantSlugSurrenderFailed(Id, _slug!, operation.LogicalId, operation, firstResponse));
         return Result.Success;
+    }
+
+    /// <summary>The provenance of a root operation on this owner.</summary>
+    public OperationProvenance Provenance(Uuid commandId, string commandKind, ActorReference actor, string episode,
+        ulong? originalExpectedRevision, string authoredIntentSha256, DateTimeOffset acceptedAt) =>
+        OwnerProvenance.For(this, commandId, commandKind, actor, episode, originalExpectedRevision,
+            authoredIntentSha256, acceptedAt);
+
+    Result PrepareReceiver(OperationProvenance operation, ImmutableContentRef firstResponse, Result prepared)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+            return Failure(RequestErrorKind.Validation, "A tenant slug operation requires its own logical operation.");
+        return prepared;
+    }
+
+    void Accept(DomainEvent fact, Uuid commandId, OperationProvenance operation)
+    {
+        OwnerProvenance.RequireOwn(this, commandId, operation);
+        Acceptance.Observe(fact);
     }
 
     bool Matches(string slug) => TenantSlugs.TryNormalize(slug, out var normalized) && normalized == _slug;
@@ -279,15 +365,33 @@ public sealed class Tenant : Aggregate
         _ownerUserId = registered.OwnerUserId;
         _operatorUserId = registered.CreatorIsAdministrator ? Uuid.Empty : registered.OwnerUserId;
     }
-    void Apply(TenantSlugConfirmed _)
+    void Apply(TenantSlugConfirmed confirmed)
     {
+        Accept(confirmed, confirmed.CommandId, confirmed.Operation);
         _slugState = TenantSlugState.Confirmed;
         _slugEverConfirmed = true;
     }
-    void Apply(TenantSlugRejected _) => _slugState = TenantSlugState.Rejected;
-    void Apply(TenantSlugSurrenderRequested _) => _slugState = TenantSlugState.Surrendering;
-    void Apply(TenantSlugSurrenderConfirmed _) { _slug = null; _slugState = TenantSlugState.None; }
-    void Apply(TenantSlugSurrenderFailed _) => _slugState = TenantSlugState.Confirmed;
+    void Apply(TenantSlugRejected rejected)
+    {
+        Accept(rejected, rejected.CommandId, rejected.Operation);
+        _slugState = TenantSlugState.Rejected;
+    }
+    void Apply(TenantSlugSurrenderRequested requested)
+    {
+        Accept(requested, requested.CommandId, requested.Operation);
+        _slugState = TenantSlugState.Surrendering;
+    }
+    void Apply(TenantSlugSurrenderConfirmed confirmed)
+    {
+        Accept(confirmed, confirmed.CommandId, confirmed.Operation);
+        _slug = null;
+        _slugState = TenantSlugState.None;
+    }
+    void Apply(TenantSlugSurrenderFailed failed)
+    {
+        Accept(failed, failed.CommandId, failed.Operation);
+        _slugState = TenantSlugState.Confirmed;
+    }
 
     static Result Failure(RequestErrorKind kind, string message) => Result.Failure(new RequestError(kind, message));
     static Result<T> Failure<T>(RequestErrorKind kind, string message) => Result<T>.Failure(new RequestError(kind, message));

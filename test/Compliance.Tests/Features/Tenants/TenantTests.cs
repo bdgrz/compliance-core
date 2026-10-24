@@ -270,9 +270,28 @@ public sealed class TenantTests
         Assert.Equal("acme", tenant.CurrentSlug);
         Assert.True(tenant.ConfirmSlug("acme-new").IsSuccess);
         Assert.Equal("acme-new", tenant.CurrentSlug);
-        Assert.True(tenant.ConfirmSlugSurrender("acme").IsSuccess);
         Assert.True(tenant.IsActive);
         Assert.Single(new AggregateScenario<Tenant>(tenant).PendingEvents.OfType<TenantSlugChanged>());
+    }
+
+    [Fact]
+    public void ShouldReportStaleOutcomeGivenSurrenderOfAReplacedSlugAcknowledgedLate()
+    {
+        // Arrange
+        var tenant = new Tenant(TenantId);
+        _ = tenant.Register(OwnerUserId, "Acme", "acme");
+        _ = tenant.ConfirmSlug("acme");
+        _ = tenant.RequestSlugChange("acme-new");
+        _ = tenant.ConfirmSlug("acme-new");
+        var before = new AggregateScenario<Tenant>(tenant).PendingEvents.Count;
+
+        // Act
+        var late = tenant.ConfirmSlugSurrender("acme");
+
+        // Assert
+        Assert.Equal(Tenant.StaleSlugOutcome, late.Error);
+        Assert.Equal(before, new AggregateScenario<Tenant>(tenant).PendingEvents.Count);
+        Assert.True(tenant.IsActive);
     }
 
     [Fact]

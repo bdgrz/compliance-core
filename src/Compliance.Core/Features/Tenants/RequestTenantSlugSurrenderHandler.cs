@@ -1,15 +1,29 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
-public sealed class RequestTenantSlugSurrenderHandler(IAggregateExecutor executor)
-    : IRequestHandler<RequestTenantSlugSurrender>
+/// <summary>
+///     Starts the tenant's surrender of its confirmed slug.
+/// </summary>
+public sealed class RequestTenantSlugSurrenderHandler(NativeOperationExecutor operations, IImmutableContentStore content,
+    TimeProvider clock) : IRequestHandler<RequestTenantSlugSurrender>
 {
-    public ValueTask<Result> HandleAsync(
-        IRequestContext<RequestTenantSlugSurrender> context,
-        CancellationToken ct) =>
-        executor.ExecuteAsync(
-            new Tenant(context.Request.TenantId),
-            tenant => AggregateOutcome.CommitOnSuccess(tenant.RequestSlugSurrender(context.Request.Slug)),
-            context, ct);
+    const string CommandKind = "RequestTenantSlugSurrender";
+    const string CurrentEpisode = "current";
+
+    public ValueTask<Result> HandleAsync(IRequestContext<RequestTenantSlugSurrender> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        if (request.TenantId == Uuid.Empty)
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A tenant is required.")));
+        return UnitOperations.RunAsync(operations, content, clock, context, RegisterMemberHandler.ActorOf(context.Actor),
+            request.CommandId, CommandKind, CurrentEpisode, null, selected => new Tenant(request.TenantId, selected),
+            tenant => tenant.Acceptance, tenant => tenant.PrepareRequestSlugSurrender(request.Slug),
+            (Tenant tenant, OperationProvenance operation, ImmutableContentRef response) => tenant.RequestSlugSurrender(operation, response, request.Slug));
+    }
 }

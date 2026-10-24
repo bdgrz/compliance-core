@@ -1,5 +1,7 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 
@@ -9,170 +11,202 @@ public sealed class RoleCleanupReactorTests
     static readonly Uuid RoleId = Uuid.CreateVersion4();
 
     [Fact]
-    public async Task ShouldRemoveRelationshipsGivenDeletedRole()
+    public async Task ShouldRemoveEveryRelationshipGivenDeletedRoleAndNoProjection()
     {
         // Arrange
-        var firstTeam = Uuid.CreateVersion4();
-        var secondTeam = Uuid.CreateVersion4();
-        var permissions = new FakeRolePermissionDirectoryReader(
-            new RolePermissionView(RoleId, "controls.read", Uuid.CreateVersion4(), 1), new RolePermissionView(RoleId, "controls.manage", Uuid.CreateVersion4(), 1));
-        var teams = new FakeRoleTeamDirectoryReader(
-            new RoleTeamView(RoleId, firstTeam, Uuid.CreateVersion4(), 1), new RoleTeamView(RoleId, secondTeam, Uuid.CreateVersion4(), 1));
-        var scenario = new ReactorScenario().Given(new RoleDeleted(TenantId, RoleId));
+        await using var provider = Build();
+        await DefineAndDeleteAsync(provider, [], RoleId);
+        var permissions = Enumerable.Range(0, 205).Select(index => $"controls.item{index:000}").ToArray();
+        var teams = new[] { Uuid.CreateVersion4(), Uuid.CreateVersion4() };
+        foreach (var permission in permissions)
+            await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, permission);
+        foreach (var team in teams)
+            await RbacTeamRoleFacts.GrantAsync(provider, TenantId, team, RoleId);
 
         // Act
-        await scenario.RunAsync(new RoleCleanupReactor(new InMemoryProjectionCheckpointStore(),
-            scenario.Requests, permissions, teams));
+        await CleanupReactorHost.RunAsync(provider, TenantId, Create);
 
         // Assert
-        Assert.Equal(4, scenario.SentRequests.Count);
-        Assert.Contains(scenario.SentRequests, request =>
-            request is RemoveRolePermission removal && removal.Permission == "controls.read");
-        Assert.Contains(scenario.SentRequests, request =>
-            request is RemoveRolePermission removal && removal.Permission == "controls.manage");
-        Assert.Contains(scenario.SentRequests, request =>
-            request is RemoveTeamRole removal && removal.TeamId == firstTeam);
-        Assert.Contains(scenario.SentRequests, request =>
-            request is RemoveTeamRole removal && removal.TeamId == secondTeam);
+        foreach (var permission in permissions)
+            Assert.False((await CleanupReactorHost.ReadAsync(provider,
+                new RolePermission(TenantId, RoleId, permission))).IsAssigned);
+        foreach (var team in teams)
+            Assert.False((await CleanupReactorHost.ReadAsync(provider, new TeamRole(TenantId, team, RoleId))).IsAssigned);
     }
 
     [Fact]
-    public async Task ShouldDispatchNothingGivenAnAlreadyEmptyRole()
+    public async Task ShouldRemoveRelationshipsGivenDeletedRoleWhileTheProjectionIsEmpty()
     {
         // Arrange
-        var permissions = new FakeRolePermissionDirectoryReader();
-        var teams = new FakeRoleTeamDirectoryReader();
-        var scenario = new ReactorScenario().Given(new RoleDeleted(TenantId, RoleId));
+        await using var provider = Build();
+        await DefineAndDeleteAsync(provider, [], RoleId);
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.read");
+        var team = Uuid.CreateVersion4();
+        await RbacTeamRoleFacts.GrantAsync(provider, TenantId, team, RoleId);
+        var scenario = new ReactorScenario(new TenantId(TenantId.ToString())).Given(await DeletedFactAsync(provider));
 
         // Act
-        await scenario.RunAsync(new RoleCleanupReactor(new InMemoryProjectionCheckpointStore(),
-            scenario.Requests, permissions, teams));
+        await RunWithRecordingBusAsync(provider, scenario);
 
         // Assert
-        Assert.Equal([RoleId], permissions.QueriedRoles);
-        Assert.Equal([RoleId], teams.QueriedRoles);
-        Assert.Empty(scenario.SentRequests);
+        Assert.Equal(2, scenario.SentRequests.Count);
+        var permission = Assert.Single(scenario.SentRequests.OfType<RemoveRolePermission>());
+        Assert.Equal("controls.read", permission.Permission);
+        Assert.Equal((await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, "controls.read")))
+            .AssignmentId, permission.AssignmentId);
+        var teamRole = Assert.Single(scenario.SentRequests.OfType<RemoveTeamRole>());
+        Assert.Equal(team, teamRole.TeamId);
     }
 
     [Fact]
     public async Task ShouldBindRemovalToTheDiscoveredEpisodeGivenCleanupReplay()
     {
         // Arrange
-        var row = new RolePermissionView(RoleId, "controls.read", Uuid.CreateVersion4(), 5);
-        var scenario = new ReactorScenario().Given(new RoleDeleted(TenantId, RoleId));
-        var reactor = new RoleCleanupReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests,
-            new FakeRolePermissionDirectoryReader(row), new FakeRoleTeamDirectoryReader());
-        await scenario.RunAsync(reactor);
+        await using var provider = Build();
+        await DefineAndDeleteAsync(provider, [], RoleId);
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.read");
+        await RbacTeamRoleFacts.GrantAsync(provider, TenantId, Uuid.CreateVersion4(), RoleId);
+        var trigger = await DeletedFactAsync(provider);
+        var first = new ReactorScenario(new TenantId(TenantId.ToString())).Given(trigger);
+        var replay = new ReactorScenario(new TenantId(TenantId.ToString())).Given(trigger);
 
         // Act
-        await scenario.RunAsync(reactor);
+        await RunWithRecordingBusAsync(provider, first);
+        await RunWithRecordingBusAsync(provider, replay);
 
         // Assert
-        var first = Assert.IsType<RemoveRolePermission>(scenario.SentRequests[0]);
-        Assert.Equal(first, scenario.SentRequests[1]);
-        Assert.Equal(row.AssignmentId, first.AssignmentId);
-        Assert.Equal(row.Revision, first.ExpectedRevision);
-        Assert.NotEqual(Uuid.Empty, first.CommandId);
+        var permission = await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, "controls.read"));
+        Assert.Equal(first.SentRequests.Count, replay.SentRequests.Count);
+        var removal = Assert.IsType<RemoveRolePermission>(first.SentRequests.First(static request => request is RemoveRolePermission));
+        Assert.Equal(removal, replay.SentRequests.First(static request => request is RemoveRolePermission));
+        Assert.Equal(permission.AssignmentId, removal.AssignmentId);
+        Assert.Equal(permission.Version, removal.ExpectedRevision);
+        Assert.NotEqual(Uuid.Empty, removal.CommandId);
+        var teamRemoval = Assert.IsType<RemoveTeamRole>(first.SentRequests.First(static request => request is RemoveTeamRole));
+        Assert.Equal(teamRemoval, replay.SentRequests.First(static request => request is RemoveTeamRole));
     }
 
     [Fact]
-    public async Task ShouldRetainTheCheckpointGivenAForeignPermissionRow()
+    public async Task ShouldDispatchNothingGivenAnAlreadyEmptyRole()
     {
         // Arrange
-        var scenario = new ReactorScenario().Given(new RoleDeleted(TenantId, RoleId));
-        var checkpoints = new InMemoryProjectionCheckpointStore();
-        var reactor = new RoleCleanupReactor(checkpoints, scenario.Requests,
-            new FakeRolePermissionDirectoryReader(new RolePermissionView(Uuid.CreateVersion4(), "controls.read",
-                Uuid.CreateVersion4(), 1)), new FakeRoleTeamDirectoryReader());
+        await using var provider = Build();
+        await DefineAndDeleteAsync(provider, [], RoleId);
+        var scenario = new ReactorScenario(new TenantId(TenantId.ToString())).Given(await DeletedFactAsync(provider));
 
         // Act
-        await Assert.ThrowsAsync<InvalidOperationException>(() => scenario.RunAsync(reactor));
+        await RunWithRecordingBusAsync(provider, scenario);
 
         // Assert
         Assert.Empty(scenario.SentRequests);
-        Assert.Equal(ProjectionCheckpoint.Start,
-            await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
     }
 
     [Fact]
-    public async Task ShouldBindTeamRoleRemovalToTheDiscoveredEpisodeGivenCleanupReplay()
+    public async Task ShouldIgnoreRelationshipsGivenOtherRolesAndAlreadyRemovedOnes()
     {
         // Arrange
-        var row = new RoleTeamView(RoleId, Uuid.CreateVersion4(), Uuid.CreateVersion4(), 5);
-        var scenario = new ReactorScenario().Given(new RoleDeleted(TenantId, RoleId));
-        var reactor = new RoleCleanupReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests,
-            new FakeRolePermissionDirectoryReader(), new FakeRoleTeamDirectoryReader(row));
-        await scenario.RunAsync(reactor);
+        await using var provider = Build();
+        var other = Uuid.CreateVersion4();
+        await DefineAndDeleteAsync(provider, [other], RoleId);
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, other, "controls.read");
+        await RbacTeamRoleFacts.GrantAsync(provider, TenantId, Uuid.CreateVersion4(), other);
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.write");
+        await RbacPermissionFacts.RevokeAsync(provider, TenantId, RoleId, "controls.write");
 
         // Act
-        await scenario.RunAsync(reactor);
+        await CleanupReactorHost.RunAsync(provider, TenantId, Create);
 
         // Assert
-        var first = Assert.IsType<RemoveTeamRole>(scenario.SentRequests[0]);
-        Assert.Equal(first, scenario.SentRequests[1]);
-        Assert.Equal(row.AssignmentId, first.AssignmentId);
-        Assert.Equal(row.Revision, first.ExpectedRevision);
-        Assert.NotEqual(Uuid.Empty, first.CommandId);
+        Assert.True((await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, other, "controls.read"))).IsAssigned);
+        var records = await RecordsAsync(provider, "rbac-role-permissions");
+        Assert.Single(records.Select(static record => record.Event).OfType<RolePermissionRemoved>(),
+            removed => removed.RoleId == RoleId);
     }
 
     [Fact]
-    public async Task ShouldRetainTheCheckpointGivenAForeignTeamRoleRow()
+    public async Task ShouldKeepTheNewerPermissionEpisodeGivenReassignmentAfterTheScan()
     {
         // Arrange
-        var scenario = new ReactorScenario().Given(new RoleDeleted(TenantId, RoleId));
-        var checkpoints = new InMemoryProjectionCheckpointStore();
-        var reactor = new RoleCleanupReactor(checkpoints, scenario.Requests,
-            new FakeRolePermissionDirectoryReader(), new FakeRoleTeamDirectoryReader(
-                new RoleTeamView(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1)));
+        var store = new ScanHookEventStore();
+        await using var provider = Build(store);
+        await DefineAndDeleteAsync(provider, [], RoleId);
+        await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.read");
+        var old = (await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, "controls.read")))
+            .AssignmentId;
+        store.AfterNextScan(EventStreamPattern.ForPattern(TenantId.ToString(), "rbac-role-permissions"), async () =>
+        {
+            await RbacPermissionFacts.RevokeAsync(provider, TenantId, RoleId, "controls.read");
+            await RbacPermissionFacts.GrantAsync(provider, TenantId, RoleId, "controls.read");
+        });
 
         // Act
-        await Assert.ThrowsAsync<InvalidOperationException>(() => scenario.RunAsync(reactor));
+        await CleanupReactorHost.RunAsync(provider, TenantId, Create);
 
         // Assert
-        Assert.Empty(scenario.SentRequests);
-        Assert.Equal(ProjectionCheckpoint.Start,
-            await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
+        var current = await CleanupReactorHost.ReadAsync(provider, new RolePermission(TenantId, RoleId, "controls.read"));
+        Assert.True(current.IsAssigned);
+        Assert.NotEqual(old, current.AssignmentId);
     }
 
-    sealed class FakeRolePermissionDirectoryReader(params RolePermissionView[] items) : IRolePermissionDirectoryReader
+    [Fact]
+    public async Task ShouldKeepTheNewerTeamRoleEpisodeGivenReassignmentAfterTheScan()
     {
-        public List<Uuid> QueriedRoles { get; } = [];
-
-        public ValueTask<Page<RolePermissionView>> ListAsync(
-            Uuid tenantId,
-            Uuid roleId,
-            int? limit,
-            string? cursor,
-            string? search,
-            bool descending,
-            CancellationToken ct = default) =>
-            Record(roleId, new Page<RolePermissionView>(items, null));
-
-        ValueTask<Page<RolePermissionView>> Record(Uuid roleId, Page<RolePermissionView> page)
+        // Arrange
+        var store = new ScanHookEventStore();
+        await using var provider = Build(store);
+        await DefineAndDeleteAsync(provider, [], RoleId);
+        var team = Uuid.CreateVersion4();
+        await RbacTeamRoleFacts.GrantAsync(provider, TenantId, team, RoleId);
+        var old = (await CleanupReactorHost.ReadAsync(provider, new TeamRole(TenantId, team, RoleId))).AssignmentId;
+        store.AfterNextScan(EventStreamPattern.ForPattern(TenantId.ToString(), "rbac-team-roles"), async () =>
         {
-            QueriedRoles.Add(roleId);
-            return ValueTask.FromResult(page);
-        }
+            await RbacTeamRoleFacts.RevokeAsync(provider, TenantId, team, RoleId);
+            await RbacTeamRoleFacts.GrantAsync(provider, TenantId, team, RoleId);
+        });
+
+        // Act
+        await CleanupReactorHost.RunAsync(provider, TenantId, Create);
+
+        // Assert
+        var current = await CleanupReactorHost.ReadAsync(provider, new TeamRole(TenantId, team, RoleId));
+        Assert.True(current.IsAssigned);
+        Assert.NotEqual(old, current.AssignmentId);
     }
 
-    sealed class FakeRoleTeamDirectoryReader(params RoleTeamView[] items) : IRoleTeamDirectoryReader
+    static Reactor Create(IProjectionCheckpointStore checkpoints, IRequestBus bus, IDomainEventReader events,
+        IAggregateReader reader) => new RoleCleanupReactor(checkpoints, bus, events, reader);
+
+    static ServiceProvider Build(IEventStore? store = null) => RbacManagementServices.Build(allowed: true,
+        portia => portia.AddRequestHandler<RemoveRolePermissionHandler>().AddRequestHandler<RemoveTeamRoleHandler>(),
+        store);
+
+    static async Task DefineAndDeleteAsync(IServiceProvider provider, Uuid[] otherRoles, Uuid roleId)
     {
-        public List<Uuid> QueriedRoles { get; } = [];
+        await CleanupReactorHost.SeedAsync(provider, new Role(TenantId, roleId), role => role.Define("Reviewer"));
+        foreach (var other in otherRoles)
+            await CleanupReactorHost.SeedAsync(provider, new Role(TenantId, other), role => role.Define("Other"));
+        await CleanupReactorHost.SeedAsync(provider, new Role(TenantId, roleId), role => role.Delete());
+    }
 
-        public ValueTask<Page<RoleTeamView>> ListAsync(
-            Uuid tenantId,
-            Uuid roleId,
-            int? limit,
-            string? cursor,
-            string? search,
-            bool descending,
-            CancellationToken ct = default) =>
-            Record(roleId, new Page<RoleTeamView>(items, null));
+    static async Task<RoleDeleted> DeletedFactAsync(IServiceProvider provider) =>
+        Assert.Single((await RecordsAsync(provider, "rbac-roles")).Select(static record => record.Event)
+            .OfType<RoleDeleted>());
 
-        ValueTask<Page<RoleTeamView>> Record(Uuid roleId, Page<RoleTeamView> page)
-        {
-            QueriedRoles.Add(roleId);
-            return ValueTask.FromResult(page);
-        }
+    static async Task<List<DomainEventRecord>> RecordsAsync(IServiceProvider provider, string area)
+    {
+        var records = new List<DomainEventRecord>();
+        await foreach (var record in provider.GetRequiredService<IDomainEventReader>()
+                           .ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(), area), EventCursor.Start,
+                               CancellationToken.None))
+            records.Add(record);
+        return records;
+    }
+
+    static async Task RunWithRecordingBusAsync(ServiceProvider provider, ReactorScenario scenario)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        await scenario.RunAsync(new RoleCleanupReactor(new InMemoryProjectionCheckpointStore(), scenario.Requests,
+            scope.ServiceProvider.GetRequiredService<IDomainEventReader>(),
+            scope.ServiceProvider.GetRequiredService<IAggregateReader>()));
     }
 }

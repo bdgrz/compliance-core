@@ -2928,7 +2928,7 @@ Generated from current source inventory at `b7a2bd02cc90c6734c94391399a55c0da162
   - Boundary test: Nothing domain-atomic breaks if this disappears: TenantRegistered already records the owner; relation/discovery is projection.
   - Proof/authorization test: Created by reaction from TenantRegistered, no other aggregate reads inside.
   - Growth test: Single flag, at most one duplicate relationship event per pair. Natural per-pair event size bounded but that does not justify an aggregate.
-- **Existing test references:** [TenantOwnerTests.cs](../../../../test/Compliance.Tests/Features/Tenants/TenantOwnerTests.cs)
+- **Existing test references:** none; the aggregate and its tests were deleted with the cutover
 
 ## 91. TenantSlug
 

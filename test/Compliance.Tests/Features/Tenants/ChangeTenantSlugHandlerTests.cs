@@ -1,6 +1,10 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -94,6 +98,92 @@ public sealed class ChangeTenantSlugHandlerTests
         Assert.Empty(requests);
     }
 
+    [Fact]
+    public async Task ShouldReplayWithoutAppendingGivenAnExactRetryAfterTheChangeCompleted()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var commandId = Uuid.CreateVersion4();
+        var first = await scenario.Handler.HandleAsync(scenario.Context("acme-next", commandId), CancellationToken.None);
+        var tenant = await scenario.Reader.HydrateAsync(new Tenant(scenario.TenantId), CancellationToken.None);
+        Assert.True(tenant.ConfirmSlug("acme-next").IsSuccess);
+        await scenario.Writer.SaveAsync(tenant, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+        var before = (await scenario.TenantEventsAsync()).Count;
+
+        // Act
+        var retry = await scenario.Handler.HandleAsync(scenario.Context("acme-next", commandId), CancellationToken.None);
+        var after = (await scenario.TenantEventsAsync()).Count;
+
+        // Assert
+        Assert.True(first.IsSuccess);
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(before, after);
+    }
+
+    [Fact]
+    public async Task ShouldConflictGivenTheSameCommandIdWithAnotherSlug()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var commandId = Uuid.CreateVersion4();
+        Assert.True((await scenario.Handler.HandleAsync(scenario.Context("acme-next", commandId),
+            CancellationToken.None)).IsSuccess);
+        var before = (await scenario.TenantEventsAsync()).Count;
+
+        // Act
+        var changed = await scenario.Handler.HandleAsync(scenario.Context("acme-other", commandId),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Equal(before, (await scenario.TenantEventsAsync()).Count);
+    }
+
+    [Fact]
+    public async Task ShouldConflictGivenAStaleExpectedRevision()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+
+        // Act
+        var result = await scenario.Handler.HandleAsync(scenario.Context("acme-next", expectedRevision: 1),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Empty((await scenario.TenantEventsAsync()).Select(static record => record.Event)
+            .OfType<TenantSlugChangeRequested>());
+    }
+
+    [Fact]
+    public async Task ShouldAppendNothingGivenTheCurrentSlug()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+
+        // Act
+        var result = await scenario.Handler.HandleAsync(scenario.Context("acme"), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Empty((await scenario.TenantEventsAsync()).Select(static record => record.Event)
+            .OfType<TenantSlugChangeRequested>());
+    }
+
+    [Fact]
+    public async Task ShouldRejectNegativeRevisionGivenANonSystemActor()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+
+        // Act
+        var result = await scenario.Handler.HandleAsync(scenario.Context("acme-next", expectedRevision: -1),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
+    }
+
     sealed class Scenario : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -115,14 +205,17 @@ public sealed class ChangeTenantSlugHandlerTests
         public IAggregateReader Reader => _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         public IAggregateWriter Writer => _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         public IAggregateExecutor Executor => _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
-        public ChangeTenantSlugHandler Handler => new(Reader, Executor,
-            new FixedOperatorAccess(), new FixedTimeProvider(Now));
+        public IImmutableContentStore Content => _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        public ChangeTenantSlugHandler Handler => new(new NativeOperationExecutor(Reader, Executor, Content), Reader,
+            Content, new FixedOperatorAccess(), new FixedTimeProvider(Now));
 
         public static async Task<Scenario> CreateAsync()
         {
             var events = new InMemoryEventStore();
             var services = new ServiceCollection();
             services.AddSingleton<IEventStore>(events);
+            services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+                new PersistenceKvClient(new InMemoryKvClient())));
             services.AddPortia();
             var provider = services.BuildServiceProvider(
                 new ServiceProviderOptions { ValidateScopes = true });
@@ -137,8 +230,9 @@ public sealed class ChangeTenantSlugHandlerTests
             return scenario;
         }
 
-        public FixedRequestContext Context(string slug) =>
-            new(new ChangeTenantSlug(TenantId, slug), Actor(UserId), Uuid.CreateVersion4());
+        public FixedRequestContext Context(string slug, Uuid commandId = default, long expectedRevision = 2) =>
+            new(new ChangeTenantSlug(commandId == Uuid.Empty ? Uuid.CreateVersion4() : commandId, TenantId, slug,
+                expectedRevision), Actor(UserId), Uuid.CreateVersion4());
 
         public async Task<List<DomainEventRecord>> TenantEventsAsync()
         {

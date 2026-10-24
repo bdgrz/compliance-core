@@ -1,4 +1,8 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +22,7 @@ public sealed class TenantLifecycleReactionRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(actor)
             // Act
-            .When(new RegisterTenantSlug(Uuid.CreateVersion4(), "acme"))
+            .When(new RegisterTenantSlug(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "acme"))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();
@@ -33,7 +37,7 @@ public sealed class TenantLifecycleReactionRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RequestActor.System)
             // Act
-            .When(new RegisterTenantSlug(Uuid.CreateVersion4(), "acme"))
+            .When(new RegisterTenantSlug(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "acme"))
             // Assert
             .ExpectAuthorized()
             .ExpectHandled()
@@ -44,6 +48,10 @@ public sealed class TenantLifecycleReactionRequestScenarioTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+            new PersistenceKvClient(new InMemoryKvClient())));
+        services.AddScoped<NativeOperationExecutor>();
         services.AddPortia()
             .AddRequestHandler<RegisterTenantSlugHandler>()
             .AddRequestAuthorizer<TenantLifecycleReactionAuthorizer>();

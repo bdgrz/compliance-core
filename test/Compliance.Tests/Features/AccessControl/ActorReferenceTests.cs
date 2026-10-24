@@ -1,4 +1,8 @@
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.Configuration;
@@ -31,7 +35,9 @@ public sealed class ActorReferenceTests
             "Administrators"), actor);
 
         // Act
-        var result = await new DefineTeamHandler(fixture.Repository)
+        var content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+        var result = await new DefineTeamHandler(
+                new NativeOperationExecutor(fixture.Repository, fixture.Repository, content), content, TimeProvider.System)
             .HandleAsync(context, CancellationToken.None);
         DomainEventMetadata? metadata = null;
         await foreach (var record in fixture.Store.ReadAsync(

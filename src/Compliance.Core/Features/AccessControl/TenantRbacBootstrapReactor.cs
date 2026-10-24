@@ -63,6 +63,15 @@ public sealed partial class TenantRbacBootstrapReactor(
                 if (!assigned.IsSuccess)
                     throw new ReactionCommandFailedException(assigned.Error);
             }
+            else if (command is DefineRole or DefineTeam)
+            {
+                // A replayed bootstrap meets built-ins that are already defined. A definition the owner refuses
+                // as conflicting content (a catalog name migrated by RenameRole since) must not block the
+                // checkpoint: the accepted definition stays authoritative.
+                var defined = await bus.SendAsync((IRequest)command, context, ct).ConfigureAwait(false);
+                if (!defined.IsSuccess && defined.Error.Kind != RequestErrorKind.Conflict)
+                    throw new ReactionCommandFailedException(defined.Error);
+            }
             else
             {
                 await bus.SendReactionAsync((IRequest)command, context, ct);

@@ -102,8 +102,8 @@ public sealed class InternalRbacTests
         var memberId = RbacIds.Member(TenantId, UserId);
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(TenantId, memberId, UserId));
-        state.Apply(new TeamDefined(TenantId, TeamId, "Reviewers"));
-        state.Apply(new RoleDefined(TenantId, RoleId, "Control reviewer"));
+        state.Apply(RbacFacts.TeamDefinedFact(TenantId, TeamId, "Reviewers"));
+        state.Apply(RbacFacts.RoleDefinedFact(TenantId, RoleId, "Control reviewer"));
         state.Apply(TeamMemberFacts.Assigned(TenantId, TeamId, memberId));
         state.Apply(RbacTeamRoleFacts.Assigned(TenantId, TeamId, RoleId));
 
@@ -111,7 +111,7 @@ public sealed class InternalRbacTests
         Assert.Contains(new PermissionGrant(memberId, "controls.read"), state.Materialize());
 
         // Act
-        state.Apply(new RoleDeleted(TenantId, RoleId));
+        state.Apply(RbacFacts.RoleDeletedFact(TenantId, RoleId));
 
         // Assert
 
@@ -125,8 +125,8 @@ public sealed class InternalRbacTests
         var memberId = RbacIds.Member(TenantId, UserId);
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(TenantId, memberId, UserId));
-        state.Apply(new TeamDefined(TenantId, TeamId, "Reviewers"));
-        state.Apply(new RoleDefined(TenantId, RoleId, "Control reviewer"));
+        state.Apply(RbacFacts.TeamDefinedFact(TenantId, TeamId, "Reviewers"));
+        state.Apply(RbacFacts.RoleDefinedFact(TenantId, RoleId, "Control reviewer"));
         state.Apply(TeamMemberFacts.Assigned(TenantId, TeamId, memberId));
         state.Apply(RbacTeamRoleFacts.Assigned(TenantId, TeamId, RoleId));
 

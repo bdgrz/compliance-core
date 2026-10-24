@@ -53,7 +53,7 @@ public sealed class FitzTenantDirectoryReaderTests
         {
             await repository.ApplyAsync(new TenantRegistered(tenantId, creatorId, "Acme", "acme",
                 "Acme LLC", CreatorIsAdministrator: true, ActivationRequired: true));
-            await repository.ApplyAsync(new TenantSlugConfirmed(tenantId, "acme"));
+            await repository.ApplyAsync(TenantFacts.Confirmed(tenantId, "acme"));
             await repository.ApplyAsync(new TenantActivated(tenantId, creatorId));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -80,7 +80,7 @@ public sealed class FitzTenantDirectoryReaderTests
         await using (var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
             await repository.ApplyAsync(new TenantRegistered(tenantId, operatorId, "Acme", "acme"));
-            await repository.ApplyAsync(new TenantSlugConfirmed(tenantId, "acme"));
+            await repository.ApplyAsync(TenantFacts.Confirmed(tenantId, "acme"));
             await repository.ApplyAsync(new TenantSuspended(tenantId, operatorId));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -114,7 +114,7 @@ public sealed class FitzTenantDirectoryReaderTests
         {
             await repository.ApplyAsync(new TenantRegistered(tenantId, creatorId,
                 "Acme", "acme", CreatorIsAdministrator: true, ActivationRequired: true));
-            await repository.ApplyAsync(new TenantSlugConfirmed(tenantId, "acme"));
+            await repository.ApplyAsync(TenantFacts.Confirmed(tenantId, "acme"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -147,12 +147,12 @@ public sealed class FitzTenantDirectoryReaderTests
             await repository.ApplyAsync(new TenantRegistered(provisioningId, operatorId,
                 "Provisioning", "provisioning", FirstAdministratorEmail: "admin@example.com"));
             await repository.ApplyAsync(new TenantRegistered(activeId, operatorId, "Active", "active"));
-            await repository.ApplyAsync(new TenantSlugConfirmed(activeId, "active"));
+            await repository.ApplyAsync(TenantFacts.Confirmed(activeId, "active"));
             await repository.ApplyAsync(new TenantRegistered(suspendedId, operatorId, "Suspended", "suspended"));
-            await repository.ApplyAsync(new TenantSlugConfirmed(suspendedId, "suspended"));
+            await repository.ApplyAsync(TenantFacts.Confirmed(suspendedId, "suspended"));
             await repository.ApplyAsync(new TenantSuspended(suspendedId, operatorId));
             await repository.ApplyAsync(new TenantRegistered(rejectedId, operatorId, "Rejected", "rejected"));
-            await repository.ApplyAsync(new TenantSlugRejected(rejectedId, "rejected"));
+            await repository.ApplyAsync(TenantFacts.Rejected(rejectedId, "rejected"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 

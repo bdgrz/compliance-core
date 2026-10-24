@@ -1,15 +1,32 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
-public sealed class ConfirmTenantSlugSurrenderHandler(IAggregateExecutor executor)
-    : IRequestHandler<ConfirmTenantSlugSurrender>
+/// <summary>
+///     Answers the tenant with the slug release the slug owner confirmed.
+///     The answer is a native operation bound to its command id. An exact replay returns the original acceptance and an
+///     answer for a tenant that already moved on is a terminal no-op, so neither can block the reaction checkpoint.
+/// </summary>
+public sealed class ConfirmTenantSlugSurrenderHandler(NativeOperationExecutor operations, IImmutableContentStore content,
+    TimeProvider clock) : IRequestHandler<ConfirmTenantSlugSurrender>
 {
-    public ValueTask<Result> HandleAsync(
-        IRequestContext<ConfirmTenantSlugSurrender> context,
-        CancellationToken ct) =>
-        executor.ExecuteAsync(
-            new Tenant(context.Request.TenantId),
-            tenant => AggregateOutcome.CommitOnSuccess(tenant.ConfirmSlugSurrender(context.Request.Slug)),
-            context, ct);
+    const string CommandKind = "ConfirmTenantSlugSurrender";
+    const string CurrentEpisode = "current";
+
+    public ValueTask<Result> HandleAsync(IRequestContext<ConfirmTenantSlugSurrender> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        if (request.TenantId == Uuid.Empty)
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A tenant is required.")));
+        return UnitOperations.RunAsync(operations, content, clock, context, RegisterMemberHandler.ActorOf(context.Actor),
+            request.CommandId, CommandKind, CurrentEpisode, null, selected => new Tenant(request.TenantId, selected),
+            tenant => tenant.Acceptance, tenant => tenant.PrepareConfirmSlugSurrender(request.Slug),
+            (Tenant tenant, OperationProvenance operation, ImmutableContentRef response) => tenant.ConfirmSlugSurrender(operation, response, request.Slug),
+            Tenant.StaleSlugOutcome);
+    }
 }

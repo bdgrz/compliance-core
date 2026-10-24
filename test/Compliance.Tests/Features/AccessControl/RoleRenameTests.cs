@@ -47,22 +47,22 @@ public sealed class RoleRenameTests
     }
 
     [Fact]
-    public void ShouldPreserveCurrentNameGivenIdempotentRoleDefinition()
+    public void ShouldRefuseRedefinitionGivenAMigratedRoleName()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var role = new Role(tenantId, roleId);
         var history = new AggregateScenario<Role>(role)
-            .Given(DomainEventSeed.Attach(new RoleDefined(tenantId, roleId, "Compliance Manager"), roleId, 1))
-            .Given(DomainEventSeed.Attach(new RoleRenamed(tenantId, roleId,
+            .Given(DomainEventSeed.Attach(RbacFacts.RoleDefinedFact(tenantId, roleId, "Compliance Manager"), roleId, 1))
+            .Given(DomainEventSeed.Attach(RbacFacts.RoleRenamedFact(tenantId, roleId,
                 BuiltInRbac.ComplianceManagementRoleName), roleId, 2));
 
-        // Act: applying an idempotent definition after migration leaves the accepted name intact.
+        // Act: a new definition after migration is refused instead of silently ignoring changed content.
         var result = role.Define("Compliance Manager");
 
         // Assert: the aggregate remains unchanged and does not reintroduce the legacy name.
-        Assert.True(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Empty(history.PendingEvents);
     }
 }
