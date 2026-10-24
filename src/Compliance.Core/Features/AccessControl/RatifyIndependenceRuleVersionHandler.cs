@@ -10,6 +10,9 @@ sealed class RatifyIndependenceRuleVersionHandler(IAggregateExecutor executor,
         IRequestContext<RatifyIndependenceRuleVersion> context, CancellationToken ct)
     {
         var request = context.Request;
+        if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
+            return Refuse(RequestErrorKind.Validation,
+                "Ratification requires its command identity and exact authored catalog revision.");
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
             throw new InvalidOperationException("IndependenceRuleRatificationAuthorizer must reject this actor.");
         var currentDuty = await duties.ReadCurrentAsync(userId, FirmProfessionalDuty.RuleRatifier, null, ct)
@@ -17,6 +20,15 @@ sealed class RatifyIndependenceRuleVersionHandler(IAggregateExecutor executor,
         if (currentDuty is null)
             return Refuse(RequestErrorKind.Forbidden,
                 "The actor no longer has a current rule-ratifier designation.");
+
+        var actor = ActorReference.ForFirmStaff(userId, UserIdentityClaims.BdgrzDisplay(context.Actor, userId));
+        var ratifications = await reader.HydrateAsync(new IndependenceRuleRatificationCatalog(), ct)
+            .ConfigureAwait(false);
+        if (ratifications.Replay(request, actor) is { } original)
+            return original;
+        if (request.ExpectedRevision != request.ExpectedRatificationSequence)
+            return Refuse(RequestErrorKind.Validation,
+                "A new ratification must author the current owner revision and ratification sequence consistently.");
 
         var rules = await reader.HydrateAsync(new IndependenceRuleCatalog(), ct).ConfigureAwait(false);
         if (rules.Sequence != request.ExpectedRuleCatalogSequence || rules.Current is not { } version ||
@@ -27,9 +39,6 @@ sealed class RatifyIndependenceRuleVersionHandler(IAggregateExecutor executor,
 
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out userId))
             throw new InvalidOperationException("IndependenceRuleRatificationAuthorizer must reject this actor.");
-        var actor = ActorReference.ForFirmStaff(userId, UserIdentityClaims.BdgrzDisplay(context.Actor, userId));
-        var ratifications = await reader.HydrateAsync(new IndependenceRuleRatificationCatalog(), ct)
-            .ConfigureAwait(false);
         if (ratifications.Sequence != request.ExpectedRatificationSequence ||
             request.RuleVersion <= (ratifications.Active?.RuleVersion ?? 0))
             return Refuse(RequestErrorKind.Conflict,
@@ -44,7 +53,7 @@ sealed class RatifyIndependenceRuleVersionHandler(IAggregateExecutor executor,
             return Refuse(RequestErrorKind.Conflict,
                 "The rule-ratifier authority changed during this request; reload before ratifying.", true);
         return await executor.ExecuteAsync(new IndependenceRuleRatificationCatalog(), catalog =>
-            AggregateOutcome.CommitOnSuccess(catalog.Ratify(context.RequestId, request.RatificationId,
+            AggregateOutcome.CommitOnSuccess(catalog.Ratify(request.CommandId, request.RatificationId,
                 request.RuleVersion, request.ExpectedRuleCatalogSequence, request.ExpectedRatificationSequence,
                 request.ExpectedContentDigest, request.SourceReference, confirmedDuty.Staff,
                 confirmedDuty.Designation, actor, clock.GetUtcNow())), context, ct).ConfigureAwait(false);

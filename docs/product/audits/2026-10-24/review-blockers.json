@@ -64,7 +64,10 @@
     "contribution-integration-jev.json",
     "methodology-history-file-reviews.json",
     "methodology-history-file-triage.json",
-    "methodology-history-integration-jev.json"
+    "methodology-history-integration-jev.json",
+    "foundation-original-binding-file-reviews.json",
+    "foundation-original-binding-file-triage.json",
+    "foundation-original-binding-integration-jev.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -155,16 +158,32 @@
     {
       "id": "methodology-template-history-and-published-reads",
       "slice": "S34",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "focusedGreen": "79passed/0failed including51owningHTTP tests",
       "fullUnitGreen": "5546passed/0failed",
-      "jev": "32currentfiles;1signaltriaged;directintegrationmerge.61"
+      "jev": "32currentfiles;1signaltriaged;directintegrationmerge.61",
+      "pullRequest": 1097,
+      "mergeCommit": "fca824c12c2d36092fa3427f3ac15f285a2dd92e"
     },
     {
       "id": "application-preview-http-fixture-projection",
-      "status": "repair_prepared",
+      "status": "validated_awaiting_merge",
       "externalDependency": false,
-      "evidence": "13broaderWebIntegration failures: unchanged fixture omits incoming-relationship checkpoint. Test-only real-projection seed patch prepared; do not weaken production source fence."
+      "evidence": "Real incoming-relationship projection/checkpoint is seeded. Entire HTTP/MCP field presence fixture passes within1810focused; no production fence changed."
+    },
+    {
+      "id": "foundation-original-bindings",
+      "status": "validated_awaiting_merge",
+      "behavioralRed": "7failed/0passed;5additional selected-receipt regressions repaired",
+      "focusedGreen": "1810passed/0failed",
+      "fullUnitGreen": "5568passed/0failed",
+      "jev": "36currentfiles;7signalstriaged;directintegrationmerge.79"
+    },
+    {
+      "id": "risk-and-ratification-compact-authority",
+      "status": "queued_unblocked",
+      "externalDependency": false,
+      "evidence": "Binding defects repaired, but RiskDraft raw initial content/event frame limit, RiskEvaluation history collections and ratification catalog full history/decision collections still require compact native authority and external verified history."
     }
   ],
   "resolved": [

@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Risks;
 ///     (risk, risk_id, residual_assessment_id, expected_revision, approve).
 /// </summary>
 [Discriminator("bdgrz.risk.accept", 1)]
-public sealed record AcceptRisk(Uuid TenantId, Uuid ProgramId, Uuid RiskId,
+public sealed record AcceptRisk(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid RiskId,
     long ExpectedRevision, Uuid ResidualAssessmentId, string ApproverAuthority,
     DateTimeOffset ExpiresAt, string Rationale, Uuid? SeparationOfDutiesWaiverId = null)
     : IRequest<RiskAcceptanceView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;

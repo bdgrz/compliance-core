@@ -30,8 +30,8 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         var staffRegistered = await FirmStaffFacts.RegisterThroughProcessAsync(provider, Actor,
             new RegisterFirmStaff(Staff, User, "attest", "Synthetic staff source", 0));
         Assert.True(staffRegistered.IsSuccess, staffRegistered.Error?.Message);
-        var noDesignation = await bus.DispatchAsync(new RatifyIndependenceRuleVersion(Uuid.CreateVersion4(),
-            1, 1, 0, new string('a', 64), "Synthetic ratification source"), http, CancellationToken.None);
+        var noDesignation = await bus.DispatchAsync(new RatifyIndependenceRuleVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            1, 1, 0, new string('a', 64), "Synthetic ratification source", 0), http, CancellationToken.None);
 
         // Act
         var designated = await bus.DispatchAsync(new RecordFirmProfessionalDutyDesignation(
@@ -42,8 +42,8 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
             [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
             "Synthetic authored rules");
         var draft = await bus.SendAsync(new ReviseIndependenceRules(0, rules), Actor);
-        var ratification = await bus.DispatchAsync(new RatifyIndependenceRuleVersion(Uuid.CreateVersion4(),
-            1, 1, 0, IndependenceSourceDigest.RuleContent(rules), "Synthetic ratification evidence"),
+        var ratification = await bus.DispatchAsync(new RatifyIndependenceRuleVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            1, 1, 0, IndependenceSourceDigest.RuleContent(rules), "Synthetic ratification evidence", 0),
             http, CancellationToken.None);
         var versions = await bus.SendAsync(new GetIndependenceRuleVersions(), Actor);
         var duties = await bus.DispatchAsync(new GetFirmProfessionalDutyCatalog(), http, CancellationToken.None);
@@ -296,6 +296,42 @@ public sealed class ProfessionalDutyGovernanceCompositionTests
         Assert.Equal(User, preservedRules.Ratification?.UserId);
         Assert.Equal(Staff, preservedRules.Ratification?.StaffMemberId);
         Assert.Equal(staff.Revision, preservedRules.Ratification?.DirectoryStaffRevision);
+    }
+
+    [Fact]
+    public async Task ShouldReturnOriginalRatificationGivenImmediateExactHandlerRetry()
+    {
+        // Arrange
+        var at = DateTimeOffset.FromUnixTimeSeconds(DateTimeOffset.UtcNow.ToUnixTimeSeconds()).AddMinutes(-1);
+        await using var provider = Compose();
+        await using var scope = provider.CreateAsyncScope();
+        var seeded = await SeedRatifiedRulesAsync(scope.ServiceProvider, at, at.AddMinutes(59));
+        var rules = new IndependenceRuleContent(12,
+            [new IndependenceServiceRuleContent("readiness", "conditionally_compatible", "impairing")],
+            "Second version for retry proof");
+        Assert.True((await seeded.Executor.ExecuteAsync(new IndependenceRuleCatalog(), current =>
+            AggregateOutcome.CommitOnSuccess(current.ReviseRules(Uuid.CreateVersion4(), 1, rules,
+                seeded.OperatorActor, at)), new RequestDispatchContext(RequestActor.System), CancellationToken.None)).IsSuccess);
+        var request = new RatifyIndependenceRuleVersion(Uuid.CreateVersion4(), Uuid.CreateVersion4(), 2, 2, 1,
+            IndependenceSourceDigest.RuleContent(rules), "Original retry decision", 1);
+        var context = new Cntryl.Portia.RequestContext<RatifyIndependenceRuleVersion>(request,
+            new RequestDispatchContext(Actor, new HttpInvocation("PUT", "/synthetic/ratify", null, "ratify-retry")));
+        var handler = ActivatorUtilities.CreateInstance<RatifyIndependenceRuleVersionHandler>(scope.ServiceProvider);
+        var first = await handler.HandleAsync(context, CancellationToken.None);
+        Assert.True(first.IsSuccess, first.Error?.Message);
+
+        // Act
+        var retry = await handler.HandleAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(first.Value, retry.Value);
+        var changed = await handler.HandleAsync(new Cntryl.Portia.RequestContext<RatifyIndependenceRuleVersion>(
+            request with { ExpectedRevision = request.ExpectedRevision + 1 }, context), CancellationToken.None);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        var current = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new IndependenceRuleRatificationCatalog());
+        Assert.Equal(2, current.Sequence);
     }
 
     static async Task<SeededRuleSource> SeedRatifiedRulesAsync(IServiceProvider services, DateTimeOffset at,

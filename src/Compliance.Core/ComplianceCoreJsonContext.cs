@@ -2064,6 +2064,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(TenantReactivated))]
 [JsonSerializable(typeof(TenantOffboardingStarted))]
 [JsonSerializable(typeof(TenantActivated))]
+[JsonSerializable(typeof(TenantActivatedV2))]
 [JsonSerializable(typeof(ActivateTenant))]
 [JsonSerializable(typeof(InviteTenantMember))]
 [JsonSerializable(typeof(InviteOrganizationMember))]

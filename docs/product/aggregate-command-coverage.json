@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "b020548de4205c86975c2ac928643cd1a4ab1cbf",
+  "sourceCommit": "fca824c12c2d36092fa3427f3ac15f285a2dd92e",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 507,
-    "factsWithReducer": 484,
-    "factsWithAggregateEmitter": 482,
+    "domainEventContracts": 508,
+    "factsWithReducer": 485,
+    "factsWithAggregateEmitter": 483,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 21,
     "legacyReducerOnlyFacts": 2,
@@ -26,11 +26,11 @@
     "applicationMcpAdapterRequests": 2,
     "registeredCoreHandlerRegistrations": 728,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 38,
+    "unwiredAggregateProducerOperations": 39,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 12,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 25
+      "no_registered_request_route": 26
     },
     "factReplayGuardRows": 0
   },
@@ -7832,6 +7832,22 @@
       "note": ""
     },
     {
+      "fact": "TenantActivatedV2",
+      "contract": "src/Compliance.Common/Features/Tenants/TenantActivatedV2.cs",
+      "reducers": [
+        {
+          "aggregate": "Tenant",
+          "source": "src/Compliance.Core/Features/Tenants/Tenant.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Tenants/Tenant.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "TenantIdentityProviderConfigured",
       "contract": "src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderConfigured.cs",
       "reducers": [
@@ -11471,9 +11487,9 @@
         "test/Compliance.Tests/Features/Risks/FitzRiskDraftHistoryDirectoryV1Tests.cs",
         "test/Compliance.Tests/Features/Risks/RiskDraftActorProjectionTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskDraftActorSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskDraftTests.cs",
-        "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskDraftCreationIdentityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftRevisionIdentityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11495,11 +11511,11 @@
         "test/Compliance.Tests/Features/Examinations/RiskTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Risks/AttestRiskManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Risks/FitzRiskEvaluationDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskAcceptanceIdentityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskAssessmentIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskEvaluationTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentIdentityTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11535,12 +11551,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/RiskTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Risks/FitzRiskEvaluationDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskAcceptanceIdentityTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskAssessmentIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskEvaluationTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskMethodTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
-        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentIdentityTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11998,6 +12014,7 @@
       "source": "src/Compliance.Core/Features/Tenants/Tenant.cs",
       "appliedFacts": [
         "TenantActivated",
+        "TenantActivatedV2",
         "TenantOffboardingStarted",
         "TenantReactivated",
         "TenantRegistered",
@@ -12733,8 +12750,7 @@
       "directAggregateReferences": [
         "RiskDraft",
         "RiskEvaluation",
-        "RiskMethod",
-        "SeparationOfDutiesWaiver"
+        "RiskMethod"
       ],
       "aggregateTargets": [
         "RiskEvaluation"
@@ -12743,6 +12759,7 @@
         "RiskGovernanceReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskAcceptanceIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
         "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkCompositionTests.cs"
@@ -12945,7 +12962,7 @@
     {
       "request": "ActivateTenant",
       "contract": "src/Compliance.Common/Features/Tenants/ActivateTenant.cs",
-      "interfaces": "IRequest",
+      "interfaces": "IRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -12967,6 +12984,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ActivationReactionProbe.cs",
         "test/Compliance.Tests/Features/AccessControl/TenantRbacBootstrapReactorTests.cs",
+        "test/Compliance.Tests/Features/Tenants/ActivateTenantIdentityTests.cs",
         "test/Compliance.Tests/Features/Tenants/ActivateTenantReadinessTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantInvitationReactorTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantSelfServiceActivationReactorTests.cs"
@@ -15372,7 +15390,9 @@
         "RiskEvaluation"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskTreatmentIdentityTests.cs"
+      ],
       "note": ""
     },
     {
@@ -17011,7 +17031,9 @@
         "RiskDraft"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskDraftCreationIdentityTests.cs"
+      ],
       "note": ""
     },
     {
@@ -26821,6 +26843,7 @@
         "RiskGovernanceReader"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskAssessmentIdentityTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs"
       ],
       "note": ""
@@ -29630,7 +29653,9 @@
         "RiskDraft"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/RiskDraftRevisionIdentityTests.cs"
+      ],
       "note": ""
     },
     {
@@ -31548,6 +31573,17 @@
       "ownerIssue": 276,
       "callerSources": [],
       "methodArgumentCount": 9,
+      "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
+    },
+    {
+      "fact": "TenantActivated",
+      "aggregate": "Tenant",
+      "method": "Activate",
+      "methodArgumentCount": 2,
+      "source": "src/Compliance.Core/Features/Tenants/Tenant.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {

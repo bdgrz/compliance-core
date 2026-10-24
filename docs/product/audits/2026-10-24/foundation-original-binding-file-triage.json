@@ -1,0 +1,91 @@
+{
+  "reviewed": 36,
+  "blockedReviews": 0,
+  "signalsTriaged": 7,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs",
+      "sha256": "6fea05e4b926fb3e836395f83b35618483183e2d34cc44937e62000ec2dad805",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.35
+      },
+      "classification": "original_receipt_repair_verified_remaining_history_queued",
+      "evidence": "Current professional authority precedes replay; immutable original request/actor and owner revision resolve before mutable draft/sequence. Existing signed duty and ratification tests pass. The pre-existing ratification history/decision collections remain separate unblocked compaction work, not declared completed by this patch."
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessControl/RatifyIndependenceRuleVersionHandler.cs",
+      "sha256": "1bc9cb14912d91a8c9cb9f05256aa6d6858d735ad2c4aabcf6030ffe7825993f",
+      "signals": {
+        "authority_gap": 0.41,
+        "invariant_gap": 0.62,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.32
+      },
+      "classification": "scoped_repair_verified",
+      "evidence": "Current signed professional designation is checked before replay. New decisions still recheck exact current draft digest, sequence and duty identity/revision. Immediate retry/changed-original-revision regressions and authority expiry/revocation tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Evidence/EvidenceSupport.cs",
+      "sha256": "8f81a6fab0e835d68ff9ed2aecc500384113aa58d8ea9e60c631283ae2cfbdfb",
+      "signals": {
+        "authority_gap": 0.66,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.47
+      },
+      "classification": "original_assertion_binding_verified",
+      "evidence": "One immutable assertion now uses explicit support CommandId, initial owner revision and full original request digest/actor. Exact original view is frozen on its single fact; changed actor/intent/revision conflicts. Existing scope/attribution/source/period tests remain."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Evidence/LinkEvidenceSupportHandler.cs",
+      "sha256": "65950500e19d057417d6c153535c77dc51c4f1aa901c51cc0ce1a81b6c8f7019",
+      "signals": {
+        "authority_gap": 0.62,
+        "invariant_gap": 0.6,
+        "recovery_gap": 0.69,
+        "incomplete_path": 0.29
+      },
+      "classification": "current_disclosure_and_original_replay_verified",
+      "evidence": "Personal HTTP and current artifact disclosure authority remain before accepted replay; mutable availability/target selection moves after receipt. Actual handler regression advances target after original acceptance and now returns original support. Existing exact-source checks stay for fresh writes; cross-owner source-use qualification remains separately tracked."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Risks/RiskDraft.cs",
+      "sha256": "5252fb3e8dd87a4a35933184f6bc2f6fee910fab1d040f1f6a48b13a5c7e459b",
+      "signals": {
+        "authority_gap": 0.72,
+        "invariant_gap": 0.65,
+        "recovery_gap": 0.8,
+        "incomplete_path": 0.5
+      },
+      "classification": "binding_repair_verified_remaining_content_cutover_queued",
+      "evidence": "Authored RiskId must equal existing normalized identifier-derived identity. Original creation and selected revision bind full request and actor; changed actor conflicts and historical selected retry retains original revision. Existing raw content/frame cap and initial-body storage remain separate unblocked native content migration work."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Risks/RiskEvaluation.cs",
+      "sha256": "2a13ebbcd650ddc9bfeb81bd49d87ba90a0257a57892ffd84d3670e01efe1a47",
+      "signals": {
+        "authority_gap": 0.65,
+        "invariant_gap": 0.63,
+        "recovery_gap": 0.74,
+        "incomplete_path": 0.49
+      },
+      "classification": "binding_and_immutable_waiver_repair_verified_remaining_history_queued",
+      "evidence": "Full original assessment/treatment/acceptance request, actor and original revision are retained. Exact same-ID cross-kind reuse conflicts; selected-fact wrong-kind checks now only apply to incoming selected ID, preserving a later distinct valid assessment (5regressions). Live waiver owner replaced by exact immutable scope/version/revision/time proof. Existing assessment/acceptance histories remain separate unblocked compact-authority work."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Tenants/ActivateTenantHandler.cs",
+      "sha256": "365a76c7f068bedb9ca15d54938532f4e56496ef6ffcb1ce5396a1bc9edb43ce",
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.78,
+        "recovery_gap": 0.42,
+        "incomplete_path": 0.48
+      },
+      "classification": "native_activation_readiness_verified",
+      "evidence": "Trusted system-only invocation. Native exact acceptance binds original administrator/email before mutable readiness; fresh activation still checks creator/invited administrator, client-personnel affiliation, current membership episode, admin team and all three permissions. Existing activation/readiness/late receiver no-op tests and changed-bootstrap same-ID regression pass. No personal or public bootstrap route enabled."
+    }
+  ]
+}

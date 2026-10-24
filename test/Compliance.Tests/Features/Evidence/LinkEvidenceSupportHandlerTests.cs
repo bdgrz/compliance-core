@@ -159,6 +159,33 @@ public sealed class LinkEvidenceSupportHandlerTests
         Assert.Equal(0, support.Revision);
     }
 
+    [Fact]
+    public async Task ShouldReturnOriginalSupportGivenAcceptedRetryAfterTargetRevisionAdvances()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var artifact = await fixture.SeedArtifactAsync(EvidenceInspectionOutcome.Clean);
+        var controlId = await fixture.SeedControlAsync();
+        var request = fixture.Request(artifact, controlId, 1);
+        var first = await fixture.Handler().HandleAsync(fixture.Context(request), CancellationToken.None);
+        Assert.True(first.IsSuccess, first.Error?.Message);
+        var control = await fixture.Reader.HydrateAsync(new ControlDraft(fixture.TenantId, controlId));
+        Assert.Null(control.Revise(fixture.ProgramId, 1,
+            new("Updated review", "New owner instruction", "Review access", "Quarterly review", ["Approval record"]),
+            RbacIds.Member(fixture.TenantId, fixture.UserId), "Evidence lead", Now));
+        await fixture.Writer.SaveAsync(control, fixture.Context(request));
+
+        // Act
+        var result = await fixture.Handler().HandleAsync(fixture.Context(request), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(first.Value, result.Value);
+        var owner = await fixture.Reader.HydrateAsync(new EvidenceSupport(fixture.TenantId,
+            fixture.ProgramId, EvidenceSupport.IdFor(request)));
+        Assert.Equal(1UL, owner.CommittedStreamPosition);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -192,12 +219,12 @@ public sealed class LinkEvidenceSupportHandlerTests
 
         public LinkEvidenceSupportHandler Handler() => new(Access,
             new EvidenceArtifactMetadataRead(Reader, Events), new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events), EmptyOperations.Evaluations(Reader, Events)),
-            _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), TimeProvider.System);
+            _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), TimeProvider.System, Reader);
 
         public LinkEvidenceSupport Request(Uuid artifactId, Uuid controlId, long revision) =>
-            new(TenantId, ProgramId, artifactId, "control", controlId, revision,
+            new(Uuid.CreateVersion4(), TenantId, ProgramId, artifactId, "control", controlId, revision,
                 new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), "Design review",
-                "The artifact demonstrates the approved control design.");
+                "The artifact demonstrates the approved control design.", 0);
 
         public Cntryl.Portia.RequestContext<LinkEvidenceSupport> Context(
             LinkEvidenceSupport request) => new(request,

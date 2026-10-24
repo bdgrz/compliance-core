@@ -11,6 +11,14 @@ public sealed class RecordRiskAssessmentHandler(IAggregateExecutor executor,
         IRequestContext<RecordRiskAssessment> context, CancellationToken ct)
     {
         var request = context.Request;
+        if (request.CommandId == Uuid.Empty)
+            return Result<RiskAssessmentView>.Failure(new RequestError(RequestErrorKind.Validation,
+                "An assessment requires its typed command identity."));
+        var actor = RiskActor.From(context.Actor, request.TenantId);
+        var snapshot = await reader.HydrateAsync(new RiskEvaluation(request.TenantId, request.RiskId, request.CommandId), ct)
+            .ConfigureAwait(false);
+        if (snapshot.ReplayAssessment(request, actor.MemberId) is { } original)
+            return original;
         var risk = await reader.HydrateAsync(new RiskDraft(request.TenantId, request.RiskId), ct)
             .ConfigureAwait(false);
         if (!risk.IsCreated || risk.ProgramId != request.ProgramId)
@@ -24,16 +32,15 @@ public sealed class RecordRiskAssessmentHandler(IAggregateExecutor executor,
         var governance = await governanceReader.ReadRiskAsync(request.TenantId, request.ProgramId,
             request.RiskId, ct).ConfigureAwait(false);
         var hasControlTreatment = governance.HasAcceptedControlTreatment(request.RiskId);
-        var actor = RiskActor.From(context.Actor, request.TenantId);
-        return await executor.ExecuteAsync(new RiskEvaluation(request.TenantId, request.RiskId),
+        return await executor.ExecuteAsync(new RiskEvaluation(request.TenantId, request.RiskId, request.CommandId),
             evaluation =>
             {
                 var failure = evaluation.RecordAssessment(request.ProgramId,
-                    request.ExpectedRevision, context.RequestId, method, request.Phase,
+                    request.ExpectedRevision, request.CommandId, method, request.Phase,
                     request.Likelihood, request.Impact, request.Rationale, actor.MemberId,
                     actor.Display, clock.GetUtcNow(), hasControlTreatment);
                 return CommandFailureRequestAdapter.ToOutcome(failure,
-                    evaluation.FindAssessment(context.RequestId)!);
+                    evaluation.FindAssessment(request.CommandId)!);
             }, context, ct).ConfigureAwait(false);
     }
 }

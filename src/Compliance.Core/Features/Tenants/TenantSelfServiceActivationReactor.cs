@@ -27,6 +27,6 @@ public sealed partial class TenantSelfServiceActivationReactor(IProjectionCheckp
             return;
 
         await _policy.SendActivationAsync(bus,
-            new ActivateTenant(assignment.TenantId, tenant.OwnerUserId), context, logger, ct);
+            TenantActivationEffects.Activate(assignment.Metadata.EventId, assignment.TenantId, tenant.OwnerUserId), context, logger, ct);
     }
 }

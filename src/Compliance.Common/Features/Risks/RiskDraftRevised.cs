@@ -9,6 +9,13 @@ public sealed record RiskDraftRevised(Uuid TenantId, Uuid ProgramId, Uuid RiskId
     long Revision, RiskDraftContent Content, Uuid ActorMemberId,
     string ActorDisplay, DateTimeOffset ChangedAt) : DomainEvent
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Uuid? CommandId { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public long? OriginalExpectedRevision { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? AuthoredIntentSha256 { get; init; }
+
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }
 

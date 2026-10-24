@@ -481,8 +481,8 @@ public sealed class ComplianceWebTests
                  {
                      (method + "/versions", "post"), (method, "get"),
                      (method + "/versions/{version}", "get"),
-                     (risk + "/assessments", "post"), (risk + "/treatment", "put"),
-                     (risk + "/acceptances", "post"), (risk + "/evaluation", "get"),
+                     (risk + "/assessments/{command_id}", "put"), (risk + "/treatment", "put"),
+                     (risk + "/acceptances/{command_id}", "put"), (risk + "/evaluation", "get"),
                      (risk + "/evaluation/history", "get"),
                  })
             Assert.True(paths.GetProperty(route).TryGetProperty(verb, out _), route);

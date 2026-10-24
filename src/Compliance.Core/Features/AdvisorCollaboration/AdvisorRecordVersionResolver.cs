@@ -112,9 +112,9 @@ sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates,
             link.ArtifactId != selected.RecordId)
             return Missing();
 
-        var request = new LinkEvidenceSupport(tenantId, programId, link.ArtifactId,
+        var request = new LinkEvidenceSupport(selected.EvidenceSupportId!.Value, tenantId, programId, link.ArtifactId,
             link.SupportedRecordType!, link.SupportedRecordId, link.SupportedRecordRevision,
-            link.PeriodStart, link.PeriodEnd, link.Purpose!, link.SufficiencyRationale!);
+            link.PeriodStart, link.PeriodEnd, link.Purpose!, link.SufficiencyRationale!, 0);
         if (EvidenceSupport.IdFor(request) != selected.EvidenceSupportId)
             return Missing();
         if (link.ArtifactRevision != selected.Revision ||

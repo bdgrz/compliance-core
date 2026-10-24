@@ -8,13 +8,13 @@ static class TenantDirectoryStatus
     {
         if (current.Status == "offboarding")
             return "offboarding";
-        if (domainEvent is TenantActivated && current.Status == "suspended")
+        if (domainEvent is (TenantActivated or TenantActivatedV2) && current.Status == "suspended")
             return "suspended";
 
         return domainEvent switch
         {
             TenantSlugConfirmed when current.RequiresActivation => "provisioning",
-            TenantSlugConfirmed or TenantReactivated or TenantActivated => "active",
+            TenantSlugConfirmed or TenantReactivated or TenantActivated or TenantActivatedV2 => "active",
             TenantSlugRejected => "rejected",
             TenantSuspended => "suspended",
             TenantOffboardingStarted => "offboarding",

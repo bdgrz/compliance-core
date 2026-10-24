@@ -51,6 +51,7 @@ public sealed class Tenant : Aggregate
         On<TenantReactivated>(_ => _suspended = false);
         On<TenantOffboardingStarted>(_ => _offboarding = true);
         On<TenantActivated>(_ => _activated = true);
+        On<TenantActivatedV2>(Apply);
         On<TenantSlugChangeRequested>(ev =>
         {
             Accept(ev, ev.CommandId, ev.Operation);
@@ -123,7 +124,55 @@ public sealed class Tenant : Aggregate
         return Result<TenantRegistration>.Success(new TenantRegistration(Id, normalizedSlug));
     }
 
+    /// <summary>A bootstrap reaction for an already completed/rejected registration needs no state transition.</summary>
+    public static RequestError ActivationNotNeeded { get; } = new(RequestErrorKind.Conflict,
+        "The tenant registration no longer needs an activation decision.", false);
+
+    public Result PrepareActivation(Uuid userId, string? email)
+    {
+        if (IsRegistrationRejected || HasCompletedActivation)
+            return Result.Failure(ActivationNotNeeded);
+        return ValidateActivation(userId, email);
+    }
+
+    public Result Activate(OperationProvenance operation, ImmutableContentRef response, Uuid userId, string? email)
+    {
+        var prepared = PrepareActivation(userId, email);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (!ValidActivationOperation(operation) || response is null)
+            return Failure(RequestErrorKind.Validation, "Activation requires its exact native bootstrap operation.");
+        RaiseEvent(new TenantActivatedV2(Id, userId, email, operation, response));
+        return Result.Success;
+    }
+
+    bool ValidActivationOperation(OperationProvenance operation) => operation.Owner == Stream &&
+        operation.AffectedOwner == Stream && operation.ExpectedRevisionOwner == Stream &&
+        operation.LogicalId != Uuid.Empty && operation.RootOperationId == operation.LogicalId &&
+        operation.CommandKind == "ActivateTenant" && operation.Episode == "activation" &&
+        operation.OriginalExpectedRevision is null && operation.Actor is { Kind: "system_process", Id: "system" };
+
+    void Apply(TenantActivatedV2 ev)
+    {
+        if (ev.TenantId != Id || ev.FirstResponse is null || !ValidActivationOperation(ev.Operation) ||
+            !PrepareActivation(ev.FirstAdministratorUserId, ev.FirstAdministratorEmail).IsSuccess)
+            throw new InvalidOperationException("A native tenant activation must follow its exact eligible bootstrap.");
+        Accept(ev, ev.Operation.LogicalId, ev.Operation);
+        _activated = true;
+    }
+
     public Result Activate(Uuid firstAdministratorUserId, string? firstAdministratorEmail)
+    {
+        var valid = ValidateActivation(firstAdministratorUserId, firstAdministratorEmail);
+        if (!valid.IsSuccess)
+            return valid;
+        if (_activated)
+            return Result.Success;
+        RaiseEvent(new TenantActivated(Id, firstAdministratorUserId));
+        return Result.Success;
+    }
+
+    Result ValidateActivation(Uuid firstAdministratorUserId, string? firstAdministratorEmail)
     {
         if (_offboarding)
             return Failure(RequestErrorKind.Conflict, "The tenant is being offboarded.");
@@ -142,9 +191,6 @@ public sealed class Tenant : Aggregate
             (!EmailAddresses.TryNormalize(firstAdministratorEmail, out var normalized) ||
              normalized != _firstAdministratorEmail))
             return Failure(RequestErrorKind.Forbidden, "Only the invited first administrator may activate.");
-        if (_activated)
-            return Result.Success;
-        RaiseEvent(new TenantActivated(Id, firstAdministratorUserId));
         return Result.Success;
     }
 
