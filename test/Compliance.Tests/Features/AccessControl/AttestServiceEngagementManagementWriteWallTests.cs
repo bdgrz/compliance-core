@@ -32,8 +32,6 @@ public sealed class AttestServiceEngagementManagementWriteWallTests
     [InlineData("record_service", "mcp")]
     [InlineData("revoke", "http")]
     [InlineData("revoke", "mcp")]
-    [InlineData("acknowledge", "http")]
-    [InlineData("acknowledge", "mcp")]
     public async Task ShouldDenyClientIndependenceWriteGivenRetainedSameTenantAttestHistoryWithoutAppending(
         string operation, string transport)
     {
@@ -67,23 +65,22 @@ public sealed class AttestServiceEngagementManagementWriteWallTests
         await FirmStaffFacts.RegisterAsync(provider, prior.StaffMemberId, User, prior.Practice,
             "Synthetic staff directory source",
             ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Synthetic directory operator"), Now);
-        var ledger = await ProgramManagementServices.HydrateAsync(provider, new IndependenceLedger(Tenant));
         await using var scope = provider.CreateAsyncScope();
         var engagementId = Uuid.CreateVersion4();
-        var request = new CreateServiceEngagement(Tenant, engagementId, ledger.Sequence,
+        var request = new CreateServiceEngagement(Tenant, engagementId, 0,
             new ServiceEngagementDraftContent(prior.Practice, "Synthetic service scope", new DateOnly(2026, 1, 1),
                 new DateOnly(2026, 12, 31), prior.StaffMemberId));
 
         // Act
         var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
             Context("create", "http"), CancellationToken.None);
-        var retained = await ProgramManagementServices.HydrateAsync(provider, new IndependenceLedger(Tenant));
+        var retained = await ProgramManagementServices.HydrateAsync(provider,
+            new ServiceEngagementIndependence(Tenant, engagementId));
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(ledger.Sequence + 1, retained.Sequence);
-        Assert.Equal("Synthetic service scope", Assert.Single(retained.Engagements,
-            engagement => engagement.EngagementId == engagementId).Content.Scope);
+        Assert.Equal(1UL, retained.Revision);
+        Assert.Equal("Synthetic service scope", result.Value!.Content.Scope);
     }
 
     [Fact]
@@ -101,24 +98,6 @@ public sealed class AttestServiceEngagementManagementWriteWallTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, error?.Kind);
         Assert.DoesNotContain("Attest", error!.Message, StringComparison.Ordinal);
-        Assert.Equal(before, after);
-    }
-
-    [Fact]
-    public async Task ShouldPreservePersonalHttpGuardGivenMcpManagementAcknowledgementWithoutAttestHistory()
-    {
-        // Arrange
-        await using var provider = Compose();
-        await using var scope = provider.CreateAsyncScope();
-        var before = await TenantEventCountAsync(provider, Tenant);
-
-        // Act
-        var error = await DispatchAsync(scope.ServiceProvider, "acknowledge", "mcp");
-        var after = await TenantEventCountAsync(provider, Tenant);
-
-        // Assert
-        Assert.Equal(RequestErrorKind.Forbidden, error?.Kind);
-        Assert.Contains("personal HTTP acknowledgement", error!.Message, StringComparison.Ordinal);
         Assert.Equal(before, after);
     }
 
@@ -157,24 +136,22 @@ public sealed class AttestServiceEngagementManagementWriteWallTests
         {
             "create" => (await bus.DispatchAsync(new CreateServiceEngagement(Tenant, Uuid.CreateVersion4(), 0,
                 Content), context, CancellationToken.None)).Error,
-            "amend" => (await bus.DispatchAsync(new AmendServiceEngagement(Tenant, Uuid.CreateVersion4(), 0,
-                Content), context, CancellationToken.None)).Error,
-            "close" => (await bus.DispatchAsync(new CloseServiceEngagement(Tenant, Uuid.CreateVersion4(), 0,
-                "Synthetic close reason"), context, CancellationToken.None)).Error,
-            "evaluate" => (await bus.DispatchAsync(new EvaluateClientIndependence(Tenant, Uuid.CreateVersion4(), 0,
-                1, new DateOnly(2026, 1, 1)), context, CancellationToken.None)).Error,
-            "propose" => (await bus.DispatchAsync(new ProposeServiceEngagementStaff(Tenant, Uuid.CreateVersion4(),
-                Uuid.CreateVersion4(), 0), context, CancellationToken.None)).Error,
-            "withdraw" => (await bus.DispatchAsync(new WithdrawServiceEngagementStaffProposal(Tenant,
-                Uuid.CreateVersion4(), Uuid.CreateVersion4(), 0, "Synthetic withdrawal reason"), context,
+            "amend" => (await bus.DispatchAsync(new AmendServiceEngagement(Uuid.CreateVersion4(), Tenant,
+                Uuid.CreateVersion4(), 0, Content), context, CancellationToken.None)).Error,
+            "close" => (await bus.DispatchAsync(new CloseServiceEngagement(Uuid.CreateVersion4(), Tenant,
+                Uuid.CreateVersion4(), 0, "Synthetic close reason"), context, CancellationToken.None)).Error,
+            "evaluate" => (await bus.DispatchAsync(new EvaluateClientIndependence(Tenant, Uuid.CreateVersion4(), 1,
+                new DateOnly(2026, 1, 1), 0), context, CancellationToken.None)).Error,
+            "propose" => (await bus.DispatchAsync(new ProposeServiceEngagementStaff(Uuid.CreateVersion4(), Tenant,
+                Uuid.CreateVersion4(), Uuid.CreateVersion4(), 0), context, CancellationToken.None)).Error,
+            "withdraw" => (await bus.DispatchAsync(new WithdrawServiceEngagementStaffProposal(Uuid.CreateVersion4(),
+                Tenant, Uuid.CreateVersion4(), Uuid.CreateVersion4(), 0, "Synthetic withdrawal reason"), context,
                 CancellationToken.None)).Error,
             "record_service" => (await bus.DispatchAsync(new RecordNonattestService(Tenant, Uuid.CreateVersion4(), 0,
                 new NonattestServiceContent(Uuid.CreateVersion4(), "readiness", new DateOnly(2026, 1, 1), null,
                     [], false, "Synthetic service source")), context, CancellationToken.None)).Error,
-            "revoke" => (await bus.DispatchAsync(new RevokeServiceEngagementActualStaff(Tenant, Uuid.CreateVersion4(),
-                Uuid.CreateVersion4(), 0, "Synthetic revocation reason"), context, CancellationToken.None)).Error,
-            "acknowledge" => (await bus.DispatchAsync(new AcknowledgeEngagementManagement(Tenant,
-                Uuid.CreateVersion4(), Uuid.CreateVersion4(), 0, 1, [], "I retain management responsibility"), context,
+            "revoke" => (await bus.DispatchAsync(new RevokeServiceEngagementActualStaff(Uuid.CreateVersion4(), Tenant,
+                Uuid.CreateVersion4(), Uuid.CreateVersion4(), 0, "Synthetic revocation reason"), context,
                 CancellationToken.None)).Error,
             _ => throw new InvalidOperationException(operation),
         };

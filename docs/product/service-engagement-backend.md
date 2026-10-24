@@ -33,33 +33,38 @@ draft, and accepted-engagement operations:
 | Operation | HTTP route | MCP tool |
 | --- | --- | --- |
 | Register canonical staff | `PUT /api/v1/platform/firm-staff/{staff_member_id}` | `bdgrz.firm-staff.register` |
-| Change staff activity | `PUT /api/v1/platform/firm-staff/{staff_member_id}/status` | `bdgrz.firm-staff.status.set` |
+| Change staff activity | `PUT /api/v1/platform/firm-staff/{staff_member_id}/set-firm-staff-status/{command_id}` | `bdgrz.firm-staff.status.set` |
 | Read platform staff directory | `GET /api/v1/platform/firm-staff` | `bdgrz.firm-staff.list` |
 | Read active roster in authorized client context | `GET /api/v1/tenants/{tenant_id}/firm-staff` | `bdgrz.firm-staff.assignable.list` |
-| Create draft | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `bdgrz.service-engagement.create` |
-| Amend draft | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/draft` | `bdgrz.service-engagement.amend` |
-| Propose staff | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}` | `bdgrz.service-engagement.staff.propose` |
-| Withdraw proposal | `POST /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals` | `bdgrz.service-engagement.staff.withdraw` |
-| Assign actual staff after acceptance | `POST /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}` | personal partner HTTP only |
-| Close draft | `POST /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure` | `bdgrz.service-engagement.close` |
+| Create draft | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/create-service-engagement` | `bdgrz.service-engagement.create` |
+| Amend draft | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/amend-service-engagement/{command_id}` | `bdgrz.service-engagement.amend` |
+| Propose staff | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/propose-service-engagement-staff/{command_id}` | `bdgrz.service-engagement.staff.propose` |
+| Withdraw proposal | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals/{command_id}` | `bdgrz.service-engagement.staff.withdraw` |
+| Revoke actual staff of an accepted engagement | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations/{command_id}` | `bdgrz.service-engagement.actual-staff.revoke` |
+| Close draft | `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure/{command_id}` | `bdgrz.service-engagement.close` |
 | Read current draft | `GET /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}` | `bdgrz.service-engagement.get` |
 | List client drafts | `GET /api/v1/tenants/{tenant_id}/service-engagements` | `bdgrz.service-engagement.list` |
 | Read immutable draft revisions | `GET /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/history` | `bdgrz.service-engagement.history.get` |
 
-Every mutation requires the current `expected_sequence`. Client draft changes,
-service additions and evaluation previews share the same authoritative client
-ledger sequence. Directory registration/status changes use their platform
-sequence. Directory rereads detect concurrent source changes after retaining a
-draft; a transient conflict asks the caller to reload. A retained proposal
-remains tentative and cannot create access even if staff was disabled during
-the operation. Canonical-user directory lag fails closed at registration.
+Every mutation requires the current `expected_revision` of that engagement
+(creation requires zero); it counts accepted changes of that one engagement and
+never moves with other engagements or the client's service history. Each
+engagement is its own `ServiceEngagementIndependence` owner. Mutations after
+creation carry a `command_id`, so an exact retry returns the original response
+even after later changes. A retained proposal remains tentative and cannot create
+access even if staff was disabled during the operation. The directory snapshot a
+command relied on is retained with the change. Canonical-user directory lag
+fails closed at registration.
 
-Client draft count, staff per draft and immutable revisions per draft are each
-bounded to one hundred. Events cannot exceed 48 KiB, and history is never
-truncated to make a write pass. Retries preserve original intent and actor;
-reusing a request identity for another mutation conflicts. Closed drafts cannot
-be reopened or edited. A draft amendment cannot rewrite its practice identity,
-and the proposed lead must remain selected until another lead is recorded.
+Engagement count, staff per draft and revisions per draft are not capped; every
+revision is retained and history is never truncated. Reusing a command identity
+for another mutation conflicts. Closed drafts cannot be reopened or edited. A
+draft amendment cannot rewrite its practice identity, and the proposed lead must
+remain selected until another lead is recorded. Acceptance, actual-staff
+assignment, personal management acknowledgement, the partner evaluation and the
+partner review context are unregistered until the personal-decision and
+acceptance work lands; revoking actual staff applies only to an accepted
+engagement.
 
 Professional duties are never inferred from this metadata. The platform duty
 catalog accepts only a signed assertion from the deployment-configured firm

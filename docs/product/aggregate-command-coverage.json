@@ -41,32 +41,32 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 430,
-    "factsWithReducer": 410,
-    "factsWithAggregateEmitter": 403,
+    "domainEventContracts": 431,
+    "factsWithReducer": 409,
+    "factsWithAggregateEmitter": 402,
     "auditFactsWithoutReducer": 2,
-    "factsWithoutReducerOrEmitter": 18,
+    "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 105,
-    "aggregateTypesWithCommandPath": 102,
-    "requestContracts": 667,
-    "commonRequestContracts": 665,
+    "aggregateTypes": 108,
+    "aggregateTypesWithCommandPath": 105,
+    "requestContracts": 668,
+    "commonRequestContracts": 666,
     "requestClassificationCounts": {
-      "command": 347,
-      "deferred_command": 5,
+      "command": 343,
       "confirmed_command_gap": 8,
-      "internal_reaction": 32,
-      "query_or_reconstruction": 274,
-      "internal_executor_context": 1
+      "deferred_command": 9,
+      "internal_executor_context": 1,
+      "internal_reaction": 33,
+      "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 609,
+    "registeredCoreHandlerRegistrations": 605,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 41,
+    "unwiredAggregateProducerOperations": 45,
     "unwiredAggregateProducerClassifications": {
-      "no_registered_request_route": 17,
-      "direct_reactor_executor": 6,
       "legacy_emitter_to_prune": 8,
+      "no_registered_request_route": 21,
+      "direct_reactor_executor": 6,
       "direct_processor_executor": 10
     },
     "factReplayGuardRows": 7
@@ -1241,20 +1241,11 @@
     {
       "fact": "AssignmentIndependenceReevaluated",
       "contract": "src/Compliance.Common/Features/AccessControl/AssignmentIndependenceReevaluated.cs",
-      "reducers": [
-        {
-          "aggregate": "IndependenceLedger",
-          "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceLedger.AssignmentReevaluation.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "reducers": [],
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "confirmed_gap",
+      "note": "Rehomed to ServiceEngagementIndependence by the independence split; the reevaluation slice re-shapes the fact and adds its producer. No reducer or producer exists until then."
     },
     {
       "fact": "AssuranceReportRecorded",
@@ -2132,14 +2123,34 @@
       "contract": "src/Compliance.Common/Features/AccessControl/ClientIndependenceEvaluated.cs",
       "reducers": [
         {
-          "aggregate": "IndependenceLedger",
-          "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs"
+          "aggregate": "ClientIndependenceDecision",
+          "source": "src/Compliance.Core/Features/AccessControl/ClientIndependenceDecision.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs"
+        "src/Compliance.Core/Features/AccessControl/ClientIndependenceDecision.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ClientIndependenceEvaluationAdmitted",
+      "contract": "src/Compliance.Common/Features/AccessControl/ClientIndependenceEvaluationAdmitted.cs",
+      "reducers": [
+        {
+          "aggregate": "ClientServiceIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -4471,16 +4482,15 @@
       "contract": "src/Compliance.Common/Features/AccessControl/NonattestServiceRecorded.cs",
       "reducers": [
         {
-          "aggregate": "IndependenceLedger",
-          "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs"
+          "aggregate": "ClientServiceIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs"
+        "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/IndependenceLedgerTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6079,16 +6089,14 @@
       "contract": "src/Compliance.Common/Features/AccessControl/ServiceEngagementAssignmentRevoked.cs",
       "reducers": [
         {
-          "aggregate": "IndependenceLedger",
-          "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs"
+          "aggregate": "ServiceEngagementIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceLedger.Revocation.cs"
+        "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
       ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs"
-      ],
+      "testSymbolReferences": [],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -6097,16 +6105,15 @@
       "contract": "src/Compliance.Common/Features/AccessControl/ServiceEngagementMutationRecorded.cs",
       "reducers": [
         {
-          "aggregate": "IndependenceLedger",
-          "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.Engagements.cs"
+          "aggregate": "ServiceEngagementIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceLedger.Engagements.cs"
+        "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementLifecycleTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6170,20 +6177,11 @@
     {
       "fact": "ServiceIndependenceReevaluated",
       "contract": "src/Compliance.Common/Features/AccessControl/ServiceIndependenceReevaluated.cs",
-      "reducers": [
-        {
-          "aggregate": "IndependenceLedger",
-          "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceLedger.SourceReevaluation.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "reducers": [],
+      "emitters": [],
+      "testSymbolReferences": [],
+      "disposition": "confirmed_gap",
+      "note": "Rehomed to ServiceEngagementIndependence by the independence split; the reevaluation slice re-shapes the fact and adds its producer. No reducer or producer exists until then."
     },
     {
       "fact": "SignificantChangeImpactAssessed",
@@ -8456,6 +8454,21 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
+      "aggregate": "ClientIndependenceDecision",
+      "source": "src/Compliance.Core/Features/AccessControl/ClientIndependenceDecision.cs",
+      "appliedFacts": [
+        "ClientIndependenceEvaluated"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "MaterializeClientIndependencePreview"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
       "aggregate": "ClientService",
       "source": "src/Compliance.Core/Features/Programs/ClientService.cs",
       "appliedFacts": [
@@ -8476,6 +8489,24 @@
         "test/Compliance.Tests/Features/Programs/ProgramResourceScopeResolverTests.cs",
         "test/Compliance.Tests/Features/Programs/ProjectionFreshnessTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ClientServiceIndependence",
+      "source": "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs",
+      "appliedFacts": [
+        "ClientIndependenceEvaluationAdmitted",
+        "NonattestServiceRecorded"
+      ],
+      "commandRequests": [
+        "EvaluateClientIndependence",
+        "RecordNonattestService"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs",
+        "test/Compliance.Tests/Testing/IndependenceFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9367,50 +9398,18 @@
       "aggregate": "IndependenceLedger",
       "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
       "appliedFacts": [
-        "AssignmentIndependenceReevaluated",
-        "ClientIndependenceEvaluated",
         "DirectoryIndependenceReevaluated",
         "EngagementManagementAcknowledged",
-        "NonattestServiceRecorded",
         "PartnerIndependenceEvaluationRecorded",
         "ServiceEngagementAcceptanceRecorded",
-        "ServiceEngagementAssignmentRevoked",
-        "ServiceEngagementMutationRecorded",
-        "ServiceEngagementStaffAssigned",
-        "ServiceIndependenceReevaluated"
+        "ServiceEngagementStaffAssigned"
       ],
       "commandRequests": [
-        "AcceptServiceEngagement",
-        "AcknowledgeEngagementManagement",
-        "AmendServiceEngagement",
-        "AssignServiceEngagementStaff",
-        "CloseServiceEngagement",
-        "CreateServiceEngagement",
-        "EvaluateClientIndependence",
-        "ProposeServiceEngagementStaff",
-        "RecordDirectoryIndependenceReevaluation",
-        "RecordNonattestService",
-        "RecordPartnerIndependenceEvaluation",
-        "RevokeServiceEngagementActualStaff",
-        "WithdrawServiceEngagementStaffProposal"
+        "RecordDirectoryIndependenceReevaluation"
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ActualStaffEngagementLocatorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/IndependenceLedgerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/IndependenceOperationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementHandlerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementLifecycleTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs",
         "test/Compliance.Tests/Testing/AttestAssignmentHistoryFixture.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -10447,6 +10446,30 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
+      "aggregate": "ServiceEngagementIndependence",
+      "source": "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs",
+      "appliedFacts": [
+        "ServiceEngagementAssignmentRevoked",
+        "ServiceEngagementMutationRecorded"
+      ],
+      "commandRequests": [
+        "AmendServiceEngagement",
+        "CloseServiceEngagement",
+        "CreateServiceEngagement",
+        "ProposeServiceEngagementStaff",
+        "RevokeServiceEngagementActualStaff",
+        "WithdrawServiceEngagementStaffProposal"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs",
+        "test/Compliance.Tests/Testing/ServiceEngagementFacts.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
       "aggregate": "ServiceIdentity",
       "source": "src/Compliance.Core/Features/Workforce/ServiceIdentity.cs",
       "appliedFacts": [
@@ -11362,27 +11385,16 @@
       "request": "AcceptServiceEngagement",
       "contract": "src/Compliance.Common/Features/AccessControl/AcceptServiceEngagement.cs",
       "interfaces": "IRequest<ServiceEngagementAcceptanceView>, IServiceEngagementAcceptanceRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "AcceptServiceEngagementHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/AcceptServiceEngagementHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
-      "aggregateTargets": [
-        "IndependenceLedger"
-      ],
+      "classification": "deferred_command",
+      "handlers": [],
+      "handlerRegistration": false,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs"
       ],
-      "note": ""
+      "note": "S9: acceptance with permanent practice commitments is re-registered by the acceptance slice; its owner and receivers do not exist yet."
     },
     {
       "request": "AcceptTemplateContribution",
@@ -11438,36 +11450,16 @@
       "request": "AcknowledgeEngagementManagement",
       "contract": "src/Compliance.Common/Features/AccessControl/AcknowledgeEngagementManagement.cs",
       "interfaces": "IRequest<EngagementManagementAcknowledgementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "AcknowledgeEngagementManagementHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/AcknowledgeEngagementManagementHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
-      "aggregateTargets": [
-        "IndependenceLedger"
-      ],
+      "classification": "deferred_command",
+      "handlers": [],
+      "handlerRegistration": false,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Testing/AttestAssignmentHistoryFixture.cs",
-        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ActualStaffEngagementLocatorTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs"
       ],
-      "note": ""
+      "note": "S8: personal management acknowledgement is re-registered by the engagement personal decision slice."
     },
     {
       "request": "AcknowledgePolicy",
@@ -11715,7 +11707,7 @@
     {
       "request": "AmendServiceEngagement",
       "contract": "src/Compliance.Common/Features/AccessControl/AmendServiceEngagement.cs",
-      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -11727,14 +11719,15 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [
-        "IndependenceLedger"
+        "ServiceEngagementIndependence"
       ],
       "helperServices": [
-        "EngagementStaffBoundary"
+        "ServiceEngagementCommands"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
       ],
       "note": ""
     },
@@ -12842,26 +12835,14 @@
       "request": "AssignServiceEngagementStaff",
       "contract": "src/Compliance.Common/Features/AccessControl/AssignServiceEngagementStaff.cs",
       "interfaces": "IRequest<ServiceEngagementAcceptanceView>, IPersonalEngagementPartnerRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "AssignServiceEngagementStaffHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/AssignServiceEngagementStaffHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
-      "aggregateTargets": [
-        "IndependenceLedger"
-      ],
+      "classification": "deferred_command",
+      "handlers": [],
+      "handlerRegistration": false,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs"
-      ],
-      "note": ""
+      "testSymbolReferences": [],
+      "note": "S9: actual assignment is re-registered by the acceptance slice with the practice commitment owner."
     },
     {
       "request": "AssignTeamMember",
@@ -13523,7 +13504,7 @@
     {
       "request": "CloseServiceEngagement",
       "contract": "src/Compliance.Common/Features/AccessControl/CloseServiceEngagement.cs",
-      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -13533,17 +13514,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "IndependenceLedger"
+        "ServiceEngagementIndependence"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ServiceEngagementCommands"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
       ],
       "note": ""
     },
@@ -14374,7 +14355,7 @@
     {
       "request": "CreateServiceEngagement",
       "contract": "src/Compliance.Common/Features/AccessControl/CreateServiceEngagement.cs",
-      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14386,16 +14367,16 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [
-        "IndependenceLedger"
+        "ServiceEngagementIndependence"
       ],
       "helperServices": [
-        "EngagementStaffBoundary"
+        "ServiceEngagementCommands"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
       ],
       "note": ""
     },
@@ -15042,7 +15023,7 @@
     {
       "request": "EvaluateClientIndependence",
       "contract": "src/Compliance.Common/Features/AccessControl/EvaluateClientIndependence.cs",
-      "interfaces": "IRequest<IndependenceEvaluationView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -15052,17 +15033,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger",
-        "IndependenceRuleCatalog"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "IndependenceLedger"
+        "ClientServiceIndependence"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/IndependenceOperationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
       ],
       "note": ""
@@ -16053,9 +16031,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -17605,9 +17581,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -17675,9 +17649,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -17690,22 +17662,14 @@
       "contract": "src/Compliance.Common/Features/AccessControl/GetServiceEngagementPartnerReviewContext.cs",
       "interfaces": "IRequest<ServiceEngagementPartnerReviewContextView>, IPersonalEngagementPartnerRequest, ICallable",
       "classification": "query_or_reconstruction",
-      "handlers": [
-        {
-          "name": "GetServiceEngagementPartnerReviewContextHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/GetServiceEngagementPartnerReviewContextHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
+      "handlers": [],
+      "handlerRegistration": false,
       "directAggregateReferences": [
         "IndependenceLedger"
       ],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs"
-      ],
+      "testSymbolReferences": [],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -20541,9 +20505,7 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
@@ -21083,6 +21045,31 @@
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "MaterializeClientIndependencePreview",
+      "contract": "src/Compliance.Common/Features/AccessControl/MaterializeClientIndependencePreview.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IClientIndependencePreviewReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "MaterializeClientIndependencePreviewHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/MaterializeClientIndependencePreviewHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ClientIndependenceDecision"
+      ],
+      "aggregateTargets": [
+        "ClientIndependenceDecision"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs"
+      ],
+      "note": "System-only preview process receiver; computes the immutable historical preview from the frozen intent only and never grants production acceptance. No HTTP/MCP route."
     },
     {
       "request": "MigrateFindingHistory",
@@ -22100,7 +22087,7 @@
     {
       "request": "ProposeServiceEngagementStaff",
       "contract": "src/Compliance.Common/Features/AccessControl/ProposeServiceEngagementStaff.cs",
-      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -22112,15 +22099,16 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [
-        "IndependenceLedger"
+        "ServiceEngagementIndependence"
       ],
       "helperServices": [
-        "EngagementStaffBoundary"
+        "ServiceEngagementCommands"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
       ],
       "note": ""
     },
@@ -23367,7 +23355,7 @@
     {
       "request": "RecordNonattestService",
       "contract": "src/Compliance.Common/Features/AccessControl/RecordNonattestService.cs",
-      "interfaces": "IRequest<NonattestServiceView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<NonattestServiceView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -23377,17 +23365,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "IndependenceLedger"
+        "ClientServiceIndependence"
       ],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
       ],
       "note": ""
     },
@@ -23444,28 +23431,14 @@
       "request": "RecordPartnerIndependenceEvaluation",
       "contract": "src/Compliance.Common/Features/AccessControl/RecordPartnerIndependenceEvaluation.cs",
       "interfaces": "IRequest<PartnerIndependenceEvaluationView>, IPersonalEngagementPartnerRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "RecordPartnerIndependenceEvaluationHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/RecordPartnerIndependenceEvaluationHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
-      "aggregateTargets": [
-        "IndependenceLedger"
-      ],
+      "classification": "deferred_command",
+      "handlers": [],
+      "handlerRegistration": false,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs"
-      ],
-      "note": ""
+      "testSymbolReferences": [],
+      "note": "S8: personal partner evaluation is re-registered by the engagement personal decision slice."
     },
     {
       "request": "RecordPerson",
@@ -26344,7 +26317,7 @@
     {
       "request": "RevokeServiceEngagementActualStaff",
       "contract": "src/Compliance.Common/Features/AccessControl/RevokeServiceEngagementActualStaff.cs",
-      "interfaces": "IRequest<ServiceEngagementAcceptanceView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ServiceEngagementAcceptanceView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26354,16 +26327,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "IndependenceLedger"
+        "ServiceEngagementIndependence"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ServiceEngagementCommands"
+      ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
       ],
       "note": ""
     },
@@ -27085,7 +27058,7 @@
     {
       "request": "WithdrawServiceEngagementStaffProposal",
       "contract": "src/Compliance.Common/Features/AccessControl/WithdrawServiceEngagementStaffProposal.cs",
-      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -27095,16 +27068,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "IndependenceLedger"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "IndependenceLedger"
+        "ServiceEngagementIndependence"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ServiceEngagementCommands"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs"
       ],
       "note": ""
     },
@@ -27151,6 +27125,18 @@
   ],
   "unwiredAggregateProducers": [
     {
+      "fact": "ApplicationImportCanceled",
+      "aggregate": "ImportBatch",
+      "method": "Cancel",
+      "source": "src/Compliance.Core/Features/Applications/ImportBatch.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 5
+    },
+    {
       "fact": "ArtifactDispositionApproved",
       "aggregate": "ArtifactDisposition",
       "method": "Approve",
@@ -27191,16 +27177,6 @@
       "methodArgumentCount": 6
     },
     {
-      "fact": "AuditObservationRecorded",
-      "aggregate": "AuditObservation",
-      "method": "Record",
-      "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 301,
-      "callerSources": [],
-      "methodArgumentCount": 5
-    },
-    {
       "fact": "AuditObservationManagementResponseRecorded",
       "aggregate": "AuditObservation",
       "method": "Respond",
@@ -27209,6 +27185,16 @@
       "ownerIssue": 301,
       "callerSources": [],
       "methodArgumentCount": 7
+    },
+    {
+      "fact": "AuditObservationRecorded",
+      "aggregate": "AuditObservation",
+      "method": "Record",
+      "source": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 301,
+      "callerSources": [],
+      "methodArgumentCount": 5
     },
     {
       "fact": "AuditPackageBuildProgressRecorded",
@@ -27241,6 +27227,30 @@
       "methodArgumentCount": 4
     },
     {
+      "fact": "CorrectiveActionAdded",
+      "aggregate": "RemediationLedger",
+      "method": "AddAction",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 8
+    },
+    {
+      "fact": "CorrectiveActionCompleted",
+      "aggregate": "RemediationLedger",
+      "method": "CompleteAction",
+      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
+      "classification": "legacy_emitter_to_prune",
+      "ownerIssue": 1022,
+      "migrationRequired": true,
+      "migrationDisposition": "retain_until_verified_stream_migration",
+      "callerSources": [],
+      "methodArgumentCount": 8
+    },
+    {
       "fact": "EmailChallengeDeliveryFailed",
       "aggregate": "EmailAddress",
       "method": "RecordDeliveryFailure",
@@ -27254,6 +27264,25 @@
           "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
           "methods": [
             "RecordDeliveryFailure"
+          ]
+        }
+      ],
+      "methodArgumentCount": 3
+    },
+    {
+      "fact": "EmailChallengeDeliveryFailed",
+      "aggregate": "EmailAddress",
+      "method": "RecordRecoveryDeliveryFailure",
+      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+      "classification": "direct_reactor_executor",
+      "ownerIssue": null,
+      "followUpIssueNeeded": true,
+      "followUpReason": "The active email recovery flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
+          "methods": [
+            "RecordRecoveryDeliveryFailure"
           ]
         }
       ],
@@ -27279,25 +27308,6 @@
       "methodArgumentCount": 2
     },
     {
-      "fact": "EmailChallengeDeliveryFailed",
-      "aggregate": "EmailAddress",
-      "method": "RecordRecoveryDeliveryFailure",
-      "source": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
-      "classification": "direct_reactor_executor",
-      "ownerIssue": null,
-      "followUpIssueNeeded": true,
-      "followUpReason": "The active email recovery flow has no open backend issue for routing delivery outcomes through registered internal reaction requests.",
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs",
-          "methods": [
-            "RecordRecoveryDeliveryFailure"
-          ]
-        }
-      ],
-      "methodArgumentCount": 3
-    },
-    {
       "fact": "EmailChallengeDeliverySent",
       "aggregate": "EmailAddress",
       "method": "RecordRecoveryDeliverySent",
@@ -27317,61 +27327,19 @@
       "methodArgumentCount": 2
     },
     {
-      "fact": "ApplicationImportCanceled",
-      "aggregate": "ImportBatch",
-      "method": "Cancel",
-      "source": "src/Compliance.Core/Features/Applications/ImportBatch.cs",
-      "classification": "legacy_emitter_to_prune",
+      "fact": "EngagementManagementAcknowledged",
+      "aggregate": "IndependenceLedger",
+      "method": "AcknowledgeManagement",
+      "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.Management.cs",
+      "classification": "no_registered_request_route",
       "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
       "callerSources": [],
       "methodArgumentCount": 5
     },
     {
-      "fact": "ManagementAssertionRevised",
-      "aggregate": "ManagementAssertion",
-      "method": "Revise",
-      "source": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 303,
-      "callerSources": [],
-      "methodArgumentCount": 6
-    },
-    {
-      "fact": "MethodologyTemplateDraftRevised",
-      "aggregate": "MethodologyTemplate",
-      "method": "ReviseDraftWithAcceptedContribution",
-      "source": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 276,
-      "callerSources": [],
-      "methodArgumentCount": 7
-    },
-    {
-      "fact": "ProgramNextPeriodCreated",
-      "aggregate": "ProgramRollover",
-      "method": "RecordNextPeriodCreated",
-      "source": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 316,
-      "callerSources": [],
-      "methodArgumentCount": 4
-    },
-    {
-      "fact": "ProgramRolloverRevised",
-      "aggregate": "ProgramRollover",
-      "method": "Revise",
-      "source": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 316,
-      "callerSources": [],
-      "methodArgumentCount": 8
-    },
-    {
-      "fact": "CorrectiveActionAdded",
+      "fact": "FindingAcceptanceLinked",
       "aggregate": "RemediationLedger",
-      "method": "AddAction",
+      "method": "LinkAcceptance",
       "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
       "classification": "legacy_emitter_to_prune",
       "ownerIssue": 1022,
@@ -27391,30 +27359,6 @@
       "migrationDisposition": "retain_until_verified_stream_migration",
       "callerSources": [],
       "methodArgumentCount": 10
-    },
-    {
-      "fact": "CorrectiveActionCompleted",
-      "aggregate": "RemediationLedger",
-      "method": "CompleteAction",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 8
-    },
-    {
-      "fact": "FindingAcceptanceLinked",
-      "aggregate": "RemediationLedger",
-      "method": "LinkAcceptance",
-      "source": "src/Compliance.Core/Features/Remediation/RemediationLedger.cs",
-      "classification": "legacy_emitter_to_prune",
-      "ownerIssue": 1022,
-      "migrationRequired": true,
-      "migrationDisposition": "retain_until_verified_stream_migration",
-      "callerSources": [],
-      "methodArgumentCount": 8
     },
     {
       "fact": "FindingRaised",
@@ -27451,6 +27395,86 @@
       "migrationDisposition": "retain_until_verified_stream_migration",
       "callerSources": [],
       "methodArgumentCount": 10
+    },
+    {
+      "fact": "ManagementAssertionRevised",
+      "aggregate": "ManagementAssertion",
+      "method": "Revise",
+      "source": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 303,
+      "callerSources": [],
+      "methodArgumentCount": 6
+    },
+    {
+      "fact": "MethodologyTemplateDraftRevised",
+      "aggregate": "MethodologyTemplate",
+      "method": "ReviseDraftWithAcceptedContribution",
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 276,
+      "callerSources": [],
+      "methodArgumentCount": 7
+    },
+    {
+      "fact": "ObservationPeriodCloseProposed",
+      "aggregate": "TypeIIPeriod",
+      "method": "RecordCloseValidation",
+      "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 310,
+      "callerSources": [],
+      "methodArgumentCount": 5
+    },
+    {
+      "fact": "PartnerIndependenceEvaluationRecorded",
+      "aggregate": "IndependenceLedger",
+      "method": "RecordPartnerIndependenceEvaluation",
+      "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.PartnerEvaluation.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 6
+    },
+    {
+      "fact": "ProgramNextPeriodCreated",
+      "aggregate": "ProgramRollover",
+      "method": "RecordNextPeriodCreated",
+      "source": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 316,
+      "callerSources": [],
+      "methodArgumentCount": 4
+    },
+    {
+      "fact": "ProgramRolloverRevised",
+      "aggregate": "ProgramRollover",
+      "method": "Revise",
+      "source": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 316,
+      "callerSources": [],
+      "methodArgumentCount": 8
+    },
+    {
+      "fact": "ServiceEngagementAcceptanceRecorded",
+      "aggregate": "IndependenceLedger",
+      "method": "AcceptEngagement",
+      "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.Acceptance.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 5
+    },
+    {
+      "fact": "ServiceEngagementStaffAssigned",
+      "aggregate": "IndependenceLedger",
+      "method": "AssignActualStaff",
+      "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.ActualAssignment.cs",
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1022,
+      "callerSources": [],
+      "methodArgumentCount": 6
     },
     {
       "fact": "TemplateApplicationDraftCreated",
@@ -27507,16 +27531,6 @@
       "methodArgumentCount": 9
     },
     {
-      "fact": "ObservationPeriodCloseProposed",
-      "aggregate": "TypeIIPeriod",
-      "method": "RecordCloseValidation",
-      "source": "src/Compliance.Core/Features/Operations/TypeIIPeriod.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 310,
-      "callerSources": [],
-      "methodArgumentCount": 5
-    },
-    {
       "fact": "TypeIIPlanRevised",
       "aggregate": "TypeIIPlan",
       "method": "Revise",
@@ -27525,6 +27539,23 @@
       "ownerIssue": 303,
       "callerSources": [],
       "methodArgumentCount": 6
+    },
+    {
+      "fact": "WorkDigestDispatchAttemptStarted",
+      "aggregate": "WorkDigestDispatch",
+      "method": "StartAttempt",
+      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
+      "classification": "direct_processor_executor",
+      "ownerIssue": 121,
+      "callerSources": [
+        {
+          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
+          "methods": [
+            "StartAttempt"
+          ]
+        }
+      ],
+      "methodArgumentCount": 2
     },
     {
       "fact": "WorkDigestDispatchOutcomeRecorded",
@@ -27678,23 +27709,6 @@
         }
       ],
       "methodArgumentCount": 4
-    },
-    {
-      "fact": "WorkDigestDispatchAttemptStarted",
-      "aggregate": "WorkDigestDispatch",
-      "method": "StartAttempt",
-      "source": "src/Compliance.Core/Features/Work/WorkDigestDispatch.cs",
-      "classification": "direct_processor_executor",
-      "ownerIssue": 121,
-      "callerSources": [
-        {
-          "source": "src/Compliance.Core/Features/Work/WorkDigestDispatchProcessor.cs",
-          "methods": [
-            "StartAttempt"
-          ]
-        }
-      ],
-      "methodArgumentCount": 2
     }
   ],
   "factEmissionHelpers": [

@@ -1,7 +1,14 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
+/// <summary>Withdraws the current tentative proposal of one staff member from the open draft of a service engagement.</summary>
 [Discriminator("bdgrz.service-engagement.staff.withdraw", 1)]
-public sealed record WithdrawServiceEngagementStaffProposal(Uuid TenantId, Uuid EngagementId, Uuid StaffMemberId, long ExpectedSequence, string Reason)
-    : IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable;
+public sealed record WithdrawServiceEngagementStaffProposal(Uuid CommandId, Uuid TenantId, Uuid EngagementId,
+    Uuid StaffMemberId, long ExpectedRevision, string Reason)
+    : IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest,
+        IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

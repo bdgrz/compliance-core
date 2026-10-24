@@ -716,6 +716,13 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.SourceUse.ReservationGrant))]
 [JsonSerializable(typeof(ServiceEngagementMutationRecorded))]
 [JsonSerializable(typeof(IReadOnlyList<ServiceEngagementView>))]
+[JsonSerializable(typeof(ServiceEngagementChange))]
+[JsonSerializable(typeof(ClientIndependenceEvaluationAdmitted))]
+[JsonSerializable(typeof(ClientIndependencePreviewIntent))]
+[JsonSerializable(typeof(MaterializeClientIndependencePreview))]
+[JsonSerializable(typeof(NonattestServiceView[]))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.SourceFactLocator[]))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.AuthoritativeReadCut[]))]
 [PortiaJsonContext]
 [JsonSourceGenerationOptions(
     JsonSerializerDefaults.Web,

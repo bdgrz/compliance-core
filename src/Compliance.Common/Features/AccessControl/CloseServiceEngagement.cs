@@ -1,7 +1,14 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
+/// <summary>Closes one open service engagement at its current revision.</summary>
 [Discriminator("bdgrz.service-engagement.close", 1)]
-public sealed record CloseServiceEngagement(Uuid TenantId, Uuid EngagementId, long ExpectedSequence, string Reason)
-    : IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable;
+public sealed record CloseServiceEngagement(Uuid CommandId, Uuid TenantId, Uuid EngagementId, long ExpectedRevision,
+    string Reason)
+    : IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest,
+        IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

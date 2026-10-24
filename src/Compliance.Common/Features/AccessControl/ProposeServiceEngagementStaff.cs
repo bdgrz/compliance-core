@@ -1,7 +1,14 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
+/// <summary>Tentatively proposes one active staff member for the open draft of a service engagement.</summary>
 [Discriminator("bdgrz.service-engagement.staff.propose", 1)]
-public sealed record ProposeServiceEngagementStaff(Uuid TenantId, Uuid EngagementId, Uuid StaffMemberId, long ExpectedSequence)
-    : IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable;
+public sealed record ProposeServiceEngagementStaff(Uuid CommandId, Uuid TenantId, Uuid EngagementId,
+    Uuid StaffMemberId, long ExpectedRevision)
+    : IRequest<ServiceEngagementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest,
+        IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

@@ -116,40 +116,43 @@ public sealed class ComplianceWebTests
         var route = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
             .OfType<RouteEndpoint>()
             .Single(endpoint => endpoint.RoutePattern.RawText ==
-                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations");
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations/{command_id}");
 
         // Act
         var methods = route.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods;
         var authorization = route.Metadata.GetOrderedMetadata<IAuthorizeData>();
 
         // Assert
-        Assert.Contains("POST", methods ?? []);
+        Assert.Contains("PUT", methods ?? []);
         Assert.Equal("BdgrzApiUser", Assert.Single(authorization).Policy);
-        Assert.Equal(["tenant_id", "engagement_id", "staff_member_id"],
+        Assert.Equal(["tenant_id", "engagement_id", "staff_member_id", "command_id"],
             route.RoutePattern.Parameters.Select(parameter => parameter.Name));
     }
 
     [Fact]
-    public async Task ShouldMapServiceEngagementAcceptanceGivenPersonalHttpEndpoint()
+    public async Task ShouldKeepAcceptanceAndPersonalDecisionRoutesUnmappedGivenIndependenceSplit()
     {
         // Arrange
         await using var factory = CreateBrokerFreeFactory("Development");
         using var client = factory.CreateClient();
-        var route = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
-            .OfType<RouteEndpoint>()
-            .Single(endpoint => endpoint.RoutePattern.RawText ==
-                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance" &&
-                endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Contains("POST") == true);
 
         // Act
-        var methods = route.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods;
-        var authorization = route.Metadata.GetOrderedMetadata<IAuthorizeData>();
+        var unmapped = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>()
+            .Where(endpoint => endpoint.RoutePattern.RawText is
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance" or
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations" or
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-review-context" or
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}" or
+                "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}")
+            .Where(endpoint => endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Any(method =>
+                method is "POST" or "PUT") == true || endpoint.RoutePattern.RawText!.EndsWith("partner-review-context",
+                StringComparison.Ordinal))
+            .Select(endpoint => endpoint.RoutePattern.RawText)
+            .ToArray();
 
         // Assert
-        Assert.Contains("POST", methods ?? []);
-        Assert.Equal("BdgrzApiUser", Assert.Single(authorization).Policy);
-        Assert.Equal(["tenant_id", "engagement_id"],
-            route.RoutePattern.Parameters.Select(parameter => parameter.Name));
+        Assert.Empty(unmapped);
     }
 
     [Fact]

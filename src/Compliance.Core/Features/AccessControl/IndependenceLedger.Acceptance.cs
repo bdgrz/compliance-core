@@ -83,15 +83,21 @@ public sealed partial class IndependenceLedger
         return Result<ServiceEngagementAcceptanceView>.Success(view);
     }
 
-    public bool IsEligibleForProfessionalAccess(Uuid engagementId, Uuid staffMemberId, Uuid userId,
+    public IReadOnlyList<ServiceEngagementAcceptanceView> Acceptances => Array.AsReadOnly(_acceptances.Values
+        .OrderBy(item => item.EngagementId.ToString(), StringComparer.Ordinal).ToArray());
+
+    /// <summary>
+    ///     Whether the active acceptance of the engagement still grants this staff member professional access. The
+    ///     engagement draft is read from its own owner by the caller; an open draft with an active acceptance is accepted.
+    /// </summary>
+    public bool IsEligibleForProfessionalAccess(ServiceEngagementView engagement, Uuid staffMemberId, Uuid userId,
         long currentRuleVersion, long currentDirectoryStaffRevision, DateTimeOffset effectiveAt) =>
-        Acceptance(engagementId) is { Status: "active" } acceptance && acceptance.RecordedAt <= effectiveAt &&
-        Engagement(engagementId) is { Status: "accepted" } engagement &&
+        Acceptance(engagement.EngagementId) is { Status: "active" } acceptance && acceptance.RecordedAt <= effectiveAt &&
+        engagement.Status != "closed" && engagement.RecordedAt <= effectiveAt &&
         DateOnly.FromDateTime(effectiveAt.UtcDateTime) >= engagement.Content.PeriodStart &&
         (engagement.Content.PeriodEnd is null || DateOnly.FromDateTime(effectiveAt.UtcDateTime) <= engagement.Content.PeriodEnd) &&
         acceptance.Rules.Version == currentRuleVersion &&
-        !_sourceReevaluations.Any(receipt => receipt.EngagementId == engagementId) &&
-        !_directoryReevaluations.Any(receipt => receipt.OriginalAcceptance.EngagementId == engagementId &&
+        !_directoryReevaluations.Any(receipt => receipt.OriginalAcceptance.EngagementId == engagement.EngagementId &&
             receipt.Source.StaffMemberId == staffMemberId && receipt.Source.UserId == userId) &&
         CompleteFacts(acceptance.CompleteServiceHistory.Select(service => service.ServiceRecordId).ToArray()) &&
         acceptance.Assignments.Any(staff => staff.IsCurrent && staff.StaffMemberId == staffMemberId &&
@@ -179,34 +185,43 @@ public sealed partial class IndependenceLedger
             : acceptance.BoundaryId is null && acceptance.BoundaryVersionId is null && acceptance.BoundaryRevision is null &&
               acceptance.BoundaryApprovalDecisionId is null;
 
+    /// <summary>
+    ///     Retains an accepted engagement and its permanent actual-assignment wall. The engagement draft, the
+    ///     acknowledgement and the service history are other owners' facts that a reducer cannot read, so only the
+    ///     fact's own consistency and the permanent person-practice wall are checked here; the acceptance owner proves
+    ///     the cross-owner sources with source-fact proofs before it appends.
+    /// </summary>
     void Apply(ServiceEngagementAcceptanceRecorded ev)
     {
         var acceptance = ev.Acceptance;
-        var engagement = Engagement(acceptance.EngagementId);
         if (ev.TenantId != _tenantId || ev.ExpectedSequence != Sequence || acceptance.TenantId != _tenantId ||
-            ev.RequestId == Uuid.Empty || _decisions.ContainsKey(ev.RequestId) || string.IsNullOrWhiteSpace(ev.Intent) || engagement is not { Status: "draft" } ||
-            acceptance.ReviewedDraftRevision != engagement.Revision || acceptance.Revision != 1 || acceptance.Status != "active" ||
+            ev.RequestId == Uuid.Empty || _decisions.ContainsKey(ev.RequestId) || string.IsNullOrWhiteSpace(ev.Intent) ||
+            acceptance.EngagementId == Uuid.Empty || acceptance.Revision != 1 || acceptance.Status != "active" ||
             !acceptance.Rules.IsRatified || !IndependenceRecordValidation.ValidRules(acceptance.Rules.Content) ||
             acceptance.Rules.Version <= 0 || acceptance.ReviewTaskId == Uuid.Empty || acceptance.PartnerStaffMemberId == Uuid.Empty ||
             acceptance.PartnerUserId == Uuid.Empty || acceptance.PartnerDirectoryStaffRevision <= 0 || acceptance.PartnerDutyRevision <= 0 ||
-            IndependenceCompartments.CanAssign(_assignmentHistory, new EngagementAssignment(_tenantId, acceptance.EngagementId,
-                acceptance.PartnerStaffMemberId, acceptance.PartnerUserId, Practice(engagement.Content.Practice))).Code != IndependenceDecisionCode.Allowed ||
-            _engagementHistory[acceptance.EngagementId].Any(view => view.Actor.Id == RbacIds.Member(_tenantId, acceptance.PartnerUserId).ToString()) ||
             acceptance.Actor.Kind != "firm_staff" ||
             acceptance.Actor.Id != acceptance.PartnerUserId.ToString() || !BoundedEngagement(acceptance.AuthorityReference) ||
-            acceptance.RecordedAt == default || !EngagementSourcesExistBy(engagement.EngagementId, acceptance.RecordedAt) ||
-            _services.Any(service => service.RecordedAt > acceptance.RecordedAt) || !ValidRecordedSourceTimes(acceptance) ||
+            acceptance.RecordedAt == default || !ValidRecordedSourceTimes(acceptance) ||
             acceptance.ChangedBy is not null || acceptance.ChangedAt is not null ||
-            acceptance.ChangeReason is not null || !MatchingAcceptedBoundary(engagement, acceptance) ||
+            acceptance.ChangeReason is not null ||
             acceptance.PartnerEvaluationReference is not null && !BoundedEngagement(acceptance.PartnerEvaluationReference) ||
             acceptance.PartnerEvaluationReference != acceptance.PartnerEvaluation?.EvaluationId.ToString() ||
-            !MatchingAcknowledgement(acceptance.ManagementAcknowledgementId, engagement, acceptance.PartnerUserId, acceptance.RecordedAt) ||
-            !SameServiceSnapshots(acceptance.CompleteServiceHistory) ||
-            !MatchingAcceptancePolicy(engagement, acceptance) ||
-            !ValidInitialAssignments(engagement, acceptance) || _acceptances.ContainsKey(acceptance.EngagementId) ||
-            _engagementHistory[engagement.EngagementId].Count >= 100 ||
+            acceptance.Assignments is not { Count: > 0 and <= 100 } ||
+            acceptance.Assignments.Select(staff => staff.Practice).Distinct().Count() != 1 ||
+            acceptance.Assignments.Select(staff => staff.StaffMemberId).Distinct().Count() != acceptance.Assignments.Count ||
+            !acceptance.Assignments.All(staff => staff.IsCurrent && staff.DirectoryStaffRecordedAt != default &&
+                staff.DirectoryStaffRecordedAt <= acceptance.RecordedAt && staff.Actor == acceptance.Actor &&
+                staff.AssignedAt == acceptance.RecordedAt) ||
+            IndependenceCompartments.CanAssign(_assignmentHistory, new EngagementAssignment(_tenantId, acceptance.EngagementId,
+                acceptance.PartnerStaffMemberId, acceptance.PartnerUserId,
+                Practice(acceptance.Assignments[0].Practice))).Code != IndependenceDecisionCode.Allowed ||
+            acceptance.Assignments.Any(staff => IndependenceCompartments.CanAssign(_assignmentHistory,
+                new EngagementAssignment(_tenantId, acceptance.EngagementId, staff.StaffMemberId, staff.UserId,
+                    Practice(staff.Practice))).Code != IndependenceDecisionCode.Allowed) ||
+            _acceptances.ContainsKey(acceptance.EngagementId) ||
             _assignmentHistory.Count + acceptance.Assignments.Count > 1000)
-            throw new InvalidOperationException("Accepted engagements require exact immutable client sources, ratified rules and actual independent assignments.");
+            throw new InvalidOperationException("Accepted engagements require ratified rules and actual independent assignments.");
         Fence(ev.TenantId, ev.ExpectedSequence);
         acceptance = acceptance with
         {
@@ -221,15 +236,6 @@ public sealed partial class IndependenceLedger
         _acceptanceHistory.Add(acceptance.EngagementId, [acceptance]);
         _assignmentHistory.AddRange(acceptance.Assignments.Select(staff => new EngagementAssignment(_tenantId,
             acceptance.EngagementId, staff.StaffMemberId, staff.UserId, Practice(staff.Practice))));
-        var accepted = engagement with
-        {
-            Revision = engagement.Revision + 1,
-            Status = "accepted",
-            Actor = acceptance.Actor,
-            RecordedAt = acceptance.RecordedAt
-        };
-        _engagements[accepted.EngagementId] = accepted;
-        _engagementHistory[accepted.EngagementId].Add(accepted);
         _decisions.Add(ev.RequestId, (ev.Intent, acceptance.Actor, acceptance));
     }
 
