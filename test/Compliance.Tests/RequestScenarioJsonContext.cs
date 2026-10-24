@@ -9,4 +9,6 @@ namespace Bdgrz.Compliance.Tests;
 [JsonSerializable(typeof(RegisterMember))]
 [JsonSerializable(typeof(DeleteTeam))]
 [JsonSerializable(typeof(UnprotectedCompositionRequest))]
+[JsonSerializable(typeof(Features.NativeOperations.ProbeAdmitted))]
+[JsonSerializable(typeof(Features.NativeOperations.ProbeEdited))]
 sealed partial class RequestScenarioJsonContext : JsonSerializerContext;

@@ -1900,6 +1900,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.SelectionOrder))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Proofs.SourceFactLocator))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.DurableIntentHeader))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.AcceptedOperationBinding))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.NativeFactReference))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.EntityConcurrency))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.FirstResponseDescriptor))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.NativeOperations.MutationResultContent))]

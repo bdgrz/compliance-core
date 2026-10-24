@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -651,6 +652,7 @@ public static class ComplianceServiceCollectionExtensions
             EventSourcedServiceEngagementAcceptanceEvidenceReader>();
         services.AddSingleton<IImmutableContentStore>(provider =>
             new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>()));
+        services.AddScoped<NativeOperationExecutor>();
         // ISourceFactResolver stays unregistered until Portia publishes the shared connection's IStreamClient
         // (AddStreamClient); the first consuming slice registers FitzSourceFactResolver.
         services.AddScoped<FitzActualStaffEngagementLocator>();
