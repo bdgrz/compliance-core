@@ -198,7 +198,7 @@ public sealed class ServiceEngagementTransportTests
     }
 
     [Fact]
-    public async Task ShouldKeepUnregisteredPersonalDecisionAndAcceptanceRoutesClosedGivenIndependenceSlice()
+    public async Task ShouldKeepUnregisteredAcceptanceRoutesClosedGivenIndependenceSlice()
     {
         // Arrange
         await using var factory = Factory();
@@ -209,13 +209,10 @@ public sealed class ServiceEngagementTransportTests
         // Act
         using var accept = await client.PostAsync($"{path}/acceptance", Json("{}"));
         using var assign = await client.PostAsync($"{path}/actual-assignments/{Uuid.CreateVersion4()}", Json("{}"));
-        using var partner = await client.PostAsync($"{path}/partner-evaluations", Json("{}"));
-        using var acknowledge = await client.PostAsync($"{path}/management-acknowledgements/{Uuid.CreateVersion4()}",
-            Json("{}"));
         using var context = await client.GetAsync($"{path}/partner-review-context");
 
         // Assert
-        Assert.All(new[] { accept, assign, partner, acknowledge, context },
+        Assert.All(new[] { accept, assign, context },
             response => Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed,
                 response.StatusCode.ToString()));
     }

@@ -41,31 +41,31 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 431,
-    "factsWithReducer": 409,
-    "factsWithAggregateEmitter": 402,
+    "domainEventContracts": 445,
+    "factsWithReducer": 423,
+    "factsWithAggregateEmitter": 416,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 108,
-    "aggregateTypesWithCommandPath": 105,
-    "requestContracts": 668,
-    "commonRequestContracts": 666,
+    "aggregateTypes": 110,
+    "aggregateTypesWithCommandPath": 107,
+    "requestContracts": 683,
+    "commonRequestContracts": 681,
     "requestClassificationCounts": {
-      "command": 343,
+      "command": 345,
       "confirmed_command_gap": 8,
-      "deferred_command": 9,
+      "deferred_command": 7,
       "internal_executor_context": 1,
-      "internal_reaction": 33,
+      "internal_reaction": 48,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 605,
+    "registeredCoreHandlerRegistrations": 622,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 45,
+    "unwiredAggregateProducerOperations": 43,
     "unwiredAggregateProducerClassifications": {
       "legacy_emitter_to_prune": 8,
-      "no_registered_request_route": 21,
+      "no_registered_request_route": 19,
       "direct_reactor_executor": 6,
       "direct_processor_executor": 10
     },
@@ -2174,6 +2174,42 @@
       "note": ""
     },
     {
+      "fact": "ClientServicePersonalDecisionUseAuthorized",
+      "contract": "src/Compliance.Common/Features/AccessControl/ClientServicePersonalDecisionUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "ClientServiceIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ClientServicePersonalDecisionUseSettled",
+      "contract": "src/Compliance.Common/Features/AccessControl/ClientServicePersonalDecisionUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "ClientServiceIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "ClientServiceRetired",
       "contract": "src/Compliance.Common/Features/Programs/ClientServiceRetired.cs",
       "reducers": [
@@ -3204,15 +3240,89 @@
       "contract": "src/Compliance.Common/Features/AccessControl/EngagementManagementAcknowledged.cs",
       "reducers": [
         {
-          "aggregate": "IndependenceLedger",
-          "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs"
+          "aggregate": "EngagementManagementAcknowledgement",
+          "source": "src/Compliance.Core/Features/AccessControl/EngagementManagementAcknowledgement.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceLedger.Management.cs"
+        "src/Compliance.Core/Features/AccessControl/EngagementManagementAcknowledgement.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "EngagementPersonalDecisionAdmitted",
+      "contract": "src/Compliance.Common/Features/AccessControl/EngagementPersonalDecisionAdmitted.cs",
+      "reducers": [
+        {
+          "aggregate": "ServiceEngagementIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "EngagementPersonalDecisionAuthorized",
+      "contract": "src/Compliance.Common/Features/AccessControl/EngagementPersonalDecisionAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "ServiceEngagementIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "EngagementPersonalDecisionCanceled",
+      "contract": "src/Compliance.Common/Features/AccessControl/EngagementPersonalDecisionCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "ServiceEngagementIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "EngagementPersonalDecisionMaterialized",
+      "contract": "src/Compliance.Common/Features/AccessControl/EngagementPersonalDecisionMaterialized.cs",
+      "reducers": [
+        {
+          "aggregate": "ServiceEngagementIndependence",
+          "source": "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3775,6 +3885,42 @@
       "note": ""
     },
     {
+      "fact": "FirmProfessionalDutyDesignationEngagementUseAuthorized",
+      "contract": "src/Compliance.Common/Features/AccessControl/FirmProfessionalDutyDesignationEngagementUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmProfessionalDutyDesignation",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FirmProfessionalDutyDesignationEngagementUseSettled",
+      "contract": "src/Compliance.Common/Features/AccessControl/FirmProfessionalDutyDesignationEngagementUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmProfessionalDutyDesignation",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "FirmProfessionalDutyDesignationRecorded",
       "contract": "src/Compliance.Common/Features/AccessControl/FirmProfessionalDutyDesignationRecorded.cs",
       "reducers": [
@@ -3880,6 +4026,42 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FirmStaffRecordEngagementUseAuthorized",
+      "contract": "src/Compliance.Common/Features/AccessControl/FirmStaffRecordEngagementUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmStaffRecord",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "FirmStaffRecordEngagementUseSettled",
+      "contract": "src/Compliance.Common/Features/AccessControl/FirmStaffRecordEngagementUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "FirmStaffRecord",
+          "source": "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4020,6 +4202,78 @@
         "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
       ],
       "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "IndependenceRuleCatalogEngagementUseAuthorized",
+      "contract": "src/Compliance.Common/Features/AccessControl/IndependenceRuleCatalogEngagementUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "IndependenceRuleCatalog",
+          "source": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "IndependenceRuleCatalogEngagementUseSettled",
+      "contract": "src/Compliance.Common/Features/AccessControl/IndependenceRuleCatalogEngagementUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "IndependenceRuleCatalog",
+          "source": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "IndependenceRuleRatificationCatalogEngagementUseAuthorized",
+      "contract": "src/Compliance.Common/Features/AccessControl/IndependenceRuleRatificationCatalogEngagementUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "IndependenceRuleRatificationCatalog",
+          "source": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "IndependenceRuleRatificationCatalogEngagementUseSettled",
+      "contract": "src/Compliance.Common/Features/AccessControl/IndependenceRuleRatificationCatalogEngagementUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "IndependenceRuleRatificationCatalog",
+          "source": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -4711,14 +4965,17 @@
       "contract": "src/Compliance.Common/Features/AccessControl/PartnerIndependenceEvaluationRecorded.cs",
       "reducers": [
         {
-          "aggregate": "IndependenceLedger",
-          "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs"
+          "aggregate": "PartnerIndependenceDecision",
+          "source": "src/Compliance.Core/Features/AccessControl/PartnerIndependenceDecision.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessControl/IndependenceLedger.PartnerEvaluation.cs"
+        "src/Compliance.Core/Features/AccessControl/PartnerIndependenceDecision.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -8497,16 +8754,23 @@
       "source": "src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs",
       "appliedFacts": [
         "ClientIndependenceEvaluationAdmitted",
+        "ClientServicePersonalDecisionUseAuthorized",
+        "ClientServicePersonalDecisionUseSettled",
         "NonattestServiceRecorded"
       ],
       "commandRequests": [
         "EvaluateClientIndependence",
         "RecordNonattestService"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "AuthorizeClientServicePersonalDecisionUse",
+        "SettleClientServicePersonalDecisionUse"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/ClientServiceIndependenceTests.cs",
-        "test/Compliance.Tests/Testing/IndependenceFacts.cs"
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
+        "test/Compliance.Tests/Testing/IndependenceFacts.cs",
+        "test/Compliance.Tests/Testing/PersonalDecisionFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9041,6 +9305,23 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
+      "aggregate": "EngagementManagementAcknowledgement",
+      "source": "src/Compliance.Core/Features/AccessControl/EngagementManagementAcknowledgement.cs",
+      "appliedFacts": [
+        "EngagementManagementAcknowledged"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "MaterializeEngagementManagementAcknowledgement"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
       "aggregate": "EvidenceArtifact",
       "source": "src/Compliance.Core/Features/Evidence/EvidenceArtifact.cs",
       "appliedFacts": [
@@ -9276,6 +9557,8 @@
       "aggregate": "FirmProfessionalDutyDesignation",
       "source": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs",
       "appliedFacts": [
+        "FirmProfessionalDutyDesignationEngagementUseAuthorized",
+        "FirmProfessionalDutyDesignationEngagementUseSettled",
         "FirmProfessionalDutyDesignationRecorded",
         "FirmProfessionalDutyDesignationRevoked",
         "ProfessionalDutyChangeAccepted",
@@ -9287,11 +9570,15 @@
       ],
       "internalReactionRequests": [
         "ApplyProfessionalDutyChange",
-        "RejectProfessionalDutyChange"
+        "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+        "RejectProfessionalDutyChange",
+        "SettleFirmProfessionalDutyDesignationEngagementUse"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
+        "test/Compliance.Tests/Testing/PersonalDecisionFacts.cs",
         "test/Compliance.Tests/Testing/ProfessionalDutyFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -9318,6 +9605,8 @@
         "FirmStaffChangeRecorded",
         "FirmStaffProfessionalDutyUseAuthorized",
         "FirmStaffProfessionalDutyUseSettled",
+        "FirmStaffRecordEngagementUseAuthorized",
+        "FirmStaffRecordEngagementUseSettled",
         "FirmStaffRegistrationAccepted",
         "FirmStaffRegistrationRejected"
       ],
@@ -9327,17 +9616,21 @@
       ],
       "internalReactionRequests": [
         "AuthorizeFirmStaffProfessionalDutyUse",
+        "AuthorizeFirmStaffRecordEngagementUse",
         "ClaimFirmStaffIdentity",
         "CompleteFirmStaffRegistration",
         "RejectFirmStaffRegistration",
-        "SettleFirmStaffProfessionalDutyUse"
+        "SettleFirmStaffProfessionalDutyUse",
+        "SettleFirmStaffRecordEngagementUse"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRecordTests.cs",
         "test/Compliance.Tests/Features/AccessControl/FirmStaffRetainedStatusTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
-        "test/Compliance.Tests/Testing/FirmStaffFacts.cs"
+        "test/Compliance.Tests/Testing/FirmStaffFacts.cs",
+        "test/Compliance.Tests/Testing/PersonalDecisionFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9399,8 +9692,6 @@
       "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
       "appliedFacts": [
         "DirectoryIndependenceReevaluated",
-        "EngagementManagementAcknowledged",
-        "PartnerIndependenceEvaluationRecorded",
         "ServiceEngagementAcceptanceRecorded",
         "ServiceEngagementStaffAssigned"
       ],
@@ -9418,18 +9709,26 @@
       "aggregate": "IndependenceRuleCatalog",
       "source": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs",
       "appliedFacts": [
+        "IndependenceRuleCatalogEngagementUseAuthorized",
+        "IndependenceRuleCatalogEngagementUseSettled",
         "IndependenceRulesRevised"
       ],
       "commandRequests": [
         "ReviseIndependenceRules"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "AuthorizeIndependenceRuleCatalogEngagementUse",
+        "SettleIndependenceRuleCatalogEngagementUse"
+      ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceLedgerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceOperationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceRuleCatalogLifetimeTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
-        "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs"
+        "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs",
+        "test/Compliance.Tests/Testing/PersonalDecisionFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9437,16 +9736,24 @@
       "aggregate": "IndependenceRuleRatificationCatalog",
       "source": "src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs",
       "appliedFacts": [
+        "IndependenceRuleRatificationCatalogEngagementUseAuthorized",
+        "IndependenceRuleRatificationCatalogEngagementUseSettled",
         "IndependenceRuleRatificationRecorded"
       ],
       "commandRequests": [
         "RatifyIndependenceRuleVersion"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "AuthorizeIndependenceRuleRatificationCatalogEngagementUse",
+        "SettleIndependenceRuleRatificationCatalogEngagementUse"
+      ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/IndependenceRuleCatalogLifetimeTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceRuleRatificationCatalogTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs",
+        "test/Compliance.Tests/Testing/PersonalDecisionFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -9837,6 +10144,22 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterAggregateTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "PartnerIndependenceDecision",
+      "source": "src/Compliance.Core/Features/AccessControl/PartnerIndependenceDecision.cs",
+      "appliedFacts": [
+        "PartnerIndependenceEvaluationRecorded"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "MaterializePartnerIndependenceDecision"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10449,22 +10772,38 @@
       "aggregate": "ServiceEngagementIndependence",
       "source": "src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs",
       "appliedFacts": [
+        "EngagementPersonalDecisionAdmitted",
+        "EngagementPersonalDecisionAuthorized",
+        "EngagementPersonalDecisionCanceled",
+        "EngagementPersonalDecisionMaterialized",
         "ServiceEngagementAssignmentRevoked",
         "ServiceEngagementMutationRecorded"
       ],
       "commandRequests": [
+        "AcknowledgeEngagementManagement",
         "AmendServiceEngagement",
         "CloseServiceEngagement",
         "CreateServiceEngagement",
         "ProposeServiceEngagementStaff",
+        "RecordPartnerIndependenceEvaluation",
         "RevokeServiceEngagementActualStaff",
         "WithdrawServiceEngagementStaffProposal"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "AuthorizeEngagementPersonalDecision",
+        "CancelEngagementPersonalDecision",
+        "SettleEngagementPersonalDecision"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTransportTests.cs",
         "test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ServiceEngagementIndependenceTests.cs",
+        "test/Compliance.Tests/Testing/PersonalDecisionFacts.cs",
         "test/Compliance.Tests/Testing/ServiceEngagementFacts.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
@@ -11449,17 +11788,31 @@
     {
       "request": "AcknowledgeEngagementManagement",
       "contract": "src/Compliance.Common/Features/AccessControl/AcknowledgeEngagementManagement.cs",
-      "interfaces": "IRequest<EngagementManagementAcknowledgementView>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, ICallable",
-      "classification": "deferred_command",
-      "handlers": [],
-      "handlerRegistration": false,
-      "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs"
+      "interfaces": "IRequest<OperationAcceptedResponse>, IIndependenceAdministrationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
+      "classification": "command",
+      "handlers": [
+        {
+          "name": "AcknowledgeEngagementManagementHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/AcknowledgeEngagementManagementHandler.cs",
+          "registered": true
+        }
       ],
-      "note": "S8: personal management acknowledgement is re-registered by the engagement personal decision slice."
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "ServiceEngagementIndependence"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionAdmission"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTransportTests.cs"
+      ],
+      "note": ""
     },
     {
       "request": "AcknowledgePolicy",
@@ -11997,32 +12350,6 @@
       "note": ""
     },
     {
-      "request": "ApplyProfessionalDutyChange",
-      "contract": "src/Compliance.Common/Features/AccessControl/ApplyProfessionalDutyChange.cs",
-      "interfaces": "IRequest<ReceiverOutcome>, IProfessionalDutyChangeReceiver, IIdentifiedRequest",
-      "classification": "internal_reaction",
-      "handlers": [
-        {
-          "name": "ApplyProfessionalDutyChangeHandler",
-          "source": "src/Compliance.Core/Features/AccessControl/ApplyProfessionalDutyChangeHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [],
-      "aggregateTargets": [
-        "FirmProfessionalDutyDesignation"
-      ],
-      "helperServices": [
-        "ProfessionalDutyChangeReceivers"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
-        "test/Compliance.Tests/Testing/ProfessionalDutyFacts.cs"
-      ],
-      "note": "System-only professional-duty process receiver; records or revokes the designation only after the exact permanent claim (and, for recording, the granted staff use). No HTTP/MCP route."
-    },
-    {
       "request": "ApplyNeutralAdministratorAssignmentMutation",
       "contract": "src/Compliance.Common/Features/AccessControl/ApplyNeutralAdministratorAssignmentMutation.cs",
       "interfaces": "IAdministratorTransitionReceiver",
@@ -12068,6 +12395,32 @@
         "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs"
       ],
       "note": "Process receiver: applies a member mutation the guard admitted as neutral. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ApplyProfessionalDutyChange",
+      "contract": "src/Compliance.Common/Features/AccessControl/ApplyProfessionalDutyChange.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IProfessionalDutyChangeReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyProfessionalDutyChangeHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/ApplyProfessionalDutyChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "FirmProfessionalDutyDesignation"
+      ],
+      "helperServices": [
+        "ProfessionalDutyChangeReceivers"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs",
+        "test/Compliance.Tests/Testing/ProfessionalDutyFacts.cs"
+      ],
+      "note": "System-only professional-duty process receiver; records or revokes the designation only after the exact permanent claim (and, for recording, the granted staff use). No HTTP/MCP route."
     },
     {
       "request": "ApproveAccessExpectation",
@@ -12967,6 +13320,87 @@
       "note": ""
     },
     {
+      "request": "AuthorizeClientServicePersonalDecisionUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/AuthorizeClientServicePersonalDecisionUse.cs",
+      "interfaces": "ISourceUseAuthorization, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeClientServicePersonalDecisionUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/AuthorizeClientServicePersonalDecisionUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ClientServiceIndependence"
+      ],
+      "aggregateTargets": [
+        "ClientServiceIndependence"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic acquire base; holds the exact source content the decision pinned at admission, or rejects the decision so the abort path cancels it and fences every use. No HTTP/MCP route."
+    },
+    {
+      "request": "AuthorizeEngagementPersonalDecision",
+      "contract": "src/Compliance.Common/Features/AccessControl/AuthorizeEngagementPersonalDecision.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IEngagementPersonalDecisionReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeEngagementPersonalDecisionHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/AuthorizeEngagementPersonalDecisionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ServiceEngagementIndependence"
+      ],
+      "aggregateTargets": [
+        "ServiceEngagementIndependence"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver; re-proves every required source use from its owner, judges temporal validity at the frozen decision instant and appends the irreversible authorization. No HTTP/MCP route."
+    },
+    {
+      "request": "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/AuthorizeFirmProfessionalDutyDesignationEngagementUse.cs",
+      "interfaces": "ISourceUseAuthorization, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeFirmProfessionalDutyDesignationEngagementUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/AuthorizeFirmProfessionalDutyDesignationEngagementUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FirmProfessionalDutyDesignation"
+      ],
+      "aggregateTargets": [
+        "FirmProfessionalDutyDesignation"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic acquire base; holds the exact source content the decision pinned at admission, or rejects the decision so the abort path cancels it and fences every use. No HTTP/MCP route."
+    },
+    {
       "request": "AuthorizeFirmStaffProfessionalDutyUse",
       "contract": "src/Compliance.Common/Features/AccessControl/AuthorizeFirmStaffProfessionalDutyUse.cs",
       "interfaces": "ISourceUseAuthorization, IProfessionalDutyChangeReceiver",
@@ -12993,6 +13427,87 @@
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
       ],
       "note": "System-only professional-duty process receiver on the generic acquire base; holds the exact active staff content a recording pinned at admission, or rejects the change and fences the key. No HTTP/MCP route."
+    },
+    {
+      "request": "AuthorizeFirmStaffRecordEngagementUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/AuthorizeFirmStaffRecordEngagementUse.cs",
+      "interfaces": "ISourceUseAuthorization, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeFirmStaffRecordEngagementUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/AuthorizeFirmStaffRecordEngagementUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FirmStaffRecord"
+      ],
+      "aggregateTargets": [
+        "FirmStaffRecord"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic acquire base; holds the exact source content the decision pinned at admission, or rejects the decision so the abort path cancels it and fences every use. No HTTP/MCP route."
+    },
+    {
+      "request": "AuthorizeIndependenceRuleCatalogEngagementUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/AuthorizeIndependenceRuleCatalogEngagementUse.cs",
+      "interfaces": "ISourceUseAuthorization, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeIndependenceRuleCatalogEngagementUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/AuthorizeIndependenceRuleCatalogEngagementUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "IndependenceRuleCatalog"
+      ],
+      "aggregateTargets": [
+        "IndependenceRuleCatalog"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic acquire base; holds the exact source content the decision pinned at admission, or rejects the decision so the abort path cancels it and fences every use. No HTTP/MCP route."
+    },
+    {
+      "request": "AuthorizeIndependenceRuleRatificationCatalogEngagementUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/AuthorizeIndependenceRuleRatificationCatalogEngagementUse.cs",
+      "interfaces": "ISourceUseAuthorization, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeIndependenceRuleRatificationCatalogEngagementUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/AuthorizeIndependenceRuleRatificationCatalogEngagementUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "IndependenceRuleRatificationCatalog"
+      ],
+      "aggregateTargets": [
+        "IndependenceRuleRatificationCatalog"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic acquire base; holds the exact source content the decision pinned at admission, or rejects the decision so the abort path cancels it and fences every use. No HTTP/MCP route."
     },
     {
       "request": "AuthorizeWorkDigestUnknownRetry",
@@ -13100,6 +13615,33 @@
         "test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "CancelEngagementPersonalDecision",
+      "contract": "src/Compliance.Common/Features/AccessControl/CancelEngagementPersonalDecision.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IEngagementPersonalDecisionReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CancelEngagementPersonalDecisionHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/CancelEngagementPersonalDecisionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ServiceEngagementIndependence"
+      ],
+      "aggregateTargets": [
+        "ServiceEngagementIndependence"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision abort receiver; cancels only before authorization. No HTTP/MCP route."
     },
     {
       "request": "CancelEvidenceRequest",
@@ -21072,6 +21614,61 @@
       "note": "System-only preview process receiver; computes the immutable historical preview from the frozen intent only and never grants production acceptance. No HTTP/MCP route."
     },
     {
+      "request": "MaterializeEngagementManagementAcknowledgement",
+      "contract": "src/Compliance.Common/Features/AccessControl/MaterializeEngagementManagementAcknowledgement.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IEngagementPersonalDecisionReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "MaterializeEngagementManagementAcknowledgementHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/MaterializeEngagementManagementAcknowledgementHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "EngagementManagementAcknowledgement"
+      ],
+      "aggregateTargets": [
+        "EngagementManagementAcknowledgement"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver; materializes the immutable acknowledgement from the authorization fact only. No HTTP/MCP route."
+    },
+    {
+      "request": "MaterializePartnerIndependenceDecision",
+      "contract": "src/Compliance.Common/Features/AccessControl/MaterializePartnerIndependenceDecision.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IEngagementPersonalDecisionReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "MaterializePartnerIndependenceDecisionHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/MaterializePartnerIndependenceDecisionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "PartnerIndependenceDecision"
+      ],
+      "aggregateTargets": [
+        "PartnerIndependenceDecision"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs"
+      ],
+      "note": "System-only personal decision process receiver; materializes the immutable partner evaluation from the authorization fact and the pinned sources only. No HTTP/MCP route."
+    },
+    {
       "request": "MigrateFindingHistory",
       "contract": "src/Compliance.Common/Features/Remediation/MigrateFindingHistory.cs",
       "interfaces": "IRequest",
@@ -23430,15 +24027,29 @@
     {
       "request": "RecordPartnerIndependenceEvaluation",
       "contract": "src/Compliance.Common/Features/AccessControl/RecordPartnerIndependenceEvaluation.cs",
-      "interfaces": "IRequest<PartnerIndependenceEvaluationView>, IPersonalEngagementPartnerRequest, ICallable",
-      "classification": "deferred_command",
-      "handlers": [],
-      "handlerRegistration": false,
+      "interfaces": "IRequest<OperationAcceptedResponse>, IPersonalEngagementPartnerRequest, IIdentifiedRequest, ICallable",
+      "classification": "command",
+      "handlers": [
+        {
+          "name": "RecordPartnerIndependenceEvaluationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/RecordPartnerIndependenceEvaluationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
       "directAggregateReferences": [],
-      "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
-      "note": "S8: personal partner evaluation is re-registered by the engagement personal decision slice."
+      "aggregateTargets": [
+        "ServiceEngagementIndependence"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionAdmission"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs"
+      ],
+      "note": ""
     },
     {
       "request": "RecordPerson",
@@ -26545,6 +27156,87 @@
       "note": ""
     },
     {
+      "request": "SettleClientServicePersonalDecisionUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/SettleClientServicePersonalDecisionUse.cs",
+      "interfaces": "ISourceUseSettlement, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleClientServicePersonalDecisionUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/SettleClientServicePersonalDecisionUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ClientServiceIndependence"
+      ],
+      "aggregateTargets": [
+        "ClientServiceIndependence"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic settle base; the disposition follows the terminal fact of the engagement owner and a settlement before any grant fences the key. No HTTP/MCP route."
+    },
+    {
+      "request": "SettleEngagementPersonalDecision",
+      "contract": "src/Compliance.Common/Features/AccessControl/SettleEngagementPersonalDecision.cs",
+      "interfaces": "IRequest<ReceiverOutcome>, IEngagementPersonalDecisionReceiver, IIdentifiedRequest",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleEngagementPersonalDecisionHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/SettleEngagementPersonalDecisionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "ServiceEngagementIndependence"
+      ],
+      "aggregateTargets": [
+        "ServiceEngagementIndependence"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver; releases the engagement content pin of a materialized decision and records the decision pointer. No HTTP/MCP route."
+    },
+    {
+      "request": "SettleFirmProfessionalDutyDesignationEngagementUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/SettleFirmProfessionalDutyDesignationEngagementUse.cs",
+      "interfaces": "ISourceUseSettlement, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleFirmProfessionalDutyDesignationEngagementUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/SettleFirmProfessionalDutyDesignationEngagementUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FirmProfessionalDutyDesignation"
+      ],
+      "aggregateTargets": [
+        "FirmProfessionalDutyDesignation"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic settle base; the disposition follows the terminal fact of the engagement owner and a settlement before any grant fences the key. No HTTP/MCP route."
+    },
+    {
       "request": "SettleFirmStaffProfessionalDutyUse",
       "contract": "src/Compliance.Common/Features/AccessControl/SettleFirmStaffProfessionalDutyUse.cs",
       "interfaces": "ISourceUseSettlement, IProfessionalDutyChangeReceiver",
@@ -26570,6 +27262,87 @@
         "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyChangeTests.cs"
       ],
       "note": "System-only professional-duty process receiver on the generic settle base; settles the exact staff use, or fences a key never acquired, with the disposition the terminal source fact requires. No HTTP/MCP route."
+    },
+    {
+      "request": "SettleFirmStaffRecordEngagementUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/SettleFirmStaffRecordEngagementUse.cs",
+      "interfaces": "ISourceUseSettlement, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleFirmStaffRecordEngagementUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/SettleFirmStaffRecordEngagementUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "FirmStaffRecord"
+      ],
+      "aggregateTargets": [
+        "FirmStaffRecord"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic settle base; the disposition follows the terminal fact of the engagement owner and a settlement before any grant fences the key. No HTTP/MCP route."
+    },
+    {
+      "request": "SettleIndependenceRuleCatalogEngagementUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/SettleIndependenceRuleCatalogEngagementUse.cs",
+      "interfaces": "ISourceUseSettlement, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleIndependenceRuleCatalogEngagementUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/SettleIndependenceRuleCatalogEngagementUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "IndependenceRuleCatalog"
+      ],
+      "aggregateTargets": [
+        "IndependenceRuleCatalog"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic settle base; the disposition follows the terminal fact of the engagement owner and a settlement before any grant fences the key. No HTTP/MCP route."
+    },
+    {
+      "request": "SettleIndependenceRuleRatificationCatalogEngagementUse",
+      "contract": "src/Compliance.Common/Features/AccessControl/SettleIndependenceRuleRatificationCatalogEngagementUse.cs",
+      "interfaces": "ISourceUseSettlement, IEngagementPersonalDecisionUse, IEngagementPersonalDecisionReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleIndependenceRuleRatificationCatalogEngagementUseHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/SettleIndependenceRuleRatificationCatalogEngagementUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "IndependenceRuleRatificationCatalog"
+      ],
+      "aggregateTargets": [
+        "IndependenceRuleRatificationCatalog"
+      ],
+      "helperServices": [
+        "EngagementPersonalDecisionVerifier"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessControl/EngagementPersonalDecisionTests.cs"
+      ],
+      "note": "System-only personal decision process receiver on the generic settle base; the disposition follows the terminal fact of the engagement owner and a settlement before any grant fences the key. No HTTP/MCP route."
     },
     {
       "request": "SignManagementRepresentationLetter",
@@ -27327,16 +28100,6 @@
       "methodArgumentCount": 2
     },
     {
-      "fact": "EngagementManagementAcknowledged",
-      "aggregate": "IndependenceLedger",
-      "method": "AcknowledgeManagement",
-      "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.Management.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1022,
-      "callerSources": [],
-      "methodArgumentCount": 5
-    },
-    {
       "fact": "FindingAcceptanceLinked",
       "aggregate": "RemediationLedger",
       "method": "LinkAcceptance",
@@ -27425,16 +28188,6 @@
       "ownerIssue": 310,
       "callerSources": [],
       "methodArgumentCount": 5
-    },
-    {
-      "fact": "PartnerIndependenceEvaluationRecorded",
-      "aggregate": "IndependenceLedger",
-      "method": "RecordPartnerIndependenceEvaluation",
-      "source": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.PartnerEvaluation.cs",
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1022,
-      "callerSources": [],
-      "methodArgumentCount": 6
     },
     {
       "fact": "ProgramNextPeriodCreated",

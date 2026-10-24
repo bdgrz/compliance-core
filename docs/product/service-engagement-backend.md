@@ -61,10 +61,13 @@ revision is retained and history is never truncated. Reusing a command identity
 for another mutation conflicts. Closed drafts cannot be reopened or edited. A
 draft amendment cannot rewrite its practice identity, and the proposed lead must
 remain selected until another lead is recorded. Acceptance, actual-staff
-assignment, personal management acknowledgement, the partner evaluation and the
-partner review context are unregistered until the personal-decision and
-acceptance work lands; revoking actual staff applies only to an accepted
-engagement.
+assignment and the partner review context are unregistered until the acceptance
+work lands; revoking actual staff applies only to an accepted engagement. The
+personal management acknowledgement and the partner evaluation are admitted on
+the engagement owner against `expected_engagement_revision` and
+`expected_service_epoch`; while one is pending it pins the engagement content,
+so lifecycle changes return a transient conflict until it is materialized or
+canceled.
 
 Professional duties are never inferred from this metadata. The platform duty
 catalog accepts only a signed assertion from the deployment-configured firm

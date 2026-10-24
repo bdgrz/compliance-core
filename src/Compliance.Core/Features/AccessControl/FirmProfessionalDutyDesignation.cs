@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
@@ -11,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     authority revision and the continuity proof carried by the latest designation content. The logical revision
 ///     counts applied changes. At most one accepted change is pending; it ends as recorded, revoked or rejected.
 /// </summary>
-public sealed class FirmProfessionalDutyDesignation : Aggregate
+public sealed class FirmProfessionalDutyDesignation : Aggregate, ISourceUseOwner
 {
     /// <summary>Stream area of every designation owner.</summary>
     public const string Area = "firm-professional-duty-designations";
@@ -31,6 +32,7 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate
         Duty = duty;
         TenantId = tenantId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        Uses = new SourceUseReservations(Stream);
         On<ProfessionalDutyChangeAccepted>(accepted =>
         {
             Acceptance.Observe(accepted);
@@ -63,7 +65,22 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate
             _terminal.Add(_pending.Value, rejected);
             _pending = null;
         });
+        On<FirmProfessionalDutyDesignationEngagementUseAuthorized>(granted =>
+        {
+            Acceptance.Observe(granted);
+            if (_latest is null || granted.Revision != (long)_revision)
+                throw new InvalidOperationException("A designation use is granted on a recorded designation at its held revision.");
+            Uses.ApplyGranted(SourceUsePurpose.EngagementPersonalDecision, granted);
+        });
+        On<FirmProfessionalDutyDesignationEngagementUseSettled>(settled =>
+        {
+            Acceptance.Observe(settled);
+            Uses.ApplySettled(SourceUsePurpose.EngagementPersonalDecision, settled);
+        });
     }
+
+    /// <summary>The active grants, receiver generation and fences of this designation's source uses.</summary>
+    public SourceUseReservations Uses { get; }
 
     /// <summary>The canonical user the designation names.</summary>
     public Uuid UserId { get; }
@@ -129,6 +146,9 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate
         if (_pending is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Another professional-duty change is still being applied; retry after it ends.", true));
+        if (Uses.HasActiveUse)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "An engagement personal decision holds this designation; retry after it settles.", true));
         return expectedRevision == (long)_revision
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -151,6 +171,32 @@ public sealed class FirmProfessionalDutyDesignation : Aggregate
             return prepared;
         RaiseEvent(new ProfessionalDutyChangeAccepted(Stream, (long)_revision, ProfessionalDutyEffects.Generation,
             intent, null, operation, firstResponse, null));
+        return Result.Success;
+    }
+
+    /// <summary>Holds this exact recorded designation for an engagement personal decision; the revision does not advance.</summary>
+    public Result AuthorizeEngagementUse(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (_latest is null || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only a recorded designation can be held, on its own stream.", true));
+        RaiseEvent(new FirmProfessionalDutyDesignationEngagementUseAuthorized(Stream, (long)_revision, generation,
+            intent, null, operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Settles an engagement use, or fences its key when no grant exists yet.</summary>
+    public Result SettleEngagementUse(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A settlement is recorded on the held designation stream."));
+        RaiseEvent(new FirmProfessionalDutyDesignationEngagementUseSettled(Stream, (long)_revision, generation,
+            intent, null, operation, null, null));
         return Result.Success;
     }
 

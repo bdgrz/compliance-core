@@ -23,16 +23,20 @@ sealed class IndependenceHost : IAsyncDisposable
     public IndependenceHost(bool permitted = true)
     {
         var services = new ServiceCollection();
-        services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        var settings = new Dictionary<string, string?>
         {
             ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
             ["Fitz:ApplicationName"] = "compliance",
-        }).Build(), developerAuthentication: true);
+        };
+        ProfessionalDutyAssertionTestIssuer.AddConfiguration(settings);
+        services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(settings).Build(),
+            developerAuthentication: true);
         var events = new InMemoryEventStore();
         services.AddSingleton<IEventStore>(events);
         services.AddSingleton<IDomainEventReader>(events);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());
         services.AddSingleton<IPermissionAuthorizer>(new RecordingPermissionAuthorizer(permitted));
+        services.AddSingleton<IPlatformUserDirectoryReader>(new AnyPlatformUserDirectory());
         services.AddSingleton<ITenantActivity>(new ActiveTenant());
         services.AddSingleton<ITenantMembershipDirectoryReader>(new FixedMembershipDirectory(true));
         Provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
@@ -65,6 +69,12 @@ sealed class IndependenceHost : IAsyncDisposable
 
     public ValueTask<Result<TResult>> SendAsync<TResult>(IRequest<TResult> request, ClaimsPrincipal? actor = null) =>
         Bus.SendAsync(request, actor ?? Actor);
+
+    /// <summary>Dispatches a request as a personal HTTP call by <paramref name="actor" /> (default: the client administrator).</summary>
+    public ValueTask<Result<TResult>> HttpAsync<TResult>(IRequest<TResult> request, ClaimsPrincipal? actor = null) =>
+        Bus.DispatchAsync(request, new RequestDispatchContext(actor ?? Actor,
+            new HttpInvocation("PUT", "/synthetic/decision", "/synthetic/decision", "synthetic")),
+            CancellationToken.None);
 
     public async Task<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate) where TAggregate : Aggregate =>
         await Scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(aggregate);

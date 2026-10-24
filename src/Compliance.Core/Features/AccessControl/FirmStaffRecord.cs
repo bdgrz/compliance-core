@@ -73,6 +73,18 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
             Acceptance.Observe(settled);
             Uses.ApplySettled(SourceUsePurpose.ProfessionalDutyRecording, settled);
         });
+        On<FirmStaffRecordEngagementUseAuthorized>(granted =>
+        {
+            Acceptance.Observe(granted);
+            if (_latest is null || granted.Revision != (long)_revision)
+                throw new InvalidOperationException("A staff use is granted on a registered record at its held revision.");
+            Uses.ApplyGranted(SourceUsePurpose.EngagementPersonalDecision, granted);
+        });
+        On<FirmStaffRecordEngagementUseSettled>(settled =>
+        {
+            Acceptance.Observe(settled);
+            Uses.ApplySettled(SourceUsePurpose.EngagementPersonalDecision, settled);
+        });
     }
 
     /// <summary>The active grants, receiver generation and fences of this record's source uses.</summary>
@@ -175,7 +187,7 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The staff member was not found."));
         if (Uses.HasActiveUse)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "A professional-duty change holds this staff record; retry after it settles.", true));
+                "A professional-duty change or an engagement personal decision holds this staff record; retry after it settles.", true));
         return expectedRevision == _revision
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -208,6 +220,32 @@ public sealed class FirmStaffRecord : Aggregate, ISourceUseOwner
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only a registered staff record can be held, on its own stream.", true));
         RaiseEvent(new FirmStaffProfessionalDutyUseAuthorized(Stream, (long)_revision, generation, intent, null,
+            operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Holds this exact registered record for an engagement personal decision; the revision does not advance.</summary>
+    public Result AuthorizeEngagementUse(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (!IsRegistered || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "Only a registered staff record can be held, on its own stream.", true));
+        RaiseEvent(new FirmStaffRecordEngagementUseAuthorized(Stream, (long)_revision, generation, intent, null,
+            operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Settles an engagement use, or fences its key when no grant exists yet.</summary>
+    public Result SettleEngagementUse(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A settlement is recorded on the held staff stream."));
+        RaiseEvent(new FirmStaffRecordEngagementUseSettled(Stream, (long)_revision, generation, intent, null,
             operation, null, null));
         return Result.Success;
     }

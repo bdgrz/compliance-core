@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateReader reader,
     FirmStaffViews staffViews, ProfessionalDutyAuthorityReader duties, CurrentRatifiedIndependenceRulesReader rulesReader,
     IBoundaryDirectoryReader boundaries, BoundaryHistoryReadConsistency boundaryConsistency,
-    TimeProvider clock) : IServiceEngagementAcceptanceEvidenceReader
+    EngagementPersonalDecisionViews personalDecisions, TimeProvider clock) : IServiceEngagementAcceptanceEvidenceReader
 {
     public async ValueTask<Result<ServiceEngagementAcceptanceEvidence>> ReadCurrentAsync(Uuid tenantId,
         Uuid engagementId, Uuid actorUserId, CancellationToken ct)
@@ -52,7 +52,8 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
         }
 
         var serviceIds = ledger.History().Services.Select(item => item.ServiceRecordId).ToArray();
-        var acknowledgement = ledger.ManagementAcknowledgements(engagementId)
+        var acknowledgement = (await personalDecisions.ManagementAcknowledgementsAsync(tenantId, engagementId, ct)
+            .ConfigureAwait(false))
             .Where(item => item.EngagementRevision == engagement.Revision && item.UserId != partner.UserId &&
                 item.CompleteServiceRecordIds.Count == serviceIds.Length &&
                 item.CompleteServiceRecordIds.ToHashSet().SetEquals(serviceIds))
@@ -74,7 +75,8 @@ sealed class EventSourcedServiceEngagementAcceptanceEvidenceReader(IAggregateRea
                 sourceRecords, engagement.Content.PeriodStart, partnerEvaluationRecorded: false);
             if (decision.Code == IndependenceDecisionCode.PartnerEvaluationRequired)
             {
-                evaluation = ledger.PartnerEvaluationsFor(engagementId).LastOrDefault(item =>
+                evaluation = (await personalDecisions.PartnerEvaluationsAsync(tenantId, engagementId, ct)
+                    .ConfigureAwait(false)).LastOrDefault(item =>
                     MatchesEvaluation(item, tenantId, engagement, rules, serviceHistory, partner,
                         duty.Designation, clock.GetUtcNow()));
                 if (evaluation is null)

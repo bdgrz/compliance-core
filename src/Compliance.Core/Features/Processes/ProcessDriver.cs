@@ -102,6 +102,20 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 break;
             }
 
+            if (result.Value is Features.Processes.ReceiverOutcome.Rejected rejected &&
+                record.State != ProcessState.Aborting)
+            {
+                // The operation can never proceed: fence through the abort receivers, then settle what was held.
+                record = await store.ReplaceAsync(record with
+                {
+                    State = ProcessState.Aborting,
+                    Lease = null,
+                    NextDueAt = now,
+                    Note = $"{step.Receiver} rejected: {rejected.Reason}",
+                }, record.Version, ct).ConfigureAwait(false);
+                continue;
+            }
+
             record = await Advance(record, step, definition, result.Value switch
             {
                 Features.Processes.ReceiverOutcome.Applied applied => applied.Fact,

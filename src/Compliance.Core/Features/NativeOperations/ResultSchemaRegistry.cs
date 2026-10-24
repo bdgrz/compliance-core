@@ -26,6 +26,14 @@ public static class ResultSchemaRegistry
         [IndependenceContent.EvaluationSchema] = ComplianceCoreJsonContext.Default.IndependenceEvaluationView,
         [IndependenceContent.EngagementSchema] = ComplianceCoreJsonContext.Default.ServiceEngagementView,
         [IndependenceContent.RevocationSchema] = ComplianceCoreJsonContext.Default.ServiceEngagementAcceptanceView,
+        [EngagementPersonalDecisionEffects.AcknowledgementSchema] =
+            ComplianceCoreJsonContext.Default.EngagementManagementAcknowledgementView,
+        [EngagementPersonalDecisionEffects.EvaluationSchema] =
+            ComplianceCoreJsonContext.Default.PartnerIndependenceEvaluationView,
+        [EngagementPersonalDecisionEffects.RatifiedRulesSchema] =
+            ComplianceCoreJsonContext.Default.IndependenceRuleVersionView,
+        [EngagementPersonalDecisionEffects.RatificationSchema] =
+            ComplianceCoreJsonContext.Default.IndependenceRuleRatificationView,
     };
 
     /// <summary>Registered schema names.</summary>

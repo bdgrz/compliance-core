@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
@@ -9,9 +10,11 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 ///     The complete nonattest service history of one client and its service epoch. Every recorded service is an
 ///     immutable fact in record order and advances the epoch by one; no count bounds the history. An admitted preview
 ///     evaluation is a root fact at the current epoch and leaves the epoch unchanged, so evaluations and later read
-///     uses never contend with service records.
+///     uses never contend with service records. The owner embeds <see cref="SourceUseReservations" />: a personal
+///     decision that holds the exact epoch does not advance it, but a held epoch refuses further services until the
+///     use is settled.
 /// </summary>
-public sealed class ClientServiceIndependence : Aggregate
+public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
 {
     /// <summary>Stream area of every client service owner.</summary>
     public const string Area = "client-service-independence";
@@ -32,6 +35,7 @@ public sealed class ClientServiceIndependence : Aggregate
     {
         _tenantId = tenantId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
+        Uses = new SourceUseReservations(Stream);
         On<NonattestServiceRecorded>(recorded =>
         {
             Acceptance.Observe(recorded);
@@ -56,13 +60,31 @@ public sealed class ClientServiceIndependence : Aggregate
                     "An evaluation is admitted once, at the current service epoch of its own client.");
             _admissions.Add(admitted);
         });
+        On<ClientServicePersonalDecisionUseAuthorized>(granted =>
+        {
+            Acceptance.Observe(granted);
+            if (granted.Revision != _services.Count)
+                throw new InvalidOperationException("A service epoch is held exactly at its current epoch.");
+            Uses.ApplyGranted(SourceUsePurpose.EngagementPersonalDecision, granted);
+        });
+        On<ClientServicePersonalDecisionUseSettled>(settled =>
+        {
+            Acceptance.Observe(settled);
+            Uses.ApplySettled(SourceUsePurpose.EngagementPersonalDecision, settled);
+        });
     }
+
+    /// <summary>The active grants, receiver generation and fences of this owner's source uses.</summary>
+    public SourceUseReservations Uses { get; }
 
     /// <summary>The client tenant this owner serves.</summary>
     public Uuid TenantId => _tenantId;
 
     /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
+
+    /// <summary>The latest recorded service, whose event pins the complete history; null at epoch zero.</summary>
+    public NonattestServiceRecorded? LatestService => _services.LastOrDefault();
 
     /// <summary>The service epoch: the number of services ever recorded for this client.</summary>
     public ulong Epoch => (ulong)_services.Count;
@@ -83,6 +105,9 @@ public sealed class ClientServiceIndependence : Aggregate
         if (_serviceIndex.ContainsKey(serviceRecordId) || _admissionIndex.ContainsKey(serviceRecordId))
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Service identities are immutable and cannot be reused."));
+        if (Uses.HasActiveUse)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A personal decision holds the service epoch of this client; retry after it settles.", true));
         return expectedEpoch == (long)Epoch
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -143,6 +168,33 @@ public sealed class ClientServiceIndependence : Aggregate
                 "A service was recorded while the evaluation was prepared; reload and retry.", true));
         RaiseEvent(new ClientIndependenceEvaluationAdmitted(Stream, (long)Epoch, Generation, intent, null, operation,
             firstResponse, null));
+        return Result.Success;
+    }
+
+    /// <summary>Holds the exact complete service history for a personal decision; the epoch does not advance.</summary>
+    public Result AuthorizePersonalDecisionUse(OperationProvenance operation, ImmutableContentRef intent,
+        long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A service history is held on its own client stream."));
+        RaiseEvent(new ClientServicePersonalDecisionUseAuthorized(Stream, (long)Epoch, generation, intent, null,
+            operation, null, null));
+        return Result.Success;
+    }
+
+    /// <summary>Settles a personal decision use, or fences its key when no grant exists yet.</summary>
+    public Result SettlePersonalDecisionUse(OperationProvenance operation, ImmutableContentRef intent, long generation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(intent);
+        if (operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A settlement is recorded on the held client stream."));
+        RaiseEvent(new ClientServicePersonalDecisionUseSettled(Stream, (long)Epoch, generation, intent, null,
+            operation, null, null));
         return Result.Success;
     }
 }

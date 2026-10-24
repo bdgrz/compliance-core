@@ -55,9 +55,33 @@ atomic engagement acceptance.
 The look-back is at least twelve months. Management-function classifications
 must be impairing. Complete histories and previews are immutable content
 referenced by the facts, so no service or preview count is capped and nothing is
-truncated; the platform draft rule catalog still supports up to one hundred
-versions. Reads use authoritative event-stream hydration, so no asynchronous
-directory or projection can omit service facts from an evaluation.
+truncated; the platform draft rule catalog and the ratification catalog are
+append-only with no version or ratification cap. Reads use authoritative
+event-stream hydration, so no asynchronous directory or projection can omit
+service facts from an evaluation.
+
+Personal engagement decisions are admitted on the engagement owner and
+acknowledged with a fixed 202: `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}`
+(`bdgrz.service-engagement.management-acknowledge`, the owning client's member)
+and `PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations/{evaluation_id}`
+(`bdgrz.service-engagement.partner-evaluation.record`, the designated partner).
+Both compare `expected_engagement_revision` with the engagement content revision
+and `expected_service_epoch` with the client's service epoch. Admission freezes
+the exact engagement content revision, the complete service manifest, the
+authored content and the exact source uses the kind requires, and pins the
+engagement content until the decision is materialized or canceled.
+`EngagementPersonalDecisionProcess` then holds every required use (the service
+history for both kinds; for a partner evaluation also the partner's staff record
+and engagement-partner designation, the draft rule version and its
+ratification), appends the irreversible `EngagementPersonalDecisionAuthorized`
+fact that fixes the decision instant, materializes the independent
+`EngagementManagementAcknowledgement` or `PartnerIndependenceDecision`, and
+settles the uses. A source that changed before its grant rejects the decision:
+the abort receiver cancels it before authorization and every use is settled or
+fenced. A held source refuses its own writers until it settles, an authorized
+decision recovers forward, and an older decision that materializes late never
+regresses the engagement's current decision pointer. Admission alone approves
+nothing; acceptance consumes the independent decisions separately.
 
 Firm ratification evidence remains owned by the quality-management partner in
 [#343](https://github.com/bdgrz/compliance/issues/343). Every preview returns

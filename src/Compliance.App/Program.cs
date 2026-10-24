@@ -721,6 +721,34 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Service engagements");
+    app.MapPortiaPut<AcknowledgeEngagementManagement, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Service engagements");
+    app.MapPortiaPut<RecordPartnerIndependenceEvaluation, OperationAcceptedResponse>(
+            "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations/{evaluation_id}",
+            config => config
+                .Produces<OperationAcceptedResponse>(StatusCodes.Status202Accepted, "application/json")
+                .OnResult((http, result) =>
+                {
+                    if (!result.IsSuccess)
+                        return null;
+                    http.Response.Headers.Location = result.Value.StatusUrl;
+                    return Results.Json(result.Value, ComplianceCoreJsonContext.Default.OperationAcceptedResponse,
+                        statusCode: StatusCodes.Status202Accepted);
+                }))
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Service engagements");
     app.MapPortiaPut<CloseServiceEngagement, ServiceEngagementView>(
             "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
