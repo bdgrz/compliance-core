@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Content;
+using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Processes;
 using Cntryl.Portia;
@@ -21,24 +23,28 @@ static class FirmStaffRegistrationProcess
         ], [nameof(RejectFirmStaffRegistration)], Receiver);
 
     /// <summary>The canonical user is the single claim target; the staff member is the record stream's resource.</summary>
-    static ValueTask<IRequest<ReceiverOutcome>?> Receiver(ProcessStep step, IServiceProvider services,
+    static async ValueTask<IRequest<ReceiverOutcome>?> Receiver(ProcessStep step, IServiceProvider services,
         CancellationToken ct)
     {
         var record = step.Record;
         var staffMemberId = Uuid.Parse(record.Source.Stream.Resource, CultureInfo.InvariantCulture);
         var userId = Uuid.Parse(record.Targets.Single(), CultureInfo.InvariantCulture);
         var recordStream = new FirmStaffRecord(staffMemberId).Stream;
-        return ValueTask.FromResult<IRequest<ReceiverOutcome>?>(step.Receiver switch
+        var practice = step.Receiver == nameof(ClaimFirmStaffIdentity)
+            ? (await services.GetRequiredService<IImmutableContentStore>().ReadJsonAsync<FirmStaffRegistrationIntent>(
+                record.Key.Realm, record.Intent, ct).ConfigureAwait(false)).Practice
+            : null;
+        return step.Receiver switch
         {
             nameof(ClaimFirmStaffIdentity) => new ClaimFirmStaffIdentity(step.CommandId, record.Source,
                 new FirmStaffIdentityClaim(userId).Stream, record.Key.RootOperationId, FirmStaffEffects.Generation,
-                null, record.Intent, staffMemberId, userId),
+                null, record.Intent, staffMemberId, userId, practice!),
             nameof(CompleteFirmStaffRegistration) => new CompleteFirmStaffRegistration(step.CommandId, record.Source,
                 recordStream, record.Key.RootOperationId, FirmStaffEffects.Generation, null, record.Intent,
                 staffMemberId, userId),
             nameof(RejectFirmStaffRegistration) => new RejectFirmStaffRegistration(step.CommandId,
                 record.Key.RootOperationId, recordStream, FirmStaffEffects.Generation, 0, record.Intent),
             _ => throw new InvalidOperationException($"{step.Receiver} is not a registration receiver."),
-        });
+        };
     }
 }

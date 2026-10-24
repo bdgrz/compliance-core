@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.AccessControl;
 [Discriminator("bdgrz.firm-staff-identity-claim.claim", 1)]
 public sealed record ClaimFirmStaffIdentity(Uuid CommandId, NativeFactReference Source, EventStreamAddress Target,
     Uuid OperationId, long Generation, long? ExpectedRevision, ImmutableContentRef Intent, Uuid StaffMemberId,
-    Uuid UserId) : IRequest<ReceiverOutcome>, IFirmStaffRegistrationReceiver, IIdentifiedRequest
+    Uuid UserId, string Practice) : IRequest<ReceiverOutcome>, IFirmStaffRegistrationReceiver, IIdentifiedRequest
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }

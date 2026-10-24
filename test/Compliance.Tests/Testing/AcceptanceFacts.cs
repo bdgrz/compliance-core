@@ -34,8 +34,8 @@ static class AcceptanceFacts
         Assert.Equal(ProcessState.Completed, evaluated.State);
     }
 
-    public static ProcessKey KeyOf(Uuid tenant, Uuid operation) =>
-        new(EngagementAcceptanceEffects.ProcessName, tenant.ToString(), operation);
+    public static ProcessKey KeyOf(Uuid operation, NativeFactReference source) =>
+        ProcessKey.ForRoot(EngagementAcceptanceEffects.ProcessName, operation, source);
 
     /// <summary>The admitted acceptance or assignment of an engagement, or a failure when it is not admitted.</summary>
     public static Task<EngagementAcceptanceRecord> OperationAsync(IndependenceHost host, Uuid engagement, Uuid operation) =>
@@ -81,7 +81,7 @@ static class AcceptanceFacts
         await using var scope = provider.CreateAsyncScope();
         var stream = new ServiceEngagementIndependence(tenant, engagement).Stream;
         return await scope.ServiceProvider.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(
-            ProcessRecord.Start(KeyOf(tenant, operation), NativeFactReference.Of(stream, admitted.Requested),
+            ProcessRecord.Start(KeyOf(operation, NativeFactReference.Of(stream, admitted.Requested)), NativeFactReference.Of(stream, admitted.Requested),
                 admitted.RequestedOperation.Operation.Episode, admitted.Intent, targets, DateTimeOffset.UtcNow));
     }
 
@@ -190,10 +190,13 @@ static class AcceptanceFacts
     }
 
     /// <summary>The process record of an operation, or null when no process was started for it.</summary>
-    public static async Task<ProcessRecord?> RecordOfAsync(IndependenceHost host, Uuid operation)
+    public static async Task<ProcessRecord?> RecordOfAsync(IndependenceHost host, Uuid engagement, Uuid operation)
     {
         await using var scope = host.Provider.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<IProcessRecordStore>().ReadAsync(KeyOf(host.Tenant, operation));
+        var admitted = await OperationAsync(host, engagement, operation);
+        var source = NativeFactReference.Of(new ServiceEngagementIndependence(host.Tenant, engagement).Stream,
+            admitted.Requested);
+        return await scope.ServiceProvider.GetRequiredService<IProcessRecordStore>().ReadAsync(KeyOf(operation, source));
     }
 
     /// <summary>The acceptance command for the exact current revision of the engagement.</summary>

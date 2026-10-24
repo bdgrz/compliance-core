@@ -41,7 +41,10 @@ sealed class AuthorizeFirmStaffProfessionalDutyUseHandler(IAggregateReader reade
             : null;
         return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, request.Intent,
             ProfessionalDutyRules.StaffUseKey(request.OperationId, owner.Stream, requirement), requirement,
-            nameof(AuthorizeFirmStaffProfessionalDutyUse), null, superseded));
+            nameof(AuthorizeFirmStaffProfessionalDutyUse), null, superseded)
+        {
+            RequiresAbort = owner.IsRejected(request.OperationId),
+        });
     }
 
     protected override async ValueTask<Result> VerifyPinnedAsync(FirmStaffRecord owner,

@@ -152,3 +152,35 @@ for (const surface of ['http', 'mcp']) {
         assert.equal(result.status, 1);
     });
 }
+
+const enumReceiver = converted => `
+    public class Example : Aggregate { }
+    public record BeginExample(Uuid Id) : IRequest<Result>;
+    public record FinishExample(SubjectKind SubjectKind) : IRequest<Result>;
+    ${converted ? '[JsonConverter(typeof(JsonStringEnumConverter<SubjectKind>))]' : ''}
+    public enum SubjectKind { Staff, CanonicalUser }
+    services.AddRequestHandler<BeginExampleHandler>();
+    services.AddRequestHandler<FinishExampleHandler>();
+    app.MapPortiaPost<BeginExample, Result>("/examples");
+    const string Process = "ExampleProcess";
+`;
+
+test('ShouldPermitStringWireShapeGivenUnexposedReceiverWithJsonStringEnum', t => {
+    const result = checkFixture(t, enumReceiver(true), false, [{ name: 'SubjectKind', type: 'string' }]);
+    assert.equal(result.status, 0);
+});
+
+test('ShouldRejectStringWireShapeGivenReceiverWithNumericEnum', t => {
+    const result = checkFixture(t, enumReceiver(false), false, [{ name: 'SubjectKind', type: 'string' }]);
+    assert.equal(result.status, 1);
+});
+
+for (const surface of ['http', 'mcp']) {
+    test(`ShouldRequireSelectedPublicTypeGivenEnumReceiverExposedOver${surface}`, t => {
+        const expose = surface === 'http'
+            ? 'app.MapPortiaPost<FinishExample, Result>("/receivers");'
+            : 'services.AddMcpTool<FinishExample>();';
+        const result = checkFixture(t, enumReceiver(true) + expose, false, [{ name: 'SubjectKind', type: 'string' }]);
+        assert.equal(result.status, 1);
+    });
+}

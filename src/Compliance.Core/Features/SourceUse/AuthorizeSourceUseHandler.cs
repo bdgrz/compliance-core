@@ -39,7 +39,9 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
             return Result<ReceiverOutcome>.Failure(verified.Error!);
         var source = verified.Value!;
         if (source.SupersededReason is { } reason)
-            return SourceUseReceiverSupport.Superseded(reason, null);
+            return source.RequiresAbort
+                ? Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected(reason, null))
+                : SourceUseReceiverSupport.Superseded(reason, null);
         if (source.Key.Target != request.Target || source.Key.RootOperationId != request.OperationId ||
             source.Requirement.SourceOwner != request.Target)
             return SourceUseReceiverSupport.Permanent("The authorization differs from the frozen source use requirement.");

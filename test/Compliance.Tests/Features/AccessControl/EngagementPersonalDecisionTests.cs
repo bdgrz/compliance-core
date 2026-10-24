@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -13,6 +15,34 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 
 public sealed class EngagementPersonalDecisionTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRejectServiceUseGivenWireEpochDiffersFromPinnedHistory(bool negative)
+    {
+        // Arrange
+        await using var host = new IndependenceHost();
+        var partner = await SeedPartnerAsync(host);
+        var (engagement, _) = await SeedEngagementAsync(host);
+        var request = await EvaluationAsync(host, engagement, partner);
+        Assert.True((await host.HttpAsync(request, partner.Actor)).IsSuccess);
+        var record = await StartAsync(host.Provider, host.Tenant, engagement, request.EvaluationId);
+        var command = Assert.IsType<AuthorizeClientServicePersonalDecisionUse>(
+            await BuildAsync(host, record, nameof(AuthorizeClientServicePersonalDecisionUse)));
+        var wire = JsonSerializer.SerializeToNode(command,
+            ComplianceCoreJsonContext.Default.AuthorizeClientServicePersonalDecisionUse)!;
+        wire["service_epoch"] = negative ? -1 : (long)((ISourceUseAuthorization)command).ExpectedContentRevision + 1;
+        var changed = wire.Deserialize(ComplianceCoreJsonContext.Default.AuthorizeClientServicePersonalDecisionUse)!;
+
+        // Act
+        var result = await SendReceiverAsync(host.Provider, changed);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.False(result.Error?.IsTransient);
+        Assert.False((await host.HydrateAsync(new ClientServiceIndependence(host.Tenant))).Uses.HasActiveUse);
+    }
+
     [Fact]
     public async Task ShouldFencePersonalDecisionGivenSourceChangesBeforeAuthorization()
     {

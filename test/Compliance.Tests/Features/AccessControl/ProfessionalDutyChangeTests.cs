@@ -21,6 +21,38 @@ public sealed class ProfessionalDutyChangeTests
 
     static ClaimsPrincipal Actor => ActorFor(Operator);
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task ShouldSettleHeldUseGivenRejectionPersistedBeforeProcessCheckpoint(int stageIndex)
+    {
+        // Arrange
+        await using var host = new Host();
+        var (user, staff, designation) = (Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        await FirmStaffFacts.RegisterAsync(host.Provider, staff, user);
+        var assertion = Active(designation, user);
+        Assert.True((await host.AdmitAsync(RecordOf(assertion, 0))).IsSuccess);
+        var record = await ProfessionalDutyFacts.StartProcessAsync(host.Provider, user, Duty, null,
+            assertion.Evidence.AssertionId);
+        Assert.IsType<ReceiverOutcome.Applied>((await host.SendAsync(await Step(host, record, "acquire",
+            nameof(AuthorizeFirmStaffProfessionalDutyUse)))).Value);
+        var store = host.Scope.ServiceProvider.GetRequiredService<IProcessRecordStore>();
+        record = await store.ReplaceAsync(record with { StageIndex = stageIndex }, record.Version);
+        Assert.IsType<ReceiverOutcome.Applied>((await host.SendAsync(await Step(host, record, "abort",
+            nameof(RejectProfessionalDutyChange)))).Value);
+
+        // Act: resume the durable crash state after rejection but before settlement/checkpoint.
+        var completed = await ProfessionalDutyFacts.RunProcessAsync(host.Provider, user, Duty, null,
+            assertion.Evidence.AssertionId);
+
+        // Assert
+        Assert.Equal(ProcessState.Completed, completed.State);
+        var owner = await host.HydrateAsync(new FirmStaffRecord(staff));
+        Assert.False(owner.Uses.HasActiveUse);
+        Assert.Single(await host.EventsAsync<FirmStaffProfessionalDutyUseSettled>(owner.Stream));
+    }
+
     [Fact]
     public async Task ShouldRejectDesignationGivenStaffDeactivatedBeforeUseGrant()
     {
@@ -317,7 +349,7 @@ public sealed class ProfessionalDutyChangeTests
         // Assert
         Assert.IsType<ReceiverOutcome.Applied>(rejection.Value);
         Assert.IsType<ReceiverOutcome.Applied>(canceled.Value);
-        Assert.IsType<ReceiverOutcome.Superseded>(late.Value);
+        Assert.IsType<ReceiverOutcome.Rejected>(late.Value);
         var staffRecord = await host.HydrateAsync(new FirmStaffRecord(staff));
         Assert.False(staffRecord.Uses.HasActiveUse);
         Assert.Equal(0UL, staffRecord.Uses.Generation);
@@ -348,7 +380,7 @@ public sealed class ProfessionalDutyChangeTests
 
         // Assert
         Assert.IsType<ReceiverOutcome.Superseded>(claim.Value);
-        Assert.IsType<ReceiverOutcome.Superseded>(lateApply.Value);
+        Assert.IsType<ReceiverOutcome.Rejected>(lateApply.Value);
         var owner = await host.HydrateAsync(Owner(userB));
         Assert.True(owner.IsRejected(assertionId));
         Assert.Empty(await host.EventsAsync<FirmProfessionalDutyDesignationRecorded>(owner.Stream));
@@ -571,9 +603,22 @@ public sealed class ProfessionalDutyChangeTests
         public async Task<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate) where TAggregate : Aggregate =>
             await Scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(aggregate);
 
-        public Task<ProcessRecord?> ProcessRecordAsync(Uuid assertionId) =>
-            Scope.ServiceProvider.GetRequiredService<IProcessRecordStore>().ReadAsync(
-                new ProcessKey(ProfessionalDutyEffects.ProcessName, Realm, assertionId));
+        public async Task<ProcessRecord?> ProcessRecordAsync(Uuid assertionId)
+        {
+            NativeFactReference? source = null;
+            await foreach (var record in Scope.ServiceProvider.GetRequiredService<IDomainEventReader>().ReadAsync(
+                               EventStreamPattern.ForPattern(Realm, FirmProfessionalDutyDesignation.Area), EventCursor.Start, CancellationToken.None))
+            {
+                if (record.Event is not ProfessionalDutyChangeAccepted accepted ||
+                    accepted.Operation.LogicalId != assertionId)
+                    continue;
+                if (source is not null)
+                    throw new InvalidOperationException("The test must select one committed assertion root.");
+                source = NativeFactReference.Of(record.Stream, accepted);
+            }
+            return source is null ? null : await Scope.ServiceProvider.GetRequiredService<IProcessRecordStore>()
+                .ReadAsync(ProcessKey.ForRoot(ProfessionalDutyEffects.ProcessName, assertionId, source));
+        }
 
         public async Task<ReservationKey> StaffUseKeyAsync(FirmProfessionalDutyDesignation owner, Uuid assertionId)
         {

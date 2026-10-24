@@ -128,7 +128,8 @@ static class FirmStaffFacts
         var accepted = record.Accepted ?? throw new InvalidOperationException("The registration was not accepted.");
         var intent = await services.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<FirmStaffRegistrationIntent>(FirmStaffContentRealm, accepted.Intent);
-        var key = new ProcessKey(FirmStaffEffects.ProcessName, FirmStaffContentRealm, staffMemberId);
+        var key = ProcessKey.ForRoot(FirmStaffEffects.ProcessName, staffMemberId,
+            NativeFactReference.Of(record.Stream, accepted));
         await services.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(ProcessRecord.Start(key,
             NativeFactReference.Of(record.Stream, accepted), accepted.Operation.Episode, accepted.Intent,
             [intent.CanonicalUserId.ToString()], DateTimeOffset.UtcNow));

@@ -78,9 +78,11 @@ public sealed class EngagementAcceptanceProcessTests
         var reversed = EngagementAcceptanceProcess.Targets(requirements.Reverse(), subjects.Reverse());
         var authoredKeys = requirements.Select(item => PracticeSubjects.Key(item.SourceOwner)).Concat(
             subjects.Select(item => item.Key)).Reverse().ToArray();
-        var record = ProcessRecord.Start(AcceptanceFacts.KeyOf(host.Tenant, one), new NativeFactReference(
-            new ServiceEngagementIndependence(host.Tenant, first).Stream, Uuid.CreateVersion4(), 1), "initial",
-            (await OperationAsync(host, first, one)).Intent, authoredKeys, DateTimeOffset.UtcNow);
+        var admitted = await OperationAsync(host, first, one);
+        var source = NativeFactReference.Of(new ServiceEngagementIndependence(host.Tenant, first).Stream,
+            admitted.Requested);
+        var record = ProcessRecord.Start(AcceptanceFacts.KeyOf(one, source), source, "initial",
+            admitted.Intent, authoredKeys, DateTimeOffset.UtcNow);
         var observedOne = new ObservedAcceptanceProcess();
         await observedOne.RunAsync(host, first, one);
         var second = await CreateEngagementAsync(host);

@@ -32,10 +32,6 @@ public sealed class RegisterFirmStaffHandler(NativeOperationExecutor operations,
                 "Registration requires a staff member, canonical user, practice and attributed general staff source.");
         if (request.ExpectedRevision < 0)
             return Failure(RequestErrorKind.Validation, "The expected revision cannot be negative.");
-        if (!await users.ExistsAsync(request.UserId, ct).ConfigureAwait(false))
-            return Failure(RequestErrorKind.NotFound,
-                "The canonical platform user was not found; wait for directory recovery before registering staff.");
-
         var now = clock.GetUtcNow();
         var record = new FirmStaffRecord(request.StaffMemberId, request.StaffMemberId);
         var provenance = new OperationProvenance(request.StaffMemberId, request.StaffMemberId, null, CommandKind,
@@ -44,23 +40,33 @@ public sealed class RegisterFirmStaffHandler(NativeOperationExecutor operations,
         var binding = AcceptedOperationBinding.Of(provenance);
         var header = new DurableIntentHeader(provenance.RootOperationId, record.Stream, record.Stream, record.Stream,
             provenance.Actor, InitialEpisode, provenance.OriginalExpectedRevision, provenance.AuthoredIntentSha256, now);
-        var intent = await content.WriteJsonAsync(FirmStaffContent.Realm, Uuid.CreateVersion4(),
-            FirmStaffRegistrationIntent.Schema, new FirmStaffRegistrationIntent(header, request.StaffMemberId,
-                request.UserId, request.Practice, request.SourceReference, FirmStaffRegistrationIntent.ActiveStatus),
-            ct).ConfigureAwait(false);
-        var accepted = await content.WriteJsonAsync(FirmStaffContent.Realm, Uuid.CreateVersion4(),
-            "operation-accepted-response.v1", new OperationAcceptedResponse(request.StaffMemberId,
-                StatusUrlTemplate.Replace("{operation_id}", request.StaffMemberId.ToString(), StringComparison.Ordinal),
-                now), ct).ConfigureAwait(false);
-        var response = new FirstResponseDescriptor(202, ImmutableContentStoreExtensions.JsonMediaType,
-            "operation-accepted-response.v1", new StandardResponseBody(accepted));
+        ImmutableContentRef? intent = null;
+
+        async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(FirmStaffRecord staff, CancellationToken token)
+        {
+            var prepared = staff.PrepareRegistration(request.ExpectedRevision);
+            if (!prepared.IsSuccess)
+                return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+            if (!await users.ExistsAsync(request.UserId, token).ConfigureAwait(false))
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.NotFound,
+                    "The canonical platform user was not found; wait for directory recovery before registering staff."));
+            intent = await content.WriteJsonAsync(FirmStaffContent.Realm, Uuid.CreateVersion4(),
+                FirmStaffRegistrationIntent.Schema, new FirmStaffRegistrationIntent(header, request.StaffMemberId,
+                    request.UserId, request.Practice, request.SourceReference, FirmStaffRegistrationIntent.ActiveStatus),
+                token).ConfigureAwait(false);
+            var accepted = await content.WriteJsonAsync(FirmStaffContent.Realm, Uuid.CreateVersion4(),
+                "operation-accepted-response.v1", new OperationAcceptedResponse(request.StaffMemberId,
+                    StatusUrlTemplate.Replace("{operation_id}", request.StaffMemberId.ToString(), StringComparison.Ordinal),
+                    now), token).ConfigureAwait(false);
+            var response = new FirstResponseDescriptor(202, ImmutableContentStoreExtensions.JsonMediaType,
+                "operation-accepted-response.v1", new StandardResponseBody(accepted));
+            return Result<FirstResponseDescriptor>.Success(response);
+        }
 
         var outcome = await operations.ExecuteAsync(new NativeOperation<FirmStaffRecord>(binding,
             () => new FirmStaffRecord(request.StaffMemberId, request.StaffMemberId), staff => staff.Acceptance,
-            staff => staff.PrepareRegistration(request.ExpectedRevision) is { IsSuccess: false } refused
-                ? Result<FirstResponseDescriptor>.Failure(refused.Error!)
-                : Result<FirstResponseDescriptor>.Success(response),
-            (FirmStaffRecord staff, ImmutableContentRef frozen) => staff.AcceptRegistration(provenance, intent, frozen)), context, ct)
+            PrepareAsync,
+            (FirmStaffRecord staff, ImmutableContentRef frozen) => staff.AcceptRegistration(provenance, intent!, frozen)), context, ct)
             .ConfigureAwait(false);
         if (!outcome.IsSuccess)
             return Result<OperationAcceptedResponse>.Failure(outcome.Error!);

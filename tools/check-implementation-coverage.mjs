@@ -118,6 +118,9 @@ const scannedSources = sources.map(file => {
     const content = fs.readFileSync(file, 'utf8');
     return { file, content, declared: declarations(content) };
 });
+const jsonStringEnums = new Set(scannedSources.flatMap(source =>
+    [...source.content.matchAll(/\[JsonConverter\(typeof\(JsonStringEnumConverter<(\w+)>\)\)\]\s*(?:public|internal)\s+enum\s+\1\b/g)]
+        .map(match => match[1])));
 const interfaces = new Map(scannedSources.flatMap(source => source.declared
     .filter(declaration => declaration.kind === 'interface')
     .map(declaration => [declaration.name, baseTypes(declaration.bases)])));
@@ -196,7 +199,12 @@ const requestMatches = (name, fields) => {
     const names = paramNames(declared.params);
     const types = paramTypes(declared.params);
     const missing = fields.filter(f => !names.has(f.name)).map(f => f.name);
-    const mistyped = fields.filter(f => names.has(f.name) && /^(Uuid\??|long\??|int\??|string\??|bool\??|ulong\??|DateTimeOffset\??)$/.test(f.type) && types.get(f.name) !== simpleType(f.type)).map(f => `${f.name}:${types.get(f.name)}!=${f.type}`);
+    const receiver = reactorCatalog.reactors.find(item => item.command === name);
+    const internalReceiver = receiver?.http === false && receiver.mcp === false &&
+        !mappedRoutes.has(name) && !mcpTools.has(name);
+    const matchesType = field => types.get(field.name) === simpleType(field.type) ||
+        (internalReceiver && field.type === 'string' && jsonStringEnums.has(types.get(field.name)));
+    const mistyped = fields.filter(f => names.has(f.name) && /^(Uuid\??|long\??|int\??|string\??|bool\??|ulong\??|DateTimeOffset\??)$/.test(f.type) && !matchesType(f)).map(f => `${f.name}:${types.get(f.name)}!=${f.type}`);
     return { exists: true, missing, mistyped, ok: missing.length === 0 && mistyped.length === 0 };
 };
 const commandStatus = new Map();

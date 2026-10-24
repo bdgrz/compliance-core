@@ -72,17 +72,17 @@ public sealed class ServiceEngagementAcceptanceTests
         await PairedDecisionsAsync(host, engagement, partner);
         var accept = AcceptCommand(host, engagement);
         Assert.True((await host.HttpAsync(accept, partner.Actor)).IsSuccess);
-        Assert.Null(await RecordOfAsync(host, accept.CommandId));
+        Assert.Null(await RecordOfAsync(host, engagement, accept.CommandId));
 
         // Act: the reactor, not the test, starts and drives the acceptance.
         await RunRootReactorAsync(host);
-        var accepted = await RecordOfAsync(host, accept.CommandId);
+        var accepted = await RecordOfAsync(host, engagement, accept.CommandId);
         var assignee = await host.RegisterStaffAsync("attest");
         var assign = new AssignServiceEngagementStaff(Uuid.CreateVersion4(), host.Tenant, engagement,
             assignee.StaffMemberId, 2, DateOnly.FromDateTime(DateTime.UtcNow));
         Assert.True((await host.HttpAsync(assign, partner.Actor)).IsSuccess);
         await RunRootReactorAsync(host);
-        var assigned = await RecordOfAsync(host, assign.CommandId);
+        var assigned = await RecordOfAsync(host, engagement, assign.CommandId);
 
         // Assert
         Assert.Equal(ProcessState.Completed, accepted!.State);

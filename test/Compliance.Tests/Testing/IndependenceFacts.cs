@@ -18,7 +18,8 @@ static class IndependenceFacts
         var owner = await services.GetRequiredService<IAggregateReader>()
             .HydrateAsync(new ClientServiceIndependence(tenantId));
         var admitted = owner.AdmissionOf(evaluationId) ?? throw new InvalidOperationException("Admit first.");
-        var key = new ProcessKey(ClientIndependencePreviewEffects.ProcessName, tenantId.ToString(), evaluationId);
+        var key = ProcessKey.ForRoot(ClientIndependencePreviewEffects.ProcessName, evaluationId,
+            NativeFactReference.Of(owner.Stream, admitted));
         return await services.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(ProcessRecord.Start(key,
             NativeFactReference.Of(owner.Stream, admitted), admitted.Operation.Episode, admitted.Intent, [],
             DateTimeOffset.UtcNow));
