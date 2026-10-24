@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -24,6 +26,9 @@ public sealed class Member : Aggregate
     MemberDeprovisioned? _selectedTermination;
     bool _selectedCleanupCompleted;
 
+    /// <summary>Acceptance of the logical registration this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
     public bool IsRegistered => _isRegistered;
     public string? Affiliation => _affiliation;
     public DateOnly? MembershipExpiresOn => _membershipExpiresOn;
@@ -48,8 +53,8 @@ public sealed class Member : Aggregate
     public bool IsAccessEligibleOn(DateOnly utcDate) => IsRegistered && !_isSuspended &&
         !_isDeprovisioned && (_membershipExpiresOn is not { } expiresOn || utcDate <= expiresOn);
 
-    public Member(Uuid tenantId, Uuid userId, Uuid selectedEpisodeId = default)
-        : this(tenantId, RbacIds.Member(tenantId, userId), userId, selectedEpisodeId)
+    public Member(Uuid tenantId, Uuid userId, Uuid selectedEpisodeId = default, Uuid selectedCommandId = default)
+        : this(tenantId, RbacIds.Member(tenantId, userId), userId, selectedEpisodeId, selectedCommandId)
     {
     }
 
@@ -58,17 +63,23 @@ public sealed class Member : Aggregate
     ///     that a responsibility holder is still active. Commands require the user constructor.
     /// </summary>
     public static Member ForVerification(Uuid tenantId, Uuid memberId, Uuid selectedEpisodeId = default) =>
-        new(tenantId, memberId, Uuid.Empty, selectedEpisodeId);
+        new(tenantId, memberId, Uuid.Empty, selectedEpisodeId, default);
 
-    Member(Uuid tenantId, Uuid memberId, Uuid userId, Uuid selectedEpisodeId)
+    Member(Uuid tenantId, Uuid memberId, Uuid userId, Uuid selectedEpisodeId, Uuid selectedCommandId)
         : base(memberId,
             new EventStreamAddress(tenantId.ToString(), "rbac-members", memberId.ToString()))
     {
         _tenantId = tenantId;
         _selectedEpisodeId = selectedEpisodeId;
         _userId = userId;
+        Acceptance = new NativeAcceptance(selectedCommandId);
         On<MemberRegistered>(registered =>
         {
+            Acceptance.Observe(registered);
+            if (registered.CommandId == Uuid.Empty || registered.MembershipEpisodeId != registered.CommandId ||
+                registered.Operation.LogicalId != registered.CommandId || registered.Operation.Owner != Stream)
+                throw new InvalidOperationException(
+                    "The member registration event must accept its own logical operation as the membership episode.");
             var hasFiniteExpiry = registered.MembershipExpiresOn is { } expiresOn &&
                                   expiresOn != DateOnly.MinValue && expiresOn != DateOnly.MaxValue;
             if (registered.Affiliation is not ("client_personnel" or "firm_staff" or "guest") ||
@@ -130,8 +141,11 @@ public sealed class Member : Aggregate
         });
     }
 
-    public Result Register(string affiliation = "client_personnel",
-        DateOnly? membershipExpiresOn = null)
+    /// <summary>
+    ///     Checks the registration guards against hydrated state without raising anything; the first half of the
+    ///     native acceptance pair.
+    /// </summary>
+    public Result PrepareRegister(string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null)
     {
         EnsureUserIdentity();
         if (affiliation is not ("client_personnel" or "firm_staff" or "guest"))
@@ -145,12 +159,35 @@ public sealed class Member : Aggregate
         if (_isDeprovisioned && !_isDeprovisionCleanupComplete)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Membership authority cleanup must finish before a new invitation can take effect."));
-        if (!_isRegistered)
-            RaiseEvent(new MemberRegistered(_tenantId, Id, _userId, affiliation,
-                Uuid.CreateVersion4(), membershipExpiresOn));
-        else if (_affiliation != affiliation || _membershipExpiresOn != membershipExpiresOn)
-            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                "This membership has different affiliation or expiry terms."));
+        if (_isRegistered)
+            return Result.Failure(LiveEpisodeConflict);
+        return Result.Success;
+    }
+
+    /// <summary>
+    ///     The one live-episode conflict a new registration can meet. Dispatchers that register as a side effect of
+    ///     another accepted fact compare against this instance to continue past an already-live member.
+    /// </summary>
+    public static RequestError LiveEpisodeConflict { get; } = new(RequestErrorKind.Conflict,
+        "This user already has a live membership episode.", false);
+
+    /// <summary>
+    ///     Accepts the registration as the native fact of <paramref name="operation" />. The logical id of the
+    ///     operation is the membership episode id.
+    /// </summary>
+    public Result Register(OperationProvenance operation, ImmutableContentRef firstResponse,
+        string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A member registration requires its own logical operation."));
+        var prepared = PrepareRegister(affiliation, membershipExpiresOn);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new MemberRegistered(_tenantId, Id, _userId, affiliation, operation.LogicalId,
+            membershipExpiresOn, operation.LogicalId, operation, firstResponse));
         return Result.Success;
     }
 

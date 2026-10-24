@@ -25,7 +25,7 @@ public sealed partial class TenantRbacBootstrapReactor(
         // and core grants stay ahead of the assignment event that triggers tenant activation.
         if (ownerBecomesAdministrator)
         {
-            commands.Add(new RegisterMember(tenantId, context.Trigger.OwnerUserId));
+            commands.Add(MemberRegistrationEffects.Register(sourceEventId, tenantId, context.Trigger.OwnerUserId));
         }
 
         commands.Add(RbacTeamRoleEffects.Assign(sourceEventId, tenantId, BuiltInRbac.AdministratorsTeamId(tenantId), adminRoleId));

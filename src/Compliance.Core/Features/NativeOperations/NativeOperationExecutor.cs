@@ -31,7 +31,7 @@ public sealed class NativeOperationExecutor(IAggregateReader reader, IAggregateE
             var decided = await DecideAsync(operation, hydrated, acceptance, ct).ConfigureAwait(false);
             if (decided is not null)
                 return Result<AcceptedAppendResult>.Success(decided);
-            var prepared = operation.Prepare(hydrated);
+            var prepared = await operation.Prepare(hydrated, ct).ConfigureAwait(false);
             if (!prepared.IsSuccess)
                 return await ResolveFailureAsync(operation, prepared.Error!, ct).ConfigureAwait(false);
             var frozen = await FirstResponses.FreezeAsync(content, operation.Binding.Realm, prepared.Value!, ct)

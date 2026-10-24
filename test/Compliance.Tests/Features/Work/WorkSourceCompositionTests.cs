@@ -1230,7 +1230,7 @@ public sealed class WorkSourceCompositionTests
             registrations.Add(record.Event);
         var registered = Assert.IsType<MemberRegistered>(Assert.Single(registrations));
         // Retain the current episode to prove the canonical actor fence, not an episode mismatch.
-        DomainEvent malformed = new MemberRegistered(fixture.TenantId, fixture.OwnerMemberId,
+        DomainEvent malformed = MemberFacts.Registered(fixture.TenantId, fixture.OwnerMemberId,
             fixture.OutsiderUserId, "client_personnel", registered.MembershipEpisodeId);
         malformed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), fixture.OwnerMemberId,
             2, DateTimeOffset.UtcNow));
@@ -1268,7 +1268,7 @@ public sealed class WorkSourceCompositionTests
                 registrations.Add(record.Event);
             Assert.IsType<MemberRegistered>(Assert.Single(registrations));
             // Deliberately malformed retained provenance: public registration cannot produce this identity.
-            DomainEvent malformed = new MemberRegistered(fixture.TenantId, fixture.OwnerMemberId,
+            DomainEvent malformed = MemberFacts.Registered(fixture.TenantId, fixture.OwnerMemberId,
                 fixture.OutsiderUserId, "client_personnel", Uuid.CreateVersion4());
             malformed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), fixture.OwnerMemberId,
                 2, DateTimeOffset.UtcNow));

@@ -1,4 +1,8 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -27,6 +31,9 @@ static class RbacManagementServices
         services.AddSingleton<ITeamDirectoryReader, EmptyTeamDirectory>();
         services.AddSingleton<IAccessGrantDirectory, EmptyAccessGrantDirectory>();
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+            new PersistenceKvClient(new InMemoryKvClient())));
+        services.AddScoped<NativeOperationExecutor>();
         services.AddScoped<MemberAuthorityCleanup>();
         services.AddScoped<TenantManagerInvariant>();
         handlers(services.AddPortia().AddRequestAuthorizer<RbacManagementAuthorizer>());

@@ -23405,7 +23405,7 @@
     {
       "request": "RegisterMember",
       "contract": "src/Compliance.Common/Features/AccessControl/RegisterMember.cs",
-      "interfaces": "IRequest, IRbacManagementRequest",
+      "interfaces": "IRequest, IRbacManagementRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {

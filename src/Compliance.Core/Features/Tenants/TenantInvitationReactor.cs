@@ -32,8 +32,13 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
             guestExpiresOn = expiresOn;
         }
 
-        await bus.SendReactionAsync(new RegisterMember(context.Trigger.TenantId,
-            context.Trigger.UserId, context.Trigger.Affiliation, guestExpiresOn), context, ct);
+        // A user re-invited while already a live member keeps that episode; the owner reports the exact
+        // live-episode conflict and the rest of the acceptance (grants, teams, activation) still applies.
+        var registration = await bus.SendAsync(MemberRegistrationEffects.Register(
+            context.Trigger.Metadata.EventId, context.Trigger.TenantId, context.Trigger.UserId,
+            context.Trigger.Affiliation, guestExpiresOn), context, ct).ConfigureAwait(false);
+        if (!registration.IsSuccess && registration.Error != Member.LiveEpisodeConflict)
+            throw new ReactionCommandFailedException(registration.Error);
         if (guestPrograms is not null && guestExpiresOn is { } endDate)
         {
             var invitationId = TenantInvitation.IdFor(context.Trigger.TenantId,

@@ -1,4 +1,11 @@
 using System.Globalization;
+using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Tests.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +28,7 @@ public sealed class MemberLifecycleTests
         var scenario = new AggregateScenario<Member>(member);
 
         // Act
-        var result = scenario.Aggregate.Register("guest", GuestExpiresOn);
+        var result = MemberFacts.Register(scenario.Aggregate, "guest", GuestExpiresOn);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -40,7 +47,7 @@ public sealed class MemberLifecycleTests
         var scenario = new AggregateScenario<Member>(member);
 
         // Act
-        var result = scenario.Aggregate.Register("guest");
+        var result = MemberFacts.Register(scenario.Aggregate, "guest");
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(result.Error).Kind);
@@ -53,8 +60,8 @@ public sealed class MemberLifecycleTests
         // Arrange
         var member = new Member(TenantId, UserId);
         var scenario = new AggregateScenario<Member>(member)
-            .Given(DomainEventSeed.Attach(new MemberRegistered(TenantId, member.Id, UserId,
-                MembershipEpisodeId: Uuid.CreateVersion4()), member.Id, 1));
+            .Given(DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
+                membershipEpisodeId: Uuid.CreateVersion4()), member.Id, 1));
 
         // Act
         var result = scenario.Aggregate.Suspend(ActorMemberId, "Alex Admin", ActionAt,
@@ -78,8 +85,8 @@ public sealed class MemberLifecycleTests
         // Arrange
         var member = new Member(TenantId, UserId);
         var scenario = new AggregateScenario<Member>(member).Given(
-            DomainEventSeed.Attach(new MemberRegistered(TenantId, member.Id, UserId,
-                MembershipEpisodeId: Uuid.CreateVersion4()), member.Id, 1),
+            DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
+                membershipEpisodeId: Uuid.CreateVersion4()), member.Id, 1),
             DomainEventSeed.Attach(new MemberSuspended(TenantId, member.Id, UserId, ActorMemberId,
                 "Alex Admin", ActionAt, "Employment ended."), member.Id, 2));
 
@@ -104,8 +111,8 @@ public sealed class MemberLifecycleTests
         // Arrange
         var member = new Member(TenantId, UserId);
         var scenario = new AggregateScenario<Member>(member)
-            .Given(DomainEventSeed.Attach(new MemberRegistered(TenantId, member.Id, UserId,
-                MembershipEpisodeId: Uuid.CreateVersion4()), member.Id, 1));
+            .Given(DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
+                membershipEpisodeId: Uuid.CreateVersion4()), member.Id, 1));
 
         // Act
         var result = scenario.Aggregate.Deprovision(ActorMemberId, "Alex Admin", ActionAt,
@@ -134,7 +141,7 @@ public sealed class MemberLifecycleTests
         var termination = DomainEventSeed.Attach(new MemberDeprovisioned(TenantId, member.Id, UserId,
             ActorMemberId, "Alex Admin", ActionAt, "Access is no longer required.", priorEpisodeId), member.Id, 2);
         var scenario = new AggregateScenario<Member>(member).Given(
-            DomainEventSeed.Attach(new MemberRegistered(TenantId, member.Id, UserId,
+            DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
                 "client_personnel", priorEpisodeId), member.Id, 1),
             termination,
             DomainEventSeed.Attach(new MemberDeprovisionCleanupCompleted(TenantId, member.Id,
@@ -143,7 +150,7 @@ public sealed class MemberLifecycleTests
                 ActionAt.AddMinutes(1)), member.Id, 3));
 
         // Act
-        var result = scenario.Aggregate.Register("firm_staff");
+        var result = MemberFacts.Register(scenario.Aggregate, "firm_staff");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -162,8 +169,8 @@ public sealed class MemberLifecycleTests
         var member = new Member(TenantId, UserId);
         var episodeId = Uuid.CreateVersion4();
         var scenario = new AggregateScenario<Member>(member).Given(
-            DomainEventSeed.Attach(new MemberRegistered(TenantId, member.Id, UserId,
-                MembershipEpisodeId: episodeId), member.Id, 1),
+            DomainEventSeed.Attach(MemberFacts.Registered(TenantId, member.Id, UserId,
+                membershipEpisodeId: episodeId), member.Id, 1),
             DomainEventSeed.Attach(new MemberDeprovisioned(TenantId, member.Id, UserId,
                 ActorMemberId, "Alex Admin", ActionAt, "Access is no longer required.", episodeId), member.Id, 2));
 
@@ -189,7 +196,7 @@ public sealed class MemberLifecycleTests
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var member = new Member(TenantId, UserId);
-        Assert.True(member.Register().IsSuccess);
+        Assert.True(MemberFacts.Register(member).IsSuccess);
         await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
 
         // Act
@@ -244,7 +251,7 @@ public sealed class MemberLifecycleTests
         var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         var member = new Member(TenantId, UserId);
-        Assert.True(member.Register().IsSuccess);
+        Assert.True(MemberFacts.Register(member).IsSuccess);
         await writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
         var first = await reader.HydrateAsync(new Member(TenantId, UserId));
         var second = await reader.HydrateAsync(new Member(TenantId, UserId));
@@ -267,5 +274,259 @@ public sealed class MemberLifecycleTests
         // Assert
         Assert.Equal("First concurrent decision.", Assert.Single(suspensionEvents).Reason);
         Assert.True((await reader.HydrateAsync(new Member(TenantId, UserId))).IsSuspended);
+    }
+
+    [Fact]
+    public async Task ShouldUseCommandIdAsMembershipEpisodeGivenRegistration()
+    {
+        // Arrange
+        await using var provider = RegistrationServices();
+        var commandId = Uuid.CreateVersion4();
+
+        // Act
+        var result = await HandleRegistrationAsync(provider, new RegisterMember(commandId, TenantId, UserId));
+        var history = await HistoryAsync(provider);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var registered = Assert.IsType<MemberRegistered>(Assert.Single(history));
+        Assert.Equal(commandId, registered.CommandId);
+        Assert.Equal(commandId, registered.MembershipEpisodeId);
+        Assert.Equal(commandId, registered.Operation.LogicalId);
+        Assert.NotNull(registered.FirstResponse);
+        var member = await provider.GetRequiredService<IAggregateReader>().HydrateAsync(new Member(TenantId, UserId));
+        Assert.Equal(commandId, member.MembershipEpisodeId);
+    }
+
+    [Fact]
+    public async Task ShouldReturnValidationWithoutWritingContentGivenInvalidRegistration()
+    {
+        // Arrange
+        RegistrationContentStore? content = null;
+        await using var provider = RegistrationServices(store => content = new RegistrationContentStore(store));
+        content!.RejectWrites = true;
+        var request = new RegisterMember(Uuid.CreateVersion4(), TenantId, UserId, "guest");
+
+        // Act
+        var result = await HandleRegistrationAsync(provider, request);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, result.Error!.Kind);
+        Assert.Equal(0, content.WriteAttempts);
+        Assert.Empty(await HistoryAsync(provider));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldResolveAcceptedIdentityWithoutWritingContentGivenRegistrationRetry(bool changed)
+    {
+        // Arrange
+        RegistrationContentStore? content = null;
+        await using var provider = RegistrationServices(store => content = new RegistrationContentStore(store));
+        var request = new RegisterMember(Uuid.CreateVersion4(), TenantId, UserId);
+        Assert.True((await HandleRegistrationAsync(provider, request)).IsSuccess);
+        var writes = content!.WriteAttempts;
+        content.RejectWrites = true;
+
+        // Act
+        var retry = await HandleRegistrationAsync(provider, changed ? request with { Affiliation = "firm_staff" } : request);
+
+        // Assert
+        if (changed)
+            Assert.Equal(RequestErrorKind.Conflict, retry.Error!.Kind);
+        else
+            Assert.True(retry.IsSuccess);
+        Assert.Equal(writes, content.WriteAttempts);
+        Assert.Single(await HistoryAsync(provider));
+    }
+
+    [Fact]
+    public async Task ShouldAppendNothingGivenExactRegisterMemberRetry()
+    {
+        // Arrange
+        await using var provider = RegistrationServices();
+        var request = new RegisterMember(Uuid.CreateVersion4(), TenantId, UserId);
+        Assert.True((await HandleRegistrationAsync(provider, request)).IsSuccess);
+
+        // Act
+        var retry = await HandleRegistrationAsync(provider, request);
+        var history = await HistoryAsync(provider);
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.IsType<MemberRegistered>(Assert.Single(history));
+    }
+
+    [Fact]
+    public async Task ShouldReturnOriginalEpisodeGivenExactRegisterMemberRetryAfterDeprovisionAndCleanup()
+    {
+        // Arrange
+        await using var provider = RegistrationServices();
+        var reader = provider.GetRequiredService<IAggregateReader>();
+        var executor = provider.GetRequiredService<IAggregateExecutor>();
+        var request = new RegisterMember(Uuid.CreateVersion4(), TenantId, UserId);
+        Assert.True((await HandleRegistrationAsync(provider, request)).IsSuccess);
+        Assert.True((await executor.ExecuteAsync(new Member(TenantId, UserId), member =>
+            AggregateOutcome.CommitOnSuccess(member.Deprovision(ActorMemberId, "Alex Admin", ActionAt,
+                "Access ended.")), new RequestDispatchContext(RequestActor.System), CancellationToken.None)).IsSuccess);
+        var proof = Assert.IsType<MembershipTerminationProof>(
+            (await reader.HydrateAsync(new Member(TenantId, UserId))).TerminationProof);
+        Assert.True((await executor.ExecuteAsync(new Member(TenantId, UserId, proof.MembershipEpisodeId), member =>
+            AggregateOutcome.CommitOnSuccess(member.CompleteDeprovisionCleanup(proof,
+                MemberRetirementEffects.Complete(proof).CommandId, ActionAt.AddMinutes(1))),
+            new RequestDispatchContext(RequestActor.System), CancellationToken.None)).IsSuccess);
+
+        // Act
+        var retry = await HandleRegistrationAsync(provider, request);
+        var history = await HistoryAsync(provider);
+        var member = await reader.HydrateAsync(new Member(TenantId, UserId, Uuid.Empty, request.CommandId));
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(3, history.Count);
+        Assert.Single(history.OfType<MemberRegistered>());
+        Assert.False(member.IsRegistered);
+        Assert.Equal(request.CommandId, member.MembershipEpisodeId);
+        Assert.Equal(request.CommandId, member.Acceptance.SelectedOperation!.Operation.LogicalId);
+    }
+
+    [Theory]
+    [InlineData("affiliation")]
+    [InlineData("actor")]
+    public async Task ShouldConflictGivenSameCommandIdWithChangedAffiliationOrActor(string change)
+    {
+        // Arrange
+        await using var provider = RegistrationServices();
+        var commandId = Uuid.CreateVersion4();
+        Assert.True((await HandleRegistrationAsync(provider, new RegisterMember(commandId, TenantId, UserId))).IsSuccess);
+        var changed = change == "affiliation"
+            ? new RegisterMember(commandId, TenantId, UserId, "firm_staff")
+            : new RegisterMember(commandId, TenantId, UserId);
+        var actor = change == "actor" ? Caller(Uuid.CreateVersion4()) : RequestActor.System;
+
+        // Act
+        var result = await HandleRegistrationAsync(provider, changed, actor);
+        var history = await HistoryAsync(provider);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Single(history);
+    }
+
+    [Fact]
+    public async Task ShouldConflictGivenSameCommandIdWithChangedUserOrActor()
+    {
+        // Arrange
+        await using var provider = RegistrationServices();
+        var commandId = Uuid.CreateVersion4();
+        var original = new RegisterMember(commandId, TenantId, UserId);
+        Assert.True((await HandleRegistrationAsync(provider, original)).IsSuccess);
+        var member = await provider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new Member(TenantId, UserId, Uuid.Empty, commandId));
+        var system = ActorReference.ForSystemProcess("system", "system");
+
+        // Act
+        var userDecision = member.Acceptance.Decide(AcceptedOperationBinding.Of(RegisterMemberHandler.Provenance(
+            new RegisterMember(commandId, TenantId, Uuid.CreateVersion4()), system, ActionAt)));
+        var actorDecision = member.Acceptance.Decide(AcceptedOperationBinding.Of(RegisterMemberHandler.Provenance(
+            original, ActorReference.ForMember(ActorMemberId, "Alex Admin"), ActionAt)));
+        var exactDecision = member.Acceptance.Decide(AcceptedOperationBinding.Of(
+            RegisterMemberHandler.Provenance(original, system, ActionAt)));
+
+        // Assert
+        Assert.Equal(NativeAcceptanceDecision.Conflict, userDecision);
+        Assert.Equal(NativeAcceptanceDecision.Conflict, actorDecision);
+        Assert.Equal(NativeAcceptanceDecision.Replayed, exactDecision);
+    }
+
+    [Fact]
+    public async Task ShouldRecognizeAcceptedIntentGivenDurableRoundTrip()
+    {
+        // Arrange
+        await using var provider = RegistrationServices();
+        var request = new RegisterMember(Uuid.CreateVersion4(), TenantId, UserId);
+        Assert.True((await HandleRegistrationAsync(provider, request)).IsSuccess);
+        var original = Assert.IsType<MemberRegistered>(Assert.Single(await HistoryAsync(provider)));
+        await using var persistence = EventPersistenceFrameTests.Compose();
+        var serializer = persistence.GetRequiredService<IDomainEventSerializer>();
+        var owner = new Member(TenantId, UserId, Uuid.Empty, request.CommandId);
+        var restored = serializer.Deserialize(serializer.Serialize(original));
+        var scenario = new AggregateScenario<Member>(owner).Given(restored);
+
+        // Act
+        var decision = owner.Acceptance.Decide(AcceptedOperationBinding.Of(RegisterMemberHandler.Provenance(
+            request, ActorReference.ForSystemProcess("system", "system"), ActionAt)));
+
+        // Assert
+        Assert.Equal(NativeAcceptanceDecision.Replayed, decision);
+        Assert.Empty(scenario.PendingEvents);
+        Assert.Equal(request.CommandId, owner.MembershipEpisodeId);
+    }
+
+    static ServiceProvider RegistrationServices(Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
+    {
+        var services = new ServiceCollection();
+        var events = new InMemoryEventStore();
+        services.AddSingleton<IEventStore>(events);
+        services.AddSingleton<IDomainEventReader>(events);
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IProjectionCheckpointStore, InMemoryProjectionCheckpointStore>();
+        IImmutableContentStore content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+        services.AddSingleton(configureContent?.Invoke(content) ?? content);
+        services.AddPortia();
+        return services.BuildServiceProvider();
+    }
+
+    static async Task<Result> HandleRegistrationAsync(IServiceProvider provider, RegisterMember request,
+        ClaimsPrincipal? actor = null)
+    {
+        var reader = provider.GetRequiredService<IAggregateReader>();
+        var content = provider.GetRequiredService<IImmutableContentStore>();
+        var cleanup = new MemberAuthorityCleanup(reader, provider.GetRequiredService<IAggregateExecutor>(),
+            provider.GetRequiredService<IDomainEventReader>(), provider.GetRequiredService<IProjectionCheckpointStore>(),
+            TimeProvider.System);
+        var handler = new RegisterMemberHandler(new NativeOperationExecutor(reader,
+            provider.GetRequiredService<IAggregateExecutor>(), content), reader, cleanup, content, TimeProvider.System);
+        return await handler.HandleAsync(new RequestContext<RegisterMember>(request, actor ?? RequestActor.System),
+            CancellationToken.None);
+    }
+
+    static async Task<List<DomainEvent>> HistoryAsync(IServiceProvider provider)
+    {
+        var history = new List<DomainEvent>();
+        try
+        {
+            await foreach (var record in provider.GetRequiredService<IDomainEventReader>()
+                               .ReadAsync(new Member(TenantId, UserId).Stream, 0))
+                history.Add(record.Event);
+        }
+        catch (InvalidOperationException)
+        {
+            // An unknown stream reads as empty.
+        }
+
+        return history;
+    }
+
+    static ClaimsPrincipal Caller(Uuid userId) => new(new ClaimsIdentity(
+        [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
+
+    sealed class RegistrationContentStore(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        public bool RejectWrites { get; set; }
+        public int WriteAttempts { get; private set; }
+
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            WriteAttempts++;
+            if (RejectWrites)
+                throw new InvalidOperationException("Content writes are unavailable.");
+            return inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+        }
+
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => inner.ReadVerifiedAsync(realm, reference, ct);
     }
 }

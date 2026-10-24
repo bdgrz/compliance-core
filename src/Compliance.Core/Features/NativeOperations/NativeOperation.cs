@@ -10,5 +10,15 @@ namespace Bdgrz.Compliance.Features.NativeOperations;
 /// frozen first response.
 /// </summary>
 public sealed record NativeOperation<TAggregate>(AcceptedOperationBinding Binding, Func<TAggregate> Hydrate,
-    Func<TAggregate, NativeAcceptance> Acceptance, Func<TAggregate, Result<FirstResponseDescriptor>> Prepare,
-    Func<TAggregate, ImmutableContentRef, Result> Apply) where TAggregate : Aggregate;
+    Func<TAggregate, NativeAcceptance> Acceptance,
+    Func<TAggregate, CancellationToken, ValueTask<Result<FirstResponseDescriptor>>> Prepare,
+    Func<TAggregate, ImmutableContentRef, Result> Apply) where TAggregate : Aggregate
+{
+    /// <summary>Adapts synchronous preparation while preserving acceptance-before-preparation ordering.</summary>
+    public NativeOperation(AcceptedOperationBinding binding, Func<TAggregate> hydrate,
+        Func<TAggregate, NativeAcceptance> acceptance, Func<TAggregate, Result<FirstResponseDescriptor>> prepare,
+        Func<TAggregate, ImmutableContentRef, Result> apply)
+        : this(binding, hydrate, acceptance, (aggregate, _) => ValueTask.FromResult(prepare(aggregate)), apply)
+    {
+    }
+}

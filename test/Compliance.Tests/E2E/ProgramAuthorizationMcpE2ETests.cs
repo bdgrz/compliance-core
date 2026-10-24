@@ -90,7 +90,7 @@ public sealed class ProgramAuthorizationMcpE2ETests(BrokerStackFixture broker)
                 await using (var scope = (worker?.Services ?? factory.Services).CreateAsyncScope())
                 {
                     var registeredMember = await scope.ServiceProvider.GetRequiredService<IRequestBus>()
-                        .DispatchAsync(new RegisterMember(tenantId, memberId),
+                        .DispatchAsync(new RegisterMember(Uuid.CreateVersion4(), tenantId, memberId),
                             new RequestDispatchContext(RequestActor.System));
                     Assert.True(registeredMember.IsSuccess);
                 }

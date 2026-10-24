@@ -51,7 +51,7 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new MemberRegistered(TenantId, Uuid.CreateVersion4(), UserId,
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, Uuid.CreateVersion4(), UserId,
                 "guest", Uuid.CreateVersion4(), expiresOn));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -82,7 +82,7 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new MemberRegistered(TenantId, memberId, UserId));
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId));
             await reader.ApplyAsync(new MemberSuspended(TenantId, memberId, UserId, actorMemberId,
                 "Alex Admin", suspendedAt, "Employment ended."));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
@@ -117,8 +117,8 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new MemberRegistered(TenantId, memberId, UserId,
-                MembershipEpisodeId: membershipEpisodeId));
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId,
+                membershipEpisodeId: membershipEpisodeId));
             await reader.ApplyAsync(new MemberDeprovisioned(TenantId, memberId, UserId, actorMemberId,
                 "Alex Admin", deprovisionedAt, "Access is no longer required.", membershipEpisodeId));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
@@ -153,11 +153,11 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new MemberRegistered(TenantId, memberId, UserId,
-                MembershipEpisodeId: membershipEpisodeId));
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId,
+                membershipEpisodeId: membershipEpisodeId));
             await reader.ApplyAsync(new MemberDeprovisioned(TenantId, memberId, UserId, actorMemberId,
                 "Alex Admin", deprovisionedAt, "Access is no longer required.", membershipEpisodeId));
-            await reader.ApplyAsync(new MemberRegistered(TenantId, memberId, UserId, "firm_staff"));
+            await reader.ApplyAsync(MemberFacts.Registered(TenantId, memberId, UserId, "firm_staff"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -225,7 +225,7 @@ public sealed class FitzTenantMembershipDirectoryReaderTests
         var repository = new FitzTenantMembershipDirectoryReader(client);
         var identity = new CheckpointIdentity("TenantMembership", EventStreamPattern.ForPattern(tenantId.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
-        await repository.ApplyAsync(new MemberRegistered(tenantId, Uuid.CreateVersion4(), userId));
+        await repository.ApplyAsync(MemberFacts.Registered(tenantId, Uuid.CreateVersion4(), userId));
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 

@@ -1,4 +1,8 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -82,8 +86,8 @@ public sealed class DeprovisionMemberHandlerTests
         var deprovision = await handler.HandleAsync(new RequestContext<DeprovisionMember>(
             new DeprovisionMember(TenantId, UserId, "Access is no longer required."), Actor(ActorUserId)),
             CancellationToken.None);
-        var reinvited = await new RegisterMemberHandler(executor, reader, cleanup).HandleAsync(
-            new RequestContext<RegisterMember>(new RegisterMember(TenantId, UserId), RequestActor.System),
+        var reinvited = await Registration(provider, cleanup).HandleAsync(
+            new RequestContext<RegisterMember>(new RegisterMember(Uuid.CreateVersion4(), TenantId, UserId), RequestActor.System),
             CancellationToken.None);
         var memberAfterInvite = await reader.HydrateAsync(new Member(TenantId, UserId));
         var assignmentAfterInvite = await reader.HydrateAsync(new TeamMember(TenantId, TeamId, memberId));
@@ -163,6 +167,14 @@ public sealed class DeprovisionMemberHandlerTests
         provider.GetRequiredService<IDomainEventReader>(), provider.GetRequiredService<IProjectionCheckpointStore>(),
         TimeProvider.System);
 
+    static RegisterMemberHandler Registration(IServiceProvider provider, MemberAuthorityCleanup cleanup)
+    {
+        var content = provider.GetRequiredService<IImmutableContentStore>();
+        return new RegisterMemberHandler(new NativeOperationExecutor(provider.GetRequiredService<IAggregateReader>(),
+            provider.GetRequiredService<IAggregateExecutor>(), content),
+            provider.GetRequiredService<IAggregateReader>(), cleanup, content, TimeProvider.System);
+    }
+
     static ServiceProvider CreateProvider()
     {
         var services = new ServiceCollection();
@@ -170,6 +182,8 @@ public sealed class DeprovisionMemberHandlerTests
         services.AddSingleton<IEventStore>(events);
         services.AddSingleton<IDomainEventReader>(events);
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+            new PersistenceKvClient(new InMemoryKvClient())));
         services.AddSingleton<IProjectionCheckpointStore, InMemoryProjectionCheckpointStore>();
         services.AddPortia();
         return services.BuildServiceProvider();

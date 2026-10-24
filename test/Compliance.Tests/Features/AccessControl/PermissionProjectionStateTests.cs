@@ -28,7 +28,7 @@ public sealed class PermissionProjectionStateTests
         var roleId = BuiltInRbac.ViewerRoleId(tenantId);
 
         // Act
-        state.Apply(new MemberRegistered(tenantId, memberId, Uuid.CreateVersion4()));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new RoleDefined(tenantId, roleId, BuiltInRbac.ViewerRoleName));
         state.Apply(new RoleRenamed(tenantId, roleId, "Read only"));
 
@@ -50,7 +50,7 @@ public sealed class PermissionProjectionStateTests
         var teamId = Uuid.CreateVersion4();
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(tenantId, memberId, Uuid.CreateVersion4()));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
@@ -78,7 +78,7 @@ public sealed class PermissionProjectionStateTests
         var teamId = Uuid.CreateVersion4();
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(tenantId, memberId, Uuid.CreateVersion4()));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
@@ -103,7 +103,7 @@ public sealed class PermissionProjectionStateTests
         var teamId = Uuid.CreateVersion4();
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(tenantId, memberId, Uuid.CreateVersion4(), "firm_staff"));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4(), "firm_staff"));
         state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
         state.Apply(new RoleDefined(tenantId, roleId, "Tenant Administration"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
@@ -126,7 +126,7 @@ public sealed class PermissionProjectionStateTests
         var teamId = Uuid.CreateVersion4();
         var legacyRoleId = Uuid.CreateVersion4();
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(tenantId, memberId, Uuid.CreateVersion4()));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, legacyRoleId, "Legacy custom administrator"));
@@ -154,7 +154,7 @@ public sealed class PermissionProjectionStateTests
         var roleId = BuiltInRbac.TenantAdministrationRoleId(tenantId);
         var at = DateTimeOffset.UtcNow;
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(tenantId, memberId, userId));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, userId));
         state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Tenant Administration"));
@@ -192,8 +192,8 @@ public sealed class PermissionProjectionStateTests
         var newEpisodeId = Uuid.CreateVersion4();
         var at = DateTimeOffset.UtcNow;
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(tenantId, memberId, userId,
-            MembershipEpisodeId: oldEpisodeId));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, userId,
+            membershipEpisodeId: oldEpisodeId));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId, oldEpisodeId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
@@ -203,8 +203,8 @@ public sealed class PermissionProjectionStateTests
         // Act
         state.Apply(new MemberDeprovisioned(tenantId, memberId, userId, actorMemberId,
             "Alex Admin", at, "Access is no longer required.", oldEpisodeId));
-        state.Apply(new MemberRegistered(tenantId, memberId, userId,
-            MembershipEpisodeId: newEpisodeId));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, userId,
+            membershipEpisodeId: newEpisodeId));
         // A team assignment that was already in flight can project after the fresh invitation.
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId, oldEpisodeId));
 
@@ -222,7 +222,7 @@ public sealed class PermissionProjectionStateTests
         var teamId = Uuid.CreateVersion4();
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(tenantId, memberId, Uuid.CreateVersion4()));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
@@ -245,7 +245,7 @@ public sealed class PermissionProjectionStateTests
         var teamId = Uuid.CreateVersion4();
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
-        state.Apply(new MemberRegistered(tenantId, memberId, Uuid.CreateVersion4()));
+        state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
         state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
         state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
         state.Apply(new TeamMemberAssigned(tenantId, teamId, memberId));
