@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Portia;
@@ -12,7 +13,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 ///     that is not visible yet is a transient failure, never a release.
 /// </summary>
 sealed partial class AccessReviewCompletionSettlementReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
-    IProcessRecordStore records)
+    IProcessRecordStore records, IAggregateReader reader)
     : Reactor(checkpoints, EventStreamPattern.ForTenant(AccessReviewCampaign.Area), WorkloadName),
         IReactorHandler<AccessReviewCampaignCompletionCanceled>
 {
@@ -21,8 +22,15 @@ sealed partial class AccessReviewCompletionSettlementReactor(IProjectionCheckpoi
     public async ValueTask HandleAsync(IReactorContext<AccessReviewCampaignCompletionCanceled> context,
         CancellationToken ct)
     {
-        var key = new ProcessKey(AccessReviewEffects.CompletionProcessName, context.Source.Stream.Realm,
-            context.Trigger.Operation.RootOperationId);
+        var tenant = Uuid.Parse(context.Source.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
+        var campaignId = Uuid.Parse(context.Source.Stream.Resource, System.Globalization.CultureInfo.InvariantCulture);
+        var campaign = await reader.HydrateAsync(new AccessReviewCampaign(tenant, campaignId), ct).ConfigureAwait(false);
+        var accepted = campaign.AcceptedFor(context.Trigger.Operation.RootOperationId);
+        if (accepted is null)
+            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
+                "The accepted completion root is not visible yet.", true));
+        var key = ProcessKey.ForRoot(AccessReviewEffects.CompletionProcessName,
+            context.Trigger.Operation.RootOperationId, NativeFactReference.Of(context.Source.Stream, accepted));
         var record = await records.ReadAsync(key, ct).ConfigureAwait(false);
         if (record is null)
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,

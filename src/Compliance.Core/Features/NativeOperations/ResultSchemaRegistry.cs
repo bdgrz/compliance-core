@@ -54,7 +54,6 @@ public static class ResultSchemaRegistry
         ["technology-component-registration.v1"] = ComplianceCoreJsonContext.Default.TechnologyComponentRegistration,
         ["information-asset-registration.v1"] = ComplianceCoreJsonContext.Default.InformationAssetRegistration,
         ["data-flow-registration.v1"] = ComplianceCoreJsonContext.Default.DataFlowRegistration,
-        [UnitResult.Schema] = ComplianceCoreJsonContext.Default.UnitResult,
         ["location-registration.v1"] = ComplianceCoreJsonContext.Default.LocationRegistration,
         ["operational-process-registration.v1"] = ComplianceCoreJsonContext.Default.OperationalProcessRegistration,
         [ProviderAssuranceContent.ReportRegistrationSchema] = ComplianceCoreJsonContext.Default.AssuranceReportRegistration,

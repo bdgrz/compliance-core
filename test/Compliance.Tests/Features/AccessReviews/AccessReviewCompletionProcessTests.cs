@@ -425,7 +425,8 @@ public sealed class AccessReviewCompletionProcessTests
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reactor = new AccessReviewCompletionSettlementReactor(new InMemoryProjectionCheckpointStore(),
             scope.ServiceProvider.GetRequiredService<IRequestBus>(),
-            scope.ServiceProvider.GetRequiredService<IProcessRecordStore>());
+            scope.ServiceProvider.GetRequiredService<IProcessRecordStore>(),
+            scope.ServiceProvider.GetRequiredService<IAggregateReader>());
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<AccessReviewCampaignCompletionCanceled>(record),
             CancellationToken.None);
     }

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Globalization;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Processes;
@@ -22,7 +23,8 @@ public sealed class NamedRecordReactions(ProcessRootReaction process, IProcessRe
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(fact);
         var realm = context.Source.Stream.Realm;
-        var key = new ProcessKey(kind.ProcessName, realm, fact.Operation.RootOperationId);
+        var key = ProcessKey.ForRoot(kind.ProcessName, fact.Operation.RootOperationId,
+            NativeFactReference.Of(context.Source.Stream, (DomainEvent)fact));
         var targets = await records.ReadAsync(key, ct).ConfigureAwait(false) is null
             ? await FreezeTargetsAsync(kind, realm, fact, ct).ConfigureAwait(false)
             : [];

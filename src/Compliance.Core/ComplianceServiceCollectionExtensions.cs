@@ -715,7 +715,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<AccessReviewCompletionVerifier>();
         services.AddScoped<AccessReviewCompletionFences>();
         services.AddSingleton(FindingClosureProcess.Definition());
-        services.AddSingleton(IndependentChildMaterialization.Definition());
+        services.AddSingleton(Features.Remediation.IndependentChildMaterialization.Definition());
         services.AddScoped<FindingClosureVerifier>();
         services.AddScoped<FindingClosureFences>();
         services.AddSingleton(PolicyCampaignClosureProcess.Definition());
