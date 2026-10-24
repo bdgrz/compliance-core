@@ -47,7 +47,7 @@ public sealed class ProfessionalDutyChangeTests
             assertion.Evidence.AssertionId);
 
         // Assert
-        Assert.Equal(ProcessState.Completed, completed.State);
+        Assert.Equal(ProcessState.Aborted, completed.State);
         var owner = await host.HydrateAsync(new FirmStaffRecord(staff));
         Assert.False(owner.Uses.HasActiveUse);
         Assert.Single(await host.EventsAsync<FirmStaffProfessionalDutyUseSettled>(owner.Stream));
@@ -91,7 +91,7 @@ public sealed class ProfessionalDutyChangeTests
         };
 
         // Assert
-        Assert.All(delayed, outcome => Assert.IsType<ReceiverOutcome.Superseded>(outcome.Value));
+        Assert.All(delayed, outcome => Assert.IsType<ReceiverOutcome.Rejected>(outcome.Value));
         Assert.Empty(await host.EventsAsync<ProfessionalAssertionIdentityClaimed>(claimStream));
         Assert.Empty(await host.EventsAsync<FirmProfessionalDutyDesignationRecorded>(owner.Stream));
         Assert.Empty(await host.EventsAsync<FirmStaffProfessionalDutyUseAuthorized>(new FirmStaffRecord(staff).Stream));

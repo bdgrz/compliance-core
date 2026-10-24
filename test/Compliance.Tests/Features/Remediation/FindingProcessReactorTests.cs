@@ -35,7 +35,7 @@ public sealed class FindingProcessReactorTests
             CancellationToken.None);
         var again = await fixture.ActionAsync(finding.FindingId, actionId);
         var process = await scope.ServiceProvider.GetRequiredService<IProcessRecordStore>()
-            .ReadAsync(FindingProcesses.MaterializationKey(fixture.TenantId, actionId));
+            .ReadAsync(await FindingProcesses.MaterializationKey(fixture.Provider, fixture.TenantId, actionId));
 
         // Assert
         Assert.True(materialized.IsMaterialized);
@@ -71,7 +71,7 @@ public sealed class FindingProcessReactorTests
             CancellationToken.None);
         var closedTwice = await fixture.FindingStreamAsync(finding.FindingId);
         var process = await scope.ServiceProvider.GetRequiredService<IProcessRecordStore>()
-            .ReadAsync(fixture.ClosureKey(close.CommandId));
+            .ReadAsync(await fixture.ClosureKey(close.CommandId));
 
         // Assert
         Assert.NotNull(closedOnce.Closed);

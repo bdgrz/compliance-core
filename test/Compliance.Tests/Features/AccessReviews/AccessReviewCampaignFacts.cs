@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Bdgrz.Compliance.Tests.Features.AccessReviews;
 
 /// <summary>Builds access review launch and completion facts with their verified content for projector and baseline tests.</summary>
-static class AccessReviewFacts
+static class AccessReviewCampaignFacts
 {
     public static IImmutableContentStore NewStore() =>
         new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));

@@ -213,7 +213,7 @@ public sealed class ProviderAssuranceGapTests
         Assert.True((await host.LinkRequestAsync(gap.GapId, 1, accepted.RiskId, accepted.AcceptanceId, linkId)).IsSuccess);
         var root = await host.RootAsync(ProviderAssuranceStreams.Gap(host.Tenant, host.ProviderId, gap.GapId), linkId);
         var admitted = (ProviderCoverageGapRiskAcceptanceAdmitted)root.Event;
-        var record = await host.PrepareProcessAsync(host.LinkKey(linkId), root, admitted.Intent);
+        var record = await host.PrepareProcessAsync(await host.LinkKey(linkId), root, admitted.Intent);
         var good = (MaterializeProviderRiskAcceptanceLink)await host.CommandAsync(record,
             nameof(MaterializeProviderRiskAcceptanceLink), "materialize");
 
@@ -246,14 +246,14 @@ public sealed class ProviderAssuranceGapTests
         Assert.True((await host.LinkRequestAsync(gap.GapId, 1, accepted.RiskId, accepted.AcceptanceId, linkId)).IsSuccess);
         var root = await host.RootAsync(ProviderAssuranceStreams.Gap(host.Tenant, host.ProviderId, gap.GapId), linkId);
         var admitted = (ProviderCoverageGapRiskAcceptanceAdmitted)root.Event;
-        var record = await host.PrepareProcessAsync(host.LinkKey(linkId), root, admitted.Intent);
+        var record = await host.PrepareProcessAsync(await host.LinkKey(linkId), root, admitted.Intent);
         var command = await host.CommandAsync(record, nameof(MaterializeProviderRiskAcceptanceLink), "materialize");
         var appended = await host.ReceiveAsync(command);
 
         // Act: the worker crashed after the receiver appended and before the process record advanced.
         var identical = await host.CommandAsync(record, nameof(MaterializeProviderRiskAcceptanceLink), "materialize");
         var replay = await host.ReceiveAsync(identical);
-        var resumed = await host.ResumeAsync(host.LinkKey(linkId));
+        var resumed = await host.ResumeAsync(await host.LinkKey(linkId));
 
         // Assert
         Assert.Equal(command, identical);

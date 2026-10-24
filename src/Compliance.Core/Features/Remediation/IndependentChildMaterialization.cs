@@ -14,27 +14,15 @@ namespace Bdgrz.Compliance.Features.Remediation;
 ///     that has no reactor yet is never dispatched. A parent closure drains these before its own acquisition stage by
 ///     waiting on every unmaterialized action.
 /// </summary>
-static class IndependentChildMaterialization
+sealed class IndependentChildMaterialization : IChildMaterializationReceiver
 {
     public const string Materialize = "materialize";
 
-    public static ProcessDefinition Definition() => new(FindingClosureEffects.MaterializationProcessName,
-        [
-            "AdvisorFeedbackAdmitted", "AuditorResponseAdmitted", "AuditorCommentAdmitted",
-            nameof(CorrectiveActionAdmitted), "AuditorSampleSelectionAdmitted",
-            "ProviderCoverageGapRiskAcceptanceAdmitted", "PolicyParticipantResultAdmitted",
-        ], false,
-        [
-            new ProcessStageDefinition(Materialize,
-                [
-                    "MaterializeAdvisorFeedback", "MaterializeAuditorResponse", "MaterializeAuditorComment",
-                    nameof(MaterializeCorrectiveAction), "MaterializeAuditorSampleSelection",
-                    "MaterializeProviderRiskAcceptanceLink", "ApplyPolicyParticipantResult",
-                ],
-                "Single receiver per admitted child; no cross-receiver ordering. Parent closure drains these before its own acquisition stage."),
-        ], [], Receiver);
+    public static ProcessDefinition Definition() => IndependentChildMaterializationProcess.Definition();
 
-    static async ValueTask<IRequest<ReceiverOutcome>?> Receiver(ProcessStep step, IServiceProvider services,
+    public string Receiver => nameof(MaterializeCorrectiveAction);
+
+    public async ValueTask<IRequest<ReceiverOutcome>?> CreateAsync(ProcessStep step, IServiceProvider services,
         CancellationToken ct)
     {
         // Only the corrective action receiver ships here; a child kind of another owner is dispatched by its own slice.

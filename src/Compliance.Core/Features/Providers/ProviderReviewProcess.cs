@@ -60,7 +60,7 @@ static class ProviderReviewProcess
                 return new AuthorizeProviderAssuranceReportProviderReviewUse(step.CommandId, record.Source,
                     requirement.SourceOwner, reviewId, generation, null, record.Intent,
                     await ReportIdAsync(content, tenantId, intent, ct).ConfigureAwait(false),
-                    requirement.ContentEvent.EventId, requirement.ResourceRevision, intent.ProviderId, reviewId);
+                    requirement.ContentEvent.EventId, checked((long)requirement.ResourceRevision), intent.ProviderId, reviewId);
             case nameof(CompleteProviderAssuranceReview):
                 return new CompleteProviderAssuranceReview(step.CommandId, record.Source, review, reviewId,
                     generation, null, record.Intent, reviewId,

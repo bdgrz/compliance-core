@@ -13,11 +13,11 @@ namespace Bdgrz.Compliance.Tests.Testing;
 /// </summary>
 static class FindingProcesses
 {
-    public static ProcessKey MaterializationKey(Uuid tenantId, Uuid rootOperationId) =>
-        new(FindingClosureEffects.MaterializationProcessName, tenantId.ToString(), rootOperationId);
+    public static Task<ProcessKey> MaterializationKey(IServiceProvider provider, Uuid tenantId, Uuid rootOperationId) =>
+        ProcessKeys.FindAsync(provider, FindingClosureEffects.MaterializationProcessName, tenantId.ToString(), rootOperationId);
 
-    public static ProcessKey ClosureKey(Uuid tenantId, Uuid commandId) =>
-        new(FindingClosureEffects.ProcessName, tenantId.ToString(), commandId);
+    public static Task<ProcessKey> ClosureKey(IServiceProvider provider, Uuid tenantId, Uuid commandId) =>
+        ProcessKeys.FindAsync(provider, FindingClosureEffects.ProcessName, tenantId.ToString(), commandId);
 
     /// <summary>Starts and drives the materialization process of every admitted action of the finding.</summary>
     public static async Task<IReadOnlyList<ProcessRecord>> MaterializeAsync(IServiceProvider provider, Uuid tenantId,
@@ -30,7 +30,8 @@ static class FindingProcesses
         var driven = new List<ProcessRecord>();
         foreach (var admitted in finding.Admitted)
         {
-            var key = MaterializationKey(tenantId, admitted.Operation.RootOperationId);
+            var key = ProcessKey.ForRoot(FindingClosureEffects.MaterializationProcessName, admitted.Operation.RootOperationId,
+                NativeFactReference.Of(finding.Stream, admitted));
             await records.CreateIfAbsentAsync(ProcessRecord.Start(key, NativeFactReference.Of(finding.Stream, admitted),
                 admitted.Operation.Episode, admitted.Intent, [admitted.Operation.LogicalId.ToString()],
                 DateTimeOffset.UtcNow), ct);
@@ -54,7 +55,8 @@ static class FindingProcesses
         var children = await ImmutableSelectionManifests.ReadAsync<AdmittedChild>(content, tenantId.ToString(),
             intent.AdmittedChildren, ct);
         return await scope.ServiceProvider.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(
-            ProcessRecord.Start(ClosureKey(tenantId, commandId), NativeFactReference.Of(finding.Stream, accepted),
+            ProcessRecord.Start(ProcessKey.ForRoot(FindingClosureEffects.ProcessName, commandId,
+                NativeFactReference.Of(finding.Stream, accepted)), NativeFactReference.Of(finding.Stream, accepted),
                 accepted.Operation.Episode, accepted.Intent,
                 children.Select(child => FindingClosureEffects.ActionKey(tenantId, programId, findingId, child.ChildId)),
                 DateTimeOffset.UtcNow), ct);

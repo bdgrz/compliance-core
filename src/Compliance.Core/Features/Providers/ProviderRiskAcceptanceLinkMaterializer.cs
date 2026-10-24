@@ -18,6 +18,9 @@ sealed class ProviderRiskAcceptanceLinkMaterializer : IChildMaterializationRecei
         CancellationToken ct)
     {
         var record = processStep.Record;
+        if (processStep.Receiver != Receiver ||
+            record.Source.Stream.Area != ProviderAssuranceStreams.Area)
+            return null;
         var content = services.GetRequiredService<IImmutableContentStore>();
         var tenantId = Uuid.Parse(record.Key.Realm, System.Globalization.CultureInfo.InvariantCulture);
         ProviderRiskLinkIntent intent;

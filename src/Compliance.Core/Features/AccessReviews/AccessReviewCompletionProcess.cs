@@ -85,7 +85,7 @@ static class AccessReviewCompletionProcess
                     return new AuthorizeAccessReviewItemCampaignCompletionUse(step.CommandId, record.Source,
                         AccessReviewEffects.ItemStream(tenant, campaignId, target.ItemId), root,
                         AccessReviewEffects.Generation, null, record.Intent, target.ItemId,
-                        requirement.ContentEvent.EventId, requirement.ResourceRevision, campaignId);
+                        requirement.ContentEvent.EventId, checked((long)requirement.ResourceRevision), campaignId);
                 }
             case nameof(CompleteAccessReviewCampaignClosure):
                 {

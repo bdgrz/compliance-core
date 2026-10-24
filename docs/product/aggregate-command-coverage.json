@@ -30,7 +30,6 @@
     "unwiredAggregateProducerClassifications": {
       "no_registered_request_route": 17,
       "legacy_emitter_to_prune": 1,
-      "direct_reactor_executor": 0,
       "direct_processor_executor": 12
     },
     "factReplayGuardRows": 0

@@ -7,7 +7,7 @@ import test from 'node:test';
 
 const tool = path.resolve(import.meta.dirname, '../check-implementation-coverage.mjs');
 
-function checkFixture(t, source, trace = false, receiverFields = []) {
+function checkFixture(t, source, trace = false, receiverFields = [], options = {}) {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'compliance-coverage-'));
     t.after(() => fs.rmSync(root, { recursive: true, force: true }));
     const write = (name, value) => {
@@ -24,7 +24,7 @@ function checkFixture(t, source, trace = false, receiverFields = []) {
     catalog('remaining-command-identities', { contracts: [] });
     catalog('target-event-contracts', { events: [] });
     catalog('design-review-traces', { traces: trace ? [{ id: 'example', test: 'ShouldCompleteGivenExample' }] : [] });
-    catalog('target-reactor-contracts', {
+    catalog('target-reactor-contracts', options.reactorCatalog ?? {
         reactors: [{ command: 'FinishExample', handler: 'FinishExampleHandler', fields: receiverFields, reactor: 'ExampleReactor', http: false, mcp: false }],
         processes: [{ process: 'ExampleProcess', rootSourceEvents: ['ExampleBegun'], stages: [{ receivers: ['FinishExample'] }] }]
     });
@@ -184,3 +184,47 @@ for (const surface of ['http', 'mcp']) {
         assert.equal(result.status, 1);
     });
 }
+
+const sharedChildCatalog = ordered => ({
+    reactors: [
+        { command: 'FinishExample', handler: 'FinishExampleHandler', fields: [], reactor: 'ExampleReactor', sourceEvents: ['ExampleBegun'] },
+        { command: 'FinishOther', handler: 'FinishOtherHandler', fields: [], reactor: 'OtherReactor', sourceEvents: ['OtherBegun'] }
+    ],
+    processes: [{ process: 'ExampleProcess', ordered, rootSourceEvents: ['ExampleBegun', 'OtherBegun'], abort: [],
+        stages: [{ receivers: ['FinishExample', 'FinishOther'] }] }]
+});
+const shippedChildVariant = `
+    public class Example : Aggregate { }
+    public record BeginExample(Uuid Id) : IRequest<Result>;
+    public record ExampleBegun() : DomainEvent;
+    public record FinishExample() : IRequest<Result>;
+    services.AddRequestHandler<BeginExampleHandler>();
+    services.AddRequestHandler<FinishExampleHandler>();
+    app.MapPortiaPost<BeginExample, Result>("/examples");
+    const string Process = "ExampleProcess";
+`;
+
+test('ShouldPermitShippedIndependentRootGivenUnshippedUnrelatedChildVariant', t => {
+    const result = checkFixture(t, shippedChildVariant, false, [], { reactorCatalog: sharedChildCatalog(false) });
+    assert.equal(result.status, 0);
+});
+
+test('ShouldRejectRegisteredIndependentRootGivenShippedChildWithoutReceiver', t => {
+    const result = checkFixture(t, shippedChildVariant + 'public record OtherBegun() : DomainEvent;', false, [],
+        { reactorCatalog: sharedChildCatalog(false) });
+    assert.equal(result.status, 1);
+});
+
+test('ShouldRequireAllReceiversGivenOrderedProcessWithUnshippedRoot', t => {
+    const result = checkFixture(t, shippedChildVariant, false, [], { reactorCatalog: sharedChildCatalog(true) });
+    assert.equal(result.status, 1);
+});
+
+test('ShouldDiscoverRegisteredDefinitionGivenCatalogProcessNameWithoutProcessSuffix', t => {
+    const catalog = sharedChildCatalog(false);
+    catalog.reactors = catalog.reactors.slice(0, 1);
+    catalog.processes = [{ process: 'ExampleFanOut', rootSourceEvents: ['ExampleBegun'], stages: [{ receivers: ['FinishExample'] }] }];
+    const result = checkFixture(t, shippedChildVariant.replace('"ExampleProcess"', '"ExampleFanOut"'), false, [],
+        { reactorCatalog: catalog });
+    assert.equal(result.status, 0);
+});

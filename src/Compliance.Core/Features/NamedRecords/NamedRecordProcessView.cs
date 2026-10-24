@@ -62,6 +62,16 @@ public sealed class NamedRecordProcessView
     public NativeFactReference? FactOf(string receiver) =>
         Step.Record.Facts.TryGetValue(receiver, out var fact) ? fact : null;
 
+    /// <summary>The per-target fact that acquired the new claim, rather than a different name held by the same change.</summary>
+    public NativeFactReference? NewClaimFact(string receiver)
+    {
+        if (Intent.NewClaimKey is not { } desired)
+            return null;
+        var encoded = Step.Record.Targets.SingleOrDefault(target =>
+            new EventStreamAddress(Realm, Kind.ClaimArea, DecodeTarget(target).Resource) == desired);
+        return encoded is null ? null : Step.Record.Facts.GetValueOrDefault(ProcessRecord.FactKey(receiver, encoded));
+    }
+
     /// <summary>The receiver fields every command of this step shares for <paramref name="target" />.</summary>
     public NameChangeStep StepFor(EventStreamAddress target) => new(Step.CommandId, target,
         Root.Operation.RootOperationId, Generation, ExpectedRevision, Step.Record.Intent, Intent.RecordId);

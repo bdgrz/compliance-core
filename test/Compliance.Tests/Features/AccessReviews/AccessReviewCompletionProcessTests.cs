@@ -358,7 +358,7 @@ public sealed class AccessReviewCompletionProcessTests
         // Act
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<AccessReviewCampaignCompletionAccepted>(record),
             CancellationToken.None);
-        var process = await fixture.ProcessAsync(fixture.CompletionKey(request.CommandId));
+        var process = await fixture.ProcessAsync(await fixture.CompletionKey(request.CommandId));
 
         // Assert
         Assert.Equal(ProcessState.Completed, process!.State);

@@ -21,8 +21,8 @@ public sealed class TenantManagerGuardTests
         await using var host = new AdministratorTransitionHost();
         _ = await host.AddAdministratorAsync();
         var target = await host.AddAdministratorAsync();
-        var request = TeamMemberEffects.Remove(Uuid.CreateVersion4(), host.TenantId,
-            host.AdministratorsTeamId, target.MemberId);
+        var request = new RemoveTeamMember(Uuid.CreateVersion4(), host.TenantId,
+            host.AdministratorsTeamId, target.MemberId, Uuid.Empty, -1, -1);
         var first = await host.SubmitSystemRemovalAsync(request);
         Assert.True(first.IsSuccess);
         Assert.Equal(ProcessState.Completed, (await host.DriveAsync(request.CommandId)).State);

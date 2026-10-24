@@ -14,14 +14,14 @@ public sealed class FitzAccessReviewCampaignDirectoryTests
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
-        var content = AccessReviewFacts.NewStore();
+        var content = AccessReviewCampaignFacts.NewStore();
         var directory = new FitzAccessReviewCampaignDirectory(new PrefixCompatibleKvClient(new InMemoryKvClient()),
             content);
         var now = new DateTimeOffset(2026, 10, 2, 0, 0, 0, TimeSpan.Zero);
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer");
         var launched = new List<AccessReviewCampaignLaunched>();
         foreach (var offset in LaunchOffsets)
-            launched.Add(await AccessReviewFacts.LaunchedAsync(content, tenantId, Uuid.CreateVersion4(),
+            launched.Add(await AccessReviewCampaignFacts.LaunchedAsync(content, tenantId, Uuid.CreateVersion4(),
                 $"Campaign {offset}", now.AddDays(30), Uuid.CreateVersion4(), new string('a', 64), [], [], actor,
                 now.AddMinutes(offset)));
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
@@ -30,7 +30,7 @@ public sealed class FitzAccessReviewCampaignDirectoryTests
         {
             foreach (var campaign in launched)
                 await directory.ApplyAsync(campaign);
-            await directory.ApplyAsync(await AccessReviewFacts.CompletedAsync(content, tenantId,
+            await directory.ApplyAsync(await AccessReviewCampaignFacts.CompletedAsync(content, tenantId,
                 launched[1].CampaignId, 2, new AccessReviewCampaignCompletionView(Uuid.CreateVersion4(),
                     new string('b', 64), "Complete", actor, now.AddDays(1)), actor));
             await batch.CommitAsync(ProjectionCheckpoint.Start);

@@ -143,7 +143,8 @@ sealed class OperationsFixture
                     new PersistenceKvClient(new InMemoryKvClient()));
                 services.AddSingleton(processStore?.Invoke(records) ?? records);
                 services.AddSingleton(FindingClosureProcess.Definition());
-                services.AddSingleton(IndependentChildMaterialization.Definition());
+                services.AddSingleton(IndependentChildMaterializationProcess.Definition());
+                services.AddSingleton<IChildMaterializationReceiver, IndependentChildMaterialization>();
                 services.AddSingleton<ProcessCatalog>(provider =>
                     new ProcessCatalog(provider.GetServices<ProcessDefinition>()));
                 services.AddScoped<ProcessDriver>();
@@ -496,7 +497,7 @@ sealed class OperationsFixture
             .HydrateAsync(new FindingAggregate(TenantId, ProgramId, findingId));
     }
 
-    public ProcessKey ClosureKey(Uuid commandId) => FindingProcesses.ClosureKey(TenantId, commandId);
+    public Task<ProcessKey> ClosureKey(Uuid commandId) => FindingProcesses.ClosureKey(Provider, TenantId, commandId);
 
     /// <summary>Drives the closure process of an accepted closure until it is terminal or waits.</summary>
     public Task<ProcessRecord> RunClosureAsync(Uuid findingId, Uuid commandId) =>

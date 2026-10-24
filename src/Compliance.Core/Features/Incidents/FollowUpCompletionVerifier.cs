@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.Incidents;
 /// <summary>
 ///     Turns the native facts named by a resolution into verified completions. The authoritative completion of a
 ///     follow-up work item is the committed <see cref="CorrectiveActionCompletedV2" /> fact of its corrective action
-///     on the owning finding stream: a work item is derived from its source workflow and that workflow alone owns
+///     on its own action stream: a work item is derived from its source workflow and that workflow alone owns
 ///     completion. A caller-supplied work identifier, a projection row or a fact of another kind or tenant is never
 ///     accepted.
 /// </summary>
@@ -26,15 +26,15 @@ public sealed class FollowUpCompletionVerifier(ISourceFactResolver resolver, IIm
         var completions = new List<ComplianceIncidentFollowUpCompletionView>();
         foreach (var reference in resolution.FollowUpCompletionFacts)
         {
-            if (reference.Stream.Realm != tenantId.ToString() || reference.Stream.Area != FindingAggregate.Area)
-                return Reject("A follow-up completion must be a fact of a finding in this tenant.");
+            if (reference.Stream.Realm != tenantId.ToString() || reference.Stream.Area != CorrectiveAction.Area)
+                return Reject("A follow-up completion must be a fact of a corrective action in this tenant.");
             try
             {
                 var (proof, fact, locator) = await SourceFactProofs.BuildAsync<CorrectiveActionCompletedV2>(resolver,
                     content, tenantId.ToString(), reference, ct).ConfigureAwait(false);
                 if (fact.TenantId != tenantId || fact.ProgramId != programId ||
-                    locator.Source != new FindingAggregate(tenantId, programId, fact.FindingId).Stream)
-                    return Reject("A follow-up completion must be a fact of a finding in this program.");
+                    locator.Source != new CorrectiveAction(tenantId, programId, fact.FindingId, fact.ActionId).Stream)
+                    return Reject("A follow-up completion must be a fact of a corrective action in this program.");
                 completions.Add(new ComplianceIncidentFollowUpCompletionView(
                     WorkCandidate.IdFor(fact.ActionId, WorkSource.CorrectiveAction), proof));
             }

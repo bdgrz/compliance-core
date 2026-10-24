@@ -263,7 +263,7 @@ public sealed class FitzAccessReviewCampaignWorkItemDirectoryTests
         await fixture.ClassifyStandardAsync(populationId);
         var routed = await fixture.LaunchAsync(populationId);
         var source = await fixture.CampaignAsync(routed.CampaignId);
-        await AccessReviewFacts.SeedLaunchedAsync(fixture.Provider, fixture.TenantId, Uuid.CreateVersion4(),
+        await AccessReviewCampaignFacts.SeedLaunchedAsync(fixture.Provider, fixture.TenantId, Uuid.CreateVersion4(),
             source.Reviewers, source.Items.Select(static item => item.Item).ToArray(), source.LaunchedBy,
             source.LaunchedAt, fixture.ProgramId, null);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();

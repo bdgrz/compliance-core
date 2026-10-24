@@ -99,8 +99,8 @@ sealed class TypeIIRangeHost : IAsyncDisposable
         Services.GetRequiredService<NativeOperationExecutor>(), Reader, Services.GetRequiredService<ControlOperationsReader>(),
         Content, clock);
 
-    public static ProcessKey FanOutKeyOf(Uuid tenantId, Uuid operationId) =>
-        new(ControlOccurrenceFanOut.ProcessName, tenantId.ToString(), operationId);
+    public Task<ProcessKey> FanOutKeyOf(Uuid tenantId, Uuid operationId) =>
+        ProcessKeys.FindAsync(Provider, ControlOccurrenceFanOut.ProcessName, tenantId.ToString(), operationId);
 
     /// <summary>Runs the fan-out root reactor on the committed selections of a period, as the worker would.</summary>
     public async Task ReactFanOutAsync(EventStreamAddress stream)
@@ -123,8 +123,8 @@ sealed class TypeIIRangeHost : IAsyncDisposable
         var period = await HydrateAsync(new TypeIIPeriod(tenantId, programId, periodId));
         var manifest = await Content.ReadJsonAsync<ControlOccurrenceSelectionManifest>(tenantId.ToString(),
             selected.CreationIntentManifest);
-        return await Records.CreateIfAbsentAsync(ProcessRecord.Start(new ProcessKey(ControlOccurrenceFanOut.ProcessName,
-            tenantId.ToString(), selected.Operation.RootOperationId), NativeFactReference.Of(period.Stream, selected),
+        return await Records.CreateIfAbsentAsync(ProcessRecord.Start(ProcessKey.ForRoot(ControlOccurrenceFanOut.ProcessName, selected.Operation.RootOperationId,
+            NativeFactReference.Of(period.Stream, selected)), NativeFactReference.Of(period.Stream, selected),
             selected.Operation.Episode, selected.CreationIntentManifest,
             manifest.Selections.Select(static selection => selection.OccurrenceId.ToString()),
             DateTimeOffset.UtcNow));
@@ -153,15 +153,16 @@ sealed class TypeIIRangeHost : IAsyncDisposable
     public async Task<T> HydrateAsync<T>(T aggregate) where T : Aggregate =>
         await Reader.HydrateAsync(aggregate);
 
-    public static ProcessKey KeyOf(Uuid tenantId, Uuid operationId) =>
-        new(TypeIIRangeEffects.ProcessName, tenantId.ToString(), operationId);
+    public Task<ProcessKey> KeyOf(Uuid tenantId, Uuid operationId) =>
+        ProcessKeys.FindAsync(Provider, TypeIIRangeEffects.ProcessName, tenantId.ToString(), operationId);
 
     /// <summary>Creates (if absent) the process record of an accepted opening or amendment, as the root reactor does.</summary>
     public async Task<ProcessRecord> StartProcessAsync(Uuid tenantId, Uuid programId, Uuid periodId, Uuid operationId)
     {
         var period = await HydrateAsync(new TypeIIPeriod(tenantId, programId, periodId));
         var accepted = period.AcceptedFor(operationId) ?? throw new InvalidOperationException("Not accepted.");
-        return await Records.CreateIfAbsentAsync(ProcessRecord.Start(KeyOf(tenantId, operationId),
+        return await Records.CreateIfAbsentAsync(ProcessRecord.Start(ProcessKey.ForRoot(TypeIIRangeEffects.ProcessName, operationId,
+                NativeFactReference.Of(period.Stream, accepted)),
             NativeFactReference.Of(period.Stream, accepted), ((INativeOperationFact)accepted).Operation.Episode,
             TypeIIPeriod.IntentOf(accepted)!, [], DateTimeOffset.UtcNow));
     }

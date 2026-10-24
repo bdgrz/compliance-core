@@ -52,7 +52,7 @@ public sealed class ControlOccurrenceFanOutTests
         // Act
         await fixture.Host.ReactFanOutAsync(fixture.StreamOf(period));
         await fixture.Host.ReactFanOutAsync(fixture.StreamOf(period));
-        var record = await fixture.Host.Records.ReadAsync(TypeIIRangeHost.FanOutKeyOf(fixture.TenantId,
+        var record = await fixture.Host.Records.ReadAsync(await fixture.Host.FanOutKeyOf(fixture.TenantId,
             selected.Operation.RootOperationId));
         var opened = await OpenedAsync(fixture, selected);
 

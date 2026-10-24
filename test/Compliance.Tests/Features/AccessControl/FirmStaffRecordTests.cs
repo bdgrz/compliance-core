@@ -55,6 +55,7 @@ public sealed class FirmStaffRecordTests
         // Arrange
         StaffContentStore content = null!;
         await using var host = new Host(configureContent: inner => content = new StaffContentStore(inner));
+        _ = host.Content;
         content.RejectWrites = true;
         var request = Register(Uuid.CreateVersion4(), Uuid.CreateVersion4()) with { ExpectedRevision = 1 };
 

@@ -192,7 +192,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
         var campaignStream = AccessReviewEffects.CampaignStream(TenantId, CampaignId);
         var itemStream = AccessReviewEffects.ItemStream(TenantId, CampaignId, ItemId);
         var itemStreamId = AccessReviewEffects.ItemStreamId(TenantId, CampaignId, ItemId);
-        var launchedFact = await AccessReviewFacts.LaunchedAsync(content, TenantId, CampaignId, header.Name, deadline,
+        var launchedFact = await AccessReviewCampaignFacts.LaunchedAsync(content, TenantId, CampaignId, header.Name, deadline,
             CampaignSnapshotId, launchDigest.Value.Sha256, reviewers, items, CampaignOwner, launchedAt, ProgramId,
             RemediationOwnerMemberId, header.Instructions);
         var intentHeader = new DurableIntentHeader(CampaignId, campaignStream, campaignStream, campaignStream,
@@ -269,7 +269,7 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
             accepted.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), CampaignId, 2, completedAt));
             var completion = new AccessReviewCampaignCompletionView(completionSnapshotId, resultDigest.Value.Sha256,
                 attestation, CampaignOwner, completedAt);
-            var stableCompletion = await AccessReviewFacts.CompletedAsync(content, TenantId, CampaignId, 3, completion,
+            var stableCompletion = await AccessReviewCampaignFacts.CompletedAsync(content, TenantId, CampaignId, 3, completion,
                 CampaignOwner);
             DomainEvent closed = stableCompletion with
             {

@@ -355,7 +355,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
         var manifest = await services.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<AccessReviewItemIntentManifest>(TenantId.ToString(), launched.ItemIntentManifest);
         var records = services.GetRequiredService<IProcessRecordStore>();
-        var key = LaunchKey(campaignId);
+        var key = await LaunchKey(campaignId);
         await records.CreateIfAbsentAsync(ProcessRecord.Start(key, NativeFactReference.Of(campaign.Stream, launched),
             launched.Operation.Episode, launched.ItemIntentManifest,
             manifest.Selections.Select(static selection => selection.ItemId.ToString()), DateTimeOffset.UtcNow));
@@ -363,11 +363,11 @@ sealed class AccessReviewFixture : IAsyncDisposable
             new RequestDispatchContext(RequestActor.System));
     }
 
-    public ProcessKey LaunchKey(Uuid campaignId) => new(AccessReviewEffects.LaunchFanOutName, TenantId.ToString(),
-        campaignId);
+    public Task<ProcessKey> LaunchKey(Uuid campaignId) =>
+        ProcessKeys.FindAsync(Provider, AccessReviewEffects.LaunchFanOutName, TenantId.ToString(), campaignId);
 
-    public ProcessKey CompletionKey(Uuid commandId) => new(AccessReviewEffects.CompletionProcessName,
-        TenantId.ToString(), commandId);
+    public Task<ProcessKey> CompletionKey(Uuid commandId) =>
+        ProcessKeys.FindAsync(Provider, AccessReviewEffects.CompletionProcessName, TenantId.ToString(), commandId);
 
     /// <summary>The item facts of one materialized item.</summary>
     public async Task<AccessReviewItem> ItemAsync(Uuid campaignId, Uuid itemId, Uuid? selectedLogicalId = null) =>
@@ -416,7 +416,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
         var targets = await services.GetRequiredService<AccessReviewManifests>()
             .CompletionTargetsAsync(TenantId, campaignId, campaign.Launched!, intent);
         return await services.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(
-            ProcessRecord.Start(CompletionKey(commandId), NativeFactReference.Of(campaign.Stream, accepted),
+            ProcessRecord.Start(await CompletionKey(commandId), NativeFactReference.Of(campaign.Stream, accepted),
                 accepted.Operation.Episode, accepted.Intent, targets, DateTimeOffset.UtcNow));
     }
 

@@ -24,8 +24,8 @@ public sealed class PolicyParticipantResultProcessTests
         // Act
         await host.ReactResultsAsync(campaign);
         await host.ReactResultsAsync(campaign);
-        var first = await host.RunAsync(host.ResultKey(personal.CommandId));
-        var second = await host.RunAsync(host.ResultKey(proxy.CommandId));
+        var first = await host.RunAsync(await host.ResultKey(personal.CommandId));
+        var second = await host.RunAsync(await host.ResultKey(proxy.CommandId));
 
         // Assert
         Assert.Equal(ProcessState.Completed, first.State);
@@ -63,8 +63,8 @@ public sealed class PolicyParticipantResultProcessTests
 
         // Act
         await host.ReactResultsAsync(campaign);
-        await host.RunAsync(host.ResultKey(completion.CommandId));
-        await host.RunAsync(host.ResultKey(waiver.CommandId));
+        await host.RunAsync(await host.ResultKey(completion.CommandId));
+        await host.RunAsync(await host.ResultKey(waiver.CommandId));
 
         // Assert
         var completed = (await host.ParticipantAsync(campaign, host.LearnerPerson)).Completion!;
@@ -92,7 +92,7 @@ public sealed class PolicyParticipantResultProcessTests
         hold.ArmAfterReplaceCount(0);
         await host.ReactResultsAsync(campaign, tolerateCrash: true);
         hold.Disarm();
-        var record = (await host.RecordAsync(host.ResultKey(request.CommandId)))!;
+        var record = (await host.RecordAsync(await host.ResultKey(request.CommandId)))!;
         var command = (ApplyPolicyParticipantResult)(await host.StepAsync(record, "materialize",
             nameof(ApplyPolicyParticipantResult), record.Targets[0]))!;
 
@@ -125,8 +125,8 @@ public sealed class PolicyParticipantResultProcessTests
         hold.ArmAfterReplaceCount(0);
         await host.ReactResultsAsync(campaign, tolerateCrash: true);
         hold.Disarm();
-        var record = (await host.RecordAsync(host.ResultKey(first.CommandId)))!;
-        var otherRecord = (await host.RecordAsync(host.ResultKey(second.CommandId)))!;
+        var record = (await host.RecordAsync(await host.ResultKey(first.CommandId)))!;
+        var otherRecord = (await host.RecordAsync(await host.ResultKey(second.CommandId)))!;
         var command = (ApplyPolicyParticipantResult)(await host.StepAsync(record, "materialize",
             nameof(ApplyPolicyParticipantResult), record.Targets[0]))!;
         var otherCommand = (ApplyPolicyParticipantResult)(await host.StepAsync(otherRecord, "materialize",
@@ -166,7 +166,7 @@ public sealed class PolicyParticipantResultProcessTests
         hold.ArmAfterReplaceCount(0);
         await host.ReactResultsAsync(campaign, tolerateCrash: true);
         hold.Disarm();
-        var record = (await host.RecordAsync(host.ResultKey(request.CommandId)))!;
+        var record = (await host.RecordAsync(await host.ResultKey(request.CommandId)))!;
         var command = (await host.StepAsync(record, "materialize", nameof(ApplyPolicyParticipantResult),
             record.Targets[0]))!;
 

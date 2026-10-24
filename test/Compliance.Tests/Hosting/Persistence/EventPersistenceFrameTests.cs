@@ -2,7 +2,8 @@ using Bdgrz.Compliance.Hosting.Persistence;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using Bdgrz.Compliance.Features.Tenants;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Risks;
 using Bdgrz.Compliance.Features.Operations;
 using Cntryl.Fitz;
 using Cntryl.Portia;
@@ -48,8 +49,9 @@ public sealed class EventPersistenceFrameTests
             Beginning = () => ids.AddRange(Enumerable.Range(0, 2000).Select(_ => Uuid.CreateVersion4())),
         };
         var store = Guard(new FitzEventStore(streams, serializer), serializer);
-        var ev = new TenantMemberInvited(Uuid.CreateVersion4(), "lead@example.test", "client_personnel", false,
-            "hash", Now.AddDays(7), Uuid.CreateVersion4(), GuestProgramIds: ids, InvitedAt: Now);
+        var ev = new RiskTreatmentActionCompletionSubmitted(Uuid.CreateVersion4(), Uuid.CreateVersion4(),
+            Uuid.CreateVersion4(), 1, Uuid.CreateVersion4(), Uuid.CreateVersion4(), "Completed", ids,
+            Uuid.CreateVersion4(), ActorReference.ForSystemProcess("test", "Test"), Now);
         ev.AttachMetadata(Event("metadata", 1).Metadata);
         var checkedBytes = serializer.Serialize(ev).ToArray();
 
@@ -59,7 +61,7 @@ public sealed class EventPersistenceFrameTests
         // Assert
         Assert.Equal(2001, ids.Count);
         Assert.Equal(checkedBytes, Assert.Single(streams.Bodies));
-        Assert.Single(Assert.IsType<TenantMemberInvited>(serializer.Deserialize(streams.Bodies[0])).GuestProgramIds!);
+        Assert.Single(Assert.IsType<RiskTreatmentActionCompletionSubmitted>(serializer.Deserialize(streams.Bodies[0])).EvidenceRequestIds);
     }
 
     [Fact]

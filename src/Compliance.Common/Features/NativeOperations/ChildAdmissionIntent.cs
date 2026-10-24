@@ -1,8 +1,7 @@
-using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
-namespace Bdgrz.Compliance.Features.Processes;
+namespace Bdgrz.Compliance.Features.NativeOperations;
 
 /// <summary>
 ///     The frozen terms of one admitted child: the parent and its generation at admission, the complete canonical

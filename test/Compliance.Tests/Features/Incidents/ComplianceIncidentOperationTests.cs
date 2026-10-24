@@ -187,12 +187,12 @@ public sealed class ComplianceIncidentOperationTests
         var wrongKind = completed.Raised;
         var wrongStream = completed.Fact with
         {
-            Stream = new EventStreamAddress(host.TenantId.ToString(), FindingAggregate.Area,
+            Stream = new EventStreamAddress(host.TenantId.ToString(), CorrectiveAction.Area,
                 Uuid.CreateVersion4().ToString()),
         };
         var wrongTenant = completed.Fact with
         {
-            Stream = new EventStreamAddress(Uuid.CreateVersion4().ToString(), FindingAggregate.Area,
+            Stream = new EventStreamAddress(Uuid.CreateVersion4().ToString(), CorrectiveAction.Area,
                 completed.Fact.Stream.Resource),
         };
         var forgedEvent = completed.Fact with { EventId = Uuid.CreateVersion4() };
@@ -357,11 +357,12 @@ public sealed class ComplianceIncidentOperationTests
             services.AddSingleton<IEventStore>(_events);
             services.AddSingleton<IDomainEventReader>(_events);
             services.AddPortia();
+            Content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
+            services.AddSingleton(Content);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             _writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
-            Content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
             Operations = new NativeOperationExecutor(Reader, _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
                 Content);
             Verifier = new FollowUpCompletionVerifier(new EventStoreSourceFactResolver(_events), Content);
@@ -424,24 +425,15 @@ public sealed class ComplianceIncidentOperationTests
             var actionId = Uuid.CreateVersion4();
             var owner = RbacIds.Member(TenantId, Uuid.CreateVersion4());
             var actor = ActorReference.ForMember(owner, "Owner");
-            var dispatch = new RequestDispatchContext(RequestActor.System);
-            var raise = Uuid.CreateVersion4();
-            var raising = new FindingAggregate(TenantId, programId, findingId, raise);
-            Assert.Null(raising.Raise(raise, new FindingSource("manual", null, null, "Raised by test"),
-                "Credential exposure follow-up", "Rotate the exposed credential.", "high", "Payment API", owner,
-                new DateOnly(2026, 12, 1), [], actor, Start.AddMinutes(-9)));
-            await _writer.SaveAsync(raising, dispatch);
-            var add = Uuid.CreateVersion4();
-            var adding = await Reader.HydrateAsync(new FindingAggregate(TenantId, programId, findingId, add));
-            Assert.Null(adding.AddAction(add, 1, actionId, "Rotate the credential", owner,
-                new DateOnly(2026, 12, 1), actor, Start.AddMinutes(-8)));
-            await _writer.SaveAsync(adding, dispatch);
-            var complete = Uuid.CreateVersion4();
-            var finding = await Reader.HydrateAsync(new FindingAggregate(TenantId, programId, findingId, complete));
-            Assert.Null(finding.CompleteAction(complete, 2, actionId, "Rotated and verified",
-                [new EvidenceReference(null, "external", "https://example.com/evidence")],
-                owner, actor, Start.AddMinutes(-4)));
-            await _writer.SaveAsync(finding, dispatch);
+            await FindingSeed.RaiseAsync(_provider, TenantId, programId, findingId,
+                new FindingSource("manual", null, null, "Raised by test"), "Credential exposure follow-up",
+                "Rotate the exposed credential.", "high", "Payment API", owner, new DateOnly(2026, 12, 1), [], actor,
+                Start.AddMinutes(-9));
+            await FindingSeed.AddActionAsync(_provider, TenantId, programId, findingId, actionId,
+                "Rotate the credential", owner, new DateOnly(2026, 12, 1), actor, Start.AddMinutes(-4),
+                new EvidenceReference(null, "external", "https://example.com/evidence"), owner);
+            var finding = new FindingAggregate(TenantId, programId, findingId);
+            var action = new CorrectiveAction(TenantId, programId, findingId, actionId);
             NativeFactReference? raised = null;
             NativeFactReference? completion = null;
             await foreach (var record in _events.ReadAsync(finding.Stream, 0))
@@ -449,8 +441,11 @@ public sealed class ComplianceIncidentOperationTests
                 var reference = NativeFactReference.Of(finding.Stream, record.Event);
                 if (record.Event is FindingRaisedV2)
                     raised = reference;
+            }
+            await foreach (var record in _events.ReadAsync(action.Stream, 0))
+            {
                 if (record.Event is CorrectiveActionCompletedV2)
-                    completion = reference;
+                    completion = NativeFactReference.Of(action.Stream, record.Event);
             }
 
             return new Completed(Bdgrz.Compliance.Features.Work.WorkCandidate.IdFor(actionId, "corrective_action"),

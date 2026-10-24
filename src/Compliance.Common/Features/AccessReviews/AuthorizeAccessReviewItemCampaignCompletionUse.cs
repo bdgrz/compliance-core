@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
@@ -13,8 +14,16 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 [Discriminator("bdgrz.access-review-item.authorize-campaign-completion-use", 1)]
 public sealed record AuthorizeAccessReviewItemCampaignCompletionUse(Uuid CommandId, NativeFactReference Source,
     EventStreamAddress Target, Uuid OperationId, long Generation, long? ExpectedRevision, ImmutableContentRef Intent,
-    Uuid SourceOwnerId, Uuid SourceContentEventId, ulong ExpectedContentRevision, Uuid CampaignId)
+    Uuid SourceOwnerId, Uuid SourceContentEventId, long SourceRevision, Uuid ReceivingOwnerId)
     : ISourceUseAuthorization, IAccessReviewReceiver
 {
+    /// <summary>The source revision in the shared use protocol; invalid negative input cannot match a held revision.</summary>
+    [JsonIgnore]
+    public ulong ExpectedContentRevision => SourceRevision >= 0 ? (ulong)SourceRevision : ulong.MaxValue;
+
+    /// <summary>The receiving owner whose exact accepted operation this use serves.</summary>
+    [JsonIgnore]
+    public Uuid CampaignId => ReceivingOwnerId;
+
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }

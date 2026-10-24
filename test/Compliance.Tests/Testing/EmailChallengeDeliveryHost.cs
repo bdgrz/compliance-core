@@ -155,14 +155,14 @@ sealed class EmailChallengeDeliveryHost : IAsyncDisposable
     {
         Clock.Advance(ProcessDriver.LeaseDuration + ProcessDriver.RetryDelay + TimeSpan.FromSeconds(1));
         await using var scope = Provider.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(ProcessKeyOf(challengeId), worker,
+        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(await ProcessKeyOf(challengeId), worker,
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
     }
 
-    public static ProcessKey ProcessKeyOf(Uuid challengeId) =>
-        new(EmailChallengeDeliveryProcess.Name, EmailChallengeDeliveryWorker.Realm, challengeId);
+    public Task<ProcessKey> ProcessKeyOf(Uuid challengeId) =>
+        ProcessKeys.FindAsync(Provider, EmailChallengeDeliveryProcess.Name, EmailChallengeDeliveryWorker.Realm, challengeId);
 
-    public Task<ProcessRecord?> ProcessAsync(Uuid challengeId) => Store.ReadAsync(ProcessKeyOf(challengeId));
+    public async Task<ProcessRecord?> ProcessAsync(Uuid challengeId) => await Store.ReadAsync(await ProcessKeyOf(challengeId));
 
     /// <summary>Sends one command through the real bus as the given principal (the system process by default).</summary>
     public async Task<Result> SendAsync(IRequest command, ClaimsPrincipal? actor = null)

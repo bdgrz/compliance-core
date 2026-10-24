@@ -45,7 +45,7 @@ public static class ProviderNameChangeProcess
                 }
             case ProviderNames.ApplyReceiver:
                 {
-                    var claimed = view.FactOf(ProviderNames.ClaimReceiver)
+                    var claimed = view.NewClaimFact(ProviderNames.ClaimReceiver)
                         ?? throw new InvalidOperationException("A provider change always holds its name claim.");
                     var (proof, _, _) = await SourceFactProofs.BuildAsync<ProviderNameClaimed>(view.Resolver, view.Content,
                         view.Realm, claimed, ct).ConfigureAwait(false);

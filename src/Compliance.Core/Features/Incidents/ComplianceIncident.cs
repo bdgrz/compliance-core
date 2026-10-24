@@ -508,7 +508,7 @@ public sealed class ComplianceIncident : Aggregate
 
     static bool ValidCompletion(ComplianceIncidentFollowUpCompletionView item, Uuid tenantId) =>
         item is { Proof: { } proof } && item.WorkItemId != Uuid.Empty &&
-        proof.Source.Realm == tenantId.ToString() && proof.Source.Area == FindingAggregate.Area &&
+        proof.Source.Realm == tenantId.ToString() && proof.Source.Area == CorrectiveAction.Area &&
         proof.EventKind == EventKind.Of(typeof(CorrectiveActionCompletedV2)) && proof.EventId != Uuid.Empty;
 
     static bool ValidStatus(ComplianceIncidentView state)

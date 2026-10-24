@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
@@ -13,8 +14,12 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 [Discriminator("bdgrz.policy-campaign-participant.settle-campaign-closure-use", 1)]
 public sealed record SettlePolicyCampaignParticipantCampaignClosureUse(Uuid CommandId, NativeFactReference Source,
     EventStreamAddress Target, Uuid OperationId, long Generation, long? ExpectedRevision, ImmutableContentRef Intent,
-    Uuid SourceOwnerId, Uuid CampaignId, Uuid PersonId, SourceUseSettlementDisposition Disposition)
+    Uuid SourceOwnerId, Uuid ReceivingOwnerId, Uuid PersonId, SourceUseSettlementDisposition Disposition)
     : ISourceUseSettlement, IPolicyCampaignReceiver
 {
+    /// <summary>The receiving owner whose exact accepted operation this use serves.</summary>
+    [JsonIgnore]
+    public Uuid CampaignId => ReceivingOwnerId;
+
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }

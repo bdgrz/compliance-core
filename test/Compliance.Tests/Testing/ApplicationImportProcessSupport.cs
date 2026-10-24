@@ -12,9 +12,6 @@ static class ApplicationImportProcessSupport
 {
     public const string ProcessName = "ApplicationImportExecutionProcess";
 
-    public static ProcessKey KeyOf(Uuid tenantId, Uuid rootOperationId) =>
-        new(ProcessName, tenantId.ToString(), rootOperationId);
-
     /// <summary>Creates (if absent) the process record of a sealed plan with the canonical target list.</summary>
     public static async Task<ProcessRecord> StartAsync(IServiceProvider services, Uuid tenantId, Uuid batchId)
     {
@@ -28,7 +25,8 @@ static class ApplicationImportProcessSupport
             plan.TargetGroups, CancellationToken.None);
         var source = new ApplicationImportSource(tenantId, plan.SourceKey, plan.SourceNamespace).Stream;
         return await services.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(ProcessRecord.Start(
-            KeyOf(tenantId, sealedPlan.Operation.RootOperationId), NativeFactReference.Of(batch.Stream, sealedPlan),
+            ProcessKey.ForRoot(ProcessName, sealedPlan.Operation.RootOperationId,
+                NativeFactReference.Of(batch.Stream, sealedPlan)), NativeFactReference.Of(batch.Stream, sealedPlan),
             sealedPlan.Operation.Episode, sealedPlan.FrozenPlan,
             [$"{source.Area}/{source.Resource}", .. groups.Select(group => $"applications/{group.ApplicationId}")],
             DateTimeOffset.UtcNow));

@@ -46,7 +46,7 @@ public static class OperationalProcessNameChangeProcess
             case OperationalProcessNames.ApplyReceiver:
                 {
                     ApplyOperationalProcessChangeSourceProof source;
-                    if (view.FactOf(OperationalProcessNames.ClaimReceiver) is { } claimed)
+                    if (view.NewClaimFact(OperationalProcessNames.ClaimReceiver) is { } claimed)
                         source = new ApplyOperationalProcessChangeSourceProof.ClaimedProof((await SourceFactProofs
                             .BuildAsync<OperationalProcessNameClaimed>(view.Resolver, view.Content, view.Realm, claimed, ct)
                             .ConfigureAwait(false)).Proof);

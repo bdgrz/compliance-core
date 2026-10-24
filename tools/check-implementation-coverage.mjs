@@ -145,7 +145,9 @@ for (const { file, content, declared } of scannedSources) {
     for (const m of content.matchAll(/AddReactor<(\w+)>\(\s*(?:"(\w+)")?/g)) registeredReactors.set(m[1], m[2] ?? null);
     for (const m of content.matchAll(/MapPortia(Put|Post|Delete)<(\w+)\s*[,>][^;]*?"([^"]*)"/gs)) mappedRoutes.set(m[2], [...(mappedRoutes.get(m[2]) ?? []), { verb: m[1].toUpperCase(), path: m[3] }]);
     for (const m of content.matchAll(/AddMcpTool<(\w+)>/g)) mcpTools.add(m[1]);
-    if (file.includes(`${path.sep}Compliance.Core${path.sep}`)) for (const m of content.matchAll(/"(\w+Process)"/g)) literals.add(m[1]);
+    if (file.includes(`${path.sep}Compliance.Core${path.sep}`)) for (const m of content.matchAll(/"(\w+)"/g)) {
+        if (reactorCatalog.processes.some(process => process.process === m[1])) literals.add(m[1]);
+    }
 }
 const testNames = new Set();
 for (const file of tests) for (const m of fs.readFileSync(file, 'utf8').matchAll(/\b(?:Task|void)\s+(\w*Should\w+)\s*\(/g)) testNames.add(m[1]);
@@ -272,19 +274,34 @@ const abortStatus = name => {
 for (const process of reactorCatalog.processes) {
     const receivers = [...new Set([...process.stages.flatMap(s => s.receivers), ...(process.abort ?? [])])];
     const statuses = receivers.map(r => [r, receiverStatus.get(r) ?? abortStatus(r)]);
+    const rootsByReceiver = new Map(receivers.map(name => [name, reactorByCommand.get(name)?.sourceEvents ?? []]));
+    const independentRoots = process.ordered === false && process.stages.length === 1 &&
+        (process.abort ?? []).length === 0 && process.rootSourceEvents.length > 1 &&
+        receivers.length === process.rootSourceEvents.length &&
+        receivers.every(name => rootsByReceiver.get(name).length === 1 &&
+            process.rootSourceEvents.includes(rootsByReceiver.get(name)[0])) &&
+        new Set(receivers.map(name => rootsByReceiver.get(name)[0])).size === receivers.length;
+    // Independent child kinds dispatch separate receivers. Shipped roots must be complete; absent unrelated
+    // native root kinds cannot start a process yet. Ordered processes retain the full receiver boundary.
+    const requiredStatuses = independentRoots
+        ? statuses.filter(([name]) => rootsByReceiver.get(name).some(root => domainEvents.has(root)))
+        : statuses;
     const registered = literals.has(process.process);
     const allDone = statuses.every(([, s]) => s === 'implemented');
     const anyDone = statuses.some(([, s]) => s !== 'pending');
     processStatus.set(process.process, allDone && registered ? 'implemented' : anyDone || registered ? 'partial' : 'pending');
     processDetail.set(process.process, statuses.filter(([, s]) => s !== 'implemented').map(([r, s]) => `${r}:${s}`).join(',') + (registered ? '' : ' [definition literal absent]'));
-    if (registered && !allDone) fail(`Process ${process.process} is registered but these receivers are incomplete: ${statuses.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ')}`);
+    if (registered && requiredStatuses.some(([, state]) => state !== 'implemented')) fail(`Process ${process.process} is registered but these receivers are incomplete: ${requiredStatuses.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ')}`);
     // A public route ships in the same PR as every receiver of every process rooted at its native facts.
     const rootCommands = commands.filter(c => c.status !== 'remove' && (c.events ?? []).some(e => process.rootSourceEvents.includes(e)));
     for (const command of rootCommands) {
         // A selected replacement contract can be exposed before its owner or handler is complete.
         // Legacy contracts with the same name remain pending until their owning cutover slice.
         const exposed = requestMatches(command.command, command.fields).ok && ((mappedRoutes.get(command.command) ?? []).length > 0 || mcpTools.has(command.command));
-        if (exposed && !(allDone && registered)) fail(`${command.command} is exposed over HTTP/MCP but ${process.process}, rooted at its facts, is incomplete: ${statuses.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ') || 'definition literal absent'}`);
+        const needed = independentRoots
+            ? statuses.filter(([name]) => rootsByReceiver.get(name).some(root => (command.events ?? []).includes(root)))
+            : statuses;
+        if (exposed && !(needed.every(([, state]) => state === 'implemented') && registered)) fail(`${command.command} is exposed over HTTP/MCP but ${process.process}, rooted at its facts, is incomplete: ${needed.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ') || 'definition literal absent'}`);
     }
 }
 

@@ -189,7 +189,8 @@ sealed class IdentityRecoveryHost : IAsyncDisposable
     {
         var record = await ClaimRecordAsync(account, challengeId);
         var claimed = (IdentityRecoveryChallengeClaimed)record.Event;
-        return await Store.CreateIfAbsentAsync(ProcessRecord.Start(ProcessKeyOf(claimed.ChallengeId),
+        return await Store.CreateIfAbsentAsync(ProcessRecord.Start(ProcessKey.ForRoot(IdentityRecoveryProcess.Name, claimed.ChallengeId,
+                NativeFactReference.Of(record.Stream, record.Event)),
             NativeFactReference.Of(record.Stream, record.Event), claimed.Operation.Episode, claimed.Intent,
             [claimed.OldIdentityId.ToString(), claimed.ReplacementIdentityId.ToString()], DateTimeOffset.UtcNow));
     }
@@ -211,14 +212,14 @@ sealed class IdentityRecoveryHost : IAsyncDisposable
         // A crashed worker leaves its lease behind; the sweep resumes the record once the lease lapsed.
         Clock.Advance(ProcessDriver.LeaseDuration + TimeSpan.FromSeconds(1));
         await using var scope = Provider.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(ProcessKeyOf(challengeId), worker,
+        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(await ProcessKeyOf(challengeId), worker,
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
     }
 
-    public static ProcessKey ProcessKeyOf(Uuid challengeId) =>
-        new(IdentityRecoveryProcess.Name, IdentityRecoveryReceiverSupport.Realm, challengeId);
+    public Task<ProcessKey> ProcessKeyOf(Uuid challengeId) =>
+        ProcessKeys.FindAsync(Provider, IdentityRecoveryProcess.Name, IdentityRecoveryReceiverSupport.Realm, challengeId);
 
-    public Task<ProcessRecord?> ProcessAsync(Uuid challengeId) => Store.ReadAsync(ProcessKeyOf(challengeId));
+    public async Task<ProcessRecord?> ProcessAsync(Uuid challengeId) => await Store.ReadAsync(await ProcessKeyOf(challengeId));
 
     /// <summary>Sends one receiver command through the real bus as the system principal.</summary>
     public async Task<Result<ReceiverOutcome>> SendAsync(IRequest<ReceiverOutcome> command, ClaimsPrincipal? actor = null)
