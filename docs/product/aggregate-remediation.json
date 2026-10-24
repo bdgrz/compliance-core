@@ -24,10 +24,16 @@
       "name": "Tracking and CI",
       "state": "complete",
       "completedPullRequests": [
-        1029
+        1029,
+        1044
       ],
       "issue": 1028,
-      "mergedCommit": "416104ab6ce6ae4acc070dcdf254dc3582c1e754"
+      "mergedCommit": "416104ab6ce6ae4acc070dcdf254dc3582c1e754",
+      "slices": [
+        "D0",
+        "T0"
+      ],
+      "toolingIssue": 1045
     },
     {
       "order": 1,
@@ -37,7 +43,8 @@
         1031
       ],
       "issue": 1030,
-      "mergedCommit": "7323bb3179766d93d6e7a4df1e4460ab1c689962"
+      "mergedCommit": "7323bb3179766d93d6e7a4df1e4460ab1c689962",
+      "slices": []
     },
     {
       "order": 2,
@@ -48,44 +55,76 @@
         1035,
         1037
       ],
-      "issue": 1036
+      "issue": 1036,
+      "slices": [
+        "S1",
+        "S2"
+      ]
     },
     {
       "order": 3,
       "name": "Administrator safety",
       "state": "pending",
-      "completedPullRequests": []
+      "completedPullRequests": [],
+      "slices": [
+        "S3"
+      ],
+      "issue": 1046
     },
     {
       "order": 4,
       "name": "Identity recovery",
       "state": "pending",
-      "completedPullRequests": []
+      "completedPullRequests": [],
+      "slices": [
+        "S4"
+      ],
+      "issue": 1047
     },
     {
       "order": 5,
       "name": "Independence",
       "state": "pending",
-      "completedPullRequests": []
+      "completedPullRequests": [],
+      "slices": [
+        "S7",
+        "S8",
+        "S9"
+      ],
+      "issue": 1048
     },
     {
       "order": 6,
       "name": "Incidents and impact",
       "state": "pending",
-      "completedPullRequests": []
+      "completedPullRequests": [],
+      "slices": [
+        "S10"
+      ],
+      "issue": 1049
     },
     {
       "order": 7,
       "name": "Imports",
       "state": "pending",
-      "completedPullRequests": []
+      "completedPullRequests": [],
+      "slices": [
+        "S11",
+        "S12"
+      ],
+      "issue": 1050
     },
     {
       "order": 8,
       "name": "Reactor recovery",
       "state": "in_progress",
       "completedPullRequests": [],
-      "issue": 1040
+      "issue": 1040,
+      "slices": [
+        "S13",
+        "S14",
+        "S15"
+      ]
     },
     {
       "order": 9,
@@ -94,31 +133,67 @@
       "completedPullRequests": [
         1039
       ],
-      "issue": 1038
+      "issue": 1038,
+      "slices": [
+        "S5",
+        "S6",
+        "S16",
+        "S17",
+        "S18",
+        "S19"
+      ]
     },
     {
       "order": 10,
       "name": "Operations and campaigns",
       "state": "pending",
-      "completedPullRequests": []
+      "completedPullRequests": [],
+      "slices": [
+        "S20",
+        "S21",
+        "S22",
+        "S23",
+        "S24",
+        "S25",
+        "S27"
+      ],
+      "issue": 1051
     },
     {
       "order": 11,
       "name": "Evidence and assurance",
       "state": "pending",
-      "completedPullRequests": []
+      "completedPullRequests": [],
+      "slices": [
+        "S26",
+        "S28",
+        "S29",
+        "S30",
+        "S31"
+      ],
+      "issue": 1052
     },
     {
       "order": 12,
       "name": "Versioned content",
       "state": "pending",
-      "completedPullRequests": []
+      "completedPullRequests": [],
+      "slices": [
+        "S32",
+        "S33",
+        "S34"
+      ],
+      "issue": 1053
     },
     {
       "order": 13,
       "name": "Process and legacy cleanup",
       "state": "pending",
-      "completedPullRequests": []
+      "completedPullRequests": [],
+      "slices": [
+        "S35"
+      ],
+      "issue": 1054
     }
   ],
   "observations": [
@@ -173,7 +248,8 @@
           "scope": "RolePermission only: required typed operation identity, exact assignment episodes and selected native facts; complete bootstrap replaces twelve backfill reactors. TeamRole, TeamMember, Member and PlatformOperatorRoster remain open.",
           "pullRequest": 1033,
           "mergedCommit": "fce4a35732de949ba08f27423dd1736e796f85b9",
-          "ownerState": "complete"
+          "ownerState": "complete",
+          "removedDiscriminators": []
         },
         {
           "issue": 1034,
@@ -182,7 +258,8 @@
           "scope": "TeamRole only: required operation identity, exact assignment episode, native facts, both directory views and source-stable bootstrap/cleanup effects. TeamMember, Member and PlatformOperatorRoster remain open.",
           "pullRequest": 1035,
           "mergedCommit": "fb4ff895cfdb4fd34a8c24aa6eebadaef989953c",
-          "ownerState": "complete"
+          "ownerState": "complete",
+          "removedDiscriminators": []
         },
         {
           "issue": 1036,
@@ -191,7 +268,8 @@
           "scope": "PlatformOperatorRoster: required typed operation identity, original revision, exact active assignment slots, native fact retries and stable seed creation. Last-operator authority remains atomic. Member and TeamMember remain open.",
           "pullRequest": 1037,
           "mergedCommit": "25ec3117e723626fed98a7b9d4d279f5658a10ae",
-          "ownerState": "complete"
+          "ownerState": "complete",
+          "removedDiscriminators": []
         }
       ]
     },
@@ -240,7 +318,8 @@
           "proof": "test/Compliance.Tests/Hosting/Persistence",
           "scope": "Fourteen concrete payload guards, other oversized nominal budgets, attributed whole-batch preflight, actual KV operation overhead, notifier forwarding and request validation mapping. Structural owner/content corrections remain separate.",
           "pullRequest": 1031,
-          "mergedCommit": "7323bb3179766d93d6e7a4df1e4460ab1c689962"
+          "mergedCommit": "7323bb3179766d93d6e7a4df1e4460ab1c689962",
+          "removedDiscriminators": []
         }
       ]
     },
@@ -454,7 +533,8 @@
           "scope": "Presentation uses independent audit sessions with immutable source registration proof. Association/revocation physical replay stays bounded; authoritative admission, audit races, unknown outcomes and projection rebuilding are covered.",
           "pullRequest": 1039,
           "mergedCommit": "df1bc10742debbd99e11eda7a2e5ae65e9f48b81",
-          "ownerState": "complete"
+          "ownerState": "complete",
+          "removedDiscriminators": []
         }
       ]
     },
@@ -723,7 +803,8 @@
           "issue": 1040,
           "implementation": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
           "proof": "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs",
-          "scope": "Member retirement only: exact episode/source proof, complete native-source discovery with technical cuts, fenced relationship receivers and independent retirement/late-assignment/grant reactors. Manager withdrawal and other relationship cleanup owners remain open."
+          "scope": "Member retirement only: exact episode/source proof, complete native-source discovery with technical cuts, fenced relationship receivers and independent retirement/late-assignment/grant reactors. Manager withdrawal and other relationship cleanup owners remain open.",
+          "removedDiscriminators": []
         }
       ]
     },
@@ -769,7 +850,8 @@
           "issue": 1040,
           "implementation": "src/Compliance.Core/Features/AccessControl/MemberAuthorityCleanup.cs",
           "proof": "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs",
-          "scope": "Member retirement only: exact episode/source proof, complete native-source discovery with technical cuts, fenced relationship receivers and independent retirement/late-assignment/grant reactors. Manager withdrawal and other relationship cleanup owners remain open."
+          "scope": "Member retirement only: exact episode/source proof, complete native-source discovery with technical cuts, fenced relationship receivers and independent retirement/late-assignment/grant reactors. Manager withdrawal and other relationship cleanup owners remain open.",
+          "removedDiscriminators": []
         }
       ]
     },
@@ -1395,5 +1477,68 @@
     ],
     "accepted": "Per-finding native facts/readers, source-qualified work identities, bounded AuditObservation model. Model-only AuditObservation does not complete #301.",
     "supersedingDecision": "Pre-release histories are disposable. Remove compatibility/migration paths during owning structural corrections; no deployment or environment reset authorized."
+  },
+  "implementationPlan": {
+    "kernel": [
+      "K1",
+      "K2",
+      "K3",
+      "K4",
+      "K5",
+      "K6"
+    ],
+    "sliceCatalog": "docs/product/audits/2026-10-23/README.md",
+    "coverageTool": "tools/check-implementation-coverage.mjs",
+    "sequencingDeviations": [
+      {
+        "observations": [
+          "ACCESS-03",
+          "ACCESS-04"
+        ],
+        "family": 9,
+        "deliveredIn": [
+          "S5",
+          "S6"
+        ],
+        "before": "family 5 Independence",
+        "reason": "Engagement personal decisions and acceptance consume FirmStaffRecord and FirmProfessionalDutyDesignation use receivers."
+      },
+      {
+        "observations": [
+          "OPS-03"
+        ],
+        "family": 10,
+        "deliveredIn": [
+          "S14"
+        ],
+        "before": "remaining family 8 Reactor recovery",
+        "reason": "Type II close coverage needs the ControlOccurrence owner."
+      },
+      {
+        "observations": [
+          "ACCESS-14",
+          "ACCESS-15",
+          "ACCESS-16"
+        ],
+        "family": 9,
+        "deliveredIn": [
+          "S15"
+        ],
+        "before": "remaining family 8 Reactor recovery",
+        "reason": "Tenant slug/owner receivers share the team and role cleanup discovery fix."
+      },
+      {
+        "observations": [
+          "ASSURE-01"
+        ],
+        "family": 11,
+        "deliveredIn": [
+          "S26"
+        ],
+        "before": "family 10 completes",
+        "reason": "EvidenceRequest ships with risk treatment actions that raise it."
+      }
+    ],
+    "statusRoutesIssue": 1055
   }
 }

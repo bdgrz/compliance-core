@@ -69,6 +69,15 @@ does not count toward the 81. The baseline records its own scope and limitations
 | 12 | Versioned content | Narrow versions/proofs for criteria, policy, redaction, assertions, methodology, commitments, descriptions, changes and incidents. |
 | 13 | Process and legacy cleanup | Independent processes, hard-pruned superseded paths, full owner/event/command/reactor reconciliation. |
 
+Delivery runs as PR-sized slices (kernel K1-K6, then owner slices S1-S35) recorded
+per family in `aggregate-remediation.json` (`families[].slices`, `implementationPlan`).
+Four accepted sequencing deviations are listed under
+`implementationPlan.sequencingDeviations`: FirmStaff and duty owners before
+Independence, ControlOccurrence and Tenant slug/owner inside Reactor recovery, and
+EvidenceRequest with risk actions. `node tools/check-implementation-coverage.mjs`
+compares the source tree with the selected catalogs and fails CI on drift; each
+evidence entry lists its `removedDiscriminators`.
+
 Acquire multiple reservations in canonical stream-key order. Persist immutable
 intent sufficient to reconstruct each continuation. Cancellation fences the
 receiving operation before releasing authority. If an executable permit cannot
