@@ -76,7 +76,8 @@ for (const command of allSelected) {
         routes.set(shape, command.command);
     }
     for (const event of command.events ?? []) assert(eventByName.has(event), `Undefined target event: ${command.command} -> ${event}`);
-    if (command.sourceContract) assert(existsAt(commandsHead, command.sourceContract), `Missing command source at ${commandsHead.slice(0, 8)}: ${command.sourceContract}`);
+    const commandSourceHead = command.sourceHead ?? commandsHead;
+    if (command.sourceContract) assert(existsAt(commandSourceHead, command.sourceContract), `Missing command source at ${commandSourceHead.slice(0, 8)}: ${command.sourceContract}`);
 }
 const receiverNames = new Set();
 for (const reactor of reactors) {

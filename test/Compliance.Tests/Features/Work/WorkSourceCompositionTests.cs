@@ -419,7 +419,7 @@ public sealed class WorkSourceCompositionTests
             "deploy", "permission", "Deploy", false, "expected", [], null);
         var reviewer = new AccessReviewerView(populationId, systemInstanceId,
             fixture.LeadMemberId, false, null);
-        await Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewFacts.SeedLaunchedAsync(fixture.Provider,
+        await Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewCampaignFacts.SeedLaunchedAsync(fixture.Provider,
             fixture.TenantId, campaignId, [reviewer], [item], actor, now, fixture.ProgramId,
             fixture.ApproverMemberId, "Quarterly access review", deadline: now.AddDays(14));
         return (campaignId, itemId, systemInstanceId);

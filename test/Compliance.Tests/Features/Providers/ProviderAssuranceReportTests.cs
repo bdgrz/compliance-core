@@ -144,8 +144,8 @@ public sealed class ProviderAssuranceReportTests
         // Arrange
         await using var host = await ProviderAssuranceHost.CreateAsync();
         var otherProvider = Uuid.CreateVersion4();
-        await host.SeedAsync(new ProviderRegister(host.Tenant), register =>
-            register.Record(otherProvider, Uuid.CreateVersion4(), MaterialProvider("Other provider"), Author, Now));
+        await NamedRecordFacts.SeedProviderAsync(host.Services, host.Tenant, otherProvider,
+            MaterialProvider("Other provider"), Author, Now);
         var reportId = Uuid.CreateVersion4();
 
         // Act
@@ -172,14 +172,14 @@ public sealed class ProviderAssuranceReportTests
         Assert.True(admitted.IsSuccess, admitted.Error?.Message);
         var root = await host.RootAsync(ProviderAssuranceStreams.Review(host.Tenant, reviewId), reviewId);
         var requested = (ProviderReviewRequested)root.Event;
-        var started = await host.PrepareProcessAsync(host.ReviewKey(reviewId), root, requested.Intent);
+        var started = await host.PrepareProcessAsync(await host.ReviewKey(reviewId), root, requested.Intent);
         var acquire = await host.CommandAsync(started, nameof(AuthorizeProviderAssuranceReportProviderReviewUse), "acquire");
         Assert.True((await host.ReceiveAsync(acquire)).IsSuccess);
 
         // Act
         var held = await host.SendAsync(new ReviseAssuranceReport(Uuid.CreateVersion4(), host.Tenant, host.ProviderId,
             report.ReportId, 1, Report() with { Opinion = "qualified" }));
-        var process = await host.ResumeAsync(host.ReviewKey(reviewId));
+        var process = await host.ResumeAsync(await host.ReviewKey(reviewId));
         var released = await host.SendAsync(new ReviseAssuranceReport(Uuid.CreateVersion4(), host.Tenant, host.ProviderId,
             report.ReportId, 1, Report() with { Opinion = "qualified" }));
 

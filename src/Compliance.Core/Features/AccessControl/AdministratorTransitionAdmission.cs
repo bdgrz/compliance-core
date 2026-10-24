@@ -30,11 +30,17 @@ public sealed class AdministratorTransitionAdmission(TenantManagerGuardLoader gu
             admission.CommandKind, admission.Actor, guardStream, admission.MemberEpisodeId.ToString(),
             admission.AuthoredRevision >= 0 ? (ulong)admission.AuthoredRevision : null,
             admission.AuthoredIntentSha256, admission.AcceptedAt, admission.SourceOwner, admission.SourceOwner);
-        var binding = AcceptedOperationBinding.Of(provenance);
         for (var round = 1; round <= MaximumRounds; round++)
         {
             ct.ThrowIfCancellationRequested();
             var loaded = await guards.LoadAsync(admission.TenantId, admission.CommandId, ct).ConfigureAwait(false);
+            // A system command authored with the current-episode sentinel resolves its accepted episode from
+            // the original fact. The authored digest still distinguishes changed episode inputs and intent.
+            var retryProvenance = admission.ResolveCurrentEpisode &&
+                                  loaded.Guard.Acceptance.SelectedOperation is { } original
+                ? provenance with { Episode = original.Operation.Episode }
+                : provenance;
+            var binding = AcceptedOperationBinding.Of(retryProvenance);
             if (loaded.Guard.Acceptance.Decide(binding) != NativeAcceptanceDecision.None)
                 return await ReplayAsync(context, loaded, binding, realm, ct).ConfigureAwait(false);
 

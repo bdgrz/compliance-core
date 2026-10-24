@@ -195,10 +195,10 @@ sealed class TenantInvitationHost : IAsyncDisposable
 
     // --- the delivery process
 
-    public ProcessKey ProcessKeyOf(Uuid invitationId) =>
-        new(TenantInvitationDeliveryProcess.Name, TenantId.ToString(), invitationId);
+    public Task<ProcessKey> ProcessKeyOf(Uuid invitationId) =>
+        ProcessKeys.FindAsync(Provider, TenantInvitationDeliveryProcess.Name, TenantId.ToString(), invitationId);
 
-    public Task<ProcessRecord?> ProcessAsync(Uuid invitationId) => Processes.ReadAsync(ProcessKeyOf(invitationId));
+    public async Task<ProcessRecord?> ProcessAsync(Uuid invitationId) => await Processes.ReadAsync(await ProcessKeyOf(invitationId));
 
     /// <summary>Starts and drives the delivery process of one invitation, exactly as its root-fact reactor would.</summary>
     public async Task<ProcessRecord> DriveDeliveryAsync(Uuid invitationId)
@@ -217,7 +217,7 @@ sealed class TenantInvitationHost : IAsyncDisposable
     public async Task<ProcessRecord> ResumeDeliveryAsync(Uuid invitationId, string worker = "sweep")
     {
         await using var scope = Provider.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(ProcessKeyOf(invitationId), worker,
+        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(await ProcessKeyOf(invitationId), worker,
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
     }
 

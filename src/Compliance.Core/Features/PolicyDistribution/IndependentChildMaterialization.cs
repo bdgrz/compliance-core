@@ -15,37 +15,25 @@ namespace Bdgrz.Compliance.Features.PolicyDistribution;
 ///     kinds and receivers of the other owners are part of the catalog definition and are built by the slice that
 ///     ships each of them; a record can only start from a root whose reactor exists, so none is dispatched before.
 /// </summary>
-static class IndependentChildMaterialization
+sealed class IndependentChildMaterialization : IChildMaterializationReceiver
 {
     public const string ProcessName = "IndependentChildMaterialization";
     public const string Materialize = "materialize";
 
     /// <summary>The generation a materialization is bound to is the admitted parent generation, frozen in the intent.</summary>
-    public static ProcessDefinition Definition() => new(ProcessName,
-        [
-            "AdvisorFeedbackAdmitted", "AuditorResponseAdmitted", "AuditorCommentAdmitted", "CorrectiveActionAdmitted",
-            "AuditorSampleSelectionAdmitted", "ProviderCoverageGapRiskAcceptanceAdmitted",
-            nameof(PolicyParticipantResultAdmitted),
-        ], false,
-        [
-            new ProcessStageDefinition(Materialize,
-                [
-                    "MaterializeAdvisorFeedback", "MaterializeAuditorResponse", "MaterializeAuditorComment",
-                    "MaterializeCorrectiveAction", "MaterializeAuditorSampleSelection",
-                    "MaterializeProviderRiskAcceptanceLink", nameof(ApplyPolicyParticipantResult),
-                ], "Single receiver per admitted child; no cross-receiver ordering. Parent closure drains these before its own acquisition stage."),
-        ], [], Receiver);
-
     /// <summary>The command id the process driver derives for the receiver of one admitted child.</summary>
     public static Uuid ReceiverCommandId(Uuid rootSourceEventId, string target, string episode) =>
         Kernel.EffectIdentity.CommandId(rootSourceEventId, $"{ProcessName}:{nameof(ApplyPolicyParticipantResult)}",
             target, episode);
 
-    static async ValueTask<IRequest<ReceiverOutcome>?> Receiver(ProcessStep step, IServiceProvider services,
+    public string Receiver => nameof(ApplyPolicyParticipantResult);
+
+    public async ValueTask<IRequest<ReceiverOutcome>?> CreateAsync(ProcessStep step, IServiceProvider services,
         CancellationToken ct)
     {
         // Only the receiver of this owner is dispatched here; the other owners' factories join it with their slices.
-        if (step.Receiver != nameof(ApplyPolicyParticipantResult))
+        if (step.Receiver != nameof(ApplyPolicyParticipantResult) ||
+            step.Record.Source.Stream.Area != PolicyDistributionCampaign.Area)
             return null;
         if (step.Target is null)
             return null;

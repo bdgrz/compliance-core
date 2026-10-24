@@ -171,11 +171,11 @@ sealed class CampaignHost : IAsyncDisposable
 
     public ProcessDefinition Definition(string name) => _provider.GetRequiredService<ProcessCatalog>().Get(name);
 
-    public ProcessKey ResultKey(Uuid operationId) =>
-        new(IndependentChildMaterialization.ProcessName, Tenant.ToString(), operationId);
+    public Task<ProcessKey> ResultKey(Uuid operationId) =>
+        ProcessKeys.FindAsync(_provider, IndependentChildMaterialization.ProcessName, Tenant.ToString(), operationId);
 
-    public ProcessKey ClosureKey(Uuid operationId) =>
-        new(PolicyCampaignClosureEffects.ProcessName, Tenant.ToString(), operationId);
+    public Task<ProcessKey> ClosureKey(Uuid operationId) =>
+        ProcessKeys.FindAsync(_provider, PolicyCampaignClosureEffects.ProcessName, Tenant.ToString(), operationId);
 
     /// <summary>
     ///     Runs the participant result root reactor over the committed admissions of a campaign. With

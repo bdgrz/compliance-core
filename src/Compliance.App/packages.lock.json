@@ -4,40 +4,40 @@
     "net10.0": {
       "Cntryl.Portia.Analyzers": {
         "type": "Direct",
-        "requested": "[0.9.0, )",
-        "resolved": "0.9.0",
-        "contentHash": "KZ1NAQmLgMfxswE9c2VtVVzqTmJv6z9toDjNdrWG4Vni5Cpitj1FePcFcpTs859QmfJ5FvjmfPx6LrmAPTDI7w=="
+        "requested": "[0.9.1, )",
+        "resolved": "0.9.1",
+        "contentHash": "cmc5EC/JO9wSrZ4jcvjslFt4Ygs6wy2a8dFuaIB+MrqKcyBSHAoBLg/S920vFV66SoyYxPtIhIRV6COefa0T9Q=="
       },
       "Cntryl.Portia.AspNetCore": {
         "type": "Direct",
-        "requested": "[0.9.0, )",
-        "resolved": "0.9.0",
-        "contentHash": "4jz8Xj8mfhGivOehBK9ImnD6nsIcgOSAL57rzAQQQ1nrDhRZY8LfaHJ1W2go44eEZ4o/25ePo0Ecju4RObcyUA==",
+        "requested": "[0.9.1, )",
+        "resolved": "0.9.1",
+        "contentHash": "ji207bRpvqVXpmC6p1hbx9kYOOxR7iEg+sPxQKEHiIQ4SaPhM0c0p+S4MFFnt+ewIVJeCyJN+43V1Etq4/odgg==",
         "dependencies": {
-          "Cntryl.Portia.Abstractions": "0.9.0",
-          "Cntryl.Portia.DependencyInjection": "0.9.0",
+          "Cntryl.Portia.Abstractions": "0.9.1",
+          "Cntryl.Portia.DependencyInjection": "0.9.1",
           "Microsoft.AspNetCore.OpenApi": "10.0.13",
           "Microsoft.OpenApi": "2.12.2"
         }
       },
       "Cntryl.Portia.Mcp": {
         "type": "Direct",
-        "requested": "[0.9.0, )",
-        "resolved": "0.9.0",
-        "contentHash": "IZf94f9vThkLi8vM+x0vMnq+WP0AekDMvk/i1JmFk/tXQUArk9Oxb3J9xjWACVLl5b0ToxRFDZ7n0Zau9LaHrg==",
+        "requested": "[0.9.1, )",
+        "resolved": "0.9.1",
+        "contentHash": "JWLZC1Tc6mvw7NFQhuFbCPdP2LGfhHSK51IHouxl1hwBUya5L8dIABzw8Q6rrq0f+uOXbBYMQzCj3pvG3OceSw==",
         "dependencies": {
-          "Cntryl.Portia.DependencyInjection": "0.9.0",
+          "Cntryl.Portia.DependencyInjection": "0.9.1",
           "ModelContextProtocol": "2.2.0"
         }
       },
       "Cntryl.Portia.Mcp.AspNetCore": {
         "type": "Direct",
-        "requested": "[0.9.0, )",
-        "resolved": "0.9.0",
-        "contentHash": "BFPZJAMZcSj/7mSYqhaZE0eyrG/3aLqZ96u2ourvfXiiFiti5kcxhRP8IRfER2cGhK2fRlMZ8X00enIxGuH1uw==",
+        "requested": "[0.9.1, )",
+        "resolved": "0.9.1",
+        "contentHash": "MA5/CnKLX1okJnJ1d2WMA/kZ/6mwSl+oBgN93gPbsvDbDZygJuAxKSdDz9oYpeDwsSH/KchBXkuC3LB5yuBaww==",
         "dependencies": {
-          "Cntryl.Portia.AspNetCore": "0.9.0",
-          "Cntryl.Portia.Mcp": "0.9.0",
+          "Cntryl.Portia.AspNetCore": "0.9.1",
+          "Cntryl.Portia.Mcp": "0.9.1",
           "ModelContextProtocol.AspNetCore": "2.2.0"
         }
       },
@@ -65,19 +65,19 @@
       },
       "Cntryl.Portia.Core": {
         "type": "Transitive",
-        "resolved": "0.9.0",
-        "contentHash": "VK13w6ILMYH+K6v/rQezOtxGYWFeAeoSs5JdM/txUkxEtwsOxHvBFGdlazIV111ETe0L67/lwGgQZmmN9OPRjA==",
+        "resolved": "0.9.1",
+        "contentHash": "WMh2a8QWAC1hfVEICdiKCa77YDuPXc7HoVI//sUxELPiWLAHfsN9n3jmcxD2v0Usv7k77H+8b/J23EeGp6kwnw==",
         "dependencies": {
-          "Cntryl.Portia.Abstractions": "0.9.0"
+          "Cntryl.Portia.Abstractions": "0.9.1"
         }
       },
       "Cntryl.Portia.DependencyInjection": {
         "type": "Transitive",
-        "resolved": "0.9.0",
-        "contentHash": "X4qK1IdnrCHm/UNzAWPTcNLRRhEoi7bHdfGWGuSUq5lNQKXqwX90cXWneJ0VouPtoF4WUrIGV4HOvAGqlQRILQ==",
+        "resolved": "0.9.1",
+        "contentHash": "1Sb8v31s7xhXx0LTK9EyEgv3OKbo8slU9Omyh133/dlb/ueP2+nw5NpyrkP1zZbYnLj6l99/7fV9PiSAgy7jiQ==",
         "dependencies": {
-          "Cntryl.Portia.Abstractions": "0.9.0",
-          "Cntryl.Portia.Core": "0.9.0"
+          "Cntryl.Portia.Abstractions": "0.9.1",
+          "Cntryl.Portia.Core": "0.9.1"
         }
       },
       "Microsoft.AspNetCore.OpenApi": {
@@ -187,7 +187,7 @@
         "type": "Project",
         "dependencies": {
           "Cntryl.Fitz.Extensions": "[2.0.0, )",
-          "Cntryl.Portia.Abstractions": "[0.9.0, )"
+          "Cntryl.Portia.Abstractions": "[0.9.1, )"
         }
       },
       "Bdgrz.Compliance.Core": {
@@ -196,7 +196,7 @@
           "Bdgrz.Compliance.Common": "[1.0.0, )",
           "Cntryl.Fitz.Extensions": "[2.0.0, )",
           "Cntryl.LexKey": "[0.1.2, )",
-          "Cntryl.Portia.Fitz": "[0.9.0, )"
+          "Cntryl.Portia.Fitz": "[0.9.1, )"
         }
       },
       "Cntryl.Fitz.Extensions": {
@@ -217,19 +217,19 @@
       },
       "Cntryl.Portia.Abstractions": {
         "type": "CentralTransitive",
-        "requested": "[0.9.0, )",
-        "resolved": "0.9.0",
-        "contentHash": "uw+EWph3W8kkhURKQYyNZlMvUb16F41A/H9I9SPKAUhl8JOgmEYcHzi0ZqdCDlxQTgcgGMwwS5f5UZbi7nVvEA=="
+        "requested": "[0.9.1, )",
+        "resolved": "0.9.1",
+        "contentHash": "J1IYOSmX8zWZhR8db+Iah0w9oFYj18PjGMJJYSx67XFLlubAJeexqcBhXSNWo++pt/FeH6OrJ0bV0YVxFfwZmA=="
       },
       "Cntryl.Portia.Fitz": {
         "type": "CentralTransitive",
-        "requested": "[0.9.0, )",
-        "resolved": "0.9.0",
-        "contentHash": "ctXMDLo98NLNFeH0dhYxqQ8uSTfCZANQqhvAIOZRQTsjyt3i6QCahy4ZX9YHmkC3MRSzmDjw0XKIEuOuw/60pA==",
+        "requested": "[0.9.1, )",
+        "resolved": "0.9.1",
+        "contentHash": "vPLQRVnzGEngVKJ4RlF/nZ7yCUnnLlHgTUQP7WIq67gzzd32mPJhRGXlaZpwuAuqYEVfg/VZAExqby+4dLZcvg==",
         "dependencies": {
           "Cntryl.Fitz.Core": "2.0.0",
-          "Cntryl.Portia.Abstractions": "0.9.0",
-          "Cntryl.Portia.DependencyInjection": "0.9.0"
+          "Cntryl.Portia.Abstractions": "0.9.1",
+          "Cntryl.Portia.DependencyInjection": "0.9.1"
         }
       }
     }

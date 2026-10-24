@@ -15054,6 +15054,7 @@
       "disposition": "selected_signature_new_internal_callback",
       "owner": "EmailChallengeDeliveryLedger",
       "sourceContract": "src/Compliance.Common/Features/UserIdentities/RecordEmailChallengeDeliverySent.cs",
+      "sourceHead": "c634b7ec6ebe6c69a217b86d507404f483728a99",
       "sourceHandlers": [
         {
           "name": "RecordEmailChallengeDeliverySentHandler",
@@ -15114,6 +15115,7 @@
       "disposition": "selected_signature_new_internal_callback",
       "owner": "EmailChallengeDeliveryLedger",
       "sourceContract": "src/Compliance.Common/Features/UserIdentities/RecordEmailChallengeDeliveryFailed.cs",
+      "sourceHead": "c634b7ec6ebe6c69a217b86d507404f483728a99",
       "sourceHandlers": [
         {
           "name": "RecordEmailChallengeDeliveryFailedHandler",

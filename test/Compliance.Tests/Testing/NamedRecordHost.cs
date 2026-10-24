@@ -169,7 +169,7 @@ sealed class NamedRecordHost : IAsyncDisposable
         await using var scope = Provider.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<NamedRecordReactions>().StartAsync(kind,
             new RecordReactorContext(record), (INamedRecordFact)record.Event, "test", CancellationToken.None);
-        return (await Store.ReadAsync(KeyOf(kind, operationId)))!;
+        return (await Store.ReadAsync(await KeyOf(kind, operationId)))!;
     }
 
     /// <summary>Creates the process record of a change without driving it, as the reactor does before its first dispatch.</summary>
@@ -180,7 +180,7 @@ sealed class NamedRecordHost : IAsyncDisposable
         await using var scope = Provider.CreateAsyncScope();
         var targets = await scope.ServiceProvider.GetRequiredService<NamedRecordReactions>()
             .FreezeTargetsAsync(kind, TenantId.ToString(), fact);
-        return await Store.CreateIfAbsentAsync(ProcessRecord.Start(KeyOf(kind, operationId),
+        return await Store.CreateIfAbsentAsync(ProcessRecord.Start(await KeyOf(kind, operationId),
             NativeFactReference.Of(record.Stream, record.Event), fact.Operation.Episode, fact.Intent, targets,
             DateTimeOffset.UtcNow));
     }
@@ -190,7 +190,7 @@ sealed class NamedRecordHost : IAsyncDisposable
         string worker = "sweep")
     {
         await using var scope = Provider.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(KeyOf(kind, operationId),
+        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(await KeyOf(kind, operationId),
             worker, new RequestDispatchContext(RequestActor.System), CancellationToken.None);
     }
 
@@ -217,11 +217,11 @@ sealed class NamedRecordHost : IAsyncDisposable
             ?? throw new InvalidOperationException($"{receiver} is not selected for this record.");
     }
 
-    public ProcessKey KeyOf(NamedRecordKindDescriptor kind, Uuid operationId) =>
-        new(kind.ProcessName, TenantId.ToString(), operationId);
+    public Task<ProcessKey> KeyOf(NamedRecordKindDescriptor kind, Uuid operationId) =>
+        ProcessKeys.FindAsync(Provider, kind.ProcessName, TenantId.ToString(), operationId);
 
-    public Task<ProcessRecord?> ProcessAsync(NamedRecordKindDescriptor kind, Uuid operationId) =>
-        Store.ReadAsync(KeyOf(kind, operationId));
+    public async Task<ProcessRecord?> ProcessAsync(NamedRecordKindDescriptor kind, Uuid operationId) =>
+        await Store.ReadAsync(await KeyOf(kind, operationId));
 
     /// <summary>The accepted-change fact of an operation, as the reactor would see it.</summary>
     public async Task<DomainEventRecord> AcceptedRecordAsync(NamedRecordKindDescriptor kind, Uuid operationId)

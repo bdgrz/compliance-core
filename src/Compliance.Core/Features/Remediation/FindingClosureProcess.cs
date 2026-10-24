@@ -68,7 +68,7 @@ static class FindingClosureProcess
                     if (action.Latest is not { } latest)
                         throw new SourceFactVerificationException("The corrective action is not materialized yet.");
                     return new AuthorizeCorrectiveActionFindingClosureUse(step.CommandId, record.Source, action.Stream, root,
-                        generation, null, record.Intent, actionId, latest.Metadata.EventId, (ulong)action.Revision,
+                        generation, null, record.Intent, actionId, latest.Metadata.EventId, action.Revision,
                         intent.ParentId, decision.ProgramId);
                 }
             case nameof(CompleteFindingClosure):

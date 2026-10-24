@@ -96,8 +96,8 @@ sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggr
         }
 
         if (campaign.CanceledFor(operationId) is { } canceled)
-            return SourceUseReceiverSupport.Superseded("The closure was canceled.",
-                NativeFactReference.Of(campaign.Stream, canceled));
+            return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The closure was canceled.",
+                NativeFactReference.Of(campaign.Stream, canceled)));
         return campaign.Closing is { } closed && closed.Operation.RootOperationId == operationId
             ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream, closed))
             : null;

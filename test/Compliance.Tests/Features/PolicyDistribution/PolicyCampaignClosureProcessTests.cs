@@ -11,6 +11,38 @@ namespace Bdgrz.Compliance.Tests.Features.PolicyDistribution;
 
 public sealed class PolicyCampaignClosureProcessTests
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task ShouldSettleHeldUsesGivenCancellationPersistedBeforeProcessCheckpoint(int stageIndex)
+    {
+        // Arrange
+        var crash = new CrashAfterReplaces();
+        await using var host = new CampaignHost(crash.Wrap);
+        await host.SeedAsync();
+        var campaign = await host.LaunchAsync();
+        var (ackId, closeId) = await AcknowledgeAndCloseAsync(host, campaign);
+        await host.ReactResultsAsync(campaign);
+        await host.RunAsync(await host.ResultKey(ackId));
+        crash.ArmAfterReplaceCount(1);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => host.ReactClosureAsync(campaign));
+        crash.Disarm();
+        var key = await host.ClosureKey(closeId);
+        var record = (await host.RecordAsync(key))!;
+        Assert.True((await host.ParticipantAsync(campaign, host.LearnerPerson)).Uses.HasActiveUse);
+        record = await host.Records.ReplaceAsync(record with { StageIndex = stageIndex, Lease = null }, record.Version);
+        var abort = (await host.StepAsync(record, "abort", nameof(AbortPolicyCampaignClosure)))!;
+        Assert.IsType<ReceiverOutcome.Applied>((await host.DispatchAsync(abort)).Value);
+
+        // Act: recover after the cancellation append, before its participant settlements or the driver's checkpoint.
+        var resumed = await host.RunAsync(key);
+
+        // Assert
+        Assert.False((await host.ParticipantAsync(campaign, host.LearnerPerson)).Uses.HasActiveUse);
+        Assert.Equal(ProcessState.Aborted, resumed.State);
+        Assert.Null((await host.CampaignAsync(campaign)).Closing);
+    }
+
     [Fact]
     public async Task ShouldCloseWithExactTotalsAndSettleEveryUseGivenAppliedResults()
     {
@@ -20,11 +52,11 @@ public sealed class PolicyCampaignClosureProcessTests
         var campaign = await host.LaunchAsync();
         var (ackId, closeId) = await AcknowledgeAndCloseAsync(host, campaign);
         await host.ReactResultsAsync(campaign);
-        var applied = await host.RunAsync(host.ResultKey(ackId));
+        var applied = await host.RunAsync(await host.ResultKey(ackId));
         await host.ReactClosureAsync(campaign);
 
         // Act
-        var closed = await host.RunAsync(host.ClosureKey(closeId));
+        var closed = await host.RunAsync(await host.ClosureKey(closeId));
 
         // Assert
         Assert.Equal(ProcessState.Completed, applied.State);
@@ -58,12 +90,12 @@ public sealed class PolicyCampaignClosureProcessTests
         await host.ReactClosureAsync(campaign);
 
         // Act: the result is admitted but not applied, so the closure cannot hold the participant.
-        var waiting = await host.RunAsync(host.ClosureKey(closeId));
+        var waiting = await host.RunAsync(await host.ClosureKey(closeId));
         var stillOpen = await host.CampaignAsync(campaign);
         await host.ReactResultsAsync(campaign);
-        await host.RunAsync(host.ResultKey(ackId));
+        await host.RunAsync(await host.ResultKey(ackId));
         host.Clock.Advance(ProcessDriver.RetryDelay + TimeSpan.FromSeconds(1));
-        var closed = await host.RunAsync(host.ClosureKey(closeId));
+        var closed = await host.RunAsync(await host.ClosureKey(closeId));
 
         // Assert
         Assert.Equal(ProcessState.Pending, waiting.State);
@@ -133,7 +165,7 @@ public sealed class PolicyCampaignClosureProcessTests
         var close = new CloseCampaign(Uuid.CreateVersion4(), host.Tenant, host.Program, campaign, "Done", 1);
         var first = await host.SendAsync(close, host.Manager);
         await host.ReactClosureAsync(campaign);
-        await host.RunAsync(host.ClosureKey(close.CommandId));
+        await host.RunAsync(await host.ClosureKey(close.CommandId));
         var before = (await host.CampaignAsync(campaign)).CommittedStreamPosition;
 
         // Act
@@ -162,16 +194,16 @@ public sealed class PolicyCampaignClosureProcessTests
         var campaign = await host.LaunchAsync();
         var (ackId, closeId) = await AcknowledgeAndCloseAsync(host, campaign);
         await host.ReactResultsAsync(campaign);
-        await host.RunAsync(host.ResultKey(ackId));
+        await host.RunAsync(await host.ResultKey(ackId));
         crash.ArmAfterReplaceCount(replaces);
 
         // Act
         var crashed = await Record.ExceptionAsync(() => host.ReactClosureAsync(campaign));
-        var interrupted = await host.RecordAsync(host.ClosureKey(closeId));
+        var interrupted = await host.RecordAsync(await host.ClosureKey(closeId));
         var partial = (await host.CampaignAsync(campaign)).Closing;
         crash.Disarm();
-        var resumed = await host.RunAsync(host.ClosureKey(closeId), $"reactor:{PolicyCampaignClosureReactor.WorkloadName}");
-        var replayed = await host.RunAsync(host.ClosureKey(closeId));
+        var resumed = await host.RunAsync(await host.ClosureKey(closeId), $"reactor:{PolicyCampaignClosureReactor.WorkloadName}");
+        var replayed = await host.RunAsync(await host.ClosureKey(closeId));
         var owner = await host.CampaignAsync(campaign);
 
         // Assert
@@ -197,13 +229,13 @@ public sealed class PolicyCampaignClosureProcessTests
         var campaign = await host.LaunchAsync();
         var (ackId, closeId) = await AcknowledgeAndCloseAsync(host, campaign);
         await host.ReactResultsAsync(campaign);
-        await host.RunAsync(host.ResultKey(ackId));
+        await host.RunAsync(await host.ResultKey(ackId));
         // A foreign result lands on the participant after the closure froze its results: a permanent mismatch.
         await AppendForeignResultAsync(host, campaign, host.LearnerPerson);
         await host.ReactClosureAsync(campaign);
 
         // Act
-        var aborted = await host.RunAsync(host.ClosureKey(closeId));
+        var aborted = await host.RunAsync(await host.ClosureKey(closeId));
         var owner = await host.CampaignAsync(campaign);
         var participant = await host.ParticipantAsync(campaign, host.LearnerPerson);
         var key = PolicyCampaignClosureEffects.UseKey(closeId, owner.Stream, 1, participant.Stream);
@@ -229,23 +261,23 @@ public sealed class PolicyCampaignClosureProcessTests
         var campaign = await host.LaunchAsync();
         var (ackId, closeId) = await AcknowledgeAndCloseAsync(host, campaign);
         await host.ReactResultsAsync(campaign);
-        await host.RunAsync(host.ResultKey(ackId));
+        await host.RunAsync(await host.ResultKey(ackId));
         await AppendForeignResultAsync(host, campaign, host.LearnerPerson);
         await host.ReactClosureAsync(campaign);
-        var record = (await host.RecordAsync(host.ClosureKey(closeId)))!;
+        var record = (await host.RecordAsync(await host.ClosureKey(closeId)))!;
         var acquire = (await host.StepAsync(record, "acquire", nameof(AuthorizePolicyCampaignParticipantCampaignClosureUse),
             record.Targets[0]))!;
         var complete = (await host.StepAsync(record, "complete", nameof(CompletePolicyCampaignClosure)))!;
-        await host.RunAsync(host.ClosureKey(closeId));
+        await host.RunAsync(await host.ClosureKey(closeId));
 
         // Act
         var delayedAcquire = await host.DispatchAsync(acquire);
         var delayedComplete = await host.DispatchAsync(complete);
 
         // Assert
-        var superseded = Assert.IsType<ReceiverOutcome.Superseded>(delayedAcquire.Value);
+        var superseded = Assert.IsType<ReceiverOutcome.Rejected>(delayedAcquire.Value);
         Assert.Contains("canceled", superseded.Reason, StringComparison.Ordinal);
-        var finalization = Assert.IsType<ReceiverOutcome.Superseded>(delayedComplete.Value);
+        var finalization = Assert.IsType<ReceiverOutcome.Rejected>(delayedComplete.Value);
         Assert.Contains("canceled", finalization.Reason, StringComparison.Ordinal);
         Assert.Null((await host.CampaignAsync(campaign)).Closing);
         Assert.Empty(await host.EventsAsync<PolicyCampaignParticipantCampaignClosureUseAuthorized>(
@@ -261,9 +293,9 @@ public sealed class PolicyCampaignClosureProcessTests
         var campaign = await host.LaunchAsync();
         var (ackId, closeId) = await AcknowledgeAndCloseAsync(host, campaign);
         await host.ReactResultsAsync(campaign);
-        await host.RunAsync(host.ResultKey(ackId));
+        await host.RunAsync(await host.ResultKey(ackId));
         await host.ReactClosureAsync(campaign);
-        var record = (await host.RecordAsync(host.ClosureKey(closeId)))!;
+        var record = (await host.RecordAsync(await host.ClosureKey(closeId)))!;
         var acquire = (AuthorizePolicyCampaignParticipantCampaignClosureUse)(await host.StepAsync(record, "acquire",
             nameof(AuthorizePolicyCampaignParticipantCampaignClosureUse), record.Targets[0]))!;
         var complete = (CompletePolicyCampaignClosure)(await host.StepAsync(record, "complete",
@@ -296,7 +328,7 @@ public sealed class PolicyCampaignClosureProcessTests
         var campaign = await host.LaunchAsync();
         var (_, closeId) = await AcknowledgeAndCloseAsync(host, campaign);
         await host.ReactClosureAsync(campaign);
-        var record = (await host.RecordAsync(host.ClosureKey(closeId)))!;
+        var record = (await host.RecordAsync(await host.ClosureKey(closeId)))!;
         var complete = (CompletePolicyCampaignClosure)(await host.StepAsync(record, "complete",
             nameof(CompletePolicyCampaignClosure)))!;
 

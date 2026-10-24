@@ -252,9 +252,9 @@ sealed class ProviderAssuranceHost : IAsyncDisposable
 
     // --- the processes
 
-    public ProcessKey ReviewKey(Uuid reviewId) => new("ProviderReviewProcess", Tenant.ToString(), reviewId);
+    public Task<ProcessKey> ReviewKey(Uuid reviewId) => ProcessKeys.FindAsync(Services, "ProviderReviewProcess", Tenant.ToString(), reviewId);
 
-    public ProcessKey LinkKey(Uuid linkId) => new("IndependentChildMaterialization", Tenant.ToString(), linkId);
+    public Task<ProcessKey> LinkKey(Uuid linkId) => ProcessKeys.FindAsync(Services, "IndependentChildMaterialization", Tenant.ToString(), linkId);
 
     /// <summary>The root admission fact of a review or link, as its reactor would see it.</summary>
     public async Task<DomainEventRecord> RootAsync(EventStreamAddress stream, Uuid logicalId)

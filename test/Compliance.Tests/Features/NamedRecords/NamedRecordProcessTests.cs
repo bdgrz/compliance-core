@@ -82,7 +82,8 @@ public sealed class NamedRecordProcessTests
         Assert.Equal(1, claim.HeldGeneration);
         Assert.Collection(facts, fact => Assert.IsType<ProviderChangeAccepted>(fact),
             fact => Assert.IsType<ProviderRecorded>(fact));
-        Assert.Equal(["ApplyProviderChange", "ClaimProviderName"], record.Facts.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(["ApplyProviderChange", ProcessRecord.FactKey(ProviderNames.ClaimReceiver, record.Targets[0])],
+            record.Facts.Keys.Order(StringComparer.Ordinal));
     }
 
     [Fact]
@@ -401,7 +402,9 @@ public sealed class NamedRecordProcessTests
         {
             Facts = new Dictionary<string, NativeFactReference>
             {
-                [ProviderNames.ClaimReceiver] = NativeFactReference.Of(claim.Stream, fact),
+                [ProcessRecord.FactKey(ProviderNames.ClaimReceiver, record.Targets.Single(target =>
+                    NamedRecordProcessView.DecodeTarget(target).Resource == claim.Stream.Resource))] =
+                    NativeFactReference.Of(claim.Stream, fact),
             },
         };
     }

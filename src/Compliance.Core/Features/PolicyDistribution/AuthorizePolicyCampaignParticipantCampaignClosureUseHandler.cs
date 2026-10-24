@@ -47,7 +47,10 @@ sealed class AuthorizePolicyCampaignParticipantCampaignClosureUseHandler(IAggreg
         return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, request.Intent,
             PolicyCampaignClosureEffects.UseKey(request.OperationId, intent.Header.FirstOwner, request.Generation,
                 request.Target), participant.Requirement, nameof(AuthorizePolicyCampaignParticipantCampaignClosureUse),
-            null, superseded));
+            null, superseded)
+        {
+            RequiresAbort = campaign.CanceledFor(request.OperationId) is not null,
+        });
     }
 
     protected override async ValueTask<Result> VerifyPinnedAsync(PolicyCampaignParticipant owner,

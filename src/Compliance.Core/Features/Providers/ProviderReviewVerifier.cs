@@ -82,7 +82,10 @@ sealed class ProviderReviewVerifier(IAggregateReader reader, IImmutableContentSt
             : null;
         return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, request.Intent,
             ProviderReviewEffects.UseKey(request.OperationId, owner.Stream, request.Target), requirement,
-            nameof(AuthorizeProviderAssuranceReportProviderReviewUse), null, superseded));
+            nameof(AuthorizeProviderAssuranceReportProviderReviewUse), null, superseded)
+        {
+            RequiresAbort = owner.Canceled is not null,
+        });
     }
 
     /// <summary>Derives the verified terminal source of a settle receiver and the disposition it requires.</summary>

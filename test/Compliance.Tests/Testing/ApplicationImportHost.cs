@@ -175,9 +175,6 @@ sealed class ApplicationImportHost : IAsyncDisposable
         commandId ?? Uuid.CreateVersion4(), TenantId, batchId, expectedRevision, "Superseded")),
         CancellationToken.None).AsTask();
 
-    public static ProcessKey KeyOf(Uuid tenantId, Uuid rootOperationId) =>
-        ApplicationImportProcessSupport.KeyOf(tenantId, rootOperationId);
-
     /// <summary>Creates (if absent) the process record of a sealed plan, as the root reactor does.</summary>
     public Task<ProcessRecord> StartProcessAsync(Uuid batchId) =>
         ApplicationImportProcessSupport.StartAsync(Services, TenantId, batchId);

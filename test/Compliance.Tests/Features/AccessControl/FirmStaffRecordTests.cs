@@ -1,4 +1,8 @@
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Processes;
 using Bdgrz.Compliance.Tests.Testing;
@@ -16,6 +20,104 @@ public sealed class FirmStaffRecordTests
     static readonly Uuid Operator = Uuid.CreateVersion4();
 
     static ClaimsPrincipal Actor => ActorFor(Operator);
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldResolveRegistrationWithoutWritesGivenAcceptedRetry(bool changed)
+    {
+        // Arrange
+        StaffContentStore content = null!;
+        await using var host = new Host(configureContent: inner => content = new StaffContentStore(inner));
+        var request = Register(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var first = await host.Bus.SendAsync(request, Actor);
+        Assert.True(first.IsSuccess);
+        var writes = content.WriteAttempts;
+        content.RejectWrites = true;
+
+        // Act
+        var retry = await host.Bus.SendAsync(changed ? request with { SourceReference = "Changed source" } : request, Actor);
+
+        // Assert
+        if (changed)
+            Assert.Equal(RequestErrorKind.Conflict, retry.Error?.Kind);
+        else
+        {
+            Assert.True(retry.IsSuccess);
+            Assert.Equal(first.Value, retry.Value);
+        }
+        Assert.Equal(writes, content.WriteAttempts);
+    }
+
+    [Fact]
+    public async Task ShouldRejectRegistrationWithoutWritesGivenInvalidInitialRevision()
+    {
+        // Arrange
+        StaffContentStore content = null!;
+        await using var host = new Host(configureContent: inner => content = new StaffContentStore(inner));
+        _ = host.Content;
+        content.RejectWrites = true;
+        var request = Register(Uuid.CreateVersion4(), Uuid.CreateVersion4()) with { ExpectedRevision = 1 };
+
+        // Act
+        var result = await host.Bus.SendAsync(request, Actor);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.Equal(0, content.WriteAttempts);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldResolveRegistrationBeforeDirectoryLookupGivenAcceptedRetry(bool changed)
+    {
+        // Arrange
+        await using var host = new Host();
+        var request = Register(Uuid.CreateVersion4(), Uuid.CreateVersion4());
+        var first = await host.Bus.SendAsync(request, Actor);
+        Assert.True(first.IsSuccess);
+        host.UserDirectoryKnown = false;
+
+        // Act
+        var retry = await host.Bus.SendAsync(changed ? request with { SourceReference = "Changed source" } : request, Actor);
+
+        // Assert
+        if (changed)
+            Assert.Equal(RequestErrorKind.Conflict, retry.Error?.Kind);
+        else
+        {
+            Assert.True(retry.IsSuccess);
+            Assert.Equal(first.Value, retry.Value);
+        }
+    }
+
+    [Fact]
+    public async Task ShouldRejectClaimGivenWirePracticeDiffersFromFrozenRegistration()
+    {
+        // Arrange
+        await using var host = new Host();
+        var staff = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        Assert.True((await host.Bus.SendAsync(Register(staff, user), Actor)).IsSuccess);
+        var record = await FirmStaffFacts.RunProcessAsync(host.Provider, staff);
+        var factory = FirmStaffRegistrationProcess.Definition();
+        var command = Assert.IsType<ClaimFirmStaffIdentity>(await factory.CreateReceiver(new ProcessStep(record,
+            "claim", nameof(ClaimFirmStaffIdentity), user.ToString(), FirmStaffEffects.ReceiverCommandId(
+                record.Source.EventId, nameof(ClaimFirmStaffIdentity), user.ToString(), record.Episode)),
+            host.Scope.ServiceProvider, CancellationToken.None));
+        var wire = JsonSerializer.SerializeToNode(command, ComplianceCoreJsonContext.Default.ClaimFirmStaffIdentity)!;
+        wire["practice"] = "advisory";
+        var changed = wire.Deserialize(ComplianceCoreJsonContext.Default.ClaimFirmStaffIdentity)!;
+
+        // Act
+        var result = await host.Bus.SendAsync(changed, RequestActor.System);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.False(result.Error?.IsTransient);
+        Assert.Equal(staff, (await host.HydrateAsync(new FirmStaffIdentityClaim(user))).ClaimedByStaffMemberId);
+    }
 
     [Fact]
     public async Task ShouldKeepOneStaffRecordGivenCanonicalUserRegistrationRaceWithCrashAfterClaim()
@@ -230,8 +332,10 @@ public sealed class FirmStaffRecordTests
         Assert.True((await FirmStaffFacts.RegisterThroughProcessAsync(host.Provider, Actor, Register(staff, user)))
             .IsSuccess);
         var catalog = host.Provider.GetRequiredService<ProcessCatalog>().Get(FirmStaffEffects.ProcessName);
+        var owner = await host.HydrateAsync(new FirmStaffRecord(staff));
         var record = (await host.Provider.GetRequiredService<IProcessRecordStore>().ReadAsync(
-            new ProcessKey(FirmStaffEffects.ProcessName, FirmStaffContent.Realm, staff)))!;
+            ProcessKey.ForRoot(FirmStaffEffects.ProcessName, staff,
+                NativeFactReference.Of(owner.Stream, owner.Accepted!))))!;
         var claim = (await catalog.CreateReceiver(new ProcessStep(record, "claim", nameof(ClaimFirmStaffIdentity),
             user.ToString(), FirmStaffEffects.ReceiverCommandId(record.Source.EventId,
                 nameof(ClaimFirmStaffIdentity), user.ToString(), record.Episode)), host.Provider, CancellationToken.None))!;
@@ -318,8 +422,12 @@ public sealed class FirmStaffRecordTests
     sealed class Host : IAsyncDisposable
     {
         readonly AsyncServiceScope _scope;
+        readonly Users _users;
 
-        public Host(CrashOnceStore? crash = null, bool unknownUsers = false)
+        public bool UserDirectoryKnown { get => _users.Known; set => _users.Known = value; }
+
+        public Host(CrashOnceStore? crash = null, bool unknownUsers = false,
+            Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
         {
             var services = new ServiceCollection();
             services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
@@ -331,7 +439,11 @@ public sealed class FirmStaffRecordTests
             services.AddSingleton<IEventStore>(events);
             services.AddSingleton<IDomainEventReader>(events);
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
-            services.AddSingleton<IPlatformUserDirectoryReader>(new Users(!unknownUsers));
+            _users = new Users(!unknownUsers);
+            services.AddSingleton<IPlatformUserDirectoryReader>(_users);
+            if (configureContent is not null)
+                services.AddSingleton<IImmutableContentStore>(provider => configureContent(
+                    new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>())));
             services.AddSingleton<IPlatformOperatorAccess>(new OperatorAccess());
             if (crash is not null)
                 services.AddSingleton<IProcessRecordStore>(provider => crash.Wrap(
@@ -379,12 +491,32 @@ public sealed class FirmStaffRecordTests
 
     sealed class Users(bool known) : IPlatformUserDirectoryReader
     {
-        public ValueTask<bool> ExistsAsync(Uuid userId, CancellationToken ct = default) => ValueTask.FromResult(known);
+        public bool Known { get; set; } = known;
+
+        public ValueTask<bool> ExistsAsync(Uuid userId, CancellationToken ct = default) => ValueTask.FromResult(Known);
     }
 
     sealed class OperatorAccess : IPlatformOperatorAccess
     {
         public ValueTask<bool> IsOperatorAsync(Uuid userId, CancellationToken ct = default) =>
             ValueTask.FromResult(userId != Uuid.Empty);
+    }
+
+    sealed class StaffContentStore(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        public bool RejectWrites { get; set; }
+        public int WriteAttempts { get; private set; }
+
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema,
+            string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            WriteAttempts++;
+            if (RejectWrites)
+                throw new InvalidOperationException("Content writes are unavailable.");
+            return inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+        }
+
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => inner.ReadVerifiedAsync(realm, reference, ct);
     }
 }

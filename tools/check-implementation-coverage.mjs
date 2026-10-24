@@ -39,10 +39,10 @@ const sources = walk(path.join(root, 'src'));
 const tests = walk(path.join(root, 'test'));
 const rel = file => path.relative(root, file).split(path.sep).join('/');
 
-// Parses `record|class Name[(params)] : Base1, Base2 ...` declarations with balanced parameter lists.
+// Parses `record|class|interface Name[(params)] : Base1, Base2 ...` declarations with balanced parameter lists.
 const declarations = content => {
     const found = [];
-    const pattern = /\b(record|class)\s+([A-Z]\w*)\b/g;
+    const pattern = /\b(record|class|interface)\s+([A-Z]\w*)\b/g;
     let match;
     while ((match = pattern.exec(content)) !== null) {
         let index = pattern.lastIndex;
@@ -96,13 +96,46 @@ const mcpTools = new Set();
 const literals = new Set(); // string literals in Core (process names)
 const ulongExpected = []; // { request, field, file }
 
-for (const file of sources) {
+// Resolve marker interfaces across files and declaration order. Generic arguments do not make their
+// containing interface a request: only the outer base types participate in inheritance.
+const baseTypes = bases => {
+    const parts = [];
+    let start = 0;
+    let depth = 0;
+    for (let index = 0; index <= bases.length; index++) {
+        const char = bases[index];
+        if (char === '<' || char === '(') depth++;
+        else if (char === '>' || char === ')') depth--;
+        if (index === bases.length || char === ',' && depth === 0) {
+            const outer = bases.slice(start, index).trim().split(/[<(]/)[0].trim();
+            if (outer) parts.push(outer.split(/[.:]/).at(-1));
+            start = index + 1;
+        }
+    }
+    return parts;
+};
+const scannedSources = sources.map(file => {
     const content = fs.readFileSync(file, 'utf8');
-    for (const d of declarations(content)) {
+    return { file, content, declared: declarations(content) };
+});
+const jsonStringEnums = new Set(scannedSources.flatMap(source =>
+    [...source.content.matchAll(/\[JsonConverter\(typeof\(JsonStringEnumConverter<(\w+)>\)\)\]\s*(?:public|internal)\s+enum\s+\1\b/g)]
+        .map(match => match[1])));
+const interfaces = new Map(scannedSources.flatMap(source => source.declared
+    .filter(declaration => declaration.kind === 'interface')
+    .map(declaration => [declaration.name, baseTypes(declaration.bases)])));
+const isRequestInterface = (name, visited = new Set()) => {
+    if (name === 'IRequest' || name === 'IIdentifiedRequest') return true;
+    if (visited.has(name)) return false;
+    visited.add(name);
+    return (interfaces.get(name) ?? []).some(parent => isRequestInterface(parent, visited));
+};
+for (const { file, content, declared } of scannedSources) {
+    for (const d of declared) {
         typeNames.set(d.name, [...(typeNames.get(d.name) ?? []), rel(file)]);
         if (/(^|[\s,])Aggregate\b/.test(d.bases)) aggregates.set(d.name, rel(file));
         if (/(^|[\s,])DomainEvent\b/.test(d.bases) && d.kind === 'record') domainEvents.set(d.name, { file: rel(file), discriminator: d.discriminator, params: d.params });
-        if (/\bI(?:Identified)?Request\b/.test(d.bases) && d.kind === 'record') {
+        if (d.kind === 'record' && baseTypes(d.bases).some(name => isRequestInterface(name))) {
             requests.set(d.name, { file: rel(file), params: d.params, bases: d.bases });
             for (const [name, type] of paramTypes(d.params)) if (type === 'ulong' && /^Expected\w*(Revision|Generation|Epoch|Version)$/.test(name)) ulongExpected.push({ request: d.name, field: name, file: rel(file) });
         }
@@ -112,7 +145,9 @@ for (const file of sources) {
     for (const m of content.matchAll(/AddReactor<(\w+)>\(\s*(?:"(\w+)")?/g)) registeredReactors.set(m[1], m[2] ?? null);
     for (const m of content.matchAll(/MapPortia(Put|Post|Delete)<(\w+)\s*[,>][^;]*?"([^"]*)"/gs)) mappedRoutes.set(m[2], [...(mappedRoutes.get(m[2]) ?? []), { verb: m[1].toUpperCase(), path: m[3] }]);
     for (const m of content.matchAll(/AddMcpTool<(\w+)>/g)) mcpTools.add(m[1]);
-    if (file.includes(`${path.sep}Compliance.Core${path.sep}`)) for (const m of content.matchAll(/"(\w+Process)"/g)) literals.add(m[1]);
+    if (file.includes(`${path.sep}Compliance.Core${path.sep}`)) for (const m of content.matchAll(/"(\w+)"/g)) {
+        if (reactorCatalog.processes.some(process => process.process === m[1])) literals.add(m[1]);
+    }
 }
 const testNames = new Set();
 for (const file of tests) for (const m of fs.readFileSync(file, 'utf8').matchAll(/\b(?:Task|void)\s+(\w*Should\w+)\s*\(/g)) testNames.add(m[1]);
@@ -126,7 +161,17 @@ for (const entry of allowlist.deferred) {
 }
 for (const name of allowlist.ulongExpectedRevision) if (!requests.has(name)) fail(`Allowlist ulong exception names a missing request type: ${name}`);
 const ulongAllowed = new Set(allowlist.ulongExpectedRevision);
-for (const hit of ulongExpected) if (!ulongAllowed.has(hit.request)) fail(`Unsigned public expected value outside the shipped allowlist: ${hit.request}.${hit.field} (${hit.file})`);
+// A catalog's trusted, unexposed receiver may pin an unsigned source position. Exposing that same
+// contract over HTTP/MCP restores the public signed-revision rule; this is not a blanket marker exemption.
+const internalUnsigned = new Set(reactorCatalog.reactors
+    .filter(receiver => receiver.http === false && receiver.mcp === false)
+    .flatMap(receiver => receiver.fields.filter(field => field.type === 'ulong')
+        .map(field => `${receiver.command}.${field.name}`)));
+for (const hit of ulongExpected) {
+    const internal = internalUnsigned.has(`${hit.request}.${hit.field}`) &&
+        !mappedRoutes.has(hit.request) && !mcpTools.has(hit.request);
+    if (!ulongAllowed.has(hit.request) && !internal) fail(`Unsigned public expected value outside the shipped allowlist: ${hit.request}.${hit.field} (${hit.file})`);
+}
 
 // ---------- events ----------
 const eventStatus = new Map();
@@ -156,7 +201,12 @@ const requestMatches = (name, fields) => {
     const names = paramNames(declared.params);
     const types = paramTypes(declared.params);
     const missing = fields.filter(f => !names.has(f.name)).map(f => f.name);
-    const mistyped = fields.filter(f => names.has(f.name) && /^(Uuid\??|long\??|int\??|string\??|bool\??|ulong\??|DateTimeOffset\??)$/.test(f.type) && types.get(f.name) !== simpleType(f.type)).map(f => `${f.name}:${types.get(f.name)}!=${f.type}`);
+    const receiver = reactorCatalog.reactors.find(item => item.command === name);
+    const internalReceiver = receiver?.http === false && receiver.mcp === false &&
+        !mappedRoutes.has(name) && !mcpTools.has(name);
+    const matchesType = field => types.get(field.name) === simpleType(field.type) ||
+        (internalReceiver && field.type === 'string' && jsonStringEnums.has(types.get(field.name)));
+    const mistyped = fields.filter(f => names.has(f.name) && /^(Uuid\??|long\??|int\??|string\??|bool\??|ulong\??|DateTimeOffset\??)$/.test(f.type) && !matchesType(f)).map(f => `${f.name}:${types.get(f.name)}!=${f.type}`);
     return { exists: true, missing, mistyped, ok: missing.length === 0 && mistyped.length === 0 };
 };
 const commandStatus = new Map();
@@ -224,19 +274,34 @@ const abortStatus = name => {
 for (const process of reactorCatalog.processes) {
     const receivers = [...new Set([...process.stages.flatMap(s => s.receivers), ...(process.abort ?? [])])];
     const statuses = receivers.map(r => [r, receiverStatus.get(r) ?? abortStatus(r)]);
+    const rootsByReceiver = new Map(receivers.map(name => [name, reactorByCommand.get(name)?.sourceEvents ?? []]));
+    const independentRoots = process.ordered === false && process.stages.length === 1 &&
+        (process.abort ?? []).length === 0 && process.rootSourceEvents.length > 1 &&
+        receivers.length === process.rootSourceEvents.length &&
+        receivers.every(name => rootsByReceiver.get(name).length === 1 &&
+            process.rootSourceEvents.includes(rootsByReceiver.get(name)[0])) &&
+        new Set(receivers.map(name => rootsByReceiver.get(name)[0])).size === receivers.length;
+    // Independent child kinds dispatch separate receivers. Shipped roots must be complete; absent unrelated
+    // native root kinds cannot start a process yet. Ordered processes retain the full receiver boundary.
+    const requiredStatuses = independentRoots
+        ? statuses.filter(([name]) => rootsByReceiver.get(name).some(root => domainEvents.has(root)))
+        : statuses;
     const registered = literals.has(process.process);
     const allDone = statuses.every(([, s]) => s === 'implemented');
     const anyDone = statuses.some(([, s]) => s !== 'pending');
     processStatus.set(process.process, allDone && registered ? 'implemented' : anyDone || registered ? 'partial' : 'pending');
     processDetail.set(process.process, statuses.filter(([, s]) => s !== 'implemented').map(([r, s]) => `${r}:${s}`).join(',') + (registered ? '' : ' [definition literal absent]'));
-    if (registered && !allDone) fail(`Process ${process.process} is registered but these receivers are incomplete: ${statuses.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ')}`);
+    if (registered && requiredStatuses.some(([, state]) => state !== 'implemented')) fail(`Process ${process.process} is registered but these receivers are incomplete: ${requiredStatuses.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ')}`);
     // A public route ships in the same PR as every receiver of every process rooted at its native facts.
     const rootCommands = commands.filter(c => c.status !== 'remove' && (c.events ?? []).some(e => process.rootSourceEvents.includes(e)));
     for (const command of rootCommands) {
         // A selected replacement contract can be exposed before its owner or handler is complete.
         // Legacy contracts with the same name remain pending until their owning cutover slice.
         const exposed = requestMatches(command.command, command.fields).ok && ((mappedRoutes.get(command.command) ?? []).length > 0 || mcpTools.has(command.command));
-        if (exposed && !(allDone && registered)) fail(`${command.command} is exposed over HTTP/MCP but ${process.process}, rooted at its facts, is incomplete: ${statuses.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ') || 'definition literal absent'}`);
+        const needed = independentRoots
+            ? statuses.filter(([name]) => rootsByReceiver.get(name).some(root => (command.events ?? []).includes(root)))
+            : statuses;
+        if (exposed && !(needed.every(([, state]) => state === 'implemented') && registered)) fail(`${command.command} is exposed over HTTP/MCP but ${process.process}, rooted at its facts, is incomplete: ${needed.filter(([, s]) => s !== 'implemented').map(([r]) => r).join(', ') || 'definition literal absent'}`);
     }
 }
 

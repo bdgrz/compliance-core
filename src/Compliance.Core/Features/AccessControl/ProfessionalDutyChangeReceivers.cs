@@ -35,7 +35,7 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
         if (intent.DesignationId != command.DesignationId || evidence.EvidenceDigest != command.AssertionSha256)
             return SourceUseReceiverSupport.Permanent("The claim differs from the frozen assertion tuple.");
         if (owner.IsRejected(command.AssertionId))
-            return SourceUseReceiverSupport.Superseded("The change was rejected.", null);
+            return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The change was rejected.", null));
         var held = await RequireStaffUseAsync(change, command.StaffEligibilityUse, ct).ConfigureAwait(false);
         if (held.Failure is not null)
             return held.Failure.Value;
@@ -100,7 +100,7 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
         if (command.Target != owner.Stream || intent.DesignationId != command.DesignationId)
             return SourceUseReceiverSupport.Permanent("The apply names another designation stream or designation.");
         if (owner.IsRejected(command.AssertionId))
-            return SourceUseReceiverSupport.Superseded("The change was rejected.", null);
+            return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The change was rejected.", null));
 
         var claim = await reader.HydrateAsync(new ProfessionalAssertionIdentityClaim(command.AssertionId), ct)
             .ConfigureAwait(false);
@@ -126,7 +126,7 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
                         ? SourceUseReceiverSupport.Replayed(Fact(current.Stream, current.Acceptance.SelectedFact!))
                         : Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
                 if (current.IsRejected(command.AssertionId))
-                    return SourceUseReceiverSupport.Superseded("The change was rejected.", null);
+                    return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The change was rejected.", null));
 
                 var applied = await BuildAsync(current, intent, evidence, provenance, command.CommandId, ct)
                     .ConfigureAwait(false);
@@ -159,7 +159,7 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
                 if (!step.IsSuccess)
                     return Result<ReceiverOutcome>.Failure(step.Error!);
                 if (step.Value!.Foreign)
-                    return SourceUseReceiverSupport.Superseded("The change was rejected.", null);
+                    return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The change was rejected.", null));
                 if (step.Value.Fact is null)
                 {
                     if (attempt >= MaximumAttempts)

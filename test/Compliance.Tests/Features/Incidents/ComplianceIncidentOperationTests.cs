@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Proofs;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Content;
@@ -21,6 +22,81 @@ namespace Bdgrz.Compliance.Tests.Features.Incidents;
 public sealed class ComplianceIncidentOperationTests
 {
     static readonly DateTimeOffset Start = new(2026, 10, 23, 12, 0, 0, TimeSpan.Zero);
+
+    [Theory]
+    [InlineData("assess", false)]
+    [InlineData("assess", true)]
+    [InlineData("revise", false)]
+    [InlineData("revise", true)]
+    [InlineData("resolve", false)]
+    [InlineData("resolve", true)]
+    [InlineData("decision", false)]
+    [InlineData("decision", true)]
+    public async Task ShouldResolveAcceptedRetryBeforeWritingContentGivenIncidentOperation(string operation, bool changed)
+    {
+        // Arrange
+        await using var host = new Host();
+        Func<bool, Task<Result>> submit;
+        if (operation == "decision")
+        {
+            var incident = await host.AssessedAsync([], requiresReview: true);
+            var assessment = incident.Current!.CurrentAssessment!;
+            var sha = ComplianceIncidentAggregate.AssessmentSha256(assessment);
+            var description = await host.NoChangeDescriptionAsync(incident.Id, sha, assessment.AssessedAt.AddMinutes(5));
+            var request = new RecordComplianceIncidentSystemDescriptionDecision(Uuid.CreateVersion4(), host.TenantId,
+                host.ProgramId, incident.Id, 1, description.DescriptionId, description.VersionId, description.DecisionId, sha);
+            var handler = new RecordComplianceIncidentSystemDescriptionDecisionHandler(host.Operations, host.Reader,
+                host.Content, host.Clock);
+            submit = alter => handler.HandleAsync(Host.System(alter
+                ? request with { AssessmentSha256 = new string('e', 64) } : request), CancellationToken.None).AsTask();
+        }
+        else if (operation == "resolve")
+        {
+            var completed = await host.CompletedActionAsync(host.ProgramId);
+            var incident = await host.AssessedAsync([completed.WorkItemId]);
+            var request = Resolution(host, incident, [completed.Fact]);
+            var handler = new RecordComplianceIncidentResolutionHandler(host.Operations, host.Verifier, host.Content, host.Clock);
+            submit = alter => handler.HandleAsync(Host.As(host.AssessorUserId, alter ? request with
+            {
+                Content = request.Content with { Resolution = "Changed resolution." },
+            } : request), CancellationToken.None).AsTask();
+        }
+        else
+        {
+            var incident = await host.RecordedAsync();
+            if (operation == "assess")
+            {
+                var request = new AssessComplianceIncident(Uuid.CreateVersion4(), host.TenantId, host.ProgramId,
+                    incident.Id, incident.Revision, Assessment([]));
+                var handler = new AssessComplianceIncidentHandler(host.Operations, host.Content, host.Clock);
+                submit = alter => handler.HandleAsync(Host.As(host.AssessorUserId, alter ? request with
+                {
+                    Content = request.Content with { Rationale = "Changed assessment." },
+                } : request), CancellationToken.None).AsTask();
+            }
+            else
+            {
+                var request = new ReviseComplianceIncident(Uuid.CreateVersion4(), host.TenantId, host.ProgramId,
+                    incident.Id, incident.Revision, host.Content1 with { Description = "Additional detail." }, "More detail.");
+                var handler = new ReviseComplianceIncidentHandler(host.Operations, host.Content, host.Clock);
+                submit = alter => handler.HandleAsync(Host.As(host.AssessorUserId,
+                    alter ? request with { ChangeReason = "Changed reason." } : request), CancellationToken.None).AsTask();
+            }
+        }
+        Assert.True((await submit(false)).IsSuccess);
+        var writes = host.ContentWrites;
+        host.RejectContentWrites = true;
+
+        // Act
+        var result = await submit(changed);
+
+        // Assert
+        if (changed)
+            Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        else
+            Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(writes, host.ContentWrites);
+    }
 
     [Fact]
     public async Task ShouldAppendNothingGivenExactRetryOfAssessAfterTheClockMoved()
@@ -187,12 +263,12 @@ public sealed class ComplianceIncidentOperationTests
         var wrongKind = completed.Raised;
         var wrongStream = completed.Fact with
         {
-            Stream = new EventStreamAddress(host.TenantId.ToString(), FindingAggregate.Area,
+            Stream = new EventStreamAddress(host.TenantId.ToString(), CorrectiveAction.Area,
                 Uuid.CreateVersion4().ToString()),
         };
         var wrongTenant = completed.Fact with
         {
-            Stream = new EventStreamAddress(Uuid.CreateVersion4().ToString(), FindingAggregate.Area,
+            Stream = new EventStreamAddress(Uuid.CreateVersion4().ToString(), CorrectiveAction.Area,
                 completed.Fact.Stream.Resource),
         };
         var forgedEvent = completed.Fact with { EventId = Uuid.CreateVersion4() };
@@ -339,6 +415,24 @@ public sealed class ComplianceIncidentOperationTests
         incident.Id, 2, new ComplianceIncidentResolutionContent("The credential was revoked and rotated.",
             Start.AddMinutes(-1), [Uuid.CreateVersion4()], facts));
 
+    sealed class IncidentContentStore(IImmutableContentStore inner) : IImmutableContentStore
+    {
+        public bool RejectWrites { get; set; }
+        public int Writes { get; private set; }
+
+        public Task<ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId, string schema, string mediaType,
+            ReadOnlyMemory<byte> bytes, CancellationToken ct = default)
+        {
+            Writes++;
+            if (RejectWrites)
+                throw new InvalidOperationException("Content writes unavailable.");
+            return inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+        }
+
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm, ImmutableContentRef reference,
+            CancellationToken ct = default) => inner.ReadVerifiedAsync(realm, reference, ct);
+    }
+
     sealed class Host : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -357,11 +451,12 @@ public sealed class ComplianceIncidentOperationTests
             services.AddSingleton<IEventStore>(_events);
             services.AddSingleton<IDomainEventReader>(_events);
             services.AddPortia();
+            Content = new IncidentContentStore(new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient())));
+            services.AddSingleton(Content);
             _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             _scope = _provider.CreateAsyncScope();
             Reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             _writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
-            Content = new FitzKvImmutableContentStore(new PersistenceKvClient(new InMemoryKvClient()));
             Operations = new NativeOperationExecutor(Reader, _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
                 Content);
             Verifier = new FollowUpCompletionVerifier(new EventStoreSourceFactResolver(_events), Content);
@@ -377,6 +472,8 @@ public sealed class ComplianceIncidentOperationTests
         public ComplianceIncidentContent Content1 { get; }
         public IAggregateReader Reader { get; }
         public IImmutableContentStore Content { get; }
+        public bool RejectContentWrites { set => ((IncidentContentStore)Content).RejectWrites = value; }
+        public int ContentWrites => ((IncidentContentStore)Content).Writes;
         public NativeOperationExecutor Operations { get; }
         public FollowUpCompletionVerifier Verifier { get; }
         public ManualClock Clock { get; } = new(Start);
@@ -424,24 +521,15 @@ public sealed class ComplianceIncidentOperationTests
             var actionId = Uuid.CreateVersion4();
             var owner = RbacIds.Member(TenantId, Uuid.CreateVersion4());
             var actor = ActorReference.ForMember(owner, "Owner");
-            var dispatch = new RequestDispatchContext(RequestActor.System);
-            var raise = Uuid.CreateVersion4();
-            var raising = new FindingAggregate(TenantId, programId, findingId, raise);
-            Assert.Null(raising.Raise(raise, new FindingSource("manual", null, null, "Raised by test"),
-                "Credential exposure follow-up", "Rotate the exposed credential.", "high", "Payment API", owner,
-                new DateOnly(2026, 12, 1), [], actor, Start.AddMinutes(-9)));
-            await _writer.SaveAsync(raising, dispatch);
-            var add = Uuid.CreateVersion4();
-            var adding = await Reader.HydrateAsync(new FindingAggregate(TenantId, programId, findingId, add));
-            Assert.Null(adding.AddAction(add, 1, actionId, "Rotate the credential", owner,
-                new DateOnly(2026, 12, 1), actor, Start.AddMinutes(-8)));
-            await _writer.SaveAsync(adding, dispatch);
-            var complete = Uuid.CreateVersion4();
-            var finding = await Reader.HydrateAsync(new FindingAggregate(TenantId, programId, findingId, complete));
-            Assert.Null(finding.CompleteAction(complete, 2, actionId, "Rotated and verified",
-                [new EvidenceReference(null, "external", "https://example.com/evidence")],
-                owner, actor, Start.AddMinutes(-4)));
-            await _writer.SaveAsync(finding, dispatch);
+            await FindingSeed.RaiseAsync(_provider, TenantId, programId, findingId,
+                new FindingSource("manual", null, null, "Raised by test"), "Credential exposure follow-up",
+                "Rotate the exposed credential.", "high", "Payment API", owner, new DateOnly(2026, 12, 1), [], actor,
+                Start.AddMinutes(-9));
+            await FindingSeed.AddActionAsync(_provider, TenantId, programId, findingId, actionId,
+                "Rotate the credential", owner, new DateOnly(2026, 12, 1), actor, Start.AddMinutes(-4),
+                new EvidenceReference(null, "external", "https://example.com/evidence"), owner);
+            var finding = new FindingAggregate(TenantId, programId, findingId);
+            var action = new CorrectiveAction(TenantId, programId, findingId, actionId);
             NativeFactReference? raised = null;
             NativeFactReference? completion = null;
             await foreach (var record in _events.ReadAsync(finding.Stream, 0))
@@ -449,8 +537,11 @@ public sealed class ComplianceIncidentOperationTests
                 var reference = NativeFactReference.Of(finding.Stream, record.Event);
                 if (record.Event is FindingRaisedV2)
                     raised = reference;
+            }
+            await foreach (var record in _events.ReadAsync(action.Stream, 0))
+            {
                 if (record.Event is CorrectiveActionCompletedV2)
-                    completion = reference;
+                    completion = NativeFactReference.Of(action.Stream, record.Event);
             }
 
             return new Completed(Bdgrz.Compliance.Features.Work.WorkCandidate.IdFor(actionId, "corrective_action"),

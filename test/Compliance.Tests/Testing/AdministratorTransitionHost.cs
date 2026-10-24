@@ -235,6 +235,14 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
             CancellationToken.None);
     }
 
+    public Task<Result<AdministratorTransitionResponse>> SubmitSystemAssignmentAsync(AssignTeamMember request) =>
+        AssignHandler().HandleAsync(new RequestContext<AssignTeamMember>(request, RequestActor.System),
+            CancellationToken.None).AsTask();
+
+    public Task<Result<AdministratorTransitionResponse>> SubmitSystemRemovalAsync(RemoveTeamMember request) =>
+        RemoveHandler().HandleAsync(new RequestContext<RemoveTeamMember>(request, RequestActor.System),
+            CancellationToken.None).AsTask();
+
     AssignTeamMemberHandler AssignHandler()
     {
         var content = Content;
@@ -268,7 +276,8 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
     {
         var record = await GuardRecordAsync(operationId);
         var fact = (ITenantManagerGuardFact)record.Event;
-        return await Store.CreateIfAbsentAsync(ProcessRecord.Start(ProcessKeyOf(operationId),
+        return await Store.CreateIfAbsentAsync(ProcessRecord.Start(ProcessKey.ForRoot(AdministratorTransitionProcess.Name, operationId,
+                NativeFactReference.Of(record.Stream, record.Event)),
             NativeFactReference.Of(record.Stream, record.Event), fact.Operation.Episode, fact.Intent, [],
             DateTimeOffset.UtcNow));
     }
@@ -287,14 +296,19 @@ sealed class AdministratorTransitionHost : IAsyncDisposable
     public async Task<ProcessRecord> ResumeAsync(Uuid operationId, string worker = "sweep")
     {
         await using var scope = Provider.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(ProcessKeyOf(operationId), worker,
+        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(await ProcessKeyOfAsync(operationId), worker,
             new RequestDispatchContext(RequestActor.System), CancellationToken.None);
     }
 
-    public ProcessKey ProcessKeyOf(Uuid operationId) =>
-        new(AdministratorTransitionProcess.Name, TenantId.ToString(), operationId);
+    async Task<ProcessKey> ProcessKeyOfAsync(Uuid operationId)
+    {
+        var record = await GuardRecordAsync(operationId);
+        return ProcessKey.ForRoot(AdministratorTransitionProcess.Name, operationId,
+            NativeFactReference.Of(record.Stream, record.Event));
+    }
 
-    public Task<ProcessRecord?> ProcessAsync(Uuid operationId) => Store.ReadAsync(ProcessKeyOf(operationId));
+    public async Task<ProcessRecord?> ProcessAsync(Uuid operationId) =>
+        await Store.ReadAsync(await ProcessKeyOfAsync(operationId));
 
     /// <summary>Sends one receiver command through the real bus as the system principal.</summary>
     public async Task<Result<ReceiverOutcome>> SendAsync(IRequest<ReceiverOutcome> command, ClaimsPrincipal? actor = null)

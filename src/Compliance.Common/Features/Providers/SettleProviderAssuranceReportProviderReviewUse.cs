@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
@@ -13,8 +14,12 @@ namespace Bdgrz.Compliance.Features.Providers;
 [Discriminator("bdgrz.provider-assurance-report.settle-provider-review-use", 1)]
 public sealed record SettleProviderAssuranceReportProviderReviewUse(Uuid CommandId, NativeFactReference Source,
     EventStreamAddress Target, Uuid OperationId, long Generation, long? ExpectedRevision, ImmutableContentRef Intent,
-    Uuid SourceOwnerId, Uuid ProviderId, Uuid ReviewId, SourceUseSettlementDisposition Disposition)
+    Uuid SourceOwnerId, Uuid ProviderId, Uuid ReceivingOwnerId, SourceUseSettlementDisposition Disposition)
     : ISourceUseSettlement, IProviderAssuranceReceiver
 {
+    /// <summary>The receiving owner whose exact accepted operation this use serves.</summary>
+    [JsonIgnore]
+    public Uuid ReviewId => ReceivingOwnerId;
+
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }

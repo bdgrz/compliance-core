@@ -10,6 +10,8 @@ using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using Bdgrz.Compliance.Tests.Testing;
+
 namespace Bdgrz.Compliance.Tests.E2E;
 
 [Collection(BrokerCollectionDefinition.Name)]
@@ -104,7 +106,8 @@ public sealed class SplitHostInvitationDeliveryE2ETests(BrokerStackFixture broke
             }
             Assert.Equal("delivered", Assert.Single(page!.Items).DeliveryStatus);
             var process = await restartedWorker.Services.GetRequiredService<IProcessRecordStore>().ReadAsync(
-                new ProcessKey(TenantInvitationDeliveryProcess.Name, tenantId.ToString(), invitationId));
+                await ProcessKeys.FindAsync(restartedWorker.Services, TenantInvitationDeliveryProcess.Name,
+                    tenantId.ToString(), invitationId));
             Assert.Equal(ProcessState.Completed, process?.State);
         }
         finally

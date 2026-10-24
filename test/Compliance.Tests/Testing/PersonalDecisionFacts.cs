@@ -107,8 +107,8 @@ static class PersonalDecisionFacts
             history.Value.Sequence);
     }
 
-    public static ProcessKey KeyOf(Uuid tenant, Uuid decision) =>
-        new(EngagementPersonalDecisionEffects.ProcessName, tenant.ToString(), decision);
+    public static ProcessKey KeyOf(Uuid decision, NativeFactReference source) =>
+        ProcessKey.ForRoot(EngagementPersonalDecisionEffects.ProcessName, decision, source);
 
     /// <summary>Creates (if absent) the process record of an admitted decision without dispatching any receiver.</summary>
     public static async Task<ProcessRecord> StartAsync(IServiceProvider provider, Uuid tenant, Uuid engagement,
@@ -120,7 +120,7 @@ static class PersonalDecisionFacts
             .HydrateAsync(new ServiceEngagementIndependence(tenant, engagement));
         var admitted = owner.DecisionOf(decision)?.Admitted ?? throw new InvalidOperationException("Admit first.");
         return await services.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(ProcessRecord.Start(
-            KeyOf(tenant, decision), NativeFactReference.Of(owner.Stream, admitted), admitted.Operation.Episode,
+            KeyOf(decision, NativeFactReference.Of(owner.Stream, admitted)), NativeFactReference.Of(owner.Stream, admitted), admitted.Operation.Episode,
             admitted.Intent, [], DateTimeOffset.UtcNow));
     }
 

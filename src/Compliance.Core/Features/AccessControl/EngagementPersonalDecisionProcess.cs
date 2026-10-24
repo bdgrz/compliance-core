@@ -93,7 +93,7 @@ static class EngagementPersonalDecisionProcess
             case nameof(AuthorizeClientServicePersonalDecisionUse) when Required(step.Receiver) is { } use:
                 return new AuthorizeClientServicePersonalDecisionUse(step.CommandId, record.Source, use.SourceOwner,
                     decisionId, generation, null, record.Intent, tenantId, use.ContentEvent.EventId,
-                    use.ResourceRevision, engagementId);
+                    checked((long)use.ResourceRevision), engagementId);
             case nameof(AuthorizeFirmStaffRecordEngagementUse) when Required(step.Receiver) is { } use:
                 return new AuthorizeFirmStaffRecordEngagementUse(step.CommandId, record.Source, use.SourceOwner,
                     decisionId, generation, null, record.Intent,

@@ -68,7 +68,7 @@ static class PolicyCampaignClosureProcess
                     return new AuthorizePolicyCampaignParticipantCampaignClosureUse(step.CommandId, record.Source,
                         held.Requirement.SourceOwner, root, generation, null, record.Intent,
                         Uuid.Parse(held.Target, System.Globalization.CultureInfo.InvariantCulture),
-                        held.Requirement.ContentEvent.EventId, held.Requirement.ResourceRevision, intent.ParentId,
+                        held.Requirement.ContentEvent.EventId, checked((long)held.Requirement.ResourceRevision), intent.ParentId,
                         held.PersonId);
                 }
 

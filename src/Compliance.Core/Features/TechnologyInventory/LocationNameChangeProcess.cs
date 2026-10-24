@@ -46,7 +46,7 @@ public static class LocationNameChangeProcess
             case LocationNames.ApplyReceiver:
                 {
                     ApplyLocationChangeSourceProof source;
-                    if (view.FactOf(LocationNames.ClaimReceiver) is { } claimed)
+                    if (view.NewClaimFact(LocationNames.ClaimReceiver) is { } claimed)
                         source = new ApplyLocationChangeSourceProof.ClaimedProof((await SourceFactProofs
                             .BuildAsync<LocationNameClaimed>(view.Resolver, view.Content, view.Realm, claimed, ct)
                             .ConfigureAwait(false)).Proof);

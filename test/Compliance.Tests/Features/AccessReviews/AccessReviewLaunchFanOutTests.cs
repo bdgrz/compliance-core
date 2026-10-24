@@ -67,7 +67,7 @@ public sealed class AccessReviewLaunchFanOutTests
             CancellationToken.None);
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<AccessReviewCampaignLaunched>(record),
             CancellationToken.None);
-        var process = await fixture.ProcessAsync(fixture.LaunchKey(launched.CampaignId));
+        var process = await fixture.ProcessAsync(await fixture.LaunchKey(launched.CampaignId));
 
         // Assert
         Assert.Equal(ProcessState.Completed, process!.State);
@@ -88,7 +88,7 @@ public sealed class AccessReviewLaunchFanOutTests
         // Act
         var crashed = await Record.ExceptionAsync(() => fixture.MaterializeAsync(launched.CampaignId));
         var partial = await OpenedAsync(fixture, launched.CampaignId);
-        var interrupted = await fixture.ProcessAsync(fixture.LaunchKey(launched.CampaignId));
+        var interrupted = await fixture.ProcessAsync(await fixture.LaunchKey(launched.CampaignId));
         crash.Disarm();
         var resumed = await fixture.MaterializeAsync(launched.CampaignId);
         var opened = await OpenedAsync(fixture, launched.CampaignId);
@@ -269,7 +269,7 @@ public sealed class AccessReviewLaunchFanOutTests
         var manifest = await fixture.Provider.GetRequiredService<IImmutableContentStore>()
             .ReadJsonAsync<AccessReviewItemIntentManifest>(fixture.TenantId.ToString(), launched.ItemIntentManifest);
         return await fixture.Provider.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(
-            ProcessRecord.Start(fixture.LaunchKey(campaignId), NativeFactReference.Of(aggregate.Stream, launched),
+            ProcessRecord.Start(await fixture.LaunchKey(campaignId), NativeFactReference.Of(aggregate.Stream, launched),
                 launched.Operation.Episode, launched.ItemIntentManifest,
                 manifest.Selections.Select(static selection => selection.ItemId.ToString()), DateTimeOffset.UtcNow));
     }

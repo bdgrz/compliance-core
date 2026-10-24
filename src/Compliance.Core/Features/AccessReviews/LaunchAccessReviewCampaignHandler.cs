@@ -168,7 +168,7 @@ public sealed class LaunchAccessReviewCampaignHandler(NativeOperationExecutor op
             {
                 var principal = principals[row.ProviderSubjectId];
                 var entitlement = entitlements[row.ProviderEntitlementId];
-                var classification = accepted.Population.CurrentClassification(row.ProviderSubjectId);
+                var classification = accepted.CurrentClassification(row.ProviderSubjectId);
                 var personId = classification?.Classification == AccessReviewVocabulary.Human
                     ? classification.PersonId
                     : null;

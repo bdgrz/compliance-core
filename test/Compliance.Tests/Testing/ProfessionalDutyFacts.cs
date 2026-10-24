@@ -68,7 +68,8 @@ static class ProfessionalDutyFacts
         var store = services.GetRequiredService<IImmutableContentStore>();
         var intent = await store.ReadJsonAsync<ProfessionalDutyChangeIntent>(Realm, accepted.Intent);
         var evidence = await store.ReadJsonAsync<VerifiedFirmProfessionalDutyAssertion>(Realm, intent.VerifiedScope);
-        var key = new ProcessKey(ProfessionalDutyEffects.ProcessName, Realm, assertionId);
+        var key = ProcessKey.ForRoot(ProfessionalDutyEffects.ProcessName, assertionId,
+            NativeFactReference.Of(owner.Stream, accepted));
         return await services.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(ProcessRecord.Start(key,
             NativeFactReference.Of(owner.Stream, accepted), accepted.Operation.Episode, accepted.Intent,
             [ProfessionalDutyTarget.For(intent, evidence).ToString()], DateTimeOffset.UtcNow));

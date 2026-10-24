@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Kernel;
 using Bdgrz.Compliance.Features.NativeOperations;
@@ -13,6 +15,72 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl;
 
 public sealed class EngagementPersonalDecisionTests
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task ShouldSettleHeldUsesGivenPersonalDecisionCanceledBeforeProcessCheckpoint(int stageIndex)
+    {
+        // Arrange
+        await using var host = new IndependenceHost();
+        var partner = await SeedPartnerAsync(host);
+        var (engagement, _) = await SeedEngagementAsync(host);
+        var request = await EvaluationAsync(host, engagement, partner);
+        Assert.True((await host.HttpAsync(request, partner.Actor)).IsSuccess);
+        var record = await StartAsync(host.Provider, host.Tenant, engagement, request.EvaluationId);
+        var facts = new Dictionary<string, NativeFactReference>();
+        foreach (var receiver in EngagementPersonalDecisionProcess.Definition().Stages[0].Receivers)
+        {
+            if (await BuildAsync(host, record, receiver) is not { } command)
+                continue;
+            var held = Assert.IsType<ReceiverOutcome.Applied>((await SendReceiverAsync(host.Provider, command)).Value);
+            facts[receiver] = held.Fact;
+        }
+        record = await host.Scope.ServiceProvider.GetRequiredService<IProcessRecordStore>().ReplaceAsync(
+            record with { StageIndex = stageIndex, Facts = facts }, record.Version);
+        var canceled = await SendReceiverAsync(host.Provider, new CancelEngagementPersonalDecision(
+            Uuid.CreateVersion4(), record.Source, record.Source.Stream, request.EvaluationId, 1, null,
+            record.Intent, engagement));
+        Assert.IsType<ReceiverOutcome.Applied>(canceled.Value);
+        Assert.Contains(await UseEntriesAsync(host, partner, engagement, request.EvaluationId),
+            item => item.Entry is { IsSettled: false });
+
+        // Act
+        var resumed = await RunAsync(host.Provider, host.Tenant, engagement, request.EvaluationId);
+
+        // Assert
+        Assert.All(await UseEntriesAsync(host, partner, engagement, request.EvaluationId),
+            item => Assert.True(item.Entry is { IsSettled: true }));
+        Assert.Equal(ProcessState.Aborted, resumed.State);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRejectServiceUseGivenWireEpochDiffersFromPinnedHistory(bool negative)
+    {
+        // Arrange
+        await using var host = new IndependenceHost();
+        var partner = await SeedPartnerAsync(host);
+        var (engagement, _) = await SeedEngagementAsync(host);
+        var request = await EvaluationAsync(host, engagement, partner);
+        Assert.True((await host.HttpAsync(request, partner.Actor)).IsSuccess);
+        var record = await StartAsync(host.Provider, host.Tenant, engagement, request.EvaluationId);
+        var command = Assert.IsType<AuthorizeClientServicePersonalDecisionUse>(
+            await BuildAsync(host, record, nameof(AuthorizeClientServicePersonalDecisionUse)));
+        var wire = JsonSerializer.SerializeToNode(command,
+            ComplianceCoreJsonContext.Default.AuthorizeClientServicePersonalDecisionUse)!;
+        wire["service_epoch"] = negative ? -1 : (long)((ISourceUseAuthorization)command).ExpectedContentRevision + 1;
+        var changed = wire.Deserialize(ComplianceCoreJsonContext.Default.AuthorizeClientServicePersonalDecisionUse)!;
+
+        // Act
+        var result = await SendReceiverAsync(host.Provider, changed);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
+        Assert.False(result.Error?.IsTransient);
+        Assert.False((await host.HydrateAsync(new ClientServiceIndependence(host.Tenant))).Uses.HasActiveUse);
+    }
+
     [Fact]
     public async Task ShouldFencePersonalDecisionGivenSourceChangesBeforeAuthorization()
     {
@@ -79,8 +147,8 @@ public sealed class EngagementPersonalDecisionTests
             Assert.True(entry.Entry is { IsSettled: true }, $"{entry.Area} was not settled");
         Assert.Contains(await UseEntriesAsync(host, partner, engagement, d.EvaluationId),
             entry => entry.Entry is { IsFence: true });
-        Assert.All(late, outcome => Assert.IsType<ReceiverOutcome.Superseded>(outcome.Value));
-        Assert.IsType<ReceiverOutcome.Superseded>(delayedAuthorize.Value);
+        Assert.All(late, outcome => Assert.IsType<ReceiverOutcome.Rejected>(outcome.Value));
+        Assert.IsType<ReceiverOutcome.Rejected>(delayedAuthorize.Value);
 
         Assert.True(admitted2.IsSuccess, admitted2.Error?.Message);
         Assert.Equal(ProcessState.Completed, completed.State);

@@ -212,7 +212,7 @@ public sealed class RestrictedAccessReviewCampaignReadTests
             var item = new AccessReviewItemView(itemId, populationId, Uuid.CreateVersion4(), instanceId, memberId,
                 "subject", "user_account", "User", "human", null, null, "entitlement", "permission", "Read", false,
                 "expected", [], null);
-            await AccessReviewFacts.SeedLaunchedAsync(provider, tenantId, campaignId,
+            await AccessReviewCampaignFacts.SeedLaunchedAsync(provider, tenantId, campaignId,
                 [new AccessReviewerView(populationId, instanceId, memberId, false, null)], [item], actor, now);
             return new ScenarioData(provider, tenantId, userId, applicationId, instanceId, populationId, campaignId,
                 itemId);

@@ -28,6 +28,8 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
             command.CommandId, ct).ConfigureAwait(false);
         if (verified.Failure is not null)
             return verified.Failure.Value;
+        if (command.Practice != verified.Intent!.Practice)
+            return Permanent("The claim practice differs from the frozen registration.");
         if (verified.Record!.IsRejected)
             return Superseded("The registration was rejected.", null);
 

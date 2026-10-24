@@ -150,7 +150,7 @@ sealed class CompleteProviderAssuranceReviewHandler(IAggregateReader reader, IAg
                 return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
         }
         return owner.Canceled is { } canceled
-            ? SourceUseReceiverSupport.Superseded("The review was canceled.", NativeFactReference.Of(owner.Stream, canceled))
+            ? Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The review was canceled.", NativeFactReference.Of(owner.Stream, canceled)))
             : owner.Recorded is { } recorded
                 ? SourceUseReceiverSupport.Superseded("The review is already recorded.",
                     NativeFactReference.Of(owner.Stream, recorded))

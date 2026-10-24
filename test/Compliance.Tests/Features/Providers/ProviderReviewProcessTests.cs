@@ -13,6 +13,44 @@ namespace Bdgrz.Compliance.Tests.Features.Providers;
 
 public sealed class ProviderReviewProcessTests
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task ShouldSettleHeldReportGivenCancellationPersistedBeforeProcessCheckpoint(int stageIndex)
+    {
+        // Arrange
+        await using var host = await ProviderAssuranceHost.CreateAsync();
+        var report = await host.RecordReportAsync();
+        var reviewId = Uuid.CreateVersion4();
+        Assert.True((await host.SendAsync(new RecordProviderReview(reviewId, host.Tenant, host.ProviderId,
+            Review(report.ReportId)))).IsSuccess);
+        var root = await host.RootAsync(ProviderAssuranceStreams.Review(host.Tenant, reviewId), reviewId);
+        var key = await host.ReviewKey(reviewId);
+        var record = await host.PrepareProcessAsync(key, root, ((ProviderReviewRequested)root.Event).Intent);
+        var acquire = await host.CommandAsync(record, nameof(AuthorizeProviderAssuranceReportProviderReviewUse), "acquire");
+        var held = Assert.IsType<ReceiverOutcome.Applied>((await host.ReceiveAsync(acquire)).Value);
+        await using var scope = host.Services.CreateAsyncScope();
+        record = await scope.ServiceProvider.GetRequiredService<IProcessRecordStore>().ReplaceAsync(record with
+        {
+            StageIndex = stageIndex,
+            Facts = new Dictionary<string, NativeFactReference>
+            {
+                [nameof(AuthorizeProviderAssuranceReportProviderReviewUse)] = held.Fact,
+            },
+        }, record.Version);
+        var abort = await host.CommandAsync(record, nameof(AbortProviderReview), "abort");
+        Assert.IsType<ReceiverOutcome.Applied>((await host.ReceiveAsync(abort)).Value);
+        Assert.True((await host.ReportAsync(report.ReportId)).Uses.HasActiveUse);
+
+        // Act: resume after the cancellation was saved, before the report settlement and process checkpoint.
+        var resumed = await host.ResumeAsync(key);
+
+        // Assert
+        Assert.False((await host.ReportAsync(report.ReportId)).Uses.HasActiveUse);
+        Assert.Equal(ProcessState.Aborted, resumed.State);
+        Assert.Null((await host.ReviewAsync(reviewId)).Recorded);
+    }
+
     [Fact]
     public async Task ShouldRecordReviewGivenAdmittedReviewAndHeldReportRevision()
     {
@@ -284,14 +322,14 @@ public sealed class ProviderReviewProcessTests
         var reviewId = Uuid.CreateVersion4();
         Assert.True((await host.SendAsync(new RecordProviderReview(reviewId, host.Tenant, host.ProviderId, Review(report.ReportId)))).IsSuccess);
         var root = await host.RootAsync(ProviderAssuranceStreams.Review(host.Tenant, reviewId), reviewId);
-        var record = await host.PrepareProcessAsync(host.ReviewKey(reviewId), root, ((ProviderReviewRequested)root.Event).Intent);
+        var record = await host.PrepareProcessAsync(await host.ReviewKey(reviewId), root, ((ProviderReviewRequested)root.Event).Intent);
         var acquire = await host.CommandAsync(record, nameof(AuthorizeProviderAssuranceReportProviderReviewUse), "acquire");
         var granted = await host.ReceiveAsync(acquire);
 
         // Act: the worker crashed after the receiver granted and before the process record advanced.
         var identical = await host.CommandAsync(record, nameof(AuthorizeProviderAssuranceReportProviderReviewUse), "acquire");
         var replay = await host.ReceiveAsync(identical);
-        var resumed = await host.ResumeAsync(host.ReviewKey(reviewId));
+        var resumed = await host.ResumeAsync(await host.ReviewKey(reviewId));
 
         // Assert
         Assert.Equal(acquire, identical);
@@ -312,7 +350,7 @@ public sealed class ProviderReviewProcessTests
         var reviewId = Uuid.CreateVersion4();
         Assert.True((await host.SendAsync(new RecordProviderReview(reviewId, host.Tenant, host.ProviderId, Review(report.ReportId)))).IsSuccess);
         var root = await host.RootAsync(ProviderAssuranceStreams.Review(host.Tenant, reviewId), reviewId);
-        var record = await host.PrepareProcessAsync(host.ReviewKey(reviewId), root, ((ProviderReviewRequested)root.Event).Intent);
+        var record = await host.PrepareProcessAsync(await host.ReviewKey(reviewId), root, ((ProviderReviewRequested)root.Event).Intent);
         var acquire = (AuthorizeProviderAssuranceReportProviderReviewUse)await host.CommandAsync(record,
             nameof(AuthorizeProviderAssuranceReportProviderReviewUse), "acquire");
         var noGrants = await host.Content.WriteJsonAsync(host.Tenant.ToString(), Uuid.CreateVersion4(),
@@ -322,7 +360,7 @@ public sealed class ProviderReviewProcessTests
 
         // Act
         var wrongSource = await host.ReceiveAsync(acquire with { Source = acquire.Source with { EventId = Uuid.CreateVersion4() } });
-        var wrongRevision = await host.ReceiveAsync(acquire with { ExpectedContentRevision = 7 });
+        var wrongRevision = await host.ReceiveAsync(acquire with { SourceRevision = 7 });
         var wrongEvent = await host.ReceiveAsync(acquire with { SourceContentEventId = Uuid.CreateVersion4() });
         var otherReview = await host.ReceiveAsync(acquire with { OperationId = Uuid.CreateVersion4() });
         var withoutGrant = await host.ReceiveAsync(complete);
@@ -351,7 +389,7 @@ public sealed class ProviderReviewProcessTests
         Assert.True((await host.SendAsync(new RecordProviderReview(reviewId, host.Tenant, host.ProviderId, Review(report.ReportId)))).IsSuccess);
         var root = await host.RootAsync(ProviderAssuranceStreams.Review(host.Tenant, reviewId), reviewId);
         var intent = ((ProviderReviewRequested)root.Event).Intent;
-        var record = await host.PrepareProcessAsync(host.ReviewKey(reviewId), root, intent);
+        var record = await host.PrepareProcessAsync(await host.ReviewKey(reviewId), root, intent);
         var late = await host.CommandAsync(record, nameof(AuthorizeProviderAssuranceReportProviderReviewUse), "acquire");
         var abort = await host.CommandAsync(record with { State = ProcessState.Aborting },
             nameof(AbortProviderReview), "abort");
@@ -368,7 +406,7 @@ public sealed class ProviderReviewProcessTests
         var delayed = await host.ReceiveAsync(late);
 
         // Assert
-        Assert.IsType<ReceiverOutcome.Superseded>(delayed.Value);
+        Assert.IsType<ReceiverOutcome.Rejected>(delayed.Value);
         var facts = await host.FactsAsync(ProviderAssuranceStreams.Report(host.Tenant, host.ProviderId, report.ReportId));
         Assert.DoesNotContain(facts, fact => fact is ProviderAssuranceReportProviderReviewUseAuthorized);
         Assert.False((await host.ReportAsync(report.ReportId)).Uses.HasActiveUse);

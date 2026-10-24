@@ -44,6 +44,9 @@ public sealed class AssignTeamMemberHandler(NativeOperationExecutor operations,
         var administrators = request.TeamId == BuiltInRbac.AdministratorsTeamId(request.TenantId);
         var episodeId = request.MemberEpisodeId == Uuid.Empty ? member.MembershipEpisodeId : request.MemberEpisodeId;
 
+        if (administrators)
+            return await AssignAdministratorAsync(context, request, member, actor, episodeId, ct).ConfigureAwait(false);
+
         if (!replay && prior.IsAssigned && prior.MembershipEpisodeId != member.MembershipEpisodeId)
         {
             var settled = await cleanup.ReconcileTeamAssignmentAsync(context, request, prior.MembershipEpisodeId,
@@ -51,9 +54,6 @@ public sealed class AssignTeamMemberHandler(NativeOperationExecutor operations,
             if (!settled.IsSuccess)
                 return Result<AdministratorTransitionResponse>.Failure(settled.Error!);
         }
-
-        if (administrators)
-            return await AssignAdministratorAsync(context, request, member, actor, episodeId, ct).ConfigureAwait(false);
 
         var accepted = await operations.ExecuteAsync(new NativeOperation<TeamMember>(binding,
             () => Owner(request, request.CommandId), owner => owner.Acceptance,
@@ -72,13 +72,14 @@ public sealed class AssignTeamMemberHandler(NativeOperationExecutor operations,
         IRequestContext<AssignTeamMember> context, AssignTeamMember request, Member member, ActorReference actor,
         Uuid episodeId, CancellationToken ct)
     {
-        if (episodeId == Uuid.Empty)
-            return Fail(RequestErrorKind.NotFound, "The tenant member was not found.");
         var assignment = await reader.HydrateAsync(Owner(request, Uuid.Empty), ct).ConfigureAwait(false);
         var admission = new AdministratorAdmission(request.CommandId, request.TenantId, AdministratorCommandKinds.Assign,
             actor, AuthoredIntentDigest.Compute(request), clock.GetUtcNow(), request.MemberId, episodeId,
             assignment.Stream, assignment.Id, request.ExpectedAssignmentRevision, guard =>
             {
+                if (episodeId == Uuid.Empty)
+                    return Result<AdministratorSourceBinding>.Failure(new RequestError(RequestErrorKind.NotFound,
+                        "The tenant member was not found."));
                 var removalPending = guard.PendingFor(episodeId).Any(static pending =>
                     pending is { IsWithdrawal: true, Reason: TenantManagerGuard.RemovedFromAdministrators });
                 var unfinished = AdministratorAdmissions.Unfinished(guard, episodeId, false,
@@ -100,7 +101,7 @@ public sealed class AssignTeamMemberHandler(NativeOperationExecutor operations,
                 return Result<AdministratorSourceBinding>.Success(new AdministratorSourceBinding(member.MemberRevision,
                     assignment.AssignmentGeneration + 1, assignment.AssignmentRevision + (behindRemoval ? 1UL : 0UL),
                     null));
-            });
+            }, ResolveCurrentEpisode: request.MemberEpisodeId == Uuid.Empty);
         return await admissions.AdmitAsync(context, admission, ct).ConfigureAwait(false);
     }
 

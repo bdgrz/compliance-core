@@ -7,7 +7,7 @@ import test from 'node:test';
 
 const tool = path.resolve(import.meta.dirname, '../check-implementation-coverage.mjs');
 
-function checkFixture(t, source, trace = false) {
+function checkFixture(t, source, trace = false, receiverFields = [], options = {}) {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'compliance-coverage-'));
     t.after(() => fs.rmSync(root, { recursive: true, force: true }));
     const write = (name, value) => {
@@ -24,8 +24,8 @@ function checkFixture(t, source, trace = false) {
     catalog('remaining-command-identities', { contracts: [] });
     catalog('target-event-contracts', { events: [] });
     catalog('design-review-traces', { traces: trace ? [{ id: 'example', test: 'ShouldCompleteGivenExample' }] : [] });
-    catalog('target-reactor-contracts', {
-        reactors: [{ command: 'FinishExample', handler: 'FinishExampleHandler', fields: [], reactor: 'ExampleReactor' }],
+    catalog('target-reactor-contracts', options.reactorCatalog ?? {
+        reactors: [{ command: 'FinishExample', handler: 'FinishExampleHandler', fields: receiverFields, reactor: 'ExampleReactor', http: false, mcp: false }],
         processes: [{ process: 'ExampleProcess', rootSourceEvents: ['ExampleBegun'], stages: [{ receivers: ['FinishExample'] }] }]
     });
     write('src/Compliance.Core/Example.cs', source);
@@ -91,4 +91,140 @@ test('ShouldReportTracePresenceGivenUnexecutedTest', t => {
     const result = checkFixture(t, '', true);
     assert.equal(result.report.tracesPresent, '1/1');
     assert.equal(Object.hasOwn(result.report, 'tracesPassing'), false);
+});
+
+test('ShouldPermitRegisteredProcessGivenReceiverInheritsRequestThroughInterfaces', t => {
+    const result = checkFixture(t, `
+        public class Example : Aggregate { }
+        public record BeginExample(Uuid Id) : IRequest<Result>;
+        public record FinishExample() : ISecondReceiver;
+        public interface ISecondReceiver : IFirstReceiver { }
+        public interface IFirstReceiver : IRequest<Result>, IIdentifiedRequest { }
+        services.AddRequestHandler<BeginExampleHandler>();
+        services.AddRequestHandler<FinishExampleHandler>();
+        app.MapPortiaPost<BeginExample, Result>("/examples");
+        const string Process = "ExampleProcess";
+    `);
+    assert.equal(result.status, 0);
+    assert.equal(result.report.receiversImplemented, '1/1');
+});
+
+test('ShouldRejectExposedRootGivenInheritedRequestAndIncompleteProcess', t => {
+    const result = checkFixture(t, `
+        public record BeginExample(Uuid Id) : IRootCommand;
+        public interface IRootCommand : IRequest<Result> { }
+        app.MapPortiaPost<BeginExample, Result>("/examples");
+    `);
+    assert.equal(result.status, 1);
+});
+
+test('ShouldKeepWrapperAsLegacyGivenRequestTypeArgumentWithoutRequestInheritance', t => {
+    const result = checkFixture(t, `
+        public record BeginExample(Uuid Id) : IEnvelope<IRequest<Result>>;
+        public interface IEnvelope<T> { }
+        app.MapPortiaPost<BeginExample, Result>("/examples");
+    `);
+    assert.equal(result.status, 0);
+});
+
+const internalUnsignedReceiver = `
+    public class Example : Aggregate { }
+    public record BeginExample(Uuid Id) : IRequest<Result>;
+    public record FinishExample(ulong ExpectedRevision) : IRequest<Result>;
+    services.AddRequestHandler<BeginExampleHandler>();
+    services.AddRequestHandler<FinishExampleHandler>();
+    app.MapPortiaPost<BeginExample, Result>("/examples");
+    const string Process = "ExampleProcess";
+`;
+
+test('ShouldPermitCatalogUnsignedRevisionGivenUnexposedInternalReceiver', t => {
+    const result = checkFixture(t, internalUnsignedReceiver, false, [{ name: 'ExpectedRevision', type: 'ulong' }]);
+    assert.equal(result.status, 0);
+});
+
+for (const surface of ['http', 'mcp']) {
+    test(`ShouldRejectCatalogUnsignedRevisionGivenReceiverExposedOver${surface}`, t => {
+        const expose = surface === 'http'
+            ? 'app.MapPortiaPost<FinishExample, Result>("/receivers");'
+            : 'services.AddMcpTool<FinishExample>();';
+        const result = checkFixture(t, internalUnsignedReceiver + expose, false,
+            [{ name: 'ExpectedRevision', type: 'ulong' }]);
+        assert.equal(result.status, 1);
+    });
+}
+
+const enumReceiver = converted => `
+    public class Example : Aggregate { }
+    public record BeginExample(Uuid Id) : IRequest<Result>;
+    public record FinishExample(SubjectKind SubjectKind) : IRequest<Result>;
+    ${converted ? '[JsonConverter(typeof(JsonStringEnumConverter<SubjectKind>))]' : ''}
+    public enum SubjectKind { Staff, CanonicalUser }
+    services.AddRequestHandler<BeginExampleHandler>();
+    services.AddRequestHandler<FinishExampleHandler>();
+    app.MapPortiaPost<BeginExample, Result>("/examples");
+    const string Process = "ExampleProcess";
+`;
+
+test('ShouldPermitStringWireShapeGivenUnexposedReceiverWithJsonStringEnum', t => {
+    const result = checkFixture(t, enumReceiver(true), false, [{ name: 'SubjectKind', type: 'string' }]);
+    assert.equal(result.status, 0);
+});
+
+test('ShouldRejectStringWireShapeGivenReceiverWithNumericEnum', t => {
+    const result = checkFixture(t, enumReceiver(false), false, [{ name: 'SubjectKind', type: 'string' }]);
+    assert.equal(result.status, 1);
+});
+
+for (const surface of ['http', 'mcp']) {
+    test(`ShouldRequireSelectedPublicTypeGivenEnumReceiverExposedOver${surface}`, t => {
+        const expose = surface === 'http'
+            ? 'app.MapPortiaPost<FinishExample, Result>("/receivers");'
+            : 'services.AddMcpTool<FinishExample>();';
+        const result = checkFixture(t, enumReceiver(true) + expose, false, [{ name: 'SubjectKind', type: 'string' }]);
+        assert.equal(result.status, 1);
+    });
+}
+
+const sharedChildCatalog = ordered => ({
+    reactors: [
+        { command: 'FinishExample', handler: 'FinishExampleHandler', fields: [], reactor: 'ExampleReactor', sourceEvents: ['ExampleBegun'] },
+        { command: 'FinishOther', handler: 'FinishOtherHandler', fields: [], reactor: 'OtherReactor', sourceEvents: ['OtherBegun'] }
+    ],
+    processes: [{ process: 'ExampleProcess', ordered, rootSourceEvents: ['ExampleBegun', 'OtherBegun'], abort: [],
+        stages: [{ receivers: ['FinishExample', 'FinishOther'] }] }]
+});
+const shippedChildVariant = `
+    public class Example : Aggregate { }
+    public record BeginExample(Uuid Id) : IRequest<Result>;
+    public record ExampleBegun() : DomainEvent;
+    public record FinishExample() : IRequest<Result>;
+    services.AddRequestHandler<BeginExampleHandler>();
+    services.AddRequestHandler<FinishExampleHandler>();
+    app.MapPortiaPost<BeginExample, Result>("/examples");
+    const string Process = "ExampleProcess";
+`;
+
+test('ShouldPermitShippedIndependentRootGivenUnshippedUnrelatedChildVariant', t => {
+    const result = checkFixture(t, shippedChildVariant, false, [], { reactorCatalog: sharedChildCatalog(false) });
+    assert.equal(result.status, 0);
+});
+
+test('ShouldRejectRegisteredIndependentRootGivenShippedChildWithoutReceiver', t => {
+    const result = checkFixture(t, shippedChildVariant + 'public record OtherBegun() : DomainEvent;', false, [],
+        { reactorCatalog: sharedChildCatalog(false) });
+    assert.equal(result.status, 1);
+});
+
+test('ShouldRequireAllReceiversGivenOrderedProcessWithUnshippedRoot', t => {
+    const result = checkFixture(t, shippedChildVariant, false, [], { reactorCatalog: sharedChildCatalog(true) });
+    assert.equal(result.status, 1);
+});
+
+test('ShouldDiscoverRegisteredDefinitionGivenCatalogProcessNameWithoutProcessSuffix', t => {
+    const catalog = sharedChildCatalog(false);
+    catalog.reactors = catalog.reactors.slice(0, 1);
+    catalog.processes = [{ process: 'ExampleFanOut', rootSourceEvents: ['ExampleBegun'], stages: [{ receivers: ['FinishExample'] }] }];
+    const result = checkFixture(t, shippedChildVariant.replace('"ExampleProcess"', '"ExampleFanOut"'), false, [],
+        { reactorCatalog: catalog });
+    assert.equal(result.status, 0);
 });

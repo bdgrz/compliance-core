@@ -20,6 +20,9 @@ sealed class EventStoreSnapshotReader(IDomainEventReader events) : IAuthoritativ
         AuthoritativeReadCut cut, SnapshotCursor? cursor = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(selector);
+        if (cursor is not null && (cursor.Route != selector.Route || cursor.TenantScope != tenantScope ||
+            cursor.CutWatermarkExclusive != cut.GlobalWatermarkExclusive))
+            throw new SourceFactVerificationException("A cursor belongs to its original tenant, selector and cut.");
         var resource = selector.Resource ?? throw new SourceFactVerificationException(
             "The in-memory reader serves concrete resources only.");
         var stream = new EventStreamAddress(tenantScope, selector.Area, resource);
@@ -43,6 +46,6 @@ sealed class EventStoreSnapshotReader(IDomainEventReader events) : IAuthoritativ
         }
 
         return new SnapshotReadResult(facts, new SnapshotCursor(selector.Route, cut.GlobalWatermarkExclusive, null,
-            cut.GlobalWatermarkExclusive), true);
+            cut.GlobalWatermarkExclusive, tenantScope, cut.GlobalWatermarkExclusive), true);
     }
 }

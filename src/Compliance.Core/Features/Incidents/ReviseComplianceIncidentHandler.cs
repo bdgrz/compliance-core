@@ -24,13 +24,12 @@ public sealed class ReviseComplianceIncidentHandler(NativeOperationExecutor oper
         var (memberId, display) = ClientServiceActor.Snapshot(context);
         var provenance = IncidentOperations.Provenance(request, CommandKind, request.CommandId, request.TenantId,
             request.ProgramId, request.IncidentId, request.ExpectedRevision, actor!, clock.GetUtcNow());
-        var response = await IncidentOperations.UnitResponseAsync(content, request.TenantId, ct).ConfigureAwait(false);
         var accepted = await operations.ExecuteAsync(new NativeOperation<ComplianceIncident>(
             AcceptedOperationBinding.Of(provenance),
             () => IncidentOperations.Owner(request.TenantId, request.ProgramId, request.IncidentId, request.CommandId),
             incident => incident.Acceptance,
-            incident => IncidentOperations.Prepared(incident.PrepareRevise(request.ExpectedRevision, request.Content,
-                request.ChangeReason, memberId, display, provenance.AcceptedAt), response),
+            (incident, token) => IncidentOperations.PrepareAsync(incident.PrepareRevise(request.ExpectedRevision,
+                request.Content, request.ChangeReason, memberId, display, provenance.AcceptedAt), content, request.TenantId, token),
             (ComplianceIncident incident, ImmutableContentRef frozen) => IncidentOperations.Applied(
                 incident.Revise(provenance, frozen, request.ExpectedRevision, request.Content, request.ChangeReason,
                     memberId, display))), context, ct).ConfigureAwait(false);

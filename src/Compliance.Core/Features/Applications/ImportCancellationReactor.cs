@@ -56,8 +56,8 @@ sealed partial class ImportCancellationReactor(IProjectionCheckpointStore checkp
         {
             try
             {
-                _ = await driver.AbortAsync(new ProcessKey(ApplicationImportEffects.ProcessName, stream.Realm,
-                    sealedFact.Operation.RootOperationId), ct).ConfigureAwait(false);
+                _ = await driver.AbortAsync(ProcessKey.ForRoot(ApplicationImportEffects.ProcessName, sealedFact.Operation.RootOperationId,
+                    NativeFactReference.Of(stream, sealedFact)), ct).ConfigureAwait(false);
             }
             catch (KeyNotFoundException)
             {

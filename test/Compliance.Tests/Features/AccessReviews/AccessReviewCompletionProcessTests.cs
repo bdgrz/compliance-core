@@ -358,7 +358,7 @@ public sealed class AccessReviewCompletionProcessTests
         // Act
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<AccessReviewCampaignCompletionAccepted>(record),
             CancellationToken.None);
-        var process = await fixture.ProcessAsync(fixture.CompletionKey(request.CommandId));
+        var process = await fixture.ProcessAsync(await fixture.CompletionKey(request.CommandId));
 
         // Assert
         Assert.Equal(ProcessState.Completed, process!.State);
@@ -425,7 +425,8 @@ public sealed class AccessReviewCompletionProcessTests
         await using var scope = fixture.Provider.CreateAsyncScope();
         var reactor = new AccessReviewCompletionSettlementReactor(new InMemoryProjectionCheckpointStore(),
             scope.ServiceProvider.GetRequiredService<IRequestBus>(),
-            scope.ServiceProvider.GetRequiredService<IProcessRecordStore>());
+            scope.ServiceProvider.GetRequiredService<IProcessRecordStore>(),
+            scope.ServiceProvider.GetRequiredService<IAggregateReader>());
         await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<AccessReviewCampaignCompletionCanceled>(record),
             CancellationToken.None);
     }

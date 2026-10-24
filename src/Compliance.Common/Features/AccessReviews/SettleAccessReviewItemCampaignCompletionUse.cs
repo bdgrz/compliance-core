@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.SourceUse;
@@ -14,8 +15,12 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 [Discriminator("bdgrz.access-review-item.settle-campaign-completion-use", 1)]
 public sealed record SettleAccessReviewItemCampaignCompletionUse(Uuid CommandId, NativeFactReference Source,
     EventStreamAddress Target, Uuid OperationId, long Generation, long? ExpectedRevision, ImmutableContentRef Intent,
-    Uuid SourceOwnerId, Uuid CampaignId, SourceUseSettlementDisposition Disposition)
+    Uuid SourceOwnerId, Uuid ReceivingOwnerId, SourceUseSettlementDisposition Disposition)
     : ISourceUseSettlement, IAccessReviewReceiver
 {
+    /// <summary>The receiving owner whose exact accepted operation this use serves.</summary>
+    [JsonIgnore]
+    public Uuid CampaignId => ReceivingOwnerId;
+
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }
