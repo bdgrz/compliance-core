@@ -1,4 +1,9 @@
 using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Processes;
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Programs;
@@ -24,8 +29,9 @@ sealed class AccessReviewFixture : IAsyncDisposable
 
     AccessReviewFixture(ServiceProvider provider, MemberPermissions permissions,
         FakeAccessReviewSources sources, FakeApplicationDirectory applications,
-        bool applicationRestricted)
+        bool applicationRestricted, ManualClock clock)
     {
+        Clock = clock;
         Provider = provider;
         Permissions = permissions;
         Sources = sources;
@@ -34,6 +40,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
     }
 
     public ServiceProvider Provider { get; }
+    public ManualClock Clock { get; }
     public MemberPermissions Permissions { get; }
     public FakeAccessReviewSources Sources { get; }
     public FakeApplicationDirectory Applications { get; }
@@ -54,8 +61,10 @@ sealed class AccessReviewFixture : IAsyncDisposable
     public Uuid ReviewerPersonId { get; } = Uuid.CreateVersion4();
     public Uuid BotIdentityId { get; } = Uuid.CreateVersion4();
 
-    public static async Task<AccessReviewFixture> CreateAsync(bool applicationRestricted = false)
+    public static async Task<AccessReviewFixture> CreateAsync(bool applicationRestricted = false,
+        Func<IProcessRecordStore, IProcessRecordStore>? processStore = null)
     {
+        var clock = new ManualClock();
         var permissions = new MemberPermissions();
         var sources = new FakeAccessReviewSources();
         var applications = new FakeApplicationDirectory();
@@ -79,12 +88,17 @@ sealed class AccessReviewFixture : IAsyncDisposable
                 .AddRequestHandler<GetAccessReviewCampaignHandler>()
                 .AddRequestHandler<RecordAccessDecisionHandler>()
                 .AddRequestHandler<PreviewBulkAccessDecisionHandler>()
-                .AddRequestHandler<RecordBulkAccessDecisionHandler>()
                 .AddRequestHandler<RecordAccessRemediationChangeHandler>()
                 .AddRequestHandler<ReassignAccessReviewResponsibilityHandler>()
                 .AddRequestHandler<VerifyAccessRemediationHandler>()
                 .AddRequestHandler<ExemptAccessRemediationHandler>()
-                .AddRequestHandler<CompleteAccessReviewCampaignHandler>(),
+                .AddRequestHandler<CompleteAccessReviewCampaignHandler>()
+                .AddRequestAuthorizer<AccessReviewReceiverAuthorizer>()
+                .AddRequestHandler<MaterializeAccessReviewItemHandler>()
+                .AddRequestHandler<AuthorizeAccessReviewItemCampaignCompletionUseHandler>()
+                .AddRequestHandler<SettleAccessReviewItemCampaignCompletionUseHandler>()
+                .AddRequestHandler<CompleteAccessReviewCampaignClosureHandler>()
+                .AddRequestHandler<AbortAccessReviewCampaignCompletionHandler>(),
             services =>
             {
                 var store = new InMemoryEventStore();
@@ -92,6 +106,20 @@ sealed class AccessReviewFixture : IAsyncDisposable
                 services.AddSingleton<IDomainEventReader>(store);
                 services.AddScoped<PopulationSnapshotFreezer>();
                 services.AddScoped<AccessExpectationsReader>();
+                services.AddSingleton<AccessReviewManifests>();
+                services.AddScoped<AccessReviewReader>();
+                services.AddScoped<AccessReviewCompletionVerifier>();
+                services.AddScoped<AccessReviewCompletionFences>();
+                services.AddSingleton<TimeProvider>(clock);
+                services.AddSingleton<IProcessRecordStore>(processStore?.Invoke(new FitzKvProcessRecordStore(
+                    new PersistenceKvClient(new InMemoryKvClient()))) ?? new FitzKvProcessRecordStore(
+                    new PersistenceKvClient(new InMemoryKvClient())));
+                services.AddScoped<ProcessRootReaction>();
+                services.AddSingleton(AccessReviewLaunchFanOut.Definition());
+                services.AddSingleton(AccessReviewCompletionProcess.Definition());
+                services.AddSingleton<ProcessCatalog>(provider =>
+                    new ProcessCatalog(provider.GetServices<ProcessDefinition>()));
+                services.AddScoped<ProcessDriver>();
                 services.AddScoped<OperatingAuthority>();
                 services.AddScoped<AccessReviewQueueEligibility>();
                 services.AddScoped(provider => RestrictedApplicationVisibilityFixture.Create(
@@ -104,7 +132,7 @@ sealed class AccessReviewFixture : IAsyncDisposable
                     new FitzAccessPopulationDirectory(new InMemoryKvClient()));
             });
         var fixture = new AccessReviewFixture(provider, permissions, sources, applications,
-            applicationRestricted);
+            applicationRestricted, clock);
         permissions.Allow(fixture.ManagerUserId);
         permissions.Allow(fixture.ApproverUserId);
         permissions.Allow(fixture.ReviewerUserId);
@@ -299,28 +327,204 @@ sealed class AccessReviewFixture : IAsyncDisposable
         return await SendAsync(ApproverUserId, Approve(proposed.ExpectationId, proposed.Revision));
     }
 
-    public Task<AccessReviewCampaignRegistration> LaunchAsync(Uuid populationId,
-        Uuid? reviewerMemberId = null, string? delegation = null,
-        Uuid? remediationOwnerMemberId = null) =>
-        SendAsync(ManagerUserId, new LaunchAccessReviewCampaign(TenantId, "Q3 AWS review",
+    public LaunchAccessReviewCampaign LaunchRequest(Uuid populationId, Uuid? reviewerMemberId = null,
+        string? delegation = null, Uuid? remediationOwnerMemberId = null, Uuid? campaignId = null) =>
+        new(campaignId ?? Uuid.CreateVersion4(), TenantId, "Q3 AWS review",
             "Keep only access each person still needs.", DateTimeOffset.UtcNow.AddDays(14),
             [new AccessReviewAssignment(populationId, reviewerMemberId ?? ReviewerMemberId, delegation)],
-            ProgramId, remediationOwnerMemberId ?? RemediationOwnerMemberId));
+            ProgramId, remediationOwnerMemberId ?? RemediationOwnerMemberId);
 
+    /// <summary>Launches a campaign and runs its launch fan-out, so every frozen item is materialized.</summary>
+    public async Task<AccessReviewCampaignRegistration> LaunchAsync(Uuid populationId,
+        Uuid? reviewerMemberId = null, string? delegation = null, Uuid? remediationOwnerMemberId = null)
+    {
+        var registration = await SendAsync(ManagerUserId, LaunchRequest(populationId, reviewerMemberId, delegation,
+            remediationOwnerMemberId));
+        await MaterializeAsync(registration.CampaignId);
+        return registration;
+    }
+
+    /// <summary>Starts (if absent) and drives the launch fan-out of a launched campaign, as the root reactor would.</summary>
+    public async Task<ProcessRecord> MaterializeAsync(Uuid campaignId)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var campaign = await services.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new AccessReviewCampaign(TenantId, campaignId));
+        var launched = campaign.Launched ?? throw new InvalidOperationException("The campaign was not launched.");
+        var manifest = await services.GetRequiredService<IImmutableContentStore>()
+            .ReadJsonAsync<AccessReviewItemIntentManifest>(TenantId.ToString(), launched.ItemIntentManifest);
+        var records = services.GetRequiredService<IProcessRecordStore>();
+        var key = LaunchKey(campaignId);
+        await records.CreateIfAbsentAsync(ProcessRecord.Start(key, NativeFactReference.Of(campaign.Stream, launched),
+            launched.Operation.Episode, launched.ItemIntentManifest,
+            manifest.Selections.Select(static selection => selection.ItemId.ToString()), DateTimeOffset.UtcNow));
+        return await services.GetRequiredService<ProcessDriver>().RunAsync(key, "test-worker",
+            new RequestDispatchContext(RequestActor.System));
+    }
+
+    public ProcessKey LaunchKey(Uuid campaignId) => new(AccessReviewEffects.LaunchFanOutName, TenantId.ToString(),
+        campaignId);
+
+    public ProcessKey CompletionKey(Uuid commandId) => new(AccessReviewEffects.CompletionProcessName,
+        TenantId.ToString(), commandId);
+
+    /// <summary>The item facts of one materialized item.</summary>
+    public async Task<AccessReviewItem> ItemAsync(Uuid campaignId, Uuid itemId, Uuid? selectedLogicalId = null) =>
+        await ProgramManagementServices.HydrateAsync(Provider, new AccessReviewItem(TenantId, campaignId, itemId,
+            selectedLogicalId ?? Uuid.Empty));
+
+    public async Task<AccessReviewCampaign> CampaignAggregateAsync(Uuid campaignId, Uuid? selectedLogicalId = null) =>
+        await ProgramManagementServices.HydrateAsync(Provider, new AccessReviewCampaign(TenantId, campaignId,
+            selectedLogicalId ?? Uuid.Empty));
+
+    /// <summary>The revision an item command expects: the item's own logical revision.</summary>
+    public async Task<long> ItemRevisionAsync(Uuid campaignId, Uuid itemId) =>
+        (await ItemAsync(campaignId, itemId)).Revision;
+
+    public RecordAccessDecision Decision(Uuid campaignId, Uuid itemId, long expectedRevision, string decision,
+        string rationale, Uuid? waiverId = null, Uuid? commandId = null) => new(commandId ?? Uuid.CreateVersion4(),
+        TenantId, campaignId, itemId, expectedRevision, decision, rationale, waiverId);
+
+    public RecordAccessRemediationChange Change(Uuid campaignId, Uuid itemId, long expectedRevision,
+        string reference = "ticket-1", string description = "Disable access.", Uuid? commandId = null) =>
+        new(commandId ?? Uuid.CreateVersion4(), TenantId, campaignId, itemId, expectedRevision, reference,
+            description, DateTimeOffset.UtcNow);
+
+    public ExemptAccessRemediation Exception(Uuid campaignId, Uuid itemId, long expectedRevision,
+        string rationale = "Compensating control.", DateTimeOffset? expiresAt = null, Uuid? commandId = null) =>
+        new(commandId ?? Uuid.CreateVersion4(), TenantId, campaignId, itemId, expectedRevision, rationale, expiresAt);
+
+    public VerifyAccessRemediation Verification(Uuid campaignId, Uuid itemId, long expectedRevision,
+        Uuid populationId, Uuid? commandId = null) => new(commandId ?? Uuid.CreateVersion4(), TenantId, campaignId,
+        itemId, expectedRevision, populationId);
+
+    public CompleteAccessReviewCampaign Completion(Uuid campaignId, long expectedRevision,
+        string attestation = "I attest that this review is complete.", Uuid? commandId = null) =>
+        new(commandId ?? Uuid.CreateVersion4(), TenantId, campaignId, expectedRevision, attestation);
+
+    /// <summary>Starts (if absent) the completion process of an admitted completion, as the root reactor would.</summary>
+    public async Task<ProcessRecord> StartCompletionAsync(Uuid campaignId, Uuid commandId)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var campaign = await services.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new AccessReviewCampaign(TenantId, campaignId));
+        var accepted = campaign.AcceptedFor(commandId) ?? throw new InvalidOperationException("Not admitted.");
+        var intent = await services.GetRequiredService<IImmutableContentStore>()
+            .ReadJsonAsync<ClosureIntent>(TenantId.ToString(), accepted.Intent);
+        var targets = await services.GetRequiredService<AccessReviewManifests>()
+            .CompletionTargetsAsync(TenantId, campaignId, campaign.Launched!, intent);
+        return await services.GetRequiredService<IProcessRecordStore>().CreateIfAbsentAsync(
+            ProcessRecord.Start(CompletionKey(commandId), NativeFactReference.Of(campaign.Stream, accepted),
+                accepted.Operation.Episode, accepted.Intent, targets, DateTimeOffset.UtcNow));
+    }
+
+    /// <summary>Starts (if absent) and drives the completion process of an admitted completion.</summary>
+    public async Task<ProcessRecord> RunCompletionAsync(Uuid campaignId, Uuid commandId)
+    {
+        var started = await StartCompletionAsync(campaignId, commandId);
+        await using var scope = Provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ProcessDriver>().RunAsync(started.Key, "test-worker",
+            new RequestDispatchContext(RequestActor.System));
+    }
+
+    /// <summary>Admits a completion and runs its process; returns the admission and the process record.</summary>
+    public async Task<(OperationAcceptedResponse Acknowledgment, ProcessRecord Process)> CompleteAsync(
+        Uuid userId, Uuid campaignId, long? expectedRevision = null, Uuid? commandId = null,
+        string attestation = "I attest that this review is complete.")
+    {
+        var id = commandId ?? Uuid.CreateVersion4();
+        var revision = expectedRevision ?? (await CampaignAggregateAsync(campaignId)).Revision;
+        var acknowledgment = await SendAsync(userId, Completion(campaignId, revision, attestation, id));
+        return (acknowledgment, await RunCompletionAsync(campaignId, id));
+    }
+
+    /// <summary>Dispatches a receiver as the trusted process worker.</summary>
+    public async Task<Result<ReceiverOutcome>> ReceiveAsync(IRequest<ReceiverOutcome> command)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(command,
+            new RequestDispatchContext(RequestActor.System), CancellationToken.None);
+    }
+
+    /// <summary>The receiver command the completion process builds for a step, with the driver's deterministic command id.</summary>
+    public async Task<IRequest<ReceiverOutcome>> CompletionStepAsync(ProcessRecord record, string stage, string receiver,
+        string? target = null)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var definition = scope.ServiceProvider.GetRequiredService<ProcessCatalog>()
+            .Get(AccessReviewEffects.CompletionProcessName);
+        return (await definition.CreateReceiver(new ProcessStep(record, stage, receiver, target,
+            AccessReviewCompletionProcess.ReceiverCommandId(record.Source.EventId, receiver, target, record.Episode)),
+            scope.ServiceProvider, CancellationToken.None))!;
+    }
+
+    /// <summary>The receiver command the launch fan-out builds for one item, with the driver's deterministic command id.</summary>
+    public async Task<MaterializeAccessReviewItem> MaterializeStepAsync(ProcessRecord record, string target)
+    {
+        await using var scope = Provider.CreateAsyncScope();
+        var definition = scope.ServiceProvider.GetRequiredService<ProcessCatalog>()
+            .Get(AccessReviewEffects.LaunchFanOutName);
+        return (MaterializeAccessReviewItem)(await definition.CreateReceiver(new ProcessStep(record,
+            AccessReviewLaunchFanOut.Materialize, nameof(MaterializeAccessReviewItem), target,
+            AccessReviewLaunchFanOut.ReceiverCommandId(record.Source.EventId, target, record.Episode)),
+            scope.ServiceProvider, CancellationToken.None))!;
+    }
+
+    public async Task<ProcessRecord?> ProcessAsync(ProcessKey key) =>
+        await Provider.GetRequiredService<IProcessRecordStore>().ReadAsync(key);
+
+    /// <summary>
+    ///     Seeds a campaign that was launched without a routed owner Program, copying the frozen content of an existing
+    ///     campaign, and materializes its items.
+    /// </summary>
     public async Task<(Uuid CampaignId, Uuid ItemId)> SeedLegacyCampaignAsync(Uuid sourceCampaignId)
     {
         var source = await CampaignAsync(sourceCampaignId);
         var campaignId = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync<AccessReviewCampaign,
-            AccessReviewCampaignRegistration>(Provider,
-            new AccessReviewCampaign(TenantId, campaignId), campaign => campaign.Launch(
-                source.Name, source.Instructions, source.Deadline, source.SnapshotId,
-                source.ContentSha256, source.Reviewers,
-                source.Items.Select(static item => item.Item).ToArray(), source.LaunchedBy,
-                source.LaunchedAt));
-        var itemId = Assert.Single(source.Items, static item =>
-            item.Item.ProviderSubjectId == "ada" && item.Item.ProviderEntitlementId == "deploy")
-            .Item.ItemId;
+        var content = Provider.GetRequiredService<IImmutableContentStore>();
+        var realm = TenantId.ToString();
+        var items = source.Items.Select(item => item.Item with
+        {
+            ItemId = Uuid.CreateVersion5(campaignId,
+            $"{item.Item.PopulationId}\n{item.Item.ProviderSubjectId}\n{item.Item.ProviderEntitlementId}")
+        }).ToArray();
+        var stream = AccessReviewEffects.CampaignStream(TenantId, campaignId);
+        var actor = source.LaunchedBy;
+        var provenance = AccessReviewEffects.Root(campaignId, "LaunchAccessReviewCampaign", stream, actor, null,
+            new string('c', 64), source.LaunchedAt);
+        var header = new DurableIntentHeader(campaignId, stream, stream, stream, actor, "initial", null,
+            provenance.AuthoredIntentSha256, source.LaunchedAt);
+        var proof = new NativeFactReference(new EventStreamAddress(realm, "population-snapshots",
+            source.SnapshotId.ToString()), Uuid.CreateVersion4(), 1);
+        var selections = new List<AccessReviewItemSelection>();
+        foreach (var item in items.OrderBy(static item => item.ItemId.ToString(), StringComparer.Ordinal))
+        {
+            var entry = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), AccessReviewContent.ItemEntrySchema, item);
+            var intent = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), AccessReviewItemCreationIntent.Schema,
+                new AccessReviewItemCreationIntent(header, campaignId, 1, item.ItemId, item.SystemInstanceId, entry,
+                    item.ReviewerMemberId, AccessReviewEffects.ReviewerEpisode(campaignId, item.ItemId), proof));
+            selections.Add(new AccessReviewItemSelection(item.ItemId, intent));
+        }
+
+        var reviewers = await content.WriteJsonAsync<IReadOnlyList<AccessReviewerView>>(realm, Uuid.CreateVersion4(),
+            AccessReviewContent.ReviewersSchema, source.Reviewers);
+        var itemsRef = await content.WriteJsonAsync<IReadOnlyList<AccessReviewItemView>>(realm, Uuid.CreateVersion4(),
+            AccessReviewContent.ItemsSchema, items);
+        var manifest = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), AccessReviewItemIntentManifest.Schema,
+            new AccessReviewItemIntentManifest(selections));
+        var (response, result) = await AccessReviewContent.FreezeOkAsync(content, TenantId,
+            AccessReviewContent.CampaignRegistrationSchema, new AccessReviewCampaignRegistration(campaignId, source.SnapshotId,
+                source.ContentSha256, items.Length), CancellationToken.None);
+        var firstResponse = await FirstResponses.FreezeAsync(content, realm, response);
+        await ProgramManagementServices.SeedAsync(Provider, new AccessReviewCampaign(TenantId, campaignId, campaignId),
+            campaign => campaign.Launch(provenance, source.Name, source.Instructions, source.Deadline, source.SnapshotId,
+                source.ContentSha256, reviewers, itemsRef, manifest, source.LaunchedBy, source.LaunchedAt, null, null,
+                firstResponse, result));
+        await MaterializeAsync(campaignId);
+        var itemId = Assert.Single(items, static item => item.ProviderSubjectId == "ada" &&
+                                                         item.ProviderEntitlementId == "deploy").ItemId;
         return (campaignId, itemId);
     }
 
@@ -328,6 +532,16 @@ sealed class AccessReviewFixture : IAsyncDisposable
         SendAsync(userId ?? ManagerUserId, new GetAccessReviewCampaign(TenantId, campaignId));
 
     public ValueTask DisposeAsync() => Provider.DisposeAsync();
+
+    /// <summary>A clock the test advances; every handler of the fixture reads it.</summary>
+    public sealed class ManualClock : TimeProvider
+    {
+        TimeSpan _offset = TimeSpan.Zero;
+
+        public override DateTimeOffset GetUtcNow() => DateTimeOffset.UtcNow + _offset;
+
+        public void Advance(TimeSpan by) => _offset += by;
+    }
 
     public sealed class FakeApplicationDirectory : IApplicationDirectoryReader
     {

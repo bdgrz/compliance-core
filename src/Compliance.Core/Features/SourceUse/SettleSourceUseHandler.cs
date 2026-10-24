@@ -47,7 +47,7 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
         var provenance = SourceUseReceiverSupport.Child(request.CommandId, source.CommandKind,
             request.Source.EventId, source.Header, request.Target, clock.GetUtcNow());
         var binding = AcceptedOperationBinding.Of(provenance);
-        var settle = SettleOperation();
+        var settle = SettleOperation(required);
         for (var attempt = 1; ; attempt++)
         {
             try
@@ -102,6 +102,14 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
     ///     with explicitly typed lambda parameters, keeps the owner mutation visible to the aggregate route inventory.
     /// </summary>
     protected abstract Func<TOwner, OperationProvenance, ImmutableContentRef, long, Result> SettleOperation();
+
+    /// <summary>
+    ///     The settle operation for a verified disposition. A pair whose owner must distinguish a closure fence from a
+    ///     canceled-parent clearing in its own state overrides this to hand the disposition to its settlement fact; the
+    ///     default ignores it and uses <see cref="SettleOperation()" />.
+    /// </summary>
+    protected virtual Func<TOwner, OperationProvenance, ImmutableContentRef, long, Result> SettleOperation(
+        SourceUseSettlementDisposition disposition) => SettleOperation();
 
     static Result<ReceiverOutcome>? Decide(TOwner owner, AcceptedOperationBinding binding, ReservationKey key)
     {

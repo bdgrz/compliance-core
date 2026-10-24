@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
@@ -95,10 +96,8 @@ public sealed class AttestAccessReviewWriteWallTests
         Assert.True(result.IsSuccess, result.Error?.Message);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ShouldRetainPersonalAccessDecisionGivenOrdinaryAssignedReviewerWithoutAttestHistory(bool bulk)
+    [Fact]
+    public async Task ShouldRetainPersonalAccessDecisionGivenOrdinaryAssignedReviewerWithoutAttestHistory()
     {
         // Arrange
         await using var fixture = await Fixture.CreateAsync();
@@ -107,15 +106,10 @@ public sealed class AttestAccessReviewWriteWallTests
         var launched = await fixture.Source.LaunchAsync(populationId);
         var campaign = await fixture.Source.CampaignAsync(launched.CampaignId);
         var itemId = AccessReviewCampaignTests.ItemId(campaign, "ada", "deploy");
-        var preview = await fixture.SendAsync(fixture.Source.ReviewerUserId,
-            new PreviewBulkAccessDecision(fixture.Source.TenantId, launched.CampaignId, [itemId], "keep"));
 
         // Act
-        var success = bulk
-            ? (await fixture.SendAsync(fixture.Source.ReviewerUserId, new RecordBulkAccessDecision(fixture.Source.TenantId,
-                launched.CampaignId, [itemId], "keep", "Reviewed", preview.Value!.PreviewToken))).IsSuccess
-            : (await fixture.SendAsync(fixture.Source.ReviewerUserId, new RecordAccessDecision(fixture.Source.TenantId,
-                launched.CampaignId, itemId, 1, "keep", "Reviewed"))).IsSuccess;
+        var success = (await fixture.SendAsync(fixture.Source.ReviewerUserId,
+            fixture.Source.Decision(launched.CampaignId, itemId, 1, "keep", "Reviewed"))).IsSuccess;
         var retained = await fixture.SendAsync(fixture.Source.ReviewerUserId,
             new GetAccessReviewCampaign(fixture.Source.TenantId, launched.CampaignId));
 
@@ -125,10 +119,8 @@ public sealed class AttestAccessReviewWriteWallTests
         Assert.Equal("decided", Assert.Single(retained.Value!.Items, item => item.Item.ItemId == itemId).Status);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ShouldDenyAssignedAccessDecisionGivenActualAttestHistoryDespitePersonalHttpAndReviewAssignment(bool bulk)
+    [Fact]
+    public async Task ShouldDenyAssignedAccessDecisionGivenActualAttestHistoryDespitePersonalHttpAndReviewAssignment()
     {
         // Arrange
         await using var fixture = await Fixture.CreateAsync();
@@ -144,11 +136,8 @@ public sealed class AttestAccessReviewWriteWallTests
             new PreviewBulkAccessDecision(fixture.Source.TenantId, launched.CampaignId, [itemId], "keep"));
 
         // Act
-        var error = bulk
-            ? (await fixture.SendAsync(fixture.Source.ReviewerUserId, new RecordBulkAccessDecision(fixture.Source.TenantId,
-                launched.CampaignId, [itemId], "keep", "Reviewed", preview.Value!.PreviewToken))).Error
-            : (await fixture.SendAsync(fixture.Source.ReviewerUserId, new RecordAccessDecision(fixture.Source.TenantId,
-                launched.CampaignId, itemId, 1, "keep", "Reviewed"))).Error;
+        var error = (await fixture.SendAsync(fixture.Source.ReviewerUserId,
+            fixture.Source.Decision(launched.CampaignId, itemId, 1, "keep", "Reviewed"))).Error;
         var after = await fixture.SendAsync(fixture.Source.ReviewerUserId,
             new GetAccessReviewCampaign(fixture.Source.TenantId, launched.CampaignId));
 
@@ -160,6 +149,7 @@ public sealed class AttestAccessReviewWriteWallTests
         Assert.True(after.IsSuccess);
         Assert.Equal(before.Value!.Revision, after.Value!.Revision);
         Assert.All(after.Value.Items, item => Assert.Equal("unresolved", item.Status));
+        Assert.All(after.Value.Items, item => Assert.Equal(1, item.Revision));
     }
 
     sealed class Fixture(AccessReviewFixture source, ServiceProvider provider) : IAsyncDisposable
@@ -181,6 +171,7 @@ public sealed class AttestAccessReviewWriteWallTests
             services.AddSingleton<IEventStore>(events);
             services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
+            services.AddSingleton(source.Provider.GetRequiredService<IImmutableContentStore>());
             services.AddSingleton<IPermissionAuthorizer>(source.Permissions);
             services.AddSingleton<IAccessGrantPermissionAuthorizer>(
                 new PermissionBackedAccessGrantPermissionAuthorizer(source.Permissions));

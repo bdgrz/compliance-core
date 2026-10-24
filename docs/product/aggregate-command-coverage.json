@@ -41,26 +41,26 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 478,
-    "factsWithReducer": 456,
-    "factsWithAggregateEmitter": 449,
+    "domainEventContracts": 483,
+    "factsWithReducer": 461,
+    "factsWithAggregateEmitter": 454,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 120,
-    "aggregateTypesWithCommandPath": 117,
-    "requestContracts": 740,
-    "commonRequestContracts": 738,
+    "aggregateTypes": 121,
+    "aggregateTypesWithCommandPath": 118,
+    "requestContracts": 745,
+    "commonRequestContracts": 743,
     "requestClassificationCounts": {
-      "command": 346,
+      "command": 345,
       "confirmed_command_gap": 8,
-      "deferred_command": 5,
+      "deferred_command": 6,
       "internal_executor_context": 1,
-      "internal_reaction": 106,
+      "internal_reaction": 111,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 681,
+    "registeredCoreHandlerRegistrations": 685,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 37,
     "unwiredAggregateProducerClassifications": {
@@ -77,12 +77,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessDecisionsRecorded.cs",
       "reducers": [
         {
-          "aggregate": "AccessReviewCampaign",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+          "aggregate": "AccessReviewItem",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributorTests.cs"
@@ -283,12 +283,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessRemediationChangeRecorded.cs",
       "reducers": [
         {
-          "aggregate": "AccessReviewCampaign",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+          "aggregate": "AccessReviewItem",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -299,12 +299,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessRemediationExceptionRecorded.cs",
       "reducers": [
         {
-          "aggregate": "AccessReviewCampaign",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+          "aggregate": "AccessReviewItem",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -315,12 +315,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessRemediationVerified.cs",
       "reducers": [
         {
-          "aggregate": "AccessReviewCampaign",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+          "aggregate": "AccessReviewItem",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -372,12 +372,12 @@
       "contract": "src/Compliance.Common/Features/AccessReviews/AccessReviewResponsibilityReassigned.cs",
       "reducers": [
         {
-          "aggregate": "AccessReviewCampaign",
-          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+          "aggregate": "AccessReviewItem",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
       ],
       "testSymbolReferences": [],
       "disposition": "aggregate_fact",
@@ -8876,6 +8876,86 @@
       ],
       "disposition": "aggregate_fact",
       "note": ""
+    },
+    {
+      "fact": "AccessReviewCampaignCompletionAccepted",
+      "contract": "src/Compliance.Common/Features/AccessReviews/AccessReviewCampaignCompletionAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "AccessReviewCampaign",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AccessReviewCampaignCompletionCanceled",
+      "contract": "src/Compliance.Common/Features/AccessReviews/AccessReviewCampaignCompletionCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "AccessReviewCampaign",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AccessReviewItemCampaignCompletionUseAuthorized",
+      "contract": "src/Compliance.Common/Features/AccessReviews/AccessReviewItemCampaignCompletionUseAuthorized.cs",
+      "reducers": [
+        {
+          "aggregate": "AccessReviewItem",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AccessReviewItemCampaignCompletionUseSettled",
+      "contract": "src/Compliance.Common/Features/AccessReviews/AccessReviewItemCampaignCompletionUseSettled.cs",
+      "reducers": [
+        {
+          "aggregate": "AccessReviewItem",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "AccessReviewItemOpened",
+      "contract": "src/Compliance.Common/Features/AccessReviews/AccessReviewItemOpened.cs",
+      "reducers": [
+        {
+          "aggregate": "AccessReviewItem",
+          "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
     }
   ],
   "aggregates": [
@@ -8935,36 +9015,28 @@
       "aggregate": "AccessReviewCampaign",
       "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs",
       "appliedFacts": [
-        "AccessDecisionsRecorded",
-        "AccessRemediationChangeRecorded",
-        "AccessRemediationExceptionRecorded",
-        "AccessRemediationVerified",
         "AccessReviewCampaignCompleted",
-        "AccessReviewCampaignLaunched",
-        "AccessReviewResponsibilityReassigned"
+        "AccessReviewCampaignCompletionAccepted",
+        "AccessReviewCampaignCompletionCanceled",
+        "AccessReviewCampaignLaunched"
       ],
       "commandRequests": [
         "CompleteAccessReviewCampaign",
-        "ExemptAccessRemediation",
-        "LaunchAccessReviewCampaign",
-        "ReassignAccessReviewResponsibility",
-        "RecordAccessDecision",
-        "RecordAccessRemediationChange",
-        "RecordBulkAccessDecision",
-        "VerifyAccessRemediation"
+        "LaunchAccessReviewCampaign"
       ],
-      "internalReactionRequests": [],
+      "internalReactionRequests": [
+        "AbortAccessReviewCampaignCompletion",
+        "CompleteAccessReviewCampaignClosure"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
-        "test/Compliance.Tests/Features/AccessReviews/FitzAccessReviewCampaignDirectoryTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/FitzAccessReviewCampaignImpactDirectoryTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewLaunchFanOutTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationReviewCampaignImpactTests.cs",
-        "test/Compliance.Tests/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+        "test/Compliance.Tests/Features/Examinations/AccessReviewCampaignsTypeIBaselineSourceContributorTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10787,7 +10859,6 @@
       ],
       "commandRequests": [
         "AcceptAccessPopulation",
-        "CompleteAccessReviewCampaign",
         "LaunchAccessReviewCampaign"
       ],
       "internalReactionRequests": [],
@@ -10814,7 +10885,6 @@
       ],
       "commandRequests": [
         "AcceptAccessPopulation",
-        "CompleteAccessReviewCampaign",
         "LaunchAccessReviewCampaign"
       ],
       "internalReactionRequests": [],
@@ -12557,6 +12627,44 @@
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "AccessReviewItem",
+      "source": "src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs",
+      "appliedFacts": [
+        "AccessDecisionsRecorded",
+        "AccessRemediationChangeRecorded",
+        "AccessRemediationExceptionRecorded",
+        "AccessRemediationVerified",
+        "AccessReviewItemCampaignCompletionUseAuthorized",
+        "AccessReviewItemCampaignCompletionUseSettled",
+        "AccessReviewItemOpened",
+        "AccessReviewResponsibilityReassigned"
+      ],
+      "commandRequests": [
+        "ExemptAccessRemediation",
+        "ReassignAccessReviewResponsibility",
+        "RecordAccessDecision",
+        "RecordAccessRemediationChange",
+        "VerifyAccessRemediation"
+      ],
+      "internalReactionRequests": [
+        "AuthorizeAccessReviewItemCampaignCompletionUse",
+        "MaterializeAccessReviewItem",
+        "SettleAccessReviewItemCampaignCompletionUse"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFacts.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewLaunchFanOutTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs"
+      ],
       "commandRouteDisposition": "registered_command_route"
     }
   ],
@@ -15135,7 +15243,7 @@
     {
       "request": "CompleteAccessReviewCampaign",
       "contract": "src/Compliance.Common/Features/AccessReviews/CompleteAccessReviewCampaign.cs",
-      "interfaces": "IRequest<AccessReviewCampaignCompletionView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -15149,9 +15257,7 @@
         "AccessReviewCampaign"
       ],
       "aggregateTargets": [
-        "AccessReviewCampaign",
-        "PopulationSnapshot",
-        "PopulationSnapshotChunk"
+        "AccessReviewCampaign"
       ],
       "helperServices": [
         "PopulationSnapshotFreezer"
@@ -16779,7 +16885,7 @@
     {
       "request": "ExemptAccessRemediation",
       "contract": "src/Compliance.Common/Features/AccessReviews/ExemptAccessRemediation.cs",
-      "interfaces": "IRequest<AccessRemediationExceptionView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessRemediationExceptionView>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16790,10 +16896,10 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AccessReviewCampaign"
+        "AccessReviewItem"
       ],
       "aggregateTargets": [
-        "AccessReviewCampaign"
+        "AccessReviewItem"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -19974,7 +20080,7 @@
     {
       "request": "LaunchAccessReviewCampaign",
       "contract": "src/Compliance.Common/Features/AccessReviews/LaunchAccessReviewCampaign.cs",
-      "interfaces": "IRequest<AccessReviewCampaignRegistration>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessReviewCampaignRegistration>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -19988,7 +20094,8 @@
         "AccessPopulation",
         "AccessReviewCampaign",
         "ComplianceProgram",
-        "Person"
+        "Person",
+        "PopulationSnapshot"
       ],
       "aggregateTargets": [
         "AccessReviewCampaign",
@@ -19999,9 +20106,9 @@
         "PopulationSnapshotFreezer"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewInfrastructureTests.cs",
-        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs"
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewInfrastructureTests.cs"
       ],
       "note": ""
     },
@@ -24106,7 +24213,7 @@
     {
       "request": "ReassignAccessReviewResponsibility",
       "contract": "src/Compliance.Common/Features/AccessReviews/ReassignAccessReviewResponsibility.cs",
-      "interfaces": "IRequest<AccessReviewResponsibilityReassignmentView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessReviewResponsibilityReassignmentView>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -24117,10 +24224,10 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AccessReviewCampaign"
+        "AccessReviewItem"
       ],
       "aggregateTargets": [
-        "AccessReviewCampaign"
+        "AccessReviewItem"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -24207,7 +24314,7 @@
     {
       "request": "RecordAccessDecision",
       "contract": "src/Compliance.Common/Features/AccessReviews/RecordAccessDecision.cs",
-      "interfaces": "IRequest<AccessDecisionView>, IAccessReviewParticipantRequest, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessDecisionView>, IAccessReviewParticipantRequest, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -24218,11 +24325,11 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AccessReviewCampaign",
+        "AccessReviewItem",
         "SeparationOfDutiesWaiver"
       ],
       "aggregateTargets": [
-        "AccessReviewCampaign"
+        "AccessReviewItem"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -24267,7 +24374,7 @@
     {
       "request": "RecordAccessRemediationChange",
       "contract": "src/Compliance.Common/Features/AccessReviews/RecordAccessRemediationChange.cs",
-      "interfaces": "IRequest<AccessRemediationChangeView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessRemediationChangeView>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -24278,10 +24385,10 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AccessReviewCampaign"
+        "AccessReviewItem"
       ],
       "aggregateTargets": [
-        "AccessReviewCampaign"
+        "AccessReviewItem"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -24601,28 +24708,18 @@
       "request": "RecordBulkAccessDecision",
       "contract": "src/Compliance.Common/Features/AccessReviews/RecordBulkAccessDecision.cs",
       "interfaces": "IRequest<BulkAccessDecisionResult>, IAccessReviewParticipantRequest, IAccessReviewMutationRequest, ICallable",
-      "classification": "command",
-      "handlers": [
-        {
-          "name": "RecordBulkAccessDecisionHandler",
-          "source": "src/Compliance.Core/Features/AccessReviews/RecordBulkAccessDecisionHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "AccessReviewCampaign"
-      ],
-      "aggregateTargets": [
-        "AccessReviewCampaign"
-      ],
+      "classification": "deferred_command",
+      "handlers": [],
+      "handlerRegistration": false,
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AttestAccessReviewWriteWallTests.cs",
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs"
       ],
-      "note": ""
+      "note": "S22 (#1022): the bulk decision is admitted on the campaign and applied by the independent AccessReviewDecisionBatch owner; it stays unregistered (no handler, route or MCP tool) until that owner ships."
     },
     {
       "request": "RecordClientExportBuildResult",
@@ -28980,7 +29077,7 @@
     {
       "request": "VerifyAccessRemediation",
       "contract": "src/Compliance.Common/Features/AccessReviews/VerifyAccessRemediation.cs",
-      "interfaces": "IRequest<AccessRemediationVerificationView>, IAccessReviewMutationRequest, ICallable",
+      "interfaces": "IRequest<AccessRemediationVerificationView>, IAccessReviewMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28991,10 +29088,10 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "AccessReviewCampaign"
+        "AccessReviewItem"
       ],
       "aggregateTargets": [
-        "AccessReviewCampaign"
+        "AccessReviewItem"
       ],
       "helperServices": [],
       "testSymbolReferences": [
@@ -30304,6 +30401,133 @@
         "test/Compliance.Tests/Testing/ProviderAssuranceHost.cs"
       ],
       "note": "System-only provider assurance process receiver. No HTTP/MCP route. Generic settle base: settles the exact report use, or fences a key never acquired."
+    },
+    {
+      "request": "AbortAccessReviewCampaignCompletion",
+      "contract": "src/Compliance.Common/Features/AccessReviews/AbortAccessReviewCampaignCompletion.cs",
+      "interfaces": "",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AbortAccessReviewCampaignCompletionHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/AbortAccessReviewCampaignCompletionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "AccessReviewCampaign"
+      ],
+      "aggregateTargets": [
+        "AccessReviewCampaign"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
+      ],
+      "note": "System-only completion receiver; cancels the exact pending completion and fences every delayed finalization of its generation. A closed completion recovers forward. No HTTP/MCP route."
+    },
+    {
+      "request": "AuthorizeAccessReviewItemCampaignCompletionUse",
+      "contract": "src/Compliance.Common/Features/AccessReviews/AuthorizeAccessReviewItemCampaignCompletionUse.cs",
+      "interfaces": "",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "AuthorizeAccessReviewItemCampaignCompletionUseHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/AuthorizeAccessReviewItemCampaignCompletionUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "AccessReviewItem"
+      ],
+      "aggregateTargets": [
+        "AccessReviewItem"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
+      ],
+      "note": "System-only completion receiver; holds the exact item head the completion pinned at admission, or cancels and fences the completion. No HTTP/MCP route."
+    },
+    {
+      "request": "CompleteAccessReviewCampaignClosure",
+      "contract": "src/Compliance.Common/Features/AccessReviews/CompleteAccessReviewCampaignClosure.cs",
+      "interfaces": "",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CompleteAccessReviewCampaignClosureHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/CompleteAccessReviewCampaignClosureHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "AccessReviewCampaign",
+        "AccessReviewItem"
+      ],
+      "aggregateTargets": [
+        "AccessReviewCampaign"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
+      ],
+      "note": "System-only completion receiver; verifies every held item and its decision, remediation and exception proof, freezes the final snapshot and appends the completion. No HTTP/MCP route."
+    },
+    {
+      "request": "MaterializeAccessReviewItem",
+      "contract": "src/Compliance.Common/Features/AccessReviews/MaterializeAccessReviewItem.cs",
+      "interfaces": "",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "MaterializeAccessReviewItemHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/MaterializeAccessReviewItemHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "AccessReviewCampaign",
+        "AccessReviewItem"
+      ],
+      "aggregateTargets": [
+        "AccessReviewItem"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewLaunchFanOutTests.cs"
+      ],
+      "note": "System-only launch fan-out receiver; materializes one frozen item once, verifying the frozen creation intent against the launch fact and manifest of the authoritative campaign. No HTTP/MCP route."
+    },
+    {
+      "request": "SettleAccessReviewItemCampaignCompletionUse",
+      "contract": "src/Compliance.Common/Features/AccessReviews/SettleAccessReviewItemCampaignCompletionUse.cs",
+      "interfaces": "",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "SettleAccessReviewItemCampaignCompletionUseHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/SettleAccessReviewItemCampaignCompletionUseHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [
+        "AccessReviewItem"
+      ],
+      "aggregateTargets": [
+        "AccessReviewItem"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCompletionProcessTests.cs"
+      ],
+      "note": "System-only completion receiver; settles one item use with the disposition of the terminal campaign fact (closure fence or canceled-parent clearing), including a use that was never acquired. No HTTP/MCP route."
     }
   ],
   "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",

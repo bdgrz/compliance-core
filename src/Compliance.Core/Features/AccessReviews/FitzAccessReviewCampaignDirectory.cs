@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Fitz;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
@@ -5,7 +6,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AccessReviews;
 
 /// <summary>Projects campaign identities and status; replays are idempotent.</summary>
-sealed class FitzAccessReviewCampaignDirectory(IKvClient client)
+sealed class FitzAccessReviewCampaignDirectory(IKvClient client, IImmutableContentStore content)
     : FitzKvProjectionStore(client, "kv://bdgrz/access-review-campaign-directory-v2/projection",
             AccessReviewDirectorySchema.CampaignProjector),
         IAccessReviewCampaignDirectoryReader, IAccessReviewCampaignDirectoryProjection
@@ -17,10 +18,14 @@ sealed class FitzAccessReviewCampaignDirectory(IKvClient client)
         {
             case AccessReviewCampaignLaunched launched:
                 if (await directory.GetAsync(Transaction, launched.CampaignId, ct).ConfigureAwait(false) is null)
+                {
+                    var items = await AccessReviewContent.ReadAsync<IReadOnlyList<AccessReviewItemView>>(content,
+                        launched.TenantId, launched.ItemsManifest, ct).ConfigureAwait(false);
                     await directory.InsertAsync(Transaction, new AccessReviewCampaignSummaryView(
                         launched.TenantId, launched.CampaignId, launched.Name, launched.Deadline,
-                        AccessReviewCampaign.Active, launched.Items.Count, launched.SnapshotId,
+                        AccessReviewCampaign.Active, items.Count, launched.SnapshotId,
                         launched.LaunchedAt, null, null), ct).ConfigureAwait(false);
+                }
                 break;
             case AccessReviewCampaignCompleted completed:
                 {
@@ -28,12 +33,16 @@ sealed class FitzAccessReviewCampaignDirectory(IKvClient client)
                         .ConfigureAwait(false) ?? throw new InvalidOperationException(
                         "A completion cannot project before the campaign was launched.");
                     if (existing.Status != AccessReviewCampaign.Completed)
+                    {
+                        var completion = await AccessReviewContent.ReadAsync<AccessReviewCampaignCompletionView>(
+                            content, completed.TenantId, completed.CompletionContent, ct).ConfigureAwait(false);
                         await directory.ReplaceAsync(Transaction, existing, existing with
                         {
                             Status = AccessReviewCampaign.Completed,
-                            FinalSnapshotId = completed.Completion.SnapshotId,
-                            CompletedAt = completed.Completion.CompletedAt,
+                            FinalSnapshotId = completion.SnapshotId,
+                            CompletedAt = completion.CompletedAt,
                         }, ct).ConfigureAwait(false);
+                    }
                     break;
                 }
         }

@@ -108,9 +108,9 @@ public sealed class ApplicationReviewCampaignImpactTests
         var campaigns = new StubCampaignImpactDirectory([], []);
         var events = new InMemoryEventStore();
         var consistency = new ApplicationReviewCampaignReadConsistency(campaigns, events);
-        var launched = new AccessReviewCampaignLaunched(tenantId, campaignId, "Review",
-            "Review access", DateTimeOffset.UtcNow.AddDays(7), Uuid.CreateVersion4(),
-            new string('a', 64), [], [],
+        var launched = await Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewFacts.LaunchedAsync(
+            Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewFacts.NewStore(), tenantId, campaignId,
+            "Review", DateTimeOffset.UtcNow.AddDays(7), Uuid.CreateVersion4(), new string('a', 64), [], [],
             Bdgrz.Compliance.Features.AccessControl.ActorReference.ForMember(
                 Uuid.CreateVersion4(), "Campaign owner"), DateTimeOffset.UtcNow);
         DomainEvent domainEvent = launched;
@@ -140,9 +140,9 @@ public sealed class ApplicationReviewCampaignImpactTests
         var fence = await consistency.CaptureAsync(tenantId, CancellationToken.None);
         Assert.True(fence.IsSuccess);
         var launchedAt = DateTimeOffset.UtcNow;
-        var launched = new AccessReviewCampaignLaunched(tenantId, campaignId, "Review",
-            "Review access", launchedAt.AddDays(7), Uuid.CreateVersion4(),
-            new string('b', 64), [], [],
+        var launched = await Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewFacts.LaunchedAsync(
+            Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewFacts.NewStore(), tenantId, campaignId,
+            "Review", launchedAt.AddDays(7), Uuid.CreateVersion4(), new string('b', 64), [], [],
             Bdgrz.Compliance.Features.AccessControl.ActorReference.ForMember(
                 Uuid.CreateVersion4(), "Campaign owner"), launchedAt);
         DomainEvent domainEvent = launched;

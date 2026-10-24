@@ -1,10 +1,15 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Snapshots;
+using Bdgrz.Compliance.Tests.Features.AccessReviews;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 
@@ -147,6 +152,16 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
         DateTimeOffset? decisionRecordedAt = null, bool directoryCaughtUp = true,
         bool completeBeforeTypeIDate = false)
     {
+        var provider = ProgramManagementServices.Build(new AlwaysAllowed(), _ => { }, services =>
+        {
+            services.AddSingleton<AccessReviewManifests>();
+            services.AddScoped<AccessReviewReader>();
+        });
+        var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var content = services.GetRequiredService<IImmutableContentStore>();
+        var events = services.GetRequiredService<IEventStore>();
+        var realm = TenantId.ToString();
         var deadline = launchedAt.AddDays(60);
         var reviewer = new AccessReviewerView(PopulationId, SystemInstanceId,
             ReviewerMemberId, false, null);
@@ -170,126 +185,115 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
         Assert.True(launchSnapshot.Freeze(CampaignSnapshotId, null,
             AccessReviewCampaignContent.LaunchKind, launchRows, launchDigest.Value.Sha256, null,
             CampaignOwner, launchedAt).IsSuccess);
+        await events.AppendAsync(new EventStreamAddress(realm, "population-snapshots", CampaignSnapshotId.ToString()),
+            0, new AggregateScenario<PopulationSnapshot>(launchSnapshot).PendingEvents.ToArray());
 
-        var campaign = new AccessReviewCampaign(TenantId, CampaignId);
-        Assert.True(campaign.Launch(header.Name, header.Instructions, deadline, CampaignSnapshotId,
-            launchDigest.Value.Sha256, reviewers, items, CampaignOwner, launchedAt, ProgramId,
-            RemediationOwnerMemberId).IsSuccess);
+        // The launch fact, its item intent and the materialized item, with the recorded times the test controls.
+        var campaignStream = AccessReviewEffects.CampaignStream(TenantId, CampaignId);
+        var itemStream = AccessReviewEffects.ItemStream(TenantId, CampaignId, ItemId);
+        var itemStreamId = AccessReviewEffects.ItemStreamId(TenantId, CampaignId, ItemId);
+        var launchedFact = await AccessReviewFacts.LaunchedAsync(content, TenantId, CampaignId, header.Name, deadline,
+            CampaignSnapshotId, launchDigest.Value.Sha256, reviewers, items, CampaignOwner, launchedAt, ProgramId,
+            RemediationOwnerMemberId, header.Instructions);
+        var intentHeader = new DurableIntentHeader(CampaignId, campaignStream, campaignStream, campaignStream,
+            CampaignOwner, "initial", null, new string('d', 64), launchedAt);
+        var entry = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), AccessReviewContent.ItemEntrySchema, item);
+        var creationIntent = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(),
+            AccessReviewItemCreationIntent.Schema, new AccessReviewItemCreationIntent(intentHeader, CampaignId, 1,
+                ItemId, SystemInstanceId, entry, ReviewerMemberId,
+                AccessReviewEffects.ReviewerEpisode(CampaignId, ItemId),
+                new NativeFactReference(new EventStreamAddress(realm, "population-snapshots",
+                    CampaignSnapshotId.ToString()), Uuid.CreateVersion4(), 1)));
+        DomainEvent stableLaunch = launchedFact;
+        stableLaunch.AttachMetadata(new DomainEventMetadata(LaunchEventId, CampaignId, 1, LaunchAt));
+        var opened = new AccessReviewItemOpened(TenantId, CampaignId, ItemId, itemStream, 1, 1, creationIntent, null,
+            new OperationProvenance(Uuid.CreateVersion4(), CampaignId, null, nameof(MaterializeAccessReviewItem),
+                CampaignOwner, itemStream, "initial", null, new string('d', 64), launchedAt, itemStream, itemStream),
+            null, null);
+        DomainEvent openedFact = opened;
+        openedFact.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), itemStreamId, 1, LaunchAt));
+        var itemEvents = new List<DomainEvent> { openedFact };
         if (includeDecisionAfterTypeIDate)
-            Assert.True(campaign.Decide([ItemId], campaign.Revision, Uuid.CreateVersion4(),
-                AccessReviewVocabulary.Keep, "The access remains required.", ReviewerMemberId,
-                ReviewerUserId, Reviewer, decisionAt ?? AfterTypeIDate, null, null).IsSuccess);
+        {
+            var effectiveDecisionAt = decisionAt ?? AfterTypeIDate;
+            var decision = new AccessDecisionView(Uuid.CreateVersion4(), ItemId, AccessReviewVocabulary.Keep,
+                "The access remains required.", ReviewerMemberId, Reviewer, effectiveDecisionAt, null,
+                effectiveDecisionAt > deadline, null);
+            var decisions = await content.WriteJsonAsync<IReadOnlyList<AccessDecisionView>>(realm, Uuid.CreateVersion4(),
+                AccessReviewContent.DecisionsSchema, [decision]);
+            DomainEvent recorded = new AccessDecisionsRecorded(TenantId, CampaignId, ItemId, 2, decisions,
+                new OperationProvenance(decision.DecisionId, decision.DecisionId, null, nameof(RecordAccessDecision),
+                    Reviewer, itemStream, "initial", 1, new string('e', 64), effectiveDecisionAt, itemStream, itemStream),
+                null, false, creationIntent, null, null);
+            recorded.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), itemStreamId, 2,
+                decisionRecordedAt ?? AfterTypeIDate));
+            itemEvents.Add(recorded);
+        }
 
-        PopulationSnapshot? completionSnapshot = null;
+        await events.AppendAsync(itemStream, 0, itemEvents.ToArray());
+        var campaignEvents = new List<DomainEvent> { stableLaunch };
+        await events.AppendAsync(campaignStream, 0, campaignEvents.ToArray());
+
+        Uuid? finalSnapshotId = null;
+        DateTimeOffset? completedAtValue = null;
         if (completeBeforeTypeIDate)
         {
             var completedAt = new DateTimeOffset(2027, 3, 11, 12, 0, 0, TimeSpan.Zero);
             var attestation = "All campaign decisions were reviewed.";
             var completionSnapshotId = Uuid.CreateVersion4();
+            var snapshot = await services.GetRequiredService<AccessReviewReader>()
+                .ReadCampaignAsync(TenantId, CampaignId);
             var resultHeader = new AccessReviewCampaignResultHeader(CampaignId, header.Name,
                 deadline, CampaignSnapshotId, launchDigest.Value.Sha256, attestation);
-            var resultRows = AccessReviewCampaignContent.ResultRows(resultHeader,
-                campaign.ItemStates(completedAt));
-            var resultDigest = PopulationContentIdentity.Compute(
-                AccessReviewCampaignContent.ResultKind, resultRows);
+            var resultRows = AccessReviewCampaignContent.ResultRows(resultHeader, snapshot.ItemStates(completedAt));
+            var resultDigest = PopulationContentIdentity.Compute(AccessReviewCampaignContent.ResultKind, resultRows);
             Assert.True(resultDigest.IsSuccess, resultDigest.Error?.Message);
-            completionSnapshot = new PopulationSnapshot(TenantId, completionSnapshotId);
+            var completionSnapshot = new PopulationSnapshot(TenantId, completionSnapshotId);
             Assert.True(completionSnapshot.Freeze(completionSnapshotId, null,
                 AccessReviewCampaignContent.ResultKind, resultRows, resultDigest.Value.Sha256,
                 null, CampaignOwner, completedAt).IsSuccess);
-            Assert.True(campaign.Complete(campaign.Revision, completionSnapshotId,
-                resultDigest.Value.Sha256, attestation, CampaignOwner, completedAt).IsSuccess);
+            await events.AppendAsync(new EventStreamAddress(realm, "population-snapshots",
+                completionSnapshotId.ToString()), 0,
+                new AggregateScenario<PopulationSnapshot>(completionSnapshot).PendingEvents.ToArray());
+
+            var operationId = Uuid.CreateVersion4();
+            var closureIntent = await content.WriteJsonAsync(realm, Uuid.CreateVersion4(), ClosureIntent.Schema,
+                new UnitResult());
+            var firstResponse = await FirstResponses.FreezeAsync(content, realm,
+                await AccessReviewContent.AcceptedResponseAsync(content, TenantId, operationId, completedAt,
+                    CancellationToken.None));
+            DomainEvent accepted = new AccessReviewCampaignCompletionAccepted(campaignStream, 2, 1, closureIntent, null,
+                new OperationProvenance(operationId, operationId, null, nameof(CompleteAccessReviewCampaign),
+                    CampaignOwner, campaignStream, "initial", 1, new string('f', 64), completedAt, campaignStream,
+                    campaignStream), firstResponse, null);
+            accepted.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), CampaignId, 2, completedAt));
+            var completion = new AccessReviewCampaignCompletionView(completionSnapshotId, resultDigest.Value.Sha256,
+                attestation, CampaignOwner, completedAt);
+            var stableCompletion = await AccessReviewFacts.CompletedAsync(content, TenantId, CampaignId, 3, completion,
+                CampaignOwner);
+            DomainEvent closed = stableCompletion with
+            {
+                Intent = closureIntent,
+                Operation = stableCompletion.Operation with { RootOperationId = operationId },
+            };
+            closed.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), CampaignId, 3, completedAt));
+            await events.AppendAsync(campaignStream, 1, [accepted, closed]);
+            finalSnapshotId = completionSnapshotId;
+            completedAtValue = completedAt;
         }
 
-        var events = new InMemoryEventStore();
-        var snapshotEvents = new AggregateScenario<PopulationSnapshot>(launchSnapshot).PendingEvents;
-        await events.AppendAsync(new EventStreamAddress(TenantId.ToString(), "population-snapshots",
-            CampaignSnapshotId.ToString()), 0, snapshotEvents.ToArray());
-        if (completionSnapshot is not null)
-        {
-            var completionSnapshotEvents = new AggregateScenario<PopulationSnapshot>(
-                completionSnapshot).PendingEvents;
-            await events.AppendAsync(new EventStreamAddress(TenantId.ToString(),
-                "population-snapshots", completionSnapshot.Id.ToString()), 0,
-                completionSnapshotEvents.ToArray());
-        }
-        var pendingCampaignEvents = new AggregateScenario<AccessReviewCampaign>(campaign)
-            .PendingEvents.ToArray();
-        var recordedLaunch = (AccessReviewCampaignLaunched)pendingCampaignEvents[0];
-        DomainEvent stableLaunch = new AccessReviewCampaignLaunched(recordedLaunch.TenantId,
-            recordedLaunch.CampaignId, recordedLaunch.Name, recordedLaunch.Instructions,
-            recordedLaunch.Deadline, recordedLaunch.SnapshotId, recordedLaunch.ContentSha256,
-            recordedLaunch.Reviewers, recordedLaunch.Items, recordedLaunch.LaunchedBy,
-            recordedLaunch.LaunchedAt, recordedLaunch.ProgramId,
-            recordedLaunch.RemediationOwnerMemberId);
-        stableLaunch.AttachMetadata(new DomainEventMetadata(LaunchEventId, CampaignId, 1,
-            LaunchAt));
-        DomainEvent[] campaignEvents;
-        if (pendingCampaignEvents.Length == 1)
-        {
-            campaignEvents = [stableLaunch];
-        }
-        else if (pendingCampaignEvents.Length >= 2 &&
-                 pendingCampaignEvents[1] is AccessDecisionsRecorded pendingDecision)
-        {
-            var effectiveDecisionAt = decisionAt ?? AfterTypeIDate;
-            var backdatedDecision = new AccessDecisionsRecorded(pendingDecision.TenantId,
-                pendingDecision.CampaignId, pendingDecision.Revision,
-                pendingDecision.Decisions.Select(decision => decision with
-                {
-                    DecidedAt = effectiveDecisionAt,
-                    AfterDeadline = effectiveDecisionAt > deadline,
-                }).ToArray());
-            backdatedDecision.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
-                CampaignId, 2, decisionRecordedAt ?? AfterTypeIDate));
-            if (pendingCampaignEvents.Length == 2)
-            {
-                campaignEvents = [stableLaunch, backdatedDecision];
-            }
-            else if (pendingCampaignEvents is [_, _, AccessReviewCampaignCompleted completed])
-            {
-                DomainEvent stableCompletion = new AccessReviewCampaignCompleted(
-                    completed.TenantId, completed.CampaignId, completed.Revision,
-                    completed.Completion);
-                stableCompletion.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
-                    CampaignId, 3, completed.Completion.CompletedAt));
-                campaignEvents = [stableLaunch, backdatedDecision, stableCompletion];
-            }
-            else
-            {
-                throw new InvalidOperationException("The campaign fixture produced unexpected events.");
-            }
-        }
-        else
-        {
-            throw new InvalidOperationException("The campaign fixture produced unexpected events.");
-        }
-        await events.AppendAsync(new EventStreamAddress(TenantId.ToString(),
-            AccessReviewCampaign.Area, CampaignId.ToString()), 0, campaignEvents);
-        var replayed = new AggregateScenario<AccessReviewCampaign>(
-            new AccessReviewCampaign(TenantId, CampaignId)).Given(campaignEvents).Aggregate;
         var checkpoint = directoryCaughtUp
-            ? await CheckpointAfterAsync(events)
+            ? await CheckpointAfterAsync((IDomainEventReader)events)
             : new ProjectionCheckpoint(EventCursor.Start);
-        var directory = new CampaignDirectory(Summary(replayed), checkpoint);
-        var aggregates = new List<Aggregate> { replayed, launchSnapshot };
-        if (completionSnapshot is not null)
-            aggregates.Add(completionSnapshot);
-        var reader = new AggregateReader(aggregates.ToArray());
+        var directory = new CampaignDirectory(new AccessReviewCampaignSummaryView(TenantId, CampaignId, header.Name,
+            deadline, finalSnapshotId is null ? AccessReviewCampaign.Active : AccessReviewCampaign.Completed, 1,
+            CampaignSnapshotId, launchedAt, finalSnapshotId, completedAtValue), checkpoint);
         return new FixtureState(new AccessReviewCampaignsTypeIBaselineSourceContributor(directory,
-            reader, events));
+            services.GetRequiredService<IAggregateReader>(), (IDomainEventReader)events,
+            services.GetRequiredService<AccessReviewReader>(), content), scope, provider);
     }
 
-    static AccessReviewCampaignSummaryView Summary(AccessReviewCampaign campaign)
-    {
-        var launched = campaign.Launched!;
-        var completion = campaign.Completion;
-        return new AccessReviewCampaignSummaryView(TenantId, campaign.Id, launched.Name,
-            launched.Deadline, campaign.Status, launched.Items.Count, launched.SnapshotId,
-            launched.LaunchedAt, completion?.SnapshotId, completion?.CompletedAt);
-    }
-
-    static async Task<ProjectionCheckpoint> CheckpointAfterAsync(InMemoryEventStore events)
+    static async Task<ProjectionCheckpoint> CheckpointAfterAsync(IDomainEventReader events)
     {
         var cursor = EventCursor.Start;
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(
@@ -299,7 +303,14 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
         return new ProjectionCheckpoint(cursor);
     }
 
-    sealed record FixtureState(ITypeIBaselineSourceContributor Contributor);
+    sealed record FixtureState(ITypeIBaselineSourceContributor Contributor, AsyncServiceScope Scope,
+        ServiceProvider Provider);
+
+    sealed class AlwaysAllowed : IPermissionAuthorizer
+    {
+        public ValueTask<bool> IsAllowedAsync(Uuid tenantId, Uuid userId, Uuid memberId, string permission,
+            CancellationToken ct = default) => ValueTask.FromResult(true);
+    }
 
     sealed class CampaignDirectory(AccessReviewCampaignSummaryView summary,
         ProjectionCheckpoint checkpoint) : IAccessReviewCampaignDirectoryReader
@@ -310,13 +321,5 @@ public sealed class AccessReviewCampaignsTypeIBaselineSourceContributorTests
         public ValueTask<Page<AccessReviewCampaignSummaryView>> ListAsync(Uuid tenantId,
             int limit, string? cursor, CancellationToken ct = default) =>
             ValueTask.FromResult(new Page<AccessReviewCampaignSummaryView>([summary], null));
-    }
-
-    sealed class AggregateReader(params Aggregate[] aggregates) : IAggregateReader
-    {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(aggregates.FirstOrDefault(item => item.Id == aggregate.Id &&
-                item.GetType() == typeof(TAggregate)) is TAggregate found ? found : aggregate);
     }
 }

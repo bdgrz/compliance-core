@@ -159,7 +159,7 @@ public sealed class WorkSourceCompositionTests
             .ExpectFailure(RequestErrorKind.NotFound);
 
         var decision = await PersonalAccessReviewTransportTests.SendHttpAsync(provider,
-            fixture.LeadUserId, new RecordAccessDecision(fixture.TenantId, reviewCampaignId,
+            fixture.LeadUserId, new RecordAccessDecision(Uuid.CreateVersion4(), fixture.TenantId, reviewCampaignId,
                 reviewItemId, 1, "keep", "The access is still required."));
         Assert.True(decision.IsSuccess, decision.Error?.Message);
         var campaignChanged = await Scenario().When(list).ExpectFailure(RequestErrorKind.Conflict);
@@ -222,7 +222,7 @@ public sealed class WorkSourceCompositionTests
 
         // Act
         var decision = await PersonalAccessReviewTransportTests.SendHttpAsync(provider,
-            fixture.LeadUserId, new RecordAccessDecision(fixture.TenantId, campaignId,
+            fixture.LeadUserId, new RecordAccessDecision(Uuid.CreateVersion4(), fixture.TenantId, campaignId,
                 itemId, 1, "revoke", "The access is no longer required."));
         Assert.True(decision.IsSuccess, decision.Error?.Message);
         var decisionLag = await Scenario(fixture.ApproverUserId).When(request)
@@ -238,7 +238,7 @@ public sealed class WorkSourceCompositionTests
         }).ExpectSuccess();
 
         var providerChange = await PersonalAccessReviewTransportTests.SendHttpAsync(provider,
-            fixture.ApproverUserId, new RecordAccessRemediationChange(fixture.TenantId,
+            fixture.ApproverUserId, new RecordAccessRemediationChange(Uuid.CreateVersion4(), fixture.TenantId,
                 campaignId, itemId, 2, "CASE-42", "Removed the provider-side grant.",
                 DateTimeOffset.UtcNow));
         Assert.True(providerChange.IsSuccess, providerChange.Error?.Message);
@@ -355,7 +355,7 @@ public sealed class WorkSourceCompositionTests
         var permissions = new RestrictedReadPermissions(fixture.Permissions, fixture.LeadUserId);
         await using var provider = CreateProvider(fixture, permissions, permissions);
         var decision = await PersonalAccessReviewTransportTests.SendHttpAsync(provider,
-            fixture.LeadUserId, new RecordAccessDecision(fixture.TenantId, campaignId,
+            fixture.LeadUserId, new RecordAccessDecision(Uuid.CreateVersion4(), fixture.TenantId, campaignId,
                 itemId, 1, "revoke", "The access is no longer required."));
         Assert.True(decision.IsSuccess, decision.Error?.Message);
         await CatchUpAsync(provider, fixture.TenantId);
@@ -430,12 +430,9 @@ public sealed class WorkSourceCompositionTests
             "deploy", "permission", "Deploy", false, "expected", [], null);
         var reviewer = new AccessReviewerView(populationId, systemInstanceId,
             fixture.LeadMemberId, false, null);
-        await ProgramManagementServices.SeedAsync<AccessReviewCampaign,
-            AccessReviewCampaignRegistration>(fixture.Provider,
-            new AccessReviewCampaign(fixture.TenantId, campaignId), campaign => campaign.Launch(
-                "Quarterly access review", "Review each frozen assignment.", now.AddDays(14),
-                snapshotId, new string('a', 64), [reviewer], [item], actor, now,
-                fixture.ProgramId, fixture.ApproverMemberId));
+        await Bdgrz.Compliance.Tests.Features.AccessReviews.AccessReviewFacts.SeedLaunchedAsync(fixture.Provider,
+            fixture.TenantId, campaignId, [reviewer], [item], actor, now, fixture.ProgramId,
+            fixture.ApproverMemberId, "Quarterly access review", deadline: now.AddDays(14));
         return (campaignId, itemId, systemInstanceId);
     }
 
@@ -470,7 +467,7 @@ public sealed class WorkSourceCompositionTests
         var unresolved = await SeedReviewCampaignAsync(fixture);
         var remediation = await SeedReviewCampaignAsync(fixture);
         var result = await PersonalAccessReviewTransportTests.SendHttpAsync(provider,
-            fixture.LeadUserId, new RecordAccessDecision(fixture.TenantId,
+            fixture.LeadUserId, new RecordAccessDecision(Uuid.CreateVersion4(), fixture.TenantId,
                 remediation.CampaignId, remediation.ItemId, 1, "revoke",
                 "The assignment is no longer required."));
         Assert.True(result.IsSuccess, result.Error?.Message);

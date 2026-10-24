@@ -1776,6 +1776,7 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [AccessPopulationException](../../src/Compliance.Core/Features/AccessReviews/AccessPopulationException.cs#L16)
 - [AccessPrincipalClassification](../../src/Compliance.Core/Features/AccessReviews/AccessPrincipalClassification.cs#L15)
 - [AccessReviewCampaign](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs#L11)
+- [AccessReviewItem](../../src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs#L17)
 
 #### AdvisorCollaboration
 
@@ -3121,17 +3122,16 @@ These are literal MapPortia registrations in the host. Host-mode/authentication 
 | PUT | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval/{command_id}` | `ApproveAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1455) |
 | PUT | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions/{command_id}` | `ExemptAccessExpectation` | [registration](../../src/Compliance.App/Program.cs#L1459) |
 | GET | `/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations` | `ListAccessExpectations` | [registration](../../src/Compliance.App/Program.cs#L1463) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns` | `LaunchAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1467) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}` | `LaunchAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1467) |
 | GET | `/api/v1/tenants/{tenant_id}/access-review-campaigns` | `ListAccessReviewCampaigns` | [registration](../../src/Compliance.App/Program.cs#L1471) |
 | GET | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}` | `GetAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1475) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions` | `RecordAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1479) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions/{command_id}` | `RecordAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1479) |
 | POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decision-previews` | `PreviewBulkAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1483) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decisions` | `RecordBulkAccessDecision` | [registration](../../src/Compliance.App/Program.cs#L1487) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes` | `RecordAccessRemediationChange` | [registration](../../src/Compliance.App/Program.cs#L1491) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments` | `ReassignAccessReviewResponsibility` | [registration](../../src/Compliance.App/Program.cs#L1495) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications` | `VerifyAccessRemediation` | [registration](../../src/Compliance.App/Program.cs#L1499) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions` | `ExemptAccessRemediation` | [registration](../../src/Compliance.App/Program.cs#L1503) |
-| POST | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion` | `CompleteAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1507) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes/{command_id}` | `RecordAccessRemediationChange` | [registration](../../src/Compliance.App/Program.cs#L1491) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments/{command_id}` | `ReassignAccessReviewResponsibility` | [registration](../../src/Compliance.App/Program.cs#L1495) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications/{command_id}` | `VerifyAccessRemediation` | [registration](../../src/Compliance.App/Program.cs#L1499) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions/{command_id}` | `ExemptAccessRemediation` | [registration](../../src/Compliance.App/Program.cs#L1503) |
+| PUT | `/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion/{command_id}` | `CompleteAccessReviewCampaign` | [registration](../../src/Compliance.App/Program.cs#L1507) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work` | `ListWork` | [registration](../../src/Compliance.App/Program.cs#L1511) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/reminders` | `ListWorkReminders` | [registration](../../src/Compliance.App/Program.cs#L1515) |
 | GET | `/api/v1/tenants/{tenant_id}/programs/{program_id}/work/digest` | `GetWorkDigest` | [registration](../../src/Compliance.App/Program.cs#L1519) |

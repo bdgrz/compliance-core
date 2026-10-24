@@ -6,7 +6,7 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 
 /// <summary>Lists from the Fitz campaign directory once it has reached the source.</summary>
 public sealed class ListAccessReviewCampaignsHandler(IAccessReviewCampaignDirectoryReader directory,
-    IDomainEventReader events, IAggregateReader reader,
+    IDomainEventReader events, AccessReviewReader reader, IAggregateReader aggregates,
     RestrictedApplicationVisibility visibility)
     : IRequestHandler<ListAccessReviewCampaigns, Page<AccessReviewCampaignSummaryView>>
 {
@@ -34,10 +34,12 @@ public sealed class ListAccessReviewCampaignsHandler(IAccessReviewCampaignDirect
                 (limit, cursor) => directory.ListAsync(request.TenantId, limit, cursor, ct),
                 async item =>
                 {
-                    var campaign = await reader.HydrateAsync(new AccessReviewCampaign(
+                    var campaign = await aggregates.HydrateAsync(new AccessReviewCampaign(
                         request.TenantId, item.CampaignId), ct).ConfigureAwait(false);
-                    if (campaign.Launched is not { } launched)
+                    if (campaign.Launched is not { } launchFact)
                         return false;
+                    var launched = await reader.LaunchOfAsync(request.TenantId, launchFact, ct)
+                        .ConfigureAwait(false);
                     var visibleInstances = new HashSet<Uuid>();
                     foreach (var systemInstanceId in launched.Items.Select(
                                  static reviewItem => reviewItem.SystemInstanceId).Distinct())

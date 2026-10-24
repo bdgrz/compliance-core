@@ -20,15 +20,15 @@ public sealed class FitzAccessReviewCampaignImpactDirectoryTests
         var launchedAt = new DateTimeOffset(2026, 10, 11, 12, 0, 0, TimeSpan.Zero);
         var completedAt = launchedAt.AddDays(1);
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Review owner");
-        var launched = new AccessReviewCampaignLaunched(tenantId, campaignId,
-            "Quarterly access review", "Review access", launchedAt.AddDays(14), snapshotId,
-            new string('a', 64), [],
-            [Item(firstSystemInstanceId), Item(firstSystemInstanceId),
-             Item(secondSystemInstanceId)], actor, launchedAt);
-        var completed = new AccessReviewCampaignCompleted(tenantId, campaignId, 2,
-            new AccessReviewCampaignCompletionView(finalSnapshotId, new string('b', 64),
-                "No exceptions remain.", actor, completedAt));
-        var directory = new FitzAccessReviewCampaignImpactDirectory(new InMemoryKvClient());
+        var content = AccessReviewFacts.NewStore();
+        var launched = await AccessReviewFacts.LaunchedAsync(content, tenantId, campaignId,
+            "Quarterly access review", launchedAt.AddDays(14), snapshotId, new string('a', 64), [],
+            [Item(firstSystemInstanceId), Item(firstSystemInstanceId), Item(secondSystemInstanceId)], actor,
+            launchedAt);
+        var completed = await AccessReviewFacts.CompletedAsync(content, tenantId, campaignId, 2,
+            new AccessReviewCampaignCompletionView(finalSnapshotId, new string('b', 64), "No exceptions remain.",
+                actor, completedAt), actor);
+        var directory = new FitzAccessReviewCampaignImpactDirectory(new InMemoryKvClient(), content);
         var identity = new CheckpointIdentity(AccessReviewCampaignImpactSchema.Projector,
             AccessReviewCampaignImpactSchema.Pattern(tenantId));
 

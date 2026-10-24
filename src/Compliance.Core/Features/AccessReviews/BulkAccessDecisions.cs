@@ -7,11 +7,12 @@ namespace Bdgrz.Compliance.Features.AccessReviews;
 
 /// <summary>
 ///     Computes a bulk decision preview. Its token binds the campaign revision, the reviewer, the
-///     decision, and the exact eligible items, so a changed campaign invalidates the preview.
+///     decision, and the exact eligible items at their own revisions, so a changed campaign or item
+///     invalidates the preview.
 /// </summary>
 public static class BulkAccessDecisions
 {
-    public static Result<BulkAccessDecisionPreview> Preview(AccessReviewCampaign campaign,
+    public static Result<BulkAccessDecisionPreview> Preview(AccessReviewCampaignSnapshot campaign,
         IReadOnlyList<Uuid> itemIds, string decision, Uuid reviewerMemberId, Uuid reviewerUserId)
     {
         ArgumentNullException.ThrowIfNull(campaign);
@@ -36,17 +37,17 @@ public static class BulkAccessDecisions
         return Result<BulkAccessDecisionPreview>.Success(new BulkAccessDecisionPreview(campaign.Id,
             campaign.Revision, decision, eligible, rejected,
             Token(campaign.Id, campaign.Revision, reviewerMemberId, decision,
-                eligible.Select(static item => item.ItemId))));
+                eligible.Select(item => $"{item.ItemId}@{campaign.State(item.ItemId)!.Revision}"))));
     }
 
     static string Token(Uuid campaignId, long revision, Uuid reviewerMemberId, string decision,
-        IEnumerable<Uuid> itemIds)
+        IEnumerable<string> itemHeads)
     {
         var material = string.Join('\n', new[]
         {
             "bdgrz.access_review.bulk_decision.v1", campaignId.ToString(),
             revision.ToString(CultureInfo.InvariantCulture), reviewerMemberId.ToString(), decision,
-        }.Concat(itemIds.Select(static id => id.ToString()).Order(StringComparer.Ordinal)));
+        }.Concat(itemHeads.Order(StringComparer.Ordinal)));
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(material)));
     }
 }

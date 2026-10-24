@@ -2,9 +2,11 @@ using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.AccessReviews;
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.AccessReviews;
 
@@ -14,8 +16,8 @@ public sealed class RestrictedAccessReviewCampaignReadTests
     public async Task ShouldHideCampaignGivenManagerWithoutRestrictedReadGrant()
     {
         // Arrange
-        var scenario = Scenario();
-        var handler = new GetAccessReviewCampaignHandler(scenario.Reader,
+        await using var scenario = await ScenarioData.CreateAsync();
+        var handler = new GetAccessReviewCampaignHandler(scenario.Campaigns,
             new AccessReviewManagerPermissions(), TimeProvider.System,
             RestrictedApplicationVisibilityFixture.Create(scenario.Reader), null!);
         var context = new RequestContext<GetAccessReviewCampaign>(new GetAccessReviewCampaign(
@@ -33,11 +35,11 @@ public sealed class RestrictedAccessReviewCampaignReadTests
     public async Task ShouldReturnCampaignItemGivenExactSystemInstanceReadGrant()
     {
         // Arrange
-        var scenario = Scenario();
+        await using var scenario = await ScenarioData.CreateAsync();
         var visibility = RestrictedApplicationVisibilityFixture.Create(scenario.Reader,
             allowedScopes: [new AccessGrantScope(AccessGrantScopeKind.SystemInstance,
                 scenario.InstanceId)]);
-        var handler = new GetAccessReviewCampaignHandler(scenario.Reader,
+        var handler = new GetAccessReviewCampaignHandler(scenario.Campaigns,
             new AccessReviewManagerPermissions(), TimeProvider.System, visibility, null!);
         var context = new RequestContext<GetAccessReviewCampaign>(new GetAccessReviewCampaign(
             scenario.TenantId, scenario.CampaignId), Actor(scenario.UserId));
@@ -47,20 +49,22 @@ public sealed class RestrictedAccessReviewCampaignReadTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(scenario.InstanceId, Assert.Single(result.Value.Items).Item.SystemInstanceId);
+        var item = Assert.Single(result.Value.Items);
+        Assert.Equal(scenario.InstanceId, item.Item.SystemInstanceId);
+        Assert.Equal(1, item.Revision);
     }
 
     [Fact]
     public async Task ShouldOmitCampaignGivenAllItemsHaveRestrictedInstances()
     {
         // Arrange
-        var scenario = Scenario();
+        await using var scenario = await ScenarioData.CreateAsync();
         var summary = new AccessReviewCampaignSummaryView(scenario.TenantId,
             scenario.CampaignId, "Payroll review", DateTimeOffset.UtcNow.AddDays(1),
             AccessReviewCampaign.Active, 1, Uuid.CreateVersion4(), DateTimeOffset.UtcNow,
             null, null);
         var handler = new ListAccessReviewCampaignsHandler(
-            new CampaignDirectory(summary), new InMemoryEventStore(), scenario.Reader,
+            new CampaignDirectory(summary), new InMemoryEventStore(), scenario.Campaigns, scenario.Reader,
             RestrictedApplicationVisibilityFixture.Create(scenario.Reader));
         var context = new RequestContext<ListAccessReviewCampaigns>(
             new ListAccessReviewCampaigns(scenario.TenantId), Actor(scenario.UserId));
@@ -76,7 +80,7 @@ public sealed class RestrictedAccessReviewCampaignReadTests
     public async Task ShouldRetainVisibleItemCountGivenExactSystemInstanceReadGrant()
     {
         // Arrange
-        var scenario = Scenario();
+        await using var scenario = await ScenarioData.CreateAsync();
         var summary = new AccessReviewCampaignSummaryView(scenario.TenantId,
             scenario.CampaignId, "Payroll review", DateTimeOffset.UtcNow.AddDays(1),
             AccessReviewCampaign.Active, 1, Uuid.CreateVersion4(), DateTimeOffset.UtcNow,
@@ -85,7 +89,7 @@ public sealed class RestrictedAccessReviewCampaignReadTests
             allowedScopes: [new AccessGrantScope(AccessGrantScopeKind.SystemInstance,
                 scenario.InstanceId)]);
         var handler = new ListAccessReviewCampaignsHandler(new CampaignDirectory(summary),
-            new InMemoryEventStore(), scenario.Reader, visibility);
+            new InMemoryEventStore(), scenario.Campaigns, scenario.Reader, visibility);
         var context = new RequestContext<ListAccessReviewCampaigns>(
             new ListAccessReviewCampaigns(scenario.TenantId), Actor(scenario.UserId));
 
@@ -100,8 +104,8 @@ public sealed class RestrictedAccessReviewCampaignReadTests
     public async Task ShouldHideBulkPreviewGivenManagerWithoutRestrictedReadGrant()
     {
         // Arrange
-        var scenario = Scenario();
-        var handler = new PreviewBulkAccessDecisionHandler(scenario.Reader,
+        await using var scenario = await ScenarioData.CreateAsync();
+        var handler = new PreviewBulkAccessDecisionHandler(scenario.Campaigns,
             RestrictedApplicationVisibilityFixture.Create(scenario.Reader), null!);
         var context = new RequestContext<PreviewBulkAccessDecision>(
             new PreviewBulkAccessDecision(scenario.TenantId, scenario.CampaignId,
@@ -119,11 +123,11 @@ public sealed class RestrictedAccessReviewCampaignReadTests
     public async Task ShouldHideAssignedDecisionGivenReviewerWithoutRestrictedReadGrant()
     {
         // Arrange
-        var scenario = Scenario();
-        var handler = new RecordAccessDecisionHandler(null!, scenario.Reader,
+        await using var scenario = await ScenarioData.CreateAsync();
+        var handler = new RecordAccessDecisionHandler(null!, scenario.Campaigns, scenario.Reader, scenario.Content,
             TimeProvider.System, RestrictedApplicationVisibilityFixture.Create(scenario.Reader), null!);
         var context = PersonalAccessReviewTransportTests.HttpContext<RecordAccessDecision>(new RecordAccessDecision(
-            scenario.TenantId, scenario.CampaignId, scenario.ItemId, 1, "keep",
+            Uuid.CreateVersion4(), scenario.TenantId, scenario.CampaignId, scenario.ItemId, 1, "keep",
             "Still required."), Actor(scenario.UserId));
 
         // Act
@@ -138,11 +142,11 @@ public sealed class RestrictedAccessReviewCampaignReadTests
     public async Task ShouldHideCampaignCompletionGivenManagerWithoutRestrictedReadGrant()
     {
         // Arrange
-        var scenario = Scenario();
-        var handler = new CompleteAccessReviewCampaignHandler(scenario.Reader, null!, null!,
+        await using var scenario = await ScenarioData.CreateAsync();
+        var handler = new CompleteAccessReviewCampaignHandler(null!, scenario.Campaigns, scenario.Content,
             TimeProvider.System, RestrictedApplicationVisibilityFixture.Create(scenario.Reader));
         var context = PersonalAccessReviewTransportTests.HttpContext<CompleteAccessReviewCampaign>(
-            new CompleteAccessReviewCampaign(scenario.TenantId, scenario.CampaignId, 1,
+            new CompleteAccessReviewCampaign(Uuid.CreateVersion4(), scenario.TenantId, scenario.CampaignId, 1,
                 "I reviewed the campaign."), Actor(scenario.UserId));
 
         // Act
@@ -153,57 +157,72 @@ public sealed class RestrictedAccessReviewCampaignReadTests
             Assert.IsType<RequestError>(result.Error).Kind);
     }
 
-    static ScenarioData Scenario()
-    {
-        var tenantId = Uuid.CreateVersion4();
-        var userId = Uuid.CreateVersion4();
-        var memberId = RbacIds.Member(tenantId, userId);
-        var applicationId = Uuid.CreateVersion4();
-        var instanceId = Uuid.CreateVersion4();
-        var populationId = Uuid.CreateVersion4();
-        var campaignId = Uuid.CreateVersion4();
-        var itemId = Uuid.CreateVersion4();
-        var now = DateTimeOffset.UtcNow;
-        var actor = ActorReference.ForMember(memberId, "Manager");
-        var application = new DeclaredApplication(tenantId, applicationId);
-        Assert.True(application.Declare("Payroll", "Run payroll", null, memberId, "Manager",
-            now, isRestricted: true).IsSuccess);
-        var instance = new DeclaredSystemInstance(tenantId, instanceId);
-        Assert.True(instance.Declare(applicationId, "Production", "aws_account", null, null,
-            memberId, "Manager", now).IsSuccess);
-        var item = new AccessReviewItemView(itemId, populationId,
-            Uuid.CreateVersion4(), instanceId, memberId, "subject", "user_account", "User",
-            "human", null, null, "entitlement", "permission", "Read", false, "expected",
-            [], null);
-        var campaign = new AccessReviewCampaign(tenantId, campaignId);
-        Assert.True(campaign.Launch("Payroll review", "Review payroll access",
-            now.AddDays(7), Uuid.CreateVersion4(), new string('a', 64),
-            [new AccessReviewerView(populationId, instanceId, memberId, false, null)], [item],
-            actor, now).IsSuccess);
-        var reader = new CampaignAggregateReader(application, instance, campaign);
-        return new ScenarioData(tenantId, userId, applicationId, instanceId, populationId,
-            campaignId, itemId, reader);
-    }
-
     static ClaimsPrincipal Actor(Uuid userId) => new(new ClaimsIdentity(
         [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));
 
-    sealed record ScenarioData(Uuid TenantId, Uuid UserId, Uuid ApplicationId,
-        Uuid InstanceId, Uuid PopulationId, Uuid CampaignId, Uuid ItemId,
-        CampaignAggregateReader Reader);
-
-    sealed class CampaignAggregateReader(DeclaredApplication application,
-        DeclaredSystemInstance instance, AccessReviewCampaign campaign) : IAggregateReader
+    sealed class ScenarioData : IAsyncDisposable
     {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(aggregate switch
-            {
-                DeclaredApplication => (TAggregate)(Aggregate)application,
-                DeclaredSystemInstance => (TAggregate)(Aggregate)instance,
-                AccessReviewCampaign => (TAggregate)(Aggregate)campaign,
-                _ => aggregate,
-            });
+        readonly ServiceProvider _provider;
+        readonly AsyncServiceScope _scope;
+
+        ScenarioData(ServiceProvider provider, Uuid tenantId, Uuid userId, Uuid applicationId, Uuid instanceId,
+            Uuid populationId, Uuid campaignId, Uuid itemId)
+        {
+            _provider = provider;
+            _scope = provider.CreateAsyncScope();
+            (TenantId, UserId, ApplicationId, InstanceId, PopulationId, CampaignId, ItemId) =
+                (tenantId, userId, applicationId, instanceId, populationId, campaignId, itemId);
+        }
+
+        public Uuid TenantId { get; }
+        public Uuid UserId { get; }
+        public Uuid ApplicationId { get; }
+        public Uuid InstanceId { get; }
+        public Uuid PopulationId { get; }
+        public Uuid CampaignId { get; }
+        public Uuid ItemId { get; }
+        public IAggregateReader Reader => _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        public AccessReviewReader Campaigns => _scope.ServiceProvider.GetRequiredService<AccessReviewReader>();
+        public IImmutableContentStore Content => _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+
+        public static async Task<ScenarioData> CreateAsync()
+        {
+            var provider = ProgramManagementServices.Build(new AccessReviewManagerPermissions(), _ => { },
+                services =>
+                {
+                    services.AddSingleton<AccessReviewManifests>();
+                    services.AddScoped<AccessReviewReader>();
+                });
+            var tenantId = Uuid.CreateVersion4();
+            var userId = Uuid.CreateVersion4();
+            var memberId = RbacIds.Member(tenantId, userId);
+            var applicationId = Uuid.CreateVersion4();
+            var instanceId = Uuid.CreateVersion4();
+            var populationId = Uuid.CreateVersion4();
+            var campaignId = Uuid.CreateVersion4();
+            var itemId = Uuid.CreateVersion4();
+            var now = DateTimeOffset.UtcNow;
+            var actor = ActorReference.ForMember(memberId, "Manager");
+            await ProgramManagementServices.SeedAsync(provider, new DeclaredApplication(tenantId, applicationId),
+                application => application.Declare("Payroll", "Run payroll", null, memberId, "Manager", now,
+                    isRestricted: true));
+            await ProgramManagementServices.SeedAsync(provider, new DeclaredSystemInstance(tenantId, instanceId),
+                instance => instance.Declare(applicationId, "Production", "aws_account", null, null, memberId,
+                    "Manager", now));
+            var item = new AccessReviewItemView(itemId, populationId, Uuid.CreateVersion4(), instanceId, memberId,
+                "subject", "user_account", "User", "human", null, null, "entitlement", "permission", "Read", false,
+                "expected", [], null);
+            await AccessReviewFacts.SeedLaunchedAsync(provider, tenantId, campaignId,
+                [new AccessReviewerView(populationId, instanceId, memberId, false, null)], [item], actor, now);
+            return new ScenarioData(provider, tenantId, userId, applicationId, instanceId, populationId, campaignId,
+                itemId);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _scope.DisposeAsync();
+            await _provider.DisposeAsync();
+        }
     }
 
     sealed class AccessReviewManagerPermissions : IPermissionAuthorizer
