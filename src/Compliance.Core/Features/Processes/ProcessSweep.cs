@@ -1,11 +1,13 @@
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Bdgrz.Compliance.Features.Processes;
 
 /// <summary>Resumes overdue non-terminal process records of every registered kind once a minute.</summary>
-public sealed class ProcessSweep(IServiceScopeFactory scopes, ProcessCatalog catalog, TimeProvider clock)
+public sealed class ProcessSweep(IServiceScopeFactory scopes, ProcessCatalog catalog, TimeProvider clock,
+    ILogger<ProcessSweep>? logger = null)
     : BackgroundService
 {
     /// <summary>Interval between sweeps.</summary>
@@ -38,6 +40,13 @@ public sealed class ProcessSweep(IServiceScopeFactory scopes, ProcessCatalog cat
                 {
                     // Another worker advanced the record; it is no longer ours to resume.
                 }
+                catch (Exception exception) when (exception is not OperationCanceledException || !ct.IsCancellationRequested)
+                {
+                    // Leave this record due for retry while allowing independent records in the batch to recover.
+                    logger?.LogWarning(exception,
+                        "Process recovery failed for {ProcessKind} in {Realm} at {RootOperationId}/{SourceId}.",
+                        key.ProcessKind, key.Realm, key.RootOperationId, key.SourceId);
+                }
             }
         }
 
@@ -53,9 +62,10 @@ public sealed class ProcessSweep(IServiceScopeFactory scopes, ProcessCatalog cat
             {
                 await SweepOnceAsync(stoppingToken).ConfigureAwait(false);
             }
-            catch (Exception exception) when (exception is not OperationCanceledException)
+            catch (Exception exception) when (exception is not OperationCanceledException || !stoppingToken.IsCancellationRequested)
             {
                 // A failed sweep is retried on the next tick; records keep their own due times.
+                logger?.LogWarning(exception, "Process recovery sweep failed and will retry.");
             }
         }
     }
