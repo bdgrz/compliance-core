@@ -1,0 +1,13 @@
+# Native tenant lifecycle commands
+
+SuspendTenant, ReactivateTenant and OffboardTenant now carry typed stable command identities and append their exact native business facts with original first responses and mutation-result-content.v1 Unit envelopes. Suspend/Offboard additionally bind the selected owner-local ExpectedRevision; Reactivate preserves its selected no-caller-revision contract. The compact tenant scalar authority and selected native acceptance remain the conflict boundary. Original actor kind/ID, full authored request digest, owner, lifecycle, source revision, result schema and attribution are checked.
+
+Exact acceptance resolves before current state checks or async immutable preparation. A retry cannot restore a former suspension/reactivation after a later opposite command. Fresh decisions that confirm the current state still retain one durable native outcome, so later replay preserves that original no-change decision. Legacy version1 fact reads and trusted fixture/history helpers remain compatible; live producers use the native path exclusively. The existing platform authorizer stays active, with personal actor checks in native execution. Native version2 facts feed the existing tenant discovery/status projector and preserve terminal offboarding dominance.
+
+RED8failed/0passed reproduced changed original actor/reason acceptance and state-restoring retries through actual handlers. An additional real production HTTP RED1failed showed plain Portia Result maps204 despite native first-response metadata200. These three DTOs/handlers/maps now use explicit typed UnitResult, and actual first+retry responses are200{}.
+
+GREEN: strict Release0warnings/errors;419focused tests (alltenant/productionHTTP plus28smokes);5,605unit tests. Added cases cover changed original revision, durable no-change results, exact result envelopes, real directory projection, malformed tenant/actor/revision facts and accepted response-body recovery without duplicate append. Whitespace,24Node,design/coverage and diff checks pass.
+
+Jev1.14.0 reviewed16 current source/dependency hashes; one owner recovery signal was checked against the native executor and executable evidence. Direct integration selected merge_scoped_repair .86, introduced_regression .28 and scope_misrepresentation .17. Full units subsequently passed.
+
+No realm-wide binding/global lookup or deployment is claimed. Other plain nativeUnit/async202 endpoints still need a separate descriptor-aware transport conformance repair; this actual discovered gap is queued locally rather than inferred resolved by stored response metadata. No new GitHub issue.

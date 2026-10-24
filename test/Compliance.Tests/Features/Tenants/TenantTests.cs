@@ -153,7 +153,7 @@ public sealed class TenantTests
     public void ShouldRequirePlatformOperatorGivenOffboardingRequest()
     {
         // Arrange
-        var request = new OffboardTenant(TenantId, "Client requested offboarding.");
+        var request = new OffboardTenant(Uuid.CreateVersion4(), TenantId, "Client requested offboarding.", 2);
 
         // Act
         var platformRequest = Assert.IsAssignableFrom<IPlatformOperatorRequest>(request);

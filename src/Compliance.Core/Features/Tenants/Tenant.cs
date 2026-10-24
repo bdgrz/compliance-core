@@ -48,8 +48,26 @@ public sealed class Tenant : Aggregate
         On<TenantSlugSurrenderConfirmed>(Apply);
         On<TenantSlugSurrenderFailed>(Apply);
         On<TenantSuspended>(_ => _suspended = true);
+        On<TenantSuspendedV2>(ev =>
+        {
+            RequireLifecycle(ev, nameof(SuspendTenant), ev.TenantId, ev.OperatorUserId, ev.Reason, ev.OccurredAt,
+                ev.OperationResult);
+            _suspended = true;
+        });
         On<TenantReactivated>(_ => _suspended = false);
+        On<TenantReactivatedV2>(ev =>
+        {
+            RequireLifecycle(ev, nameof(ReactivateTenant), ev.TenantId, ev.OperatorUserId, ev.Reason, ev.OccurredAt,
+                ev.OperationResult);
+            _suspended = false;
+        });
         On<TenantOffboardingStarted>(_ => _offboarding = true);
+        On<TenantOffboardingStartedV2>(ev =>
+        {
+            RequireLifecycle(ev, nameof(OffboardTenant), ev.TenantId, ev.OperatorUserId, ev.Reason, ev.OccurredAt,
+                ev.OperationResult);
+            _offboarding = true;
+        });
         On<TenantActivated>(_ => _activated = true);
         On<TenantActivatedV2>(Apply);
         On<TenantSlugChangeRequested>(ev =>
@@ -290,6 +308,73 @@ public sealed class Tenant : Aggregate
             return prepared;
         RaiseEvent(new TenantSlugSurrenderRequested(Id, _slug!, operation.LogicalId, operation, firstResponse));
         return Result.Success;
+    }
+
+    /// <summary>Checks a fresh native lifecycle decision on the exact current owner.</summary>
+    public Result PrepareLifecycle(string kind, string reason, long? expectedRevision)
+    {
+        if (!TryNormalizeReason(reason, out _))
+            return Failure(RequestErrorKind.Validation, "A reason of at most 500 characters is required.");
+        if (kind is not (nameof(SuspendTenant) or nameof(ReactivateTenant) or nameof(OffboardTenant)))
+            return Failure(RequestErrorKind.Validation, "The tenant lifecycle command is unsupported.");
+        if (kind == nameof(ReactivateTenant) ? expectedRevision is not null : expectedRevision is null or < 0)
+            return Failure(RequestErrorKind.Validation, "The lifecycle command needs its declared owner revision scope.");
+        if (expectedRevision is { } expected && (ulong)expected != Revision)
+            return Failure(RequestErrorKind.Conflict, "The tenant changed since it was read.");
+        if (_slug is null || _slugState == TenantSlugState.Rejected)
+            return Failure(RequestErrorKind.NotFound, "The tenant does not exist.");
+        if (kind != nameof(OffboardTenant) && _offboarding)
+            return Failure(RequestErrorKind.Conflict, "The tenant is being offboarded.");
+        if (kind == nameof(SuspendTenant) && !_suspended && !IsActive)
+            return Failure(RequestErrorKind.Conflict, "The tenant is not active.");
+        if (kind == nameof(ReactivateTenant) && (_slugState != TenantSlugState.Confirmed ||
+            _requiresActivation && !_activated))
+            return Failure(RequestErrorKind.Conflict, "The tenant is not ready to reactivate.");
+        return Result.Success;
+    }
+
+    /// <summary>Records even an unchanged fresh decision, so its original outcome remains durable after later changes.</summary>
+    public Result ApplyLifecycle(OperationProvenance operation, ImmutableContentRef response,
+        ImmutableContentRef result, string reason)
+    {
+        var expected = operation.OriginalExpectedRevision is { } revision && revision <= long.MaxValue
+            ? (long?)revision : null;
+        var valid = PrepareLifecycle(operation.CommandKind, reason, expected);
+        if (!valid.IsSuccess)
+            return valid;
+        if (!Uuid.TryParse(operation.Actor.Id, out var userId) || userId == Uuid.Empty)
+            return Failure(RequestErrorKind.Validation, "A lifecycle decision requires its platform operator.");
+        TryNormalizeReason(reason, out var normalized);
+        DomainEvent fact = operation.CommandKind switch
+        {
+            nameof(SuspendTenant) => new TenantSuspendedV2(Id, userId, normalized, operation.AcceptedAt,
+                operation, response, result),
+            nameof(ReactivateTenant) => new TenantReactivatedV2(Id, userId, normalized, operation.AcceptedAt,
+                operation, response, result),
+            _ => new TenantOffboardingStartedV2(Id, userId, normalized, operation.AcceptedAt,
+                operation, response, result),
+        };
+        RaiseEvent(fact);
+        return Result.Success;
+    }
+
+    void RequireLifecycle<T>(T fact, string kind, Uuid tenantId, Uuid operatorId, string reason,
+        DateTimeOffset at, ImmutableContentRef result) where T : DomainEvent, INativeOperationFact
+    {
+        var operation = fact.Operation;
+        OwnerProvenance.RequireOwn(this, operation.LogicalId, operation);
+        var expected = operation.OriginalExpectedRevision is { } revision && revision <= long.MaxValue
+            ? (long?)revision : null;
+        if (tenantId != Id || operatorId == Uuid.Empty || operation.Actor.Kind != "platform_operator" ||
+            operation.Actor.Id != operatorId.ToString() || operation.RootOperationId != operation.LogicalId ||
+            operation.CausationEventId is not null || operation.CommandKind != kind ||
+            operation.Episode != "lifecycle" || operation.AffectedOwner != Stream ||
+            operation.ExpectedRevisionOwner != Stream || fact.FirstResponse is null || result is null ||
+            result.Schema != "mutation-result-content.v1" || at == default || at != operation.AcceptedAt ||
+            !TryNormalizeReason(reason, out var normalized) || normalized != reason ||
+            !PrepareLifecycle(kind, reason, expected).IsSuccess)
+            throw new InvalidOperationException("A lifecycle fact must retain its exact current owner and platform decision.");
+        Acceptance.Observe(fact);
     }
 
     public Result Suspend(Uuid operatorUserId, string reason, DateTimeOffset occurredAt)

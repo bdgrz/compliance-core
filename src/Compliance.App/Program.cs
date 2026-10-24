@@ -521,13 +521,13 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         // The registered content store is local; keep public uploads unavailable until production storage is qualified.
         app.MapEvidenceArtifactUpload();
     }
-    app.MapPortiaPost<SuspendTenant>("/api/v1/tenants/{tenant_id}/suspensions")
+    app.MapPortiaPut<SuspendTenant, UnitResult>("/api/v1/tenants/{tenant_id}/suspensions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapPortiaDelete<ReactivateTenant>("/api/v1/tenants/{tenant_id}/suspensions")
+    app.MapPortiaDelete<ReactivateTenant, UnitResult>("/api/v1/tenants/{tenant_id}/suspensions")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapPortiaPost<OffboardTenant>("/api/v1/tenants/{tenant_id}/offboarding")
+    app.MapPortiaPut<OffboardTenant, UnitResult>("/api/v1/tenants/{tenant_id}/offboarding/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
     app.MapPortiaPut<GrantPlatformOperator>("/api/v1/platform/operator-grants/{command_id}")
