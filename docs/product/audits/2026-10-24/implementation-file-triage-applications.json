@@ -1,0 +1,320 @@
+{
+  "generated_at_utc": "2026-10-24T15:29:11.869609+00:00",
+  "source": "implementation-file-reviews.json",
+  "reviewed_files": 12,
+  "summary": {
+    "false_positive": 8,
+    "actual_finding": 3,
+    "known_blocker": 1
+  },
+  "all_reviewed_sha_match": true,
+  "policy": "Read-only source triage. Probabilities are signals, not proofs. No source/index/git changes, issues, builds or tests. Actual findings require focused regressions before implementation.",
+  "files": [
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/RecordBulkAccessDecisionHandler.cs",
+      "sha256": "36d7ece8b6f175d7de51be65dc79b3509ad237945d5daefa18928604124500f6",
+      "signals": {
+        "authority_gap": 0.65,
+        "invariant_gap": 0.68,
+        "recovery_gap": 0.88,
+        "incomplete_path": 0.39
+      },
+      "current_sha256": "36d7ece8b6f175d7de51be65dc79b3509ad237945d5daefa18928604124500f6",
+      "sha_matches": true,
+      "classification": "false_positive",
+      "summary": "Current code resolves native acceptance before queue eligibility, revision, preview and mutable business checks; exact retry replays the admitted acknowledgment. Current restricted visibility remains an intentional read boundary.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessReviews/RecordBulkAccessDecisionHandler.cs",
+          "line_start": 39,
+          "line_end": 89,
+          "excerpt": "        var campaign = await campaigns.ReadCampaignAsync(request.TenantId, request.CampaignId, request.DecisionBatchId,\n            ct).ConfigureAwait(false);\n        if (!await RestrictedAccessReviewVisibility.CanReadCampaignItemsAsync(visibility, request.TenantId,\n                actor.UserId, campaign, itemIds, ct).ConfigureAwait(false))\n            return Failure(RequestErrorKind.NotFound, \"The review items were not found.\");\n\n        var now = clock.GetUtcNow();\n        var stream = campaign.Campaign.Stream;\n        var provenance = AccessReviewEffects.Root(request.DecisionBatchId, CommandKind, stream, actor.Reference,\n            request.ExpectedCampaignRevision, AuthoredIntentDigest.Compute(request), now);\n        var binding = AcceptedOperationBinding.Of(provenance);\n        FirstResponseDescriptor? response = null;\n        ImmutableContentRef? intent = null;\n        if (campaign.Campaign.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)\n        {\n            foreach (var itemId in itemIds.Distinct())\n            {\n                if (campaign.FindItem(itemId) is not { } item || campaign.CurrentReviewerMemberId(itemId) != actor.MemberId ||\n                    campaign.Launched?.ProgramId is { } programId &&\n                    !await eligibility.CanReviewAsync(request.TenantId, programId, actor.MemberId, item.SystemInstanceId, ct)\n                        .ConfigureAwait(false))\n                    return Failure(RequestErrorKind.NotFound,\n                        \"The review items were not found among the reviewer's current queue access.\");\n            }\n            if (campaign.Campaign.PrepareBulkAdmission(request.ExpectedCampaignRevision) is { IsSuccess: false } blocked)\n                return Result<OperationAcceptedResponse>.Failure(blocked.Error!);\n            if (!AccessReviewVocabulary.IsBoundedText(request.Rationale, 4000))\n                return Failure(RequestErrorKind.Validation,\n                    \"A decision is keep, modify, revoke, or unable_to_determine with a rationale of at most 4000 characters.\");\n            var preview = BulkAccessDecisions.Preview(campaign, itemIds, request.Decision, actor.MemberId, actor.UserId);\n            if (!preview.IsSuccess)\n                return Result<OperationAcceptedResponse>.Failure(preview.Error!);\n            if (preview.Value!.Rejected.Count > 0 || preview.Value.Eligible.Count != itemIds.Count ||\n                !string.Equals(preview.Value.PreviewToken, request.PreviewToken, StringComparison.Ordinal))\n                return Failure(RequestErrorKind.Conflict,\n                    \"The bulk decision no longer matches its preview; preview it again.\");\n            if (preview.Value.Eligible.Any(item => campaign.State(item.ItemId) is not { Materialized: true }))\n                return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Conflict,\n                    \"A selected review item has not been materialized yet; retry shortly.\", true));\n            intent = await FreezeIntentAsync(request, campaign, provenance, [.. preview.Value.Eligible.Select(\n                static item => item.ItemId)], now, ct).ConfigureAwait(false);\n            response = await AccessReviewContent.AcceptedResponseAsync(content, request.TenantId,\n                request.DecisionBatchId, now, ct).ConfigureAwait(false);\n        }\n\n        var outcome = await operations.ExecuteAsync(new NativeOperation<AccessReviewCampaign>(binding,\n            () => new AccessReviewCampaign(request.TenantId, request.CampaignId, request.DecisionBatchId),\n            owner => owner.Acceptance, owner => Prepare(owner, request.ExpectedCampaignRevision, response),\n            (AccessReviewCampaign owner, ImmutableContentRef acknowledgment) => owner.AdmitBulkDecision(provenance,\n                intent!, acknowledgment)), context, ct).ConfigureAwait(false);\n        return await AccessReviewContent.AcknowledgmentAsync(content, request.TenantId, outcome, ct)"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Applications/RemoveApplicationRelationshipHandler.cs",
+      "sha256": "ee91a50903b4bb633b7e2e8b5bdbf7bea7b392ad6fe4fcbd7af313932ff43966",
+      "signals": {
+        "authority_gap": 0.49,
+        "invariant_gap": 0.51,
+        "recovery_gap": 0.71,
+        "incomplete_path": 0.31
+      },
+      "current_sha256": "ee91a50903b4bb633b7e2e8b5bdbf7bea7b392ad6fe4fcbd7af313932ff43966",
+      "sha_matches": true,
+      "classification": "false_positive",
+      "summary": "Existing tombstone retry resolves before visible revision guard; executor rechecks source relationship revision and retries bounded source races. No concrete duplicate-removal defect found.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/RemoveApplicationRelationshipHandler.cs",
+          "line_start": 26,
+          "line_end": 70,
+          "excerpt": "        for (var attempt = 0; attempt < MaximumConcurrencyAttempts; attempt++)\n        {\n            var source = await reader.HydrateAsync(target, ct).ConfigureAwait(false);\n            if (!source.IsCreated || !await visibility.CanReadApplicationAsync(request.TenantId,\n                    userId, request.ApplicationId, ct).ConfigureAwait(false) ||\n                !source.TryGetApplicationRelationship(request.RelationshipId,\n                    out var relationship, out _))\n                return NotFound();\n            if (relationship is null || !await visibility.CanReadApplicationAsync(\n                    request.TenantId, userId, relationship.TargetApplicationId, ct)\n                    .ConfigureAwait(false))\n                return NotFound();\n\n            var projection = await ApplicationRelationshipProjection.ReadAsync(source,\n                request.TenantId, userId, visibility, ct).ConfigureAwait(false);\n            if (source.TryResolveApplicationRelationshipRemoval(request.RelationshipId,\n                    out var retry))\n                return MapVisibleRevision(retry, projection.Revision);\n\n            if (request.ExpectedRelationshipRevision != projection.Revision)\n                return Result<ApplicationRelationshipChange>.Failure(\n                    ApplicationRelationshipConcurrency.VisibleRevisionMismatch(\n                        request.ExpectedRelationshipRevision, projection.Revision));\n\n            var result = await executor.ExecuteAsync(target, app =>\n            {\n                if (app.SourceRelationshipRevision != source.SourceRelationshipRevision)\n                    return AggregateOutcome.Discard(Result<ApplicationRelationshipChange>.Failure(\n                        ApplicationRelationshipConcurrency.SourceChanged()));\n                if (app.TryResolveApplicationRelationshipRemoval(request.RelationshipId,\n                        out var currentRetry))\n                    return AggregateOutcome.Discard(currentRetry);\n                return AggregateOutcome.CommitOnSuccess(app.RemoveApplicationRelationship(\n                    source.SourceRelationshipRevision, request.RelationshipId, memberId,\n                    display, clock.GetUtcNow()));\n            }, context, ct).ConfigureAwait(false);\n            if (ApplicationRelationshipConcurrency.IsSourceChanged(result.Error))\n                continue;\n            if (!result.IsSuccess)\n                return result;\n\n            var latest = await reader.HydrateAsync(target, ct).ConfigureAwait(false);\n            var latestProjection = await ApplicationRelationshipProjection.ReadAsync(latest,\n                request.TenantId, userId, visibility, ct).ConfigureAwait(false);\n            return MapVisibleRevision(result, latestProjection.Revision);"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditorRequests/AuthorizeAuditorResponseRequestResolutionUseHandler.cs",
+      "sha256": "1f6f92b26fe5c883240f9089ff107ff3f90cb60c77651eab69dc2b59cd4aaac8",
+      "signals": {
+        "authority_gap": 0.41,
+        "invariant_gap": 0.4,
+        "recovery_gap": 0.46,
+        "incomplete_path": 0.71
+      },
+      "current_sha256": "1f6f92b26fe5c883240f9089ff107ff3f90cb60c77651eab69dc2b59cd4aaac8",
+      "sha_matches": true,
+      "classification": "false_positive",
+      "summary": "Receiver verifies exact accepted request resolution source, frozen admitted child membership, receiving owner/program/generation, source pinned fact and resource revision; unavailable content waits, corruption refuses, and refusal aborts/fences. No missing path established by score.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AuditorRequests/AuthorizeAuditorResponseRequestResolutionUseHandler.cs",
+          "line_start": 26,
+          "line_end": 81,
+          "excerpt": "    protected override async ValueTask<Result<SourceUseSource>> VerifyAsync(\n        AuthorizeAuditorResponseRequestResolutionUse request, CancellationToken ct)\n    {\n        var resolution = await verifier.VerifyAcceptedAsync(request.Source, request.Intent, request.OperationId,\n            request.CommandId, ct).ConfigureAwait(false);\n        if (resolution.Error is not null)\n            return Result<SourceUseSource>.Failure(resolution.Error);\n        var (auditorRequest, intent, decision, tenant) = (resolution.Request!, resolution.Intent!, resolution.Decision!,\n            resolution.TenantId);\n        IReadOnlyList<AdmittedRequestChild> children;\n        try\n        {\n            children = await AuditorRequestResolutionProofs.ChildrenAsync(Content, tenant, intent, ct).ConfigureAwait(false);\n        }\n        catch (ImmutableContentUnavailableException exception)\n        {\n            return Fail($\"The admitted child manifest cannot be verified: {exception.Message}\", true);\n        }\n        catch (ImmutableContentIntegrityException exception)\n        {\n            return Fail($\"The admitted child manifest cannot be verified: {exception.Message}\", false);\n        }\n\n        if (request.ReceivingOwnerId != intent.ParentId || request.ProgramId != decision.ProgramId ||\n            request.Generation != (long)intent.ParentGeneration || children.All(child =>\n                child.Kind != AdmittedRequestChildKind.Response || child.ChildId != request.SourceOwnerId))\n            return Fail(\"The authorization differs from the frozen resolution response set.\", false);\n\n        var terminal = auditorRequest.TerminalResolution(request.OperationId);\n        var superseded = terminal is AuditorRequestResolved ? \"The resolution already resolved the request.\" : null;\n        var response = await verifier.HydrateAsync(Open(request, request.CommandId), ct).ConfigureAwait(false);\n        var key = AuditorRequestResolutionEffects.UseKey(intent, response.Stream);\n        if (superseded is not null)\n            return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, request.Intent, key,\n                Placeholder(response, intent), nameof(AuthorizeAuditorResponseRequestResolutionUse), null, superseded));\n        if (!response.IsMaterialized)\n            return Fail(\"The auditor response is not materialized yet.\", true);\n        if (response.FactById(request.SourceContentEventId) is not { } pinned)\n            return Fail(\"The pinned auditor response fact does not exist.\", false);\n        if (auditorRequest.Responses.All(fact => fact.Operation.LogicalId != request.SourceOwnerId))\n            return Fail(\"The response was not admitted by this request.\", false);\n\n        var disposition = response.Disposition;\n        var refusal = terminal is AuditorRequestResolutionCanceled ? \"The resolution was canceled.\"\n            : response.Delivery is null || disposition is not { Outcome: \"accepted\" }\n                ? \"The response has no accepted external disposition for its delivered version.\"\n                : null;\n        var facts = new ResponseResolutionFacts(request.SourceOwnerId, (int)(response.Delivery?.Version ?? 0),\n            disposition?.Outcome ?? string.Empty,\n            disposition is null ? null : NativeFactReference.Of(response.Stream, disposition), refusal);\n        var factsReference = await AuditorContent.WriteDeterministicAsync(Content, tenant, request.CommandId,\n            AuditorContent.ResponseFactsSchema, facts, ct).ConfigureAwait(false);\n        var requirement = new SourceUseRequirement(response.Stream, NativeFactReference.Of(response.Stream, pinned),\n            request.ExpectedContentRevision, SourceUsePurpose.RequestResolution, factsReference);\n        return Result<SourceUseSource>.Success(new SourceUseSource(intent.Header, request.Intent, key, requirement,\n            nameof(AuthorizeAuditorResponseRequestResolutionUse), null, null));"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditorRequests/AuthorizeAuditorResponseRequestResolutionUseHandler.cs",
+          "line_start": 84,
+          "line_end": 133,
+          "excerpt": "    protected override async ValueTask<Result> VerifyPinnedAsync(AuditorResponse owner, SourceUseRequirement requirement,\n        CancellationToken ct)\n    {\n        if (!owner.IsMaterialized)\n            return Result.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"The auditor response is not materialized yet.\", true));\n        if (!IsPinned(owner, requirement))\n            return Result.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"The auditor response changed after the resolution pinned it.\", false));\n        ResponseResolutionFacts facts;\n        try\n        {\n            facts = await AuditorContent.ReadAsync<ResponseResolutionFacts>(Content,\n                Uuid.Parse(owner.Stream.Realm, CultureInfo.InvariantCulture), requirement.RequiredFacts, ct)\n                .ConfigureAwait(false);\n        }\n        catch (ImmutableContentUnavailableException exception)\n        {\n            return Result.Failure(new RequestError(RequestErrorKind.Conflict,\n                $\"The pinned response facts cannot be verified: {exception.Message}\", true));\n        }\n        catch (ImmutableContentIntegrityException exception)\n        {\n            return Result.Failure(new RequestError(RequestErrorKind.Conflict,\n                $\"The pinned response facts cannot be verified: {exception.Message}\", false));\n        }\n\n        return facts.Refusal is null\n            ? Result.Success\n            : Result.Failure(new RequestError(RequestErrorKind.Conflict, facts.Refusal, false));\n    }\n\n    protected override bool IsPinned(AuditorResponse owner, SourceUseRequirement requirement) =>\n        owner.Latest is { } latest && latest.Metadata.EventId == requirement.ContentEvent.EventId &&\n        (ulong)owner.Revision == requirement.ResourceRevision;\n\n    protected override Func<AuditorResponse, OperationProvenance, ImmutableContentRef, long, Result> GrantOperation() =>\n        (AuditorResponse response, OperationProvenance provenance, ImmutableContentRef intent, long generation) =>\n            response.AuthorizeResolutionUse(provenance, intent, generation);\n\n    protected override async ValueTask<Result<ReceiverOutcome>> RefuseAsync(\n        AuthorizeAuditorResponseRequestResolutionUse request, SourceUseSource source, string reason,\n        IExecutionContext context, CancellationToken ct)\n    {\n        var resolution = await verifier.VerifyAcceptedAsync(request.Source, request.Intent, request.OperationId,\n            request.CommandId, ct).ConfigureAwait(false);\n        return resolution.Error is not null\n            ? Result<ReceiverOutcome>.Failure(resolution.Error)\n            : await fences.AbortAsync(resolution, request.Source, request.Intent, reason, request.SourceOwnerId, context,\n                ct).ConfigureAwait(false);"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AccessReviews/CompleteAccessReviewCampaignHandler.cs",
+      "sha256": "67aceb8f723adb8529c7afdf7db5ff235120f7e9d60524801ec479b80093bf99",
+      "signals": {
+        "authority_gap": 0.5,
+        "invariant_gap": 0.57,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.32
+      },
+      "current_sha256": "67aceb8f723adb8529c7afdf7db5ff235120f7e9d60524801ec479b80093bf99",
+      "sha_matches": true,
+      "classification": "false_positive",
+      "summary": "No concrete recovery defect found: business completion blockers and content preparation run only when native acceptance is absent; executor resolves exact replay and later closure process pins complete independent item heads.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AccessReviews/CompleteAccessReviewCampaignHandler.cs",
+          "line_start": 41,
+          "line_end": 67,
+          "excerpt": "        var now = clock.GetUtcNow();\n        var stream = campaign.Campaign.Stream;\n        var provenance = AccessReviewEffects.Root(request.CommandId, CommandKind, stream, actor.Reference,\n            request.ExpectedRevision, AuthoredIntentDigest.Compute(request), now);\n        var binding = AcceptedOperationBinding.Of(provenance);\n        FirstResponseDescriptor? response = null;\n        ImmutableContentRef? intent = null;\n        if (campaign.Campaign.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)\n        {\n            if (campaign.Campaign.PrepareCompletion(request.ExpectedRevision) is { IsSuccess: false } blocked)\n                return Result<OperationAcceptedResponse>.Failure(blocked.Error!);\n            if (campaign.CompletionBlockers(now) is { Count: > 0 } blockers)\n                return Failure(RequestErrorKind.Conflict, string.Join(\" \", blockers.Take(10)));\n            if (!AccessReviewVocabulary.IsBoundedText(request.Attestation, 4000))\n                return Failure(RequestErrorKind.Validation,\n                    \"Completion requires an attestation of at most 4000 characters.\");\n            intent = await FreezeIntentAsync(request, campaign, provenance, now, ct).ConfigureAwait(false);\n            response = await AccessReviewContent.AcceptedResponseAsync(content, request.TenantId, request.CommandId,\n                now, ct).ConfigureAwait(false);\n        }\n\n        var outcome = await operations.ExecuteAsync(new NativeOperation<AccessReviewCampaign>(binding,\n            () => new AccessReviewCampaign(request.TenantId, request.CampaignId, request.CommandId),\n            owner => owner.Acceptance, owner => Prepare(owner, request.ExpectedRevision, response),\n            (AccessReviewCampaign owner, ImmutableContentRef acknowledgment) => owner.AcceptCompletion(provenance,\n                intent!, acknowledgment)), context, ct).ConfigureAwait(false);\n        return await AccessReviewContent.AcknowledgmentAsync(content, request.TenantId, outcome, ct)"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AccessReviews/CompleteAccessReviewCampaignHandler.cs",
+          "line_start": 83,
+          "line_end": 110,
+          "excerpt": "    async Task<ImmutableContentRef> FreezeIntentAsync(CompleteAccessReviewCampaign request,\n        AccessReviewCampaignSnapshot campaign, OperationProvenance provenance, DateTimeOffset now, CancellationToken ct)\n    {\n        var tenantId = request.TenantId;\n        var requirements = new SortedDictionary<string, SourceUseRequirement>(StreamKeyOrder.Instance);\n        foreach (var state in campaign.Items)\n        {\n            var stream = AccessReviewEffects.ItemStream(tenantId, request.CampaignId, state.Item.ItemId);\n            var decision = state.CurrentDecision!;\n            var facts = await AccessReviewContent.WriteAsync(content, tenantId, AccessReviewContent.ItemFactsSchema,\n                new AccessReviewItemCompletionFacts(state.Item.ItemId, state.Revision, decision.DecisionId,\n                    decision.Decision, state.RemediationStatus(now)), ct).ConfigureAwait(false);\n            requirements.Add(stream.Resource, new SourceUseRequirement(stream, state.Latest!, (ulong)state.Revision,\n                SourceUsePurpose.CampaignCompletion, facts));\n        }\n\n        var uses = await ManifestAsync(tenantId, AccessReviewContent.SourceUseItemSchema, [.. requirements.Values], ct)\n            .ConfigureAwait(false);\n        var admitted = await DrainedBatchesAsync(tenantId, campaign.Campaign, ct).ConfigureAwait(false);\n        var decisionContent = await AccessReviewContent.WriteAsync(content, tenantId,\n            AccessReviewContent.CompletionDecisionSchema, new AccessReviewCompletionDecision(request.CommandId,\n                request.CampaignId, request.ExpectedRevision, request.Attestation.Trim()), ct).ConfigureAwait(false);\n        var header = new DurableIntentHeader(request.CommandId, provenance.Owner, provenance.Owner, provenance.Owner,\n            provenance.Actor, provenance.Episode, provenance.OriginalExpectedRevision, provenance.AuthoredIntentSha256,\n            now);\n        return await AccessReviewContent.WriteAsync(content, tenantId, ClosureIntent.Schema,\n            new ClosureIntent(header, ClosureParentKind.AccessReviewCampaign, request.CampaignId,\n                (ulong)AccessReviewEffects.Generation, admitted, decisionContent, uses, null), ct).ConfigureAwait(false);"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Applications/PreviewApplicationImportHandler.cs",
+      "sha256": "699f426fe0a94c424763ea399369b91b9b40d6b82fb1918786781083f6b150ec",
+      "signals": {
+        "authority_gap": 0.47,
+        "invariant_gap": 0.59,
+        "recovery_gap": 0.68,
+        "incomplete_path": 0.24
+      },
+      "current_sha256": "699f426fe0a94c424763ea399369b91b9b40d6b82fb1918786781083f6b150ec",
+      "sha_matches": true,
+      "classification": "false_positive",
+      "summary": "Read-only preview validates projection rows against immutable staged rows, binds cursor to batch revision/source position/publication cut, and rechecks source unchanged after composition. No concrete recovery mutation defect found.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/PreviewApplicationImportHandler.cs",
+          "line_start": 22,
+          "line_end": 60,
+          "excerpt": "        var fresh = await consistency.GetFreshAsync(request.TenantId, request.BatchId,\n            request.MinimumRevision, ct).ConfigureAwait(false);\n        if (!fresh.IsSuccess)\n            return Result<Page<ApplicationImportPreviewRow>>.Failure(fresh.Error);\n        var loaded = await ApplicationImportOmissionSources.LoadAsync(reader, content, request.TenantId,\n            request.BatchId, ct).ConfigureAwait(false);\n        if (!loaded.IsSuccess)\n            return Result<Page<ApplicationImportPreviewRow>>.Failure(loaded.Error);\n        var (source, view, stagedRows) = loaded.Value;\n        if (source.Revision != fresh.Value.Revision)\n            return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"The import lifecycle changed while reading the preview.\", isTransient: true));\n        var missing = view.Missing(source, stagedRows);\n        var claims = view.Claims.ToDictionary(claim => claim.Observation.SourceRecordId, StringComparer.Ordinal);\n        var sourcePosition = view.Source.CommittedStreamPosition;\n        var cursorError = ApplicationImportPaging.Decode(request.TenantId, request.BatchId,\n            fresh.Value.Revision, innerCursor, out var rowsCursor, sourcePosition);\n        if (cursorError is not null)\n            return Result<Page<ApplicationImportPreviewRow>>.Failure(cursorError);\n        Page<ApplicationImportRowView> page;\n        try\n        {\n            page = await directory.ListRowsAsync(request.TenantId, request.BatchId,\n                request.Limit ?? 50, rowsCursor, ct).ConfigureAwait(false);\n        }\n        catch (KvDirectoryQueryException)\n        {\n            return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(\n                RequestErrorKind.Validation, \"The import preview cursor is invalid.\"));\n        }\n        var legacyError = ApplicationImportPaging.CheckLegacyRevision(fresh.Value.Revision, innerCursor, sourcePosition);\n        if (legacyError is not null)\n            return Result<Page<ApplicationImportPreviewRow>>.Failure(legacyError);\n        if (page.Items.Any(row => row.TenantId != request.TenantId ||\n                                  row.BatchId != request.BatchId) ||\n            (innerCursor is null && page.Items.Count == 0 && fresh.Value.RowCount > 0))\n            return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(\n                RequestErrorKind.Conflict, \"The import row projection is incomplete.\",\n                isTransient: true));"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/PreviewApplicationImportHandler.cs",
+          "line_start": 95,
+          "line_end": 124,
+          "excerpt": "                    var target = await cut.ReadAsync(request.TenantId, targetId!.Value, ct)\n                        .ConfigureAwait(false);\n                    var expected = choice?.ExpectedApplicationRevision ?? claim!.Observation.ExpectedApplicationRevision ?? 1;\n                    if (!target.IsCreated || target.IsRetired || target.Id != targetId ||\n                        target.Stream.Realm != request.TenantId.ToString() || target.Revision != expected)\n                    {\n                        blockers.Add(claim is not null ? \"source_claim_target_changed\" : \"correlation_target_changed\");\n                        state = \"conflicting\";\n                    }\n                }\n            }\n            items.Add(new ApplicationImportPreviewRow(row.TenantId, row.BatchId, row.RowId,\n                row.RowNumber, row.SourceRecordId, row.Name, row.Purpose, row.OwnerReference, row.ValidationFindings,\n                state, targetId is { } id ? [id] : [], changed, blockers)\n            {\n                Correlation = choice is not null\n                        ? new ApplicationImportCorrelationView(choice.Decision, choice.ApplicationId,\n                            choice.ExpectedApplicationRevision, choice.Reason, choice.ActorMemberId,\n                            choice.ActorDisplay, choice.RecordedAt, choice.Revision)\n                        : null,\n            });\n        }\n        if (!await ApplicationImportOmissionSources.UnchangedAsync(reader, content, request.TenantId, source, view, ct)\n                .ConfigureAwait(false))\n            return Result<Page<ApplicationImportPreviewRow>>.Failure(new RequestError(\n                RequestErrorKind.Conflict, \"The import source changed while reading the preview.\", isTransient: true));\n        var nextCursor = ApplicationPublicationCursor.Wrap(cut.Cut.GlobalWatermarkExclusive,\n            ApplicationImportPaging.Encode(request.TenantId, request.BatchId,\n                fresh.Value.Revision, page.NextCursor, sourcePosition));\n        return Result<Page<ApplicationImportPreviewRow>>.Success(new Page<ApplicationImportPreviewRow>(items, nextCursor));"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Applications/RecordApplicationRelationshipHandler.cs",
+      "sha256": "03eb352d7a8e8d2c6b4aa33d20aa558caf3e1583396f026d343370ebc5c9cc22",
+      "signals": {
+        "authority_gap": 0.49,
+        "invariant_gap": 0.67,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.21
+      },
+      "current_sha256": "03eb352d7a8e8d2c6b4aa33d20aa558caf3e1583396f026d343370ebc5c9cc22",
+      "sha_matches": true,
+      "classification": "actual_finding",
+      "summary": "Lost-response retry can fail after an unrelated application revision: handler reloads current endpoint revisions, but existing relationship records old endpoint revisions and RecordRelationship rejects the identical request against different revisions. This path lacks immutable authored command acceptance. Double hydration also does not hold target currentness through source append.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/RecordApplicationRelationshipHandler.cs",
+          "line_start": 24,
+          "line_end": 59,
+          "excerpt": "        var source = await reader.HydrateApplicationAsync(request.TenantId,\n            request.SourceApplicationId, ct).ConfigureAwait(false);\n        var target = await reader.HydrateApplicationAsync(request.TenantId,\n            request.TargetApplicationId, ct).ConfigureAwait(false);\n        if (!source.IsCreated || !target.IsCreated ||\n            !await visibility.CanReadApplicationAsync(request.TenantId, userId,\n                request.SourceApplicationId, ct).ConfigureAwait(false) ||\n            !await visibility.CanReadApplicationAsync(request.TenantId, userId,\n                request.TargetApplicationId, ct).ConfigureAwait(false))\n            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(\n                RequestErrorKind.NotFound, \"The application was not found.\"));\n        if (source.IsRetired || target.IsRetired)\n            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(\n                RequestErrorKind.Conflict, \"Relationships require active applications.\"));\n\n        var targetAggregate = new DeclaredApplication(request.TenantId, request.SourceApplicationId);\n        var currentSource = await reader.HydrateApplicationAsync(request.TenantId,\n            request.SourceApplicationId, ct).ConfigureAwait(false);\n        var currentTarget = await reader.HydrateApplicationAsync(request.TenantId,\n            request.TargetApplicationId, ct).ConfigureAwait(false);\n        if (!currentSource.IsCreated || !currentTarget.IsCreated ||\n            currentSource.IsRetired || currentTarget.IsRetired)\n            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(\n                RequestErrorKind.Conflict, \"The application relationship endpoints changed.\"));\n        if (currentSource.Revision != source.Revision || currentTarget.Revision != target.Revision)\n            return Result<ApplicationRelationshipRegistration>.Failure(new RequestError(\n                RequestErrorKind.Conflict, \"The application relationship endpoints changed.\"));\n        return await executor.ExecuteAsync(targetAggregate,\n            app => app.CheckPendingImportChanges() is { } importError\n                ? AggregateOutcome.Discard(Result<ApplicationRelationshipRegistration>.Failure(\n                    importError))\n                : AggregateOutcome.CommitOnSuccess(app.RecordRelationship(\n                    request.TargetApplicationId, currentSource.Revision, currentTarget.Revision,\n                    request.RelationshipType, RbacIds.Member(request.TenantId, userId),\n                    UserIdentityClaims.BdgrzDisplay(context.Actor, userId),\n                    clock.GetUtcNow())), context, ct).ConfigureAwait(false);"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs",
+      "sha256": "19e6737cb1cbb964c3f2360459df591cef52bc80b0fa54161d147ec4c949a45f",
+      "signals": {
+        "authority_gap": 0.49,
+        "invariant_gap": 0.59,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.32
+      },
+      "current_sha256": "19e6737cb1cbb964c3f2360459df591cef52bc80b0fa54161d147ec4c949a45f",
+      "sha_matches": true,
+      "classification": "known_blocker",
+      "summary": "Accepted independent population export owner/process migration remains incomplete: current full-state owner stores export histories and emits snapshots, including RecordExport on population revision. This is an implementation gap, not an external prerequisite.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs",
+          "line_start": 49,
+          "line_end": 57,
+          "excerpt": "        On<AuditPopulationDefined>(Apply);\n        On<AuditPopulationDefinitionRevised>(Apply);\n        On<AuditPopulationGenerated>(Apply);\n        On<AuditPopulationFactRecorded>(Apply);\n        On<AuditPopulationRowClassified>(Apply);\n        On<AuditPopulationReconciled>(Apply);\n        On<AuditPopulationAmended>(Apply);\n        On<AuditPopulationFrozen>(Apply);\n        On<AuditPopulationExportGenerated>(Apply);"
+        },
+        {
+          "path": "src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs",
+          "line_start": 355,
+          "line_end": 395,
+          "excerpt": "    public CommandFailure? RecordExport(long expectedRevision, Uuid exportId,\n        int populationVersion, string format, string fileName, Uuid artifactId,\n        string outputContentSha256, long outputContentLength,\n        Uuid actorMemberId, string actorDisplay, DateTimeOffset generatedAt)\n    {\n        if (_current is not { } current)\n            return CommandFailure.MissingRecord(\"The audit population was not found.\");\n        format = Clean(format).ToLowerInvariant();\n        fileName = Clean(fileName);\n        if (current.Exports.FirstOrDefault(item => item.ExportId == exportId) is { } existing)\n            return existing.PopulationVersion == populationVersion && existing.Format == format &&\n                existing.FileName == fileName && existing.ArtifactId == artifactId &&\n                existing.OutputContentSha256 == outputContentSha256 &&\n                existing.OutputContentLength == outputContentLength ? null :\n                CommandFailure.StateConflict(\"An export identity cannot be reused for different population content.\");\n        if (expectedRevision != Revision)\n            return StaleRevision();\n        var version = current.Versions.FirstOrDefault(item => item.Version == populationVersion);\n        if (current.Status is not (\"frozen\" or \"amending\" or \"reconciled\") || version is null ||\n            !ExportFormats.Contains(format) ||\n            exportId == Uuid.Empty || artifactId == Uuid.Empty || !IsHash(outputContentSha256) ||\n            outputContentLength <= 0 || !Bounded(fileName, 1, 255) ||\n            fileName.Contains('/') || fileName.Contains('\\\\') ||\n            !ValidActor(actorMemberId, actorDisplay, generatedAt) || generatedAt < current.UpdatedAt ||\n            current.Exports.Count >= MaximumExports)\n            return Invalid(\"Population export requires an exact frozen version, supported format, stable identity, and attribution.\");\n        var export = new AuditPopulationExportView(exportId, populationVersion, format, fileName,\n            version.ContentSha256, version.CloseSnapshotId, generatedAt, actorMemberId, actorDisplay.Trim(),\n            artifactId, outputContentSha256, outputContentLength);\n        var state = current with\n        {\n            Revision = Revision + 1,\n            Exports = Append(current.Exports, export),\n            ActorMemberId = actorMemberId,\n            ActorDisplay = actorDisplay.Trim(),\n            UpdatedAt = generatedAt,\n        };\n        return Emit(state, actorMemberId, generatedAt,\n            static (tenant, subject, revision, actor, snapshot, at) =>\n                new AuditPopulationExportGenerated(tenant, subject, revision, actor, snapshot, at),\n            \"export\");"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs",
+      "sha256": "0d92dd638ef1355d69c995d2741174ddfa3043b6d870df2b863702f40f6e2796",
+      "signals": {
+        "authority_gap": 0.56,
+        "invariant_gap": 0.64,
+        "recovery_gap": 0.67,
+        "incomplete_path": 0.57
+      },
+      "current_sha256": "0d92dd638ef1355d69c995d2741174ddfa3043b6d870df2b863702f40f6e2796",
+      "sha_matches": true,
+      "classification": "false_positive",
+      "summary": "Gap owns record/one closure/pair uniqueness with native logical acceptance; close requires own expected revision and newer/different verified source; accepted risk link admission serializes pair uniqueness and immutable intent on this owner. External proof checks belong to handlers; no concrete defect established in this owner.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs",
+          "line_start": 35,
+          "line_end": 64,
+          "excerpt": "        On<ProviderCoverageGapRecorded>(recorded =>\n        {\n            Acceptance.Observe(recorded);\n            if (_recorded is not null || recorded.TenantId != _tenantId || recorded.ProviderId != _providerId ||\n                recorded.GapId != _gapId || recorded.ProviderRevision < 1 || recorded.Operation.Owner != Stream ||\n                recorded.Operation.LogicalId != _gapId || recorded.RequestId != _gapId)\n                throw new InvalidOperationException(\"A gap is recorded once, by its own provider and logical identity.\");\n            _recorded = recorded;\n            _revision = 1;\n        });\n        On<ProviderCoverageGapClosed>(closed =>\n        {\n            Acceptance.Observe(closed);\n            if (_recorded is null || _closed is not null || closed.TenantId != _tenantId ||\n                closed.ProviderId != _providerId || closed.GapId != _gapId || closed.Revision != _revision + 1 ||\n                closed.Operation.Owner != Stream || closed.Operation.LogicalId != closed.RequestId)\n                throw new InvalidOperationException(\"A closure must follow the open gap and its previous revision.\");\n            _closed = closed;\n            _revision = closed.Revision;\n        });\n        On<ProviderCoverageGapRiskAcceptanceAdmitted>(admitted =>\n        {\n            Acceptance.Observe(admitted);\n            if (_recorded is null || _closed is not null || admitted.Owner != Stream ||\n                admitted.Revision != _revision + 1 || admitted.Operation.Owner != Stream ||\n                !_admittedPairs.Add(admitted.Operation.Episode) ||\n                !_admissions.TryAdd(admitted.Operation.LogicalId, admitted))\n                throw new InvalidOperationException(\n                    \"A risk acceptance link is admitted on the open gap for a new pair at the next revision.\");\n            _revision = admitted.Revision;"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs",
+          "line_start": 124,
+          "line_end": 157,
+          "excerpt": "    public Result PrepareClose(long expectedRevision, ProviderCoverageGapContent recorded,\n        ProviderCoverageGapClosureContent closure)\n    {\n        ArgumentNullException.ThrowIfNull(recorded);\n        ArgumentNullException.ThrowIfNull(closure);\n        if (_recorded is null)\n            return Result.Failure(new RequestError(RequestErrorKind.NotFound, \"The provider coverage gap was not found.\"));\n        if (expectedRevision != _revision)\n            return Result.Failure(VersionedRecordRules.StaleRevision(\"provider coverage gap\", _revision)\n                .ToRequestError());\n        if (_closed is not null)\n            return Result.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"A provider coverage gap can be closed only once.\"));\n        return recorded.SourceKind == closure.SourceKind && recorded.SourceId == closure.SourceId &&\n               closure.SourceRevision <= recorded.SourceRevision\n            ? Result.Failure(new RequestError(RequestErrorKind.Validation,\n                \"A provider coverage gap requires a newer or different closure source.\"))\n            : Result.Success;\n    }\n\n    /// <summary>Accepts the closure as the native fact of its logical command.</summary>\n    public Result Close(OperationProvenance operation, long expectedRevision, ProviderCoverageGapContent recorded,\n        ProviderCoverageGapClosureContent closure, ImmutableContentRef content, ActorReference actor,\n        DateTimeOffset closedAt, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)\n    {\n        ArgumentNullException.ThrowIfNull(operation);\n        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)\n            return Result.Failure(new RequestError(RequestErrorKind.Validation,\n                \"A gap closure requires its own logical operation.\"));\n        var prepared = PrepareClose(expectedRevision, recorded, closure);\n        if (!prepared.IsSuccess)\n            return prepared;\n        RaiseEvent(new ProviderCoverageGapClosed(_tenantId, _gapId, _providerId, operation.LogicalId, _revision + 1,\n            content, actor, closedAt, operation, firstResponse, operationResult));"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs",
+          "line_start": 162,
+          "line_end": 197,
+          "excerpt": "    public Result PrepareAdmitLink(long expectedRevision, Uuid riskId, Uuid acceptanceId)\n    {\n        if (_recorded is null)\n            return Result.Failure(new RequestError(RequestErrorKind.NotFound, \"The provider coverage gap was not found.\"));\n        if (expectedRevision != _revision)\n            return Result.Failure(VersionedRecordRules.StaleRevision(\"provider coverage gap\", _revision)\n                .ToRequestError());\n        if (_closed is not null)\n            return Result.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"A closed provider coverage gap cannot receive a risk acceptance link.\"));\n        return _admittedPairs.Contains(PairEpisode(riskId, acceptanceId))\n            ? Result.Failure(new RequestError(RequestErrorKind.Conflict,\n                \"The risk acceptance is already linked to this provider coverage gap.\"))\n            : Result.Success;\n    }\n\n    /// <summary>\n    ///     Admits the link as the root native fact of its logical command. The admission produces the next gap\n    ///     revision, which <paramref name=\"operation\" /> keeps even if the gap closes before the link materializes.\n    /// </summary>\n    public Result AdmitLink(OperationProvenance operation, long expectedRevision, Uuid riskId, Uuid acceptanceId,\n        ImmutableContentRef intent, ImmutableContentRef firstResponse)\n    {\n        ArgumentNullException.ThrowIfNull(operation);\n        ArgumentNullException.ThrowIfNull(intent);\n        ArgumentNullException.ThrowIfNull(firstResponse);\n        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream ||\n            operation.Episode != PairEpisode(riskId, acceptanceId))\n            return Result.Failure(new RequestError(RequestErrorKind.Validation,\n                \"A link admission is the logical operation of its own gap owner, bound to its pair.\"));\n        var prepared = PrepareAdmitLink(expectedRevision, riskId, acceptanceId);\n        if (!prepared.IsSuccess)\n            return prepared;\n        var revision = _revision + 1;\n        RaiseEvent(new ProviderCoverageGapRiskAcceptanceAdmitted(Stream, revision, revision, intent, null, operation,\n            firstResponse, null));"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AdvisorCollaboration/ListAdvisorFeedbackHandler.cs",
+      "sha256": "ddab207bb8bcc62018db519a59622522b6ba024ccab17de66be1a92bdcdeaf51",
+      "signals": {
+        "authority_gap": 0.66,
+        "invariant_gap": 0.47,
+        "recovery_gap": 0.47,
+        "incomplete_path": 0.17
+      },
+      "current_sha256": "ddab207bb8bcc62018db519a59622522b6ba024ccab17de66be1a92bdcdeaf51",
+      "sha_matches": true,
+      "classification": "false_positive",
+      "summary": "ListAdvisorFeedback is IProgramReadRequest; handler additionally requires handoff ProgramId match, lists only handoff-admitted child IDs, and computes currentness from exact selected version resolver. No concrete authority bypass found.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AdvisorCollaboration/ListAdvisorFeedbackHandler.cs",
+          "line_start": 39,
+          "line_end": 74,
+          "excerpt": "        var handoff = await handoffs.ReadAsync(request.TenantId, request.ProgramId, request.HandoffId, ct)\n            .ConfigureAwait(false);\n        if (!handoff.IsCreated || handoff.ProgramId != request.ProgramId)\n            return Result<Page<AdvisorFeedbackView>>.Failure(new RequestError(\n                RequestErrorKind.NotFound,\n                \"The advisor handoff was not found in the requested program.\"));\n\n        var admitted = handoff.Handoff.Admitted.Select(static fact => fact.Operation.LogicalId).ToArray();\n        var start = 0;\n        if (cursorId is { } after)\n        {\n            var cursorIndex = Array.IndexOf(admitted, after);\n            if (cursorIndex < 0)\n                return Invalid(\"The advisor feedback cursor is invalid for this handoff.\");\n            start = cursorIndex + 1;\n        }\n\n        var limit = request.Limit ?? DefaultLimit;\n        var threads = new List<AdvisorFeedbackThread>(limit + 1);\n        for (var index = start; index < admitted.Length && threads.Count <= limit; index++)\n        {\n            var thread = await reader.HydrateAsync(new AdvisorFeedbackThread(request.TenantId, request.ProgramId,\n                request.HandoffId, admitted[index]), ct).ConfigureAwait(false);\n            if (thread.IsMaterialized)\n                threads.Add(thread);\n        }\n\n        var hasMore = threads.Count > limit;\n        var pageThreads = threads.Take(limit).ToArray();\n        var currentSources = new HashSet<AdvisorRecordVersion>();\n        foreach (var source in pageThreads.Select(thread => SourceOf(thread.Recorded!))\n                     .Where(source => handoff.Selection.Contains(source) && source.IsSupported).Distinct())\n        {\n            var current = await versions.RequireCurrentAsync(request.TenantId,\n                request.ProgramId, [source], ct).ConfigureAwait(false);\n            if (current.IsSuccess)"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Applications/AddApplicationRelationshipHandler.cs",
+      "sha256": "ed8348261d8ed5ffbc5b8a2072f4236ee160cefcf8b6d33083070aa3ffd7e8c8",
+      "signals": {
+        "authority_gap": 0.47,
+        "invariant_gap": 0.54,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.29
+      },
+      "current_sha256": "ed8348261d8ed5ffbc5b8a2072f4236ee160cefcf8b6d33083070aa3ffd7e8c8",
+      "sha_matches": true,
+      "classification": "false_positive",
+      "summary": "Stable relationship identity retries resolve before visible revision guard; executor rechecks source relationship revision and bounds OCC retries. Current endpoint visibility is enforced before disclosure.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/AddApplicationRelationshipHandler.cs",
+          "line_start": 24,
+          "line_end": 76,
+          "excerpt": "        for (var attempt = 0; attempt < MaximumConcurrencyAttempts; attempt++)\n        {\n            var source = await reader.HydrateAsync(target, ct).ConfigureAwait(false);\n            if (!source.IsCreated || !await visibility.CanReadApplicationAsync(request.TenantId,\n                    userId, request.ApplicationId, ct).ConfigureAwait(false))\n                return NotFound();\n\n            var projection = await ApplicationRelationshipProjection.ReadAsync(source,\n                request.TenantId, userId, visibility, ct).ConfigureAwait(false);\n            if (source.TryGetApplicationRelationship(request.RelationshipId,\n                    out var existing, out _))\n            {\n                if (existing is null || !await visibility.CanReadApplicationAsync(\n                        request.TenantId, userId, existing.TargetApplicationId, ct)\n                        .ConfigureAwait(false))\n                    return NotFound();\n                if (source.TryResolveApplicationRelationshipAdd(request.RelationshipId,\n                        request.TargetApplicationId, request.RelationshipType, out var retry))\n                    return MapVisibleRevision(retry, projection.Revision);\n            }\n            else if (!await visibility.CanReadApplicationAsync(request.TenantId, userId,\n                         request.TargetApplicationId, ct).ConfigureAwait(false))\n            {\n                return NotFound();\n            }\n\n            if (request.ExpectedRelationshipRevision != projection.Revision)\n                return Result<ApplicationRelationshipChange>.Failure(\n                    ApplicationRelationshipConcurrency.VisibleRevisionMismatch(\n                        request.ExpectedRelationshipRevision, projection.Revision));\n\n            var result = await executor.ExecuteAsync(target, app =>\n            {\n                if (app.SourceRelationshipRevision != source.SourceRelationshipRevision)\n                    return AggregateOutcome.Discard(Result<ApplicationRelationshipChange>.Failure(\n                        ApplicationRelationshipConcurrency.SourceChanged()));\n                if (app.TryResolveApplicationRelationshipAdd(request.RelationshipId,\n                        request.TargetApplicationId, request.RelationshipType, out var retry))\n                    return AggregateOutcome.Discard(retry);\n                return AggregateOutcome.CommitOnSuccess(app.AddApplicationRelationship(\n                    source.SourceRelationshipRevision, request.RelationshipId,\n                    request.TargetApplicationId, request.RelationshipType, memberId, display,\n                    clock.GetUtcNow()));\n            }, context, ct).ConfigureAwait(false);\n            if (ApplicationRelationshipConcurrency.IsSourceChanged(result.Error))\n                continue;\n            if (!result.IsSuccess)\n                return result;\n\n            var latest = await reader.HydrateAsync(target, ct).ConfigureAwait(false);\n            var latestProjection = await ApplicationRelationshipProjection.ReadAsync(latest,\n                request.TenantId, userId, visibility, ct).ConfigureAwait(false);\n            return MapVisibleRevision(result, latestProjection.Revision);"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/AuditPopulations/GenerateAuditPopulationExportHandler.cs",
+      "sha256": "5926252ede8280c6a204a1d031e8f46a6ae3d3aa318a5f829963d7b037a65e9d",
+      "signals": {
+        "authority_gap": 0.49,
+        "invariant_gap": 0.65,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.25
+      },
+      "current_sha256": "5926252ede8280c6a204a1d031e8f46a6ae3d3aa318a5f829963d7b037a65e9d",
+      "sha_matches": true,
+      "classification": "actual_finding",
+      "summary": "Current handler captures evidence and mutates retention before population export acceptance, then uses aggregate.Revision instead of an authored expected export-owner token. It has no durable export intent/process receipt covering partial execution. Accepted target contract assigns AuditPopulationExportProcess; preserve canonical source/digest checks when migrating.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/AuditPopulations/GenerateAuditPopulationExportHandler.cs",
+          "line_start": 58,
+          "line_end": 115,
+          "excerpt": "        var bytes = AuditPopulationExportDocument.Build(current, version, format);\n        var outputSha = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();\n        var fileName = $\"audit-population-{request.PopulationId}-v{version.Version}.{format}\";\n        var capturedAt = clock.GetUtcNow();\n        var metadata = new EvidenceArtifactContent($\"Audit population v{version.Version} export\",\n            $\"Deterministic {format.ToUpperInvariant()} export of frozen population {request.PopulationId}, version {version.Version}.\",\n            \"audit_population_export\", \"Bdgrz audit population\", capturedAt,\n            definition.Content.PeriodStart, definition.Content.PeriodEnd, \"confidential\");\n        var collector = ActorReference.ForMember(actorMemberId, actorDisplay);\n        var capture = await evidenceIntake.CaptureAsync(request.TenantId,\n            new MemoryStream(bytes, writable: false), metadata, collector,\n            new RequestDispatchContext(context.Actor, context.Invocation), ct).ConfigureAwait(false);\n        if (!capture.IsSuccess)\n            return Result<AuditPopulationExportReceipt>.Failure(capture.Error);\n        if (capture.Value.State == EvidenceArtifactStates.Rejected)\n            return Failure(RequestErrorKind.Conflict,\n                \"The generated export failed evidence inspection and was rejected.\");\n\n        var artifact = await reader.HydrateAsync(new EvidenceArtifact(request.TenantId,\n            capture.Value.ArtifactId), ct).ConfigureAwait(false);\n        if (!MatchesGeneratedArtifact(artifact, metadata, outputSha, bytes.LongLength) ||\n            artifact.State is not (EvidenceArtifactStates.PendingInspection or EvidenceArtifactStates.Available or\n                EvidenceArtifactStates.Quarantined))\n            return Failure(RequestErrorKind.Conflict,\n                \"The generated export does not match its canonical evidence registration.\");\n\n        var retained = await EnsureRetentionAsync(context, artifact, definition.Content.PeriodStart,\n            definition.Content.PeriodEnd, ct).ConfigureAwait(false);\n        if (!retained.IsSuccess)\n            return Result<AuditPopulationExportReceipt>.Failure(retained.Error);\n\n        var exportAt = clock.GetUtcNow();\n        var export = new AuditPopulationExportView(exportId, version.Version, format, fileName,\n            version.ContentSha256, version.CloseSnapshotId, exportAt, actorMemberId, actorDisplay,\n            artifact.Id, outputSha, bytes.LongLength);\n        var receipt = new AuditPopulationExportReceipt(export, artifact.State!, artifact.StateReason);\n        return await executor.ExecuteAsync(new AuditPopulation(request.TenantId, request.ProgramId,\n            request.PopulationId), aggregate =>\n        {\n            if (aggregate.Current is not { } latest)\n                return AggregateOutcome.Discard(Result<AuditPopulationExportReceipt>.Failure(\n                    new RequestError(RequestErrorKind.NotFound, \"The audit population was not found.\")));\n            if (latest.Exports.FirstOrDefault(item => item.ExportId == exportId) is { } raced)\n            {\n                if (raced.PopulationVersion == version.Version && raced.Format == format &&\n                    raced.PopulationContentSha256 == version.ContentSha256 &&\n                    raced.ArtifactId == artifact.Id && raced.OutputContentSha256 == outputSha &&\n                    raced.OutputContentLength == bytes.LongLength)\n                    return AggregateOutcome.Discard(Result<AuditPopulationExportReceipt>.Success(\n                        new AuditPopulationExportReceipt(raced, artifact.State!, artifact.StateReason)));\n                return AggregateOutcome.Discard(Result<AuditPopulationExportReceipt>.Failure(\n                    new RequestError(RequestErrorKind.Conflict,\n                        \"An export key cannot be reused for different population content.\")));\n            }\n            var failure = aggregate.RecordExport(aggregate.Revision, exportId, version.Version, format,\n                fileName, artifact.Id, outputSha, bytes.LongLength, actorMemberId, actorDisplay, exportAt);\n            return CommandFailureRequestAdapter.ToOutcome(failure, receipt);\n        }, context, ct).ConfigureAwait(false);"
+        }
+      ]
+    },
+    {
+      "path": "src/Compliance.Core/Features/Applications/FreezeApplicationImportOmissionProposalHandler.cs",
+      "sha256": "3c60d13b836eec8ecd4142f06460e5f5f32fad01d9fe035555611bcf654e2143",
+      "signals": {
+        "authority_gap": 0.49,
+        "invariant_gap": 0.61,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.28
+      },
+      "current_sha256": "3c60d13b836eec8ecd4142f06460e5f5f32fad01d9fe035555611bcf654e2143",
+      "sha_matches": true,
+      "classification": "actual_finding",
+      "summary": "Immutable staged-row corruption is classified transient by catching the integrity base type. With the new unavailable subtype, corrupt immutable content must remain permanent; otherwise retry cannot recover and process/clients may retry forever. Native acceptance/retry order itself is sound.",
+      "evidence": [
+        {
+          "path": "src/Compliance.Core/Features/Applications/FreezeApplicationImportOmissionProposalHandler.cs",
+          "line_start": 43,
+          "line_end": 64,
+          "excerpt": "        var binding = AcceptedOperationBinding.Of(provenance);\n\n        FirstResponseDescriptor? response = null;\n        ImmutableContentRef? result = null;\n        ImmutableContentRef? proposal = null;\n        if (snapshot.Acceptance.Decide(binding) == NativeAcceptanceDecision.None)\n        {\n            var frozen = await FreezeAsync(request, snapshot, memberId, display, now, ct).ConfigureAwait(false);\n            if (!frozen.IsSuccess)\n                return Result.Failure(frozen.Error!);\n            proposal = frozen.Value;\n            var unit = await ApplicationImportContent.UnitAsync(content, request.TenantId, ct).ConfigureAwait(false);\n            (response, result) = (unit.Response, unit.Result);\n        }\n\n        var outcome = await operations.ExecuteAsync(new NativeOperation<ApplicationImportBatch>(binding,\n            () => new ApplicationImportBatch(request.TenantId, request.BatchId, request.CommandId),\n            batch => batch.Acceptance,\n            batch => Prepare(batch, request.ExpectedRevision, response),\n            (ApplicationImportBatch batch, ImmutableContentRef frozen) => batch.SealProposal(provenance,\n                proposal!.Sha256, proposal, frozen, result!)), context, ct).ConfigureAwait(false);\n        return ApplicationImportContent.UnitOutcome(outcome);"
+        },
+        {
+          "path": "src/Compliance.Core/Features/Applications/FreezeApplicationImportOmissionProposalHandler.cs",
+          "line_start": 82,
+          "line_end": 91,
+          "excerpt": "        IReadOnlyList<ApplicationImportStagedRow> rows;\n        try\n        {\n            rows = (await ApplicationImportContent.ReadAsync<ApplicationImportRowsManifest>(content, request.TenantId,\n                staged.RowsManifest, ct).ConfigureAwait(false)).Rows;\n        }\n        catch (ImmutableContentIntegrityException)\n        {\n            return Fail(RequestErrorKind.Conflict, \"The staged rows cannot be verified yet.\", true);\n        }"
+        }
+      ]
+    }
+  ]
+}

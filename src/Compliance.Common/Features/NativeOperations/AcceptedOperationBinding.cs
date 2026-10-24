@@ -5,7 +5,8 @@ namespace Bdgrz.Compliance.Features.NativeOperations;
 
 /// <summary>
 /// The comparison fields of an accepted logical operation. Reuse of a logical id is an exact replay only when every
-/// field is equal; a hash alone never stands in for the owner, actor or episode checks.
+/// field is equal; a hash alone never stands in for the owner, actor or episode checks. Actor identity is kind and
+/// subject; its server-enriched display snapshot remains on the original fact and does not change authored intent.
 /// </summary>
 public sealed record AcceptedOperationBinding(string Realm, Uuid LogicalId, string CommandKind,
     EventStreamAddress FirstOwner, EventStreamAddress AffectedOwner, EventStreamAddress ExpectedRevisionOwner,
@@ -17,6 +18,7 @@ public sealed record AcceptedOperationBinding(string Realm, Uuid LogicalId, stri
         ArgumentNullException.ThrowIfNull(operation);
         return new AcceptedOperationBinding(operation.Owner.Realm, operation.LogicalId, operation.CommandKind,
             operation.Owner, operation.AffectedOwner, operation.ExpectedRevisionOwner, operation.Episode,
-            operation.Actor, operation.OriginalExpectedRevision, operation.AuthoredIntentSha256);
+            operation.Actor with { Display = string.Empty }, operation.OriginalExpectedRevision,
+            operation.AuthoredIntentSha256);
     }
 }

@@ -25,5 +25,35 @@
   "triageArtifacts": [
     "implementation-file-reviews.json"
   ],
-  "reviewSignalsAwaitingTriage": 73
+  "reviewSignalsAwaitingTriage": 0,
+  "reviewSignalsTriaged": 73,
+  "findingArtifacts": [
+    "implementation-file-triage-versioned.json",
+    "implementation-file-triage-foundations.json",
+    "implementation-file-triage-applications.json",
+    "implementation-file-triage-core.json"
+  ],
+  "inProgress": [
+    {
+      "id": "retention-owner-split",
+      "slice": "S31",
+      "status": "patch_preparation"
+    },
+    {
+      "id": "versioned-replay",
+      "status": "patch_preparation"
+    },
+    {
+      "id": "audit-package-split",
+      "slice": "S29",
+      "status": "patch_preparation"
+    }
+  ],
+  "resolved": [
+    {
+      "id": "native-actor-label",
+      "evidence": "Behavioral RED1failed/2passed; GREEN39native tests; full5433passed/0failed. Binding compares actor kind/id and retains original display in fact.",
+      "status": "validated"
+    }
+  ]
 }
