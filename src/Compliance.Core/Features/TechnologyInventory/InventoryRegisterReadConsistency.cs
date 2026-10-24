@@ -9,9 +9,9 @@ public sealed class InventoryRegisterReadConsistency(IInventoryRegisterReader di
     public async ValueTask<Result<LocationView>> GetLocationAsync(Uuid tenantId, Uuid id,
         long? minimumRevision, CancellationToken ct)
     {
-        var source = await reader.HydrateAsync(new LocationRegister(tenantId), ct)
+        var source = await reader.HydrateAsync(new Location(tenantId, id), ct)
             .ConfigureAwait(false);
-        return await ServeAsync("location", source.RevisionOf(id), minimumRevision,
+        return await ServeAsync("location", source.Revision, minimumRevision,
             async () => await directory.GetLocationAsync(tenantId, id, ct)
                 .ConfigureAwait(false) is { } view && view.TenantId == tenantId &&
                 view.LocationId == id
@@ -22,9 +22,9 @@ public sealed class InventoryRegisterReadConsistency(IInventoryRegisterReader di
     public async ValueTask<Result<OperationalProcessView>> GetOperationalProcessAsync(
         Uuid tenantId, Uuid id, long? minimumRevision, CancellationToken ct)
     {
-        var source = await reader.HydrateAsync(new OperationalProcessRegister(tenantId), ct)
+        var source = await reader.HydrateAsync(new OperationalProcess(tenantId, id), ct)
             .ConfigureAwait(false);
-        return await ServeAsync("operational process", source.RevisionOf(id), minimumRevision,
+        return await ServeAsync("operational process", source.Revision, minimumRevision,
             async () => await directory.GetOperationalProcessAsync(tenantId, id, ct)
                 .ConfigureAwait(false) is { } view && view.TenantId == tenantId &&
                 view.OperationalProcessId == id

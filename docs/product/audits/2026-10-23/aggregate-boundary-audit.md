@@ -197,7 +197,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | ComplianceProgram | Programs | narrow | ASSURE-16 (pending), ASSURE-11 (pending) | 0.79 | [source](../../../../src/Compliance.Core/Features/Programs/ComplianceProgram.cs) |
 | ProgramRollover | Programs | process | ASSURE-15 (pending), ASSURE-17 (pending), ASSURE-11 (pending), CORE-01 (complete) | 0.78 | [source](../../../../src/Compliance.Core/Features/Programs/ProgramRollover.cs) |
 | ProviderAssuranceRegister | Providers | split | ROOTTECH-03 (pending), ROOTTECH-04 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs) |
-| ProviderRegister | Providers | split | ROOTTECH-01 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/Providers/ProviderRegister.cs) |
+| ProviderRegister | Providers | split | ROOTTECH-01 (pending) | 0.89 | source retired by S18 (`Providers/ProviderRegister.cs`) |
 | ReadinessLedger | Readiness | split | OPS-08 (pending), OPS-11 (pending), OPS-16 (pending) | 0.93 | [source](../../../../src/Compliance.Core/Features/Readiness/ReadinessLedger.cs) |
 | FindingAggregate | Remediation | split | OPS-06 (pending), OPS-11 (pending), OPS-12 (pending) | 0.90 | [source](../../../../src/Compliance.Core/Features/Remediation/FindingAggregate.NativeValidation.cs) |
 | FindingMigrationAggregate | Remediation | process | OPS-12 (pending) | 0.18 | [source](../../../../src/Compliance.Core/Features/Remediation/FindingMigrationAggregate.cs) |
@@ -218,8 +218,8 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | SystemDescription | SystemDescription | split | ROOTACCESS-03 (pending), ROOTACCESS-04 (pending), ROOTACCESS-05 (pending) | 0.80 | [source](../../../../src/Compliance.Core/Features/SystemDescription/SystemDescription.cs) |
 | DataFlow | TechnologyInventory | retain | ROOTTECH-02 (pending), ROOTTECH-05 (pending) | 0.41 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/DataFlow.cs) |
 | InformationAsset | TechnologyInventory | retain | ROOTTECH-02 (pending) | 0.53 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/InformationAsset.cs) |
-| LocationRegister | TechnologyInventory | split | ROOTTECH-01 (pending), ROOTTECH-02 (pending) | 0.86 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/LocationRegister.cs) |
-| OperationalProcessRegister | TechnologyInventory | split | ROOTTECH-01 (pending), ROOTTECH-02 (pending) | 0.89 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/OperationalProcessRegister.cs) |
+| LocationRegister | TechnologyInventory | split | ROOTTECH-01 (pending), ROOTTECH-02 (pending) | 0.86 | source retired by S18 (`TechnologyInventory/LocationRegister.cs`) |
+| OperationalProcessRegister | TechnologyInventory | split | ROOTTECH-01 (pending), ROOTTECH-02 (pending) | 0.89 | source retired by S18 (`TechnologyInventory/OperationalProcessRegister.cs`) |
 | TechnologyComponent | TechnologyInventory | retain | ROOTTECH-02 (pending) | 0.52 | [source](../../../../src/Compliance.Core/Features/TechnologyInventory/TechnologyComponent.cs) |
 | PlatformOperatorRoster | Tenants | retain | ACCESS-08 (in_progress) | 0.25 | [source](../../../../src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs) |
 | Tenant | Tenants | narrow | ACCESS-10 (pending), ACCESS-16 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Tenants/Tenant.cs) |

@@ -142,13 +142,12 @@ public sealed class ApplicationVendorImpactTests
         // Arrange
         var scenario = await Scenario.CreateAsync();
         var now = DateTimeOffset.UtcNow;
-        var providerEvent = new ProviderRecorded(scenario.TenantId, Uuid.CreateVersion4(),
-            Uuid.CreateVersion4(), new ProviderContent("Payroll provider", "SaaS"),
+        var providerId = Uuid.CreateVersion4();
+        var providerEvent = NamedRecordFacts.ProviderRecordedFact(scenario.TenantId, providerId,
             ActorReference.ForMember(Uuid.CreateVersion4(), "Manager"), now);
         providerEvent.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(),
-            scenario.TenantId, 1, now));
-        await scenario.Events.AppendAsync(new EventStreamAddress(scenario.TenantId.ToString(),
-            ProviderRegister.Area, scenario.TenantId.ToString()), 0, [providerEvent]);
+            providerId, 1, now));
+        await scenario.Events.AppendAsync(new Provider(scenario.TenantId, providerId).Stream, 0, [providerEvent]);
         var providers = new StubProviderReader(new Page<ProviderView>([], null));
         var handler = scenario.Handler(providers);
 

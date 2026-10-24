@@ -5,19 +5,19 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Providers;
 
 /// <summary>Inspects the authoritative provider and governed artifacts an assurance record cites.</summary>
-public sealed class AssuranceReferences(IAggregateReader reader, IAssuranceReader assurance,
+public sealed class AssuranceReferences(IAggregateReader reader, ProviderSource providers, IAssuranceReader assurance,
     AssuranceReadConsistency assuranceConsistency,
     CommitmentVersionReadConsistency commitmentConsistency)
 {
-    public AssuranceReferences(IAggregateReader reader)
-        : this(reader, null!, null!, null!)
+    public AssuranceReferences(IAggregateReader reader, ProviderSource providers)
+        : this(reader, providers, null!, null!, null!)
     {
     }
 
     public async ValueTask<Result<ProviderView>> ProviderAsync(Uuid tenantId, Uuid providerId, CancellationToken ct)
     {
-        var register = await reader.HydrateAsync(new ProviderRegister(tenantId), ct).ConfigureAwait(false);
-        return register.Get(providerId) is { } provider && provider.TenantId == tenantId
+        return await providers.GetAsync(tenantId, providerId, ct).ConfigureAwait(false) is { } provider &&
+               provider.TenantId == tenantId
             ? Result<ProviderView>.Success(provider)
             : Result<ProviderView>.Failure(new RequestError(RequestErrorKind.NotFound, "The provider was not found."));
     }

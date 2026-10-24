@@ -1,0 +1,12 @@
+using Bdgrz.Compliance.Features.NamedRecords;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
+using Cntryl.Portia;
+
+namespace Bdgrz.Compliance.Features.TechnologyInventory;
+
+/// <summary>The name claim is held by the location record and change generation named by this fact.</summary>
+[Discriminator("bdgrz.location-name-claim.location-name-claimed", 1)]
+public sealed record LocationNameClaimed(EventStreamAddress Owner, long Revision, long Generation, ImmutableContentRef Intent,
+    ImmutableContentRef? SourceProofs, OperationProvenance Operation, ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult) : DomainEvent, INamedRecordFact;

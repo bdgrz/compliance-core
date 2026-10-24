@@ -23,12 +23,12 @@ public sealed class FitzInventoryRegisterDirectoryTests
             await using var batch = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenants[t]), ProjectionCheckpoint.Start));
             for (var i = 0; i < 2; i++)
             {
-                await directory.ApplyAsync(new LocationRevisionRecorded(tenants[t], locations[t][i], 1,
-                    Loc($"Site {i}"), Author, Now));
-                await directory.ApplyAsync(new LocationRevisionRecorded(tenants[t], locations[t][i], 2,
-                    Loc($"Site {i} renamed"), Author, Now.AddMinutes(1)));
-                await directory.ApplyAsync(new OperationalProcessRevisionRecorded(tenants[t], processes[t][i], 1,
-                    Proc($"Process {i}"), Author, Now));
+                await directory.ApplyAsync(NamedRecordFacts.LocationFact(tenants[t], locations[t][i], 1, Author, Now),
+                    Loc($"Site {i}"));
+                await directory.ApplyAsync(NamedRecordFacts.LocationFact(tenants[t], locations[t][i], 2, Author,
+                    Now.AddMinutes(1)), Loc($"Site {i} renamed"));
+                await directory.ApplyAsync(NamedRecordFacts.ProcessFact(tenants[t], processes[t][i], 1, Author, Now),
+                    Proc($"Process {i}"));
             }
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
@@ -73,25 +73,25 @@ public sealed class FitzInventoryRegisterDirectoryTests
         var directory = new FitzInventoryRegisterDirectory(new InMemoryKvClient());
         var tenantId = Uuid.CreateVersion4();
         var id = Uuid.CreateVersion4();
-        var first = new LocationRevisionRecorded(tenantId, id, 1, Loc("Original"), Author, Now);
-        var second = new LocationRevisionRecorded(tenantId, id, 2, Loc("Revised"), Author, Now.AddMinutes(1));
+        var first = NamedRecordFacts.LocationFact(tenantId, id, 1, Author, Now);
+        var second = NamedRecordFacts.LocationFact(tenantId, id, 2, Author, Now.AddMinutes(1));
         await using (var initial = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(first);
-            await directory.ApplyAsync(second);
+            await directory.ApplyAsync(first, Loc("Original"));
+            await directory.ApplyAsync(second, Loc("Revised"));
             await initial.CommitAsync(ProjectionCheckpoint.Start);
         }
 
         // Act
         await using (var replay = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start)))
         {
-            await directory.ApplyAsync(first);
-            await directory.ApplyAsync(second);
+            await directory.ApplyAsync(first, Loc("Original"));
+            await directory.ApplyAsync(second, Loc("Revised"));
             await replay.CommitAsync(ProjectionCheckpoint.Start);
         }
         await using (var changed = await directory.BeginAsync(new ProjectionBatchContext(Identity(tenantId), ProjectionCheckpoint.Start)))
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await directory.ApplyAsync(
-                first with { Content = first.Content with { Name = "Replacement" } }));
+                first, Loc("Replacement")));
 
         // Assert
         Assert.Equal("Revised", (await directory.GetLocationAsync(tenantId, id))!.Content.Name);
@@ -108,8 +108,8 @@ public sealed class FitzInventoryRegisterDirectoryTests
 
         // Act
         var gap = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await directory.ApplyAsync(new OperationalProcessRevisionRecorded(tenantId,
-                Uuid.CreateVersion4(), 2, Proc("Orphan"), Author, Now)));
+            await directory.ApplyAsync(NamedRecordFacts.ProcessFact(tenantId, Uuid.CreateVersion4(), 2, Author, Now),
+                Proc("Orphan")));
 
         // Assert
         Assert.Contains("predecessor", gap.Message, StringComparison.Ordinal);

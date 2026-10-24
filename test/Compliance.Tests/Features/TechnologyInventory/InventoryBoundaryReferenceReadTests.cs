@@ -79,9 +79,9 @@ public sealed class InventoryBoundaryReferenceReadTests
         var asset = await scenario.Reader.HydrateAsync(new InformationAsset(scenario.TenantId,
             scenario.AssetId));
         scenario.Directory.Page = new([Reference(scenario.TenantId, "information", scenario.AssetId)], null);
-        scenario.Directory.OnList = () => Assert.Null(asset.Revise(1,
+        scenario.Directory.OnList = () => Assert.True(asset.Revise(1,
             current => current with { Classification = "restricted" }, Author,
-            DateTimeOffset.UtcNow));
+            DateTimeOffset.UtcNow).IsSuccess);
         var handler = new ListInformationAssetBoundaryReferencesHandler(scenario.Reader,
             scenario.Directory, scenario.Consistency, Visibility());
         var userId = Uuid.CreateVersion4();
@@ -107,9 +107,9 @@ public sealed class InventoryBoundaryReferenceReadTests
         var asset = await scenario.Reader.HydrateAsync(new InformationAsset(scenario.TenantId,
             scenario.AssetId));
         scenario.Directory.Page = new([Reference(scenario.TenantId, "information", scenario.AssetId)], null);
-        scenario.Directory.OnList = () => Assert.Null(asset.Revise(1,
+        scenario.Directory.OnList = () => Assert.True(asset.Revise(1,
             current => current with { Classification = "confidential" }, Author,
-            DateTimeOffset.UtcNow));
+            DateTimeOffset.UtcNow).IsSuccess);
         var handler = new ListInformationAssetBoundaryReferencesHandler(scenario.Reader,
             scenario.Directory, scenario.Consistency, Visibility());
         var userId = Uuid.CreateVersion4();

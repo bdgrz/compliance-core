@@ -41,26 +41,26 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 461,
-    "factsWithReducer": 439,
-    "factsWithAggregateEmitter": 432,
+    "domainEventContracts": 473,
+    "factsWithReducer": 451,
+    "factsWithAggregateEmitter": 444,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 2,
-    "aggregateTypes": 112,
-    "aggregateTypesWithCommandPath": 109,
-    "requestContracts": 723,
-    "commonRequestContracts": 721,
+    "aggregateTypes": 115,
+    "aggregateTypesWithCommandPath": 112,
+    "requestContracts": 735,
+    "commonRequestContracts": 733,
     "requestClassificationCounts": {
       "command": 346,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 89,
+      "internal_reaction": 101,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 664,
+    "registeredCoreHandlerRegistrations": 676,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 37,
     "unwiredAggregateProducerClassifications": {
@@ -4274,17 +4274,16 @@
       "contract": "src/Compliance.Common/Features/TechnologyInventory/LocationRevisionRecorded.cs",
       "reducers": [
         {
-          "aggregate": "LocationRegister",
-          "source": "src/Compliance.Core/Features/TechnologyInventory/LocationRegister.cs"
+          "aggregate": "Location",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/Location.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/LocationRegister.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/Location.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/TechnologyInventory/FitzInventoryRegisterDirectoryTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterAggregateTests.cs"
+        "test/Compliance.Tests/NamedRecordFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -4769,17 +4768,16 @@
       "contract": "src/Compliance.Common/Features/TechnologyInventory/OperationalProcessRevisionRecorded.cs",
       "reducers": [
         {
-          "aggregate": "OperationalProcessRegister",
-          "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessRegister.cs"
+          "aggregate": "OperationalProcess",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcess.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessRegister.cs"
+        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcess.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/TechnologyInventory/FitzInventoryRegisterDirectoryTests.cs",
         "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterAggregateTests.cs"
+        "test/Compliance.Tests/NamedRecordFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5541,19 +5539,17 @@
       "contract": "src/Compliance.Common/Features/Providers/ProviderRecorded.cs",
       "reducers": [
         {
-          "aggregate": "ProviderRegister",
-          "source": "src/Compliance.Core/Features/Providers/ProviderRegister.cs"
+          "aggregate": "Provider",
+          "source": "src/Compliance.Core/Features/Providers/Provider.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderRegister.cs"
+        "src/Compliance.Core/Features/Providers/Provider.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderRegisterTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderReadConsistencyTests.cs",
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs",
         "test/Compliance.Tests/Features/Providers/FitzProviderDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationVendorImpactTests.cs"
+        "test/Compliance.Tests/NamedRecordFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -5582,15 +5578,16 @@
       "contract": "src/Compliance.Common/Features/Providers/ProviderRevised.cs",
       "reducers": [
         {
-          "aggregate": "ProviderRegister",
-          "source": "src/Compliance.Core/Features/Providers/ProviderRegister.cs"
+          "aggregate": "Provider",
+          "source": "src/Compliance.Core/Features/Providers/Provider.cs"
         }
       ],
       "emitters": [
-        "src/Compliance.Core/Features/Providers/ProviderRegister.cs"
+        "src/Compliance.Core/Features/Providers/Provider.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/FitzProviderDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Providers/FitzProviderDirectoryTests.cs",
+        "test/Compliance.Tests/NamedRecordFacts.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -8545,6 +8542,206 @@
       ],
       "disposition": "aggregate_fact",
       "note": ""
+    },
+    {
+      "fact": "LocationChangeAccepted",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/LocationChangeAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "Location",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/Location.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/TechnologyInventory/Location.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "LocationChangeCanceled",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/LocationChangeCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "Location",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/Location.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/TechnologyInventory/Location.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "LocationNameClaimed",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/LocationNameClaimed.cs",
+      "reducers": [
+        {
+          "aggregate": "LocationNameClaim",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "LocationNameReleased",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/LocationNameReleased.cs",
+      "reducers": [
+        {
+          "aggregate": "LocationNameClaim",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "OperationalProcessChangeAccepted",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/OperationalProcessChangeAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "OperationalProcess",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcess.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcess.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "OperationalProcessChangeCanceled",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/OperationalProcessChangeCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "OperationalProcess",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcess.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcess.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "OperationalProcessNameClaimed",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/OperationalProcessNameClaimed.cs",
+      "reducers": [
+        {
+          "aggregate": "OperationalProcessNameClaim",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "OperationalProcessNameReleased",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/OperationalProcessNameReleased.cs",
+      "reducers": [
+        {
+          "aggregate": "OperationalProcessNameClaim",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProviderChangeAccepted",
+      "contract": "src/Compliance.Common/Features/Providers/ProviderChangeAccepted.cs",
+      "reducers": [
+        {
+          "aggregate": "Provider",
+          "source": "src/Compliance.Core/Features/Providers/Provider.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Providers/Provider.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProviderChangeCanceled",
+      "contract": "src/Compliance.Common/Features/Providers/ProviderChangeCanceled.cs",
+      "reducers": [
+        {
+          "aggregate": "Provider",
+          "source": "src/Compliance.Core/Features/Providers/Provider.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Providers/Provider.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProviderNameClaimed",
+      "contract": "src/Compliance.Common/Features/Providers/ProviderNameClaimed.cs",
+      "reducers": [
+        {
+          "aggregate": "ProviderNameClaim",
+          "source": "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "ProviderNameReleased",
+      "contract": "src/Compliance.Common/Features/Providers/ProviderNameReleased.cs",
+      "reducers": [
+        {
+          "aggregate": "ProviderNameClaim",
+          "source": "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     }
   ],
   "aggregates": [
@@ -9975,23 +10172,6 @@
       "note": "Rehydrates historical program-wide WorkItemAssigned and WorkItemEscalated facts for read compatibility; all current writes target WorkItemAssignment per-item streams."
     },
     {
-      "aggregate": "LocationRegister",
-      "source": "src/Compliance.Core/Features/TechnologyInventory/LocationRegister.cs",
-      "appliedFacts": [
-        "LocationRevisionRecorded"
-      ],
-      "commandRequests": [
-        "RecordLocation",
-        "ReviseLocation"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterAggregateTests.cs",
-        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "ManagementAssertion",
       "source": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
       "appliedFacts": [
@@ -10300,23 +10480,6 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/MethodologyTemplateContributionTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
-      "aggregate": "OperationalProcessRegister",
-      "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessRegister.cs",
-      "appliedFacts": [
-        "OperationalProcessRevisionRecorded"
-      ],
-      "commandRequests": [
-        "RecordOperationalProcess",
-        "ReviseOperationalProcess"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterAggregateTests.cs",
-        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -10643,34 +10806,6 @@
         "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderAssuranceRegisterTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderCoverageGapTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
-      "aggregate": "ProviderRegister",
-      "source": "src/Compliance.Core/Features/Providers/ProviderRegister.cs",
-      "appliedFacts": [
-        "ProviderRecorded",
-        "ProviderRevised"
-      ],
-      "commandRequests": [
-        "RecordProvider",
-        "ReviseProvider"
-      ],
-      "internalReactionRequests": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationVendorImpactTests.cs",
-        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
-        "test/Compliance.Tests/Features/Providers/AttestProviderManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Providers/FitzProviderDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAssuranceDisclosureTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderHttpMcpTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderMalformedInputTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderPagingHttpMcpTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderReadConsistencyTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderRegisterTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -11958,6 +12093,256 @@
         "test/Compliance.Tests/Features/Tenants/TenantInvitationMailboxClaimTests.cs",
         "test/Compliance.Tests/Features/Tenants/TenantMemberInvitedSerializationTests.cs",
         "test/Compliance.Tests/Testing/TenantInvitationHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "Location",
+      "source": "src/Compliance.Core/Features/TechnologyInventory/Location.cs",
+      "appliedFacts": [
+        "LocationChangeAccepted",
+        "LocationChangeCanceled",
+        "LocationRevisionRecorded"
+      ],
+      "commandRequests": [
+        "RecordLocation",
+        "ReviseLocation"
+      ],
+      "internalReactionRequests": [
+        "ApplyLocationChange",
+        "CancelLocationChange"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/E2E/ArtifactContentHostModeE2ETests.cs",
+        "test/Compliance.Tests/E2E/SplitHostTenantE2ETests.cs",
+        "test/Compliance.Tests/Features/Artifacts/LocalArtifactContentStoreTests.cs",
+        "test/Compliance.Tests/Features/Evidence/IssueArtifactDownloadHandlerTests.cs",
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs",
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordTransportTests.cs",
+        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs",
+        "test/Compliance.Tests/NamedRecordFacts.cs",
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "LocationNameClaim",
+      "source": "src/Compliance.Core/Features/TechnologyInventory/LocationNameClaim.cs",
+      "appliedFacts": [
+        "LocationNameClaimed",
+        "LocationNameReleased"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "ClaimLocationName",
+        "ReleaseLocationName"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "OperationalProcess",
+      "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcess.cs",
+      "appliedFacts": [
+        "OperationalProcessChangeAccepted",
+        "OperationalProcessChangeCanceled",
+        "OperationalProcessRevisionRecorded"
+      ],
+      "commandRequests": [
+        "RecordOperationalProcess",
+        "ReviseOperationalProcess"
+      ],
+      "internalReactionRequests": [
+        "ApplyOperationalProcessChange",
+        "CancelOperationalProcessChange"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordTransportTests.cs",
+        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRegisterReadConsistencyTests.cs",
+        "test/Compliance.Tests/NamedRecordFacts.cs",
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "OperationalProcessNameClaim",
+      "source": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessNameClaim.cs",
+      "appliedFacts": [
+        "OperationalProcessNameClaimed",
+        "OperationalProcessNameReleased"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "ClaimOperationalProcessName",
+        "ReleaseOperationalProcessName"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "Provider",
+      "source": "src/Compliance.Core/Features/Providers/Provider.cs",
+      "appliedFacts": [
+        "ProviderChangeAccepted",
+        "ProviderChangeCanceled",
+        "ProviderRecorded",
+        "ProviderRevised"
+      ],
+      "commandRequests": [
+        "RecordProvider",
+        "ReviseProvider"
+      ],
+      "internalReactionRequests": [
+        "ApplyProviderChange",
+        "CancelProviderChange"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/E2E/DraftActorSnapshotE2ETests.cs",
+        "test/Compliance.Tests/E2E/DraftReadLeakMatrixE2ETests.cs",
+        "test/Compliance.Tests/E2E/IdentityRecoveryE2ETests.cs",
+        "test/Compliance.Tests/E2E/MemberPresentationE2ETests.cs",
+        "test/Compliance.Tests/E2E/ProviderChangeImpactE2ETests.cs",
+        "test/Compliance.Tests/E2E/ProviderRegisterE2ETests.cs",
+        "test/Compliance.Tests/E2E/RiskDraftE2ETests.cs",
+        "test/Compliance.Tests/E2E/WorkforceServiceIdentityE2ETests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ActualStaffEngagementLocatorTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/AdministratorTransitionProcessTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/DeprovisionMemberHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ListTeamMembersHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/PersonalWaiverApprovalTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/ScopeResponsibilityIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/TenantManagerGuardTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/WaiverManagementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessPopulationHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AttestAccessReviewWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessPopulationReadTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs",
+        "test/Compliance.Tests/Features/Applications/ApplicationVendorImpactTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlActivationHandlerTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonWriteTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/PersonalControlEvaluationTransportTests.cs",
+        "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRedactionCompositionTests.cs",
+        "test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs",
+        "test/Compliance.Tests/Features/Examinations/ProviderTypeIBaselineSourceContributorTests.cs",
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs",
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordTransportTests.cs",
+        "test/Compliance.Tests/Features/NativeOperations/NativeOperationExecutorTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Operations/PersonalOccurrenceProofTransportTests.cs",
+        "test/Compliance.Tests/Features/Operations/PersonalOperatingPlanApprovalTransportTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyAcknowledgementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Features/Processes/ProcessDriverTests.cs",
+        "test/Compliance.Tests/Features/Processes/ProcessRootReactionTests.cs",
+        "test/Compliance.Tests/Features/Processes/ProcessSweepTests.cs",
+        "test/Compliance.Tests/Features/Processes/ProcessTestHost.cs",
+        "test/Compliance.Tests/Features/Providers/AssuranceSamples.cs",
+        "test/Compliance.Tests/Features/Providers/AttestProviderManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Providers/FitzProviderDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAssuranceCoverageTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderHttpMcpTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderMalformedInputTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderProjectionHelper.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReadAuthorizationProbeHandler.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReadConsistencyTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs",
+        "test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs",
+        "test/Compliance.Tests/Features/Readiness/PersonalReadinessAnnotationTransportTests.cs",
+        "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
+        "test/Compliance.Tests/Features/Readiness/PersonalTypeIEntryTransportTests.cs",
+        "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingReadSourceTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs",
+        "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs",
+        "test/Compliance.Tests/Features/Risks/AttestRiskManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Risks/FitzRiskDraftDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Risks/PersonalRiskSignoffTransportTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftActorProjectionTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftActorSnapshotTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskDraftTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskEvaluationTests.cs",
+        "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/TechnologyInventory/TechnologyInventoryScopedGrantTests.cs",
+        "test/Compliance.Tests/Features/Tenants/MemberEmailEnrichmentTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/FitzUserIdentityDirectoryTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/IdentityRecoveryHandlerTests.cs",
+        "test/Compliance.Tests/Features/UserIdentities/UserIdentityContinuationTests.cs",
+        "test/Compliance.Tests/Features/Work/AccessReviewWorkQueueVisibilityTests.cs",
+        "test/Compliance.Tests/Features/Work/AssignedDecisionAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/CommitmentDecisionWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs",
+        "test/Compliance.Tests/Features/Work/ControlDecisionWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/ControlMappingWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlOperatingPlanWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzPolicyCampaignWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzPolicyDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/NotApplicableOccurrenceReviewTests.cs",
+        "test/Compliance.Tests/Features/Work/OccurrencePopulationPaginationTests.cs",
+        "test/Compliance.Tests/Features/Work/PolicyDecisionWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/RiskAcceptanceWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/RiskControlTreatmentWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestContentReaderTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkDigestDispatchProcessorTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueReadConsistencyTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/AttestWorkforceManagementWallTests.cs",
+        "test/Compliance.Tests/Features/Workforce/PersonalWorkforceObservationTransportTests.cs",
+        "test/Compliance.Tests/Features/Workforce/WorkforceSourceHandlerTests.cs",
+        "test/Compliance.Tests/NamedRecordFacts.cs",
+        "test/Compliance.Tests/Testing/AdministratorTransitionHost.cs",
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "ProviderNameClaim",
+      "source": "src/Compliance.Core/Features/Providers/ProviderNameClaim.cs",
+      "appliedFacts": [
+        "ProviderNameClaimed",
+        "ProviderNameReleased"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "ClaimProviderName",
+        "ReleaseProviderName"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Kernel/AggregateIdentityTests.cs",
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs",
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     }
@@ -24171,7 +24556,7 @@
     {
       "request": "RecordDataFlow",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/RecordDataFlow.cs",
-      "interfaces": "IRequest<DataFlowRegistration>, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<DataFlowRegistration>, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -24188,7 +24573,10 @@
         "DataFlow"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRetryTests.cs",
+        "test/Compliance.Tests/InventoryFacts.cs"
+      ],
       "note": ""
     },
     {
@@ -24324,7 +24712,7 @@
     {
       "request": "RecordInformationAsset",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/RecordInformationAsset.cs",
-      "interfaces": "IRequest<InformationAssetRegistration>, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<InformationAssetRegistration>, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -24342,14 +24730,16 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/TechnologyInventory/TechnologyInventoryScopedGrantTests.cs"
+        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRetryTests.cs",
+        "test/Compliance.Tests/Features/TechnologyInventory/TechnologyInventoryScopedGrantTests.cs",
+        "test/Compliance.Tests/InventoryFacts.cs"
       ],
       "note": ""
     },
     {
       "request": "RecordLocation",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/RecordLocation.cs",
-      "interfaces": "IRequest<LocationRegistration>, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -24359,14 +24749,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "LocationRegister"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "LocationRegister"
+        "Location"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
       "note": ""
     },
     {
@@ -24480,7 +24870,7 @@
     {
       "request": "RecordOperationalProcess",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/RecordOperationalProcess.cs",
-      "interfaces": "IRequest<OperationalProcessRegistration>, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -24490,14 +24880,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "OperationalProcessRegister"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "OperationalProcessRegister"
+        "OperationalProcess"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
       "note": ""
     },
     {
@@ -24582,7 +24972,7 @@
     {
       "request": "RecordProvider",
       "contract": "src/Compliance.Common/Features/Providers/RecordProvider.cs",
-      "interfaces": "IRequest<ProviderRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -24592,19 +24982,19 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ProviderRegister"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "ProviderRegister"
+        "Provider"
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs",
-        "test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs",
         "test/Compliance.Tests/Features/Providers/AttestProviderManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderMalformedInputTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderWriteAuthorizationProbeHandler.cs",
-        "test/Compliance.Tests/Features/Providers/ProviderAuthorizationTests.cs"
+        "test/Compliance.Tests/NamedRecordFacts.cs",
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
       ],
       "note": ""
     },
@@ -24842,7 +25232,7 @@
     {
       "request": "RecordTechnologyComponent",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/RecordTechnologyComponent.cs",
-      "interfaces": "IRequest<TechnologyComponentRegistration>, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<TechnologyComponentRegistration>, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -24860,7 +25250,9 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRetryTests.cs",
+        "test/Compliance.Tests/InventoryFacts.cs"
       ],
       "note": ""
     },
@@ -26839,7 +27231,7 @@
     {
       "request": "ReviseDataFlow",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/ReviseDataFlow.cs",
-      "interfaces": "IRequest, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -26856,7 +27248,10 @@
         "DataFlow"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRetryTests.cs",
+        "test/Compliance.Tests/InventoryFacts.cs"
+      ],
       "note": ""
     },
     {
@@ -26942,7 +27337,7 @@
     {
       "request": "ReviseInformationAsset",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/ReviseInformationAsset.cs",
-      "interfaces": "IRequest, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -26959,13 +27354,16 @@
         "InformationAsset"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRetryTests.cs",
+        "test/Compliance.Tests/InventoryFacts.cs"
+      ],
       "note": ""
     },
     {
       "request": "ReviseLocation",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/ReviseLocation.cs",
-      "interfaces": "IRequest, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -26975,14 +27373,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "LocationRegister"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "LocationRegister"
+        "Location"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
       "note": ""
     },
     {
@@ -27013,7 +27411,7 @@
     {
       "request": "ReviseOperationalProcess",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/ReviseOperationalProcess.cs",
-      "interfaces": "IRequest, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27023,14 +27421,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "OperationalProcessRegister"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "OperationalProcessRegister"
+        "OperationalProcess"
       ],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
+      ],
       "note": ""
     },
     {
@@ -27109,7 +27507,7 @@
     {
       "request": "ReviseProvider",
       "contract": "src/Compliance.Common/Features/Providers/ReviseProvider.cs",
-      "interfaces": "IRequest<ProviderRegistration>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<OperationAcceptedResponse>, IProviderManagementRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27119,17 +27517,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ProviderRegister"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
-        "ProviderRegister"
+        "Provider"
       ],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Providers/AttestProviderManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Providers/ProviderMalformedInputTests.cs",
         "test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs",
-        "test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs",
-        "test/Compliance.Tests/Features/Providers/AttestProviderManagementWriteWallTests.cs"
+        "test/Compliance.Tests/NamedRecordFacts.cs",
+        "test/Compliance.Tests/Testing/NamedRecordHost.cs"
       ],
       "note": ""
     },
@@ -27290,7 +27688,7 @@
     {
       "request": "ReviseTechnologyComponent",
       "contract": "src/Compliance.Common/Features/TechnologyInventory/ReviseTechnologyComponent.cs",
-      "interfaces": "IRequest, ITechnologyInventoryWriteRequest, ICallable",
+      "interfaces": "IRequest, ITechnologyInventoryWriteRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -27308,7 +27706,9 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs",
+        "test/Compliance.Tests/Features/TechnologyInventory/InventoryRetryTests.cs",
+        "test/Compliance.Tests/InventoryFacts.cs"
       ],
       "note": ""
     },
@@ -29245,6 +29645,269 @@
         "test/Compliance.Tests/Features/Tenants/TenantInvitationDeliveryProcessTests.cs"
       ],
       "note": "Process receiver: performs the external send of one frozen invitation payload with a stable attempt identity and stores the provider result on the attempt. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ApplyLocationChange",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/ApplyLocationChange.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyLocationChangeHandler",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/ApplyLocationChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "Location"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/NamedRecordFacts.cs"
+      ],
+      "note": "Process receiver: applies the accepted change once its claims are held. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ApplyOperationalProcessChange",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/ApplyOperationalProcessChange.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyOperationalProcessChangeHandler",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/ApplyOperationalProcessChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "OperationalProcess"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/NamedRecordFacts.cs"
+      ],
+      "note": "Process receiver: applies the accepted change once its claims are held. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ApplyProviderChange",
+      "contract": "src/Compliance.Common/Features/Providers/ApplyProviderChange.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ApplyProviderChangeHandler",
+          "source": "src/Compliance.Core/Features/Providers/ApplyProviderChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "Provider"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs",
+        "test/Compliance.Tests/NamedRecordFacts.cs"
+      ],
+      "note": "Process receiver: applies the accepted change once its claims are held. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "CancelLocationChange",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/CancelLocationChange.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CancelLocationChangeHandler",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/CancelLocationChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "Location"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Process abort receiver: cancels the exact pending change and fences its apply. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "CancelOperationalProcessChange",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/CancelOperationalProcessChange.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CancelOperationalProcessChangeHandler",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/CancelOperationalProcessChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "OperationalProcess"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Process abort receiver: cancels the exact pending change and fences its apply. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "CancelProviderChange",
+      "contract": "src/Compliance.Common/Features/Providers/CancelProviderChange.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "CancelProviderChangeHandler",
+          "source": "src/Compliance.Core/Features/Providers/CancelProviderChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "Provider"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Process abort receiver: cancels the exact pending change and fences its apply. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ClaimLocationName",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/ClaimLocationName.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ClaimLocationNameHandler",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/ClaimLocationNameHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "LocationNameClaim"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Process receiver: acquires or re-pins the name claim a pending change needs. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ClaimOperationalProcessName",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/ClaimOperationalProcessName.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ClaimOperationalProcessNameHandler",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/ClaimOperationalProcessNameHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "OperationalProcessNameClaim"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Process receiver: acquires or re-pins the name claim a pending change needs. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ClaimProviderName",
+      "contract": "src/Compliance.Common/Features/Providers/ClaimProviderName.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ClaimProviderNameHandler",
+          "source": "src/Compliance.Core/Features/Providers/ClaimProviderNameHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "ProviderNameClaim"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs"
+      ],
+      "note": "Process receiver: acquires or re-pins the name claim a pending change needs. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ReleaseLocationName",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/ReleaseLocationName.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ReleaseLocationNameHandler",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/ReleaseLocationNameHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "LocationNameClaim"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Process receiver: releases a name claim only for the exact holder and generation. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ReleaseOperationalProcessName",
+      "contract": "src/Compliance.Common/Features/TechnologyInventory/ReleaseOperationalProcessName.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ReleaseOperationalProcessNameHandler",
+          "source": "src/Compliance.Core/Features/TechnologyInventory/ReleaseOperationalProcessNameHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "OperationalProcessNameClaim"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [],
+      "note": "Process receiver: releases a name claim only for the exact holder and generation. System principal only; no HTTP/MCP route."
+    },
+    {
+      "request": "ReleaseProviderName",
+      "contract": "src/Compliance.Common/Features/Providers/ReleaseProviderName.cs",
+      "interfaces": "INamedRecordReceiver",
+      "classification": "internal_reaction",
+      "handlers": [
+        {
+          "name": "ReleaseProviderNameHandler",
+          "source": "src/Compliance.Core/Features/Providers/ReleaseProviderNameHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "directAggregateReferences": [],
+      "aggregateTargets": [
+        "ProviderNameClaim"
+      ],
+      "helperServices": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/NamedRecords/NamedRecordProcessTests.cs"
+      ],
+      "note": "Process receiver: releases a name claim only for the exact holder and generation. System principal only; no HTTP/MCP route."
     }
   ],
   "scope": "Current working tree includes Finding boundary/migration foundation and Jev-selected bounded AuditObservation domain behavior; routed production acceptance and broader locked boundary migrations remain explicit work.",

@@ -237,9 +237,9 @@ public sealed class InventoryManagementIndependenceTests
         var declare = await fixture.Bus.DispatchAsync(new DeclareApplication(Uuid.CreateVersion4(), fixture.Tenant, "Attempted", "Purpose"), context);
         var revise = await fixture.Bus.DispatchAsync(new ReviseApplication(Uuid.CreateVersion4(), fixture.Tenant, fixture.ApplicationId,
             1, "Attempted", "Purpose", null), context);
-        var record = await fixture.Bus.DispatchAsync(new RecordTechnologyComponent(fixture.Tenant, "repository",
+        var record = await fixture.Bus.DispatchAsync(new RecordTechnologyComponent(Uuid.CreateVersion4(), fixture.Tenant, "repository",
             "Attempted", fixture.PersonId), context);
-        var component = await fixture.Bus.DispatchAsync(new ReviseTechnologyComponent(fixture.Tenant,
+        var component = await fixture.Bus.DispatchAsync(new ReviseTechnologyComponent(Uuid.CreateVersion4(), fixture.Tenant,
             fixture.ComponentId, 1, "Attempted", fixture.PersonId, "active"), context);
         var stage = await fixture.Bus.DispatchAsync(new StageApplicationImport(fixture.Tenant, Uuid.CreateVersion4(),
             "manual", "applications", "partial", [new("row", "Attempted", "Purpose", null)]), context);
@@ -274,7 +274,7 @@ public sealed class InventoryManagementIndependenceTests
         // Act
         var application = await fixture.Bus.SendAsync(new ReviseApplication(Uuid.CreateVersion4(), fixture.Tenant, fixture.ApplicationId,
             1, "Allowed revision", "Purpose", null), fixture.Actor);
-        var component = await fixture.Bus.SendAsync(new ReviseTechnologyComponent(fixture.Tenant,
+        var component = await fixture.Bus.SendAsync(new ReviseTechnologyComponent(Uuid.CreateVersion4(), fixture.Tenant,
             fixture.ComponentId, 1, "Allowed revision", fixture.PersonId, "active"), fixture.Actor);
         var retained = await fixture.Reader.HydrateAsync(new TechnologyComponent(fixture.Tenant, fixture.ComponentId));
 
@@ -315,7 +315,7 @@ public sealed class InventoryManagementIndependenceTests
 
         // Act
         var application = await fixture.Bus.SendAsync(new DeclareApplication(Uuid.CreateVersion4(), fixture.Tenant, "Attempted", "Purpose"), fixture.Actor);
-        var component = await fixture.Bus.SendAsync(new RecordTechnologyComponent(fixture.Tenant,
+        var component = await fixture.Bus.SendAsync(new RecordTechnologyComponent(Uuid.CreateVersion4(), fixture.Tenant,
             "repository", "Attempted", Uuid.CreateVersion4()), fixture.Actor);
 
         // Assert
@@ -406,7 +406,7 @@ public sealed class InventoryManagementIndependenceTests
             var application = await Bus.SendAsync(new DeclareApplication(Uuid.CreateVersion4(), Tenant, "Original application", "Purpose"), admin);
             Assert.True(application.IsSuccess, application.Error?.Message);
             ApplicationId = application.Value!.ApplicationId;
-            var component = await Bus.SendAsync(new RecordTechnologyComponent(Tenant, "repository", "Original component", PersonId), admin);
+            var component = await Bus.SendAsync(new RecordTechnologyComponent(Uuid.CreateVersion4(), Tenant, "repository", "Original component", PersonId), admin);
             Assert.True(component.IsSuccess, component.Error?.Message);
             ComponentId = component.Value!.ComponentId;
         }

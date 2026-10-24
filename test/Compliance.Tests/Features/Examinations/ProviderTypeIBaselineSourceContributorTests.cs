@@ -1,7 +1,11 @@
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Examinations;
 using Bdgrz.Compliance.Features.Providers;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Examinations;
 
@@ -22,14 +26,16 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
     public async Task ShouldCaptureProviderAtTypeIDateGivenLaterRevision()
     {
         // Arrange
-        var provider = new ProviderRegister(TenantId);
+        var store = new InMemoryEventStore();
+        await using var services = Services(store);
         var initial = Content("Payroll Processor");
-        Assert.True(provider.Record(ProviderId, Uuid.CreateVersion4(), initial,
-            ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder"), CreatedAt).IsSuccess);
-        Assert.True(provider.Revise(ProviderId, Uuid.CreateVersion4(), 1,
-            Content("Renamed Payroll Processor"),
-            ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder"),
-            RevisedAfterTypeI).IsSuccess);
+        await NamedRecordFacts.SeedProviderAsync(services, TenantId, ProviderId, initial,
+            MemberActor("Recorder"), CreatedAt);
+        await NamedRecordFacts.SeedProviderAsync(services, TenantId, ProviderId, Content("Renamed Payroll Processor"),
+            MemberActor("Recorder"), RevisedAfterTypeI);
+        var provider = await new ProviderSource(services.GetRequiredService<IAggregateReader>(),
+            services.GetRequiredService<IImmutableContentStore>()).GetAsync(TenantId, ProviderId, CancellationToken.None);
+        var contentStore = services.GetRequiredService<IImmutableContentStore>();
         var assuranceRegister = new ProviderAssuranceRegister(TenantId);
         var reportId = Uuid.CreateVersion4();
         var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Reviewer");
@@ -56,32 +62,28 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
             Uuid.CreateVersion4(), 1, gapContent, actor,
             assuranceRecordedAt.AddHours(2)).IsSuccess);
 
-        var store = new InMemoryEventStore();
-        var providerEvents = new AggregateScenario<ProviderRegister>(provider).PendingEvents;
-        var stream = new EventStreamAddress(TenantId.ToString(), ProviderRegister.Area,
-            TenantId.ToString());
-        await store.AppendAsync(stream, 0, providerEvents.ToArray());
         var assuranceStream = new EventStreamAddress(TenantId.ToString(),
             ProviderAssuranceRegister.Area, TenantId.ToString());
         var assuranceEvents = new AggregateScenario<ProviderAssuranceRegister>(assuranceRegister)
             .PendingEvents.ToArray();
         await store.AppendAsync(assuranceStream, 0, assuranceEvents);
-        var providerDirectory = new ProviderDirectory(provider.Get(ProviderId)!,
+        var providerDirectory = new ProviderDirectory(provider!,
             await CheckpointAfterAsync(store, EventStreamPattern.ForPattern(TenantId.ToString(),
-                ProviderRegister.Area)));
+                Provider.Area)));
         var assuranceDirectory = new AssuranceDirectory(
             await CheckpointAfterAsync(store, EventStreamPattern.ForPattern(TenantId.ToString(),
                 ProviderAssuranceRegister.Area)));
         var firstReport = assuranceRegister.Reports(ProviderId).Single();
         assuranceDirectory.SetCurrent(assuranceRegister, ProviderId, [firstReport]);
         var contributor = new ProviderTypeIBaselineSourceContributor(providerDirectory,
-            assuranceDirectory, new AggregateReader(provider, assuranceRegister), store,
-            new ProviderCsocReader());
+            assuranceDirectory, new AggregateReader(services.GetRequiredService<IAggregateReader>(),
+                assuranceRegister), store, new ProviderCsocReader(), contentStore);
 
         var staleProviderContributor = new ProviderTypeIBaselineSourceContributor(
-            new ProviderDirectory(provider.Get(ProviderId)!,
+            new ProviderDirectory(provider!,
                 new ProjectionCheckpoint(EventCursor.Start)), assuranceDirectory,
-            new AggregateReader(provider, assuranceRegister), store, new ProviderCsocReader());
+            new AggregateReader(services.GetRequiredService<IAggregateReader>(), assuranceRegister), store,
+            new ProviderCsocReader(), contentStore);
         var staleProviderResult = await staleProviderContributor.ReadAsync(Engagement(),
             CancellationToken.None);
         Assert.False(staleProviderResult.IsSuccess);
@@ -93,7 +95,8 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
         staleAssuranceDirectory.SetCurrent(assuranceRegister, ProviderId, [firstReport]);
         var staleAssuranceContributor = new ProviderTypeIBaselineSourceContributor(
             providerDirectory, staleAssuranceDirectory,
-            new AggregateReader(provider, assuranceRegister), store, new ProviderCsocReader());
+            new AggregateReader(services.GetRequiredService<IAggregateReader>(), assuranceRegister), store,
+            new ProviderCsocReader(), contentStore);
         var staleAssuranceResult = await staleAssuranceContributor.ReadAsync(Engagement(),
             CancellationToken.None);
         Assert.False(staleAssuranceResult.IsSuccess);
@@ -145,28 +148,26 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
     public async Task ShouldRequireCapturedCsocGivenCarvedOutSubserviceProvider()
     {
         // Arrange
-        var provider = new ProviderRegister(TenantId);
-        var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Recorder");
-        Assert.True(provider.Record(ProviderId, Uuid.CreateVersion4(),
-            Content("Payroll subservice", subservice: true), actor, CreatedAt).IsSuccess);
         var store = new InMemoryEventStore();
-        var stream = new EventStreamAddress(TenantId.ToString(), ProviderRegister.Area,
-            TenantId.ToString());
-        await store.AppendAsync(stream, 0,
-            new AggregateScenario<ProviderRegister>(provider).PendingEvents.ToArray());
-        var providerDirectory = new ProviderDirectory(provider.Get(ProviderId)!,
+        await using var services = Services(store);
+        await NamedRecordFacts.SeedProviderAsync(services, TenantId, ProviderId,
+            Content("Payroll subservice", subservice: true), MemberActor("Recorder"), CreatedAt);
+        var contentStore = services.GetRequiredService<IImmutableContentStore>();
+        var provider = await new ProviderSource(services.GetRequiredService<IAggregateReader>(), contentStore)
+            .GetAsync(TenantId, ProviderId, CancellationToken.None);
+        var providerDirectory = new ProviderDirectory(provider!,
             await CheckpointAfterAsync(store, EventStreamPattern.ForPattern(TenantId.ToString(),
-                ProviderRegister.Area)));
+                Provider.Area)));
         var assuranceDirectory = new AssuranceDirectory(new ProjectionCheckpoint(EventCursor.Start));
         var assuranceRegister = new ProviderAssuranceRegister(TenantId);
-        var aggregateReader = new AggregateReader(provider, assuranceRegister);
+        var aggregateReader = new AggregateReader(services.GetRequiredService<IAggregateReader>(), assuranceRegister);
 
         // Act
         var missingCsoc = await new ProviderTypeIBaselineSourceContributor(providerDirectory,
-            assuranceDirectory, aggregateReader, store, new ProviderCsocReader())
+            assuranceDirectory, aggregateReader, store, new ProviderCsocReader(), contentStore)
             .ReadAsync(Engagement(), CancellationToken.None);
         var capturedCsoc = await new ProviderTypeIBaselineSourceContributor(providerDirectory,
-            assuranceDirectory, aggregateReader, store, new ProviderCsocReader(ProviderId))
+            assuranceDirectory, aggregateReader, store, new ProviderCsocReader(ProviderId), contentStore)
             .ReadAsync(Engagement(), CancellationToken.None);
 
         // Assert
@@ -211,12 +212,28 @@ public sealed class ProviderTypeIBaselineSourceContributorTests
         return new ProjectionCheckpoint(cursor);
     }
 
-    sealed class AggregateReader(params Aggregate[] aggregates) : IAggregateReader
+    static ActorReference MemberActor(string display) => ActorReference.ForMember(Uuid.CreateVersion4(), display);
+
+    static ServiceProvider Services(InMemoryEventStore store)
+    {
+        var collection = new ServiceCollection();
+        collection.AddSingleton<IEventStore>(store);
+        collection.AddSingleton<IDomainEventReader>(store);
+        collection.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+            new PersistenceKvClient(new InMemoryKvClient())));
+        collection.AddPortia();
+        return collection.BuildServiceProvider();
+    }
+
+    /// <summary>Hydrates providers from the real store and every other owner from the fixed instances.</summary>
+    sealed class AggregateReader(IAggregateReader real, params Aggregate[] aggregates) : IAggregateReader
     {
         public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
             CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(aggregates.FirstOrDefault(item => item.Id == aggregate.Id &&
-                item.GetType() == typeof(TAggregate)) is TAggregate found ? found : aggregate);
+            aggregate is Provider
+                ? real.HydrateAsync(aggregate, ct)
+                : ValueTask.FromResult(aggregates.FirstOrDefault(item => item.Id == aggregate.Id &&
+                    item.GetType() == typeof(TAggregate)) is TAggregate found ? found : aggregate);
     }
 
     sealed class ProviderCsocReader(params Uuid[] providerIds) : IProviderCsocBaselineReader

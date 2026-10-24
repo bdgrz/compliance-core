@@ -1,8 +1,11 @@
 using System.Security.Claims;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.TechnologyInventory;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.TechnologyInventory;
 
@@ -23,7 +26,7 @@ public sealed class InventoryRegisterReadConsistencyTests
         var tenant = Uuid.CreateVersion4();
         var id = Uuid.CreateVersion4();
         var consistency = Consistency(new FitzInventoryRegisterDirectory(new InMemoryKvClient()),
-            Locations(tenant, id), new InMemoryEventStore());
+            NamedRecordFacts.RecordedLocation(tenant, id), new InMemoryEventStore());
 
         // Act
         var result = await consistency.GetLocationAsync(tenant, id, minimum, CancellationToken.None);
@@ -39,16 +42,16 @@ public sealed class InventoryRegisterReadConsistencyTests
         var tenant = Uuid.CreateVersion4();
         var id = Uuid.CreateVersion4();
         var directory = new FitzInventoryRegisterDirectory(new InMemoryKvClient());
-        await Project(directory, tenant, new LocationRevisionRecorded(tenant, id, 1, Loc("HQ"), Author, Now));
+        await Project(directory, tenant, NamedRecordFacts.LocationFact(tenant, id, 1), Loc("HQ"));
         var otherTenant = Uuid.CreateVersion4();
-        var foreign = Consistency(directory, new LocationRegister(otherTenant), new InMemoryEventStore());
-        var unknown = Consistency(directory, Locations(tenant, id), new InMemoryEventStore());
+        var foreign = Consistency(directory, new Location(otherTenant, id), new InMemoryEventStore());
+        var unknown = Consistency(directory, new Location(tenant, Uuid.CreateVersion4()), new InMemoryEventStore());
 
         // Act
         var leak = await foreign.GetLocationAsync(otherTenant, id, null, CancellationToken.None);
         var missing = await unknown.GetLocationAsync(tenant, Uuid.CreateVersion4(), null, CancellationToken.None);
-        var processLeak = await Consistency(directory, new LocationRegister(otherTenant),
-            new InMemoryEventStore(), new OperationalProcessRegister(otherTenant))
+        var processLeak = await Consistency(directory, new Location(otherTenant, id),
+            new InMemoryEventStore(), new OperationalProcess(otherTenant, id))
             .GetOperationalProcessAsync(otherTenant, id, null, CancellationToken.None);
 
         // Assert
@@ -63,10 +66,9 @@ public sealed class InventoryRegisterReadConsistencyTests
         // Arrange
         var tenant = Uuid.CreateVersion4();
         var id = Uuid.CreateVersion4();
-        var source = Locations(tenant, id);
-        Assert.Null(source.Revise(id, 1, c => c with { Name = "Main" }, Author, Now.AddMinutes(1)));
+        var source = NamedRecordFacts.RecordedLocation(tenant, id, 2);
         var directory = new FitzInventoryRegisterDirectory(new InMemoryKvClient());
-        await Project(directory, tenant, new LocationRevisionRecorded(tenant, id, 1, Loc("HQ"), Author, Now));
+        await Project(directory, tenant, NamedRecordFacts.LocationFact(tenant, id, 1, Author, Now), Loc("HQ"));
         var consistency = Consistency(directory, source, new InMemoryEventStore());
 
         // Act
@@ -75,7 +77,8 @@ public sealed class InventoryRegisterReadConsistencyTests
         var history = await new ListLocationRevisionsHandler(directory, consistency).HandleAsync(
             new RequestContext<ListLocationRevisions>(new ListLocationRevisions(tenant, id), new ClaimsPrincipal()),
             CancellationToken.None);
-        await Project(directory, tenant, new LocationRevisionRecorded(tenant, id, 2, Loc("Main"), Author, Now.AddMinutes(1)));
+        await Project(directory, tenant, NamedRecordFacts.LocationFact(tenant, id, 2, Author, Now.AddMinutes(1)),
+            Loc("Main"));
         var caughtUp = await new GetLocationHandler(consistency).HandleAsync(
             new RequestContext<GetLocation>(new GetLocation(tenant, id, 2), new ClaimsPrincipal()), CancellationToken.None);
 
@@ -97,10 +100,10 @@ public sealed class InventoryRegisterReadConsistencyTests
         var tenant = Uuid.CreateVersion4();
         var id = Uuid.CreateVersion4();
         var events = new InMemoryEventStore();
-        await events.AppendAsync(new EventStreamAddress(tenant.ToString(), "inventory-registers", "locations"), 0,
-            [DomainEventSeed.Attach(new LocationRevisionRecorded(tenant, id, 1, Loc("HQ"), Author, Now), tenant, 1)]);
+        await events.AppendAsync(new Location(tenant, id).Stream, 0,
+            [DomainEventSeed.Attach(NamedRecordFacts.LocationFact(tenant, id, 1, Author, Now), id, 1)]);
         var directory = new FitzInventoryRegisterDirectory(new InMemoryKvClient());
-        var consistency = Consistency(directory, Locations(tenant, id), events);
+        var consistency = Consistency(directory, NamedRecordFacts.RecordedLocation(tenant, id), events);
 
         // Act
         var locations = await new ListLocationsHandler(directory, consistency).HandleAsync(
@@ -121,10 +124,11 @@ public sealed class InventoryRegisterReadConsistencyTests
         var tenant = Uuid.CreateVersion4();
         var other = Uuid.CreateVersion4();
         var directory = new FitzInventoryRegisterDirectory(new InMemoryKvClient());
-        await Project(directory, tenant,
-            new OperationalProcessRevisionRecorded(tenant, Uuid.CreateVersion4(), 1, Proc("One"), Author, Now),
-            new OperationalProcessRevisionRecorded(tenant, Uuid.CreateVersion4(), 1, Proc("Two"), Author, Now));
-        var consistency = Consistency(directory, new LocationRegister(tenant), new InMemoryEventStore());
+        await Project(directory, tenant, NamedRecordFacts.ProcessFact(tenant, Uuid.CreateVersion4(), 1, Author, Now),
+            Proc("One"));
+        await Project(directory, tenant, NamedRecordFacts.ProcessFact(tenant, Uuid.CreateVersion4(), 1, Author, Now),
+            Proc("Two"));
+        var consistency = Consistency(directory, new Location(tenant, Uuid.CreateVersion4()), new InMemoryEventStore());
         var handler = new ListOperationalProcessesHandler(directory, consistency);
         var first = await handler.HandleAsync(new RequestContext<ListOperationalProcesses>(
             new ListOperationalProcesses(tenant, 1), new ClaimsPrincipal()), CancellationToken.None);
@@ -147,19 +151,27 @@ public sealed class InventoryRegisterReadConsistencyTests
     public async Task ShouldReportActiveOnlyGivenRetiredOrForeignRegisterRecordsAsBoundarySubjects()
     {
         // Arrange
+        var collection = new ServiceCollection();
+        var events = new InMemoryEventStore();
+        collection.AddSingleton<IEventStore>(events);
+        collection.AddSingleton<IDomainEventReader>(events);
+        collection.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(
+            new PersistenceKvClient(new InMemoryKvClient())));
+        collection.AddPortia();
+        await using var services = collection.BuildServiceProvider();
         var tenant = Uuid.CreateVersion4();
         var locationId = Uuid.CreateVersion4();
         var processId = Uuid.CreateVersion4();
-        var locations = Locations(tenant, locationId);
-        var processes = new OperationalProcessRegister(tenant);
-        Assert.True(processes.Record(processId, Proc("Backups"), Author, Now).IsSuccess);
-        var references = new TechnologyInventoryReferences(new SourceReader(locations, processes), null!, null!);
+        await NamedRecordFacts.SeedLocationAsync(services, tenant, locationId, Loc("HQ"));
+        await NamedRecordFacts.SeedProcessAsync(services, tenant, processId, Proc("Backups"));
+        var references = new TechnologyInventoryReferences(services.GetRequiredService<IAggregateReader>(), null!,
+            null!, services.GetRequiredService<IImmutableContentStore>());
 
         // Act
         var activeLocation = await references.IsActiveAsync(tenant, "location", locationId);
         var activeProcess = await references.IsActiveAsync(tenant, "process", processId);
         var wrongKind = await references.IsActiveAsync(tenant, "process", locationId);
-        Assert.Null(locations.Revise(locationId, 1, c => c with { Lifecycle = "retired" }, Author, Now));
+        await NamedRecordFacts.SeedLocationAsync(services, tenant, locationId, Loc("HQ") with { Lifecycle = "retired" });
         var retired = await references.IsActiveAsync(tenant, "location", locationId);
 
         // Assert
@@ -169,41 +181,44 @@ public sealed class InventoryRegisterReadConsistencyTests
         Assert.False(retired);
     }
 
-    static async Task Project(FitzInventoryRegisterDirectory directory, Uuid tenant, params DomainEvent[] events)
+    static async Task Project(FitzInventoryRegisterDirectory directory, Uuid tenant, LocationRevisionRecorded ev,
+        LocationContent content)
     {
-        await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
-            new CheckpointIdentity(FitzInventoryRegisterDirectory.ProjectorName,
-                EventStreamPattern.ForPattern(tenant.ToString(), "inventory-registers")), ProjectionCheckpoint.Start));
-        foreach (var ev in events)
-            await directory.ApplyAsync(ev);
+        await using var batch = await directory.BeginAsync(Batch(directory, tenant));
+        await directory.ApplyAsync(ev, content);
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 
-    static InventoryRegisterReadConsistency Consistency(FitzInventoryRegisterDirectory directory,
-        LocationRegister locations, IDomainEventReader events, OperationalProcessRegister? processes = null) =>
-        new(directory, new SourceReader(locations, processes), events);
-
-    static LocationRegister Locations(Uuid tenant, Uuid id)
+    static async Task Project(FitzInventoryRegisterDirectory directory, Uuid tenant,
+        OperationalProcessRevisionRecorded ev, OperationalProcessContent content)
     {
-        var source = new LocationRegister(tenant);
-        Assert.True(source.Record(id, Loc("HQ"), Author, Now).IsSuccess);
-        return source;
+        await using var batch = await directory.BeginAsync(Batch(directory, tenant));
+        await directory.ApplyAsync(ev, content);
+        await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
+
+    static ProjectionBatchContext Batch(FitzInventoryRegisterDirectory directory, Uuid tenant) => new(
+        new CheckpointIdentity(FitzInventoryRegisterDirectory.ProjectorName,
+            EventStreamPattern.ForPattern(tenant.ToString(), "inventory-registers")), ProjectionCheckpoint.Start);
+
+    static InventoryRegisterReadConsistency Consistency(FitzInventoryRegisterDirectory directory,
+        Location locations, IDomainEventReader events, OperationalProcess? processes = null) =>
+        new(directory, new SourceReader(locations, processes), events);
 
     static LocationContent Loc(string name) => new("physical_site", name, null, Owner, "active");
 
     static OperationalProcessContent Proc(string name) =>
         new(name, "Purpose", Owner, null, null, "active");
 
-    sealed class SourceReader(LocationRegister locations, OperationalProcessRegister? processes)
-        : IAggregateReader
+    sealed class SourceReader(Location locations, OperationalProcess? processes) : IAggregateReader
     {
         public ValueTask<T> HydrateAsync<T>(T aggregate, CancellationToken ct = default)
             where T : Aggregate =>
             ValueTask.FromResult(aggregate switch
             {
-                LocationRegister => (T)(Aggregate)locations,
-                OperationalProcessRegister => (T)(Aggregate)(processes ?? new OperationalProcessRegister(Uuid.CreateVersion4())),
+                Location => (T)(Aggregate)locations,
+                OperationalProcess => (T)(Aggregate)(processes ?? new OperationalProcess(Uuid.CreateVersion4(),
+                    Uuid.CreateVersion4())),
                 _ => aggregate,
             });
     }

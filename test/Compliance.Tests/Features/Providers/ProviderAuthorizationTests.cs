@@ -83,7 +83,7 @@ public sealed class ProviderAuthorizationTests
         RequestError? error;
         if (write)
         {
-            var call = scenario.When(new RecordProvider(tenantId, new ProviderContent("Provider", "Supplier")));
+            var call = scenario.When(new RecordProvider(Uuid.CreateVersion4(), tenantId, new ProviderContent("Provider", "Supplier")));
             error = (expected is { } denied ? await call.ExpectDenied(denied).ExpectNotHandled() : await call.ExpectSuccess().ExpectHandled()).Error;
         }
         else

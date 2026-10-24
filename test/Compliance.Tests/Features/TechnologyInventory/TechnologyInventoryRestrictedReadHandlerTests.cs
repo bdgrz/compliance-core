@@ -37,8 +37,8 @@ public sealed class TechnologyInventoryRestrictedReadHandlerTests
         var id = Uuid.CreateVersion4();
         var source = new InformationAsset(TenantId, id);
         Assert.True(source.Record(Content("public"), Author, DateTimeOffset.UtcNow).IsSuccess);
-        Assert.Null(source.Revise(1, current => current with { Classification = "restricted" },
-            Author, DateTimeOffset.UtcNow));
+        Assert.True(source.Revise(1, current => current with { Classification = "restricted" },
+            Author, DateTimeOffset.UtcNow).IsSuccess);
         var staleProjection = AssetView(id, 1, Content("public"));
         var directory = new InventoryDirectory([staleProjection]);
         var handler = new GetInformationAssetHandler(new AggregateReader(source),
@@ -60,9 +60,9 @@ public sealed class TechnologyInventoryRestrictedReadHandlerTests
         var source = AssetAggregate(view);
         var directory = new InventoryDirectory([view])
         {
-            OnAssetGet = () => Assert.Null(source.Revise(1,
+            OnAssetGet = () => Assert.True(source.Revise(1,
                 current => current with { Classification = "restricted" }, Author,
-                DateTimeOffset.UtcNow)),
+                DateTimeOffset.UtcNow).IsSuccess),
         };
         var handler = new GetInformationAssetHandler(new AggregateReader(source),
             Consistency(directory, source), Visibility());
@@ -84,9 +84,9 @@ public sealed class TechnologyInventoryRestrictedReadHandlerTests
         var source = AssetAggregate(view);
         var directory = new InventoryDirectory([view])
         {
-            OnAssetGet = () => Assert.Null(source.Revise(1,
+            OnAssetGet = () => Assert.True(source.Revise(1,
                 current => current with { Classification = "confidential" }, Author,
-                DateTimeOffset.UtcNow)),
+                DateTimeOffset.UtcNow).IsSuccess),
         };
         var handler = new GetInformationAssetHandler(new AggregateReader(source),
             Consistency(directory, source), Visibility());
@@ -109,9 +109,9 @@ public sealed class TechnologyInventoryRestrictedReadHandlerTests
         var source = FlowAggregate(view);
         var directory = new InventoryDirectory(flows: [view])
         {
-            OnFlowGet = () => Assert.Null(source.Revise(1,
+            OnFlowGet = () => Assert.True(source.Revise(1,
                 current => current with { Classification = "restricted" }, Author,
-                DateTimeOffset.UtcNow)),
+                DateTimeOffset.UtcNow).IsSuccess),
         };
         var handler = new GetDataFlowHandler(new AggregateReader(source),
             Consistency(directory, source), Visibility());
@@ -133,9 +133,9 @@ public sealed class TechnologyInventoryRestrictedReadHandlerTests
         var source = FlowAggregate(view);
         var directory = new InventoryDirectory(flows: [view])
         {
-            OnFlowGet = () => Assert.Null(source.Revise(1,
+            OnFlowGet = () => Assert.True(source.Revise(1,
                 current => current with { Classification = "confidential" }, Author,
-                DateTimeOffset.UtcNow)),
+                DateTimeOffset.UtcNow).IsSuccess),
         };
         var handler = new GetDataFlowHandler(new AggregateReader(source),
             Consistency(directory, source), Visibility());
@@ -161,9 +161,9 @@ public sealed class TechnologyInventoryRestrictedReadHandlerTests
             OnHydrate = call =>
             {
                 if (call == 2)
-                    Assert.Null(source.Revise(1,
+                    Assert.True(source.Revise(1,
                         current => current with { Classification = "restricted" }, Author,
-                        DateTimeOffset.UtcNow));
+                        DateTimeOffset.UtcNow).IsSuccess);
             },
         };
         var directory = new InventoryDirectory([view]);
@@ -190,9 +190,9 @@ public sealed class TechnologyInventoryRestrictedReadHandlerTests
             OnHydrate = call =>
             {
                 if (call == 2)
-                    Assert.Null(source.Revise(1,
+                    Assert.True(source.Revise(1,
                         current => current with { Classification = "restricted" }, Author,
-                        DateTimeOffset.UtcNow));
+                        DateTimeOffset.UtcNow).IsSuccess);
             },
         };
         var directory = new InventoryDirectory(flows: [view]);
@@ -237,7 +237,7 @@ public sealed class TechnologyInventoryRestrictedReadHandlerTests
         var visible = Asset("public");
         var events = new InMemoryEventStore();
         var incomingFlowId = Uuid.CreateVersion4();
-        var arriving = DomainEventSeed.Attach(new DataFlowRevisionRecorded(TenantId,
+        var arriving = DomainEventSeed.Attach(InventoryFacts.FlowFact(TenantId,
             incomingFlowId, 1, new DataFlowContent("technology_component", Uuid.CreateVersion4(),
                 "external_party", null, "Payroll provider", [Uuid.CreateVersion4()], "Payroll", true,
                 true, null, new DateOnly(2026, 1, 1), Uuid.CreateVersion4(), "active", "restricted"),
@@ -302,8 +302,8 @@ public sealed class TechnologyInventoryRestrictedReadHandlerTests
         // Arrange
         var aggregate = new InformationAsset(TenantId, Uuid.CreateVersion4());
         Assert.True(aggregate.Record(Content("restricted"), Author, DateTimeOffset.UtcNow).IsSuccess);
-        Assert.Null(aggregate.Revise(1, current => current with { Classification = "public" },
-            Author, DateTimeOffset.UtcNow));
+        Assert.True(aggregate.Revise(1, current => current with { Classification = "public" },
+            Author, DateTimeOffset.UtcNow).IsSuccess);
         var restrictedRevision = AssetView(aggregate.Id, 1, Content("restricted"));
         var currentRevision = AssetView(aggregate.Id, 2, Content("public"));
         var directory = new InventoryDirectory([currentRevision],

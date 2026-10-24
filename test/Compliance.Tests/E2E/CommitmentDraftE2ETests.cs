@@ -547,7 +547,8 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
         while (DateTimeOffset.UtcNow < deadline)
         {
-            using var provider = await owner.PostAsJsonAsync(path, new
+            var providerId = Guid.NewGuid();
+            using var provider = await owner.PutAsJsonAsync($"{path}/{providerId}", new
             {
                 content = new
                 {
@@ -560,9 +561,8 @@ public sealed class CommitmentDraftE2ETests(BrokerStackFixture broker)
                     boundary_treatment = "carve_out",
                 },
             });
-            if (provider.StatusCode == HttpStatusCode.OK)
-                return Guid.Parse((await ReadAsync(provider)).GetProperty("provider_id")
-                    .GetString()!);
+            if (provider.StatusCode == HttpStatusCode.Accepted)
+                return providerId;
             Assert.True(provider.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,
                 await provider.Content.ReadAsStringAsync());
             await Task.Delay(250);

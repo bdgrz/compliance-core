@@ -177,7 +177,7 @@ public sealed class DataFlowTypeIBaselineSourceContributorTests
     static DataFlowRevisionRecorded Revision(long revision, string purpose,
         DateTimeOffset changedAt, DateOnly effectiveFrom, string classification = "internal",
         string lifecycle = TechnologyInventoryRules.Active) =>
-        new(TenantId, FlowId, revision, new DataFlowContent(
+        InventoryFacts.FlowFact(TenantId, FlowId, revision, new DataFlowContent(
             TechnologyInventoryRules.ComponentReference, SourceComponentId,
             TechnologyInventoryRules.ComponentReference, DestinationComponentId, null,
             [AssetId], purpose, true, true, null, effectiveFrom, OwnerId, lifecycle,

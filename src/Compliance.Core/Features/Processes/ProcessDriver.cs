@@ -102,19 +102,20 @@ public sealed class ProcessDriver(IProcessRecordStore store, IRequestBus bus, Pr
                 break;
             }
 
-            if (result.Value is Features.Processes.ReceiverOutcome.Rejected rejected &&
-                record.State != ProcessState.Aborting)
+            if (result.Value is Features.Processes.ReceiverOutcome.Rejected rejected)
             {
                 // The operation can never proceed: fence through the abort receivers, then settle what was held.
                 record = await store.ReplaceAsync(record with
                 {
-                    State = ProcessState.Aborting,
-                    AbortIndex = 0,
+                    State = record.State == ProcessState.Aborting ? ProcessState.Quarantined : ProcessState.Aborting,
+                    AbortIndex = record.State == ProcessState.Aborting ? record.AbortIndex : 0,
                     Attempts = 0,
                     Lease = null,
                     NextDueAt = now,
                     Note = $"{step.Receiver} rejected: {rejected.Reason}",
                 }, record.Version, ct).ConfigureAwait(false);
+                if (record.State == ProcessState.Quarantined)
+                    break;
                 continue;
             }
 

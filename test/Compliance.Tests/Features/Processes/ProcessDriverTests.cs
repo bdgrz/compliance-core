@@ -414,4 +414,63 @@ public sealed class ProcessDriverTests
         Assert.DoesNotContain(host.Recorder.Calls, c => c.Receiver is "ApplyA" or "ApplyB");
         Assert.Contains("stale source", record.Note ?? "stale source", StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task ShouldAbortThroughFenceThenSettleEveryTargetGivenRejectedOutcome()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1", "t2");
+        host.Recorder.Script("AcquireX", call => call.Target == "t2"
+            ? Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("t2 is held by another operation"))
+            : Result<ReceiverOutcome>.Success(new ReceiverOutcome.Applied(new(
+                new EventStreamAddress("tenant-a", "targets", call.Target!), call.CommandId, 1))));
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Aborted, record.State);
+        Assert.Equal(["AcquireX", "AcquireX", "RejectX", "SettleX", "SettleX"],
+            host.Recorder.Calls.Select(c => c.Receiver).ToArray());
+    }
+
+    [Fact]
+    public async Task ShouldKeepSettlingRemainingTargetsAndEndAbortedGivenSupersededSettleStep()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1", "t2");
+        host.Recorder.Script("AcquireX", call => call.Target == "t2"
+            ? Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("refused"))
+            : Result<ReceiverOutcome>.Success(new ReceiverOutcome.Applied(new(
+                new EventStreamAddress("tenant-a", "targets", call.Target!), call.CommandId, 1))));
+        host.Recorder.Script("SettleX", call => call.Target == "t1"
+            ? Result<ReceiverOutcome>.Success(new ReceiverOutcome.Superseded("a later holder owns it", null))
+            : Result<ReceiverOutcome>.Success(new ReceiverOutcome.Applied(new(
+                new EventStreamAddress("tenant-a", "targets", call.Target!), call.CommandId, 1))));
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Aborted, record.State);
+        Assert.Equal(["t1", "t2"], host.Recorder.Calls.Where(c => c.Receiver == "SettleX").Select(c => c.Target!));
+    }
+
+    [Fact]
+    public async Task ShouldQuarantineGivenRejectedOutcomeWhileAlreadyAborting()
+    {
+        // Arrange
+        await using var host = new ProcessTestHost();
+        await host.StartAsync("t1");
+        host.Recorder.Script("AcquireX", _ => Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("refused")));
+        host.Recorder.Script("RejectX", _ => Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("again")));
+
+        // Act
+        var record = await host.RunAsync();
+
+        // Assert
+        Assert.Equal(ProcessState.Quarantined, record.State);
+    }
 }

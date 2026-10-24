@@ -1,5 +1,8 @@
 using Bdgrz.Compliance.Features.Applications;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Evidence;
+using Bdgrz.Compliance.Features.NamedRecords;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Providers;
 using Bdgrz.Compliance.Features.Workforce;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
@@ -13,14 +16,13 @@ namespace Bdgrz.Compliance.Tests.Features.Providers;
 public sealed class ProviderReferenceTests
 {
     [Fact]
-    public async Task ShouldRetainInspectedRevisionsGivenHydratedRequestRetryAfterCanonicalChanges()
+    public async Task ShouldRetainInspectedRevisionsGivenExactRetryAfterCanonicalChanges()
     {
         // Arrange
         await using var fixture = await Fixture.CreateAsync();
-        var createMetadata = RequestMetadata.Create();
-        var request = new RecordProvider(fixture.TenantId, fixture.Content());
+        var request = new RecordProvider(Uuid.CreateVersion4(), fixture.TenantId, fixture.Content());
         var scenario = RequestScenario.For(fixture.Services).GivenActor(ProgramManagementServices.Actor(fixture.UserId));
-        var first = (await scenario.GivenMetadata(createMetadata).When(request).ExpectSuccess()).Value;
+        var first = (await scenario.When(request).ExpectSuccess()).Value;
         await ProgramManagementServices.SeedAsync(fixture.Services, new Person(fixture.TenantId, fixture.PersonId), person =>
         {
             Assert.Null(person.Revise(1, "Second name", null, fixture.Author, fixture.Now.AddMinutes(1)));
@@ -36,37 +38,51 @@ public sealed class ProviderReferenceTests
             Assert.Null(instance.Retire(1, fixture.Now, "Changed", fixture.UserId, "Recorder", fixture.Now.AddMinutes(1)));
             return Result.Success;
         });
-        var revisionMetadata = RequestMetadata.Create();
-        var revision = new ReviseProvider(fixture.TenantId, first.ProviderId, 1, request.Content with { Name = "Revised provider" });
-        var second = (await scenario.GivenMetadata(revisionMetadata).When(revision).ExpectSuccess()).Value;
+        var revisedId = Uuid.CreateVersion4();
+        await NamedRecordFacts.SeedProviderAsync(fixture.Services, fixture.TenantId, revisedId,
+            (await fixture.References.ResolveAsync(fixture.TenantId, fixture.Content() with { Name = "Other provider" },
+                CancellationToken.None)).Value!, fixture.Author, fixture.Now);
+        var revision = new ReviseProvider(Uuid.CreateVersion4(), fixture.TenantId, revisedId, 1,
+            request.Content with { Name = "Revised provider" });
+        var second = (await scenario.When(revision).ExpectSuccess()).Value;
 
         // Act
-        var createRetry = await scenario.GivenMetadata(createMetadata).When(request).ExpectSuccess();
+        var createRetry = await scenario.When(request).ExpectSuccess();
         await ProgramManagementServices.SeedAsync(fixture.Services, new Person(fixture.TenantId, fixture.PersonId), person =>
         {
             Assert.Null(person.Revise(2, "Third name", null, fixture.Author, fixture.Now.AddMinutes(2)));
             return Result.Success;
         });
-        var revisionRetry = await scenario.GivenMetadata(revisionMetadata).When(revision).ExpectSuccess();
-        var stale = await scenario.When(revision).ExpectFailure(RequestErrorKind.Conflict);
-        var register = await ProgramManagementServices.HydrateAsync(fixture.Services, new ProviderRegister(fixture.TenantId));
-        var retained = new List<DomainEvent>();
-        await foreach (var record in fixture.Services.GetRequiredService<IDomainEventReader>().ReadAsync(
-            EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ProviderRegister.Area), EventCursor.Start, CancellationToken.None))
-            retained.Add(record.Event);
+        var revisionRetry = await scenario.When(revision).ExpectSuccess();
+        var pending = await scenario.When(revision with { CommandId = Uuid.CreateVersion4() })
+            .ExpectFailure(RequestErrorKind.Conflict);
+        var created = await FrozenContentAsync(fixture, request.ProviderId);
+        var revised = await FrozenContentAsync(fixture, revisedId);
+        var owner = await ProgramManagementServices.HydrateAsync(fixture.Services,
+            new Provider(fixture.TenantId, request.ProviderId));
 
         // Assert
         Assert.Equal(first, createRetry.Value);
         Assert.Equal(second, revisionRetry.Value);
-        Assert.Contains("Current revision: 2", stale.Error!.Message, StringComparison.Ordinal);
-        Assert.Equal(2, retained.Count);
-        Assert.Equal(1, Assert.IsType<ProviderRecorded>(retained[0]).Content.OwnerPersonRevision);
-        var current = register.Get(first.ProviderId)!;
-        Assert.Equal(2, current.Content.OwnerPersonRevision);
-        Assert.Equal([2L, 2L], current.Content.Dependencies!.Select(static dependency => dependency.SourceRevision!.Value));
-        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId).ToString(), current.RecordedBy.Id);
-        Assert.Equal(fixture.PersonId, current.Content.OwnerPersonId);
-        Assert.NotEqual(fixture.PersonId.ToString(), current.RecordedBy.Id);
+        Assert.True(pending.Error!.IsTransient);
+        Assert.Equal(1UL, owner.Version);
+        Assert.Equal(1, created.OwnerPersonRevision);
+        Assert.Equal(2, revised.OwnerPersonRevision);
+        Assert.Equal("Revised provider", revised.Name);
+        Assert.Equal([2L, 2L], revised.Dependencies!.Select(static dependency => dependency.SourceRevision!.Value));
+        Assert.Equal(fixture.PersonId, created.OwnerPersonId);
+    }
+
+    static async Task<ProviderContent> FrozenContentAsync(Fixture fixture, Uuid providerId)
+    {
+        var owner = await ProgramManagementServices.HydrateAsync(fixture.Services,
+            new Provider(fixture.TenantId, providerId));
+        var content = fixture.Services.GetRequiredService<IImmutableContentStore>();
+        var realm = fixture.TenantId.ToString();
+        var intent = await content.ReadJsonAsync<RecordNameChangeIntent>(realm, owner.Pending!.Intent);
+        var bytes = await content.ReadVerifiedAsync(realm, intent.AuthoredContent);
+        return System.Text.Json.JsonSerializer.Deserialize(bytes.Span,
+            ComplianceCoreJsonContext.Default.ProviderContent)!;
     }
 
     [Fact]
@@ -185,6 +201,8 @@ public sealed class ProviderReferenceTests
                     services.AddSingleton<IEventStore>(store);
                     services.AddSingleton<IDomainEventReader>(store);
                     services.AddScoped<ProviderReferences>();
+                    services.AddScoped<NativeOperationExecutor>();
+                    services.AddScoped<NamedRecordAdmission>();
                 }),
             };
             await ProgramManagementServices.SeedAsync(fixture.Services, new Person(fixture.TenantId, fixture.PersonId),

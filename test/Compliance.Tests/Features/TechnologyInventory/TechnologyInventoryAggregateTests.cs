@@ -1,5 +1,4 @@
 using Bdgrz.Compliance.Features.TechnologyInventory;
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 
@@ -13,18 +12,18 @@ public sealed class TechnologyInventoryAggregateTests
     static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public void ShouldReplayIdenticalRecordAndRejectChangedContentGivenRecordedComponent()
+    public void ShouldConflictOnAnotherCreationOfTheIdentityGivenRecordedComponent()
     {
         // Arrange
         var component = new TechnologyComponent(TenantId, Uuid.CreateVersion4());
         Assert.True(component.Record(Component("network", " Core VPC "), Author, Now).IsSuccess);
 
         // Act
-        var replay = component.Record(Component("network", "Core VPC"), Author, Now);
+        var another = component.Record(Component("network", "Core VPC"), Author, Now);
         var changed = component.Record(Component("network", "Edge VPC"), Author, Now);
 
         // Assert
-        Assert.True(replay.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, another.Error!.Kind);
         Assert.Equal(RequestErrorKind.Conflict, changed.Error!.Kind);
         var recorded = Assert.IsType<TechnologyComponentRevisionRecorded>(Assert.Single(
             new AggregateScenario<TechnologyComponent>(component).PendingEvents));
@@ -98,11 +97,11 @@ public sealed class TechnologyInventoryAggregateTests
         }, Author, Now);
 
         // Assert
-        Assert.Null(retired);
+        Assert.True(retired.IsSuccess);
         Assert.Equal(2, component.Revision);
         Assert.Equal(TechnologyInventoryRules.Retired, component.Content!.Lifecycle);
-        Assert.Equal(CommandFailureCode.VersionConflict, stale!.Code);
-        Assert.Equal(CommandFailureCode.InvalidContent, recategorized!.Code);
+        Assert.Equal(RequestErrorKind.Conflict, stale.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, recategorized.Error!.Kind);
     }
 
     [Theory]
@@ -155,7 +154,7 @@ public sealed class TechnologyInventoryAggregateTests
         Assert.True(flow.Record(original, Author, Now).IsSuccess);
 
         // Act
-        var replay = flow.Record(original with { InformationAssetIds = [.. original.InformationAssetIds] },
+        var another = flow.Record(original with { InformationAssetIds = [.. original.InformationAssetIds] },
             Author, Now);
         var earlier = flow.Revise(1, current => current with
         {
@@ -168,9 +167,9 @@ public sealed class TechnologyInventoryAggregateTests
         }, Author, Now);
 
         // Assert
-        Assert.True(replay.IsSuccess);
-        Assert.Equal(CommandFailureCode.InvalidContent, earlier!.Code);
-        Assert.Null(later);
+        Assert.Equal(RequestErrorKind.Conflict, another.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, earlier.Error!.Kind);
+        Assert.True(later.IsSuccess);
         Assert.Equal(2, flow.Revision);
     }
 
@@ -179,7 +178,7 @@ public sealed class TechnologyInventoryAggregateTests
     {
         // Arrange
         var id = Uuid.CreateVersion4();
-        var recorded = new TechnologyComponentRevisionRecorded(TenantId, id, 1,
+        var recorded = InventoryFacts.ComponentFact(TenantId, id, 1,
             Component("network", "VPC"), Author, Now);
 
         // Act

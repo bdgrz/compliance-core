@@ -1,35 +1,66 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.TechnologyInventory;
 
-public sealed class RecordTechnologyComponentHandler(IAggregateExecutor executor,
-    TechnologyInventoryReferences references, TimeProvider clock)
+/// <summary>
+///     Records a component as the native fact of its own logical operation. The identity in the command is the
+///     logical identity, so an exact retry replays the original answer after any later revision, and the same identity
+///     with a different actor, kind or intent conflicts. References are inspected only for a new operation.
+/// </summary>
+public sealed class RecordTechnologyComponentHandler(NativeOperationExecutor operations, IAggregateReader reader,
+    TechnologyInventoryReferences references, IImmutableContentStore contentStore, TimeProvider clock)
     : IRequestHandler<RecordTechnologyComponent, TechnologyComponentRegistration>
 {
-    public async ValueTask<Result<TechnologyComponentRegistration>> HandleAsync(
-        IRequestContext<RecordTechnologyComponent> context, CancellationToken ct)
+    const string CommandKind = "RecordTechnologyComponent";
+
+    public async ValueTask<Result<TechnologyComponentRegistration>> HandleAsync(IRequestContext<RecordTechnologyComponent> context,
+        CancellationToken ct)
     {
-        var actor = TechnologyInventoryActor.From(context);
         var request = context.Request;
+        if (request.ComponentId == Uuid.Empty || request.TenantId == Uuid.Empty)
+            return Result<TechnologyComponentRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A component identity and tenant are required."));
+        var actor = TechnologyInventoryActor.From(context);
+        var provenance = InventoryOperations.Provenance(new TechnologyComponent(request.TenantId, request.ComponentId).Stream,
+            request.ComponentId, CommandKind, actor, null, AuthoredIntentDigest.Compute(request), clock.GetUtcNow());
+        var binding = AcceptedOperationBinding.Of(provenance);
+        var decision = (await reader.HydrateAsync(new TechnologyComponent(request.TenantId, request.ComponentId, request.ComponentId), ct)
+            .ConfigureAwait(false)).Acceptance.Decide(binding);
         var content = new TechnologyComponentContent(request.Category, request.Name,
             request.OwnerPersonId, request.EnvironmentReference, request.LocationReference,
             request.SystemInstanceId, request.EndpointCount, request.ManagementSource,
             TechnologyInventoryRules.Active);
-        var error = await references.ValidateOwnerAsync(request.TenantId,
-                request.OwnerPersonId, ct).ConfigureAwait(false) ??
-            (request.Category?.Trim() == TechnologyInventoryRules.CloudAccount
-                ? await references.ValidateCloudAccountAsync(request.TenantId,
-                    request.SystemInstanceId, ct).ConfigureAwait(false)
-                : null);
-        if (error is not null)
-            return Result<TechnologyComponentRegistration>.Failure(error);
-        // A cloud account component is keyed by its system instance so it cannot be duplicated.
-        var id = request.Category?.Trim() == TechnologyInventoryRules.CloudAccount &&
-                 request.SystemInstanceId is { } instanceId && instanceId != Uuid.Empty
-            ? instanceId
-            : context.RequestId;
-        return await executor.ExecuteAsync(new TechnologyComponent(request.TenantId, id),
-            component => AggregateOutcome.CommitOnSuccess(component.Record(content, actor,
-                clock.GetUtcNow())), context, ct).ConfigureAwait(false);
+
+        if (decision == NativeAcceptanceDecision.None)
+        {
+            var error = await references.ValidateOwnerAsync(request.TenantId, request.OwnerPersonId, ct)
+                .ConfigureAwait(false) ??
+                (request.Category?.Trim() == TechnologyInventoryRules.CloudAccount
+                    ? await references.ValidateCloudAccountAsync(request.TenantId, request.SystemInstanceId, ct)
+                        .ConfigureAwait(false)
+                    : null);
+            if (error is not null)
+                return Result<TechnologyComponentRegistration>.Failure(error);
+        }
+        var realm = request.TenantId.ToString();
+        var response = await InventoryOperations.FreezeAsync(contentStore, realm, "technology-component-registration.v1",
+            new TechnologyComponentRegistration(request.ComponentId), ct).ConfigureAwait(false);
+        var accepted = await operations.ExecuteAsync(new NativeOperation<TechnologyComponent>(binding,
+            () => new TechnologyComponent(request.TenantId, request.ComponentId, request.ComponentId), component => component.Acceptance,
+            component =>
+            {
+                var prepared = component.PrepareRecord(content);
+                return prepared.IsSuccess
+                    ? Result<FirstResponseDescriptor>.Success(response)
+                    : Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+            },
+            (TechnologyComponent component, ImmutableContentRef frozen) => component.Record(provenance, frozen, content, actor,
+                provenance.AcceptedAt)), context, ct).ConfigureAwait(false);
+        return await InventoryOperations.ReadAsync<TechnologyComponentRegistration>(contentStore, realm, "technology-component-registration.v1", accepted, ct)
+            .ConfigureAwait(false);
     }
 }

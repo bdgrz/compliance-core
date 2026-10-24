@@ -166,12 +166,12 @@ public sealed class TechnologyComponentTypeIBaselineSourceContributorTests
 
     static TechnologyComponentRevisionRecorded Revision(long revision, string name,
         DateTimeOffset changedAt, string lifecycle = TechnologyInventoryRules.Active) =>
-        new(TenantId, ComponentId, revision, new TechnologyComponentContent("network", name,
+        InventoryFacts.ComponentFact(TenantId, ComponentId, revision, new TechnologyComponentContent("network", name,
             OwnerId, null, null, null, null, null, lifecycle), Actor, changedAt);
 
     static TechnologyComponentRevisionRecorded Revision(long revision, string name,
         DateTimeOffset changedAt, TechnologyComponentContent content) =>
-        new(TenantId, ComponentId, revision, content, Actor, changedAt);
+        InventoryFacts.ComponentFact(TenantId, ComponentId, revision, content, Actor, changedAt);
 
     static TechnologyComponentContent CloudAccount(Uuid id) =>
         new(TechnologyInventoryRules.CloudAccount, "Production AWS", OwnerId, null, null,

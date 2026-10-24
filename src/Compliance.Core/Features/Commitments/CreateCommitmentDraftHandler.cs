@@ -5,7 +5,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Commitments;
 
 public sealed class CreateCommitmentDraftHandler(IAggregateExecutor executor,
-    IAggregateReader reader, TimeProvider clock)
+    IAggregateReader reader, ProviderSource providers, TimeProvider clock)
     : IRequestHandler<CreateCommitmentDraft, CommitmentDraftRegistration>
 {
     public async ValueTask<Result<CommitmentDraftRegistration>> HandleAsync(
@@ -28,9 +28,7 @@ public sealed class CreateCommitmentDraftHandler(IAggregateExecutor executor,
             draftId), ct).ConfigureAwait(false);
         if (!draftSource.IsCreated && request.ProviderId is { } providerId)
         {
-            var register = await reader.HydrateAsync(new ProviderRegister(request.TenantId), ct)
-                .ConfigureAwait(false);
-            var provider = register.Get(providerId);
+            var provider = await providers.GetAsync(request.TenantId, providerId, ct).ConfigureAwait(false);
             if (provider is null || !provider.Content.Subservice)
                 return Result<CommitmentDraftRegistration>.Failure(new RequestError(
                     RequestErrorKind.NotFound,

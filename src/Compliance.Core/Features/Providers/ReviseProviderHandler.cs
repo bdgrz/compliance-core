@@ -1,28 +1,36 @@
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NamedRecords;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Providers;
 
-public sealed class ReviseProviderHandler(IAggregateExecutor executor, IAggregateReader reader,
-    ProviderReferences references, TimeProvider clock) : IRequestHandler<ReviseProvider, ProviderRegistration>
+/// <summary>
+///     Admits a revision of a provider at its expected revision as the first native fact on the provider's own owner.
+///     <c>CommandId</c> is the logical identity, so an exact retry replays the original 202 after any later change.
+/// </summary>
+public sealed class ReviseProviderHandler(NamedRecordAdmission admission, ProviderReferences references)
+    : IRequestHandler<ReviseProvider, OperationAcceptedResponse>
 {
-    public async ValueTask<Result<ProviderRegistration>> HandleAsync(IRequestContext<ReviseProvider> context, CancellationToken ct)
+    /// <inheritdoc />
+    public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(IRequestContext<ReviseProvider> context,
+        CancellationToken ct)
     {
         var request = context.Request;
-        var source = await reader.HydrateAsync(new ProviderRegister(request.TenantId), ct).ConfigureAwait(false);
-        if (source.CheckRetry(request.ProviderId, context.RequestId, request.ExpectedRevision, request.Content) is { } retry)
-            return retry;
-        var current = source.Get(request.ProviderId);
-        if (current is null)
-            return Result<ProviderRegistration>.Failure(new RequestError(RequestErrorKind.NotFound, "The provider was not found."));
-        if (request.ExpectedRevision != current.Revision)
-            return Result<ProviderRegistration>.Failure(VersionedRecordRules.StaleRevision("provider", current.Revision).ToRequestError());
-        var resolved = await references.ResolveAsync(request.TenantId, request.Content, ct).ConfigureAwait(false);
-        if (!resolved.IsSuccess)
-            return Result<ProviderRegistration>.Failure(resolved.Error);
-        var actor = ProviderActor.From(context);
-        return await executor.ExecuteAsync(new ProviderRegister(request.TenantId), register =>
-            AggregateOutcome.CommitOnSuccess(register.Revise(request.ProviderId, context.RequestId,
-                request.ExpectedRevision, resolved.Value, actor, clock.GetUtcNow())), context, ct).ConfigureAwait(false);
+        if (request.CommandId == Uuid.Empty || request.ProviderId == Uuid.Empty || request.TenantId == Uuid.Empty)
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A command id, provider identity and tenant are required."));
+        if (request.ExpectedRevision < 1)
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Validation,
+                "The expected provider revision must be positive."));
+        if (ProviderRules.InputError(request.Content) is { } inputError)
+            return Result<OperationAcceptedResponse>.Failure(new RequestError(RequestErrorKind.Validation, inputError));
+        return await admission.AdmitAsync(ProviderNames.Descriptor, context, new NamedRecordAdmissionRequest(
+            request.TenantId, request.ProviderId, request.CommandId, false, request.ExpectedRevision,
+            ProviderActor.From(context), AuthoredIntentDigest.Compute(request), token =>
+                ProviderContents.ResolveAsync(references, request.TenantId, request.Content, token)),
+            (Provider record, AcceptAttempt change) => record.AcceptChange(change.Operation, change.Create,
+                change.ExpectedRevision, change.Intent, change.FirstResponse), ct)
+            .ConfigureAwait(false);
     }
 }

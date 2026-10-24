@@ -66,7 +66,7 @@ public sealed class ProviderChangeImpactE2ETests(BrokerStackFixture broker)
                 kind = "production",
                 source_identifier = "payroll-prod",
             }, "system_instance_id", HttpMethod.Put);
-        var informationAssetId = await PostIdAsync(owner, $"{tenantPath}/information-assets",
+        var informationAssetId = await PutIdAsync(owner, $"{tenantPath}/information-assets",
             new
             {
                 name = "Payroll records",
@@ -75,7 +75,7 @@ public sealed class ProviderChangeImpactE2ETests(BrokerStackFixture broker)
                 owner_person_id = personId,
                 description = "Employee payroll data",
             }, "information_asset_id");
-        var componentId = await PostIdAsync(owner, $"{tenantPath}/technology-components",
+        var componentId = await PutIdAsync(owner, $"{tenantPath}/technology-components",
             new
             {
                 category = "cloud_account",
@@ -242,6 +242,26 @@ public sealed class ProviderChangeImpactE2ETests(BrokerStackFixture broker)
         throw new TimeoutException($"POST {path} remained unauthorized after bootstrap.");
     }
 
+    /// <summary>
+    ///     Puts an identified create: the caller names the identity in the route, the body carries the rest, and the
+    ///     answer is the immediate 200 registration or the 202 acknowledgment of an asynchronous name claim.
+    /// </summary>
+    static async Task<Guid> PutIdAsync(HttpClient client, string collectionPath, object body, string property)
+    {
+        var id = Guid.NewGuid();
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            using var response = await client.PutAsJsonAsync($"{collectionPath}/{id}", body);
+            if (response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Accepted)
+                return id;
+            Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden,
+                await response.Content.ReadAsStringAsync());
+            await Task.Delay(250);
+        }
+        throw new TimeoutException($"PUT {collectionPath} remained unauthorized after bootstrap ({property}).");
+    }
+
     static async Task PostWithoutResultAsync(HttpClient client, string path, object body)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(120);
@@ -259,7 +279,7 @@ public sealed class ProviderChangeImpactE2ETests(BrokerStackFixture broker)
 
     static async Task<Guid> RecordFlowAsync(HttpClient client, string tenantPath,
         Guid systemInstanceId, Guid informationAssetId, Guid ownerPersonId, string purpose) =>
-        await PostIdAsync(client, $"{tenantPath}/data-flows", new
+        await PutIdAsync(client, $"{tenantPath}/data-flows", new
         {
             source_type = "system_instance",
             source_id = systemInstanceId,
@@ -275,7 +295,7 @@ public sealed class ProviderChangeImpactE2ETests(BrokerStackFixture broker)
 
     static async Task<Guid> RecordProviderAsync(HttpClient client, string tenantPath,
         Guid applicationId, Guid systemInstanceId) =>
-        await PostIdAsync(client, $"{tenantPath}/providers", new
+        await PutIdAsync(client, $"{tenantPath}/providers", new
         {
             content = new
             {

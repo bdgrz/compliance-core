@@ -151,9 +151,8 @@ public sealed class PersonalProviderReviewTransportTests
         {
             var fixture = new Fixture();
             await using var scope = fixture._provider.CreateAsyncScope();
-            var registered = await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(new RecordProvider(fixture.Tenant, MaterialProvider()), ProgramManagementServices.Actor(fixture.User));
-            Assert.True(registered.IsSuccess, registered.Error?.Message);
-            fixture.ProviderId = registered.Value.ProviderId;
+            fixture.ProviderId = Uuid.CreateVersion4();
+            await NamedRecordFacts.SeedProviderAsync(fixture._provider, fixture.Tenant, fixture.ProviderId, MaterialProvider());
             return fixture;
         }
         public async Task ReviseSourcesAsync()
@@ -161,8 +160,7 @@ public sealed class PersonalProviderReviewTransportTests
             await using var scope = _provider.CreateAsyncScope();
             var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
             var actor = ProgramManagementServices.Actor(User);
-            var provider = await bus.SendAsync(new ReviseProvider(Tenant, ProviderId, 1, MaterialProvider("Revised provider")), actor);
-            Assert.True(provider.IsSuccess, provider.Error?.Message);
+            await NamedRecordFacts.SeedProviderAsync(_provider, Tenant, ProviderId, MaterialProvider("Revised provider"));
             var report = await bus.SendAsync(new RecordAssuranceReport(Tenant, ProviderId, Report()), actor);
             Assert.True(report.IsSuccess, report.Error?.Message);
             ReportId = report.Value.ReportId;

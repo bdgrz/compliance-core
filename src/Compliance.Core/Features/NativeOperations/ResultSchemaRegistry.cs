@@ -47,6 +47,13 @@ public static class ResultSchemaRegistry
             ComplianceCoreJsonContext.Default.IndependenceRuleVersionView,
         [EngagementPersonalDecisionEffects.RatificationSchema] =
             ComplianceCoreJsonContext.Default.IndependenceRuleRatificationView,
+        ["provider-registration.v1"] = ComplianceCoreJsonContext.Default.ProviderRegistration,
+        ["technology-component-registration.v1"] = ComplianceCoreJsonContext.Default.TechnologyComponentRegistration,
+        ["information-asset-registration.v1"] = ComplianceCoreJsonContext.Default.InformationAssetRegistration,
+        ["data-flow-registration.v1"] = ComplianceCoreJsonContext.Default.DataFlowRegistration,
+        [UnitResult.Schema] = ComplianceCoreJsonContext.Default.UnitResult,
+        ["location-registration.v1"] = ComplianceCoreJsonContext.Default.LocationRegistration,
+        ["operational-process-registration.v1"] = ComplianceCoreJsonContext.Default.OperationalProcessRegistration,
     };
 
     /// <summary>Registered schema names.</summary>
