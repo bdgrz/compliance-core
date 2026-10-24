@@ -2945,7 +2945,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Advisor collaboration");
     app.MapPortiaGet<GetSignificantChange, SignificantChangeView>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{significant_change_id}")
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Changes");
     app.MapPortiaGet<ListSignificantChanges, Page<SignificantChangeSummaryView>>(
@@ -2964,16 +2964,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/incidents")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Incidents");
-    app.MapPortiaPut<RecordSignificantChange>(
+    app.MapPortiaPut<RecordSignificantChange, UnitResult>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}", config => config.OnNativeResult()).WithNativeFirstResponse<RecordSignificantChange>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Changes");
-    app.MapPortiaPost<ReviseSignificantChange>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/revisions", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseSignificantChange>()
+    app.MapPortiaPut<ReviseSignificantChange, UnitResult>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/revisions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseSignificantChange>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Changes");
-    app.MapPortiaPost<AssessSignificantChange>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/assessments", config => config.OnNativeResult()).WithNativeFirstResponse<AssessSignificantChange>()
+    app.MapPortiaPut<AssessSignificantChange, UnitResult>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/assessments/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<AssessSignificantChange>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Changes");
     app.MapMethods(

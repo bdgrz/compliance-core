@@ -584,6 +584,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<FitzExaminationEngagementDirectory>();
         services.AddScoped<IExaminationEngagementDirectoryReader>(provider =>
             provider.GetRequiredService<FitzExaminationEngagementDirectory>());
+        services.AddScoped<SignificantChangeReader>();
+        services.AddScoped<SignificantChangeOperations>();
+        services.AddScoped<SignificantChangeDirectoryReadConsistency>();
         services.AddScoped<FitzSignificantChangeDirectory>();
         services.AddScoped<ISignificantChangeDirectoryProjection>(provider =>
             provider.GetRequiredService<FitzSignificantChangeDirectory>());
@@ -822,6 +825,7 @@ public static class ComplianceServiceCollectionExtensions
         // Portia 0.9.1 registers the shared connection's IStreamClient for source-fact verification.
         services.TryAddScoped<ISourceFactResolver>(provider => new FitzSourceFactResolver(
             provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>()));
+        services.TryAddScoped<INativeEventReceiptReader, FitzNativeEventReceiptReader>();
         // The fixed-cut reader shares the Portia stream client.
         services.TryAddScoped<IAuthoritativeSnapshotReader>(provider => new FitzAuthoritativeSnapshotReader(
             provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>(),
@@ -1846,7 +1850,7 @@ public static class ComplianceServiceCollectionExtensions
                 WorkloadScope.PerTenant)
             .AddProjector<ControlDraftHistoryDirectoryV1Projector>(
                 FitzControlDraftHistoryDirectoryV1.ProjectorName, WorkloadScope.PerTenant)
-            .AddProjector<CommitmentDraftDirectoryProjector>("CommitmentDraftDirectory",
+            .AddProjector<CommitmentDraftDirectoryProjector>(FitzCommitmentDraftDirectory.ProjectorName,
                 WorkloadScope.PerTenant)
             .AddProjector<PolicyDirectoryProjector>(FitzPolicyDirectory.ProjectorName,
                 WorkloadScope.PerTenant)
@@ -1859,7 +1863,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<TrainingRequirementDirectoryProjector>(FitzTrainingRequirementDirectory.ProjectorName,
                 WorkloadScope.PerTenant)
             .AddProjector<CommitmentDraftHistoryDirectoryProjectorV1>(
-                "CommitmentDraftHistoryDirectoryV1", WorkloadScope.PerTenant)
+                FitzCommitmentDraftHistoryDirectoryV1.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<RiskDraftDirectoryProjector>("RiskDraftDirectory", WorkloadScope.PerTenant)
             .AddProjector<PersonDirectoryProjector>("PersonDirectoryV2", WorkloadScope.PerTenant)
             .AddProjector<TechnologyInventoryDirectoryProjector>(

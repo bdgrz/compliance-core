@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.SourceFacts;
+using Bdgrz.Compliance.Tests.Features.Changes;
 using System.Security.Claims;
 using System.Text;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -38,7 +40,8 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
             var published = new PublishedTypeIBaselinePreviewReader(new TypeIBaselinePreviewReader(contributors), artifacts, fixture.Host.Content);
             var source = new TypeIIPeriodCloseReconciliation(fixture.Reader, fixture.Host.Content,
                 fixture.Host.Services.GetRequiredService<ControlOperationsReader>(), fixture.Host.Services.GetRequiredService<FindingReader>(), published,
-                new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events, new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true))),
+                new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events, new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(true)),
+                    new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()),
                 new TypeIIPeriodCloseSourcePublication(artifacts, fixture.Host.Content));
             var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
             var request = await CloseRequestAsync(fixture);
@@ -77,14 +80,15 @@ public sealed partial class TypeIIPeriodCommandHandlerTests
         // Arrange
         await using var fixture = new Fixture();
         await fixture.SeedStartedPeriodAsync();
-        var change = new SignificantChange(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4());
+        var change = new SignificantChangeRules(fixture.TenantId, fixture.ProgramId, Uuid.CreateVersion4());
         Assert.Null(change.Record(new SignificantChangeContent(null, null, null, "Restricted change", "Confidential details",
             fixture.PeriodStart, null, fixture.ProposerMemberId, [Uuid.CreateVersion4()], "high", "restricted", []),
             fixture.ProposerMemberId, "Recorder", StartedAt));
-        await fixture.Writer.SaveAsync(change, new RequestDispatchContext(RequestActor.System));
+        await ChangeSeeds.WriteAsync(fixture.Writer, fixture.Host.Content, change);
         var period = await fixture.Periods.ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.PeriodId);
         var reader = new TypeIIPeriodCloseHistory(fixture.Reader, fixture.Events,
-            new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(false)));
+            new RestrictedComplianceRecordVisibility(new RecordingPermissionAuthorizer(false)),
+            new SignificantChangeReader(fixture.Reader, fixture.Events, fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>()), fixture.Host.Content, fixture.Host.Services.GetRequiredService<INativeEventReceiptReader>());
         var request = await CloseRequestAsync(fixture);
 
         // Act

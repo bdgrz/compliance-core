@@ -2,6 +2,7 @@ using Bdgrz.Compliance.Features.Controls;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.SourceFacts;
 using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Processes;
@@ -34,7 +35,8 @@ sealed class TypeIIRangeHost : IAsyncDisposable
         };
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(values).Build(),
             developerAuthentication: true);
-        var events = new InMemoryEventStore();
+        var events = new ReceiptTrackingEventStore(new InMemoryEventStore(), clock ?? TimeProvider.System);
+        services.AddSingleton<INativeEventReceiptReader>(events);
         services.AddSingleton<IEventStore>(events);
         services.AddSingleton<IDomainEventReader>(events);
         services.AddSingleton<IKvClient>(new InMemoryKvClient());

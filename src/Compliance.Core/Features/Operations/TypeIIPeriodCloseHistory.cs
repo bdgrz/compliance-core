@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Authoritative change/incident histories with exact scope, current restricted visibility and receipt cutoff.</summary>
 public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEventReader events,
-    RestrictedComplianceRecordVisibility visibility)
+    RestrictedComplianceRecordVisibility visibility, SignificantChangeReader changes, IImmutableContentStore content, INativeEventReceiptReader receipts)
 {
     const int MaximumRecords = 100_000;
 
@@ -32,10 +32,10 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
                 var id = Uuid.Parse(group.Key, System.Globalization.CultureInfo.InvariantCulture);
                 if (area == "significant-changes")
                 {
-                    var current = await reader.HydrateAsync(new SignificantChange(period.TenantId, period.ProgramId, id), ct).ConfigureAwait(false);
-                    var latest = current.Current ?? throw new ImmutableContentUnavailableException("A discovered native change is not readable yet.");
-                    var past = ChangeState(group.Last().Payload)
-                        ?? throw new ImmutableContentIntegrityException("A scoped change history has no complete final state.");
+                    var latest = (await changes.ReadAsync(period.TenantId, period.ProgramId, id, ct).ConfigureAwait(false)).View
+                        ?? throw new ImmutableContentUnavailableException("A discovered native change is not readable yet.");
+                    var past = (await changes.ReadThroughAsync(period.TenantId, period.ProgramId, id, recordedThrough, ct).ConfigureAwait(false)).View
+                        ?? throw new ImmutableContentIntegrityException("A scoped change history has no complete final immutable state.");
                     if (past.Current is null || past.Current.Content.EffectiveOn > period.PeriodEnd ||
                         past.Current.Content.EffectiveThrough is { } end && end < period.PeriodStart)
                         continue;
@@ -87,13 +87,27 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
             var state = State(record.Event);
             if (state is null)
                 throw new ImmutableContentIntegrityException("A close source scan returned an unrecognized native record.");
-            if (state.Value.Program != program || state.Value.At > through)
+            if (state.Value.Program != program)
+                continue;
+            var recordedAt = await receipts.RecordedAtAsync(record, ct).ConfigureAwait(false);
+            if (recordedAt > through)
                 continue;
             if (state.Value.Tenant != tenant || state.Value.Record.ToString() != record.Stream.Resource)
                 throw new ImmutableContentIntegrityException("A close source payload differs from its native tenant or record identity.");
             if (result.Count >= MaximumRecords)
                 throw new ImmutableContentIntegrityException("The complete native close source population exceeds the supported capture bound.");
-            result.Add(Capture(record.Stream, record.Event));
+            var captured = Capture(record.Stream, record.Event) with { RecordedAt = recordedAt };
+            if (record.Event is ISignificantChangeFact change)
+            {
+                var body = await content.ReadVerifiedAsync(tenant.ToString(), change.CurrentContent, ct).ConfigureAwait(false);
+                var mutation = await content.ReadVerifiedAsync(tenant.ToString(), change.Change, ct).ConfigureAwait(false);
+                captured = captured with
+                {
+                    ContentBlobs = [new(change.CurrentContent,Convert.ToBase64String(body.Span)),
+                    new(change.Change,Convert.ToBase64String(mutation.Span))]
+                };
+            }
+            result.Add(captured);
         }
         return result.OrderBy(item => item.Fact.Stream.ToString(), StreamKeyOrder.Instance)
             .ThenBy(item => item.Fact.AggregateVersion).ToArray();
@@ -105,11 +119,7 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
 
     static (Uuid Tenant, Uuid Program, Uuid Record, DateTimeOffset At)? State(DomainEvent fact) => fact switch
     {
-        SignificantChangeRecorded e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
-        SignificantChangeRevised e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
-        SignificantChangeImpactAssessed e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
-        SignificantChangeSystemDescriptionDecisionRecorded e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
-        ImpactReviewWorkLinked e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
+        ISignificantChangeFact e => (e.TenantId, e.Header.ProgramId, e.SubjectId, e.Operation.AcceptedAt),
         ComplianceIncidentRecorded e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
         ComplianceIncidentRevised e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
         ComplianceIncidentImpactAssessed e => (e.TenantId, e.State.ProgramId, e.SubjectId, e.OccurredAt),
@@ -118,11 +128,10 @@ public sealed class TypeIIPeriodCloseHistory(IAggregateReader reader, IDomainEve
         _ => null,
     };
 
-    static SignificantChangeView? ChangeState(JsonElement payload) => payload.TryGetProperty("state", out var state)
-        ? JsonSerializer.Deserialize(state, ComplianceCoreJsonContext.Default.SignificantChangeView) : null;
     static ComplianceIncidentView? IncidentState(JsonElement payload) => payload.TryGetProperty("state", out var state)
         ? JsonSerializer.Deserialize(state, ComplianceCoreJsonContext.Default.ComplianceIncidentView) : null;
     static bool Same(IReadOnlyList<TypeIIPeriodCloseNativeSource> left, IReadOnlyList<TypeIIPeriodCloseNativeSource> right) =>
         left.Count == right.Count && left.Zip(right).All(pair => pair.First.Fact == pair.Second.Fact &&
-            pair.First.EventKind == pair.Second.EventKind && pair.First.PayloadSha256 == pair.Second.PayloadSha256);
+            pair.First.EventKind == pair.Second.EventKind && pair.First.RecordedAt == pair.Second.RecordedAt && pair.First.PayloadSha256 == pair.Second.PayloadSha256 &&
+            AuthoredIntentDigest.Compute(pair.First.ContentBlobs ?? []) == AuthoredIntentDigest.Compute(pair.Second.ContentBlobs ?? []));
 }

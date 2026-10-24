@@ -24,7 +24,7 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
         var assessorUserId = Uuid.CreateVersion4();
         var assessorMemberId = RbacIds.Member(tenantId, assessorUserId);
         await scenario.SaveAsync(AssessedChange(tenantId, programId, changeId, assessorMemberId));
-        var request = new AssessSignificantChange(tenantId, programId, changeId, 2,
+        var request = new AssessSignificantChange(Uuid.CreateVersion4(), tenantId, programId, changeId, 2,
             new SignificantChangeImpactContent("significant", "The change affects the boundary.",
                 true, false, false, false, ["scope", "system_description"],
                 [new("system_description_section", Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1)],
@@ -33,12 +33,12 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
         var deniedPermissions = new RecordingPermissionAuthorizer(false);
 
         // Act
-        var denied = await Authorizer(scenario.Reader, deniedPermissions).AuthorizeAsync(
+        var denied = await Authorizer(scenario, deniedPermissions).AuthorizeAsync(
             Context(request, Uuid.CreateVersion4()), CancellationToken.None);
-        var assessor = await Authorizer(scenario.Reader, deniedPermissions).AuthorizeAsync(
+        var assessor = await Authorizer(scenario, deniedPermissions).AuthorizeAsync(
             Context(request, assessorUserId), CancellationToken.None);
         var privilegedPermissions = new RecordingPermissionAuthorizer(true);
-        var privileged = await Authorizer(scenario.Reader, privilegedPermissions).AuthorizeAsync(
+        var privileged = await Authorizer(scenario, privilegedPermissions).AuthorizeAsync(
             Context(request, Uuid.CreateVersion4()), CancellationToken.None);
 
         // Assert
@@ -68,9 +68,9 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
         var permissions = new RecordingPermissionAuthorizer(false);
 
         // Act
-        var denied = await Authorizer(scenario.Reader, permissions).AuthorizeAsync(
+        var denied = await Authorizer(scenario, permissions).AuthorizeAsync(
             Context(request, Uuid.CreateVersion4()), CancellationToken.None);
-        var assessor = await Authorizer(scenario.Reader, permissions).AuthorizeAsync(
+        var assessor = await Authorizer(scenario, permissions).AuthorizeAsync(
             Context(request, assessorUserId), CancellationToken.None);
 
         // Assert
@@ -91,9 +91,9 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
         var request = new RecordSignificantChange(tenantId, programId, changeId, content);
 
         // Act
-        var denied = await Authorizer(scenario.Reader, new RecordingPermissionAuthorizer(false))
+        var denied = await Authorizer(scenario, new RecordingPermissionAuthorizer(false))
             .AuthorizeAsync(Context(request, Uuid.CreateVersion4()), CancellationToken.None);
-        var allowed = await Authorizer(scenario.Reader, new RecordingPermissionAuthorizer(true))
+        var allowed = await Authorizer(scenario, new RecordingPermissionAuthorizer(true))
             .AuthorizeAsync(Context(request, Uuid.CreateVersion4()), CancellationToken.None);
 
         // Assert
@@ -102,8 +102,8 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
         Assert.True(allowed.IsSuccess);
     }
 
-    static RestrictedComplianceRecordMutationAuthorizer Authorizer(IAggregateReader reader,
-        IPermissionAuthorizer permissions) => new(reader,
+    static RestrictedComplianceRecordMutationAuthorizer Authorizer(Scenario scenario,
+        IPermissionAuthorizer permissions) => new(scenario.Reader, scenario.Changes,
         new RestrictedComplianceRecordVisibility(permissions));
 
     static RequestContext<IRestrictedComplianceRecordMutationRequest> Context(
@@ -114,10 +114,10 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
             new Claim("name", "Test user"),
         ], "UnitTest")));
 
-    static SignificantChange AssessedChange(Uuid tenantId, Uuid programId, Uuid changeId,
+    static SignificantChangeRules AssessedChange(Uuid tenantId, Uuid programId, Uuid changeId,
         Uuid assessorMemberId)
     {
-        var change = new SignificantChange(tenantId, programId, changeId);
+        var change = new SignificantChangeRules(tenantId, programId, changeId);
         Assert.Null(change.Record(ChangeContent(tenantId, "restricted"),
             RbacIds.Member(tenantId, Uuid.CreateVersion4()), "Reporter", Now.AddMinutes(-2)));
         Assert.Null(change.Assess(change.Revision, new SignificantChangeImpactContent(
@@ -162,15 +162,21 @@ public sealed class RestrictedComplianceRecordMutationAuthorizerTests
         public Scenario()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<IEventStore>(new InMemoryEventStore());
+            var events = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(events);
+            services.AddSingleton<IDomainEventReader>(events);
             services.AddPortia();
             provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
             scope = provider.CreateAsyncScope();
             Reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
             writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+            Changes = new SignificantChangeReader(Reader, events, Content);
         }
 
         readonly IAggregateWriter writer;
+        public Bdgrz.Compliance.Features.Content.IImmutableContentStore Content { get; } = ChangeSeeds.Content();
+        public SignificantChangeReader Changes { get; }
+        public ValueTask<SignificantChange> SaveAsync(SignificantChangeRules rules) => ChangeSeeds.WriteAsync(writer, Content, rules);
         public IAggregateReader Reader { get; }
 
         public ValueTask SaveAsync(Aggregate aggregate) => writer.SaveAsync(aggregate,

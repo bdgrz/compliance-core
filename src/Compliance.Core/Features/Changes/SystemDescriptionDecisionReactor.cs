@@ -46,6 +46,7 @@ public sealed partial class SystemDescriptionDecisionReactor(
             if (correlated.DecidedAt < assessment.AssessedAt)
                 continue;
             await ImpactReactionOutcomes.SendAsync(bus, new RecordSignificantChangeSystemDescriptionDecision(
+                EffectIdentity.CommandId(ev.Metadata.EventId, "change:system-description-decision", $"{ev.TenantId}:{changeId}", null),
                 ev.TenantId, ev.ProgramId, changeId, assessment.ContentVersion,
                 ev.SystemDescriptionId, version.SystemDescriptionVersionId,
                 correlated.DecisionId, correlated.Decision, assessment.AssessmentSha256),
@@ -93,6 +94,7 @@ public sealed partial class SystemDescriptionDecisionReactor(
                 throw new InvalidOperationException(
                     "A no-change decision does not retain an exact change correlation.");
             await ImpactReactionOutcomes.SendAsync(bus, new RecordSignificantChangeSystemDescriptionDecision(
+                EffectIdentity.CommandId(ev.Metadata.EventId, "change:system-description-decision", $"{ev.TenantId}:{ev.Decision.ChangeId}", null),
                 ev.TenantId, ev.ProgramId, ev.Decision.ChangeId,
                 currentChangeAssessment.ContentVersion, ev.SystemDescriptionId,
                 ev.Decision.VersionId, decisionId, "no_change",

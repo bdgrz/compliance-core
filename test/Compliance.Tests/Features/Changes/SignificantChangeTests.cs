@@ -2,7 +2,7 @@ using Bdgrz.Compliance.Features.Changes;
 using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
-using SignificantChangeAggregate = Bdgrz.Compliance.Features.Changes.SignificantChange;
+using SignificantChangeAggregate = Bdgrz.Compliance.Features.Changes.SignificantChangeRules;
 
 namespace Bdgrz.Compliance.Tests.Features.Changes;
 
@@ -16,6 +16,82 @@ public sealed class SignificantChangeTests
     static readonly Uuid AssessorId = Uuid.CreateVersion4();
     static readonly Uuid ReviewerId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task ShouldRetainCompleteChronologyGivenMoreThanThirtyTwoGovernedVersions()
+    {
+        // Arrange
+        var change = RecordedChange();
+
+        // Act
+        for (var version = 2; version <= 40; version++)
+            Assert.Null(change.Revise(change.Revision, Content() with { Title = "Governed correction " + version },
+                "Correct source narrative", RecorderId, "Compliance lead", Now.AddMinutes(version)));
+
+        // Assert
+        Assert.Equal(40, change.Current!.CurrentVersionNumber);
+        Assert.Equal(40, change.Current.Versions.Count);
+        await using var fixture = new SignificantChangeNativeFixture();
+        await ChangeSeeds.WriteAsync(fixture.Writer, fixture.Content, change);
+        var snapshot = await fixture.Changes.ReadAsync(TenantId, ProgramId, ChangeId);
+        Assert.Equal(40, snapshot.Owner.NativeSequence);
+        Assert.Equal(40, snapshot.View!.Versions.Count);
+        await foreach (var source in fixture.Events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(), "significant-changes", ChangeId.ToString()), EventCursor.Start, CancellationToken.None))
+            if (!source.Event.Metadata.IsAudit)
+                Assert.True(Bdgrz.Compliance.Hosting.Persistence.DomainEventPayload.Size(source.Event) < Bdgrz.Compliance.Hosting.Persistence.DomainEventPayload.MaximumBytes);
+    }
+
+    [Fact]
+    public void ShouldRequireCorrectiveActionLinkGivenCurrentAssessmentWithoutDescriptionReview()
+    {
+        // Arrange
+        var change = RecordedChange();
+        var correctiveAction = Uuid.CreateVersion4();
+        var impact = Impact("significant", [AffectedRecord("control")], changesKeyControl: true) with
+        {
+            RelatedCorrectiveActionIds = [correctiveAction],
+        };
+        Assert.Null(change.Assess(change.Revision, impact, AssessorId, "Compliance lead", Now.AddHours(1)));
+
+        // Act
+        var eligibleBeforeLink = change.Current!.PeriodCloseEligible;
+        var linked = change.LinkReviewWork(change.Revision, [correctiveAction], ReviewerId, "Compliance lead", Now.AddHours(2));
+
+        // Assert
+        Assert.False(eligibleBeforeLink);
+        Assert.Null(linked);
+        Assert.True(change.Current!.PeriodCloseEligible);
+    }
+
+    [Fact]
+    public async Task ShouldRecordCompleteGovernedReferencesGivenSourceContentExceedsEventBudget()
+    {
+        // Arrange
+        var change = NewChange();
+        var content = Content() with
+        {
+            AffectedSystemIds = Enumerable.Range(0, 1000).Select(index => Uuid.CreateVersion5(ChangeId, "system:" + index)).ToArray(),
+            EvidenceArtifactIds = Enumerable.Range(0, 1000).Select(index => Uuid.CreateVersion5(ChangeId, "evidence:" + index)).ToArray(),
+        };
+
+        // Act
+        var result = change.Record(content, RecorderId, "Compliance lead", Now);
+
+        // Assert
+        Assert.Null(result);
+        Assert.Equal(1000, change.Current!.Current!.Content.AffectedSystemIds.Count);
+        Assert.Equal(1000, change.Current.Current.Content.EvidenceArtifactIds.Count);
+        await using var fixture = new SignificantChangeNativeFixture();
+        await ChangeSeeds.WriteAsync(fixture.Writer, fixture.Content, change);
+        var owner = await fixture.Reader.HydrateAsync(new Bdgrz.Compliance.Features.Changes.SignificantChange(TenantId, ProgramId, ChangeId));
+        Assert.Equal(1, owner.NativeSequence);
+        await foreach (var source in fixture.Events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(), "significant-changes", ChangeId.ToString()), EventCursor.Start, CancellationToken.None))
+            if (!source.Event.Metadata.IsAudit)
+                Assert.True(Bdgrz.Compliance.Hosting.Persistence.DomainEventPayload.Size(source.Event) < Bdgrz.Compliance.Hosting.Persistence.DomainEventPayload.MaximumBytes);
+        var read = await fixture.Changes.ReadAsync(TenantId, ProgramId, ChangeId);
+        Assert.Equal(1000, read.View!.Current!.Content.AffectedSystemIds.Count);
+        Assert.Equal(1000, read.View.Current.Content.EvidenceArtifactIds.Count);
+    }
 
     [Fact]
     public void ShouldRecordManualChangeWithoutExternalProvenanceGivenAuthorizedOwner()
@@ -118,10 +194,12 @@ public sealed class SignificantChangeTests
         var revision = Content() with { Title = "Revised network migration" };
         Assert.Null(change.Revise(change.Revision, revision, "Corrected title", RecorderId,
             "Compliance lead", Now.AddHours(2)));
-        var events = new AggregateScenario<SignificantChangeAggregate>(change).PendingEvents.ToArray();
+        var changes = change.AppliedChanges.ToArray();
 
         // Act
-        var replay = new AggregateScenario<SignificantChangeAggregate>(NewChange()).Given(events).Aggregate;
+        var replay = NewChange();
+        foreach (var mutation in changes)
+            replay.Apply(mutation);
 
         // Assert
         Assert.Equal("recorded", replay.Current!.Status);

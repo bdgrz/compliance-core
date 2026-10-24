@@ -1,3 +1,6 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Bdgrz.Compliance.Features.Changes;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -12,11 +15,12 @@ public sealed class ComplianceImpactReactorTests
     public async Task ShouldAdvanceCheckpointGivenSupersededSourceEventAnswer()
     {
         // Arrange
-        var trigger = AssessedTrigger();
-        var scenario = new ReactorScenario(new TenantId(trigger.TenantId.ToString())).Given(trigger)
-            .RespondTo<LinkImpactReviewWork>(Result.Failure(ImpactReactionOutcomes.Superseded));
+        var content = ChangeSeeds.Content();
+        var trigger = await AssessedTriggerAsync(content);
+        var scenario = new ReactorScenario(new TenantId(trigger.TenantId.ToString())).Given(trigger);
+        TypedReactionBus.FailWith<LinkImpactReviewWork>(scenario, ImpactReactionOutcomes.Superseded);
         var checkpoints = new InMemoryProjectionCheckpointStore();
-        var reactor = new LinkImpactReviewWorkReactor(checkpoints, scenario.Requests);
+        var reactor = new LinkImpactReviewWorkReactor(checkpoints, TypedReactionBus.For(scenario), content);
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         // Act
@@ -24,7 +28,7 @@ public sealed class ComplianceImpactReactorTests
         var after = await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern));
 
         // Assert
-        Assert.Single(scenario.SentRequests.OfType<LinkImpactReviewWork>());
+        Assert.Single(TypedReactionBus.Sent(scenario).OfType<LinkImpactReviewWork>());
         Assert.NotEqual(ProjectionCheckpoint.Start, after);
     }
 
@@ -32,12 +36,12 @@ public sealed class ComplianceImpactReactorTests
     public async Task ShouldKeepCheckpointAndReplayGivenTransientDependencyLag()
     {
         // Arrange
-        var trigger = AssessedTrigger();
-        var scenario = new ReactorScenario(new TenantId(trigger.TenantId.ToString())).Given(trigger)
-            .RespondTo<LinkImpactReviewWork>(Result.Failure(
-                ImpactReactionOutcomes.NotReady("The review work is not visible yet.")));
+        var content = ChangeSeeds.Content();
+        var trigger = await AssessedTriggerAsync(content);
+        var scenario = new ReactorScenario(new TenantId(trigger.TenantId.ToString())).Given(trigger);
+        TypedReactionBus.FailWith<LinkImpactReviewWork>(scenario, ImpactReactionOutcomes.NotReady("The review work is not visible yet."));
         var checkpoints = new InMemoryProjectionCheckpointStore();
-        var reactor = new LinkImpactReviewWorkReactor(checkpoints, scenario.Requests);
+        var reactor = new LinkImpactReviewWorkReactor(checkpoints, TypedReactionBus.For(scenario), content);
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         // Act
@@ -45,7 +49,7 @@ public sealed class ComplianceImpactReactorTests
             () => scenario.RunAsync(reactor, deadline.Token));
         var identity = new CheckpointIdentity(reactor.Name, reactor.Pattern);
         var before = await checkpoints.LoadAsync(identity, deadline.Token);
-        scenario.RespondTo<LinkImpactReviewWork>(Result.Success);
+        TypedReactionBus.Succeed<LinkImpactReviewWork>(scenario);
         await scenario.RunAsync(reactor, deadline.Token);
         var afterRecovery = await checkpoints.LoadAsync(identity);
 
@@ -53,7 +57,7 @@ public sealed class ComplianceImpactReactorTests
         Assert.True(failure.Error.IsTransient);
         Assert.Equal(ProjectionCheckpoint.Start, before);
         Assert.NotEqual(ProjectionCheckpoint.Start, afterRecovery);
-        Assert.Equal(2, scenario.SentRequests.OfType<LinkImpactReviewWork>().Count());
+        Assert.Equal(2, TypedReactionBus.Sent(scenario).OfType<LinkImpactReviewWork>().Count());
     }
 
     [Fact]
@@ -78,12 +82,13 @@ public sealed class ComplianceImpactReactorTests
         Assert.False(ImpactReactionOutcomes.Superseded.IsTransient);
     }
 
-    static SignificantChangeImpactAssessed AssessedTrigger()
+    static async ValueTask<SignificantChangeImpactAssessed> AssessedTriggerAsync(IImmutableContentStore content)
     {
         var tenantId = Uuid.CreateVersion4();
         var change = ComplianceImpactReactionHandlerTests.AssessedChange(tenantId, Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), RbacIds.Member(tenantId, Uuid.CreateVersion4()), Now, [Uuid.CreateVersion4()]);
-        return new AggregateScenario<SignificantChange>(change).PendingEvents.OfType<SignificantChangeImpactAssessed>()
+        var owner = await ChangeSeeds.OwnerAsync(content, change);
+        return new AggregateScenario<SignificantChange>(owner).PendingEvents.OfType<SignificantChangeImpactAssessed>()
             .Single();
     }
 }

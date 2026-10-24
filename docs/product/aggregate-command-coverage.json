@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "d544bb3f53fc97b27f8b4bc1364acab010b78872",
+  "sourceCommit": "a705834b95adbad0745dbd3ac19fe0d2d3dd2783",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 487,
-    "factsWithAggregateEmitter": 443,
+    "factsWithAggregateEmitter": 438,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 22,
-    "legacyReducerOnlyFacts": 44,
+    "legacyReducerOnlyFacts": 49,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 119,
+    "aggregateTypesWithCommandPath": 118,
     "requestContracts": 784,
     "commonRequestContracts": 782,
     "requestClassificationCounts": {
@@ -4388,12 +4388,10 @@
           "source": "src/Compliance.Core/Features/Changes/SignificantChange.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Changes/SignificantChange.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "IncidentResolutionRecorded",
@@ -7168,14 +7166,12 @@
           "source": "src/Compliance.Core/Features/Changes/SignificantChange.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Changes/SignificantChange.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactorTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SignificantChangeRecorded",
@@ -7186,12 +7182,10 @@
           "source": "src/Compliance.Core/Features/Changes/SignificantChange.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Changes/SignificantChange.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SignificantChangeRevised",
@@ -7202,12 +7196,10 @@
           "source": "src/Compliance.Core/Features/Changes/SignificantChange.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Changes/SignificantChange.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SignificantChangeSystemDescriptionDecisionRecorded",
@@ -7218,12 +7210,10 @@
           "source": "src/Compliance.Core/Features/Changes/SignificantChange.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Changes/SignificantChange.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "SnapshotFrozen",
@@ -8114,7 +8104,7 @@
         "test/Compliance.Tests/Features/SourceFacts/EventStoreSourceFactResolverTests.cs",
         "test/Compliance.Tests/Features/SourceFacts/FitzAuthoritativeSnapshotReaderBrokerTests.cs",
         "test/Compliance.Tests/Features/SourceFacts/FitzAuthoritativeSnapshotReaderTests.cs",
-        "test/Compliance.Tests/Features/SourceFacts/FitzSourceFactResolverBrokerTests.cs"
+        "test/Compliance.Tests/Features/SourceFacts/FitzNativeEventReceiptReaderBrokerTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -11676,24 +11666,21 @@
         "SignificantChangeRevised",
         "SignificantChangeSystemDescriptionDecisionRecorded"
       ],
-      "commandRequests": [
-        "AssessSignificantChange",
-        "RecordSignificantChange",
-        "ReviseSignificantChange"
-      ],
-      "internalReactionRequests": [
-        "LinkImpactReviewWork",
-        "RecordSignificantChangeSystemDescriptionDecision"
-      ],
+      "commandRequests": [],
+      "internalReactionRequests": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Changes/ChangeAndIncidentCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Changes/ChangeSeeds.cs",
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs",
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactorTests.cs",
         "test/Compliance.Tests/Features/Changes/RestrictedComplianceRecordMutationAuthorizerTests.cs",
-        "test/Compliance.Tests/Features/Changes/SignificantChangeTests.cs",
-        "test/Compliance.Tests/Features/Operations/TypeIIPeriodCommandHandlerTests.CloseSources.cs"
+        "test/Compliance.Tests/Features/Changes/SignificantChangeHttpTests.cs",
+        "test/Compliance.Tests/Features/Changes/SignificantChangeNativeFixture.cs",
+        "test/Compliance.Tests/Features/Changes/SignificantChangeNativeTests.cs",
+        "test/Compliance.Tests/Features/Changes/SignificantChangeTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "SystemBoundary",
@@ -14186,7 +14173,7 @@
     {
       "request": "AssessSignificantChange",
       "contract": "src/Compliance.Common/Features/Changes/AssessSignificantChange.cs",
-      "interfaces": "IRequest, IRestrictedComplianceRecordMutationRequest, ICallable",
+      "interfaces": "IRequest<UnitResult>, IIdentifiedRequest, IRestrictedComplianceRecordMutationRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14196,15 +14183,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SignificantChange"
-      ],
-      "aggregateTargets": [
-        "SignificantChange"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Changes/ChangeAndIncidentCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Changes/ChangeSeeds.cs",
         "test/Compliance.Tests/Features/Changes/RestrictedComplianceRecordMutationAuthorizerTests.cs"
       ],
       "note": ""
@@ -20412,8 +20396,12 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
-      "testSymbolReferences": [],
+      "helperServices": [
+        "SignificantChangeReader"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Changes/SignificantChangeNativeTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -21187,7 +21175,7 @@
     {
       "request": "LinkImpactReviewWork",
       "contract": "src/Compliance.Common/Features/Changes/LinkImpactReviewWork.cs",
-      "interfaces": "IRequest, IComplianceImpactReactionRequest",
+      "interfaces": "IRequest<UnitResult>, IIdentifiedRequest, IComplianceImpactReactionRequest",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -21197,14 +21185,11 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SignificantChange"
-      ],
-      "aggregateTargets": [
-        "SignificantChange"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Changes/ChangeSeeds.cs",
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs",
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactorTests.cs"
       ],
@@ -23327,7 +23312,9 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Changes/SignificantChangeNativeTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -26851,7 +26838,7 @@
     {
       "request": "RecordSignificantChange",
       "contract": "src/Compliance.Common/Features/Changes/RecordSignificantChange.cs",
-      "interfaces": "IRequest, IRestrictedComplianceRecordMutationRequest, ICallable",
+      "interfaces": "IRequest<UnitResult>, IIdentifiedRequest, IRestrictedComplianceRecordMutationRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -26861,23 +26848,23 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SignificantChange"
-      ],
-      "aggregateTargets": [
-        "SignificantChange"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Changes/ChangeAndIncidentCommandHandlerTests.cs",
-        "test/Compliance.Tests/Features/Changes/RestrictedComplianceRecordMutationAuthorizerTests.cs"
+        "test/Compliance.Tests/Features/Changes/ChangeSeeds.cs",
+        "test/Compliance.Tests/Features/Changes/RestrictedComplianceRecordMutationAuthorizerTests.cs",
+        "test/Compliance.Tests/Features/Changes/SignificantChangeHttpTests.cs",
+        "test/Compliance.Tests/Features/Changes/SignificantChangeNativeFixture.cs",
+        "test/Compliance.Tests/Features/Changes/SignificantChangeNativeTests.cs"
       ],
       "note": ""
     },
     {
       "request": "RecordSignificantChangeSystemDescriptionDecision",
       "contract": "src/Compliance.Common/Features/Changes/RecordSignificantChangeSystemDescriptionDecision.cs",
-      "interfaces": "IRequest, IComplianceImpactReactionRequest",
+      "interfaces": "IRequest<UnitResult>, IIdentifiedRequest, IComplianceImpactReactionRequest",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -26887,14 +26874,11 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SignificantChange"
-      ],
-      "aggregateTargets": [
-        "SignificantChange"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Changes/ChangeSeeds.cs",
         "test/Compliance.Tests/Features/Changes/ComplianceImpactReactionHandlerTests.cs"
       ],
       "note": "Internal event-driven follow-up command."
@@ -29645,7 +29629,7 @@
     {
       "request": "ReviseSignificantChange",
       "contract": "src/Compliance.Common/Features/Changes/ReviseSignificantChange.cs",
-      "interfaces": "IRequest, IRestrictedComplianceRecordMutationRequest, ICallable",
+      "interfaces": "IRequest<UnitResult>, IIdentifiedRequest, IRestrictedComplianceRecordMutationRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -29655,15 +29639,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "SignificantChange"
-      ],
-      "aggregateTargets": [
-        "SignificantChange"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Changes/ChangeAndIncidentCommandHandlerTests.cs"
+        "test/Compliance.Tests/Features/Changes/ChangeAndIncidentCommandHandlerTests.cs",
+        "test/Compliance.Tests/Features/Changes/ChangeSeeds.cs",
+        "test/Compliance.Tests/Features/Changes/SignificantChangeNativeTests.cs"
       ],
       "note": ""
     },

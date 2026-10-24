@@ -1,0 +1,37 @@
+{
+  "newGitHubIssuesPermitted": false,
+  "scope": "Native SignificantChange authority/producers/scoped consumers and verified Fitz receipt seam.",
+  "validation": {
+    "originalApiRedFailed": 3,
+    "receiptRedFailed": 2,
+    "strictBuildWarnings": 0,
+    "focusedPassed": 94,
+    "brokerIntegrationPassed": 1,
+    "backendUnitPassed": 5829,
+    "backendUnitFailed": 0,
+    "nodeTestsPassed": 24,
+    "format": "pass",
+    "aggregateSpec": "pass",
+    "implementationCoverage": "pass"
+  },
+  "review": {
+    "model": "jev-1.14.0",
+    "files": 52,
+    "signalsTriaged": 3,
+    "mergeProbability": 0.91,
+    "adopted": "merge scoped repair; continue shared and owner queues"
+  },
+  "parentRefinements": [
+    "Explicit Versioning extension namespace and using declaration fix.",
+    "Archive fixture uses TryGetProperty for change identity when scanning mixed native families; exact full body assertions retained.",
+    "Two actual-source receipt REDs reproduced preparation-time ordering rejection and inclusion of a late commit. Raw Fitz adapter verifies route/offset/event metadata/runtime type/kind/typed payload digest; ordinary current reads do not call receipt port.",
+    "Actual isolated broker startup exposed two old Commitment workload names; changed registrations to real store constants, then real host + receipt proof passed. Owned test stacks cleaned; earlier broker/storage and other project stacks untouched."
+  ],
+  "qualification": [
+    "Receipt comparison is inclusive authenticated epoch milliseconds; same-ms values tied, no sub-ms physical completion claim.",
+    "Other21family receipt filters/legacy Incident causal-prefix guard are separately queued; this slice does not claim all source timing complete.",
+    "No new cross-owner hold or realm-wide operation lookup protocol.",
+    "No implicit retained legacy stream converter/reset/deployment qualification."
+  ],
+  "remaining": "Source receipt consumers, identity stages, SD/Risk/Calendar/catalog/Incident packages remain independent."
+}

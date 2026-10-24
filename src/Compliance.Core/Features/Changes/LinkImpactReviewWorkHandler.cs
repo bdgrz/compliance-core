@@ -1,63 +1,43 @@
-using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Changes;
 
-public sealed class LinkImpactReviewWorkHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IChangeImpactWorkOwnershipReader ownership, TimeProvider clock)
-    : IRequestHandler<LinkImpactReviewWork>
+public sealed class LinkImpactReviewWorkHandler(SignificantChangeOperations operations,
+    IChangeImpactWorkOwnershipReader ownership) : IRequestHandler<LinkImpactReviewWork, UnitResult>
 {
-    public async ValueTask<Result> HandleAsync(IRequestContext<LinkImpactReviewWork> context,
-        CancellationToken ct)
+    public ValueTask<Result<UnitResult>> HandleAsync(IRequestContext<LinkImpactReviewWork> context, CancellationToken ct)
     {
         if (!RequestActor.IsSystem(context.Actor))
-            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "Impact-review work links may only be written by a trusted reactor."));
+            return ValueTask.FromResult(Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Impact-review work links may only be written by a trusted reactor.")));
         var request = context.Request;
-        if (request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
-            request.ChangeId == Uuid.Empty || request.ContentVersion <= 0)
-            return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Tenant, program, change, and assessment-version identities are required."));
-
-        var observed = await reader.HydrateAsync(new SignificantChange(request.TenantId,
-            request.ProgramId, request.ChangeId), ct).ConfigureAwait(false);
-        if (observed.Current is not { CurrentAssessment: { } assessment } state ||
-            assessment.ContentVersion != request.ContentVersion)
-            return Result.Failure(NotCurrent(observed, request.ContentVersion));
-        var workItemIds = assessment.RelatedReviewWorkIds.Concat(
-                assessment.RelatedCorrectiveActionIds)
-            .OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray();
-        if (workItemIds.Length == 0)
-            return Result.Success;
-
-        var ownershipResult = await ownership.ConfirmOwnedByProgramAsync(request.TenantId,
-            request.ProgramId, workItemIds, ct).ConfigureAwait(false);
-        if (!ownershipResult.IsSuccess)
-            return ownershipResult;
-
-        return await executor.ExecuteAsync(new SignificantChange(request.TenantId,
-                request.ProgramId, request.ChangeId), change =>
+        if (request.ContentVersion <= 0)
+            return ValueTask.FromResult(Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Validation,
+                "The exact assessment content version is required.")));
+        return operations.ExecuteAsync(context, request.TenantId, request.ProgramId, request.ChangeId, request.CommandId,
+            nameof(LinkImpactReviewWork), null, ActorReference.ForSystemProcess("reactor:LinkImpactReviewWork", "LinkImpactReviewWork"),
+            async (snapshot, operation, token) =>
             {
-                if (change.Current is not { CurrentAssessment: { } currentAssessment } current ||
-                    currentAssessment.ContentVersion != request.ContentVersion ||
-                    !currentAssessment.RelatedReviewWorkIds.Concat(
-                            currentAssessment.RelatedCorrectiveActionIds)
-                        .OrderBy(static id => id.ToString(), StringComparer.Ordinal)
-                        .SequenceEqual(workItemIds))
-                    return AggregateOutcome.Discard(Result.Failure(NotCurrent(change, request.ContentVersion)));
-                return CommandFailureRequestAdapter.ToOutcome(change.LinkReviewWork(change.Revision,
-                    workItemIds, assessment.AssessedByMemberId, assessment.AssessedByDisplay,
-                    clock.GetUtcNow()));
-            }, context, ct).ConfigureAwait(false);
+                if (snapshot.View is not { CurrentAssessment: { } assessment } state ||
+                    assessment.ContentVersion != request.ContentVersion)
+                    return Result.Failure(NotCurrent(snapshot.View, request.ContentVersion));
+                var ids = assessment.RelatedReviewWorkIds.Concat(assessment.RelatedCorrectiveActionIds)
+                    .OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray();
+                var ready = await ownership.ConfirmOwnedByProgramAsync(request.TenantId, request.ProgramId, ids, token).ConfigureAwait(false);
+                return !ready.IsSuccess ? ready : SignificantChangeOperations.Outcome(snapshot.Rules.LinkReviewWork(
+                    state.Revision, ids, assessment.AssessedByMemberId, assessment.AssessedByDisplay, operation.AcceptedAt));
+            }, ct);
     }
 
     /// <summary>
     ///     Separates an assessment that a newer content version has replaced (terminal) or that the owner does not show
     ///     yet (transient) from a request that never matched this change.
     /// </summary>
-    static RequestError NotCurrent(SignificantChange change, int contentVersion)
+    static RequestError NotCurrent(SignificantChangeView? current, int contentVersion)
     {
-        if (change.Current is not { } current)
+        if (current is null)
             return new RequestError(RequestErrorKind.Conflict,
                 "The requested significant-change assessment is no longer current.");
         if (contentVersion > current.CurrentVersionNumber)
