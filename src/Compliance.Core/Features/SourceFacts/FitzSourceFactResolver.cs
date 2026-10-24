@@ -5,8 +5,8 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.SourceFacts;
 
 /// <summary>
-/// Resolves source facts through <see cref="IStreamClient"/>, the only Portia-adjacent surface that reports the
-/// realm and global offsets; <c>DomainEventRecord</c> exposes only the resource offset.
+/// Resolves source facts through a global selector, the only READ scope that reports global offsets. The concrete
+/// source route and resource position must both match before a record is deserialized.
 /// </summary>
 sealed class FitzSourceFactResolver(IStreamClient streams, IDomainEventSerializer serializer) : ISourceFactResolver
 {
@@ -14,16 +14,7 @@ sealed class FitzSourceFactResolver(IStreamClient streams, IDomainEventSerialize
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
-        var route = stream.ToString();
-        var page = await streams.ReadPageAsync(route, resourcePosition, 1, new StreamFilterSet(), null, null, null, ct)
-            .ConfigureAwait(false);
-        var record = page.Items
-            .Where(item => item.Kind == StreamReadItemKind.Event)
-            .Select(item => item.Record)
-            .FirstOrDefault(candidate => candidate?.Offset == resourcePosition)
-            ?? throw new SourceFactVerificationException($"No record exists at {route} offset {resourcePosition}.");
-        if (!string.Equals(record.Route, route, StringComparison.Ordinal))
-            throw new SourceFactVerificationException("The record was returned for a different stream.");
+        var record = await FindAsync(stream, resourcePosition, ct).ConfigureAwait(false);
         if (record.RealmOffset is not { } realmOffset || record.GlobalOffset is not { } globalOffset)
             throw new SourceFactVerificationException("The broker did not report realm and global offsets.");
         DomainEvent domainEvent;
@@ -36,6 +27,36 @@ sealed class FitzSourceFactResolver(IStreamClient streams, IDomainEventSerialize
             throw new SourceFactVerificationException($"The source record cannot be deserialized: {exception.Message}");
         }
         return SourceFactVerifier.Build(stream, resourcePosition, realmOffset, globalOffset, domainEvent);
+    }
+
+    async Task<StreamRecord> FindAsync(EventStreamAddress stream, ulong resourcePosition, CancellationToken ct)
+    {
+        var concrete = stream.ToString();
+        var selector = $"stream://*/{stream.Area}/{stream.Resource}";
+        ulong next = 0;
+        ulong? fingerprint = null;
+        ulong? watermark = null;
+        while (true)
+        {
+            ct.ThrowIfCancellationRequested();
+            var page = await streams.ReadPageAsync(selector, next, 256, new StreamFilterSet(), null, fingerprint,
+                watermark, ct).ConfigureAwait(false);
+            if (watermark is { } pinned && page.Cursor.CapturedWatermark != pinned)
+                throw new SourceFactVerificationException("The source selector snapshot changed between pages.");
+            var record = page.Items.Where(item => item.Kind == StreamReadItemKind.Event)
+                .Select(item => item.Record).FirstOrDefault(candidate => candidate?.Offset == resourcePosition &&
+                    string.Equals(candidate.Route, concrete, StringComparison.Ordinal));
+            if (record is not null)
+                return record;
+            if (!page.Cursor.HasMore)
+                throw new SourceFactVerificationException($"No record exists at {concrete} offset {resourcePosition}.");
+            if (page.Cursor.LastGlobalOffset is not { } last || last < next || last == ulong.MaxValue ||
+                page.Cursor.CursorFingerprint is not { } token || page.Cursor.CapturedWatermark is not { } captured)
+                throw new SourceFactVerificationException("The source selector cannot make verified global progress.");
+            next = last + 1;
+            fingerprint = token;
+            watermark = captured;
+        }
     }
 
     public async Task<VerifiedSourceProof<TEvent>> VerifyAsync<TEvent>(SourceFactProof<TEvent> proof,
