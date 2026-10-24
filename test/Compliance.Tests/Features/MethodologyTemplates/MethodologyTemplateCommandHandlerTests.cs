@@ -1,3 +1,8 @@
+using Bdgrz.Compliance.Features.AccessControl;
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Hosting.Persistence;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Content;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.MethodologyTemplates;
 using Bdgrz.Compliance.Features.Programs;
@@ -11,6 +16,33 @@ public sealed class MethodologyTemplateCommandHandlerTests
 {
     static readonly DateTimeOffset Now = new(2026, 10, 17, 15, 0, 0, TimeSpan.Zero);
     static readonly Uuid TemplateId = Uuid.CreateVersion4();
+
+    [Fact]
+    public async Task ShouldRejectContributionSelfReviewGivenSameUserAcrossTenantAndPlatformContexts()
+    {
+        // Arrange
+        await using var scenario = new Scenario();
+        var tenant = Uuid.CreateVersion4();
+        var subject = Uuid.CreateVersion4();
+        var contributionId = Uuid.CreateVersion4();
+        var propose = new ProposeDeidentifiedTemplateContribution(tenant, contributionId, Uuid.CreateVersion4(),
+            1, new MethodologyTemplateRecordContent("review-access", "control", "Review access",
+                "Review access quarterly", []), "Removed client identifiers");
+        var created = await new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations())
+            .HandleAsync(Scenario.Context(propose, subject), CancellationToken.None);
+        Assert.True(created.IsSuccess, created.Error?.Message);
+        Assert.NotEqual(RbacIds.Member(tenant, subject), RbacIds.Member(Uuid.Empty, subject));
+
+        // Act
+        var reviewed = await new ReviewTemplateContributionHandler(scenario.ContributionOperations())
+            .HandleAsync(Scenario.Context(new ReviewTemplateContribution(Uuid.CreateVersion4(), tenant,
+                contributionId, "approved", "My own proposal"), subject), CancellationToken.None);
+        var owner = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant, contributionId));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, reviewed.Error?.Kind);
+        Assert.Equal(1, owner.Revision);
+    }
 
     [Fact]
     public async Task ShouldReplayOriginalTemplateCommandsGivenLaterPublicationAndClock()
@@ -83,24 +115,24 @@ public sealed class MethodologyTemplateCommandHandlerTests
         var review = new ReviewTemplateContribution(Uuid.CreateVersion4(), tenant, propose.ContributionId,
             "approved", "Deidentified");
         var accept = new AcceptTemplateContribution(Uuid.CreateVersion4(), tenant, propose.ContributionId, "Accept");
-        Assert.True((await new ProposeDeidentifiedTemplateContributionHandler(scenario.Executor, scenario.Clock)
+        Assert.True((await new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations())
             .HandleAsync(Scenario.Context(propose, contributor), CancellationToken.None)).IsSuccess);
-        Assert.True((await new ReviewTemplateContributionHandler(scenario.Executor, scenario.Clock)
+        Assert.True((await new ReviewTemplateContributionHandler(scenario.ContributionOperations())
             .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None)).IsSuccess);
-        Assert.True((await new AcceptTemplateContributionHandler(scenario.Executor, scenario.Clock)
+        Assert.True((await new AcceptTemplateContributionHandler(scenario.ContributionOperations())
             .HandleAsync(Scenario.Context(accept, approver), CancellationToken.None)).IsSuccess);
         var before = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
             propose.ContributionId));
         var later = new FixedTimeProvider(Now.AddHours(1));
 
         // Act
-        var proposalReplay = await new ProposeDeidentifiedTemplateContributionHandler(scenario.Executor, later)
+        var proposalReplay = await new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations(later))
             .HandleAsync(Scenario.Context(propose, contributor), CancellationToken.None);
-        var reviewReplay = await new ReviewTemplateContributionHandler(scenario.Executor, later)
+        var reviewReplay = await new ReviewTemplateContributionHandler(scenario.ContributionOperations(later))
             .HandleAsync(Scenario.Context(review, reviewer), CancellationToken.None);
-        var acceptanceReplay = await new AcceptTemplateContributionHandler(scenario.Executor, later)
+        var acceptanceReplay = await new AcceptTemplateContributionHandler(scenario.ContributionOperations(later))
             .HandleAsync(Scenario.Context(accept, approver), CancellationToken.None);
-        var changed = await new AcceptTemplateContributionHandler(scenario.Executor, later)
+        var changed = await new AcceptTemplateContributionHandler(scenario.ContributionOperations(later))
             .HandleAsync(Scenario.Context(accept with { AcceptanceRationale = "Different" }, approver), CancellationToken.None);
         var after = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
             propose.ContributionId));
@@ -111,8 +143,10 @@ public sealed class MethodologyTemplateCommandHandlerTests
         Assert.True(acceptanceReplay.IsSuccess, acceptanceReplay.Error?.Message);
         Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
         Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
-        Assert.Equal(before.ShareableContent!.AcceptanceId, after.ShareableContent!.AcceptanceId);
-        Assert.Equal(before.ShareableContent.ContentSha256, after.ShareableContent.ContentSha256);
+        var beforeShare = await scenario.Contributions.ShareAsync(tenant, propose.ContributionId);
+        var afterShare = await scenario.Contributions.ShareAsync(tenant, propose.ContributionId);
+        Assert.Equal(beforeShare!.AcceptanceId, afterShare!.AcceptanceId);
+        Assert.Equal(beforeShare.ContentSha256, afterShare.ContentSha256);
     }
 
     [Fact]
@@ -176,9 +210,9 @@ public sealed class MethodologyTemplateCommandHandlerTests
         var contributor = Uuid.CreateVersion4();
         var reviewer = Uuid.CreateVersion4();
         var platformOperator = Uuid.CreateVersion4();
-        var propose = new ProposeDeidentifiedTemplateContributionHandler(scenario.Executor, scenario.Clock);
-        var review = new ReviewTemplateContributionHandler(scenario.Executor, scenario.Clock);
-        var accept = new AcceptTemplateContributionHandler(scenario.Executor, scenario.Clock);
+        var propose = new ProposeDeidentifiedTemplateContributionHandler(scenario.ContributionOperations());
+        var review = new ReviewTemplateContributionHandler(scenario.ContributionOperations());
+        var accept = new AcceptTemplateContributionHandler(scenario.ContributionOperations());
         var content = new MethodologyTemplateRecordContent("quarterly-access-review", "control",
             "Review privileged access", "Review privileged access quarterly.", []);
 
@@ -190,16 +224,17 @@ public sealed class MethodologyTemplateCommandHandlerTests
             tenantId, contributionId, "approved", "No tenant identifiers remain."), reviewer), CancellationToken.None);
         var accepted = await accept.HandleAsync(Scenario.Context(new AcceptTemplateContribution(Uuid.CreateVersion4(),
             tenantId, contributionId, "Approved for firm methodology reuse."), platformOperator), CancellationToken.None);
-        var aggregate = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenantId, contributionId));
+        var aggregate = await scenario.Contributions.ReadAsync(tenantId, contributionId);
 
         // Assert
         Assert.True(proposed.IsSuccess, proposed.Error?.Message);
         Assert.True(reviewed.IsSuccess, reviewed.Error?.Message);
         Assert.True(accepted.IsSuccess, accepted.Error?.Message);
-        var share = Assert.IsType<MethodologyTemplateContributionShareView>(aggregate.ShareableContent);
-        Assert.Equal("accepted", aggregate.Current!.Status);
-        Assert.NotEqual(aggregate.Current.ProposedByMemberId, share.Review.ReviewedByMemberId);
-        Assert.NotEqual(aggregate.Current.ProposedByMemberId, share.AcceptedByMemberId);
+        var share = Assert.IsType<MethodologyTemplateContributionShareView>(
+            await scenario.Contributions.ShareAsync(tenantId, contributionId));
+        Assert.Equal("accepted", aggregate!.Status);
+        Assert.NotEqual(aggregate.ProposedByMemberId, share.Review.ReviewedByMemberId);
+        Assert.NotEqual(aggregate.ProposedByMemberId, share.AcceptedByMemberId);
         Assert.NotEqual(share.Review.ReviewedByMemberId, share.AcceptedByMemberId);
         Assert.Equal("quarterly-access-review", share.Content.EntryKey);
     }
@@ -300,6 +335,11 @@ public sealed class MethodologyTemplateCommandHandlerTests
         }
 
         public TimeProvider Clock { get; } = new FixedTimeProvider(Now);
+        public IImmutableContentStore ContentStore { get; } = new FitzKvImmutableContentStore(
+            new PersistenceKvClient(new InMemoryKvClient()));
+        public MethodologyTemplateContributionReader Contributions => new(Reader, ContentStore);
+        public MethodologyTemplateContributionOperations ContributionOperations(TimeProvider? clock = null) =>
+            new(new NativeOperationExecutor(Reader, Executor, ContentStore), ContentStore, clock ?? Clock);
         public IAggregateExecutor Executor { get; }
         public IAggregateReader Reader { get; }
 

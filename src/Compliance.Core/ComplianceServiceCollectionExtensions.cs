@@ -678,6 +678,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton<IImmutableContentStore>(provider =>
             new FitzKvImmutableContentStore(provider.GetRequiredService<IKvClient>()));
         services.AddScoped<NativeOperationExecutor>();
+        services.AddScoped<MethodologyTemplateContributionOperations>();
+        services.AddScoped<MethodologyTemplateContributionReader>();
         services.AddScoped<FollowUpCompletionVerifier>();
         services.AddSingleton<IProcessRecordStore>(provider =>
             new FitzKvProcessRecordStore(provider.GetRequiredService<IKvClient>()));
