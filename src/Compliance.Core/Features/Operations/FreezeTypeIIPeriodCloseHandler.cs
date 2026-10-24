@@ -52,7 +52,7 @@ public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
         var frozenAt = clock.GetUtcNow();
         var existing = current.CloseSnapshots.FirstOrDefault(item =>
             item.CloseSnapshotId == request.CloseSnapshotId);
-        if (existing is not null && !MatchesFrozenSnapshot(existing, content, memberId, role))
+        if (existing is not null && !MatchesFrozenSnapshot(existing, content, memberId, role, request.ExpectedRevision))
             return Conflict("The close snapshot identity already contains different frozen facts.");
 
         if (existing is null)
@@ -77,7 +77,7 @@ public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
                     request.ProgramId, request.PeriodId), ct).ConfigureAwait(false);
                 existing = latest.Current?.CloseSnapshots.FirstOrDefault(item =>
                     item.CloseSnapshotId == request.CloseSnapshotId);
-                if (existing is null || !MatchesFrozenSnapshot(existing, content, memberId, role))
+                if (existing is null || !MatchesFrozenSnapshot(existing, content, memberId, role, request.ExpectedRevision))
                     return freeze;
             }
         }
@@ -86,15 +86,16 @@ public sealed class FreezeTypeIIPeriodCloseHandler(IAggregateExecutor executor,
             request.ProgramId, request.PeriodId), ct).ConfigureAwait(false);
         var snapshot = saved.Current?.CloseSnapshots.FirstOrDefault(item =>
             item.CloseSnapshotId == request.CloseSnapshotId);
-        if (snapshot is null || !MatchesFrozenSnapshot(snapshot, content, memberId, role))
+        if (snapshot is null || !MatchesFrozenSnapshot(snapshot, content, memberId, role, request.ExpectedRevision))
             return Conflict("The frozen close snapshot could not be verified after persistence.");
 
         return Result.Success;
     }
 
     static bool MatchesFrozenSnapshot(TypeIIPeriodCloseSnapshotView snapshot,
-        TypeIIPeriodCloseSnapshotContent content, Uuid memberId, string role) =>
-        snapshot.CloseSnapshotId == content.CloseSnapshotId && snapshot.Version == 1 &&
+        TypeIIPeriodCloseSnapshotContent content, Uuid memberId, string role, long expectedRevision) =>
+        snapshot.CloseSnapshotId == content.CloseSnapshotId && snapshot.OriginalExpectedRevision == expectedRevision &&
+        snapshot.Version == 1 &&
         snapshot.AmendsCloseSnapshotId is null && snapshot.ActorMemberId == memberId &&
         StringComparer.OrdinalIgnoreCase.Equals(snapshot.ActorRole, role) &&
         SameReferences(snapshot.SourceReferences, content.SourceReferences) &&

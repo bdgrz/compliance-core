@@ -41,7 +41,10 @@
     "versioned-replay-file-reviews.json",
     "versioned-replay-file-triage.json",
     "audit-package-file-reviews.json",
-    "audit-package-file-triage.json"
+    "audit-package-file-triage.json",
+    "foundation-file-reviews.json",
+    "foundation-file-triage.json",
+    "foundation-integration-jev-response.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -72,11 +75,13 @@
     {
       "id": "audit-package-split",
       "slice": "S29",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "focusedGreen": "283passed/0failed",
       "webGreen": "28passed/0failed",
       "fullUnitGreen": "5487passed/0failed",
-      "jev": "64/64current hashes;5signals triaged"
+      "jev": "64/64current hashes;5signals triaged",
+      "pullRequest": 1093,
+      "mergeCommit": "9d876687ab4c1983f72e8e153791c7c73ab82652"
     },
     {
       "id": "finding-content-recovery",
@@ -101,6 +106,14 @@
       "status": "offline_implementation",
       "externalDependency": false,
       "evidence": "21TypeI families and TypeII chain mapped. Merkle/prefixed logical digests must retain full content and proof through an exact physical blob descriptor; publishing root preimage alone loses rows."
+    },
+    {
+      "id": "grant-and-freeze-replay",
+      "status": "validated_awaiting_merge",
+      "focusedGreen": "949passed/0failed",
+      "mcpGreen": "1passed/0failed",
+      "fullUnitGreen": "5491passed/0failed",
+      "jev": "5current files;4 high signals source/test triaged; direct integration choice merge_scoped_repair0.81"
     }
   ],
   "resolved": [

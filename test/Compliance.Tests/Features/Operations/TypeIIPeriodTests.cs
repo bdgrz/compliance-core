@@ -236,6 +236,31 @@ public sealed class TypeIIPeriodTests
     }
 
     [Fact]
+    public void ShouldReplayFrozenSnapshotGivenLaterServerClockAndSameOriginalRevision()
+    {
+        // Arrange
+        var period = ReadyToClosePeriod();
+        var expectedRevision = period.Revision;
+        var snapshot = Snapshot(SourceReferences(),
+            period.Current!.ExpectedOccurrences.Select(item => item.OccurrenceId).ToArray());
+        var firstAt = Now.AddMonths(12).AddHours(2);
+        Assert.Null(period.FreezeClose(expectedRevision, snapshot, CEOId, "Chief Executive", firstAt));
+        var original = Assert.Single(period.Current.CloseSnapshots);
+        var revision = period.Revision;
+
+        // Act
+        var replay = period.FreezeClose(expectedRevision, snapshot, CEOId, "Chief Executive", firstAt.AddDays(1));
+        var changed = period.FreezeClose(expectedRevision + 1, snapshot, CEOId, "Chief Executive", firstAt.AddDays(1));
+
+        // Assert
+        Assert.Null(replay);
+        Assert.Equal(CommandFailureCode.StateConflict, changed?.Code);
+        Assert.Equal(revision, period.Revision);
+        Assert.Same(original, Assert.Single(period.Current.CloseSnapshots));
+        Assert.Equal(firstAt, original.RecordedAt);
+    }
+
+    [Fact]
     public void ShouldFreezeExactReconciledSnapshotAndPreserveAmendmentLineageGivenApprovedClose()
     {
         // Arrange

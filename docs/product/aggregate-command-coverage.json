@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "02bcee69f501244a332168965fc3b21eb9e54a60",
+  "sourceCommit": "9d876687ab4c1983f72e8e153791c7c73ab82652",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
@@ -9209,11 +9209,11 @@
         "test/Compliance.Tests/Features/AccessControl/AccessGrantTests.cs",
         "test/Compliance.Tests/Features/AccessControl/DeprovisionMemberHandlerTests.cs",
         "test/Compliance.Tests/Features/AccessControl/GrantAccessHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/GrantAccessReplayTests.cs",
         "test/Compliance.Tests/Features/AccessControl/MemberRetirementRecoveryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/ProvisionGuestProgramAccessHandlerTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonWriteTests.cs",
-        "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonWriteTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -20909,6 +20909,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/GrantAccessHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/GrantAccessReplayTests.cs",
         "test/Compliance.Tests/Features/AccessControl/RbacManagementAuthorizerTests.cs",
         "test/Compliance.Tests/Features/Evidence/ArtifactMetadataAccessTests.cs"
       ],

@@ -32,17 +32,28 @@ public sealed class AccessGrant : Aggregate
         if (validation is not null)
             return Result.Failure(validation);
 
-        if (_terms is not null)
-            return _isRevoked
-                ? Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "A revoked access grant cannot be reissued."))
-                : _terms == terms && _membershipEpisodeId == membershipEpisodeId
-                ? Result.Success
-                : Result.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The access grant already has different terms."));
+        if (ReplayIssue(new AccessGrantProposal(terms.Principal, terms.RoleId, terms.Scope,
+                terms.Source, terms.EffectiveFrom, terms.EffectiveUntil), terms.GrantedBy) is { } retry)
+            return retry;
 
         RaiseEvent(new AccessGrantIssued(_tenantId, Id, terms, membershipEpisodeId));
         return Result.Success;
+    }
+
+    /// <summary>
+    /// Resolves the immutable creation receipt without consulting current grant, member, role or source state.
+    /// A successful replay never reissues a revoked grant or rebinds its original membership episode.
+    /// </summary>
+    public Result? ReplayIssue(AccessGrantProposal? proposal, ActorReference actor)
+    {
+        if (_terms is not { } original)
+            return null;
+        var authored = new AccessGrantProposal(original.Principal, original.RoleId, original.Scope,
+            original.Source, original.EffectiveFrom, original.EffectiveUntil);
+        return proposal == authored && actor.Kind == original.GrantedBy.Kind && actor.Id == original.GrantedBy.Id
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The grant identity already accepted another proposal or original actor."));
     }
 
     public Result Revoke(ActorReference revokedBy, DateTimeOffset revokedAt)

@@ -135,7 +135,7 @@ public sealed class AccessGrantTests
     }
 
     [Fact]
-    public void ShouldRejectReissueGivenPreviouslyRevokedGrantId()
+    public void ShouldReplayOriginalCreationWithoutRestoringAuthorityGivenPreviouslyRevokedGrantId()
     {
         // Arrange
         var terms = new AccessGrantTerms(
@@ -157,8 +157,8 @@ public sealed class AccessGrantTests
         var result = scenario.Aggregate.Issue(terms);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.True(result.IsSuccess);
+        Assert.True(scenario.Aggregate.IsRevoked);
         Assert.Empty(scenario.PendingEvents);
     }
 

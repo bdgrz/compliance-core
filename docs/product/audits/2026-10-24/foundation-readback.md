@@ -1,0 +1,9 @@
+# Access issuance and Type II close replay
+
+Access-grant creation resolves its immutable original proposal/actor before mutable member/role eligibility. Exact retry after revocation or target retirement preserves the first outcome without restoring grant authority or moving its original membership episode. New operations retain current eligibility/role/source checks and the request pipeline retains current caller authorization. Failure/OCC reconciliation rechecks the accepted owner receipt.
+
+Type II freeze snapshots retain the original authored ExpectedRevision. Every handler reconciliation branch and the owner reject a changed original revision without appending. A new direct-owner regression also proved generated server RecordedAt must be excluded from exact retry identity; original snapshot/time are retained. Current personal HTTP, executive authority, exact approval, source/coverage and actor requirements remain.
+
+RED:4 new/strengthened owner/handler/revision rows failed on old behavior, plus1 direct-owner clock row failed before review refinement. GREEN: strict Release build0warnings/errors;949 focused unit tests; the MCP smoke test; all5,491 backend unit tests. The pre-existing MCP expected inventory was missing15 already advertised tools; it was reconciled while retaining exact inventory and denied unauthorized call assertions. The compiled coverage inventory was regenerated.
+
+Jev1.14.0 directly reviewed all5 current source/dependency hash sets, with4 high signals source/test triaged. Separate direct integration preflight chose merge_scoped_repair (probability0.81, confidence0.72), introduced_regression0.47 and scope_misrepresentation0.07; code and executable evidence support that bounded decision. This is not completion of the wider typed/native Type II owner/response migration. No wire route, deployment, reset or GitHub issue was created.

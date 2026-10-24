@@ -403,6 +403,21 @@ public sealed class RbacMcpScenarioTests
             "bdgrz.service-engagement.staff.propose",
             "bdgrz.service-engagement.staff.withdraw",
             "bdgrz.tenant.offboard",
+            "bdgrz.advisor-collaboration.get-advisor-request",
+            "bdgrz.advisor-collaboration.get-shared-source",
+            "bdgrz.advisor-collaboration.list-advisor-feedback",
+            "bdgrz.advisor-collaboration.list-advisor-requests",
+            "bdgrz.advisor-collaboration.preview-advisor-handoff",
+            "bdgrz.application.relationship.list",
+            "bdgrz.application.relationship.remove-governed",
+            "bdgrz.examinations.amend-type-i-baseline",
+            "bdgrz.examinations.create-examination-engagement",
+            "bdgrz.examinations.freeze-type-i-baseline",
+            "bdgrz.examinations.get-examination-engagement",
+            "bdgrz.examinations.get-type-i-baseline",
+            "bdgrz.examinations.preview-type-i-baseline",
+            "bdgrz.examinations.revise-examination-engagement",
+            "bdgrz.tenant.guest-consultant.invite",
             "bdgrz.work.digest.dispatch.status.get");
         var tools = await scenario.ListTools();
         Assert.True(Assert.Single(tools, tool =>
