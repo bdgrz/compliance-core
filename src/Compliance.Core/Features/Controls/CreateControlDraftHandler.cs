@@ -1,48 +1,36 @@
-using Cntryl.Fitz.Extensions;
+using Bdgrz.Compliance.Features.Kernel;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-public sealed class CreateControlDraftHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IControlApplicabilityReferenceValidator applicability,
-    TimeProvider clock)
-    : IRequestHandler<CreateControlDraft, ControlRegistration>
+public sealed class CreateControlDraftHandler(ControlOperations operations, IAggregateReader reader,
+    IControlApplicabilityReferenceValidator applicability) : IRequestHandler<CreateControlDraft, ControlRegistration>
 {
-    public async ValueTask<Result<ControlRegistration>> HandleAsync(
-        IRequestContext<CreateControlDraft> context, CancellationToken ct)
+    public ValueTask<Result<ControlRegistration>> HandleAsync(IRequestContext<CreateControlDraft> context, CancellationToken ct)
     {
         var request = context.Request;
         var identifier = ControlDraft.NormalizeIdentifier(request.Identifier);
-        if (identifier.Length is < 1 or > 80)
-            return Result<ControlRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
-                "A control identifier requires 1 to 80 characters."));
-        var program = await reader.HydrateAsync(new ComplianceProgram(request.TenantId,
-            request.ProgramId), ct).ConfigureAwait(false);
-        if (!program.IsCreated)
-            return Result<ControlRegistration>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The program was not found."));
-        var structuralError = ControlDraft.ValidateCreateInput(request.Identifier, request.Content);
-        if (structuralError is not null)
-            return Result<ControlRegistration>.Failure(structuralError);
-        var existing = await reader.HydrateAsync(new ControlDraft(request.TenantId,
-            ControlDraft.IdFor(request.TenantId, request.ProgramId, request.Identifier)), ct)
-            .ConfigureAwait(false);
-        if (!existing.IsCreated)
+        var id = ControlDraft.IdFor(request.TenantId, request.ProgramId, identifier);
+        var authored = request with
         {
-            var validation = await applicability.ValidateAsync(request.TenantId, request.Content, ct)
-                .ConfigureAwait(false);
-            if (!validation.IsSuccess)
-                return Result<ControlRegistration>.Failure(validation.Error);
-        }
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
-        var controlId = ControlDraft.IdFor(request.TenantId, request.ProgramId, identifier);
-        return await executor.ExecuteAsync(new ControlDraft(request.TenantId, controlId),
-            control => AggregateOutcome.CommitOnSuccess(control.Create(request.ProgramId,
-                context.RequestId, identifier, request.Content,
-                RbacIds.Member(request.TenantId, userId),
-                UserIdentityClaims.BdgrzDisplay(context.Actor, userId), clock.GetUtcNow())),
-            context, ct).ConfigureAwait(false);
+            Identifier = identifier,
+            Content = ControlRules.ValidateContent(request.Content) is null ? ControlRules.NormalizeContent(request.Content) : request.Content
+        };
+        return operations.ExecuteAsync<CreateControlDraft, ControlRegistration>(context, request.TenantId, request.ProgramId,
+            id, id, nameof(CreateControlDraft), null,
+            async (snapshot, actor, at, token) =>
+            {
+                if (ControlDraft.ValidateCreateInput(identifier, request.Content) is { } structural)
+                    return Result.Failure(structural);
+                var program = await reader.HydrateAsync(new ComplianceProgram(request.TenantId, request.ProgramId), token)
+                    .ConfigureAwait(false);
+                return !program.IsCreated ? Result.Failure(new RequestError(RequestErrorKind.NotFound, "The program was not found."))
+                    : await applicability.ValidateAsync(request.TenantId, request.Content, token).ConfigureAwait(false);
+            },
+            (rules, actor, at) =>
+            {
+                var created = rules.Create(request.ProgramId, id, identifier, request.Content, actor.MemberId, actor.Display, at);
+                return created.IsSuccess ? Result.Success : Result.Failure(created.Error!);
+            }, null, null, ct, AuthoredIntentDigest.Compute(authored));
     }
 }

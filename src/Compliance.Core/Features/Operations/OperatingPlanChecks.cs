@@ -6,11 +6,11 @@ namespace Bdgrz.Compliance.Features.Operations;
 static class OperatingPlanChecks
 {
     public static async ValueTask<Result<(ControlVersionView Version, bool ReviewerHoldsWork)>>
-        CheckAsync(IAggregateReader reader, OperatingAuthority authority, Uuid tenantId,
+        CheckAsync(ControlReader controlSources, OperatingAuthority authority, Uuid tenantId,
             Uuid programId, Uuid controlId, Uuid controlVersionId, OperatingHolder owner,
             OperatingHolder? backupOwner, Uuid reviewerMemberId, CancellationToken ct)
     {
-        var control = await ControlOperationsSource.LoadControlAsync(reader, tenantId, programId,
+        var control = await ControlOperationsSource.LoadControlAsync(controlSources, tenantId, programId,
             controlId, ct).ConfigureAwait(false);
         if (control is null)
             return Failure(ControlOperationsSource.ControlNotFound());

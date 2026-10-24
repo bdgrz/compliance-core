@@ -210,13 +210,13 @@ public sealed class ScopeResponsibilityIndependenceTests
             return result.IsSuccess ? Result.Success : Result.Failure(result.Error!);
         }
 
-        Task<Result> AssignAsync(Uuid assignee, string transport = "http") => SendAsync(new AssignResponsibility(Tenant, assignee,
+        Task<Result> AssignAsync(Uuid assignee, string transport = "http") => SendAsync(new AssignResponsibility(Uuid.CreateVersion4(), Tenant, assignee,
             ResponsibilityType.ControlOwner, "boundary", DraftBoundary, DraftVersion, 1, DateTimeOffset.UtcNow, null, []), transport);
 
         public Task<Result> ExecuteAsync(string operation, string transport = "http") => operation switch
         {
             "assign" => AssignAsync(Replacement, transport),
-            "revoke" => SendAsync(new RevokeResponsibility(Tenant, "boundary", DraftBoundary, DraftVersion, 1, Assignment, "Reassigned responsibility"), transport),
+            "revoke" => SendAsync(new RevokeResponsibility(Uuid.CreateVersion4(), Tenant, "boundary", DraftBoundary, DraftVersion, 1, Assignment, "Reassigned responsibility"), transport),
             "freeze" => OutcomeAsync(new FreezeProgramScopeSnapshot(Tenant, Program, 1, ApprovedBoundary, ApprovedVersion), transport),
             "amend" => OutcomeAsync(new AmendProgramScopeSnapshot(Tenant, Snapshot, Program, 1, ApprovedBoundary, ApprovedVersion, "Reviewed amendment"), transport),
             _ => throw new InvalidOperationException(operation)

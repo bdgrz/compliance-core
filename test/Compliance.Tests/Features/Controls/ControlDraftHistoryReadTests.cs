@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Controls;
 using Cntryl.Fitz.Extensions;
@@ -11,13 +12,15 @@ public sealed class ControlDraftHistoryReadTests
     public async Task ShouldReturnTransientConflictGivenHistoryProjectionLag()
     {
         // Arrange
+        await using var fixture = new ControlSourceFixture();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var controlId = ControlDraft.IdFor(tenantId, programId, "AC-01");
         var source = Source(tenantId, programId, controlId);
+        await fixture.SeedAsync(source);
         var history = new HistoryDirectory();
         var handler = new ListControlDraftRevisionsHandler(history,
-            new ControlDraftHistoryReadConsistency(history, new SourceReader(source)));
+            new ControlDraftHistoryReadConsistency(history, fixture.Controls));
 
         // Act
         var result = await handler.HandleAsync(Context(new ListControlDraftRevisions(tenantId,
@@ -34,13 +37,15 @@ public sealed class ControlDraftHistoryReadTests
     public async Task ShouldReturnTransientConflictGivenRequestedRevisionAheadOfSource()
     {
         // Arrange
+        await using var fixture = new ControlSourceFixture();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var controlId = ControlDraft.IdFor(tenantId, programId, "AC-01");
+        await fixture.SeedAsync(Source(tenantId, programId, controlId));
         var history = new HistoryDirectory();
         var handler = new ListControlDraftRevisionsHandler(history,
             new ControlDraftHistoryReadConsistency(history,
-                new SourceReader(Source(tenantId, programId, controlId))));
+                fixture.Controls));
 
         // Act
         var result = await handler.HandleAsync(Context(new ListControlDraftRevisions(tenantId,
@@ -58,13 +63,15 @@ public sealed class ControlDraftHistoryReadTests
     public async Task ShouldHideForeignProgramBeforeReadingHistoryGivenRevisionPage()
     {
         // Arrange
+        await using var fixture = new ControlSourceFixture();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var controlId = ControlDraft.IdFor(tenantId, programId, "AC-01");
+        await fixture.SeedAsync(Source(tenantId, programId, controlId));
         var history = new HistoryDirectory();
         var handler = new ListControlDraftRevisionsHandler(history,
             new ControlDraftHistoryReadConsistency(history,
-                new SourceReader(Source(tenantId, programId, controlId))));
+                fixture.Controls));
 
         // Act
         var result = await handler.HandleAsync(Context(new ListControlDraftRevisions(tenantId,
@@ -81,10 +88,11 @@ public sealed class ControlDraftHistoryReadTests
     public async Task ShouldRejectOutOfRangeLimitGivenRevisionHistoryPage(int limit)
     {
         // Arrange
+        await using var fixture = new ControlSourceFixture();
         var history = new HistoryDirectory();
         var handler = new ListControlDraftRevisionsHandler(history,
             new ControlDraftHistoryReadConsistency(history,
-                new SourceReader(new ControlDraft(Uuid.CreateVersion4(), Uuid.CreateVersion4()))));
+                fixture.Controls));
 
         // Act
         var result = await handler.HandleAsync(Context(new ListControlDraftRevisions(
@@ -99,17 +107,19 @@ public sealed class ControlDraftHistoryReadTests
     public async Task ShouldReturnValidationGivenMalformedHistoryCursor()
     {
         // Arrange
+        await using var fixture = new ControlSourceFixture();
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var controlId = ControlDraft.IdFor(tenantId, programId, "AC-01");
         var source = Source(tenantId, programId, controlId);
+        await fixture.SeedAsync(source);
         var history = new HistoryDirectory
         {
             Latest = Revision(tenantId, programId, controlId, 1),
             RejectCursor = true,
         };
         var handler = new ListControlDraftRevisionsHandler(history,
-            new ControlDraftHistoryReadConsistency(history, new SourceReader(source)));
+            new ControlDraftHistoryReadConsistency(history, fixture.Controls));
 
         // Act
         var result = await handler.HandleAsync(Context(new ListControlDraftRevisions(tenantId,
@@ -122,9 +132,9 @@ public sealed class ControlDraftHistoryReadTests
     static RequestContext<TRequest> Context<TRequest>(TRequest request)
         where TRequest : IRequestBase => new(request, new ClaimsPrincipal());
 
-    static ControlDraft Source(Uuid tenantId, Uuid programId, Uuid controlId)
+    static ControlRules Source(Uuid tenantId, Uuid programId, Uuid controlId)
     {
-        var source = new ControlDraft(tenantId, controlId);
+        var source = new ControlRules(tenantId, controlId);
         Assert.True(source.Create(programId, Uuid.CreateVersion4(), "AC-01", Content("Original"),
             Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow).IsSuccess);
         return source;
@@ -136,13 +146,6 @@ public sealed class ControlDraftHistoryReadTests
 
     static ControlDraftContent Content(string title) => new(title, "Review access",
         "Management reviews access.", "The owner reviews access quarterly.", ["Review record"]);
-
-    sealed class SourceReader(Aggregate source) : IAggregateReader
-    {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult((TAggregate)source);
-    }
 
     sealed class HistoryDirectory : IControlDraftHistoryDirectoryReader
     {

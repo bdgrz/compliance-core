@@ -8,11 +8,15 @@ namespace Bdgrz.Compliance.Features.Operations;
 
 /// <summary>Records a new attestation version superseding the latest; HTTP-only.</summary>
 public sealed class CorrectControlAttestationHandler(NativeOperationExecutor operations,
-    ControlOperationsReader operatingReader, IAggregateReader reader, OperatingAuthority authority,
+    ControlOperationsReader operatingReader, IAggregateReader reader, ControlReader controlSources, OperatingAuthority authority,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<CorrectControlAttestation, ControlOccurrenceView>
 {
-    public async ValueTask<Result<ControlOccurrenceView>> HandleAsync(
+    public ValueTask<Result<ControlOccurrenceView>> HandleAsync(
+        IRequestContext<CorrectControlAttestation> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlOccurrenceView>> HandleCoreAsync(
         IRequestContext<CorrectControlAttestation> context, CancellationToken ct)
     {
         if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
@@ -24,7 +28,7 @@ public sealed class CorrectControlAttestationHandler(NativeOperationExecutor ope
             return Result<ControlOccurrenceView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A correction requires a command id and a non-negative expected revision."));
         var now = clock.GetUtcNow();
-        var prepared = await OccurrenceAttestation.PrepareAsync(reader, operatingReader, authority, request.TenantId,
+        var prepared = await OccurrenceAttestation.PrepareAsync(controlSources, operatingReader, authority, request.TenantId,
             request.ProgramId, request.ControlId, request.OccurrenceId, request.PerformedByPersonId, context.Actor, now,
             ct).ConfigureAwait(false);
         if (!prepared.IsSuccess)

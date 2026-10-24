@@ -360,7 +360,7 @@ public sealed class ControlDecisionWorkTests
     {
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             services.GetRequiredService<WorkQueueReadConsistency>(),
             controls: controls ?? services.GetRequiredService<IControlDraftDirectoryReader>(),
@@ -386,7 +386,7 @@ public sealed class ControlDecisionWorkTests
     static async Task<Uuid> CreateDraftAsync(OperationsFixture fixture,
         bool assignReviewer, bool assignApprover = false, bool assignOwner = false)
     {
-        var controlId = Uuid.CreateVersion4();
+        var controlId = ControlDraft.IdFor(fixture.TenantId, fixture.ProgramId, "AC-WORK");
         var changedAt = DateTimeOffset.UtcNow.AddMinutes(-2);
         await ApplyControlAsync(fixture, controlId, control =>
         {
@@ -408,7 +408,7 @@ public sealed class ControlDecisionWorkTests
         return controlId;
     }
 
-    static void Assign(ControlDraft control, OperationsFixture fixture, Uuid memberId,
+    static void Assign(ControlRules control, OperationsFixture fixture, Uuid memberId,
         ResponsibilityType type, DateTimeOffset at)
     {
         Assert.Null(control.AssignResponsibility(new ResponsibilityScope("control", control.Id,
@@ -420,8 +420,8 @@ public sealed class ControlDecisionWorkTests
         "Management reviews user access.", "Review access monthly.", ["Signed review record"]);
 
     static Task ApplyControlAsync(OperationsFixture fixture, Uuid controlId,
-        Func<ControlDraft, Result> apply) => ProgramManagementServices.SeedAsync(
-        fixture.Provider, new ControlDraft(fixture.TenantId, controlId), apply);
+        Func<ControlRules, Result> apply) => ProgramManagementServices.SeedAsync(
+        fixture.Provider, new ControlRules(fixture.TenantId, controlId), apply);
 
     sealed class CheckpointAdvancingControls(Uuid tenantId, Uuid programId, Uuid controlId)
         : IControlDraftDirectoryReader

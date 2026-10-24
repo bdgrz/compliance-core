@@ -1,3 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Examinations;
@@ -17,18 +21,41 @@ public sealed class ControlTypeIBaselineSourceContributorTests
     static readonly Uuid ApproverId = Uuid.CreateVersion4();
     static readonly DateTimeOffset Now = new(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldReturnClassifiedSourceFailureGivenUnreadableNativeControlContent(bool unavailable)
+    {
+        // Arrange
+        var control = ApprovedControl("AC-UNREADABLE", new DateOnly(2026, 9, 1));
+        await using var source = await NativeSource.CreateAsync(control);
+        var before = await source.Controls.ReadAsync(TenantId, ProgramId, control.Id);
+        var contributor = Contributor(new Directory([control]), source, source.WithReadFailure(unavailable));
+
+        // Act
+        var result = await contributor.ReadAsync(Engagement(new DateOnly(2026, 9, 30)), CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.Equal(unavailable, result.Error.IsTransient);
+        var retained = await source.Controls.ReadAsync(TenantId, ProgramId, control.Id);
+        Assert.Equal(before.Owner.CommittedStreamPosition, retained.Owner.CommittedStreamPosition);
+    }
+
     [Fact]
     public async Task ShouldBindControlVersionEffectiveOnTypeIDateGivenApprovedSuccessor()
     {
         // Arrange
         var control = ApprovedControl("AC-01", new DateOnly(2026, 9, 1));
+        await using var source = await NativeSource.CreateAsync(control);
         var predecessor = Assert.IsType<ControlVersionView>(control.ApprovedVersion);
         var directory = new Directory([control]);
-        var contributor = Contributor(directory, new ControlReader(control),
-            new InMemoryEventStore());
+        var contributor = Contributor(directory, source);
         var originalPreview = await contributor.ReadAsync(Engagement(new DateOnly(2026, 10, 14)),
             CancellationToken.None);
         ApproveSuccessor(control, new DateOnly(2026, 10, 15));
+        await source.AppendAsync(control);
         directory.Replace(View(control));
         var successor = Assert.IsType<ControlVersionView>(control.ApprovedVersion);
 
@@ -64,8 +91,8 @@ public sealed class ControlTypeIBaselineSourceContributorTests
     {
         // Arrange
         var future = ApprovedControl("AC-FUTURE", new DateOnly(2026, 10, 1));
-        var contributor = Contributor(new Directory([future]), new ControlReader(future),
-            new InMemoryEventStore());
+        await using var source = await NativeSource.CreateAsync(future);
+        var contributor = Contributor(new Directory([future]), source);
 
         // Act
         var result = await contributor.ReadAsync(Engagement(new DateOnly(2026, 9, 30)),
@@ -83,9 +110,9 @@ public sealed class ControlTypeIBaselineSourceContributorTests
     {
         // Arrange
         var control = ApprovedControl("AC-02", new DateOnly(2026, 9, 1));
+        await using var source = await NativeSource.CreateAsync(control);
         var directory = new AdvancingDirectory(View(control));
-        var contributor = Contributor(directory, new ControlReader(control),
-            new InMemoryEventStore());
+        var contributor = Contributor(directory, source);
 
         // Act
         var result = await contributor.ReadAsync(Engagement(new DateOnly(2026, 9, 30)),
@@ -102,9 +129,9 @@ public sealed class ControlTypeIBaselineSourceContributorTests
     {
         // Arrange
         var control = ApprovedControl("AC-03", new DateOnly(2026, 9, 1));
+        await using var source = await NativeSource.CreateAsync(control);
         var wrongProgramView = View(control) with { ProgramId = Uuid.CreateVersion4() };
-        var contributor = Contributor(new Directory([wrongProgramView]), new ControlReader(control),
-            new InMemoryEventStore());
+        var contributor = Contributor(new Directory([wrongProgramView]), source);
 
         // Act
         var result = await contributor.ReadAsync(Engagement(new DateOnly(2026, 9, 30)),
@@ -116,25 +143,31 @@ public sealed class ControlTypeIBaselineSourceContributorTests
     }
 
     static ControlTypeIBaselineSourceContributor Contributor(
-        IControlDraftDirectoryReader directory, IAggregateReader reader, IDomainEventReader events) =>
-        new(directory, reader, new ControlDraftListReadConsistency(directory, events));
+        IControlDraftDirectoryReader directory, NativeSource source, ControlReader? controls = null)
+    {
+        if (directory is Directory stable)
+            stable.CurrentCheckpoint = () => source.Checkpoint;
+        if (directory is AdvancingDirectory advancing)
+            advancing.InitialCheckpoint = source.Checkpoint;
+        return new(directory, controls ?? source.Controls, new ControlDraftListReadConsistency(directory, source.Events));
+    }
 
     static ExaminationEngagementView Engagement(DateOnly periodStart) => new(TenantId, ProgramId,
         Uuid.CreateVersion4(), "type_i", "Audit Firm", periodStart, null,
         ["security", "availability", "confidentiality", "processing_integrity", "privacy"],
         Uuid.CreateVersion4(), [], "draft", 1, Now, AuthorId, "Examiner");
 
-    static ControlDraft ApprovedControl(string identifier, DateOnly effectiveFrom)
+    static ControlRules ApprovedControl(string identifier, DateOnly effectiveFrom)
     {
         var id = ControlDraft.IdFor(TenantId, ProgramId, identifier);
-        var control = new ControlDraft(TenantId, id);
+        var control = new ControlRules(TenantId, id);
         Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), identifier, Content(),
             AuthorId, "Author", Now).IsSuccess);
         ApproveDraft(control, effectiveFrom, Now.AddMinutes(1));
         return control;
     }
 
-    static void ApproveSuccessor(ControlDraft control, DateOnly effectiveFrom)
+    static void ApproveSuccessor(ControlRules control, DateOnly effectiveFrom)
     {
         Assert.Null(control.ProposeSuccessor(ProgramId, control.ApprovedVersion!.VersionId,
             Content() with { Title = "Access review successor" }, AuthorId, "Author",
@@ -142,7 +175,7 @@ public sealed class ControlTypeIBaselineSourceContributorTests
         ApproveDraft(control, effectiveFrom, Now.AddHours(2), "impact-digest");
     }
 
-    static void ApproveDraft(ControlDraft control, DateOnly effectiveFrom,
+    static void ApproveDraft(ControlRules control, DateOnly effectiveFrom,
         DateTimeOffset decisionAt, string? impactDigest = null)
     {
         var scope = new ResponsibilityScope("control", control.Id, control.DraftVersionId,
@@ -162,7 +195,7 @@ public sealed class ControlTypeIBaselineSourceContributorTests
         "Management reviews access", "The owner reviews the access list quarterly.",
         ["Dated review record"]);
 
-    static ControlDraftView View(ControlDraft control) => new(TenantId, ProgramId, control.Id,
+    static ControlDraftView View(ControlRules control) => new(TenantId, ProgramId, control.Id,
         control.ApprovedVersion?.Identifier ?? control.Id.ToString(), control.Revision,
         control.IsApproved ? "approved" : "draft",
         "declared_unverified", "unresolved", control.CurrentContent!, AuthorId, "Author", Now)
@@ -173,8 +206,9 @@ public sealed class ControlTypeIBaselineSourceContributorTests
     sealed class Directory : IControlDraftDirectoryReader
     {
         ControlDraftView[] _views;
+        public Func<ProjectionCheckpoint> CurrentCheckpoint { get; set; } = () => ProjectionCheckpoint.Start;
 
-        public Directory(IEnumerable<ControlDraft> controls) : this(controls.Select(View).ToArray())
+        public Directory(IEnumerable<ControlRules> controls) : this(controls.Select(View).ToArray())
         {
         }
 
@@ -183,7 +217,7 @@ public sealed class ControlTypeIBaselineSourceContributorTests
         public void Replace(ControlDraftView view) => _views = [view];
 
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+            CancellationToken ct = default) => ValueTask.FromResult(CurrentCheckpoint());
 
         public ValueTask<ControlDraftView?> GetAsync(Uuid tenantId, Uuid controlId,
             CancellationToken ct = default) => ValueTask.FromResult(_views.FirstOrDefault(view =>
@@ -204,10 +238,11 @@ public sealed class ControlTypeIBaselineSourceContributorTests
     sealed class AdvancingDirectory(ControlDraftView view) : IControlDraftDirectoryReader
     {
         int _loads;
+        public ProjectionCheckpoint InitialCheckpoint { get; set; } = ProjectionCheckpoint.Start;
 
         public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
             CancellationToken ct = default) => ValueTask.FromResult(++_loads == 1
-            ? ProjectionCheckpoint.Start
+            ? InitialCheckpoint
             : new ProjectionCheckpoint(new EventCursor("advanced")));
 
         public ValueTask<ControlDraftView?> GetAsync(Uuid tenantId, Uuid controlId,
@@ -222,11 +257,71 @@ public sealed class ControlTypeIBaselineSourceContributorTests
             ValueTask.FromResult<ControlDraftRevisionView?>(null);
     }
 
-    sealed class ControlReader(params ControlDraft[] controls) : IAggregateReader
+    sealed class FailingReads(IImmutableContentStore inner, bool unavailable) : IImmutableContentStore
     {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult(controls.FirstOrDefault(control => control.Id == aggregate.Id)
-                is TAggregate found ? found : aggregate);
+        public Task<Bdgrz.Compliance.Features.Proofs.ImmutableContentRef> WriteVerifiedAsync(string realm, Uuid contentId,
+            string schema, string mediaType, ReadOnlyMemory<byte> bytes, CancellationToken ct = default) =>
+            inner.WriteVerifiedAsync(realm, contentId, schema, mediaType, bytes, ct);
+
+        public Task<ReadOnlyMemory<byte>> ReadVerifiedAsync(string realm,
+            Bdgrz.Compliance.Features.Proofs.ImmutableContentRef reference, CancellationToken ct = default) =>
+            Task.FromException<ReadOnlyMemory<byte>>(unavailable
+                ? new ImmutableContentUnavailableException("The selected content is not visible yet.")
+                : new ImmutableContentIntegrityException("The selected content does not verify."));
+    }
+
+    sealed class NativeSource : IAsyncDisposable
+    {
+        readonly ServiceProvider _provider;
+        readonly AsyncServiceScope _scope;
+        readonly IAggregateReader _reader;
+        readonly IAggregateWriter _writer;
+        readonly IImmutableContentStore _content;
+        public InMemoryEventStore Events { get; }
+        public ControlReader Controls { get; }
+        public ProjectionCheckpoint Checkpoint { get; private set; } = ProjectionCheckpoint.Start;
+
+        NativeSource()
+        {
+            var services = new ServiceCollection();
+            var events = new InMemoryEventStore();
+            services.AddSingleton<IEventStore>(events);
+            services.AddSingleton<IDomainEventReader>(events);
+            services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(new InMemoryKvClient()));
+            services.AddPortia();
+            _provider = services.BuildServiceProvider();
+            _scope = _provider.CreateAsyncScope();
+            _reader = _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+            _writer = _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+            _content = _scope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+            Events = events;
+            Controls = new(_reader, events, _content);
+        }
+
+        public ControlReader WithReadFailure(bool unavailable) =>
+            new(_reader, Events, new FailingReads(_content, unavailable));
+
+        public static async Task<NativeSource> CreateAsync(ControlRules control)
+        {
+            var source = new NativeSource();
+            await source.AppendAsync(control);
+            return source;
+        }
+
+        public async Task AppendAsync(ControlRules control)
+        {
+            await ControlSeeds.AppendAsync(_reader, _writer, _content, control, CancellationToken.None);
+            var cursor = EventCursor.Start;
+            await foreach (var record in Events.ReadAsync(EventStreamPattern.ForPattern(
+                               TenantId.ToString(), "controls"), cursor, CancellationToken.None))
+                cursor = record.NextCursor;
+            Checkpoint = new(cursor);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _scope.DisposeAsync();
+            await _provider.DisposeAsync();
+        }
     }
 }

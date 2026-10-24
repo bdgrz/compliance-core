@@ -253,7 +253,7 @@ public sealed class ApplicationVendorImpactTests
                 "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
             return new Scenario(tenantId, applicationId, reader, applications,
                 new FitzApplicationBoundaryReferenceDirectory(kv),
-                new FitzApplicationControlDraftReferenceDirectory(kv),
+                new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content),
                 new InMemoryEventStore());
         }
 

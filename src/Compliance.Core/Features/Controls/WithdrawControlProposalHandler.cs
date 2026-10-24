@@ -1,30 +1,18 @@
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Versioning;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-/// <summary>Withdraws a pending successor draft or retirement proposal at its exact revision.</summary>
-public sealed class WithdrawControlProposalHandler(IAggregateExecutor executor,
-    ControlLifecycleReleaseGate releaseGate, TimeProvider clock)
+public sealed class WithdrawControlProposalHandler(ControlOperations operations, ControlLifecycleReleaseGate releaseGate)
     : IRequestHandler<WithdrawControlProposal>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<WithdrawControlProposal> context,
-        CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IRequestContext<WithdrawControlProposal> context, CancellationToken ct)
     {
-        if (!releaseGate.IsEnabled)
-            return ValueTask.FromResult(Result.Failure(ControlLifecycleReleaseGate.Unavailable));
         var request = context.Request;
-        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
-            ? subject
-            : throw new InvalidOperationException("ProgramManagementAuthorizer must reject this actor.");
-        var memberId = RbacIds.Member(request.TenantId, userId);
-        var actor = ActorReference.ForMember(memberId,
-            UserIdentityClaims.BdgrzDisplay(context.Actor, userId));
-        return executor.ExecuteAsync(new ControlDraft(request.TenantId, request.ControlId),
-            control => CommandFailureRequestAdapter.ToOutcome(control.Withdraw(request.ProgramId,
-                request.ExpectedRevision, context.RequestId, request.Rationale, memberId, actor,
-                clock.GetUtcNow())),
-            context, ct);
+        return operations.ExecuteUnitAsync(context, request.TenantId, request.ProgramId, request.ControlId,
+            request.CommandId, nameof(WithdrawControlProposal), request.ExpectedRevision,
+            (snapshot, actor, at, token) => ValueTask.FromResult(releaseGate.IsEnabled ? Result.Success
+                : Result.Failure(ControlLifecycleReleaseGate.Unavailable)),
+            (rules, actor, at) => ControlOperations.Outcome(rules.Withdraw(request.ProgramId, request.ExpectedRevision,
+                request.CommandId, request.Rationale, actor.MemberId, actor.Snapshot, at)), null, null, ct);
     }
 }

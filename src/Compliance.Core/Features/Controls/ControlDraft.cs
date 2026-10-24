@@ -1,923 +1,637 @@
-using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json;
 using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.Kernel;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Bdgrz.Compliance.Features.Responsibilities;
+using Bdgrz.Compliance.Features.SourceUse;
 using Bdgrz.Compliance.Features.Versioning;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-/// <summary>
-///     The Control record: its draft line, immutable approved versions with effective intervals,
-///     successor and retirement proposals, and every review and approval decision.
-/// </summary>
-public sealed class ControlDraft : Aggregate
+/// <summary>One deterministic control identity and compact current authority; full bodies/history never enter command state.</summary>
+public sealed class ControlDraft : Aggregate, ISourceUseOwner
 {
-    public NativeAcceptance ReplayAcceptance { get; }
-    OperationProvenance? _pendingOperation;
-
-    // Fitz stream events use a u16 frame. Reserve room for the Portia envelope,
-    // stream address, metadata, and framing after the serialized domain event.
+    public const string Area = "controls";
+    public const string OrganizationAuthored = "organization_authored";
     public const int MaximumDraftEventPayloadBytes = 48 * 1024;
     readonly Uuid _tenantId;
-    bool _created;
-    long _revision;
-    string? _identifier;
-    Uuid _createRequestId;
-    ControlDraftContent? _initialContent;
-    ControlDraftContent? _currentContent;
-    bool _discarded;
-    Uuid _draftAuthorMemberId;
-    bool _everReviewed;
-    bool _responsibilityEverAssigned;
-    Uuid _acceptedReviewDecisionId;
-    Uuid? _acceptedReviewerMemberId;
-    Uuid? _latestReviewDecisionId;
-    DateTimeOffset? _pendingDecisionChangedAt;
-    Uuid? _draftVersionId;
-    Uuid? _draftPredecessorVersionId;
-    PendingRetirement? _pendingRetirement;
-    bool _retired;
-    readonly List<ControlVersionView> _versions = [];
-    readonly List<ControlVersionView> _approvedVersionHistory = [];
-    readonly List<ControlRetired> _retirementHistory = [];
-    readonly List<ControlDecisionView> _decisions = [];
-    readonly Dictionary<ResponsibilityScope, ResponsibilitySet> _responsibilitySets = [];
-    readonly Dictionary<ResponsibilityScope, List<ResponsibilityDecisionFact>> _responsibilityDecisions = [];
-    readonly Dictionary<ResponsibilityScope, ControlPersonOwner> _personOwners = [];
-    readonly Dictionary<ResponsibilityScope, ControlPersonOwnerDesignationView> _personOwnerDesignations = [];
-
-    public bool IsCreated => _created;
-    public Uuid TenantId => _tenantId;
-
-    /// <summary>
-    ///     The open draft's version line, or the latest approved version when no draft is open.
-    /// </summary>
-    public Uuid DraftVersionId => _draftVersionId ?? _versions.LastOrDefault()?.VersionId ??
-        ControlVersionIds.Initial(Id);
-
-    public bool HasOpenDraft => IsVisible && !_retired && _draftVersionId is not null;
-    public bool IsApproved => _versions.Count > 0;
-    public bool IsRetired => _retired;
-    public Uuid? PendingRetirementId => _pendingRetirement?.RetirementId;
-    public DateOnly? PendingRetirementEffectiveUntil => _pendingRetirement?.EffectiveUntil;
-    public ControlDraftContent? CurrentContent => _currentContent;
-    public Uuid? PendingAuthorMemberId => PendingTargetId is null ? null : _draftAuthorMemberId;
-    public Uuid? AcceptedReviewDecisionId => _acceptedReviewDecisionId == Uuid.Empty
-        ? null : _acceptedReviewDecisionId;
-    public Uuid? AcceptedReviewerMemberId => AcceptedReviewDecisionId is null
-        ? null : _acceptedReviewerMemberId;
-    public Uuid? LatestReviewDecisionId => _latestReviewDecisionId;
-    public DateTimeOffset? PendingDecisionChangedAt => PendingTargetId is null
-        ? null : _pendingDecisionChangedAt;
-
-    /// <summary>The latest approved version, including a superseding or retired one.</summary>
-    public ControlVersionView? ApprovedVersion => _versions.LastOrDefault();
-
-    public IReadOnlyList<ControlVersionView> ReadVersions() => _versions.ToArray();
-
-    // Original source facts, before subsequent decisions replace current effective intervals.
-    internal IReadOnlyList<ControlVersionView> ReadApprovedVersionHistory() => _approvedVersionHistory.ToArray();
-    internal IReadOnlyList<ControlRetired> ReadRetirementHistory() => _retirementHistory.ToArray();
-    public IReadOnlyList<ControlDecisionView> ReadDecisions() => _decisions.ToArray();
-    public bool IsVisible => _created && !_discarded;
-    public long Revision => _revision;
-    public Uuid ProgramId { get; private set; }
-
-    /// <summary>The pending decision target: an open draft version or a retirement proposal.</summary>
-    public Uuid? PendingTargetId => !IsVisible || _retired
-        ? null
-        : _draftVersionId ?? _pendingRetirement?.RetirementId;
-
-    /// <summary>The approved version whose half-open effective interval contains the date.</summary>
-    public ControlVersionView? EffectiveVersion(DateOnly date) => _versions.LastOrDefault(
-        version => new EffectiveInterval(version.EffectiveFrom, version.EffectiveUntil)
-            .Contains(date));
+    ControlAuthorityHeader? _header;
 
     public ControlDraft(Uuid tenantId, Uuid controlId, Uuid selectedCommandId = default)
-        : base(controlId, new EventStreamAddress(tenantId.ToString(), "controls", controlId.ToString()))
+        : base(controlId, new EventStreamAddress(tenantId.ToString(), Area, controlId.ToString()))
     {
-        ReplayAcceptance = new NativeAcceptance(selectedCommandId);
         _tenantId = tenantId;
-        On<ControlDraftCreated>(ev =>
-        {
-            _created = true;
-            _revision = 1;
-            ProgramId = ev.ProgramId;
-            _identifier = ev.Identifier;
-            _createRequestId = ev.CreateRequestId;
-            _initialContent = ev.Content;
-            _currentContent = ev.Content;
-            _draftAuthorMemberId = ev.ActorMemberId;
-            _draftVersionId = ControlVersionIds.Initial(Id);
-            _pendingDecisionChangedAt = ev.ChangedAt;
-        });
-        On<ControlSuccessorProposed>(ev =>
-        {
-            _draftVersionId = ev.VersionId;
-            _draftPredecessorVersionId = ev.PredecessorVersionId;
-            _draftAuthorMemberId = ev.ActorMemberId;
-            _pendingRetirement = null;
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _acceptedReviewerMemberId = null;
-            _latestReviewDecisionId = null;
-            _pendingDecisionChangedAt = ev.ChangedAt;
-        });
-        On<ControlDraftRevised>(ev =>
-        {
-            _revision = ev.Revision;
-            _currentContent = ev.Content;
-            _draftAuthorMemberId = ev.ActorMemberId;
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _acceptedReviewerMemberId = null;
-            _latestReviewDecisionId = null;
-            _pendingDecisionChangedAt = ev.ChangedAt;
-        });
-        On<ControlReviewed>(ev =>
-        {
-            AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
-            _everReviewed = true;
-            _acceptedReviewDecisionId = ev.Outcome == "accept" ? ev.DecisionId : Uuid.Empty;
-            _acceptedReviewerMemberId = ev.Outcome == "accept" ? ev.ActorMemberId : null;
-            _latestReviewDecisionId = ev.DecisionId;
-            _pendingDecisionChangedAt = ev.DecidedAt;
-            _decisions.Add(new ControlDecisionView(ev.TenantId, ev.ProgramId, ev.ControlId,
-                ev.DecisionId, ev.VersionId, ev.Revision, "review", ev.Outcome, ev.Actor,
-                ev.Rationale, ev.DecidedAt, ev.SupersedesDecisionId, null,
-                ev.SeparationOfDutiesWaiverId));
-            RecordResponsibilityDecision(Scope(ev.VersionId, ev.Revision), ev.ActorMemberId,
-                ResponsibilityType.AssignedReviewer, ev.DecidedAt, ev.SeparationOfDutiesWaiverId);
-        });
-        On<ControlApproved>(ev =>
-        {
-            AuthoredCommandReplay.Observe(this, ReplayAcceptance, ev, ev.Operation);
-            _decisions.Add(new ControlDecisionView(ev.TenantId, ev.ProgramId, ev.ControlId,
-                ev.ApprovalDecisionId, ev.VersionId, ev.Revision, "approval", "approve",
-                ev.Actor, ev.Rationale, ev.DecidedAt, null, ev.AcceptedReviewDecisionId,
-                ev.SeparationOfDutiesWaiverId));
-            RecordResponsibilityDecision(Scope(ev.VersionId, ev.Revision), ev.ActorMemberId,
-                ResponsibilityType.PolicyApprover, ev.DecidedAt, ev.SeparationOfDutiesWaiverId);
-            if (ev.PredecessorVersionId is { } predecessorId)
-            {
-                var index = _versions.FindIndex(version => version.VersionId == predecessorId);
-                if (index >= 0)
-                    _versions[index] = _versions[index] with
-                    {
-                        Status = "superseded",
-                        EffectiveUntil = ev.EffectiveFrom,
-                    };
-            }
-            _versions.Add(new ControlVersionView(ev.TenantId, ev.ProgramId, ev.ControlId,
-                _identifier!, ev.VersionId, ev.Revision, "approved",
-                ev.Content.Provenance?.Origin ?? OrganizationAuthored,
-                ev.Content, ev.EffectiveFrom, ev.PredecessorVersionId, ev.OwnerAssignmentId,
-                ev.OwnerMemberId, ev.OwnerPersonId is null ? "verified_member" : "verified_person",
-                ev.AcceptedReviewDecisionId, ev.ApprovalDecisionId, ev.Actor, ev.Rationale,
-                ev.DecidedAt, ev.SeparationOfDutiesWaiverId)
-            {
-                OwnerPersonId = ev.OwnerPersonId,
-            });
-            _approvedVersionHistory.Add(_versions[^1]);
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _acceptedReviewerMemberId = null;
-            _draftVersionId = null;
-            _draftPredecessorVersionId = null;
-        });
-        On<ControlRetirementProposed>(ev =>
-        {
-            _pendingRetirement = new PendingRetirement(ev.RetirementId, ev.VersionId,
-                ev.EffectiveUntil);
-            _draftAuthorMemberId = ev.ActorMemberId;
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _acceptedReviewerMemberId = null;
-            _latestReviewDecisionId = null;
-            _pendingDecisionChangedAt = ev.ChangedAt;
-        });
-        On<ControlRetired>(ev =>
-        {
-            _retirementHistory.Add(ev);
-            _decisions.Add(new ControlDecisionView(ev.TenantId, ev.ProgramId, ev.ControlId,
-                ev.DecisionId, ev.RetirementId, ev.Revision, "retirement", "retire", ev.Actor,
-                ev.Rationale, ev.DecidedAt, null, ev.AcceptedReviewDecisionId,
-                ev.SeparationOfDutiesWaiverId));
-            RecordResponsibilityDecision(Scope(ev.RetirementId, ev.Revision), ev.ActorMemberId,
-                ResponsibilityType.PolicyApprover, ev.DecidedAt, ev.SeparationOfDutiesWaiverId);
-            var index = _versions.FindIndex(version => version.VersionId == ev.VersionId);
-            if (index >= 0)
-                _versions[index] = _versions[index] with
-                {
-                    Status = "retired",
-                    EffectiveUntil = ev.EffectiveUntil,
-                };
-            _retired = true;
-            _pendingRetirement = null;
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _acceptedReviewerMemberId = null;
-        });
-        On<ControlOwnerPersonDesignated>(ev =>
-        {
-            var scope = Scope(ev.VersionId, ev.Revision);
-            if (ev.PersonId is { } personId)
-            {
-                _personOwners[scope] = new ControlPersonOwner(personId, ev.CorrelatedMemberId,
-                    ev.DesignationId);
-                _personOwnerDesignations[scope] = new ControlPersonOwnerDesignationView(personId,
-                    ev.DesignationId, ev.Rationale, ev.Actor, ev.DesignatedAt);
-            }
-            else
-            {
-                _personOwners.Remove(scope);
-                _personOwnerDesignations.Remove(scope);
-            }
-        });
-        On<ControlProposalWithdrawn>(ev =>
-        {
-            _decisions.Add(new ControlDecisionView(ev.TenantId, ev.ProgramId, ev.ControlId,
-                ev.DecisionId, ev.TargetId, ev.Revision, "withdrawal", "withdraw", ev.Actor,
-                ev.Rationale, ev.WithdrawnAt, _latestReviewDecisionId, null, null));
-            _draftVersionId = null;
-            _draftPredecessorVersionId = null;
-            _pendingRetirement = null;
-            _acceptedReviewDecisionId = Uuid.Empty;
-            _acceptedReviewerMemberId = null;
-            _latestReviewDecisionId = null;
-            _pendingDecisionChangedAt = ev.WithdrawnAt;
-        });
-        On<ResponsibilityAssigned>(ev =>
-        {
-            _responsibilityEverAssigned = true;
-            GetResponsibilitySet(ev.Scope).Apply(ev);
-        });
-        On<ResponsibilityRevoked>(ev => GetResponsibilitySet(ev.Scope).Apply(ev));
-        On<ControlDraftDiscarded>(ev =>
-        {
-            _revision = ev.Revision;
-            _discarded = true;
-        });
+        Acceptance = new NativeAcceptance(selectedCommandId);
+        Uses = new SourceUseReservations(Stream);
+        On<ControlDraftCreated>(ApplyFact);
+        On<ControlDraftRevised>(ApplyFact);
+        On<ControlDraftDiscarded>(ApplyFact);
+        On<ControlReviewed>(ApplyFact);
+        On<ControlApproved>(ApplyFact);
+        On<ControlSuccessorProposed>(ApplyFact);
+        On<ControlRetirementProposed>(ApplyFact);
+        On<ControlRetired>(ApplyFact);
+        On<ControlProposalWithdrawn>(ApplyFact);
+        On<ControlOwnerPersonDesignated>(ApplyFact);
+        On<ResponsibilityAssigned>(ApplyFact);
+        On<ResponsibilityRevoked>(ApplyFact);
     }
 
-    sealed record PendingRetirement(Uuid RetirementId, Uuid VersionId, DateOnly EffectiveUntil);
+    public NativeAcceptance Acceptance { get; }
+    public SourceUseReservations Uses { get; }
+    public long NativeSequence { get; private set; }
+    public ImmutableContentRef? CurrentAuthority { get; private set; }
+    public ControlAuthorityHeader? Header => _header;
+    public Uuid TenantId => _tenantId;
+    public Uuid ProgramId => _header?.ProgramId ?? Uuid.Empty;
+    public long Revision => _header?.Revision ?? 0;
+    public bool IsCreated => _header?.IsCreated ?? false;
+    public bool IsVisible => _header?.IsVisible ?? false;
+    public bool IsApproved => _header?.IsApproved ?? false;
+    public bool IsRetired => _header?.IsRetired ?? false;
+    public bool HasOpenDraft => _header?.HasOpenDraft ?? false;
+    public Uuid DraftVersionId => _header?.DraftVersionId ?? ControlVersionIds.Initial(Id);
+    public Uuid? PendingTargetId => _header?.PendingTargetId;
+    public Uuid? PendingRetirementId => _header?.PendingRetirementId;
+    public DateOnly? PendingRetirementEffectiveUntil => _header?.PendingRetirementEffectiveUntil;
+    public Uuid? PendingAuthorMemberId => _header?.PendingAuthorMemberId;
+    public Uuid? AcceptedReviewDecisionId => _header?.AcceptedReviewDecisionId;
+    public Uuid? AcceptedReviewerMemberId => _header?.AcceptedReviewerMemberId;
+    public Uuid? LatestReviewDecisionId => _header?.LatestReviewDecisionId;
+    public DateTimeOffset? PendingDecisionChangedAt => _header?.PendingDecisionChangedAt;
 
-    public const string OrganizationAuthored = "organization_authored";
-    static readonly string[] ProvenanceOrigins = [OrganizationAuthored, "template", "supplied"];
+    public static Uuid IdFor(Uuid tenantId, Uuid programId, string identifier) => ControlIds.For(tenantId, programId, identifier);
+    public static string NormalizeIdentifier(string? identifier) => ControlIds.NormalizeIdentifier(identifier);
+    internal static RequestError? ValidateContent(ControlDraftContent? content) => ControlRules.ValidateContent(content);
+    internal static RequestError? ValidateCreateInput(string? identifier, ControlDraftContent? content) =>
+        ControlRules.ValidateCreateInput(identifier, content);
 
-    /// <summary>The person designated as owner of the exact current pending draft revision.</summary>
-    public ControlPersonOwner? CurrentPersonOwner =>
-        HasOpenDraft && _personOwners.TryGetValue(Scope(_draftVersionId!.Value, _revision),
-            out var owner)
-            ? owner
-            : null;
+    public bool IsCurrentResponsibilityScope(ResponsibilityScope scope) => scope.RecordType == SeparationOfDutiesRecordTypes.Control &&
+        scope.RecordId == Id && PendingTargetId == scope.VersionId && Revision == scope.Revision;
 
-    /// <summary>The recorded designation metadata of the exact open draft version and revision.</summary>
-    public ControlPersonOwnerDesignationView? CurrentPersonOwnerDesignation =>
-        HasOpenDraft && _personOwnerDesignations.TryGetValue(
-            Scope(_draftVersionId!.Value, _revision), out var designation)
-            ? designation
-            : null;
-
-    /// <summary>
-    ///     Designates, or clears, the workforce person who owns the exact pending draft revision.
-    ///     A later content revision needs its own designation.
-    /// </summary>
-    public CommandFailure? DesignatePersonOwner(Uuid programId, long expectedRevision,
-        Uuid designationId, Uuid? personId, Uuid? correlatedMemberId, string rationale,
-        Uuid actorMemberId, ActorReference actor, DateTimeOffset designatedAt)
+    public Result Prepare(Uuid programId, long? expectedRevision, bool creating = false)
     {
-        ArgumentNullException.ThrowIfNull(actor);
+        if (Uses.HasActiveUse)
+            return Fail(RequestErrorKind.Conflict, "The control is held by an accepted source use.", true);
+        if (creating)
+            return IsCreated ? Fail(RequestErrorKind.Conflict, "The control identifier already exists.") : Result.Success;
         if (!IsVisible || ProgramId != programId)
-            return CommandFailure.MissingRecord("The control draft was not found.");
-        if (!HasOpenDraft)
-            return CommandFailure.StateConflict(
-                "A person owner can be designated only on an open control draft revision.");
-        if (expectedRevision != _revision)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("control draft",
-                _revision));
-        if (personId == Uuid.Empty || designationId == Uuid.Empty ||
-            string.IsNullOrWhiteSpace(rationale) || rationale.Trim().Length > 4000)
-            return CommandFailure.InvalidContent(
-                "A person owner designation requires a workforce person or null and a rationale of at most 4000 characters.");
-        var current = CurrentPersonOwner;
-        if (current?.PersonId == personId && current?.CorrelatedMemberId == correlatedMemberId)
-            return null;
-        RaiseEvent(new ControlOwnerPersonDesignated(_tenantId, programId, Id,
-            _draftVersionId!.Value, _revision, designationId, personId,
-            personId is null ? null : correlatedMemberId, rationale.Trim(), actorMemberId,
-            actor, designatedAt));
-        return null;
+            return Fail(RequestErrorKind.NotFound, "The control was not found.");
+        return expectedRevision is { } expected && expected != Revision
+            ? Result.Failure(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("control draft", Revision)).ToRequestError())
+            : Result.Success;
     }
 
-    /// <summary>
-    ///     Withdraws the pending successor draft or retirement proposal. The approved version
-    ///     stays current and its content is restored on a new revision.
-    /// </summary>
-    public CommandFailure? Withdraw(Uuid programId, long expectedRevision, Uuid decisionId,
-        string rationale, Uuid actorMemberId, ActorReference actor, DateTimeOffset withdrawnAt)
+    /// <summary>The exact preparation cut is checked inside the owning OCC append, including same-content-revision decisions.</summary>
+    public Result Append(DomainEvent value, long preparedSequence, ulong preparedPhysicalPosition,
+        ControlMutationContent? preparedMutation = null, ControlAuthorityContent? beforeAuthority = null,
+        ControlAuthorityContent? afterAuthority = null)
     {
-        ArgumentNullException.ThrowIfNull(actor);
-        if (!IsVisible || ProgramId != programId)
-            return CommandFailure.MissingRecord("The control was not found.");
-        if (_retired)
-            return CommandFailure.StateConflict("The control is retired.");
-        if (ApprovedVersion is not { } current || PendingTargetId is not { } target)
-            return CommandFailure.StateConflict(
-                "Only a pending successor or retirement of an approved control can be withdrawn. Discard an unused initial draft instead.");
-        if (expectedRevision != _revision)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("control draft",
-                _revision));
-        if (decisionId == Uuid.Empty || string.IsNullOrWhiteSpace(rationale) ||
-            rationale.Trim().Length > 4000)
-            return CommandFailure.InvalidContent(
-                "Withdrawing a proposal requires a rationale of at most 4000 characters.");
-        RaiseEvent(new ControlProposalWithdrawn(_tenantId, programId, Id, decisionId,
-            HasOpenDraft ? "successor" : "retirement", target, current.VersionId, _revision,
-            rationale.Trim(), actorMemberId, actor, withdrawnAt));
-        return RaiseRevision(programId, current.Content, actorMemberId, actor.Display,
-            withdrawnAt);
-    }
-
-    public static string NormalizeIdentifier(string? identifier) =>
-        identifier?.Trim().ToUpperInvariant() ?? string.Empty;
-
-    public static Uuid IdFor(Uuid tenantId, Uuid programId, string identifier) =>
-        Uuid.CreateVersion5(Uuid.CreateVersion5(tenantId, programId.ToString()),
-            NormalizeIdentifier(identifier));
-
-    internal static RequestError? ValidateCreateInput(string? identifier,
-        ControlDraftContent? content) => Validate(NormalizeIdentifier(identifier), content);
-
-    public Result<ControlRegistration> Create(Uuid programId, Uuid createRequestId, string identifier,
-        ControlDraftContent content, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset changedAt)
-    {
-        var normalized = NormalizeIdentifier(identifier);
-        var error = Validate(normalized, content);
-        if (error is not null)
-            return Result<ControlRegistration>.Failure(error);
-        var clean = Clean(content);
-        if (_created)
+        if (NativeSequence != preparedSequence || CommittedStreamPosition != preparedPhysicalPosition)
+            return Fail(RequestErrorKind.Conflict, "The control changed while its exact content and authority were prepared.", true);
+        if (Uses.HasActiveUse)
+            return Fail(RequestErrorKind.Conflict, "The control is held by an accepted source use.", true);
+        if (value is not IControlFact fact || fact.Header is null)
+            return Fail(RequestErrorKind.Validation, "A control mutation requires a compact native fact.");
+        try
         {
-            if (_discarded)
-                return Result<ControlRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The discarded control draft cannot be recreated."));
-            return ProgramId == programId && _createRequestId == createRequestId &&
-                   StringComparer.Ordinal.Equals(_identifier, normalized) &&
-                   Equal(_initialContent!, clean)
-                ? Result<ControlRegistration>.Success(new ControlRegistration(Id, normalized, 1))
-                : Result<ControlRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
-                    "The control identifier already exists with different draft content."));
+            Validate(value, fact);
+            if (!PreparedAuthority(value, fact, preparedMutation, beforeAuthority, afterAuthority))
+                return Fail(RequestErrorKind.Validation, "The control mutation does not carry its exact prepared local authority.");
+            if (DomainEventPayload.Size(value) > DomainEventPayload.MaximumBytes)
+                return Fail(RequestErrorKind.Validation, "The native control fact exceeds the bounded event payload size.");
         }
-        ControlDraftCreated created = new(_tenantId, programId, Id, createRequestId,
-            normalized, clean, actorMemberId, actorDisplay, changedAt)
+        catch (InvalidOperationException)
         {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
+            return Fail(RequestErrorKind.Validation, "The native control mutation has an invalid local authority binding.");
+        }
+        RaiseEvent(value);
+        return Result.Success;
+    }
+
+    void ApplyFact(DomainEvent value)
+    {
+        var fact = (IControlFact)value;
+        Validate(value, fact);
+        _header = fact.Header;
+        CurrentAuthority = fact.Authority;
+        NativeSequence = fact.NativeSequence;
+        Acceptance.Observe(value);
+    }
+
+    void Validate(DomainEvent value, IControlFact fact)
+    {
+        Require(fact.Operation is not null && fact.Operation.Actor is not null, "A native control mutation requires its operation and actor.");
+        OwnerProvenance.RequireOwn(this, fact.Operation.LogicalId, fact.Operation);
+        var after = fact.Header;
+        if (after is null || fact.NativeSequence != NativeSequence + 1 || fact.TenantId != _tenantId ||
+            after.TenantId != _tenantId || after.ControlId != Id || after.ProgramId == Uuid.Empty ||
+            Id != IdFor(_tenantId, after.ProgramId, after.Identifier) || after.Revision < 1 || !after.IsCreated ||
+            !Reference(fact.Change, ControlFactContent.ChangeSchema) || !Reference(fact.Authority, ControlFactContent.AuthoritySchema) ||
+            !Reference(fact.FirstResponse, FirstResponses.Schema) || !Reference(fact.OperationResult, "mutation-result-content.v1") ||
+            !Reference(after.Content, ControlFactContent.DraftSchema) ||
+            fact.ChangeCount < 0 || !Hex(fact.Operation.AuthoredIntentSha256) || fact.Operation.RootOperationId != fact.Operation.LogicalId ||
+            fact.Operation.CausationEventId is not null || fact.Operation.Episode != Id.ToString() ||
+            fact.Operation.AffectedOwner != Stream || fact.Operation.ExpectedRevisionOwner != Stream ||
+            fact.Operation.FirstOwner is { } first && first != Stream ||
+            fact.Operation.Actor.Kind != "member" || !Uuid.TryParse(fact.Operation.Actor.Id, out var actor) || actor == Uuid.Empty ||
+            after.IsApproved != (after.ApprovedVersionCount > 0) ||
+            after.IsRetired && (after.HasOpenDraft || after.PendingTargetId is not null) ||
+            after.HasOpenDraft && after.PendingTargetId != after.DraftVersionId)
+            throw new InvalidOperationException("The control fact has an invalid exact native owner or authority binding.");
+        if (_header is null)
+        {
+            if (value is not ControlDraftCreated || after.Revision != 1 || !after.IsVisible || after.IsApproved ||
+                after.DraftVersionId != ControlVersionIds.Initial(Id) || fact.Operation.LogicalId != Id ||
+                fact.Operation.CommandKind != nameof(CreateControlDraft) || fact.Operation.OriginalExpectedRevision is not null)
+                throw new InvalidOperationException("A control begins with its deterministic own creation and first draft.");
+            ValidateTransition(value, fact, actor);
+            return;
+        }
+        if (value is ControlDraftCreated || after.ProgramId != _header.ProgramId || after.Identifier != _header.Identifier ||
+            after.Revision < Revision || after.Revision > Revision + 1 ||
+            after.ApprovedVersionCount < _header.ApprovedVersionCount || after.ApprovedVersionCount > _header.ApprovedVersionCount + 1 ||
+            !_header.IsVisible && fact.ChangeCount > 0 || _header.IsRetired && fact.ChangeCount > 0)
+            throw new InvalidOperationException("A control mutation cannot change its identity or rewrite terminal authority.");
+        var kind = value switch
+        {
+            ControlDraftRevised => nameof(ReviseControlDraft),
+            ControlDraftDiscarded => nameof(DiscardControlDraft),
+            ControlReviewed => nameof(ReviewControl),
+            ControlApproved => nameof(ApproveControl),
+            ControlSuccessorProposed => nameof(ProposeControlSuccessor),
+            ControlRetirementProposed => nameof(ProposeControlRetirement),
+            ControlRetired => nameof(RetireControl),
+            ControlProposalWithdrawn => nameof(WithdrawControlProposal),
+            ControlOwnerPersonDesignated => nameof(DesignateControlOwnerPerson),
+            ResponsibilityAssigned => nameof(AssignResponsibility),
+            ResponsibilityRevoked => nameof(RevokeResponsibility),
+            _ => throw new InvalidOperationException("The control native mutation has another business kind."),
         };
-        if (JsonSerializer.SerializeToUtf8Bytes(created,
-                ComplianceCoreJsonContext.Default.ControlDraftCreated).Length >
-            MaximumDraftEventPayloadBytes)
-            return Result<ControlRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
-                "The control draft exceeds the bounded event payload size."));
-        RaiseEvent(created);
-        return Result<ControlRegistration>.Success(new ControlRegistration(Id, normalized, 1));
+        if (fact.Operation.CommandKind != kind)
+            throw new InvalidOperationException("The control's native operation kind differs from its accepted business fact.");
+        if (value is ControlApproved approved &&
+            (PendingTargetId != approved.VersionId || AcceptedReviewDecisionId != approved.AcceptedReviewDecisionId ||
+             after.ApprovedVersionId != approved.VersionId || after.HasOpenDraft ||
+             after.ApprovedVersionCount != _header.ApprovedVersionCount + 1))
+            throw new InvalidOperationException("Control approval must answer the exact current draft and accepted review.");
+        if (value is ControlSuccessorProposed successor &&
+            (successor.PredecessorVersionId != _header.ApprovedVersionId ||
+             successor.VersionId != ControlVersionIds.Sequence(Id, _header.ApprovedVersionCount + 1)))
+            throw new InvalidOperationException("A successor must preserve its deterministic line and exact approved predecessor.");
+        ValidateTransition(value, fact, actor);
     }
 
-    public CommandFailure? Revise(Uuid programId, long expectedRevision, ControlDraftContent content,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset changedAt)
+    void ValidateTransition(DomainEvent value, IControlFact fact, Uuid actor)
     {
-        if (!_created || _discarded || ProgramId != programId)
-            return CommandFailure.MissingRecord("The control draft was not found.");
-        if (_retired)
-            return CommandFailure.StateConflict("A retired control cannot be revised.");
-        if (!HasOpenDraft)
-            return CommandFailure.StateConflict(
-                "The approved control version is immutable. Propose a successor draft.");
-        if (expectedRevision != _revision)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("control draft",
-                _revision));
-        var error = Validate(_identifier!, content);
-        if (error is not null)
-            return CommandFailure.InvalidContent(error.Message!);
-        if (_currentContent is { } current && Equal(current, Clean(content)))
-            return null;
-        return RaiseRevision(programId, content, actorMemberId, actorDisplay, changedAt);
-    }
-
-    internal bool HasSameCurrentContent(ControlDraftContent? content) =>
-        HasOpenDraft && content is not null && ValidateContent(content) is null &&
-        _currentContent is { } current && Equal(current, Clean(content));
-
-    CommandFailure? RaiseRevision(Uuid programId, ControlDraftContent content,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset changedAt,
-        ControlSuccessorProposed? proposal = null)
-    {
-        ControlDraftRevised revised = new(_tenantId, programId, Id, _revision + 1,
-            Clean(content), actorMemberId, actorDisplay, changedAt)
+        var after = fact.Header;
+        var member = value switch
         {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
+            ControlDraftCreated item => item.ActorMemberId,
+            ControlDraftRevised item => item.ActorMemberId,
+            ControlDraftDiscarded item => item.ActorMemberId,
+            ControlReviewed item => item.ActorMemberId,
+            ControlApproved item => item.ActorMemberId,
+            ControlSuccessorProposed item => item.ActorMemberId,
+            ControlRetirementProposed item => item.ActorMemberId,
+            ControlRetired item => item.ActorMemberId,
+            ControlProposalWithdrawn item => item.ActorMemberId,
+            ControlOwnerPersonDesignated item => item.ActorMemberId,
+            ResponsibilityAssigned item => item.AssignedByMemberId,
+            ResponsibilityRevoked item => item.RevokedByMemberId,
+            _ => Uuid.Empty,
         };
-        if (JsonSerializer.SerializeToUtf8Bytes(revised,
-                ComplianceCoreJsonContext.Default.ControlDraftRevised).Length >
-            MaximumDraftEventPayloadBytes)
-            return CommandFailure.InvalidContent("The control draft exceeds the bounded event payload size.");
-        if (proposal is not null)
-            RaiseEvent(proposal);
-        RaiseEvent(revised);
-        return null;
-    }
-
-    /// <summary>
-    ///     Opens a successor draft from the exact current approved version. The predecessor stays
-    ///     effective and immutable until the successor is independently reviewed and approved.
-    /// </summary>
-    public CommandFailure? ProposeSuccessor(Uuid programId, Uuid expectedApprovedVersionId,
-        ControlDraftContent content, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset changedAt)
-    {
-        if (!IsVisible || ProgramId != programId)
-            return CommandFailure.MissingRecord("The control was not found.");
-        if (_retired)
-            return CommandFailure.StateConflict("A retired control cannot have a successor.");
-        if (ApprovedVersion is not { } current)
-            return CommandFailure.StateConflict(
-                "The control has no approved version. Revise its initial draft instead.");
-        if (expectedApprovedVersionId != current.VersionId)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleApprovedVersion("control",
-                current.VersionId.ToGuid()));
-        if (HasOpenDraft)
-            return CommandFailure.StateConflict("The control already has an open successor draft.");
-        var error = Validate(_identifier!, content);
-        if (error is not null)
-            return CommandFailure.InvalidContent(error.Message!);
-        var proposal = new ControlSuccessorProposed(_tenantId, programId, Id,
-            ControlVersionIds.Sequence(Id, _versions.Count + 1), current.VersionId,
-            _revision + 1, actorMemberId, actorDisplay, changedAt)
+        Require(member == actor, "The original business actor differs from the native operation actor.");
+        var logical = value switch
         {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
+            ControlReviewed item => item.DecisionId,
+            ControlApproved item => item.ApprovalDecisionId,
+            ControlRetired item => item.DecisionId,
+            ControlProposalWithdrawn item => item.DecisionId,
+            ControlOwnerPersonDesignated item => item.DesignationId,
+            ResponsibilityAssigned item => item.AssignmentId,
+            _ => fact.Operation.LogicalId,
         };
-        return RaiseRevision(programId, content, actorMemberId, actorDisplay, changedAt,
-            proposal);
+        Require(logical != Uuid.Empty && logical == fact.Operation.LogicalId,
+            "The original business decision differs from the native logical identity.");
+        if (value is ControlDraftCreated created)
+        {
+            var initial = new ControlAuthorityHeader(TenantId, created.ProgramId, Id, created.Identifier,
+                1, true, true, false, false, true, ControlVersionIds.Initial(Id), ControlVersionIds.Initial(Id),
+                null, null, member, null, null, null, created.ChangedAt, 0, null, null, false, false, after.Content);
+            Require(fact.ChangeCount == 1 && after == initial && created.Identifier == NormalizeIdentifier(created.Identifier),
+                "Creation requires the exact first local authority.");
+            return;
+        }
+        var before = _header!;
+        var expectedRevision = value is ControlSuccessorProposed or ControlRetirementProposed
+            ? (ulong?)null : unchecked((ulong)before.Revision);
+        Require(fact.Operation.OriginalExpectedRevision == expectedRevision,
+            "The native operation must retain the original logical revision gate.");
+        if (fact.ChangeCount == 0)
+        {
+            var valid = value switch
+            {
+                ControlDraftRevised revised => before.HasOpenDraft && revised.Revision == before.Revision,
+                ControlOwnerPersonDesignated designated => before.HasOpenDraft && designated.Revision == before.Revision &&
+                    designated.VersionId == before.DraftVersionId && designated.PersonId != Uuid.Empty && Rationale(designated.Rationale),
+                ResponsibilityAssigned assigned => IsCurrentResponsibilityScope(assigned.Scope),
+                ResponsibilityRevoked revoked => IsCurrentResponsibilityScope(revoked.Scope),
+                _ => false,
+            };
+            Require(valid && before.IsVisible && !before.IsRetired && after == before,
+                "Only a valid unchanged owner-local operation may accept without a business change.");
+            return;
+        }
+        Require(before.IsVisible && !before.IsRetired, "Terminal control authority cannot change.");
+        ControlAuthorityHeader expected;
+        switch (value)
+        {
+            case ControlDraftRevised revised:
+                Require(before.HasOpenDraft && revised.Revision == before.Revision + 1,
+                    "Revision requires the exact open draft and next content revision.");
+                expected = before with
+                {
+                    Revision = revised.Revision,
+                    Content = after.Content,
+                    PendingAuthorMemberId = actor,
+                    AcceptedReviewDecisionId = null,
+                    AcceptedReviewerMemberId = null,
+                    LatestReviewDecisionId = null,
+                    PendingDecisionChangedAt = revised.ChangedAt
+                };
+                break;
+            case ControlReviewed review:
+                Require(before.PendingTargetId == review.VersionId && review.Revision == before.Revision &&
+                    review.Outcome is "accept" or "request_changes" && Rationale(review.Rationale) &&
+                    review.SupersedesDecisionId == before.LatestReviewDecisionId,
+                    "Review must answer the current exact pending revision and latest decision.");
+                expected = before with
+                {
+                    EverReviewed = true,
+                    LatestReviewDecisionId = review.DecisionId,
+                    AcceptedReviewDecisionId = review.Outcome == "accept" ? review.DecisionId : null,
+                    AcceptedReviewerMemberId = review.Outcome == "accept" ? actor : null,
+                    PendingDecisionChangedAt = review.DecidedAt
+                };
+                break;
+            case ControlApproved approved:
+                Require(before.HasOpenDraft && before.PendingTargetId == approved.VersionId &&
+                    approved.Revision == before.Revision && before.AcceptedReviewDecisionId is not null &&
+                    approved.AcceptedReviewDecisionId == before.AcceptedReviewDecisionId &&
+                    approved.OwnerAssignmentId != Uuid.Empty && approved.EffectiveFrom != default && Rationale(approved.Rationale) &&
+                    approved.PredecessorVersionId == before.ApprovedVersionId &&
+                    (before.ApprovedVersionId is null || !string.IsNullOrWhiteSpace(approved.ImpactDigest) &&
+                        approved.EffectiveFrom > before.ApprovedEffectiveFrom),
+                    "Approval must preserve the exact reviewed draft, owner, predecessor and effective interval.");
+                expected = before with
+                {
+                    HasOpenDraft = false,
+                    IsApproved = true,
+                    PendingTargetId = null,
+                    PendingAuthorMemberId = null,
+                    AcceptedReviewDecisionId = null,
+                    AcceptedReviewerMemberId = null,
+                    PendingDecisionChangedAt = null,
+                    ApprovedVersionCount = before.ApprovedVersionCount + 1,
+                    ApprovedVersionId = approved.VersionId,
+                    ApprovedEffectiveFrom = approved.EffectiveFrom
+                };
+                break;
+            case ControlSuccessorProposed successor:
+                Require(before.IsApproved && !before.HasOpenDraft && successor.Revision == before.Revision + 1 &&
+                    successor.PredecessorVersionId == before.ApprovedVersionId &&
+                    successor.VersionId == ControlVersionIds.Sequence(Id, before.ApprovedVersionCount + 1),
+                    "A successor requires its exact approved predecessor and deterministic next version.");
+                expected = before with
+                {
+                    Revision = successor.Revision,
+                    Content = after.Content,
+                    HasOpenDraft = true,
+                    DraftVersionId = successor.VersionId,
+                    PendingTargetId = successor.VersionId,
+                    PendingRetirementId = null,
+                    PendingRetirementEffectiveUntil = null,
+                    PendingAuthorMemberId = actor,
+                    AcceptedReviewDecisionId = null,
+                    AcceptedReviewerMemberId = null,
+                    LatestReviewDecisionId = null,
+                    PendingDecisionChangedAt = successor.ChangedAt
+                };
+                break;
+            case ControlRetirementProposed retirement:
+                Require(before.IsApproved && !before.HasOpenDraft && before.PendingRetirementId is null &&
+                    retirement.VersionId == before.ApprovedVersionId && retirement.Revision == before.Revision &&
+                    retirement.RetirementId == ControlVersionIds.Retirement(Id, retirement.VersionId) &&
+                    retirement.EffectiveUntil > before.ApprovedEffectiveFrom && Rationale(retirement.Rationale),
+                    "Retirement requires the exact current version and a later exclusive effective end.");
+                expected = before with
+                {
+                    PendingTargetId = retirement.RetirementId,
+                    PendingRetirementId = retirement.RetirementId,
+                    PendingRetirementEffectiveUntil = retirement.EffectiveUntil,
+                    PendingAuthorMemberId = actor,
+                    AcceptedReviewDecisionId = null,
+                    AcceptedReviewerMemberId = null,
+                    LatestReviewDecisionId = null,
+                    PendingDecisionChangedAt = retirement.ChangedAt
+                };
+                break;
+            case ControlRetired retired:
+                Require(before.PendingRetirementId == retired.RetirementId && before.PendingTargetId == retired.RetirementId &&
+                    retired.VersionId == before.ApprovedVersionId && retired.Revision == before.Revision &&
+                    before.AcceptedReviewDecisionId is not null && retired.AcceptedReviewDecisionId == before.AcceptedReviewDecisionId &&
+                    retired.EffectiveUntil == before.PendingRetirementEffectiveUntil && Rationale(retired.Rationale) &&
+                    !string.IsNullOrWhiteSpace(retired.ImpactDigest),
+                    "Retirement approval must answer the exact reviewed proposal and frozen effective end.");
+                expected = before with
+                {
+                    IsRetired = true,
+                    PendingTargetId = null,
+                    PendingRetirementId = null,
+                    PendingRetirementEffectiveUntil = null,
+                    PendingAuthorMemberId = null,
+                    AcceptedReviewDecisionId = null,
+                    AcceptedReviewerMemberId = null,
+                    PendingDecisionChangedAt = null
+                };
+                break;
+            case ControlProposalWithdrawn withdrawn:
+                Require(before.IsApproved && before.PendingTargetId == withdrawn.TargetId &&
+                    withdrawn.CurrentVersionId == before.ApprovedVersionId && withdrawn.Revision == before.Revision &&
+                    withdrawn.Kind == (before.HasOpenDraft ? "successor" : "retirement") && Rationale(withdrawn.Rationale),
+                    "Withdrawal must name the exact pending proposal and retained approved version.");
+                expected = before with
+                {
+                    Revision = before.Revision + 1,
+                    Content = after.Content,
+                    HasOpenDraft = false,
+                    DraftVersionId = before.ApprovedVersionId!.Value,
+                    PendingTargetId = null,
+                    PendingRetirementId = null,
+                    PendingRetirementEffectiveUntil = null,
+                    PendingAuthorMemberId = null,
+                    AcceptedReviewDecisionId = null,
+                    AcceptedReviewerMemberId = null,
+                    LatestReviewDecisionId = null,
+                    PendingDecisionChangedAt = null
+                };
+                break;
+            case ControlOwnerPersonDesignated designated:
+                Require(before.HasOpenDraft && designated.VersionId == before.DraftVersionId && designated.Revision == before.Revision &&
+                    designated.PersonId != Uuid.Empty && (designated.PersonId is not null || designated.CorrelatedMemberId is null) &&
+                    Rationale(designated.Rationale), "Person designation requires the exact open draft revision and original intent.");
+                expected = before;
+                break;
+            case ResponsibilityAssigned assigned:
+                Require(IsCurrentResponsibilityScope(assigned.Scope), "Assignment requires the exact current pending scope.");
+                expected = before with { ResponsibilityEverAssigned = true };
+                break;
+            case ResponsibilityRevoked revoked:
+                Require(IsCurrentResponsibilityScope(revoked.Scope), "Revocation requires the exact current pending scope.");
+                expected = before;
+                break;
+            case ControlDraftDiscarded discarded:
+                Require(before.HasOpenDraft && !before.IsApproved && !before.EverReviewed && !before.ResponsibilityEverAssigned &&
+                    discarded.Revision == before.Revision && !string.IsNullOrWhiteSpace(discarded.Rationale),
+                    "Discard requires an unused, unreviewed, unapproved initial draft.");
+                expected = before with
+                {
+                    IsVisible = false,
+                    HasOpenDraft = false,
+                    PendingTargetId = null,
+                    PendingAuthorMemberId = null,
+                    PendingDecisionChangedAt = null
+                };
+                break;
+            default:
+                throw new InvalidOperationException("The native control transition is not selected.");
+        }
+        Require(after == expected, "The native control header differs from its exact local business transition.");
     }
 
-    /// <summary>Proposes ending future use of the exact current approved version.</summary>
-    public CommandFailure? ProposeRetirement(Uuid programId, Uuid expectedApprovedVersionId,
-        DateOnly effectiveUntil, string rationale, Uuid actorMemberId, string actorDisplay,
-        DateTimeOffset changedAt)
+    static bool Rationale(string? value) => !string.IsNullOrWhiteSpace(value) && value.Length <= 4000;
+
+    bool PreparedAuthority(DomainEvent value, IControlFact fact, ControlMutationContent? mutation,
+        ControlAuthorityContent? before, ControlAuthorityContent? after)
     {
-        if (!IsVisible || ProgramId != programId)
-            return CommandFailure.MissingRecord("The control was not found.");
-        if (_retired)
-            return CommandFailure.StateConflict("The control is already retired.");
-        if (ApprovedVersion is not { } current)
-            return CommandFailure.StateConflict(
-                "Only an approved control can be retired. Discard an unused draft instead.");
-        if (expectedApprovedVersionId != current.VersionId)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleApprovedVersion("control",
-                current.VersionId.ToGuid()));
-        if (HasOpenDraft)
-            return CommandFailure.StateConflict(
-                "The control has an open successor draft. Approve it before proposing retirement.");
-        if (_pendingRetirement is not null)
-            return CommandFailure.StateConflict("The control already has a pending retirement.");
-        if (effectiveUntil == default || !EffectiveInterval.CanFollow(current.EffectiveFrom,
-                effectiveUntil))
-            return CommandFailure.InvalidContent(
-                "Retirement must take effect after the current version's effective start.");
-        if (string.IsNullOrWhiteSpace(rationale) || rationale.Length > 4000)
-            return CommandFailure.InvalidContent(
-                "Retirement requires a rationale of at most 4000 characters.");
-        RaiseEvent(new ControlRetirementProposed(_tenantId, programId, Id,
-            ControlVersionIds.Retirement(Id, current.VersionId), current.VersionId, _revision,
-            effectiveUntil, rationale.Trim(), actorMemberId, actorDisplay, changedAt)
+        if (after is null || after.Header != fact.Header || !Matches(fact.Authority, after, ControlFactContent.AuthoritySchema))
+            return false;
+        if (mutation is null || mutation.Changes is null || mutation.Changes.Count != fact.ChangeCount ||
+            !Matches(fact.Change, mutation, ControlFactContent.ChangeSchema) ||
+            mutation.Changes.Any(change => !ControlFactContent.InScope(change, fact.Header)) ||
+            mutation.Receipt is { } receipt && !ControlFactContent.InScope(receipt, fact.Header))
+            return false;
+        if (_header is not null && (before is null || before.Header != _header || CurrentAuthority is null ||
+                !Matches(CurrentAuthority, before, ControlFactContent.AuthoritySchema)))
+            return false;
+        if (_header is null && before is not null)
+            return false;
+        var expected = ControlFactFactory.Create(fact.Operation.CommandKind, fact.Header, fact.NativeSequence,
+            fact.Operation, fact.Change, fact.Authority, fact.FirstResponse!, fact.OperationResult!, mutation);
+        if (ContentDigest.Sha256(expected, expected.GetType()) != ContentDigest.Sha256(value, value.GetType()))
+            return false;
+        if (fact.ChangeCount == 0)
         {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
-        });
-        return null;
+            if (fact.Header != _header || fact.Authority != CurrentAuthority)
+                return false;
+        }
+        else if (mutation.Changes.Count != (value is ControlSuccessorProposed or ControlProposalWithdrawn ? 2 : 1))
+            return false;
+        if ((value is ControlSuccessorProposed or ControlProposalWithdrawn) &&
+            (mutation.Changes[1] is not ControlDraftRevisedContent companion || companion.Revision != fact.Header.Revision ||
+             companion.ActorMemberId != Uuid.Parse(fact.Operation.Actor.Id, System.Globalization.CultureInfo.InvariantCulture)))
+            return false;
+        var contentChange = mutation.Changes.OfType<ControlDraftCreatedContent>().Select(change => change.Content)
+            .Concat(mutation.Changes.OfType<ControlDraftRevisedContent>().Select(change => change.Content))
+            .Concat(mutation.Changes.OfType<ControlApprovedContent>().Select(change => change.Content))
+            .Concat(mutation.Receipt is ControlDraftRevisedContent unchanged ? [unchanged.Content] : []).LastOrDefault();
+        if (value is ControlDraftCreated created && (contentChange is null ||
+            ControlRules.ValidateCreateInput(created.Identifier, contentChange) is not null))
+            return false;
+        if (contentChange is not null && (ControlRules.ValidateContent(contentChange) is not null ||
+            !Matches(fact.Header.Content, contentChange, ControlFactContent.DraftSchema)))
+            return false;
+        if (!Matches(fact.Authority, ExpectedAuthority(value, fact.Header, before, contentChange), ControlFactContent.AuthoritySchema))
+            return false;
+        if (value is ControlProposalWithdrawn &&
+            (before?.ApprovedContentSha256 is not { } approved || fact.Header.Content.Sha256 != approved))
+            return false;
+        if (value is ControlDraftDiscarded && before?.CurrentApplicabilityCount != 0)
+            return false;
+        var supplied = mutation.Waivers ?? [];
+        if (supplied.Any(proof => proof is null) || supplied.Select(proof => proof.WaiverId).Distinct().Count() != supplied.Count)
+            return false;
+        if (value is ControlReviewed review)
+            return DecisionAllowed(before!, review.ActorMemberId, ResponsibilityType.AssignedReviewer,
+                SeparationOfDutiesActions.Review, review.DecidedAt, review.SeparationOfDutiesWaiverId, supplied);
+        if (value is ControlApproved approval)
+        {
+            if (!DecisionAllowed(before!, approval.ActorMemberId, ResponsibilityType.PolicyApprover,
+                    SeparationOfDutiesActions.Approve, approval.DecidedAt, approval.SeparationOfDutiesWaiverId, supplied))
+                return false;
+            if (approval.OwnerPersonId is { } person)
+                return before!.PersonOwnerBinding is { } binding && binding.PersonId == person &&
+                    binding.DesignationId == approval.OwnerAssignmentId &&
+                    (approval.SeparationOfDutiesWaiverId is not null || approval.OwnerMemberId != approval.ActorMemberId);
+            return before!.Assignments.Any(assignment => assignment.AssignmentId == approval.OwnerAssignmentId &&
+                assignment.MemberId == approval.OwnerMemberId && assignment.Type == ResponsibilityType.ControlOwner &&
+                Active(assignment, approval.DecidedAt));
+        }
+        if (value is ControlRetired retired)
+            return DecisionAllowed(before!, retired.ActorMemberId, ResponsibilityType.PolicyApprover,
+                SeparationOfDutiesActions.Approve, retired.DecidedAt, retired.SeparationOfDutiesWaiverId, supplied);
+        if (value is ResponsibilityAssigned assigned)
+        {
+            var set = Set(before!);
+            var proposed = new ResponsibilityAssignmentView(TenantId, assigned.AssignmentId, assigned.MemberId,
+                assigned.Type, assigned.Scope, assigned.AssignedAt, assigned.AssignedByMemberId,
+                assigned.EffectiveFrom, assigned.EffectiveUntil, null, Uuid.Empty, []);
+            foreach (var constraint in before!.DecisionConstraints.Where(constraint => constraint.WaiverId is null))
+            {
+                var decision = new ResponsibilityAssignmentView(TenantId, Uuid.Empty, constraint.MemberId,
+                    constraint.Type, assigned.Scope, constraint.At, Uuid.Empty, constraint.At,
+                    constraint.At.AddTicks(1), null, Uuid.Empty, []);
+                if (ResponsibilityConflictPolicy.FindConflicts(before.Assignments.Append(proposed), decision).Count > 0)
+                    return false;
+            }
+            return supplied.Select(proof => proof.WaiverId).OrderBy(id => id.ToString(), StringComparer.Ordinal)
+                    .SequenceEqual(assigned.SeparationOfDutiesWaiverIds.OrderBy(id => id.ToString(), StringComparer.Ordinal)) &&
+                set.AssignAuthorized(assigned.AssignmentId, assigned.MemberId, assigned.Type,
+                assigned.AssignedByMemberId, assigned.AssignedByDisplay, assigned.AssignedAt,
+                assigned.EffectiveFrom, assigned.EffectiveUntil, supplied) is null &&
+                supplied.All(proof => assigned.SeparationOfDutiesWaiverIds.Contains(proof.WaiverId) && LocatorValid(proof)) &&
+                (fact.ChangeCount != 0 || Matches(CurrentAuthority!, before! with { Assignments = set.ReadAssignments() },
+                    ControlFactContent.AuthoritySchema));
+        }
+        if (value is ResponsibilityRevoked revoked)
+        {
+            var set = Set(before!);
+            return supplied.Count == 0 && set.Revoke(revoked.AssignmentId, revoked.RevokedByMemberId,
+                revoked.RevokedByDisplay, revoked.RevokedAt, revoked.Reason) is null &&
+                (fact.ChangeCount != 0 || Matches(CurrentAuthority!, before! with { Assignments = set.ReadAssignments() },
+                    ControlFactContent.AuthoritySchema));
+        }
+        if (fact.ChangeCount == 0 && value is ControlOwnerPersonDesignated designated)
+            return supplied.Count == 0 && before!.PersonOwnerBinding?.PersonId == designated.PersonId &&
+                before.PersonOwnerBinding?.CorrelatedMemberId == designated.CorrelatedMemberId;
+        return supplied.Count == 0;
     }
 
-    public CommandFailure? Discard(Uuid programId, long expectedRevision, string rationale,
-        Uuid actorMemberId, string actorDisplay, DateTimeOffset discardedAt)
+    ControlAuthorityContent ExpectedAuthority(DomainEvent value, ControlAuthorityHeader header,
+        ControlAuthorityContent? before, ControlDraftContent? content)
     {
-        if (!_created || _discarded || ProgramId != programId)
-            return CommandFailure.MissingRecord("The control draft was not found.");
-        if (IsApproved)
-            return CommandFailure.StateConflict(
-                "An approved, superseded, or retired control cannot be discarded. Propose retirement instead.");
-        if (expectedRevision != _revision)
-            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("control draft",
-                _revision));
-        if (VersionedRecordRules.DraftDiscardConflict(_everReviewed) is { } referenced)
-            return CommandFailure.ForVersion(referenced);
-        if (_currentContent?.Applicability is { Count: > 0 })
-            return CommandFailure.StateConflict(
-                "Discarding a control draft requires no retained applicability relationships.");
-        // Responsibilities are retained relationships even after revocation; checking the
-        // authoritative stream means a caller's read access cannot make deletion appear safe.
-        if (_responsibilityEverAssigned)
-            return CommandFailure.StateConflict(
-                "Discarding a control draft requires that no responsibility was ever assigned to it.");
-        if (string.IsNullOrWhiteSpace(rationale))
-            return CommandFailure.InvalidContent("Discarding a control draft requires a rationale.");
-        var discarded = new ControlDraftDiscarded(_tenantId, programId, Id, _revision,
-            actorMemberId, actorDisplay, rationale.Trim(), discardedAt)
+        var expected = before is null
+            ? new ControlAuthorityContent(header, [], [], null, CurrentApplicabilityCount: content?.Applicability?.Count ?? 0)
+            : before with { Header = header };
+        if (((IControlFact)value).ChangeCount == 0)
+            return expected;
+        if (value is ControlDraftRevised or ControlSuccessorProposed or ControlRetirementProposed or
+            ControlProposalWithdrawn or ControlDraftDiscarded or ControlApproved or ControlRetired)
+            expected = expected with { Assignments = [], DecisionConstraints = [], PersonOwner = null, PersonOwnerBinding = null };
+        if (content is not null)
+            expected = expected with { CurrentApplicabilityCount = content.Applicability?.Count ?? 0 };
+        if (value is ControlApproved)
+            expected = expected with { ApprovedContentSha256 = header.Content.Sha256 };
+        if (value is ControlReviewed review)
+            expected = expected with
+            {
+                DecisionConstraints = expected.DecisionConstraints.Append(new ControlDecisionConstraint(
+                review.ActorMemberId, ResponsibilityType.AssignedReviewer, review.DecidedAt, review.SeparationOfDutiesWaiverId)).ToArray()
+            };
+        if (value is ControlOwnerPersonDesignated designated)
+            expected = expected with
+            {
+                PersonOwner = designated.PersonId is { } person
+                    ? new ControlPersonOwnerDesignationView(person, designated.DesignationId, designated.Rationale,
+                        designated.Actor, designated.DesignatedAt) : null,
+                PersonOwnerBinding = designated.PersonId is { } binding
+                    ? new ControlPersonOwner(binding, designated.CorrelatedMemberId, designated.DesignationId) : null
+            };
+        if (value is ResponsibilityAssigned assigned)
         {
-            StoredActor = ActorReference.ForMember(actorMemberId, actorDisplay),
-        };
-        if (JsonSerializer.SerializeToUtf8Bytes(discarded,
-                ComplianceCoreJsonContext.Default.ControlDraftDiscarded).Length >
-            MaximumDraftEventPayloadBytes)
-            return CommandFailure.InvalidContent(
-                "The control draft discard exceeds the bounded event payload size.");
-        RaiseEvent(discarded);
-        return null;
+            var set = Set(before!);
+            set.Apply(assigned);
+            expected = expected with { Assignments = set.ReadAssignments() };
+        }
+        if (value is ResponsibilityRevoked revoked)
+        {
+            var set = Set(before!);
+            set.Apply(revoked);
+            expected = expected with { Assignments = set.ReadAssignments() };
+        }
+        return expected;
     }
 
-    ResponsibilityScope Scope(Uuid versionId, long revision) =>
-        new(SeparationOfDutiesRecordTypes.Control, Id, versionId, revision);
-
-    public ResponsibilitySet GetResponsibilitySet(ResponsibilityScope scope)
+    bool DecisionAllowed(ControlAuthorityContent before, Uuid actor, ResponsibilityType role, string action,
+        DateTimeOffset at, Uuid? waiverId, IReadOnlyList<SeparationOfDutiesWaiverProof> proofs)
     {
-        ArgumentNullException.ThrowIfNull(scope);
-        if (!StringComparer.Ordinal.Equals(scope.RecordType, SeparationOfDutiesRecordTypes.Control) ||
-            scope.RecordId != Id)
-            throw new ArgumentException("The responsibility scope must belong to this control.",
-                nameof(scope));
-        if (!_responsibilitySets.TryGetValue(scope, out var set))
+        var waiver = waiverId is { } id ? proofs.SingleOrDefault(proof => proof.WaiverId == id) : null;
+        if (waiverId is not null && waiver is null || proofs.Count != (waiver is null ? 0 : 1))
+            return false;
+        var scope = new ResponsibilityScope(SeparationOfDutiesRecordTypes.Control, Id, PendingTargetId!.Value, Revision);
+        var author = PendingAuthorMemberId == actor;
+        if (waiver is not null && (!LocatorValid(waiver) || !ControlWaiverProof.Allows(waiver, TenantId,
+            new SeparationOfDutiesWaiverScope(scope.RecordType, Id, scope.VersionId, Revision, action), actor, at)))
+            return false;
+        if (ResponsibilityDecisionGuard.ValidateAuthorized(Set(before), scope, actor, role, at, author, waiver) is not null)
+            return false;
+        return waiver is not null || !author && before.PersonOwnerBinding?.CorrelatedMemberId != actor;
+    }
+
+    ResponsibilitySet Set(ControlAuthorityContent authority)
+    {
+        var scope = new ResponsibilityScope(SeparationOfDutiesRecordTypes.Control, Id, PendingTargetId!.Value, Revision);
+        var set = new ResponsibilitySet(TenantId, scope);
+        foreach (var assignment in authority.Assignments)
         {
-            set = new ResponsibilitySet(_tenantId, scope);
-            _responsibilitySets.Add(scope, set);
+            Require(assignment.TenantId == TenantId && assignment.Scope == scope,
+                "Current responsibility authority has another scope.");
+            set.Apply(new ResponsibilityAssigned(TenantId, assignment.AssignmentId, assignment.MemberId,
+                assignment.Type, scope, assignment.AssignedAt, assignment.AssignedByMemberId,
+                assignment.EffectiveFrom, assignment.EffectiveUntil, assignment.SeparationOfDutiesWaiverIds,
+                assignment.AssignedByDisplay));
+            if (assignment.RevokedAt is { } revoked)
+                set.Apply(new ResponsibilityRevoked(TenantId, assignment.AssignmentId, scope, assignment.RevokedByMemberId,
+                    revoked, assignment.RevocationReason ?? string.Empty,
+                    assignment.RevokedByDisplay ?? string.Empty));
         }
         return set;
     }
 
-    /// <summary>Unrevoked responsibilities on an approved version's or pending target's scope.</summary>
-    public IReadOnlyList<ResponsibilityAssignmentView> RetainedResponsibilities(Uuid versionId,
-        long revision) => GetResponsibilitySet(Scope(versionId, revision)).ReadAssignments()
-        .Where(static assignment => assignment.RevokedAt is null)
-        .ToArray();
+    static bool Active(ResponsibilityAssignmentView assignment, DateTimeOffset at) =>
+        assignment.EffectiveFrom <= at && (assignment.EffectiveUntil is null || at < assignment.EffectiveUntil) &&
+        assignment.RevokedAt is null;
 
-    /// <summary>Whether the scope is the exact current pending draft or retirement revision.</summary>
-    public bool IsCurrentResponsibilityScope(ResponsibilityScope scope) =>
-        scope is not null &&
-        StringComparer.Ordinal.Equals(scope.RecordType, SeparationOfDutiesRecordTypes.Control) &&
-        scope.RecordId == Id && PendingTargetId is { } target && scope.VersionId == target &&
-        scope.Revision == _revision;
+    static bool LocatorValid(SeparationOfDutiesWaiverProof proof) => proof.ApprovalFact.EventId != Uuid.Empty &&
+        proof.ApprovalFact.ResourcePosition == 1 && proof.ApprovalFact.AggregateVersion == 2 &&
+        Hex(proof.ApprovalFact.PayloadSha256) && proof.ValidFrom < proof.ValidUntil;
 
-    /// <summary>Members holding a control_owner responsibility on the current exact revision.</summary>
-    public IReadOnlyList<Uuid> CurrentOwnerMemberIds(DateTimeOffset at) =>
-        !HasOpenDraft
-            ? []
-            : ActiveOwners(Scope(_draftVersionId!.Value, _revision), at)
-                .Select(static assignment => assignment.MemberId).Distinct().ToArray();
+    static bool Reference(ImmutableContentRef? reference, string schema) => reference is not null &&
+        reference.ContentId != Uuid.Empty && reference.Schema == schema && reference.Bytes >= 0 &&
+        reference.MediaType == ImmutableContentStoreExtensions.JsonMediaType && Hex(reference.Sha256);
 
-    IEnumerable<ResponsibilityAssignmentView> ActiveOwners(ResponsibilityScope scope,
-        DateTimeOffset at) => GetResponsibilitySet(scope).ReadAssignments()
-        .Where(assignment => assignment.Type == ResponsibilityType.ControlOwner &&
-            assignment.RevokedAt is null && assignment.EffectiveFrom <= at &&
-            (assignment.EffectiveUntil is null || assignment.EffectiveUntil > at));
-
-    public CommandFailure? AssignResponsibility(ResponsibilityScope scope, Uuid assignmentId,
-        Uuid memberId, ResponsibilityType type, Uuid assignedByMemberId,
-        string assignedByDisplay, DateTimeOffset assignedAt, DateTimeOffset effectiveFrom,
-        DateTimeOffset? effectiveUntil, IReadOnlyList<SeparationOfDutiesWaiver> waivers)
+    static bool Matches<T>(ImmutableContentRef reference, T value, string schema) where T : notnull
     {
-        if (!IsCurrentResponsibilityScope(scope))
-            return CommandFailure.StateConflict(
-                "Responsibilities must target the current exact pending control revision.");
-        var set = GetResponsibilitySet(scope);
-        var proposed = new ResponsibilityAssignmentView(_tenantId, assignmentId, memberId,
-            type, scope, assignedAt, assignedByMemberId, effectiveFrom, effectiveUntil,
-            null, Uuid.Empty, []);
-        if (HasUnwaivedHistoricalConflict(scope, set.ReadAssignments().Append(proposed)))
-            return CommandFailure.StateConflict(
-                "The responsibility would create an unwaived conflict with a prior decision on this exact revision.");
-        return set.Assign(assignmentId, memberId, type, assignedByMemberId, assignedByDisplay,
-            assignedAt, effectiveFrom, effectiveUntil, waivers, RaiseEvent);
-    }
-
-    public CommandFailure? RevokeResponsibility(ResponsibilityScope scope, Uuid assignmentId,
-        Uuid memberId, string memberDisplay, DateTimeOffset revokedAt, string reason)
-    {
-        if (!IsCurrentResponsibilityScope(scope))
-            return CommandFailure.StateConflict(
-                "Responsibilities must target the current exact pending control revision.");
-        return GetResponsibilitySet(scope).Revoke(assignmentId, memberId, memberDisplay,
-            revokedAt, reason, RaiseEvent);
-    }
-
-    void RecordResponsibilityDecision(ResponsibilityScope scope, Uuid memberId,
-        ResponsibilityType type, DateTimeOffset at, Uuid? waiverId)
-    {
-        if (!_responsibilityDecisions.TryGetValue(scope, out var decisions))
-        {
-            decisions = [];
-            _responsibilityDecisions.Add(scope, decisions);
-        }
-        decisions.Add(new ResponsibilityDecisionFact(memberId, type, at, waiverId));
-    }
-
-    bool HasUnwaivedHistoricalConflict(ResponsibilityScope scope,
-        IEnumerable<ResponsibilityAssignmentView> assignments)
-    {
-        if (!_responsibilityDecisions.TryGetValue(scope, out var decisions))
+        if (!Reference(reference, schema))
             return false;
-        var candidates = assignments.ToArray();
-        foreach (var decision in decisions.Where(static decision => decision.WaiverId is null))
-        {
-            var decidedAction = new ResponsibilityAssignmentView(_tenantId, Uuid.Empty,
-                decision.MemberId, decision.Type, scope, decision.At, Uuid.Empty,
-                decision.At, decision.At.AddTicks(1), null, Uuid.Empty, []);
-            if (ResponsibilityConflictPolicy.FindConflicts(candidates, decidedAction).Count > 0)
-                return true;
-        }
-        return false;
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, ComplianceCoreJsonContext.Default.GetTypeInfo(typeof(T))!);
+        return reference.Bytes == bytes.LongLength && reference.Sha256 == ContentDigest.Sha256(bytes);
     }
 
-    sealed record ResponsibilityDecisionFact(Uuid MemberId, ResponsibilityType Type,
-        DateTimeOffset At, Uuid? WaiverId);
+    static bool Hex(string? value) => value is { Length: 64 } && value.All(character =>
+        character is >= '0' and <= '9' or >= 'a' and <= 'f');
 
-    CommandFailure? CheckDecisionTarget(Uuid programId, long expectedRevision)
+    static void Require([System.Diagnostics.CodeAnalysis.DoesNotReturnIf(false)] bool condition, string message)
     {
-        if (!IsVisible || ProgramId != programId)
-            return CommandFailure.MissingRecord("The control draft was not found.");
-        if (_retired)
-            return CommandFailure.StateConflict("The control is retired.");
-        if (PendingTargetId is null)
-            return CommandFailure.StateConflict(
-                "The control version is already approved and has no pending successor or retirement.");
-        return expectedRevision != _revision
-            ? CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("control draft",
-                _revision))
-            : null;
+        if (!condition)
+            throw new InvalidOperationException(message);
     }
 
-    CommandFailure? CheckSeparationOfDuties(ResponsibilityScope scope, Uuid memberId,
-        ResponsibilityType decisionType, string action, DateTimeOffset at,
-        SeparationOfDutiesWaiver? waiver, Uuid? currentOwnerMemberId = null)
-    {
-        var isAuthor = memberId == _draftAuthorMemberId;
-        var failure = ResponsibilityDecisionGuard.Validate(GetResponsibilitySet(scope), scope,
-            memberId, decisionType, at, isAuthor, waiver);
-        if (failure is not null)
-            return failure;
-        if (waiver is null && (_personOwners.TryGetValue(scope, out var personOwner) &&
-                               personOwner.CorrelatedMemberId == memberId ||
-                               currentOwnerMemberId == memberId))
-            return CommandFailure.ActorProhibited(
-                "The control owner cannot " + action + " their own control revision without a separation-of-duties waiver.");
-        var waiverScope = new SeparationOfDutiesWaiverScope(SeparationOfDutiesRecordTypes.Control,
-            Id, scope.VersionId, scope.Revision, action);
-        if (waiver is not null &&
-            (waiver.TenantId != _tenantId || !waiver.Allows(waiverScope, memberId, at)))
-            return CommandFailure.ActorProhibited(
-                "The separation-of-duties waiver is not active for this member and draft revision.");
-        return isAuthor && waiver is null
-            ? CommandFailure.ActorProhibited(
-                "A control draft or retirement author cannot " + action + " their own proposal.")
-            : null;
-    }
-
-    public CommandFailure? Review(Uuid programId, long expectedRevision, Uuid decisionId,
-        string outcome, string rationale, Uuid reviewerMemberId, string reviewerDisplay,
-        DateTimeOffset decidedAt, SeparationOfDutiesWaiver? separationOfDutiesWaiver = null,
-        OperationProvenance? operation = null)
-    {
-        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure;
-        _pendingOperation = operation;
-        if (CheckDecisionTarget(programId, expectedRevision) is { } target)
-            return target;
-        var targetId = PendingTargetId!.Value;
-        var scope = Scope(targetId, expectedRevision);
-        if (CheckSeparationOfDuties(scope, reviewerMemberId, ResponsibilityType.AssignedReviewer,
-                SeparationOfDutiesActions.Review, decidedAt, separationOfDutiesWaiver) is { } sod)
-            return sod;
-        if (decisionId == Uuid.Empty || outcome is not ("accept" or "request_changes") ||
-            string.IsNullOrWhiteSpace(rationale) || rationale.Length > 4000)
-            return CommandFailure.InvalidContent(
-                "A control review requires an outcome of accept or request_changes and a rationale of at most 4000 characters.");
-        RaiseEvent(new ControlReviewed(_tenantId, ProgramId, Id, targetId,
-            expectedRevision, decisionId, outcome, reviewerMemberId, reviewerDisplay,
-            rationale.Trim(), decidedAt, _latestReviewDecisionId, separationOfDutiesWaiver?.Id)
-        {
-            Operation = _pendingOperation,
-            StoredActor = ActorReference.ForMember(reviewerMemberId, reviewerDisplay),
-        });
-        return null;
-    }
-
-    /// <param name="verifiedActiveOwnerMemberIds">
-    ///     Members whose source membership was verified as active client personnel for this command.
-    /// </param>
-    /// <param name="impactDigest">
-    ///     The acknowledged impact preview digest; required when approving a successor.
-    /// </param>
-    public CommandFailure? Approve(Uuid programId, long expectedRevision, Uuid approvalDecisionId,
-        Uuid acceptedReviewDecisionId, DateOnly effectiveFrom, string rationale,
-        IReadOnlySet<Uuid> verifiedActiveOwnerMemberIds, Uuid approverMemberId,
-        string approverDisplay, DateTimeOffset decidedAt,
-        SeparationOfDutiesWaiver? separationOfDutiesWaiver = null, string? impactDigest = null,
-        ControlPersonOwner? verifiedPersonOwner = null,
-        OperationProvenance? operation = null)
-    {
-        if (AuthoredCommandReplay.TryReplay(ReplayAcceptance, operation, out var replayFailure))
-            return replayFailure;
-        _pendingOperation = operation;
-        ArgumentNullException.ThrowIfNull(verifiedActiveOwnerMemberIds);
-        if (CheckDecisionTarget(programId, expectedRevision) is { } target)
-            return target;
-        if (!HasOpenDraft)
-            return CommandFailure.StateConflict(
-                "Only an open control draft can be approved. Retirement uses its own decision.");
-        var draftVersionId = _draftVersionId!.Value;
-        var scope = Scope(draftVersionId, expectedRevision);
-        var designatedPerson = _personOwners.GetValueOrDefault(scope);
-        var personOwner = designatedPerson is not null &&
-                          verifiedPersonOwner?.PersonId == designatedPerson.PersonId
-            ? verifiedPersonOwner
-            : null;
-        if (CheckSeparationOfDuties(scope, approverMemberId, ResponsibilityType.PolicyApprover,
-                SeparationOfDutiesActions.Approve, decidedAt, separationOfDutiesWaiver,
-                personOwner?.CorrelatedMemberId) is { } sod)
-            return sod;
-        if (acceptedReviewDecisionId == Uuid.Empty ||
-            acceptedReviewDecisionId != _acceptedReviewDecisionId)
-            return CommandFailure.StateConflict(
-                "Approval requires the latest accepted review of this exact draft revision.");
-        if (approvalDecisionId == Uuid.Empty || string.IsNullOrWhiteSpace(rationale) ||
-            rationale.Length > 4000 || effectiveFrom == default)
-            return CommandFailure.InvalidContent(
-                "Approval requires an effective start date and a rationale of at most 4000 characters.");
-        var predecessor = _draftPredecessorVersionId is { } predecessorId
-            ? _versions.Single(version => version.VersionId == predecessorId)
-            : null;
-        if (predecessor is not null)
-        {
-            if (string.IsNullOrWhiteSpace(impactDigest))
-                return CommandFailure.InvalidContent(
-                    "Successor approval requires the acknowledged impact preview digest.");
-            if (!EffectiveInterval.CanFollow(predecessor.EffectiveFrom, effectiveFrom))
-                return CommandFailure.InvalidContent(
-                    "A successor must become effective after its predecessor's effective start.");
-        }
-        // Drafts recorded before a content rule existed must satisfy it before activation.
-        if (ValidateContent(_currentContent) is { } invalid)
-            return CommandFailure.InvalidContent(invalid.Message!);
-        var owner = ActiveOwners(scope, decidedAt)
-            .Where(assignment => verifiedActiveOwnerMemberIds.Contains(assignment.MemberId))
-            .OrderBy(static assignment => assignment.AssignedAt)
-            .ThenBy(static assignment => assignment.AssignmentId.ToString(), StringComparer.Ordinal)
-            .FirstOrDefault();
-        if (owner is null && personOwner is null)
-            return CommandFailure.StateConflict(
-                "Activation requires an active client-personnel member assigned control_owner, or a verified workforce person designated as owner, on this exact draft revision.");
-        ControlApproved approved = new(_tenantId, ProgramId, Id, draftVersionId, expectedRevision,
-            approvalDecisionId, acceptedReviewDecisionId, _currentContent!,
-            owner?.AssignmentId ?? designatedPerson!.DesignationId,
-            owner?.MemberId ?? personOwner!.CorrelatedMemberId ?? Uuid.Empty, approverMemberId,
-            approverDisplay, rationale.Trim(), effectiveFrom, decidedAt,
-            separationOfDutiesWaiver?.Id, predecessor?.VersionId,
-            predecessor is null ? null : impactDigest, owner is null ? personOwner!.PersonId : null)
-        {
-            Operation = _pendingOperation,
-            StoredActor = ActorReference.ForMember(approverMemberId, approverDisplay),
-        };
-        if (JsonSerializer.SerializeToUtf8Bytes(approved,
-                ComplianceCoreJsonContext.Default.ControlApproved).Length >
-            MaximumDraftEventPayloadBytes)
-            return CommandFailure.InvalidContent(
-                "The control approval exceeds the bounded event payload size.");
-        RaiseEvent(approved);
-        return null;
-    }
-
-    /// <summary>
-    ///     Approves the pending retirement of the exact current version after an independent
-    ///     accepted review. History and prior effective intervals are retained.
-    /// </summary>
-    public CommandFailure? Retire(Uuid programId, long expectedRevision, Uuid decisionId,
-        Uuid acceptedReviewDecisionId, string impactDigest, string rationale,
-        Uuid approverMemberId, string approverDisplay, DateTimeOffset decidedAt,
-        SeparationOfDutiesWaiver? separationOfDutiesWaiver = null)
-    {
-        if (CheckDecisionTarget(programId, expectedRevision) is { } target)
-            return target;
-        if (_pendingRetirement is not { } pending)
-            return CommandFailure.StateConflict("The control has no pending retirement.");
-        var scope = Scope(pending.RetirementId, expectedRevision);
-        if (CheckSeparationOfDuties(scope, approverMemberId, ResponsibilityType.PolicyApprover,
-                SeparationOfDutiesActions.Approve, decidedAt, separationOfDutiesWaiver) is { } sod)
-            return sod;
-        if (acceptedReviewDecisionId == Uuid.Empty ||
-            acceptedReviewDecisionId != _acceptedReviewDecisionId)
-            return CommandFailure.StateConflict(
-                "Retirement requires the latest accepted review of this exact retirement proposal.");
-        if (decisionId == Uuid.Empty || string.IsNullOrWhiteSpace(rationale) ||
-            rationale.Length > 4000)
-            return CommandFailure.InvalidContent(
-                "Retirement approval requires a rationale of at most 4000 characters.");
-        if (string.IsNullOrWhiteSpace(impactDigest))
-            return CommandFailure.InvalidContent(
-                "Retirement approval requires the acknowledged impact preview digest.");
-        RaiseEvent(new ControlRetired(_tenantId, ProgramId, Id, pending.RetirementId,
-            pending.VersionId, expectedRevision, decisionId, acceptedReviewDecisionId,
-            pending.EffectiveUntil, impactDigest, approverMemberId, approverDisplay,
-            rationale.Trim(), decidedAt, separationOfDutiesWaiver?.Id)
-        {
-            StoredActor = ActorReference.ForMember(approverMemberId, approverDisplay),
-        });
-        return null;
-    }
-
-    static RequestError? Validate(string identifier, ControlDraftContent? content)
-    {
-        if (identifier.Length is < 1 or > 80 ||
-            !identifier.All(static c => char.IsAsciiLetterUpper(c) ||
-                char.IsAsciiDigit(c) || c is '-' or '_' or '.'))
-            return new RequestError(RequestErrorKind.Validation,
-                "A control identifier requires 1 to 80 ASCII letters, digits, hyphens, underscores, or periods.");
-        return ValidateContent(content);
-    }
-
-    internal static RequestError? ValidateContent(ControlDraftContent? content)
-    {
-        if (content is null || content.ExpectedEvidenceDescriptions is null ||
-            string.IsNullOrWhiteSpace(content.Title) ||
-            string.IsNullOrWhiteSpace(content.Objective) ||
-            string.IsNullOrWhiteSpace(content.Description) ||
-            string.IsNullOrWhiteSpace(content.ImplementationNarrative))
-            return new RequestError(RequestErrorKind.Validation,
-                "A control draft requires title, objective, description, implementation narrative, and expected evidence descriptions.");
-        if (content.Title.Length > 200 || content.Objective.Length > 2000 ||
-            content.Description.Length > 8000 || content.ImplementationNarrative.Length > 12000 ||
-            content.ExpectedEvidenceDescriptions.Count is < 1 or > 20 ||
-            content.ExpectedEvidenceDescriptions.Any(static value =>
-                string.IsNullOrWhiteSpace(value) || value.Length > 2000))
-            return new RequestError(RequestErrorKind.Validation,
-                "The control draft exceeds its content limits or has an empty expected evidence description.");
-        if (content.OwnerReference is { Length: > 500 })
-            return new RequestError(RequestErrorKind.Validation,
-                "A control owner reference must be at most 500 characters.");
-        if (content.Provenance is { } provenance && !IsValidProvenance(provenance))
-            return new RequestError(RequestErrorKind.Validation,
-                "Control content provenance requires an origin of organization_authored, template, or supplied; a template or supplied origin names its source; source fields are at most 500 characters.");
-        var applicability = content.Applicability ?? [];
-        if (applicability.Count > 100 || applicability.Any(static reference =>
-                !IsValidApplicabilityReference(reference)) ||
-            applicability.Select(static reference => reference.EntryId).Distinct().Count() !=
-            applicability.Count)
-            return new RequestError(RequestErrorKind.Validation,
-            "Every control applicability reference requires a unique ID, typed subject, rationale, and a consistent governed reference state.");
-        return null;
-    }
-
-    static bool IsValidProvenance(ControlContentProvenance provenance) =>
-        ProvenanceOrigins.Contains(provenance.Origin) &&
-        (provenance.Origin == OrganizationAuthored ||
-         !string.IsNullOrWhiteSpace(provenance.SourceName)) &&
-        new[] { provenance.SourceName, provenance.SourceReference, provenance.SourceVersion }
-            .All(static value => value is null || value.Trim().Length <= 500);
-
-    static ControlContentProvenance? CleanProvenance(ControlContentProvenance? provenance) =>
-        provenance is null
-            ? null
-            : new ControlContentProvenance(provenance.Origin, Optional(provenance.SourceName),
-                Optional(provenance.SourceReference), Optional(provenance.SourceVersion));
-
-    static string? Optional(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    static bool IsValidApplicabilityReference(ControlApplicabilityReference? reference)
-    {
-        if (reference is null || reference.EntryId == Uuid.Empty ||
-            string.IsNullOrWhiteSpace(reference.Subject) || reference.Subject.Length > 500 ||
-            string.IsNullOrWhiteSpace(reference.Rationale) || reference.Rationale.Length > 2000)
-            return false;
-        return reference.SubjectType switch
-        {
-            "application" or "system_instance" or "commitment" => !reference.Unresolved &&
-                reference.GovernedRecordId is { } recordId && recordId != Uuid.Empty,
-            "risk" or "process" => reference.Unresolved && reference.GovernedRecordId is null,
-            _ => false,
-        };
-    }
-
-    static ControlDraftContent Clean(ControlDraftContent content) => new(
-        content.Title.Trim(), content.Objective.Trim(), content.Description.Trim(),
-        content.ImplementationNarrative.Trim(),
-        content.ExpectedEvidenceDescriptions.Select(static value => value.Trim()).ToArray(),
-        string.IsNullOrWhiteSpace(content.OwnerReference) ? null : content.OwnerReference.Trim(),
-        (content.Applicability ?? []).Select(static reference => new ControlApplicabilityReference(
-            reference.EntryId, reference.SubjectType, reference.Subject.Trim(),
-            reference.GovernedRecordId, reference.Rationale.Trim(), reference.Unresolved)).ToArray(),
-        CleanProvenance(content.Provenance));
-
-    static bool Equal(ControlDraftContent left, ControlDraftContent right) =>
-        StringComparer.Ordinal.Equals(left.Title, right.Title) &&
-        StringComparer.Ordinal.Equals(left.Objective, right.Objective) &&
-        StringComparer.Ordinal.Equals(left.Description, right.Description) &&
-        StringComparer.Ordinal.Equals(left.ImplementationNarrative, right.ImplementationNarrative) &&
-        left.ExpectedEvidenceDescriptions.SequenceEqual(right.ExpectedEvidenceDescriptions,
-            StringComparer.Ordinal) &&
-        StringComparer.Ordinal.Equals(left.OwnerReference, right.OwnerReference) &&
-        (left.Applicability ?? []).SequenceEqual(right.Applicability ?? []) &&
-        Equals(left.Provenance, right.Provenance);
+    static Result Fail(RequestErrorKind kind, string message, bool transient = false) =>
+        Result.Failure(new RequestError(kind, message, transient));
 }

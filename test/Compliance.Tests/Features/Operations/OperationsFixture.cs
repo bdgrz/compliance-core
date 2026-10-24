@@ -214,7 +214,7 @@ sealed class OperationsFixture
         var admin = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow.AddDays(-61);
         var reviewId = Uuid.CreateVersion4();
-        await ProgramManagementServices.SeedAsync(Provider, new ControlDraft(TenantId, ControlId),
+        await ProgramManagementServices.SeedAsync(Provider, new ControlRules(TenantId, ControlId),
             control =>
             {
                 Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "AC-OPS",
@@ -238,7 +238,7 @@ sealed class OperationsFixture
     {
         var reviewId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
-        return ProgramManagementServices.SeedAsync(Provider, new ControlDraft(TenantId, ControlId),
+        return ProgramManagementServices.SeedAsync(Provider, new ControlRules(TenantId, ControlId),
             control =>
             {
                 Assert.Null(control.ProposeRetirement(ProgramId, ControlVersionId, effectiveUntil,

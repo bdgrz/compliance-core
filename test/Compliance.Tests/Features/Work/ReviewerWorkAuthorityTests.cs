@@ -297,7 +297,7 @@ public sealed class ReviewerWorkAuthorityTests
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzPolicyDecisionWorkItemDirectory(client, provider.GetRequiredService<IAggregateReader>(), TimeProvider.System));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                            new FitzControlDecisionWorkItemDirectory(client, provider.GetRequiredService<IAggregateReader>(),
+                            new FitzControlDecisionWorkItemDirectory(client, provider.GetRequiredService<ControlReader>(),
                                 provider.GetRequiredService<OperatingAuthority>(), new(true), new(true)));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzFindingClosureWorkItemDirectory(client, provider.GetRequiredService<FindingReader>(), TimeProvider.System));
@@ -306,7 +306,7 @@ public sealed class ReviewerWorkAuthorityTests
                                 provider.GetRequiredService<IImmutableContentStore>()));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzControlOperatingPlanWorkItemDirectory(client,
-                                provider.GetRequiredService<IAggregateReader>(),
+                                provider.GetRequiredService<ControlReader>(),
                                 provider.GetRequiredService<IImmutableContentStore>()));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzControlMappingWorkItemDirectory(client));
@@ -395,10 +395,10 @@ public sealed class ReviewerWorkAuthorityTests
             }
             if (kind is "control" or "control_assigned")
             {
-                var controlId = Uuid.CreateVersion4();
+                var controlId = ControlDraft.IdFor(Operations.TenantId, Operations.ProgramId, "AC-GUEST");
                 var versionId = Uuid.CreateVersion4();
                 await ProgramManagementServices.SeedAsync(Operations.Provider,
-                    new ControlDraft(Operations.TenantId, controlId), control =>
+                    new ControlRules(Operations.TenantId, controlId), control =>
                     {
                         Assert.True(control.Create(Operations.ProgramId, versionId, "AC-GUEST",
                             new ControlDraftContent("Guest review", "Access", "Review access", "Monthly review", ["Signed review"]),

@@ -7,14 +7,18 @@ namespace Bdgrz.Compliance.Features.Evaluations;
 
 /// <summary>Defines a new immutable evaluation plan version for an approved control.</summary>
 public sealed class DefineControlEvaluationPlanHandler(IAggregateExecutor executor,
-    IAggregateReader reader, OperatingAuthority authority, TimeProvider clock)
+    ControlReader controlSources, OperatingAuthority authority, TimeProvider clock)
     : IRequestHandler<DefineControlEvaluationPlan, ControlEvaluationPlanVersionView>
 {
-    public async ValueTask<Result<ControlEvaluationPlanVersionView>> HandleAsync(
+    public ValueTask<Result<ControlEvaluationPlanVersionView>> HandleAsync(
+        IRequestContext<DefineControlEvaluationPlan> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlEvaluationPlanVersionView>> HandleCoreAsync(
         IRequestContext<DefineControlEvaluationPlan> context, CancellationToken ct)
     {
         var request = context.Request;
-        var control = await ControlOperationsSource.LoadControlAsync(reader, request.TenantId,
+        var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId,
             request.ProgramId, request.ControlId, ct).ConfigureAwait(false);
         if (control is null)
             return Result<ControlEvaluationPlanVersionView>.Failure(

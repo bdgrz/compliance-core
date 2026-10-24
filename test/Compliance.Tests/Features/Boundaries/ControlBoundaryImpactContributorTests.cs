@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Boundaries;
 using Bdgrz.Compliance.Features.Controls;
@@ -9,6 +10,7 @@ namespace Bdgrz.Compliance.Tests.Features.Boundaries;
 
 public sealed class ControlBoundaryImpactContributorTests
 {
+    readonly ControlProjectionFacts _controlFacts = new();
     [Fact]
     public async Task ShouldReportCurrentDraftsAndRemainIncompleteGivenChangedGovernedScope()
     {
@@ -112,11 +114,11 @@ public sealed class ControlBoundaryImpactContributorTests
         var now = new DateTimeOffset(2026, 9, 22, 17, 30, 0, TimeSpan.Zero);
         var previousApplication = ResolvedEntry(Uuid.CreateVersion4(), "application", applicationId);
         var events = new InMemoryEventStore();
-        DomainEvent arriving = new ControlDraftCreated(tenantId, programId, controlId,
+        DomainEvent arriving = await _controlFacts.FreezeAsync(new ControlDraftCreatedContent(tenantId, programId, controlId,
             Uuid.CreateVersion4(), "AC-01", new ControlDraftContent("Access control",
                 "Restrict payroll access", "Payroll access control",
                 "Use approved access paths.", ["Access review log"]), Uuid.CreateVersion4(),
-            "Manager", now);
+            "Manager", now));
         arriving.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), controlId, 1, now));
         var references = new ControlReferenceDirectory
         {
@@ -166,11 +168,11 @@ public sealed class ControlBoundaryImpactContributorTests
         var now = new DateTimeOffset(2026, 9, 22, 17, 30, 0, TimeSpan.Zero);
         var previousApplication = ResolvedEntry(Uuid.CreateVersion4(), "application", applicationId);
         var events = new InMemoryEventStore();
-        DomainEvent arriving = new ControlDraftCreated(tenantId, programId, arrivingControlId,
+        DomainEvent arriving = await _controlFacts.FreezeAsync(new ControlDraftCreatedContent(tenantId, programId, arrivingControlId,
             Uuid.CreateVersion4(), "AC-01", new ControlDraftContent("Access control",
                 "Restrict payroll access", "Payroll access control",
                 "Use approved access paths.", ["Access review log"]), Uuid.CreateVersion4(),
-            "Manager", now);
+            "Manager", now));
         arriving.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), arrivingControlId, 1,
             now));
         var references = new ControlReferenceDirectory

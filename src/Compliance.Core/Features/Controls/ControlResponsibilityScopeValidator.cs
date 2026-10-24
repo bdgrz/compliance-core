@@ -3,12 +3,16 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-sealed class ControlResponsibilityScopeValidator(IAggregateReader reader)
+sealed class ControlResponsibilityScopeValidator(ControlReader controlSources)
 {
-    public async ValueTask<Result> ValidateAsync(Uuid tenantId, ResponsibilityScope scope,
+    public ValueTask<Result> ValidateAsync(Uuid tenantId, ResponsibilityScope scope,
+        CancellationToken ct = default) =>
+        ControlSourceFailures.ClassifyAsync(() => ValidateCoreAsync(tenantId, scope, ct));
+
+    async ValueTask<Result> ValidateCoreAsync(Uuid tenantId, ResponsibilityScope scope,
         CancellationToken ct = default)
     {
-        var control = await reader.HydrateAsync(new ControlDraft(tenantId, scope.RecordId), ct)
+        var control = await controlSources.ReadAsync(tenantId, scope.RecordId, ct)
             .ConfigureAwait(false);
         if (!control.IsVisible)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound,

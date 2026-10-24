@@ -19,7 +19,7 @@ public sealed class WorkControlImpactContributor(EvidenceRequestReader evidenceR
     public string Context => "work";
 
     public async ValueTask<Result<ControlImpactContribution>> ContributeAsync(
-        ControlDraft subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
+        ControlReadSnapshot subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);
         var operations = await operatingReader.ReadAsync(subject.TenantId, subject.ProgramId, ct)

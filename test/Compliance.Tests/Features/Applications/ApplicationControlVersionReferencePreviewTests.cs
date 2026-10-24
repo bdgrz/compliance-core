@@ -32,7 +32,7 @@ public sealed class ApplicationControlVersionReferencePreviewTests
             tenantId, applicationId, systemInstanceId, 1, "Payroll production", "production",
             null, null, actorId, "Manager", now, ApplicationFacts.SystemInstance(tenantId, systemInstanceId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
-        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var events = new InMemoryEventStore();
         var directReference = Reference(tenantId, "application", applicationId, programId,
             controlId, versionId, "AC-01", Uuid.CreateVersion4(), "Payroll");
@@ -96,7 +96,7 @@ public sealed class ApplicationControlVersionReferencePreviewTests
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
             applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
-        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var events = new InMemoryEventStore();
         var version = Reference(tenantId, "application", applicationId, programId,
             controlId, Uuid.CreateVersion4(), "AC-01", Uuid.CreateVersion4(), "Payroll");

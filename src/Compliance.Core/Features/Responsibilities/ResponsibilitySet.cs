@@ -59,6 +59,29 @@ public sealed class ResponsibilitySet
         Action<ResponsibilityAssigned>? raise = null)
     {
         ArgumentNullException.ThrowIfNull(waivers);
+        return AssignCore(assignmentId, memberId, type, assignedByMemberId, assignedByDisplay, assignedAt,
+            effectiveFrom, effectiveUntil, waivers.Select(waiver => new WaiverAccess(waiver.Id, waiver.TenantId,
+                waiver.Allows)).ToArray(), raise);
+    }
+
+    public CommandFailure? AssignAuthorized(Uuid assignmentId, Uuid memberId, ResponsibilityType type,
+        Uuid assignedByMemberId, string assignedByDisplay, DateTimeOffset assignedAt, DateTimeOffset effectiveFrom,
+        DateTimeOffset? effectiveUntil, IReadOnlyList<SeparationOfDutiesWaiverProof> waivers,
+        Action<ResponsibilityAssigned>? raise = null)
+    {
+        ArgumentNullException.ThrowIfNull(waivers);
+        return AssignCore(assignmentId, memberId, type, assignedByMemberId, assignedByDisplay, assignedAt,
+            effectiveFrom, effectiveUntil, waivers.Select(proof => new WaiverAccess(proof.WaiverId, proof.TenantId,
+                (scope, actor, at) => Bdgrz.Compliance.Features.Controls.ControlWaiverProof.Allows(proof,
+                    _tenantId, scope, actor, at))).ToArray(), raise);
+    }
+
+    CommandFailure? AssignCore(Uuid assignmentId, Uuid memberId, ResponsibilityType type,
+        Uuid assignedByMemberId, string assignedByDisplay, DateTimeOffset assignedAt, DateTimeOffset effectiveFrom,
+        DateTimeOffset? effectiveUntil, IReadOnlyList<WaiverAccess> waivers,
+        Action<ResponsibilityAssigned>? raise = null)
+    {
+        ArgumentNullException.ThrowIfNull(waivers);
         if (_tenantId == Uuid.Empty || assignmentId == Uuid.Empty || memberId == Uuid.Empty ||
             assignedByMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(assignedByDisplay) ||
             !Enum.IsDefined(type) ||
@@ -90,7 +113,7 @@ public sealed class ResponsibilitySet
                 _scope.RecordId, _scope.VersionId, _scope.Revision, conflict.WaiverAction);
             var waiver = waivers.FirstOrDefault(candidate => candidate.TenantId == _tenantId &&
                 candidate.Allows(waiverScope, memberId, assignedAt));
-            if (waiver is null)
+            if (waiver.Id == Uuid.Empty)
                 return CommandFailure.StateConflict(
                     "The responsibility conflicts with an existing assignment and requires an approved, active SoD waiver.");
             acceptedWaivers.Add(waiver.Id);
@@ -152,4 +175,6 @@ public sealed class ResponsibilitySet
         StringComparer.Ordinal.Equals(existing.AssignedByDisplay, assigningDisplay.Trim()) &&
         existing.AssignedAt == assignedAt && existing.EffectiveFrom == effectiveFrom &&
         existing.EffectiveUntil == effectiveUntil && existing.SeparationOfDutiesWaiverIds.SequenceEqual(waiverIds);
+    readonly record struct WaiverAccess(Uuid Id, Uuid TenantId,
+        Func<SeparationOfDutiesWaiverScope, Uuid, DateTimeOffset, bool> Allows);
 }

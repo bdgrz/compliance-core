@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.Work;
@@ -19,7 +20,7 @@ public sealed class FitzControlOperatingPlanWorkItemDirectoryTests
         var plan = await fixture.ProposeAsync(0);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
                 sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));
@@ -78,7 +79,7 @@ public sealed class FitzControlOperatingPlanWorkItemDirectoryTests
         var plan = await fixture.ProposeAsync(0);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
                 sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));
@@ -108,7 +109,7 @@ public sealed class FitzControlOperatingPlanWorkItemDirectoryTests
         var plan = await fixture.ProposeAsync(0);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
                 sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));
@@ -137,7 +138,7 @@ public sealed class FitzControlOperatingPlanWorkItemDirectoryTests
         var plan = await fixture.ProposeAsync(0);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
                 sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));
@@ -169,7 +170,7 @@ public sealed class FitzControlOperatingPlanWorkItemDirectoryTests
         var plan = await fixture.ProposeAsync(0);
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var directory = new FitzControlOperatingPlanWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
                 sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         var identity = new CheckpointIdentity(FitzControlOperatingPlanWorkItemDirectory.ProjectorName,
             EventStreamPattern.ForPattern(fixture.TenantId.ToString(), ControlOperatingPlan.Area));

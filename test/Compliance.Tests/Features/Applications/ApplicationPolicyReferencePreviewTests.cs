@@ -28,7 +28,7 @@ public sealed class ApplicationPolicyReferencePreviewTests
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
             applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
-        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var policies = new FitzApplicationPolicyReferenceDirectory(kv);
         var events = new InMemoryEventStore();
         var content = new PolicyContent("Access Policy", "Govern payroll access",
@@ -86,7 +86,7 @@ public sealed class ApplicationPolicyReferencePreviewTests
         await ProjectApplicationAsync(applications, tenantId, new ApplicationDeclared(tenantId,
             applicationId, "Payroll", "Run payroll", null, actorId, "Manager", now, ApplicationFacts.Application(tenantId, applicationId), null));
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
-        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var policies = new FitzApplicationPolicyReferenceDirectory(kv);
         var events = new InMemoryEventStore();
         var content = new PolicyContent("Access Policy", "Govern payroll access",

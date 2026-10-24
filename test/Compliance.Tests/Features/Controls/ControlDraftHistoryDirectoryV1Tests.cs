@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Extensions;
-using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Tests.Features.Controls;
@@ -12,28 +12,24 @@ public sealed class ControlDraftHistoryDirectoryV1Tests
     public async Task ShouldPreserveImmutablePagedRevisionsGivenReplayedDraftEvents()
     {
         // Arrange
-        var directory = new FitzControlDraftHistoryDirectoryV1(new InMemoryKvClient());
+        await using var source = new ControlProjectionScenario();
+        var directory = new FitzControlDraftHistoryDirectoryV1(source.Kv, source.Controls);
         var tenantId = Uuid.CreateVersion4();
         var otherTenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var controlId = ControlDraft.IdFor(tenantId, programId, "AC-01");
         var now = new DateTimeOffset(2026, 9, 21, 12, 0, 0, TimeSpan.Zero);
-        var created = Created(tenantId, programId, controlId, "AC-01", Content("Original"), now);
-        var second = Revised(created, 2, Content("Second"), now.AddMinutes(1));
-        var third = Revised(created, 3, Content("Third"), now.AddMinutes(2));
-        await using (var batch = await directory.BeginAsync(
-                         new ProjectionBatchContext(Checkpoint(tenantId), ProjectionCheckpoint.Start)))
-        {
-            await directory.ApplyAsync(created);
-            await directory.ApplyAsync(second);
-            await directory.ApplyAsync(third);
-            await batch.CommitAsync(ProjectionCheckpoint.Start);
-        }
+        var rules = Created(tenantId, programId, "AC-01", "Original", now);
+        await source.PublishAsync(rules);
+        Assert.Null(rules.Revise(programId, 1, Content("Second"), Uuid.CreateVersion4(), "Reviewer", now.AddMinutes(1)));
+        await source.PublishAsync(rules);
+        Assert.Null(rules.Revise(programId, 2, Content("Third"), Uuid.CreateVersion4(), "Reviewer", now.AddMinutes(2)));
+        await source.PublishAsync(rules);
+        await source.ProjectAsync(directory, directory.ApplyAsync, FitzControlDraftHistoryDirectoryV1.ProjectorName, tenantId);
 
         // Act
         var first = await directory.ListRevisionsAsync(tenantId, controlId, 2, null);
-        var secondPage = await directory.ListRevisionsAsync(tenantId, controlId, 2,
-            first.NextCursor);
+        var secondPage = await directory.ListRevisionsAsync(tenantId, controlId, 2, first.NextCursor);
         var foreign = await directory.ListRevisionsAsync(otherTenantId, controlId, 2, null);
 
         // Assert
@@ -52,30 +48,23 @@ public sealed class ControlDraftHistoryDirectoryV1Tests
     public async Task ShouldRejectMalformedAndCrossControlCursorsGivenRevisionHistoryPage()
     {
         // Arrange
-        var directory = new FitzControlDraftHistoryDirectoryV1(new InMemoryKvClient());
+        await using var source = new ControlProjectionScenario();
+        var directory = new FitzControlDraftHistoryDirectoryV1(source.Kv, source.Controls);
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var controlId = ControlDraft.IdFor(tenantId, programId, "AC-01");
         var otherControlId = ControlDraft.IdFor(tenantId, programId, "AC-02");
         var now = new DateTimeOffset(2026, 9, 21, 12, 0, 0, TimeSpan.Zero);
-        var other = Created(tenantId, programId, otherControlId, "AC-02", Content("Other"), now);
-        await using (var batch = await directory.BeginAsync(
-                         new ProjectionBatchContext(Checkpoint(tenantId), ProjectionCheckpoint.Start)))
-        {
-            await directory.ApplyAsync(Created(tenantId, programId, controlId, "AC-01",
-                Content("Target"), now));
-            await directory.ApplyAsync(other);
-            await directory.ApplyAsync(Revised(other, 2, Content("Other revised"),
-                now.AddMinutes(1)));
-            await batch.CommitAsync(ProjectionCheckpoint.Start);
-        }
-        var foreignCursor = (await directory.ListRevisionsAsync(tenantId, otherControlId, 1,
-            null)).NextCursor;
-        var source = new ControlDraft(tenantId, controlId);
-        Assert.True(source.Create(programId, Uuid.CreateVersion4(), "AC-01", Content("Target"),
-            Uuid.CreateVersion4(), "Author", now).IsSuccess);
+        await source.PublishAsync(Created(tenantId, programId, "AC-01", "Target", now));
+        var other = Created(tenantId, programId, "AC-02", "Other", now);
+        await source.PublishAsync(other);
+        Assert.Null(other.Revise(programId, 1, Content("Other revised"), Uuid.CreateVersion4(), "Reviewer",
+            now.AddMinutes(1)));
+        await source.PublishAsync(other);
+        await source.ProjectAsync(directory, directory.ApplyAsync, FitzControlDraftHistoryDirectoryV1.ProjectorName, tenantId);
+        var foreignCursor = (await directory.ListRevisionsAsync(tenantId, otherControlId, 1, null)).NextCursor;
         var handler = new ListControlDraftRevisionsHandler(directory,
-            new ControlDraftHistoryReadConsistency(directory, new SourceReader(source)));
+            new ControlDraftHistoryReadConsistency(directory, source.Controls));
 
         // Act
         var crossDirectory = Assert.ThrowsAsync<KvDirectoryQueryException>(async () =>
@@ -91,41 +80,37 @@ public sealed class ControlDraftHistoryDirectoryV1Tests
         Assert.NotNull(foreignCursor);
         await crossDirectory;
         await malformedDirectory;
-        Assert.Equal(RequestErrorKind.Validation,
-            Assert.IsType<RequestError>(crossControl.Error).Kind);
-        Assert.Equal(RequestErrorKind.Validation,
-            Assert.IsType<RequestError>(malformed.Error).Kind);
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(crossControl.Error).Kind);
+        Assert.Equal(RequestErrorKind.Validation, Assert.IsType<RequestError>(malformed.Error).Kind);
     }
 
     [Fact]
     public async Task ShouldRollBackAndReplayHistoryGivenOutOfOrderRevision()
     {
         // Arrange
-        var directory = new FitzControlDraftHistoryDirectoryV1(new InMemoryKvClient());
+        await using var source = new ControlProjectionScenario();
+        var directory = new FitzControlDraftHistoryDirectoryV1(source.Kv, source.Controls);
         var tenantId = Uuid.CreateVersion4();
         var programId = Uuid.CreateVersion4();
         var controlId = ControlDraft.IdFor(tenantId, programId, "AC-01");
         var now = new DateTimeOffset(2026, 9, 21, 12, 0, 0, TimeSpan.Zero);
-        var created = Created(tenantId, programId, controlId, "AC-01", Content("Original"), now);
-        var invalid = Revised(created, 3, Content("Skipped"), now.AddMinutes(1));
+        var rules = Created(tenantId, programId, "AC-01", "Original", now);
+        var created = Assert.IsType<ControlDraftCreated>(Assert.Single(await source.PublishAsync(rules)));
+        var malformed = new ControlProjectionFacts();
+        var invalid = await malformed.FreezeAsync(new ControlDraftRevisedContent(tenantId, programId, controlId,
+            3, Content("Skipped"), Uuid.CreateVersion4(), "Reviewer", now.AddMinutes(1)));
         var identity = Checkpoint(tenantId);
 
         // Act
-        await using (var failed = await directory.BeginAsync(
-                         new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
+        await using (var failed = await directory.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(created);
-            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await directory.ApplyAsync(invalid));
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await directory.ApplyAsync(invalid));
         }
-        await using (var replay = await directory.BeginAsync(
-                         new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
-        {
-            await directory.ApplyAsync(created);
-            await directory.ApplyAsync(Revised(created, 2, Content("Second"),
-                now.AddMinutes(1)));
-            await replay.CommitAsync(ProjectionCheckpoint.Start);
-        }
+        Assert.Null(rules.Revise(programId, 1, Content("Second"), Uuid.CreateVersion4(), "Reviewer", now.AddMinutes(1)));
+        var second = Assert.Single(await source.PublishAsync(rules));
+        await source.ProjectAsync(directory, directory.ApplyAsync, FitzControlDraftHistoryDirectoryV1.ProjectorName,
+            tenantId, [created, second]);
 
         // Assert
         var page = await directory.ListRevisionsAsync(tenantId, controlId, 10, null);
@@ -133,30 +118,20 @@ public sealed class ControlDraftHistoryDirectoryV1Tests
         Assert.Equal(ProjectionCheckpoint.Start, await directory.LoadCheckpointAsync(tenantId));
     }
 
-    static CheckpointIdentity Checkpoint(Uuid tenantId) => new(
-        "ControlDraftHistoryDirectoryV1", EventStreamPattern.ForPattern(tenantId.ToString(),
-            "controls"));
+    static CheckpointIdentity Checkpoint(Uuid tenantId) => new(FitzControlDraftHistoryDirectoryV1.ProjectorName,
+        EventStreamPattern.ForPattern(tenantId.ToString(), ControlDraft.Area));
 
-    static ControlDraftCreated Created(Uuid tenantId, Uuid programId, Uuid controlId,
-        string identifier, ControlDraftContent content, DateTimeOffset changedAt) => new(tenantId,
-        programId, controlId, Uuid.CreateVersion4(), identifier, content, Uuid.CreateVersion4(),
-        "Author", changedAt);
-
-    static ControlDraftRevised Revised(ControlDraftCreated created, long revision,
-        ControlDraftContent content, DateTimeOffset changedAt) => new(created.TenantId,
-        created.ProgramId, created.ControlId, revision, content, Uuid.CreateVersion4(), "Reviewer",
-        changedAt);
+    static ControlRules Created(Uuid tenantId, Uuid programId, string identifier, string title, DateTimeOffset changedAt)
+    {
+        var rules = new ControlRules(tenantId, ControlDraft.IdFor(tenantId, programId, identifier));
+        Assert.True(rules.Create(programId, Uuid.CreateVersion4(), identifier, Content(title), Uuid.CreateVersion4(),
+            "Author", changedAt).IsSuccess);
+        return rules;
+    }
 
     static ControlDraftContent Content(string title) => new(title, "Review access",
         "Management reviews access.", "The owner reviews access quarterly.", ["Review record"]);
 
-    static RequestContext<TRequest> Context<TRequest>(TRequest request)
-        where TRequest : IRequestBase => new(request, new ClaimsPrincipal());
-
-    sealed class SourceReader(Aggregate source) : IAggregateReader
-    {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
-            CancellationToken ct = default) where TAggregate : Aggregate =>
-            ValueTask.FromResult((TAggregate)source);
-    }
+    static RequestContext<TRequest> Context<TRequest>(TRequest request) where TRequest : IRequestBase =>
+        new(request, new ClaimsPrincipal());
 }

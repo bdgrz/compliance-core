@@ -11,7 +11,7 @@ public sealed class ResponsibilityControlImpactContributor : IControlImpactContr
 {
     public string Context => "responsibilities";
 
-    public ValueTask<Result<ControlImpactContribution>> ContributeAsync(ControlDraft subject,
+    public ValueTask<Result<ControlImpactContribution>> ContributeAsync(ControlReadSnapshot subject,
         IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);

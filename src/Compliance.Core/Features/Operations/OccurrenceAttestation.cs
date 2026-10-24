@@ -6,12 +6,12 @@ namespace Bdgrz.Compliance.Features.Operations;
 /// <summary>Resolves the occurrence, its plan, and the performer of record before an attestation.</summary>
 static class OccurrenceAttestation
 {
-    public static async ValueTask<Result<PreparedOccurrenceProof>> PrepareAsync(IAggregateReader reader,
+    public static async ValueTask<Result<PreparedOccurrenceProof>> PrepareAsync(ControlReader controlSources,
         ControlOperationsReader operations, OperatingAuthority authority, Uuid tenantId, Uuid programId,
         Uuid controlId, Uuid occurrenceId, Uuid? personId, ClaimsPrincipal principal, DateTimeOffset now,
         CancellationToken ct)
     {
-        var control = await ControlOperationsSource.LoadControlAsync(reader, tenantId, programId, controlId, ct)
+        var control = await ControlOperationsSource.LoadControlAsync(controlSources, tenantId, programId, controlId, ct)
             .ConfigureAwait(false);
         if (control is null)
             return Failure(ControlOperationsSource.ControlNotFound());

@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Text.Json;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -145,8 +146,8 @@ public sealed class ControlOwnershipAndWithdrawalTests
         Assert.Equal(decisionId, withdrawal.DecisionId);
         Assert.Equal("withdraw", withdrawal.Outcome);
         Assert.Equal(proposedRevision + 2, control.Revision);
-        var pending = new AggregateScenario<ControlDraft>(control).PendingEvents;
-        Assert.Contains(pending, ev => ev is ControlProposalWithdrawn { Kind: "successor" });
+        var pending = new ControlRuleScenario(control).PendingEvents;
+        Assert.Contains(pending, ev => ev is ControlProposalWithdrawnContent { Kind: "successor" });
     }
 
     [Fact]
@@ -178,7 +179,7 @@ public sealed class ControlOwnershipAndWithdrawalTests
     }
 
     [Fact]
-    public void ShouldReplayWithdrawalAndPersonOwnerGivenRoundTrippedEvents()
+    public async Task ShouldReplayWithdrawalAndPersonOwnerGivenRoundTrippedEvents()
     {
         // Arrange
         var source = Draft("WD-03");
@@ -192,13 +193,8 @@ public sealed class ControlOwnershipAndWithdrawalTests
             Content() with { Title = "v2" }, AuthorId, "Author", Now.AddHours(1)));
         Assert.Null(source.Withdraw(ProgramId, source.Revision, Uuid.CreateVersion4(),
             "Not needed.", AuthorId, Author, Now.AddHours(2)));
-        var events = new AggregateScenario<ControlDraft>(source).PendingEvents;
-        var seeded = events.Select((ev, index) =>
-            DomainEventSeed.Attach(RoundTrip(ev), source.Id, (ulong)index + 1)).ToArray();
-
         // Act
-        var replayed = new AggregateScenario<ControlDraft>(new ControlDraft(TenantId, source.Id))
-            .Given(seeded).Aggregate;
+        var replayed = await ControlNativeRuleReplay.ReadAsync(source);
 
         // Assert
         Assert.Equal(source.Revision, replayed.Revision);
@@ -217,7 +213,7 @@ public sealed class ControlOwnershipAndWithdrawalTests
     public void ShouldRecordProvenanceGivenOrigin(string origin, string? source, bool valid)
     {
         // Arrange
-        var control = new ControlDraft(TenantId, ControlDraft.IdFor(TenantId, ProgramId, "PV-01"));
+        var control = new ControlRules(TenantId, ControlRules.IdFor(TenantId, ProgramId, "PV-01"));
         var content = Content() with
         {
             Provenance = new ControlContentProvenance(origin, source, " TPL-7 ", "2026.1"),
@@ -237,7 +233,7 @@ public sealed class ControlOwnershipAndWithdrawalTests
     public void ShouldCarryTemplateOriginGivenApprovedTemplateDraft()
     {
         // Arrange
-        var control = new ControlDraft(TenantId, ControlDraft.IdFor(TenantId, ProgramId, "PV-02"));
+        var control = new ControlRules(TenantId, ControlRules.IdFor(TenantId, ProgramId, "PV-02"));
         Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "PV-02", Content() with
         {
             Provenance = new ControlContentProvenance("template", "Starter pack", "AC-1"),
@@ -257,16 +253,16 @@ public sealed class ControlOwnershipAndWithdrawalTests
         Assert.Null(control.ApprovedVersion.OwnerPersonId);
     }
 
-    static ControlDraft Draft(string identifier)
+    static ControlRules Draft(string identifier)
     {
-        var control = new ControlDraft(TenantId, ControlDraft.IdFor(TenantId, ProgramId,
+        var control = new ControlRules(TenantId, ControlRules.IdFor(TenantId, ProgramId,
             identifier));
         Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), identifier, Content(),
             AuthorId, "Author", Now).IsSuccess);
         return control;
     }
 
-    static ControlDraft Approved(string identifier)
+    static ControlRules Approved(string identifier)
     {
         var control = Draft(identifier);
         Assert.Null(AssignOwner(control));
@@ -276,7 +272,7 @@ public sealed class ControlOwnershipAndWithdrawalTests
         return control;
     }
 
-    static Uuid Review(ControlDraft control)
+    static Uuid Review(ControlRules control)
     {
         var reviewId = Uuid.CreateVersion4();
         Assert.Null(control.Review(ProgramId, control.Revision, reviewId, "accept", "Reviewed.",
@@ -284,14 +280,10 @@ public sealed class ControlOwnershipAndWithdrawalTests
         return reviewId;
     }
 
-    static CommandFailure? AssignOwner(ControlDraft control) => control.AssignResponsibility(
+    static CommandFailure? AssignOwner(ControlRules control) => control.AssignResponsibility(
         new ResponsibilityScope("control", control.Id, control.DraftVersionId, control.Revision),
         Uuid.CreateVersion4(), OwnerId, ResponsibilityType.ControlOwner, AuthorId, "Author",
         Now.AddMinutes(1), Now.AddMinutes(-1), null, []);
-
-    static DomainEvent RoundTrip(DomainEvent ev) => (DomainEvent)JsonSerializer.Deserialize(
-        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonContext.Default),
-        ev.GetType(), ComplianceCoreJsonContext.Default)!;
 
     static ControlDraftContent Content() => new("Access review", "Review access",
         "Management reviews access", "The security lead reviews access quarterly.",

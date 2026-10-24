@@ -31,8 +31,19 @@ static class WorkSource
     public const string AdvisorFeedback = "advisor_feedback";
 
     /// <summary>Loads open work; <paramref name="workItemId" /> narrows the result to one item.</summary>
-    public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, FindingReader? findings, RiskGovernanceReader? riskGovernance,
+    public static ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
+        IAggregateReader reader, ControlReader controlSources, FindingReader? findings, RiskGovernanceReader? riskGovernance,
+        EvidenceRequestReader? evidenceRequests, ControlOperationsReader? operatingReader,
+        ControlMappingReader? mappingReader, ApplicabilityReader? applicabilityReader,
+        ControlEvaluationReader? evaluationReader,
+        Uuid tenantId, Uuid programId, DateOnly today, DateOnly horizon, DateTimeOffset now,
+        Uuid? workItemId, IBoundaryDirectoryReader? boundaries,
+        IReadOnlySet<string> projectedKinds,
+        CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => LoadCoreAsync(reader, controlSources, findings, riskGovernance, evidenceRequests, operatingReader, mappingReader, applicabilityReader, evaluationReader, tenantId, programId, today, horizon, now, workItemId, boundaries, projectedKinds, ct));
+
+    static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadCoreAsync(
+        IAggregateReader reader, ControlReader controlSources, FindingReader? findings, RiskGovernanceReader? riskGovernance,
         EvidenceRequestReader? evidenceRequests, ControlOperationsReader? operatingReader,
         ControlMappingReader? mappingReader, ApplicabilityReader? applicabilityReader,
         ControlEvaluationReader? evaluationReader,
@@ -55,7 +66,7 @@ static class WorkSource
             operations = await ControlOperations(operatingReader).ReadAsync(tenantId, programId, ct)
                 .ConfigureAwait(false);
             foreach (var (controlId, plan, identifier, occurrences) in await ControlOperationsSource
-                         .ReadPlannedAsync(reader, operations, tenantId, programId, today, horizon,
+                         .ReadPlannedAsync(controlSources, operations, tenantId, programId, today, horizon,
                              ct).ConfigureAwait(false))
                 foreach (var occurrence in occurrences)
                 {
@@ -260,7 +271,7 @@ static class WorkSource
                     workItemId is { } wantedPlan && WorkCandidate.IdFor(pending.PlanVersionId,
                         ControlOperatingPlanApproval) != wantedPlan)
                     continue;
-                var control = await ControlOperationsSource.LoadControlAsync(reader, tenantId,
+                var control = await ControlOperationsSource.LoadControlAsync(controlSources, tenantId,
                     programId, controlId, ct).ConfigureAwait(false);
                 if (control is null || control.IsRetired ||
                     control.ApprovedVersion is not

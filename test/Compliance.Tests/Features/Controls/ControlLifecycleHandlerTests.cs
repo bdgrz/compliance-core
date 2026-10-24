@@ -77,7 +77,7 @@ public sealed class ControlLifecycleHandlerTests
         var fixture = await Fixture.CreateApprovedAsync(lifecycleEnabled: true);
         var retireOn = new DateOnly(2027, 3, 1);
         var proposal = await fixture.Scenario(fixture.AuthorUserId)
-            .When(new ProposeControlRetirement(fixture.TenantId, fixture.ProgramId,
+            .When(new ProposeControlRetirement(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, fixture.InitialVersionId, retireOn, "Replaced."))
             .ExpectSuccess();
         var reviewId = await fixture.ReviewAsync(proposal.Value.Revision);
@@ -86,7 +86,7 @@ public sealed class ControlLifecycleHandlerTests
                 proposal.Value.Revision));
 
         // Act
-        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new RetireControl(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new RetireControl(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 proposal.Value.Revision, reviewId, preview.Digest, "Retire at quarter end."));
 
         // Assert
@@ -115,14 +115,14 @@ public sealed class ControlLifecycleHandlerTests
 
         await fixture.Scenario(fixture.AuthorUserId)
             // Act
-            .When(new ProposeControlSuccessor(fixture.TenantId, fixture.ProgramId,
+            .When(new ProposeControlSuccessor(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, fixture.InitialVersionId, Fixture.Content()))
             // Assert
             .ExpectAuthorized()
             .ExpectHandled()
             .ExpectFailure(RequestErrorKind.Conflict);
         var source = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ControlDraft(fixture.TenantId, fixture.ControlId));
+            new ControlRules(fixture.TenantId, fixture.ControlId));
         Assert.False(source.HasOpenDraft);
     }
 
@@ -371,7 +371,7 @@ public sealed class ControlLifecycleHandlerTests
         var fixture = await Fixture.CreateApprovedAsync(lifecycleEnabled: true);
         await fixture.SeedOperatingPlanAsync();
         var proposal = await fixture.Scenario(fixture.AuthorUserId)
-            .When(new ProposeControlRetirement(fixture.TenantId, fixture.ProgramId,
+            .When(new ProposeControlRetirement(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, fixture.InitialVersionId, SuccessorFrom, "Replaced."))
             .ExpectSuccess();
         var reviewId = await fixture.ReviewAsync(proposal.Value.Revision);
@@ -381,10 +381,10 @@ public sealed class ControlLifecycleHandlerTests
 
         // Act
         await fixture.SeedOperatingPlanAsync(approve: false, effectiveFrom: EffectiveFrom.AddMonths(1));
-        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new RetireControl(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new RetireControl(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 proposal.Value.Revision, reviewId, preview.Digest, "Retire."), RequestErrorKind.Conflict);
         var refreshed = await fixture.QueryAsync<PreviewControlImpact, ControlImpactPreview>(query);
-        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new RetireControl(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+        await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new RetireControl(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 proposal.Value.Revision, reviewId, refreshed.Digest, "Retire."));
 
         // Assert
@@ -420,7 +420,7 @@ public sealed class ControlLifecycleHandlerTests
         else
         {
             var proposal = await fixture.Scenario(fixture.AuthorUserId)
-                .When(new ProposeControlRetirement(fixture.TenantId, fixture.ProgramId,
+                .When(new ProposeControlRetirement(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                     fixture.ControlId, fixture.InitialVersionId, SuccessorFrom, "Replaced."))
                 .ExpectSuccess();
             revision = proposal.Value.Revision;
@@ -439,7 +439,7 @@ public sealed class ControlLifecycleHandlerTests
         if (kind == "successor")
             await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.Approve(revision, reviewId, SuccessorFrom, overflow.Digest), RequestErrorKind.Conflict);
         else
-            await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new RetireControl(fixture.TenantId, fixture.ProgramId, fixture.ControlId,
+            await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, new RetireControl(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                     revision, reviewId, overflow.Digest, "Retire."), RequestErrorKind.Conflict);
 
         // Assert
@@ -486,13 +486,13 @@ public sealed class ControlLifecycleHandlerTests
 
         // Act
         await fixture.Scenario(fixture.ReviewerUserId)
-            .When(new WithdrawControlProposal(fixture.TenantId, fixture.ProgramId,
+            .When(new WithdrawControlProposal(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, registration.Revision, "Not needed this quarter."))
             .ExpectSuccess();
 
         // Assert
         var source = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ControlDraft(fixture.TenantId, fixture.ControlId));
+            new ControlRules(fixture.TenantId, fixture.ControlId));
         Assert.False(source.HasOpenDraft);
         Assert.Equal(registration.Revision + 1, source.Revision);
         Assert.Equal("Access review", source.CurrentContent!.Title);
@@ -515,12 +515,12 @@ public sealed class ControlLifecycleHandlerTests
         var registration = await fixture.ProposeSuccessorAsync();
         var personId = await fixture.SeedPersonAsync();
         await fixture.Scenario(fixture.AuthorUserId)
-            .When(new DesignateControlOwnerPerson(fixture.TenantId, fixture.ProgramId,
+            .When(new DesignateControlOwnerPerson(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, registration.Revision, Uuid.CreateVersion4(),
                 "Unknown person."))
             .ExpectFailure(RequestErrorKind.Validation);
         await fixture.Scenario(fixture.AuthorUserId)
-            .When(new DesignateControlOwnerPerson(fixture.TenantId, fixture.ProgramId,
+            .When(new DesignateControlOwnerPerson(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, registration.Revision, personId,
                 "The facilities manager owns the control but does not sign in."))
             .ExpectSuccess();
@@ -548,7 +548,7 @@ public sealed class ControlLifecycleHandlerTests
 
         await fixture.Scenario(fixture.AuthorUserId)
             // Act
-            .When(new WithdrawControlProposal(fixture.TenantId, fixture.ProgramId,
+            .When(new WithdrawControlProposal(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
                 fixture.ControlId, 1, "Nothing."))
             // Assert
             .ExpectAuthorized()
@@ -604,7 +604,7 @@ public sealed class ControlLifecycleHandlerTests
             var fixture = new Fixture { Provider = provider };
             var now = DateTimeOffset.UtcNow;
             await ProgramManagementServices.SeedAsync(provider,
-                new ControlDraft(fixture.TenantId, fixture.ControlId), control => control.Create(
+                new ControlRules(fixture.TenantId, fixture.ControlId), control => control.Create(
                     fixture.ProgramId, Uuid.CreateVersion4(), "LC-HTTP", Content(),
                     RbacIds.Member(fixture.TenantId, fixture.AuthorUserId), "Author", now));
             await ProgramManagementServices.SeedAsync(provider,
@@ -630,7 +630,7 @@ public sealed class ControlLifecycleHandlerTests
         public async Task<ControlSuccessorRegistration> ProposeSuccessorAsync()
         {
             var result = await Scenario(AuthorUserId)
-                .When(new ProposeControlSuccessor(TenantId, ProgramId, ControlId,
+                .When(new ProposeControlSuccessor(Uuid.CreateVersion4(), TenantId, ProgramId, ControlId,
                     InitialVersionId, Content() with
                     {
                         Title = "Access review v2",
@@ -649,7 +649,7 @@ public sealed class ControlLifecycleHandlerTests
         {
             var now = DateTimeOffset.UtcNow;
             return ProgramManagementServices.SeedAsync(Provider,
-                new ControlDraft(TenantId, ControlId), control =>
+                new ControlRules(TenantId, ControlId), control =>
                     CommandResult(control.AssignResponsibility(new ResponsibilityScope("control",
                             ControlId, versionId, revision), Uuid.CreateVersion4(), OwnerMemberId,
                         ResponsibilityType.ControlOwner, RbacIds.Member(TenantId, AuthorUserId),
@@ -721,7 +721,7 @@ public sealed class ControlLifecycleHandlerTests
         {
             var planId = Uuid.CreateVersion4();
             var control = await ProgramManagementServices.HydrateAsync(Provider,
-                new ControlDraft(TenantId, ControlId));
+                new ControlRules(TenantId, ControlId));
             var now = DateTimeOffset.UtcNow;
             await ControlOperatingSeed.ProposeAsync(Provider, TenantId, ProgramId, ControlId,
                 control.ApprovedVersion!.VersionId, control.ApprovedVersion.Content.ExpectedEvidenceDescriptions, planId, new OperatingHolder("member", OwnerMemberId), null,

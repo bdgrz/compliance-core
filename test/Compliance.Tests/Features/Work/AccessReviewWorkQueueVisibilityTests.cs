@@ -230,6 +230,7 @@ public sealed class AccessReviewWorkQueueVisibilityTests
         var eligibility = new AccessReviewQueueEligibility(aggregateReader, permissions,
             permissions, visibility);
         WorkQueueReader CreateQueue() => new(aggregateReader,
+            services.GetRequiredService<Bdgrz.Compliance.Features.Controls.ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [source], accessReviewQueueEligibility: eligibility,
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),

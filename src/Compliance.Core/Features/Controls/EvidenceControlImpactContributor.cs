@@ -19,7 +19,7 @@ public sealed class EvidenceControlImpactContributor(EvidenceRequestReader evide
     public string Context => "evidence";
 
     public async ValueTask<Result<ControlImpactContribution>> ContributeAsync(
-        ControlDraft subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
+        ControlReadSnapshot subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);
         var ledger = await evidenceRequests.ReadAsync(subject.TenantId, subject.ProgramId, ct).ConfigureAwait(false);

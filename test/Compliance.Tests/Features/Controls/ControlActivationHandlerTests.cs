@@ -31,7 +31,7 @@ public sealed class ControlActivationHandlerTests
         var user = approval ? fixture.ApproverUserId : fixture.ReviewerUserId;
         await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, user, request);
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ControlDraft(fixture.TenantId, fixture.ControlId));
+            new ControlRules(fixture.TenantId, fixture.ControlId));
         IRequest changed = request switch
         {
             ApproveControl command => command with { Rationale = "Changed" },
@@ -46,10 +46,10 @@ public sealed class ControlActivationHandlerTests
             new ReviewControl(fixture.ControlId, fixture.TenantId, fixture.ProgramId, fixture.ControlId,
                 1, "accept", "Creation identity reused"), RequestErrorKind.Conflict);
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ControlDraft(fixture.TenantId, fixture.ControlId));
+            new ControlRules(fixture.TenantId, fixture.ControlId));
 
         // Assert
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
         Assert.Equal(before.ReadDecisions(), after.ReadDecisions());
     }
 
@@ -70,7 +70,7 @@ public sealed class ControlActivationHandlerTests
                 1, "accept", "Reviewed");
         await PersonalControlDecisionTransportTests.HttpAsync(fixture.Provider, user, request);
         var before = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ControlDraft(fixture.TenantId, fixture.ControlId));
+            new ControlRules(fixture.TenantId, fixture.ControlId));
         await using var scope = fixture.Provider.CreateAsyncScope();
         var dispatch = new RequestDispatchContext(ProgramManagementServices.Actor(user),
             new HttpInvocation("PUT", "/synthetic/control-decision", null, "gate-replay"));
@@ -88,11 +88,11 @@ public sealed class ControlActivationHandlerTests
             _ => throw new InvalidOperationException(),
         };
         var after = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ControlDraft(fixture.TenantId, fixture.ControlId));
+            new ControlRules(fixture.TenantId, fixture.ControlId));
 
         // Assert
         Assert.True(replay.IsSuccess, replay.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public sealed class ControlActivationHandlerTests
                 "accept", "Reviewed"), RequestErrorKind.Conflict);
         // Assert
         var source = await ProgramManagementServices.HydrateAsync(fixture.Provider,
-            new ControlDraft(fixture.TenantId, fixture.ControlId));
+            new ControlRules(fixture.TenantId, fixture.ControlId));
         Assert.Empty(source.ReadDecisions());
     }
 
@@ -185,7 +185,7 @@ public sealed class ControlActivationHandlerTests
             var fixture = new Fixture { Provider = provider };
             var now = DateTimeOffset.UtcNow;
             await ProgramManagementServices.SeedAsync(provider,
-                new ControlDraft(fixture.TenantId, fixture.ControlId), control => control.Create(
+                new ControlRules(fixture.TenantId, fixture.ControlId), control => control.Create(
                     fixture.ProgramId, Uuid.CreateVersion4(), "AC-HTTP", new ControlDraftContent(
                         "Access review", "Review access", "Management reviews access",
                         "The security lead reviews access quarterly.", ["Dated review record"]),
@@ -193,7 +193,7 @@ public sealed class ControlActivationHandlerTests
             await ProgramManagementServices.SeedAsync(provider,
                 new Member(fixture.TenantId, fixture.OwnerUserId), member => member.Register());
             await ProgramManagementServices.SeedAsync(provider,
-                new ControlDraft(fixture.TenantId, fixture.ControlId), control =>
+                new ControlRules(fixture.TenantId, fixture.ControlId), control =>
                     CommandResult(control.AssignResponsibility(new ResponsibilityScope("control",
                             fixture.ControlId, ControlVersionIds.Initial(fixture.ControlId), 1),
                         Uuid.CreateVersion4(), fixture.OwnerMemberId,

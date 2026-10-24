@@ -2,14 +2,18 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Operations;
 
-public sealed class GetControlOperatingPlanHandler(IAggregateReader reader, ControlOperationsReader operations)
+public sealed class GetControlOperatingPlanHandler(ControlReader controlSources, ControlOperationsReader operations)
     : IRequestHandler<GetControlOperatingPlan, ControlOperatingPlanSetView>
 {
-    public async ValueTask<Result<ControlOperatingPlanSetView>> HandleAsync(
+    public ValueTask<Result<ControlOperatingPlanSetView>> HandleAsync(
+        IRequestContext<GetControlOperatingPlan> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlOperatingPlanSetView>> HandleCoreAsync(
         IRequestContext<GetControlOperatingPlan> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (await ControlOperationsSource.LoadControlAsync(reader, request.TenantId,
+        if (await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId,
                 request.ProgramId, request.ControlId, ct).ConfigureAwait(false) is null)
             return Result<ControlOperatingPlanSetView>.Failure(
                 ControlOperationsSource.ControlNotFound());

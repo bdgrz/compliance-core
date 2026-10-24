@@ -19,8 +19,16 @@ static class ControlDecisionWork
     public static bool IsFullyProjected(IReadOnlySet<string> projectedKinds) =>
         ProjectedKinds.All(projectedKinds.Contains);
 
-    public static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
-        IAggregateReader reader, IControlDraftDirectoryReader directory,
+    public static ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadAsync(
+        ControlReader controlSources, IControlDraftDirectoryReader directory,
+        ControlDraftListReadConsistency? consistency, OperatingAuthority authority,
+        Uuid tenantId, Uuid programId,
+        DateTimeOffset now, Uuid? workItemId, bool activationEnabled, bool lifecycleEnabled,
+        CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => LoadCoreAsync(controlSources, directory, consistency, authority, tenantId, programId, now, workItemId, activationEnabled, lifecycleEnabled, ct));
+
+    static async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadCoreAsync(
+        ControlReader controlSources, IControlDraftDirectoryReader directory,
         ControlDraftListReadConsistency? consistency, OperatingAuthority authority,
         Uuid tenantId, Uuid programId,
         DateTimeOffset now, Uuid? workItemId, bool activationEnabled, bool lifecycleEnabled,
@@ -50,8 +58,7 @@ static class ControlDecisionWork
 
             foreach (var summary in page.Items)
             {
-                var control = await reader.HydrateAsync(new ControlDraft(tenantId,
-                    summary.ControlId), ct).ConfigureAwait(false);
+                var control = await controlSources.ReadAsync(tenantId, programId, summary.ControlId, ct).ConfigureAwait(false);
                 if (!control.IsCreated || !control.IsVisible || control.TenantId != tenantId ||
                     control.ProgramId != programId)
                     return Result<IReadOnlyList<WorkCandidate>>.Failure(SourceChanged());
@@ -76,7 +83,7 @@ static class ControlDecisionWork
         return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
     }
 
-    internal static ControlDecisionWorkState FromSource(Uuid tenantId, ControlDraft control,
+    internal static ControlDecisionWorkState FromSource(Uuid tenantId, ControlReadSnapshot control,
         string identifier)
     {
         var targetId = control.PendingTargetId;

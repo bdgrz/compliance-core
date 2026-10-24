@@ -9,7 +9,7 @@ namespace Bdgrz.Compliance.Features.Commitments;
 /// <summary>Previews what an effective commitment change would affect.</summary>
 public sealed class CommitmentImpactService(CommitmentDraftReadConsistency drafts,
     CommitmentVersionReadConsistency versions, IBoundaryDirectoryReader boundaries,
-    IControlDraftDirectoryReader controls, IAggregateReader reader)
+    IControlDraftDirectoryReader controls, ControlReader controlSources)
 {
     const int BoundaryPageSize = 200;
     const int MaximumBoundaryPages = 10;
@@ -25,7 +25,11 @@ public sealed class CommitmentImpactService(CommitmentDraftReadConsistency draft
         new("risks", "Risk drafts do not reference commitments yet."),
     ];
 
-    public async ValueTask<Result<CommitmentImpactPreview>> PreviewAsync(
+    public ValueTask<Result<CommitmentImpactPreview>> PreviewAsync(
+        PreviewCommitmentImpact request, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => PreviewCoreAsync(request, ct));
+
+    async ValueTask<Result<CommitmentImpactPreview>> PreviewCoreAsync(
         PreviewCommitmentImpact request, CancellationToken ct)
     {
         var draft = await drafts.GetAsync(request.TenantId, request.ProgramId, request.DraftId,
@@ -113,8 +117,7 @@ public sealed class CommitmentImpactService(CommitmentDraftReadConsistency draft
                          item.ProgramId == request.ProgramId))
             {
                 // The control stream is authoritative for both approved and pending applicability.
-                var control = await reader.HydrateAsync(new ControlDraft(request.TenantId,
-                    item.ControlId), ct).ConfigureAwait(false);
+                var control = await controlSources.ReadAsync(request.TenantId, request.ProgramId, item.ControlId, ct).ConfigureAwait(false);
                 if (control.ProgramId != request.ProgramId)
                     continue;
                 if (References(control.ApprovedVersion?.Content, request.DraftId))

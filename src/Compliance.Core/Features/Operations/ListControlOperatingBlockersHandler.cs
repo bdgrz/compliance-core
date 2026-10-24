@@ -8,11 +8,15 @@ namespace Bdgrz.Compliance.Features.Operations;
 ///     source streams: missing or pending plans, plans on a superseded version, inactive holders,
 ///     and missed occurrences are all visible blockers.
 /// </summary>
-public sealed class ListControlOperatingBlockersHandler(IAggregateReader reader,
+public sealed class ListControlOperatingBlockersHandler(ControlReader controlSources,
     ControlOperationsReader operations, IControlDraftDirectoryReader directory, OperatingAuthority authority, TimeProvider clock)
     : IRequestHandler<ListControlOperatingBlockers, Page<ControlOperatingBlockerView>>
 {
-    public async ValueTask<Result<Page<ControlOperatingBlockerView>>> HandleAsync(
+    public ValueTask<Result<Page<ControlOperatingBlockerView>>> HandleAsync(
+        IRequestContext<ListControlOperatingBlockers> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<Page<ControlOperatingBlockerView>>> HandleCoreAsync(
         IRequestContext<ListControlOperatingBlockers> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -33,7 +37,7 @@ public sealed class ListControlOperatingBlockersHandler(IAggregateReader reader,
         foreach (var controlId in controlIds.Distinct().OrderBy(static id => id.ToString(),
                      StringComparer.Ordinal))
         {
-            var control = await ControlOperationsSource.LoadControlAsync(reader, request.TenantId,
+            var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId,
                 request.ProgramId, controlId, ct).ConfigureAwait(false);
             if (control is null || control.IsRetired ||
                 control.ApprovedVersion is not { Status: ControlOperationStates.Approved } version)
@@ -46,7 +50,7 @@ public sealed class ListControlOperatingBlockersHandler(IAggregateReader reader,
     }
 
     async ValueTask<IReadOnlyList<ControlOperatingBlockerView>> EvaluateAsync(Uuid tenantId,
-        ControlOperationsSnapshot ledger, ControlDraft control, ControlVersionView version,
+        ControlOperationsSnapshot ledger, ControlReadSnapshot control, ControlVersionView version,
         DateOnly today, CancellationToken ct)
     {
         var identifier = version.Identifier;

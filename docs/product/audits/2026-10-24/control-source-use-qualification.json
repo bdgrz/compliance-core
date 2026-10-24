@@ -1,0 +1,15 @@
+[
+  {
+    "id": "control-source-use-pair",
+    "status": "selected-contract-gap-reported-to-parent",
+    "scope": "ControlDraft/control-version read-hold acquisition and settlement",
+    "evidence": [
+      "docs/product/audits/2026-10-23/source-admission-contracts.json has no ControlDraft/control-version source/receiver pair",
+      "docs/product/audits/2026-10-23/target-owner-extensions.json has no ControlDraft source-use protocol",
+      "src/Compliance.Common/Features/SourceUse/SourceUsePurpose.cs enumerates no Control approval/source-use purpose"
+    ],
+    "preparedBehavior": "Local compact reservation/hold boundary and exact physical preparation cut retained. No invented source-use purpose, receiver registration, acquiring process, settlement identity or silent no-op release.",
+    "qualification": "ISourceUseOwner/Uses alone is not proof of a runnable acquisition/settlement protocol. Current external membership/person/applicability checks preserve existing behavior; no new cross-owner current-source hold guarantee is claimed.",
+    "next": "Continue independent native Control content/replay/read work; require a selected exact pair/producer contract before claiming held external-source acceptance. No GitHub issue created per parent instruction."
+  }
+]

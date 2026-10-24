@@ -571,8 +571,8 @@ public sealed class ReadinessAssessmentHandlerTests
         var approval = DateTimeOffset.UtcNow.AddHours(-2);
         var fixture = await Fixture.CreateAsync(approvedAt: approval);
         await using var scope = fixture.Provider.CreateAsyncScope();
-        var control = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ControlDraft(fixture.TenantId, fixture.ControlId), CancellationToken.None);
+        var control = await scope.ServiceProvider.GetRequiredService<ControlReader>()
+            .ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ControlId, CancellationToken.None);
 
         // Act
         var earlier = ReadinessControlSelection.EffectiveVersionAt(control, approval.AddTicks(-1));
@@ -596,8 +596,8 @@ public sealed class ReadinessAssessmentHandlerTests
         await fixture.AdvanceControlAsync(retire, midnight.AddHours(-6),
             DateOnly.FromDateTime(midnight.UtcDateTime));
         await using var scope = fixture.Provider.CreateAsyncScope();
-        var control = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-            .HydrateAsync(new ControlDraft(fixture.TenantId, fixture.ControlId), CancellationToken.None);
+        var control = await scope.ServiceProvider.GetRequiredService<ControlReader>()
+            .ReadAsync(fixture.TenantId, fixture.ProgramId, fixture.ControlId, CancellationToken.None);
 
         // Act
         var before = ReadinessControlSelection.EffectiveVersionAt(control, midnight.AddTicks(-1));
@@ -685,7 +685,7 @@ public sealed class ReadinessAssessmentHandlerTests
             var owner = Uuid.CreateVersion4();
             var reviewId = Uuid.CreateVersion4();
             await ProgramManagementServices.SeedAsync(provider,
-                new ControlDraft(fixture.TenantId, fixture.ControlId), control =>
+                new ControlRules(fixture.TenantId, fixture.ControlId), control =>
                 {
                     var created = control.Create(fixture.ProgramId, Uuid.CreateVersion4(),
                         "AC-READY", new ControlDraftContent("Access review", "Review access",
@@ -708,7 +708,7 @@ public sealed class ReadinessAssessmentHandlerTests
 
         public Task AdvanceControlAsync(bool retire, DateTimeOffset decidedAt, DateOnly effectiveAt) =>
             ProgramManagementServices.SeedAsync(Provider,
-                new ControlDraft(TenantId, ControlId), control =>
+                new ControlRules(TenantId, ControlId), control =>
                 {
                     var author = Uuid.CreateVersion4();
                     var reviewer = Uuid.CreateVersion4();

@@ -45,6 +45,14 @@
         ]
       },
       "independentProgress": "Configured persistent AES protected store validated separately; no public protocol cutover."
+    },
+    {
+      "id": "control-source-use-pair",
+      "scope": "Control/current-version external read-hold acquisition and settlement",
+      "status": "selected_contract_gap",
+      "externalDependency": false,
+      "evidence": "source-admission-contracts.json,target-owner-extensions.json and SourceUsePurpose provide no selected Control source-use receiver/purpose/pair. Local current authority/reservation boundary is implemented; foreign current checks do not prove a runnable exact hold.",
+      "nextWork": "Select trusted exact source/receiver/purpose and acquiring/settling producer contract before claiming atomic held-source qualification. Continue independent owners/producers; no GitHub issue."
     }
   ],
   "remainingSlices": [
@@ -86,7 +94,11 @@
     "protected-store-integration-jev.json",
     "tenant-lifecycle-file-reviews.json",
     "tenant-lifecycle-file-triage.json",
-    "tenant-lifecycle-integration-jev.json"
+    "tenant-lifecycle-integration-jev.json",
+    "control-file-reviews.json",
+    "control-file-triage.json",
+    "control-integration-jev.json",
+    "control-source-use-qualification.json"
   ],
   "reviewSignalsAwaitingTriage": 0,
   "reviewSignalsTriaged": 73,
@@ -225,11 +237,13 @@
     },
     {
       "id": "native-tenant-lifecycle",
-      "status": "validated_awaiting_merge",
+      "status": "merged",
       "behavioralRed": "8owner/handler failures +1productionHTTP204vs200 failure",
       "focusedGreen": "419passed/0failed",
       "fullUnitGreen": "5605passed/0failed",
-      "jev": "16currentfiles;1signaltriaged;directintegrationmerge.86"
+      "jev": "16currentfiles;1signaltriaged;directintegrationmerge.86",
+      "pullRequest": 1101,
+      "mergeCommit": "5ba9fdc9fc57bd0c2078ffac931bf22b852e4c2c"
     },
     {
       "id": "native-first-response-http-transport",
@@ -237,6 +251,15 @@
       "externalDependency": false,
       "evidence": "Installed plain Portia Result HTTP mapper returns204; native frozen FirstResponseDescriptor200/202 does not alone control HTTP. Confirmed by production lifecycle test. Three tenant lifecycle commands repaired with typed UnitResult; other immediateUnit and pending202 producers need correct descriptor-aware transport adaptation and actual wire proof.",
       "nextWork": "Implement scoped native-first-response observer/filter or equivalent typed transport adapters; preserve actual first status/body, current auth, errors, unavailable/corrupt body classification and internal-child isolation. No global operation lookup required."
+    },
+    {
+      "id": "native-control-owner-and-consumers",
+      "slice": "S32",
+      "status": "validated_awaiting_merge",
+      "focusedGreen": "230passed/0failed",
+      "fullUnitGreen": "5634passed/0failed",
+      "webGreen": "44passed/0failed",
+      "jev": "142currentfiles;1obsoletehelperremoved;5signalstriaged;directintegrationmerge.60"
     }
   ],
   "resolved": [

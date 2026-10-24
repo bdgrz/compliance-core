@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-10-24",
-  "sourceCommit": "942a0e08a9cff546d3ea3cc63eaab1561c99a638",
+  "sourceCommit": "5ba9fdc9fc57bd0c2078ffac931bf22b852e4c2c",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
     "domainEventContracts": 511,
     "factsWithReducer": 488,
-    "factsWithAggregateEmitter": 486,
+    "factsWithAggregateEmitter": 476,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 21,
-    "legacyReducerOnlyFacts": 2,
+    "legacyReducerOnlyFacts": 12,
     "aggregateTypes": 131,
-    "aggregateTypesWithCommandPath": 125,
+    "aggregateTypesWithCommandPath": 124,
     "requestContracts": 783,
     "commonRequestContracts": 781,
     "requestClassificationCounts": {
@@ -2780,16 +2780,14 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Applications/ApplicationControlVersionReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlProjectionFacts.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlCriterionMappingProposed",
@@ -2855,21 +2853,19 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/DraftActorSnapshotE2ETests.cs",
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
-        "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationChangePreviewTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationControlDraftReferenceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Applications/ApplicationControlVersionReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Boundaries/ControlBoundaryImpactContributorTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlDraftActorProjectionTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlAuthorityBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlDraftActorSnapshotTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlDraftHistoryDirectoryV1Tests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlNativeBoundaryRedTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlNativeContentTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlDraftDiscarded",
@@ -2880,19 +2876,14 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationControlDraftReferenceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlDraftActorSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlDraftTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
-        "test/Compliance.Tests/Features/Controls/FitzControlDraftDirectoryV2Tests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlProjectionFacts.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlDraftRevised",
@@ -2903,21 +2894,17 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/DraftActorSnapshotE2ETests.cs",
         "test/Compliance.Tests/E2E/TenantInvitationE2ETests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationControlDraftReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Applications/ApplicationControlVersionReferenceDirectoryTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlDraftActorSnapshotTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlDraftHistoryDirectoryV1Tests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlDraftTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlNativeContentTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlProjectionFacts.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlEvaluationDeviationDisposed",
@@ -3136,15 +3123,12 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlOwnerPersonWriteTests.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlProposalWithdrawn",
@@ -3155,17 +3139,13 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationControlVersionReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlOwnershipAndWithdrawalTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlProjectionFacts.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlRetired",
@@ -3176,16 +3156,13 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationControlVersionReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlProjectionFacts.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlRetirementProposed",
@@ -3196,15 +3173,13 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationControlVersionReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlProjectionFacts.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlReviewed",
@@ -3215,14 +3190,15 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlAuthorityBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlNativeContentTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlProjectionFacts.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "ControlSuccessorProposed",
@@ -3233,17 +3209,13 @@
           "source": "src/Compliance.Core/Features/Controls/ControlDraft.cs"
         }
       ],
-      "emitters": [
-        "src/Compliance.Core/Features/Controls/ControlDraft.cs"
-      ],
+      "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/ApplicationControlVersionReferenceDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
-        "test/Compliance.Tests/Features/Controls/FitzControlDraftDirectoryV2Tests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlProjectionFacts.cs"
       ],
-      "disposition": "aggregate_fact",
-      "note": ""
+      "disposition": "legacy_replay",
+      "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path."
     },
     {
       "fact": "CorrectiveActionAddedV2",
@@ -6581,7 +6553,8 @@
         "test/Compliance.Tests/Features/Responsibilities/ResponsibilitySetProjectionTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Hosting/Persistence/EventPersistenceFrameTests.cs"
+        "test/Compliance.Tests/Hosting/Persistence/EventPersistenceFrameTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -6612,7 +6585,8 @@
         "test/Compliance.Tests/Features/Responsibilities/ResponsibilitySetProjectionTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzControlDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -9982,7 +9956,6 @@
       ],
       "commandRequests": [
         "ApproveCommitmentDraft",
-        "AssignResponsibility",
         "CreateCommitmentDraft",
         "RetireCommitment",
         "ReviewCommitmentDraft",
@@ -10097,20 +10070,7 @@
         "ResponsibilityAssigned",
         "ResponsibilityRevoked"
       ],
-      "commandRequests": [
-        "ApproveControl",
-        "AssignResponsibility",
-        "CreateControlDraft",
-        "DesignateControlOwnerPerson",
-        "DiscardControlDraft",
-        "ProposeControlRetirement",
-        "ProposeControlSuccessor",
-        "RetireControl",
-        "ReviewControl",
-        "ReviseControlDraft",
-        "RevokeResponsibility",
-        "WithdrawControlProposal"
-      ],
+      "commandRequests": [],
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ControlDraftE2ETests.cs",
@@ -10122,7 +10082,9 @@
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorRecordVersionTests.cs",
         "test/Compliance.Tests/Features/AdvisorCollaboration/PreviewAdvisorHandoffHandlerTests.cs"
       ],
-      "commandRouteDisposition": "registered_command_route"
+      "commandRouteDisposition": "pending_command_route",
+      "ownerIssue": 1022,
+      "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
     {
       "aggregate": "ControlEvaluation",
@@ -11865,7 +11827,6 @@
       ],
       "commandRequests": [
         "ApproveBoundary",
-        "AssignResponsibility",
         "CreateBoundary",
         "DiscardBoundaryDraft",
         "ProposeBoundarySuccessor",
@@ -14025,18 +13986,15 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlDraft",
-        "Person",
-        "SeparationOfDutiesWaiver"
+        "Person"
       ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Controls/ControlActivationHandlerTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Controls/PersonalControlDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/Controls/PersonalControlDecisionTransportTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
@@ -14060,7 +14018,9 @@
       "aggregateTargets": [
         "ControlOperatingPlan"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ControlReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOperatingIdentifiedOperationTests.cs",
         "test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs",
@@ -14436,7 +14396,7 @@
     {
       "request": "AssignResponsibility",
       "contract": "src/Compliance.Common/Features/Responsibilities/AssignResponsibility.cs",
-      "interfaces": "IRequest, IRbacManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IRbacManagementRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -14448,16 +14408,11 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "CommitmentDraft",
-        "ControlDraft",
         "Member",
         "SeparationOfDutiesWaiver",
         "SystemBoundary"
       ],
-      "aggregateTargets": [
-        "CommitmentDraft",
-        "ControlDraft",
-        "SystemBoundary"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/E2E/ControlOperationE2ETests.cs",
@@ -14662,8 +14617,8 @@
         "ControlOccurrence"
       ],
       "helperServices": [
-        "OccurrenceProofs",
-        "OperatingAuthority"
+        "ControlReader",
+        "OccurrenceProofs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
@@ -16117,8 +16072,7 @@
         "CorrectiveAction"
       ],
       "helperServices": [
-        "FindingReader",
-        "OperatingAuthority"
+        "FindingReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
@@ -16699,8 +16653,8 @@
         "ControlOccurrence"
       ],
       "helperServices": [
-        "OccurrenceProofs",
-        "OperatingAuthority"
+        "ControlReader",
+        "OccurrenceProofs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs",
@@ -16931,7 +16885,7 @@
     {
       "request": "CreateControlDraft",
       "contract": "src/Compliance.Common/Features/Controls/CreateControlDraft.cs",
-      "interfaces": "IRequest<ControlRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -16942,16 +16896,19 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ComplianceProgram",
-        "ControlDraft"
+        "ComplianceProgram"
       ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlDraftHandlerTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlAuthorityBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlDraftActorProjectionTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlDraftActorSnapshotTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlDraftHandlerTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlNativeBoundaryRedTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlNativeContentTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
@@ -17333,7 +17290,7 @@
         "ControlEvaluationPlan"
       ],
       "helperServices": [
-        "OperatingAuthority"
+        "ControlReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
@@ -17631,7 +17588,7 @@
     {
       "request": "DesignateControlOwnerPerson",
       "contract": "src/Compliance.Common/Features/Controls/DesignateControlOwnerPerson.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -17642,17 +17599,15 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlDraft",
         "Person"
       ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlOwnerPersonReadTests.cs",
-        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonWriteTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlOwnerPersonWriteTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
@@ -17705,7 +17660,7 @@
     {
       "request": "DiscardControlDraft",
       "contract": "src/Compliance.Common/Features/Controls/DiscardControlDraft.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -17715,15 +17670,14 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlDraft"
-      ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Controls/ControlDraftHandlerTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlAuthorityBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlDraftActorSnapshotTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlDraftHandlerTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
@@ -18204,9 +18158,7 @@
       "aggregateTargets": [
         "EvidenceRequest"
       ],
-      "helperServices": [
-        "OperatingAuthority"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs",
         "test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs",
@@ -19197,6 +19149,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlReader",
         "FindingReader"
       ],
       "testSymbolReferences": [
@@ -19224,7 +19177,9 @@
         "ControlEvaluationPlan"
       ],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ControlReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs"
@@ -19246,7 +19201,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ControlReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
@@ -19268,7 +19225,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ControlReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
@@ -21218,7 +21177,6 @@
       ],
       "helperServices": [
         "AccessReviewQueueEligibility",
-        "OperatingAuthority",
         "PopulationSnapshotFreezer"
       ],
       "testSymbolReferences": [
@@ -21298,9 +21256,7 @@
       "aggregateTargets": [
         "EvidenceSupport"
       ],
-      "helperServices": [
-        "EvidenceSupportTargetSource"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorRecordVersionResolverTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceSupportTests.cs",
@@ -22200,7 +22156,9 @@
         "ControlEvaluationPlan"
       ],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ControlReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs"
@@ -22223,6 +22181,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
+        "ControlReader",
         "FindingReader"
       ],
       "testSymbolReferences": [
@@ -22246,7 +22205,9 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ControlReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs",
@@ -22270,7 +22231,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
-        "OperatingAuthority"
+        "ControlReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
@@ -22352,11 +22313,12 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ComplianceProgram",
-        "ControlDraft"
+        "ComplianceProgram"
       ],
       "aggregateTargets": [],
-      "helperServices": [],
+      "helperServices": [
+        "ControlReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs"
       ],
@@ -22729,8 +22691,8 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
-        "FindingReader",
-        "OperatingAuthority"
+        "ControlReader",
+        "FindingReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs",
@@ -24378,7 +24340,7 @@
         "ControlOccurrence"
       ],
       "helperServices": [
-        "OperatingAuthority"
+        "ControlReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
@@ -24399,13 +24361,14 @@
       ],
       "handlerRegistration": true,
       "directAggregateReferences": [
-        "ControlDraft",
         "EvidenceRequest"
       ],
       "aggregateTargets": [
         "EvidenceRequest"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ControlReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs",
@@ -24748,7 +24711,7 @@
       "directAggregateReferences": [],
       "aggregateTargets": [],
       "helperServices": [
-        "OperatingAuthority"
+        "ControlReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs"
@@ -24878,9 +24841,7 @@
       "handlerRegistration": true,
       "directAggregateReferences": [],
       "aggregateTargets": [],
-      "helperServices": [
-        "ProviderChangeImpactService"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Providers/AttestProviderManagementWriteWallTests.cs"
       ],
@@ -25067,7 +25028,7 @@
         "ControlOperatingPlan"
       ],
       "helperServices": [
-        "OperatingAuthority"
+        "ControlReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
@@ -25077,7 +25038,7 @@
     {
       "request": "ProposeControlRetirement",
       "contract": "src/Compliance.Common/Features/Controls/ProposeControlRetirement.cs",
-      "interfaces": "IRequest<ControlRetirementRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlRetirementRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -25087,23 +25048,20 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlDraft"
-      ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Controls/PersonalControlDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/Controls/PersonalControlDecisionTransportTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
     {
       "request": "ProposeControlSuccessor",
       "contract": "src/Compliance.Common/Features/Controls/ProposeControlSuccessor.cs",
-      "interfaces": "IRequest<ControlSuccessorRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest<ControlSuccessorRegistration>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -25113,15 +25071,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlDraft"
-      ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
@@ -25388,6 +25343,7 @@
         "TypeIIPlan"
       ],
       "helperServices": [
+        "ControlReader",
         "FindingReader"
       ],
       "testSymbolReferences": [
@@ -25512,13 +25468,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlDraft"
-      ],
+      "directAggregateReferences": [],
       "aggregateTargets": [
         "FindingAggregate"
       ],
       "helperServices": [
+        "ControlReader",
         "RoutedFinding"
       ],
       "testSymbolReferences": [
@@ -25673,8 +25628,7 @@
         "AccessReviewItem"
       ],
       "helperServices": [
-        "AccessReviewQueueEligibility",
-        "OperatingAuthority"
+        "AccessReviewQueueEligibility"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessReviews/AccessReviewBulkDecisionTests.cs",
@@ -28559,7 +28513,7 @@
     {
       "request": "RetireControl",
       "contract": "src/Compliance.Common/Features/Controls/RetireControl.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -28569,17 +28523,13 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlDraft",
-        "SeparationOfDutiesWaiver"
-      ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Controls/PersonalControlDecisionTransportTests.cs"
+        "test/Compliance.Tests/Features/Controls/PersonalControlDecisionTransportTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
@@ -28776,19 +28726,17 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlDraft",
-        "SeparationOfDutiesWaiver"
-      ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Controls/ControlActivationHandlerTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlAuthorityBoundaryTests.cs",
         "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlNativeContentTests.cs",
         "test/Compliance.Tests/Features/Controls/PersonalControlDecisionTransportTests.cs",
-        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
@@ -28840,9 +28788,7 @@
       "aggregateTargets": [
         "ControlEvaluation"
       ],
-      "helperServices": [
-        "OperatingAuthority"
-      ],
+      "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
         "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
@@ -28871,8 +28817,8 @@
         "ControlOccurrence"
       ],
       "helperServices": [
-        "OccurrenceProofs",
-        "OperatingAuthority"
+        "ControlReader",
+        "OccurrenceProofs"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
@@ -29357,7 +29303,7 @@
     {
       "request": "ReviseControlDraft",
       "contract": "src/Compliance.Common/Features/Controls/ReviseControlDraft.cs",
-      "interfaces": "IRequest,\n    IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest,\n    IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -29367,15 +29313,16 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlDraft"
-      ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Controls/ControlDraftHandlerTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlAuthorityBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlDraftActorSnapshotTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlDraftHandlerTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlNativeBoundaryRedTests.cs",
+        "test/Compliance.Tests/Features/Controls/ControlNativeContentTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
@@ -30071,7 +30018,7 @@
     {
       "request": "RevokeResponsibility",
       "contract": "src/Compliance.Common/Features/Responsibilities/RevokeResponsibility.cs",
-      "interfaces": "IRequest, IRbacManagementRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IRbacManagementRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -30083,12 +30030,10 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "CommitmentDraft",
-        "ControlDraft",
         "SystemBoundary"
       ],
       "aggregateTargets": [
         "CommitmentDraft",
-        "ControlDraft",
         "SystemBoundary"
       ],
       "helperServices": [],
@@ -30097,7 +30042,8 @@
         "test/Compliance.Tests/Features/Controls/ControlLifecycleTests.cs",
         "test/Compliance.Tests/Features/Work/CommitmentDecisionWorkTests.cs",
         "test/Compliance.Tests/Features/Work/FitzBoundaryDecisionWorkItemDirectoryTests.cs",
-        "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Work/FitzCommitmentDecisionWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },
@@ -30167,13 +30113,14 @@
       "handlerRegistration": true,
       "directAggregateReferences": [
         "ComplianceProgram",
-        "ControlDraft",
         "ProgramReadiness"
       ],
       "aggregateTargets": [
         "ProgramReadiness"
       ],
-      "helperServices": [],
+      "helperServices": [
+        "ControlReader"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs",
@@ -30942,7 +30889,7 @@
         "ControlEvaluation"
       ],
       "helperServices": [
-        "OperatingAuthority"
+        "ControlReader"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
@@ -31002,6 +30949,7 @@
         "TypeIIPeriod"
       ],
       "helperServices": [
+        "ControlReader",
         "FindingReader"
       ],
       "testSymbolReferences": [
@@ -31270,7 +31218,7 @@
     {
       "request": "WithdrawControlProposal",
       "contract": "src/Compliance.Common/Features/Controls/WithdrawControlProposal.cs",
-      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+      "interfaces": "IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
       "classification": "command",
       "handlers": [
         {
@@ -31280,15 +31228,12 @@
         }
       ],
       "handlerRegistration": true,
-      "directAggregateReferences": [
-        "ControlDraft"
-      ],
-      "aggregateTargets": [
-        "ControlDraft"
-      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs"
+        "test/Compliance.Tests/Features/Controls/ControlLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Testing/ControlSeeds.cs"
       ],
       "note": ""
     },

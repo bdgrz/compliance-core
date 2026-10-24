@@ -420,7 +420,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
         public Uuid ExecutiveId { get; } = Uuid.CreateVersion4();
         public Uuid OutcomeReviewerId { get; } = Uuid.CreateVersion4();
         public Uuid BoundaryId { get; } = Uuid.CreateVersion4();
-        public Uuid ControlId { get; } = Uuid.CreateVersion4();
+        public Uuid ControlId => ControlDraft.IdFor(TenantId, ProgramId, "AC-T1-01");
         public Uuid ControlVersionId => ControlVersionIds.Initial(ControlId);
         public Uuid PolicyId { get; } = Uuid.CreateVersion4();
         public Uuid RiskId { get; } = Uuid.CreateVersion4();
@@ -458,7 +458,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             Writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
             Executor = scope.ServiceProvider.GetRequiredService<IAggregateExecutor>();
             Findings = new FindingReader(Reader, events, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
-            Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader, Findings,
+            Handler = new ProposeTypeIIOperatingPlanHandler(Executor, Reader, new ControlReader(Reader, events, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Findings,
                 new ControlOperationsReader(Reader, events,
                     scope.ServiceProvider.GetRequiredService<IImmutableContentStore>()), Clock);
         }
@@ -489,7 +489,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
             var finding = (await Findings.ReadViewAsync(TenantId, ProgramId, FindingId, Now))!;
             var findingIdentity = FindingContentIdentityFactory.Create(finding, []);
 
-            var control = new ControlDraft(TenantId, ControlId);
+            var control = new ControlRules(TenantId, ControlId);
             Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "AC-T1-01",
                 new ControlDraftContent("Quarterly access review", "Review user access",
                     "Management reviews access quarterly.",
@@ -507,7 +507,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
                 new DateOnly(2026, 10, 1), "Approved for operation.", new HashSet<Uuid> { MemberId },
                 ExecutiveId, "Chief Executive", Now.AddMinutes(-16)));
             var controlVersion = control.ApprovedVersion!;
-            await Writer.SaveAsync(control, new RequestDispatchContext(RequestActor.System));
+            await ControlSeeds.WriteAsync(Writer, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), control, CancellationToken.None);
 
             var operatingPlanId = Uuid.CreateVersion4();
             await ControlOperatingSeed.ProposeAsync(provider, TenantId, ProgramId, ControlId, controlVersion.VersionId,

@@ -861,16 +861,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/setup-work")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Programs");
-    app.MapPortiaPost<CreateControlDraft, ControlRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls")
+    app.MapPortiaPut<CreateControlDraft, ControlRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{identifier}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaPut<ReviseControlDraft>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft")
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/revisions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
-    app.MapPortiaPost<DiscardControlDraft>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/discards")
+    app.MapPortiaPut<DiscardControlDraft>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/discards/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<GetControlDraft, ControlDraftView>(
@@ -947,12 +947,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/criteria-coverage")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Control mappings");
-    app.MapPortiaPost<ProposeControlSuccessor, ControlSuccessorRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/successors")
+    app.MapPortiaPut<ProposeControlSuccessor, ControlSuccessorRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/successors/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
-    app.MapPortiaPost<ProposeControlRetirement, ControlRetirementRegistration>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/retirement-proposals")
+    app.MapPortiaPut<ProposeControlRetirement, ControlRetirementRegistration>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/retirement-proposals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<PreviewControlImpact, ControlImpactPreview>(
@@ -960,17 +960,17 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     // Retirement approval is a human decision and stays HTTP-only.
-    app.MapPortiaPost<RetireControl>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/retirements")
+    app.MapPortiaPut<RetireControl>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/retirements/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     // Withdrawal and person-owner designation are human decisions and stay HTTP-only.
-    app.MapPortiaPost<WithdrawControlProposal>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/proposal-withdrawals")
+    app.MapPortiaPut<WithdrawControlProposal>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/proposal-withdrawals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaPut<DesignateControlOwnerPerson>(
-            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person")
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/draft/owner-person/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Controls");
     app.MapPortiaGet<GetControlDraftOwnerPerson, ControlDraftOwnerPersonView>(
@@ -2441,12 +2441,12 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/boundaries/{boundary_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Boundaries");
-    app.MapPortiaPost<AssignResponsibility>(
-            "/api/v1/tenants/{tenant_id}/responsibilities")
+    app.MapPortiaPut<AssignResponsibility>(
+            "/api/v1/tenants/{tenant_id}/responsibilities/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Responsibilities");
-    app.MapPortiaPost<RevokeResponsibility>(
-            "/api/v1/tenants/{tenant_id}/responsibilities/{assignment_id}/revocation")
+    app.MapPortiaPut<RevokeResponsibility>(
+            "/api/v1/tenants/{tenant_id}/responsibilities/{assignment_id}/revocations/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Responsibilities");
     app.MapPortiaGet<ListResponsibilities, ResponsibilitySetView>(

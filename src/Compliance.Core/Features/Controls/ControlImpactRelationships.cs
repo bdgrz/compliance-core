@@ -8,7 +8,7 @@ namespace Bdgrz.Compliance.Features.Controls;
 /// <summary>Resolves retained finding relationships through canonical IDs and the owning control identifier.</summary>
 static class ControlImpactRelationships
 {
-    public static IReadOnlyList<FindingView> Findings(ControlDraft subject,
+    public static IReadOnlyList<FindingView> Findings(ControlReadSnapshot subject,
         ControlOperationsSnapshot operations, IReadOnlyList<ControlEvaluationView> evaluations,
         FindingReadSnapshot remediation)
     {

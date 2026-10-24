@@ -280,7 +280,7 @@ public sealed class ApplicationReadinessImpactTests
             readinessDirectory, events);
         var readinessImpactReader = readinessHost.Reader;
         var boundaries = new FitzApplicationBoundaryReferenceDirectory(kv);
-        var controls = new FitzApplicationControlDraftReferenceDirectory(kv);
+        var controls = new FitzApplicationControlDraftReferenceDirectory(kv, new ControlProjectionFacts().Content);
         var handler = new PreviewApplicationChangeHandler(sourceReader, applications,
             boundaries, new ApplicationBoundaryReferenceReadConsistency(boundaries, events),
             controls, new ApplicationControlDraftReferenceReadConsistency(controls, events),

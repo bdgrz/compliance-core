@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -214,7 +215,7 @@ public sealed class FitzPolicyCampaignWorkItemDirectoryTests
         var consistency = new WorkQueueReadConsistency(events, [projected]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             campaigns: new UnexpectedCampaignDirectory(), accountableWorkItems: [projected],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),

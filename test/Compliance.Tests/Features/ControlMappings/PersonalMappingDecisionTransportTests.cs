@@ -1,6 +1,7 @@
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.Criteria;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Features.Programs;
 using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Bdgrz.Compliance.Tests.Testing;
@@ -186,8 +187,11 @@ public sealed class PersonalMappingDecisionTransportTests
         Uuid _decision;
         public Permissions Permissions { get; } = new();
 
+        readonly ServiceProvider _sourceProvider;
+
         Fixture(ControlCriterionMappingHandlerTests.Fixture source)
         {
+            _sourceProvider = source.Provider;
             Tenant = source.TenantId;
             Program = source.ProgramId;
             Author = source.AuthorUserId;
@@ -202,6 +206,7 @@ public sealed class PersonalMappingDecisionTransportTests
             services.AddSingleton<IEventStore>(events);
             services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);
             services.AddSingleton<IKvClient>(new InMemoryKvClient());
+            services.AddSingleton(source.Provider.GetRequiredService<IImmutableContentStore>());
             services.AddSingleton<IAccessGrantPermissionAuthorizer>(new PermissionBackedAccessGrantPermissionAuthorizer(Permissions));
             services.AddSingleton<ITenantActivity, ActiveTenant>();
             services.AddSingleton<ITenantMembershipDirectoryReader, AlwaysMemberDirectory>();
@@ -212,7 +217,6 @@ public sealed class PersonalMappingDecisionTransportTests
         {
             var source = await ControlCriterionMappingHandlerTests.Fixture.CreateAsync();
             var fixture = new Fixture(source);
-            await source.Provider.DisposeAsync();
             await using var scope = fixture._provider.CreateAsyncScope();
             var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
             if (action == "mapping")
@@ -271,6 +275,10 @@ public sealed class PersonalMappingDecisionTransportTests
                 new ReviewCriterionApplicability(Uuid.CreateVersion4(), Tenant, program ?? Program, _decision, 1, "accept", "Verified");
             return await bus.DispatchAsync(request, context, CancellationToken.None);
         }
-        public ValueTask DisposeAsync() => _provider.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            await _provider.DisposeAsync();
+            await _sourceProvider.DisposeAsync();
+        }
     }
 }

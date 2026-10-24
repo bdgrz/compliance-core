@@ -7,7 +7,7 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Work;
 
 sealed class FitzControlDecisionWorkItemDirectory(IKvClient client,
-    IAggregateReader sourceReader, OperatingAuthority authority,
+    ControlReader controlSources, OperatingAuthority authority,
     ControlActivationReleaseGate activationGate, ControlLifecycleReleaseGate lifecycleGate)
     : FitzKvProjectionStore(client,
         "kv://bdgrz/accountable-work-items/control-decisions-v1", ProjectorName),
@@ -37,6 +37,8 @@ sealed class FitzControlDecisionWorkItemDirectory(IKvClient client,
 
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
     {
+        if (domainEvent is IControlFact { ChangeCount: 0 })
+            return;
         var (tenantId, controlId) = ScopeFor(domainEvent);
         if (tenantId == Uuid.Empty || controlId == Uuid.Empty)
             return;
@@ -48,7 +50,7 @@ sealed class FitzControlDecisionWorkItemDirectory(IKvClient client,
             throw new InvalidOperationException(
                 "A control decision work event cannot replace state outside its recorded scope.");
 
-        var control = await sourceReader.HydrateAsync(new ControlDraft(tenantId, controlId), ct)
+        var control = await controlSources.ReadAsync(tenantId, controlId, ct)
             .ConfigureAwait(false);
         if (!control.IsCreated || control.TenantId != tenantId || control.ProgramId == Uuid.Empty ||
             control.Revision < 1)

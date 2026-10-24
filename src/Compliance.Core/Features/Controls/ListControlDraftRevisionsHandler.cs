@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
@@ -28,6 +29,10 @@ public sealed class ListControlDraftRevisionsHandler(IControlDraftHistoryDirecto
         {
             return Result<Page<ControlDraftRevisionView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The control draft revision cursor is invalid."));
+        }
+        catch (ImmutableContentIntegrityException error)
+        {
+            return Result<Page<ControlDraftRevisionView>>.Failure(ControlReadFailure.Of(error));
         }
         return page.Items.Any(item => item.TenantId != request.TenantId ||
                                       item.ProgramId != request.ProgramId ||

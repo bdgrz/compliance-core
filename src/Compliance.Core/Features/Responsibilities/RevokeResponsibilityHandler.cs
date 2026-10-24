@@ -8,13 +8,15 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Responsibilities;
 
 public sealed class RevokeResponsibilityHandler(IAggregateExecutor executor,
-    IResponsibilityScopeValidator scopeValidator, TimeProvider clock)
+    IResponsibilityScopeValidator scopeValidator, ControlOperations controls, TimeProvider clock)
     : IRequestHandler<RevokeResponsibility>
 {
     public async ValueTask<Result> HandleAsync(IRequestContext<RevokeResponsibility> context,
         CancellationToken ct)
     {
         var request = context.Request;
+        if (request.RecordType == SeparationOfDutiesRecordTypes.Control)
+            return await controls.RevokeResponsibilityAsync(context, scopeValidator, ct).ConfigureAwait(false);
         var scopeResult = await scopeValidator.ValidateAsync(request.TenantId, request.Scope, ct)
             .ConfigureAwait(false);
         if (!scopeResult.IsSuccess)
@@ -28,13 +30,6 @@ public sealed class RevokeResponsibilityHandler(IAggregateExecutor executor,
                 request.Scope.RecordId), commitment => CommandFailureRequestAdapter.ToOutcome(
                 commitment.RevokeResponsibility(request.Scope, request.AssignmentId,
                     actorMemberId, UserIdentityClaims.BdgrzDisplay(context.Actor, actorUserId),
-                    clock.GetUtcNow(), request.Reason)),
-                context, ct).ConfigureAwait(false);
-        if (request.RecordType == SeparationOfDutiesRecordTypes.Control)
-            return await executor.ExecuteAsync(new ControlDraft(request.TenantId,
-                request.Scope.RecordId), control => CommandFailureRequestAdapter.ToOutcome(
-                control.RevokeResponsibility(request.Scope, request.AssignmentId, actorMemberId,
-                    UserIdentityClaims.BdgrzDisplay(context.Actor, actorUserId),
                     clock.GetUtcNow(), request.Reason)),
                 context, ct).ConfigureAwait(false);
         return await executor.ExecuteAsync(new SystemBoundary(request.TenantId, request.Scope.RecordId), boundary =>

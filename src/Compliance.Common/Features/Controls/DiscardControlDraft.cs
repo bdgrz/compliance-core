@@ -4,6 +4,9 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-[Discriminator("bdgrz.control.draft.discard", 1)]
-public sealed record DiscardControlDraft(Uuid TenantId, Uuid ProgramId, Uuid ControlId,
-    long ExpectedRevision, string Rationale) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable;
+[Discriminator("bdgrz.control.draft.discard", 2)]
+public sealed record DiscardControlDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid ControlId,
+    long ExpectedRevision, string Rationale) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

@@ -151,7 +151,7 @@ public sealed class AttestManagementWriteWallTests
         await using var scope = provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         await SeedProgramAsync(provider);
-        var controlId = Uuid.CreateVersion4();
+        var controlId = ControlDraft.IdFor(Tenant, Program, "AC-1");
         if (affiliation == "client_personnel")
         {
             var control = await bus.SendAsync(new CreateControlDraft(Tenant, Program, "AC-1", Content), Actor);
@@ -160,7 +160,7 @@ public sealed class AttestManagementWriteWallTests
         }
         else
         {
-            await ProgramManagementServices.SeedAsync(provider, new ControlDraft(Tenant, controlId), draft =>
+            await ProgramManagementServices.SeedAsync(provider, new ControlRules(Tenant, controlId), draft =>
             {
                 Assert.True(draft.Create(Program, Uuid.CreateVersion4(), "AC-1", Content,
                     RbacIds.Member(Tenant, User), "Client author", Now).IsSuccess);
@@ -168,13 +168,19 @@ public sealed class AttestManagementWriteWallTests
             });
         }
         var projection = scope.ServiceProvider.GetRequiredService<IControlDraftDirectoryProjection>();
+        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
+        var cursor = EventCursor.Start;
         await using (var batch = await projection.BeginAsync(new ProjectionBatchContext(
-            new CheckpointIdentity("ControlDraftDirectoryV2", EventStreamPattern.ForPattern(Tenant.ToString(),
-                "controls")), ProjectionCheckpoint.Start)))
+                         new CheckpointIdentity(FitzControlDraftDirectoryV2.ProjectorName, EventStreamPattern.ForPattern(
+                             Tenant.ToString(), "controls")), ProjectionCheckpoint.Start)))
         {
-            await projection.ApplyAsync(new ControlDraftCreated(Tenant, Program, controlId,
-                Uuid.CreateVersion4(), "AC-1", Content, RbacIds.Member(Tenant, User), "Client author", Now));
-            await batch.CommitAsync(ProjectionCheckpoint.Start);
+            await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(
+                               Tenant.ToString(), "controls", controlId.ToString()), cursor, CancellationToken.None))
+            {
+                await projection.ApplyAsync(record.Event);
+                cursor = record.NextCursor;
+            }
+            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
         await AttestAssignmentHistoryFixture.SeedAsync(provider, Tenant, User, true);
 

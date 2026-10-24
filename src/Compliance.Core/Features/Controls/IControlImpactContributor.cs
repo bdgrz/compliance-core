@@ -8,4 +8,4 @@ namespace Bdgrz.Compliance.Features.Controls;
 ///     unlinked because no record in them can reference a Control yet.
 /// </summary>
 public interface IControlImpactContributor :
-    IImpactContributor<ControlDraft, ControlChange, ControlImpactContribution>;
+    IImpactContributor<ControlReadSnapshot, ControlChange, ControlImpactContribution>;

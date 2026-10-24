@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Controls;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AuditPopulations;
 using Bdgrz.Compliance.Features.Content;
@@ -85,7 +86,7 @@ sealed class TypeIIRangeHost : IAsyncDisposable
         .Get(TypeIIRangeEffects.ProcessName);
 
     public StartTypeIIObservationPeriodHandler StartHandler(TimeProvider clock) => new(
-        Services.GetRequiredService<NativeOperationExecutor>(), Reader,
+        Services.GetRequiredService<NativeOperationExecutor>(), Reader, new ControlReader(Reader, Events, Content),
         Services.GetRequiredService<FindingReader>(), Services.GetRequiredService<ControlOperationsReader>(), Content,
         clock);
 

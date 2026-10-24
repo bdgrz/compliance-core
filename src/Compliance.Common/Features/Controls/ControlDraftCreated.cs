@@ -1,14 +1,34 @@
+using Bdgrz.Compliance.Features.Proofs;
+using Bdgrz.Compliance.Features.NativeOperations;
 using System.Text.Json.Serialization;
 using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Controls;
 
-[Discriminator("bdgrz.control.draft.created", 1)]
+[Discriminator("bdgrz.control.draft.created", 2)]
 public sealed record ControlDraftCreated(Uuid TenantId, Uuid ProgramId, Uuid ControlId,
-    Uuid CreateRequestId, string Identifier, ControlDraftContent Content, Uuid ActorMemberId,
-    string ActorDisplay, DateTimeOffset ChangedAt) : DomainEvent
+    Uuid CreateRequestId, string Identifier, ImmutableContentRef Content, Uuid ActorMemberId,
+    string ActorDisplay, DateTimeOffset ChangedAt) : DomainEvent, IControlFact
 {
+    /// <summary>The exact native acceptance and immutable original result.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public OperationProvenance Operation { get; init; } = default!;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? FirstResponse { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? OperationResult { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ControlAuthorityHeader Header { get; init; } = default!;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef Change { get; init; } = default!;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef Authority { get; init; } = default!;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public long NativeSequence { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public int ChangeCount { get; init; }
+
     [JsonPropertyName("actor")]
     public ActorReference? StoredActor { get; init; }
 

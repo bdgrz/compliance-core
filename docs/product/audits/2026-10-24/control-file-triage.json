@@ -1,0 +1,70 @@
+{
+  "reviewed": 142,
+  "removedSourceFiles": [
+    "src/Compliance.Core/Features/Controls/ControlPersonOwner.cs"
+  ],
+  "blockedReviews": 0,
+  "signalsTriaged": 5,
+  "rows": [
+    {
+      "path": "src/Compliance.Core/Features/Controls/ControlOperations.Responsibilities.cs",
+      "sha256": "8945958aea9c638038ed60bd00fef21972e06c342d94d6117ae1c81936cbd68c",
+      "signals": {
+        "authority_gap": 0.65,
+        "invariant_gap": 0.78,
+        "recovery_gap": 0.6,
+        "incomplete_path": 0.4
+      },
+      "classification": "native_local_binding_verified_cross_owner_qualification_explicit",
+      "evidence": "Assignments/revocations are native Control operations; current exact pending scope, active tenant member, current member source recheck and exact immutable waiver tuple remain. Own append derives before/after authority and checks physical tail because assignments share content revision. Original replay precedes these mutable reads. No lease on foreign current source is invented: selected Control source-use acquisition/settlement pair is absent and qualification is explicitly recorded locally."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Controls/ControlRules.cs",
+      "sha256": "e5063198e03fc208fa2fbb3d380f04bb36bfc0cf7c341a6c4843c672b5f15530",
+      "signals": {
+        "authority_gap": 0.47,
+        "invariant_gap": 0.6,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.35
+      },
+      "classification": "pure_rules_with_original_native_recovery_and_actor_read_fix",
+      "evidence": "Rules is a transient policy/read fold and never persists facts. Native executor resolves original receipt before async mutable preparation, with selected acceptance and failure/OCC rechecks. Large valid body and70revision history tests exercise external immutable content. Existing process-actor projection regressions caught DraftView parsing process ID as member UUID; it now retains actual scalar ActorMemberId separately while preserving full actor snapshot.230focused tests pass."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Providers/ProviderChangeImpactService.cs",
+      "sha256": "af6df975add6ed542265ffcfebb3eee0fe5864f6910c605440fcd71181415c9f",
+      "signals": {
+        "authority_gap": 0.53,
+        "invariant_gap": 0.53,
+        "recovery_gap": 0.7,
+        "incomplete_path": 0.33
+      },
+      "classification": "read_only_preview_with_bounded_source_failure_classification",
+      "evidence": "Planning preview only, not authoritative approval. Existing bounds/checkpoint/scope/visibility and explicit incomplete markers remain. Control reads now use exact native reader; expected missing/corrupt immutable content maps to transient/permanent failure. No mutation receipt is required for preview. Relevant full-suite tests are running."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/FitzControlDecisionWorkItemDirectory.cs",
+      "sha256": "3544671e55d69ecb2e4f7c36eb1b7a813ee1cac407a1a9516869afcb3e3a3694",
+      "signals": {
+        "authority_gap": 0.58,
+        "invariant_gap": 0.66,
+        "recovery_gap": 0.65,
+        "incomplete_path": 0.53
+      },
+      "classification": "compact_work_discovery_with_source_authority_and_failure_gates",
+      "evidence": "Work projection stores compact discovery identity and resolves actual native Control authority at query time, preserving due/current eligibility and source checkpoints. Bounded entrypoints classify expected immutable read failures and do not return partial successful pages. Projector Apply faults still propagate for checkpoint retry; no authoritative mutation is delegated to the work index."
+    },
+    {
+      "path": "src/Compliance.Core/Features/Work/FitzControlOperatingPlanWorkItemDirectory.cs",
+      "sha256": "2b896ee77e692dfa8e63b35f8462a0e80a24aac6cbb6c2191594bd9ab5297466",
+      "signals": {
+        "authority_gap": 0.54,
+        "invariant_gap": 0.55,
+        "recovery_gap": 0.66,
+        "incomplete_path": 0.4
+      },
+      "classification": "compact_work_discovery_with_source_authority_and_failure_gates",
+      "evidence": "Work projection stores compact discovery identity and resolves actual native Control authority at query time, preserving due/current eligibility and source checkpoints. Bounded entrypoints classify expected immutable read failures and do not return partial successful pages. Projector Apply faults still propagate for checkpoint retry; no authoritative mutation is delegated to the work index."
+    }
+  ]
+}

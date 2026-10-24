@@ -498,7 +498,7 @@ public sealed class RiskGovernanceHandlerTests
             var owner = Uuid.CreateVersion4();
             var reviewId = Uuid.CreateVersion4();
             await ProgramManagementServices.SeedAsync(provider,
-                new ControlDraft(fixture.TenantId, fixture.ControlId), control =>
+                new ControlRules(fixture.TenantId, fixture.ControlId), control =>
                 {
                     Assert.True(control.Create(fixture.ProgramId, Uuid.CreateVersion4(),
                         "AC-RISK", new ControlDraftContent("Access review", "Review access",

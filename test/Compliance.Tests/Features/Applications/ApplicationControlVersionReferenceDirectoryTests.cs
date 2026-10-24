@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Applications;
 using Bdgrz.Compliance.Features.Controls;
@@ -9,6 +10,7 @@ namespace Bdgrz.Compliance.Tests.Features.Applications;
 
 public sealed class ApplicationControlVersionReferenceDirectoryTests
 {
+    readonly ControlProjectionFacts _controlFacts = new();
     [Fact]
     public async Task ShouldIndexApprovedVersionsGivenApplicationAndSystemInstanceApplicability()
     {
@@ -20,14 +22,14 @@ public sealed class ApplicationControlVersionReferenceDirectoryTests
         var applicationId = Uuid.CreateVersion4();
         var instanceId = Uuid.CreateVersion4();
         var directory = new FitzApplicationControlVersionReferenceDirectory(
-            new InMemoryKvClient());
+            new InMemoryKvClient(), _controlFacts.Content);
         var identity = Identity(tenantId);
         var content = Content(Entry("application", applicationId, "Payroll"),
             Entry("system_instance", instanceId, "Payroll production"));
-        await ApplyAsync(directory, identity, Created(tenantId, programId, controlId, content));
+        await ApplyAsync(directory, identity, await Created(tenantId, programId, controlId, content));
 
         // Act
-        await ApplyAsync(directory, identity, Approved(tenantId, programId, controlId,
+        await ApplyAsync(directory, identity, await Approved(tenantId, programId, controlId,
             versionId, 1, content, new DateOnly(2026, 1, 1)));
         var applicationReferences = await directory.ListAsync(tenantId, "application",
             applicationId, 20, null);
@@ -55,22 +57,22 @@ public sealed class ApplicationControlVersionReferenceDirectoryTests
         var predecessorId = Uuid.CreateVersion4();
         var successorId = Uuid.CreateVersion4();
         var directory = new FitzApplicationControlVersionReferenceDirectory(
-            new InMemoryKvClient());
+            new InMemoryKvClient(), _controlFacts.Content);
         var identity = Identity(tenantId);
         var originalContent = Content(Entry("application", applicationId, "Payroll"));
         var successorContent = Content(Entry("application", applicationId, "Payroll"));
-        await ApplyAsync(directory, identity, Created(tenantId, programId, controlId,
+        await ApplyAsync(directory, identity, await Created(tenantId, programId, controlId,
             originalContent));
-        await ApplyAsync(directory, identity, Approved(tenantId, programId, controlId,
+        await ApplyAsync(directory, identity, await Approved(tenantId, programId, controlId,
             predecessorId, 1, originalContent, new DateOnly(2026, 1, 1)));
 
         // Act
-        await ApplyAsync(directory, identity, new ControlSuccessorProposed(tenantId,
+        await ApplyAsync(directory, identity, await _controlFacts.FreezeAsync(new ControlSuccessorProposedContent(tenantId,
             programId, controlId, successorId, predecessorId, 2, Uuid.CreateVersion4(),
-            "Author", DateTimeOffset.UtcNow));
+            "Author", DateTimeOffset.UtcNow)));
         var proposed = await directory.ListAsync(tenantId, "application", applicationId,
             20, null);
-        await ApplyAsync(directory, identity, Approved(tenantId, programId, controlId,
+        await ApplyAsync(directory, identity, await Approved(tenantId, programId, controlId,
             successorId, 2, successorContent, new DateOnly(2027, 1, 1), predecessorId));
         var versions = await directory.ListAsync(tenantId, "application", applicationId,
             20, null);
@@ -99,36 +101,36 @@ public sealed class ApplicationControlVersionReferenceDirectoryTests
         var applicationId = Uuid.CreateVersion4();
         var retirementId = Uuid.CreateVersion4();
         var directory = new FitzApplicationControlVersionReferenceDirectory(
-            new InMemoryKvClient());
+            new InMemoryKvClient(), _controlFacts.Content);
         var identity = Identity(tenantId);
         var content = Content(Entry("application", applicationId, "Payroll"));
         var effectiveFrom = new DateOnly(2026, 1, 1);
         var effectiveUntil = new DateOnly(2027, 1, 1);
-        await ApplyAsync(directory, identity, Created(tenantId, programId, controlId, content));
-        await ApplyAsync(directory, identity, Approved(tenantId, programId, controlId,
+        await ApplyAsync(directory, identity, await Created(tenantId, programId, controlId, content));
+        await ApplyAsync(directory, identity, await Approved(tenantId, programId, controlId,
             versionId, 1, content, effectiveFrom));
 
         // Act
-        await ApplyAsync(directory, identity, new ControlRetirementProposed(tenantId,
+        await ApplyAsync(directory, identity, await _controlFacts.FreezeAsync(new ControlRetirementProposedContent(tenantId,
             programId, controlId, retirementId, versionId, 2, effectiveUntil,
             "The control is no longer required.", Uuid.CreateVersion4(), "Author",
-            DateTimeOffset.UtcNow));
+            DateTimeOffset.UtcNow)));
         var pending = Assert.Single((await directory.ListAsync(tenantId, "application",
             applicationId, 20, null)).Items);
-        await ApplyAsync(directory, identity, new ControlProposalWithdrawn(tenantId,
+        await ApplyAsync(directory, identity, await _controlFacts.FreezeAsync(new ControlProposalWithdrawnContent(tenantId,
             programId, controlId, Uuid.CreateVersion4(), "retirement", retirementId,
             versionId, 2, "Keep the control active.", Uuid.CreateVersion4(),
-            ActorReference.ForMember(Uuid.CreateVersion4(), "Author"), DateTimeOffset.UtcNow));
+            ActorReference.ForMember(Uuid.CreateVersion4(), "Author"), DateTimeOffset.UtcNow)));
         var withdrawn = Assert.Single((await directory.ListAsync(tenantId, "application",
             applicationId, 20, null)).Items);
         var finalRetirementId = Uuid.CreateVersion4();
-        await ApplyAsync(directory, identity, new ControlRetirementProposed(tenantId,
+        await ApplyAsync(directory, identity, await _controlFacts.FreezeAsync(new ControlRetirementProposedContent(tenantId,
             programId, controlId, finalRetirementId, versionId, 3, effectiveUntil,
-            "Retirement approved.", Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow));
-        await ApplyAsync(directory, identity, new ControlRetired(tenantId, programId,
+            "Retirement approved.", Uuid.CreateVersion4(), "Author", DateTimeOffset.UtcNow)));
+        await ApplyAsync(directory, identity, await _controlFacts.FreezeAsync(new ControlRetiredContent(tenantId, programId,
             controlId, finalRetirementId, versionId, 3, Uuid.CreateVersion4(),
             Uuid.CreateVersion4(), effectiveUntil, "impact-digest", Uuid.CreateVersion4(),
-            "Approver", "Retirement approved.", DateTimeOffset.UtcNow));
+            "Approver", "Retirement approved.", DateTimeOffset.UtcNow)));
         var retired = Assert.Single((await directory.ListAsync(tenantId, "application",
             applicationId, 20, null)).Items);
 
@@ -149,15 +151,15 @@ public sealed class ApplicationControlVersionReferenceDirectoryTests
         var programId = Uuid.CreateVersion4();
         var controlId = Uuid.CreateVersion4();
         var directory = new FitzApplicationControlVersionReferenceDirectory(
-            new InMemoryKvClient());
+            new InMemoryKvClient(), _controlFacts.Content);
         var identity = Identity(tenantId);
-        await ApplyAsync(directory, identity, Created(tenantId, programId, controlId,
+        await ApplyAsync(directory, identity, await Created(tenantId, programId, controlId,
             Content()));
 
         // Act
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
             ProjectionCheckpoint.Start));
-        var foreignApproval = Approved(foreignTenantId, programId, controlId,
+        var foreignApproval = await Approved(foreignTenantId, programId, controlId,
             Uuid.CreateVersion4(), 1, Content(), new DateOnly(2026, 1, 1));
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await directory.ApplyAsync(foreignApproval));
@@ -175,14 +177,14 @@ public sealed class ApplicationControlVersionReferenceDirectoryTests
         var programId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
         var directory = new FitzApplicationControlVersionReferenceDirectory(
-            new InMemoryKvClient());
+            new InMemoryKvClient(), _controlFacts.Content);
         var events = new InMemoryEventStore();
         var consistency = new ApplicationControlVersionReferenceReadConsistency(directory,
             events);
         var identity = Identity(tenantId);
         var stream = new EventStreamAddress(tenantId.ToString(), "controls",
             controlId.ToString());
-        DomainEvent created = Created(tenantId, programId, controlId, Content());
+        DomainEvent created = await Created(tenantId, programId, controlId, Content());
         created.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), controlId, 1,
             now));
         await events.AppendAsync(stream, 0, [created]);
@@ -200,8 +202,8 @@ public sealed class ApplicationControlVersionReferenceDirectoryTests
             await batch.CommitAsync(new ProjectionCheckpoint(source.Current.NextCursor));
         }
         var caughtUp = await consistency.CaptureAsync(tenantId, CancellationToken.None);
-        DomainEvent revised = new ControlDraftRevised(tenantId, programId, controlId, 2,
-            Content(), Uuid.CreateVersion4(), "Author", now.AddMinutes(1));
+        DomainEvent revised = await _controlFacts.FreezeAsync(new ControlDraftRevisedContent(tenantId, programId, controlId, 2,
+            Content(), Uuid.CreateVersion4(), "Author", now.AddMinutes(1)));
         revised.AttachMetadata(new DomainEventMetadata(Uuid.CreateVersion4(), controlId, 2,
             now.AddMinutes(1)));
         await events.AppendAsync(stream, 1, [revised]);
@@ -229,25 +231,25 @@ public sealed class ApplicationControlVersionReferenceDirectoryTests
         var successorId = Uuid.CreateVersion4();
         var applicationId = Uuid.CreateVersion4();
         var directory = new FitzApplicationControlVersionReferenceDirectory(
-            new InMemoryKvClient());
+            new InMemoryKvClient(), _controlFacts.Content);
         var identity = Identity(tenantId);
         var content = Content(Entry("application", applicationId, "Payroll"));
-        await ApplyAsync(directory, identity, Created(tenantId, programId, controlId, content));
-        await ApplyAsync(directory, identity, Approved(tenantId, programId, controlId,
+        await ApplyAsync(directory, identity, await Created(tenantId, programId, controlId, content));
+        await ApplyAsync(directory, identity, await Approved(tenantId, programId, controlId,
             predecessorId, 1, content, new DateOnly(2026, 1, 1)));
-        var proposal = new ControlSuccessorProposed(tenantId, programId, controlId,
+        var proposal = await _controlFacts.FreezeAsync(new ControlSuccessorProposedContent(tenantId, programId, controlId,
             successorId, predecessorId, 2, Uuid.CreateVersion4(), "Author",
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow));
 
         // Act
         await using (var failedBatch = await directory.BeginAsync(new ProjectionBatchContext(
                          identity, ProjectionCheckpoint.Start)))
         {
             await directory.ApplyAsync(proposal);
-            var invalidWithdrawal = new ControlProposalWithdrawn(tenantId, programId,
+            var invalidWithdrawal = await _controlFacts.FreezeAsync(new ControlProposalWithdrawnContent(tenantId, programId,
                 controlId, Uuid.CreateVersion4(), "successor", Uuid.CreateVersion4(),
                 predecessorId, 2, "Wrong proposal.", Uuid.CreateVersion4(),
-                ActorReference.ForMember(Uuid.CreateVersion4(), "Author"), DateTimeOffset.UtcNow);
+                ActorReference.ForMember(Uuid.CreateVersion4(), "Author"), DateTimeOffset.UtcNow));
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
                 await directory.ApplyAsync(invalidWithdrawal));
         }
@@ -262,18 +264,18 @@ public sealed class ApplicationControlVersionReferenceDirectoryTests
         Assert.True(replayed.HasPendingSuccessor);
     }
 
-    static ControlDraftCreated Created(Uuid tenantId, Uuid programId, Uuid controlId,
-        ControlDraftContent content) => new(tenantId, programId, controlId,
+    Task<ControlDraftCreated> Created(Uuid tenantId, Uuid programId, Uuid controlId,
+        ControlDraftContent content) => _controlFacts.FreezeAsync(new ControlDraftCreatedContent(tenantId, programId, controlId,
         Uuid.CreateVersion4(), "AC-01", content, Uuid.CreateVersion4(), "Author",
-        DateTimeOffset.UtcNow);
+        DateTimeOffset.UtcNow));
 
-    static ControlApproved Approved(Uuid tenantId, Uuid programId, Uuid controlId,
+    Task<ControlApproved> Approved(Uuid tenantId, Uuid programId, Uuid controlId,
         Uuid versionId, long revision, ControlDraftContent content, DateOnly effectiveFrom,
-        Uuid? predecessorVersionId = null) => new(tenantId, programId, controlId, versionId,
+        Uuid? predecessorVersionId = null) => _controlFacts.FreezeAsync(new ControlApprovedContent(tenantId, programId, controlId, versionId,
         revision, Uuid.CreateVersion4(), Uuid.CreateVersion4(), content,
         Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(), "Approver",
         "Approved for use.", effectiveFrom, DateTimeOffset.UtcNow, null,
-        predecessorVersionId);
+        predecessorVersionId));
 
     static ControlDraftContent Content(params ControlApplicabilityReference[] applicability) =>
         new("Access controls", "Restrict payroll access", "Payroll access control",

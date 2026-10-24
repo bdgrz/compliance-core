@@ -35,7 +35,7 @@ public sealed class PersonalControlDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Contains("personal HTTP", result.Error!.Message, StringComparison.Ordinal);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
         Assert.Equal(before.Revision, after.Revision);
         Assert.Equal(before.ReadDecisions(), after.ReadDecisions());
     }
@@ -56,7 +56,7 @@ public sealed class PersonalControlDecisionTransportTests
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition + 1, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition + 1, after.SourcePhysicalPosition);
         var decision = after.ReadDecisions()[^1];
         Assert.Equal(RbacIds.Member(fixture.Tenant, action == "review" ? fixture.Reviewer : fixture.Approver).ToString(), decision.Actor.Id);
         Assert.Equal(before.PendingTargetId, decision.VersionId);
@@ -88,7 +88,7 @@ public sealed class PersonalControlDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Equal(message, result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Theory]
@@ -107,7 +107,7 @@ public sealed class PersonalControlDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Equal(message, result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public sealed class PersonalControlDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Equal("The impact preview changed. Reload it before deciding.", result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public sealed class PersonalControlDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Equal("The control draft changed. Current revision: 1. Reload it and retry.", result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public sealed class PersonalControlDecisionTransportTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Equal("Activation requires an active client-personnel member assigned control_owner, or a verified workforce person designated as owner, on this exact draft revision.", result.Error?.Message);
-        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.SourcePhysicalPosition, after.SourcePhysicalPosition);
     }
 
     internal static async Task<Result> HttpAsync(IServiceProvider provider, Uuid user, IRequest request,
@@ -228,7 +228,7 @@ public sealed class PersonalControlDecisionTransportTests
                 return Result.Success;
             });
             await ProgramManagementServices.SeedAsync(fixture._provider, new Member(fixture.Tenant, fixture.Owner), member => member.Register());
-            await ProgramManagementServices.SeedAsync(fixture._provider, new ControlDraft(fixture.Tenant, fixture.Control), control =>
+            await ProgramManagementServices.SeedAsync(fixture._provider, new ControlRules(fixture.Tenant, fixture.Control), control =>
             {
                 Assert.True(control.Create(fixture.Program, Uuid.CreateVersion4(), "AC-PERSONAL", new ControlDraftContent(
                     "Access review", "Review access", "Management reviews access", "Quarterly access review.", ["Dated review record"]), author, "Author", now).IsSuccess);
@@ -243,7 +243,7 @@ public sealed class PersonalControlDecisionTransportTests
                 Assert.True((await fixture.DecideAsync("approval", "http")).IsSuccess);
                 await using var scope = fixture._provider.CreateAsyncScope();
                 var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
-                var proposed = await bus.SendAsync(new ProposeControlRetirement(fixture.Tenant, fixture.Program, fixture.Control,
+                var proposed = await bus.SendAsync(new ProposeControlRetirement(Uuid.CreateVersion4(), fixture.Tenant, fixture.Program, fixture.Control,
                     fixture.InitialVersion, new DateOnly(2027, 3, 1), "Replaced."), ProgramManagementServices.Actor(fixture.Author));
                 Assert.True(proposed.IsSuccess, proposed.Error?.Message);
                 fixture._revision = proposed.Value.Revision;
@@ -269,7 +269,7 @@ public sealed class PersonalControlDecisionTransportTests
             {
                 "review" => new ReviewControl(Uuid.CreateVersion4(), Tenant, Program, Control, _revision, "accept", "Independent review."),
                 "approval" => new ApproveControl(Uuid.CreateVersion4(), Tenant, Program, Control, revision ?? _revision, review ?? AcceptedReview, new DateOnly(2026, 10, 1), "Ready to operate."),
-                _ => new RetireControl(Tenant, Program, Control, _revision, review ?? AcceptedReview, digest ?? _digest, "Retire at quarter end.")
+                _ => new RetireControl(Uuid.CreateVersion4(), Tenant, Program, Control, _revision, review ?? AcceptedReview, digest ?? _digest, "Retire at quarter end.")
             };
             await using var scope = _provider.CreateAsyncScope();
             return await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
@@ -279,7 +279,7 @@ public sealed class PersonalControlDecisionTransportTests
         public Task SuspendOwnerAsync() => ProgramManagementServices.SeedAsync(_provider, new Member(Tenant, Owner),
             member => member.Suspend(RbacIds.Member(Tenant, Author), "Author", DateTimeOffset.UtcNow, "Leave of absence."));
 
-        public Task<ControlDraft> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new ControlDraft(Tenant, Control));
+        public Task<ControlRules> ReadAsync() => ProgramManagementServices.HydrateAsync(_provider, new ControlRules(Tenant, Control));
         public ValueTask DisposeAsync() => _provider.DisposeAsync();
     }
 }

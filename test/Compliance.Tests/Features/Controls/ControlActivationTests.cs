@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Tests.Testing;
 using System.Text.Json;
 using Bdgrz.Compliance;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -174,7 +175,7 @@ public sealed class ControlActivationTests
         Assert.Equal(CommandFailureCode.ActorProhibited,
             Assert.IsType<CommandFailure>(deniedMismatch).Code);
         Assert.Null(waived);
-        Assert.Equal(waiver.Id, Assert.Single(control.ReadDecisions()).SeparationOfDutiesWaiverId);
+        Assert.Equal(waiver.WaiverId, Assert.Single(control.ReadDecisions()).SeparationOfDutiesWaiverId);
     }
 
     [Fact]
@@ -231,7 +232,7 @@ public sealed class ControlActivationTests
     }
 
     [Fact]
-    public void ShouldReplayActivationGivenPersistedEvents()
+    public async Task ShouldReplayActivationGivenPersistedEvents()
     {
         // Arrange
         var source = Created("AC-10", out var scope);
@@ -241,13 +242,8 @@ public sealed class ControlActivationTests
             ReviewerId, "Reviewer", Now.AddMinutes(2)));
         Assert.Null(source.Approve(ProgramId, 1, Uuid.CreateVersion4(), reviewId, EffectiveFrom,
             "Approved", new HashSet<Uuid> { OwnerId }, ApproverId, "Approver", Now.AddMinutes(3)));
-        var events = new AggregateScenario<ControlDraft>(source).PendingEvents;
-        var seeded = events.Select((ev, index) =>
-            DomainEventSeed.Attach(RoundTrip(ev), source.Id, (ulong)index + 1)).ToArray();
-
         // Act
-        var replayed = new AggregateScenario<ControlDraft>(new ControlDraft(TenantId, source.Id))
-            .Given(seeded).Aggregate;
+        var replayed = await ControlNativeRuleReplay.ReadAsync(source);
 
         // Assert
         var expected = Assert.IsType<ControlVersionView>(source.ApprovedVersion);
@@ -259,33 +255,29 @@ public sealed class ControlActivationTests
         Assert.Equal(1, replayed.Revision);
     }
 
-    static DomainEvent RoundTrip(DomainEvent ev) => (DomainEvent)JsonSerializer.Deserialize(
-        JsonSerializer.Serialize(ev, ev.GetType(), ComplianceCoreJsonContext.Default),
-        ev.GetType(), ComplianceCoreJsonContext.Default)!;
-
-    static ControlDraft Created(string identifier, out ResponsibilityScope scope)
+    static ControlRules Created(string identifier, out ResponsibilityScope scope)
     {
-        var controlId = ControlDraft.IdFor(TenantId, ProgramId, identifier);
-        var control = new ControlDraft(TenantId, controlId);
+        var controlId = ControlRules.IdFor(TenantId, ProgramId, identifier);
+        var control = new ControlRules(TenantId, controlId);
         Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), identifier, Content(),
             AuthorId, "Author", Now).IsSuccess);
         scope = new ResponsibilityScope("control", controlId, ControlVersionIds.Initial(controlId), 1);
         return control;
     }
 
-    static CommandFailure? AssignOwner(ControlDraft control, ResponsibilityScope scope,
+    static CommandFailure? AssignOwner(ControlRules control, ResponsibilityScope scope,
         Uuid assignmentId, Uuid memberId) => control.AssignResponsibility(scope, assignmentId,
         memberId, ResponsibilityType.ControlOwner, AuthorId, "Author", Now.AddMinutes(1),
         Now, null, []);
 
-    static SeparationOfDutiesWaiver CreateWaiver(SeparationOfDutiesWaiverScope scope,
+    static SeparationOfDutiesWaiverProof CreateWaiver(SeparationOfDutiesWaiverScope scope,
         Uuid beneficiary)
     {
         var waiver = new SeparationOfDutiesWaiver(TenantId, Uuid.CreateVersion4());
         Assert.Null(waiver.Record(scope, beneficiary, Uuid.CreateVersion4(), "Requester",
             "No other qualified reviewer is available.", Now, Now.AddDays(1)));
         Assert.Null(waiver.Approve(Uuid.CreateVersion4(), "Approver", Now.AddMinutes(1)));
-        return waiver;
+        return ControlTestWaivers.Proof(waiver);
     }
 
     static ControlDraftContent Content() => new("Access review", "Review access",

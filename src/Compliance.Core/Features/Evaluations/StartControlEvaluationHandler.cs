@@ -16,13 +16,17 @@ namespace Bdgrz.Compliance.Features.Evaluations;
 ///     the logical operation identity, so an exact retry returns the original view.
 /// </summary>
 public sealed class StartControlEvaluationHandler(NativeOperationExecutor operations,
-    ControlEvaluationReader evaluations, IAggregateReader reader, OperatingAuthority authority,
+    ControlEvaluationReader evaluations, IAggregateReader reader, ControlReader controlSources, OperatingAuthority authority,
     IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<StartControlEvaluation, ControlEvaluationView>
 {
     const string CommandKind = "StartControlEvaluation";
 
-    public async ValueTask<Result<ControlEvaluationView>> HandleAsync(
+    public ValueTask<Result<ControlEvaluationView>> HandleAsync(
+        IRequestContext<StartControlEvaluation> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<ControlEvaluationView>> HandleCoreAsync(
         IRequestContext<StartControlEvaluation> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -52,7 +56,7 @@ public sealed class StartControlEvaluationHandler(NativeOperationExecutor operat
         {
             if (existing is not null)
                 return Failure(RequestErrorKind.Conflict, "The evaluation id already identifies another evaluation.");
-            var control = await ControlOperationsSource.LoadControlAsync(reader, request.TenantId, request.ProgramId,
+            var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId, request.ProgramId,
                 request.ControlId, ct).ConfigureAwait(false);
             if (control is null)
                 return Result<ControlEvaluationView>.Failure(ControlOperationsSource.ControlNotFound());

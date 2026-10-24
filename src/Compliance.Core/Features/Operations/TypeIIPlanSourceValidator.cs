@@ -14,7 +14,7 @@ namespace Bdgrz.Compliance.Features.Operations;
 static class TypeIIPlanSourceValidator
 {
     public static async ValueTask<Result<TypeIIPlanSourceValidation>> ValidateAsync(
-        IAggregateReader reader, FindingReader findings, ControlOperationsReader operating, Uuid tenantId,
+        IAggregateReader reader, ControlReader controlSources, FindingReader findings, ControlOperationsReader operating, Uuid tenantId,
         Uuid programId, Uuid examinationId, TypeIIPlanContent content, DateTimeOffset proposedAt, CancellationToken ct)
     {
         if (content is null || content.ExaminationId != examinationId ||
@@ -68,7 +68,7 @@ static class TypeIIPlanSourceValidator
             content, proposedAt, ct).ConfigureAwait(false);
         if (!carried.IsSuccess)
             return Result<TypeIIPlanSourceValidation>.Failure(carried.Error!);
-        if (!await ControlPlansMatchAsync(reader, operating, tenantId, programId, content, baseline,
+        if (!await ControlPlansMatchAsync(reader, controlSources, operating, tenantId, programId, content, baseline,
                 proposedAt, ct).ConfigureAwait(false))
             return Failure(RequestErrorKind.Conflict,
                 "Every planned control must match its exact approved control version, operating owner, cadence, and effective period.");
@@ -175,7 +175,7 @@ static class TypeIIPlanSourceValidator
         return Result.Success;
     }
 
-    static async ValueTask<bool> ControlPlansMatchAsync(IAggregateReader reader, ControlOperationsReader operating,
+    static async ValueTask<bool> ControlPlansMatchAsync(IAggregateReader reader, ControlReader controlSources, ControlOperationsReader operating,
         Uuid tenantId,
         Uuid programId, TypeIIPlanContent content, TypeIBaselineView baseline,
         DateTimeOffset proposedAt, CancellationToken ct)
@@ -187,7 +187,7 @@ static class TypeIIPlanSourceValidator
 
         foreach (var source in baselineControls)
         {
-            var control = await reader.HydrateAsync(new ControlDraft(tenantId, source.RecordId), ct)
+            var control = await controlSources.ReadAsync(tenantId, programId, source.RecordId, ct)
                 .ConfigureAwait(false);
             if (!control.IsVisible || control.TenantId != tenantId || control.ProgramId != programId)
                 return false;

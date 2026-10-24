@@ -7,12 +7,17 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
-sealed class AdvisorSharedSourceReader(IAggregateReader aggregates,
+sealed class AdvisorSharedSourceReader(IAggregateReader aggregates, ControlReader controlSources,
     IAdvisorRecordVersionResolver versions, EvidenceArtifactMetadataRead evidence,
     IBoundaryDirectoryReader boundaries, ReadinessReader readiness)
     : IAdvisorSharedSourceReader
 {
-    public async ValueTask<Result<AdvisorSharedSourceView>> GetAsync(Uuid tenantId,
+    public ValueTask<Result<AdvisorSharedSourceView>> GetAsync(Uuid tenantId,
+        Uuid programId, Uuid handoffId, AdvisorRecordVersion selectedSource,
+        CancellationToken ct = default) =>
+        ControlSourceFailures.ClassifyAsync(() => GetCoreAsync(tenantId, programId, handoffId, selectedSource, ct));
+
+    async ValueTask<Result<AdvisorSharedSourceView>> GetCoreAsync(Uuid tenantId,
         Uuid programId, Uuid handoffId, AdvisorRecordVersion selectedSource,
         CancellationToken ct = default)
     {
@@ -52,7 +57,7 @@ sealed class AdvisorSharedSourceReader(IAggregateReader aggregates,
     async ValueTask<Result<AdvisorSharedSourceView>> ReadControlDraftAsync(Uuid tenantId,
         Uuid programId, Uuid handoffId, AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var control = await aggregates.HydrateAsync(new ControlDraft(tenantId, selected.RecordId), ct)
+        var control = await controlSources.ReadAsync(tenantId, programId, selected.RecordId, ct)
             .ConfigureAwait(false);
         return control.CurrentContent is { } content
             ? Success(tenantId, programId, handoffId, selected, controlDraft: content)
@@ -62,7 +67,7 @@ sealed class AdvisorSharedSourceReader(IAggregateReader aggregates,
     async ValueTask<Result<AdvisorSharedSourceView>> ReadControlVersionAsync(Uuid tenantId,
         Uuid programId, Uuid handoffId, AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var control = await aggregates.HydrateAsync(new ControlDraft(tenantId, selected.RecordId), ct)
+        var control = await controlSources.ReadAsync(tenantId, programId, selected.RecordId, ct)
             .ConfigureAwait(false);
         var version = control.ReadVersions().FirstOrDefault(item =>
             item.VersionId == selected.VersionId && item.Revision == selected.Revision);

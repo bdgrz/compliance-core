@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Evaluations;
 using Bdgrz.Compliance.Features.ControlMappings;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -177,7 +178,7 @@ public sealed class RiskAcceptanceWorkTests
         var projected = new ProjectedRiskAcceptanceWorkItems(candidate,
             await ReadRiskEvaluationCheckpointAsync(events, fixture.TenantId));
         var consistency = new WorkQueueReadConsistency(events, [projected]);
-        var queue = new WorkQueueReader(reader,
+        var queue = new WorkQueueReader(reader, scope.ServiceProvider.GetRequiredService<ControlReader>(),
             scope.ServiceProvider.GetRequiredService<OperatingAuthority>(), TimeProvider.System,
             consistency, risks: fixture.Risks, accountableWorkItems: [projected],
             operatingReader: scope.ServiceProvider.GetRequiredService<ControlOperationsReader>(),

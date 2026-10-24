@@ -1,3 +1,5 @@
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.Content;
 using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
@@ -169,11 +171,11 @@ public sealed class LinkEvidenceSupportHandlerTests
         var request = fixture.Request(artifact, controlId, 1);
         var first = await fixture.Handler().HandleAsync(fixture.Context(request), CancellationToken.None);
         Assert.True(first.IsSuccess, first.Error?.Message);
-        var control = await fixture.Reader.HydrateAsync(new ControlDraft(fixture.TenantId, controlId));
+        var control = await fixture.Controls.RulesAsync(fixture.TenantId, fixture.ProgramId, controlId);
         Assert.Null(control.Revise(fixture.ProgramId, 1,
             new("Updated review", "New owner instruction", "Review access", "Quarterly review", ["Approval record"]),
             RbacIds.Member(fixture.TenantId, fixture.UserId), "Evidence lead", Now));
-        await fixture.Writer.SaveAsync(control, fixture.Context(request));
+        await ControlSeeds.AppendAsync(fixture.Reader, fixture.Writer, fixture.Content, control, CancellationToken.None);
 
         // Act
         var result = await fixture.Handler().HandleAsync(fixture.Context(request), CancellationToken.None);
@@ -196,6 +198,8 @@ public sealed class LinkEvidenceSupportHandlerTests
         public IAggregateReader Reader { get; }
         public IAggregateWriter Writer { get; }
         public IDomainEventReader Events { get; }
+        public IImmutableContentStore Content { get; } = new FitzKvImmutableContentStore(new InMemoryKvClient());
+        public ControlReader Controls => new(Reader, Events, Content);
         public EvidenceArtifactDownloadAccess Access { get; }
 
         ClaimsPrincipal Actor => new(new ClaimsIdentity(
@@ -218,7 +222,7 @@ public sealed class LinkEvidenceSupportHandlerTests
         }
 
         public LinkEvidenceSupportHandler Handler() => new(Access,
-            new EvidenceArtifactMetadataRead(Reader, Events), new EvidenceSupportTargetSource(Reader, EmptyOperations.Reader(Reader, Events), EmptyOperations.Evaluations(Reader, Events)),
+            new EvidenceArtifactMetadataRead(Reader, Events), new EvidenceSupportTargetSource(Reader, Controls, EmptyOperations.Reader(Reader, Events), EmptyOperations.Evaluations(Reader, Events)),
             _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), TimeProvider.System, Reader);
 
         public LinkEvidenceSupport Request(Uuid artifactId, Uuid controlId, long revision) =>
@@ -251,12 +255,12 @@ public sealed class LinkEvidenceSupportHandlerTests
         public async Task<Uuid> SeedControlAsync()
         {
             var controlId = ControlDraft.IdFor(TenantId, ProgramId, "AC-01");
-            var control = new ControlDraft(TenantId, controlId);
+            var control = new ControlRules(TenantId, controlId);
             Assert.True(control.Create(ProgramId, Uuid.CreateVersion4(), "AC-01",
                 new ControlDraftContent("Access review", "Review access", "Management reviews access",
                     "The owner reviews the access list quarterly.", ["Dated approval record"]),
                 RbacIds.Member(TenantId, UserId), "Evidence lead", Now).IsSuccess);
-            await Writer.SaveAsync(control, new RequestDispatchContext(RequestActor.System));
+            await ControlSeeds.WriteAsync(Writer, Content, control, CancellationToken.None);
             return controlId;
         }
 

@@ -16,7 +16,7 @@ namespace Bdgrz.Compliance.Features.Providers;
 /// This is a planning preview only; it does not approve a supplier decision or claim a
 /// cross-stream transaction.
 /// </summary>
-public sealed class ProviderChangeImpactService(IAggregateReader reader, ProviderSource providers,
+public sealed class ProviderChangeImpactService(IAggregateReader reader, ControlReader controlSources, ProviderSource providers,
     EvidenceRequestReader evidenceRequests,
     ProviderReferences references, ITechnologyInventoryReader inventory,
     TechnologyInventoryReadConsistency inventoryConsistency,
@@ -30,7 +30,11 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader, Provide
     const int MaximumReturnedRecords = 200;
     static readonly string[] ContextNames = ["systems", "data", "controls", "evidence", "scope"];
 
-    public async ValueTask<Result<ProviderChangeImpactPreview>> PreviewAsync(
+    public ValueTask<Result<ProviderChangeImpactPreview>> PreviewAsync(
+        PreviewProviderChange request, Uuid userId, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => PreviewCoreAsync(request, userId, ct));
+
+    async ValueTask<Result<ProviderChangeImpactPreview>> PreviewCoreAsync(
         PreviewProviderChange request, Uuid userId, CancellationToken ct)
     {
         if (request.ExpectedRevision < 1 || request.EffectiveOn == default ||
@@ -528,8 +532,7 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader, Provide
                         incomplete["controls"] ??= "control_projection_inconsistent";
                         continue;
                     }
-                    var control = await reader.HydrateAsync(new ControlDraft(tenantId,
-                        item.ControlId), ct).ConfigureAwait(false);
+                    var control = await controlSources.ReadAsync(tenantId, programId, item.ControlId, ct).ConfigureAwait(false);
                     if (!control.IsVisible || control.TenantId != tenantId ||
                         control.ProgramId != programId)
                     {
@@ -767,7 +770,7 @@ public sealed class ProviderChangeImpactService(IAggregateReader reader, Provide
         }
     }
 
-    static bool ReferencesAffectedSystem(ControlDraft control, HashSet<Uuid> applicationIds,
+    static bool ReferencesAffectedSystem(ControlReadSnapshot control, HashSet<Uuid> applicationIds,
         HashSet<Uuid> instanceIds) =>
         ReferencesAffectedSystem(control.ApprovedVersion?.Content, applicationIds, instanceIds) ||
         ReferencesAffectedSystem(control.CurrentContent, applicationIds, instanceIds);

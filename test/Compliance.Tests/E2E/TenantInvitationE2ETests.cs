@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Content;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
@@ -134,7 +135,7 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
 
             using var deniedRead = await recipient.GetAsync(draftPath);
             using var deniedWrite = await recipient.PutAsJsonAsync(draftPath,
-                new { expected_revision = 1, content = JourneyContentRequest(changedContent) });
+                new { command_id = Uuid.CreateVersion4(), expected_revision = 1, content = JourneyContentRequest(changedContent) });
             Assert.Equal(HttpStatusCode.Forbidden, deniedRead.StatusCode);
             Assert.Equal(HttpStatusCode.Forbidden, deniedWrite.StatusCode);
             var afterDeniedWrite = await WaitForJourneyDraftAsync(administrator, draftPath, 1);
@@ -152,7 +153,7 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             Assert.Equal(originalDraft.GetProperty("content").GetRawText(),
                 grantedRead.GetProperty("content").GetRawText());
             using var revised = await recipient.PutAsJsonAsync(draftPath,
-                new { expected_revision = 1, content = JourneyContentRequest(changedContent) });
+                new { command_id = Uuid.CreateVersion4(), expected_revision = 1, content = JourneyContentRequest(changedContent) });
 
             // Assert
             Assert.Equal(HttpStatusCode.NoContent, revised.StatusCode);
@@ -167,7 +168,10 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             Assert.Equal(programId, revision.ProgramId);
             Assert.Equal(Uuid.Parse(controlId, CultureInfo.InvariantCulture), revision.ControlId);
             Assert.Equal(2, revision.Revision);
-            Assert.Equivalent(changedContent, revision.Content, strict: true);
+            await using var contentScope = factory.Services.CreateAsyncScope();
+            var frozenContent = await ControlFactContent.ReadDraftAsync(
+                contentScope.ServiceProvider.GetRequiredService<IImmutableContentStore>(), revision, CancellationToken.None);
+            Assert.Equivalent(changedContent, frozenContent, strict: true);
             var memberId = RbacIds.Member(tenantId, Uuid.Parse(recipientUserId, CultureInfo.InvariantCulture));
             Assert.Equal(memberId, revision.ActorMemberId);
             Assert.Equal("member", revision.Actor.Kind);

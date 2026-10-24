@@ -4,11 +4,15 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.Evaluations;
 
 /// <summary>Lists a control's evaluations, newest first, keeping every prior decision visible.</summary>
-public sealed class ListControlEvaluationsHandler(IAggregateReader reader, FindingReader findings,
+public sealed class ListControlEvaluationsHandler(ControlReader controlSources, FindingReader findings,
     ControlEvaluationReader evaluations)
     : IRequestHandler<ListControlEvaluations, Page<ControlEvaluationView>>
 {
-    public async ValueTask<Result<Page<ControlEvaluationView>>> HandleAsync(
+    public ValueTask<Result<Page<ControlEvaluationView>>> HandleAsync(
+        IRequestContext<ListControlEvaluations> context, CancellationToken ct) =>
+        ControlSourceFailures.ClassifyAsync(() => HandleCoreAsync(context, ct));
+
+    async ValueTask<Result<Page<ControlEvaluationView>>> HandleCoreAsync(
         IRequestContext<ListControlEvaluations> context, CancellationToken ct)
     {
         var request = context.Request;
@@ -17,7 +21,7 @@ public sealed class ListControlEvaluationsHandler(IAggregateReader reader, Findi
             return Result<Page<ControlEvaluationView>>.Failure(new RequestError(
                 RequestErrorKind.Validation,
                 "The state filter must be in_progress, submitted, or accepted."));
-        var control = await ControlOperationsSource.LoadControlAsync(reader, request.TenantId,
+        var control = await ControlOperationsSource.LoadControlAsync(controlSources, request.TenantId,
             request.ProgramId, request.ControlId, ct).ConfigureAwait(false);
         if (control is null)
             return Result<Page<ControlEvaluationView>>.Failure(

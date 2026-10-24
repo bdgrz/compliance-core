@@ -160,7 +160,7 @@ public sealed class ControlOperationE2ETests(BrokerStackFixture broker)
         var author = Uuid.CreateVersion4();
         var reviewId = Uuid.CreateVersion4();
         var now = DateTimeOffset.UtcNow;
-        await SeedAsync(factory, new ControlDraft(tenantId, controlId), control =>
+        await SeedAsync(factory, new ControlRules(tenantId, controlId), control =>
         {
             var created = control.Create(programId, Uuid.CreateVersion4(), "AC-E2E",
                 new ControlDraftContent("Access review", "Review access",
@@ -178,6 +178,9 @@ public sealed class ControlOperationE2ETests(BrokerStackFixture broker)
             return Command(failure);
         });
     }
+
+    internal static Task SeedAsync(WebApplicationFactory<Program> factory, ControlRules rules,
+        Func<ControlRules, Result> operation) => ProgramManagementServices.SeedAsync(factory.Services, rules, operation);
 
     internal static async Task SeedAsync<TAggregate>(WebApplicationFactory<Program> factory,
         TAggregate aggregate, Func<TAggregate, Result> operation) where TAggregate : Aggregate

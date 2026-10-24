@@ -1,3 +1,7 @@
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Controls;
+using Bdgrz.Compliance.Features.Content;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Boundaries;
@@ -23,6 +27,13 @@ public sealed class MemberAssignmentLagTests
         var now = DateTimeOffset.UtcNow;
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddSingleton<IDomainEventReader>(provider =>
+            (IDomainEventReader)provider.GetRequiredService<IEventStore>());
+        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(new InMemoryKvClient()));
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<NativeOperationExecutor>();
+        services.AddScoped<ControlReader>();
+        services.AddScoped<ControlOperations>();
         services.AddPortia();
         await using var provider = services.BuildServiceProvider();
         await using var scopeServices = provider.CreateAsyncScope();
@@ -43,8 +54,8 @@ public sealed class MemberAssignmentLagTests
         Assert.False((await membershipProjection.GetAsync(tenantId.ToString(), userId))!.IsSuspended);
         var handler = new AssignResponsibilityHandler(
             scopeServices.ServiceProvider.GetRequiredService<IAggregateExecutor>(), reader,
-            membershipProjection, new AllowScope(), TimeProvider.System);
-        var request = new AssignResponsibility(tenantId, userId,
+            membershipProjection, new AllowScope(), scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(), TimeProvider.System);
+        var request = new AssignResponsibility(Uuid.CreateVersion4(), tenantId, userId,
             ResponsibilityType.ControlOwner, "boundary", boundaryId, versionId, 1,
             now, null, []);
         var actor = new ClaimsPrincipal(new ClaimsIdentity(
@@ -87,6 +98,13 @@ public sealed class MemberAssignmentLagTests
         var responsibilityScope = new ResponsibilityScope("boundary", boundaryId, versionId, 1);
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(new InMemoryEventStore());
+        services.AddSingleton<IDomainEventReader>(provider =>
+            (IDomainEventReader)provider.GetRequiredService<IEventStore>());
+        services.AddSingleton<IImmutableContentStore>(new FitzKvImmutableContentStore(new InMemoryKvClient()));
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<NativeOperationExecutor>();
+        services.AddScoped<ControlReader>();
+        services.AddScoped<ControlOperations>();
         services.AddPortia();
         await using var provider = services.BuildServiceProvider();
         await using var scopeServices = provider.CreateAsyncScope();
@@ -115,9 +133,8 @@ public sealed class MemberAssignmentLagTests
             administratorMemberId, now);
         var handler = new AssignResponsibilityHandler(
             scopeServices.ServiceProvider.GetRequiredService<IAggregateExecutor>(),
-            interleavingReader, new FixedMembershipDirectory(true), new AllowScope(),
-            TimeProvider.System);
-        var request = new AssignResponsibility(tenantId, userId,
+            interleavingReader, new FixedMembershipDirectory(true), new AllowScope(), scopeServices.ServiceProvider.GetRequiredService<ControlOperations>(), TimeProvider.System);
+        var request = new AssignResponsibility(Uuid.CreateVersion4(), tenantId, userId,
             ResponsibilityType.AssignedReviewer, "boundary", boundaryId, versionId, 1,
             now, null, [waiverId]);
         var actor = new ClaimsPrincipal(new ClaimsIdentity(

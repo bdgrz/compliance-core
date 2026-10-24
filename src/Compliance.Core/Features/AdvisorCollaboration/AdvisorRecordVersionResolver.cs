@@ -8,12 +8,16 @@ using Cntryl.Portia;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration;
 
 /// <summary>Checks the exact source version and program scope before a handoff can include it.</summary>
-sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates,
+sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates, ControlReader controlSources,
     EvidenceArtifactMetadataRead evidenceMetadata, EvidenceSupportTargetSource evidenceTargets,
     IBoundaryDirectoryReader boundaries, ReadinessReader readiness)
     : IAdvisorRecordVersionResolver
 {
-    public async ValueTask<Result> RequireCurrentAsync(Uuid tenantId, Uuid programId,
+    public ValueTask<Result> RequireCurrentAsync(Uuid tenantId, Uuid programId,
+        IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default) =>
+        ControlSourceFailures.ClassifyAsync(() => RequireCurrentCoreAsync(tenantId, programId, selection, ct));
+
+    async ValueTask<Result> RequireCurrentCoreAsync(Uuid tenantId, Uuid programId,
         IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default)
     {
         if (tenantId == Uuid.Empty || programId == Uuid.Empty ||
@@ -52,7 +56,7 @@ sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates,
     async ValueTask<Result> RequireControlDraftAsync(Uuid tenantId, Uuid programId,
         AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var control = await aggregates.HydrateAsync(new ControlDraft(tenantId, selected.RecordId), ct)
+        var control = await controlSources.ReadAsync(tenantId, programId, selected.RecordId, ct)
             .ConfigureAwait(false);
         if (!control.IsVisible || control.ProgramId != programId)
             return Missing();
@@ -65,7 +69,7 @@ sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates,
     async ValueTask<Result> RequireControlVersionAsync(Uuid tenantId, Uuid programId,
         AdvisorRecordVersion selected, CancellationToken ct)
     {
-        var control = await aggregates.HydrateAsync(new ControlDraft(tenantId, selected.RecordId), ct)
+        var control = await controlSources.ReadAsync(tenantId, programId, selected.RecordId, ct)
             .ConfigureAwait(false);
         if (!control.IsVisible || control.ProgramId != programId)
             return Missing();

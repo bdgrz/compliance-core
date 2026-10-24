@@ -6,7 +6,7 @@ namespace Bdgrz.Compliance.Features.Readiness;
 /// <summary>Reconstructs a control interval from lifecycle decisions known at the assessment instant.</summary>
 static class ReadinessControlSelection
 {
-    public static ControlVersionView? EffectiveVersionAt(ControlDraft control, DateTimeOffset asOf)
+    public static ControlVersionView? EffectiveVersionAt(ControlReadSnapshot control, DateTimeOffset asOf)
     {
         var date = DateOnly.FromDateTime(asOf.UtcDateTime);
         var approvals = control.ReadApprovedVersionHistory()

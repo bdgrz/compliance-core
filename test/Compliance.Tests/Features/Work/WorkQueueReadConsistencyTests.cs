@@ -192,7 +192,7 @@ public sealed class WorkQueueReadConsistencyTests
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var decisions = new FitzControlDecisionWorkItemDirectory(new InMemoryKvClient(),
-            services.GetRequiredService<IAggregateReader>(),
+            services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(),
             new ControlActivationReleaseGate(true), new ControlLifecycleReleaseGate(true));
         var consistency = new WorkQueueReadConsistency(events, [decisions]);
@@ -272,7 +272,7 @@ public sealed class WorkQueueReadConsistencyTests
         var consistency = new WorkQueueReadConsistency(events, [evidence]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [evidence],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -320,7 +320,7 @@ public sealed class WorkQueueReadConsistencyTests
             [correctiveActions]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [correctiveActions],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -371,7 +371,7 @@ public sealed class WorkQueueReadConsistencyTests
         var consistency = new WorkQueueReadConsistency(events, [riskWork]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [riskWork],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -419,7 +419,7 @@ public sealed class WorkQueueReadConsistencyTests
             [evaluationWork]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [evaluationWork],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -468,7 +468,7 @@ public sealed class WorkQueueReadConsistencyTests
             [applicabilityWork]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [applicabilityWork],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -510,7 +510,7 @@ public sealed class WorkQueueReadConsistencyTests
         var consistency = new WorkQueueReadConsistency(events, [mappingWork]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [mappingWork],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -565,7 +565,7 @@ public sealed class WorkQueueReadConsistencyTests
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var occurrenceWork = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<ControlReader>(),
                 sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
         var consistency = new WorkQueueReadConsistency(events,
             [occurrenceWork]);
@@ -592,12 +592,12 @@ public sealed class WorkQueueReadConsistencyTests
         await using var sourceScope = fixture.Provider.CreateAsyncScope();
         var services = sourceScope.ServiceProvider;
         var occurrenceWork = new FitzControlOccurrenceWorkItemDirectory(new InMemoryKvClient(),
-            services.GetRequiredService<IAggregateReader>(),
+            services.GetRequiredService<ControlReader>(),
                 services.GetRequiredService<IImmutableContentStore>());
         await FitzControlOccurrenceWorkItemDirectoryTests.CatchUpAsync(fixture, occurrenceWork);
         var consistency = new WorkQueueReadConsistency(events,
             [occurrenceWork]);
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [occurrenceWork],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),
@@ -637,7 +637,7 @@ public sealed class WorkQueueReadConsistencyTests
         var consistency = new WorkQueueReadConsistency(events, [planWork]);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(),
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<ControlReader>(),
             services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
             accountableWorkItems: [planWork],
             operatingReader: services.GetRequiredService<ControlOperationsReader>(),

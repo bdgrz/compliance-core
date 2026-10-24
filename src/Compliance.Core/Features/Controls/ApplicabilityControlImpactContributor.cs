@@ -11,7 +11,7 @@ public sealed class ApplicabilityControlImpactContributor : IControlImpactContri
 {
     public string Context => "applicability";
 
-    public ValueTask<Result<ControlImpactContribution>> ContributeAsync(ControlDraft subject,
+    public ValueTask<Result<ControlImpactContribution>> ContributeAsync(ControlReadSnapshot subject,
         IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);
@@ -36,7 +36,7 @@ public sealed class ApplicabilityControlImpactContributor : IControlImpactContri
                 [.. records.Values], true)));
     }
 
-    ControlAffectedRecord Record(ControlDraft subject, ControlApplicabilityReference reference,
+    ControlAffectedRecord Record(ControlReadSnapshot subject, ControlApplicabilityReference reference,
         string reason, Uuid? versionId) => new(subject.TenantId, Context,
         reference.SubjectType, reference.GovernedRecordId!.Value, versionId, reason);
 

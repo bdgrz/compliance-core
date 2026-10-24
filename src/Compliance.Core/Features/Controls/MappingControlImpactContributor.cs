@@ -14,7 +14,7 @@ public sealed class MappingControlImpactContributor(ControlMappingReader mapping
     public string Context => "mappings";
 
     public async ValueTask<Result<ControlImpactContribution>> ContributeAsync(
-        ControlDraft subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
+        ControlReadSnapshot subject, IReadOnlyList<ControlChange> changes, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(subject);
         var snapshot = await mappings.ReadProgramAsync(subject.TenantId, subject.ProgramId, ct)

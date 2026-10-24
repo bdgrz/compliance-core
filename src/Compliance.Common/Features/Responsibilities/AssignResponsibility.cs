@@ -4,12 +4,14 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Responsibilities;
 
-[Discriminator("bdgrz.responsibility.assign", 1)]
-public sealed record AssignResponsibility(Uuid TenantId, Uuid MemberUserId,
+[Discriminator("bdgrz.responsibility.assign", 2)]
+public sealed record AssignResponsibility(Uuid CommandId, Uuid TenantId, Uuid MemberUserId,
     ResponsibilityType Type, string RecordType, Uuid RecordId, Uuid VersionId, long ScopeRevision,
     DateTimeOffset EffectiveFrom, DateTimeOffset? EffectiveUntil,
-    IReadOnlyList<Uuid> SeparationOfDutiesWaiverIds) : IRequest, IRbacManagementRequest, IClientManagementMutationRequest, ICallable
+    IReadOnlyList<Uuid> SeparationOfDutiesWaiverIds) : IRequest, IRbacManagementRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
 {
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+
     [JsonIgnore]
     public ResponsibilityScope Scope => new(RecordType, RecordId, VersionId, ScopeRevision);
 }

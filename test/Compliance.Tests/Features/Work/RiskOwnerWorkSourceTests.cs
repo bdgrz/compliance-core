@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Controls;
 using Bdgrz.Compliance.Features.Operations;
 using Bdgrz.Compliance.Features.AccessControl;
 using Bdgrz.Compliance.Features.Risks;
@@ -228,7 +229,7 @@ public sealed class RiskOwnerWorkSourceTests
             WorkSource.AccessReviewReview, WorkSource.AccessReviewRemediation, WorkSource.AdvisorFeedback,
             FindingClosureWork.Kind,
         };
-        var result = await WorkSource.LoadAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), null,
+        var result = await WorkSource.LoadAsync(scope.ServiceProvider.GetRequiredService<IAggregateReader>(), scope.ServiceProvider.GetRequiredService<ControlReader>(), null,
             scope.ServiceProvider.GetRequiredService<RiskGovernanceReader>(), null, null, null, null, null,
             tenant ?? fixture.TenantId, fixture.ProgramId, fixture.Today, fixture.Today.AddDays(90), DateTimeOffset.UtcNow,
             null, null, projected, CancellationToken.None);
