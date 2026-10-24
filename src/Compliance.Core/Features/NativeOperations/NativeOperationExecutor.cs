@@ -68,6 +68,8 @@ public sealed class NativeOperationExecutor(IAggregateReader reader, IAggregateE
                 if (step.Value!.Replay is { } replay)
                     return Result<AcceptedAppendResult>.Success(
                         await ReplayAsync(operation, committed!, replay, ct).ConfigureAwait(false));
+                if (step.Value.Done is AcceptedAppendResult.Conflict conflict)
+                    return Result<AcceptedAppendResult>.Success(conflict);
                 var done = (AcceptedAppendResult.Committed)step.Value.Done!;
                 return Result<AcceptedAppendResult>.Success(
                     done with { NextPhysicalPositionExclusive = committed!.CommittedStreamPosition });

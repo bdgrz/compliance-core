@@ -104,6 +104,30 @@ public sealed class NativeOperationExecutorTests
     }
 
     [Fact]
+    public async Task ShouldReturnConflictGivenDifferentIntentCommitsBeforeExecutorHydration()
+    {
+        // Arrange
+        ServiceProvider? competitorProvider = null;
+        var (provider, events, _) = Build(inner => new CompeteBeforeHydrationExecutor(inner, async () =>
+        {
+            await using var scope = competitorProvider!.CreateAsyncScope();
+            var winner = new NativeOperationExecutor(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+                inner, scope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+            await winner.ExecuteAsync(Operation(Provenance(), 200, "winner"), Context(), CancellationToken.None);
+        }));
+        competitorProvider = provider;
+        var different = Provenance() with { AuthoredIntentSha256 = new string('e', 64) };
+
+        // Act
+        var result = await ExecuteAsync(provider, different, 200, "loser");
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.IsType<AcceptedAppendResult.Conflict>(result.Value);
+        Assert.Equal(1, await CountAsync(events));
+    }
+
+    [Fact]
     public async Task ShouldResumeByLogicalIdWithoutDuplicateAppendGivenUnknownAppendOutcome()
     {
         // Arrange
@@ -271,6 +295,25 @@ public sealed class NativeOperationExecutorTests
                 throw new EventStreamConcurrencyException("Lost the append race.", new InvalidOperationException());
             }
 
+            return await inner.ExecuteAsync(aggregate, operation, context, ct);
+        }
+    }
+
+    /// <summary>Lets another operation commit before the real executor hydrates, without forcing an OCC error.</summary>
+    sealed class CompeteBeforeHydrationExecutor(IAggregateExecutor inner, Func<Task> competitor) : IAggregateExecutor
+    {
+        int _calls;
+
+        public ValueTask<Result> ExecuteAsync<TAggregate>(TAggregate aggregate,
+            Func<TAggregate, AggregateOutcome> operation, IExecutionContext context, CancellationToken ct)
+            where TAggregate : Aggregate => inner.ExecuteAsync(aggregate, operation, context, ct);
+
+        public async ValueTask<Result<TOut>> ExecuteAsync<TAggregate, TOut>(TAggregate aggregate,
+            Func<TAggregate, AggregateOutcome<TOut>> operation, IExecutionContext context, CancellationToken ct)
+            where TAggregate : Aggregate
+        {
+            if (Interlocked.Increment(ref _calls) == 1)
+                await competitor();
             return await inner.ExecuteAsync(aggregate, operation, context, ct);
         }
     }
