@@ -189,7 +189,7 @@ public sealed class FitzTeamDirectoryReaderTests
         var repository = new FitzTeamDirectoryReader(client);
         var identity = new CheckpointIdentity("TeamDirectory", EventStreamPattern.ForPattern(tenant.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
-        await repository.ApplyAsync(new TeamDefined(tenant, teamId, name));
+        await repository.ApplyAsync(RbacFacts.TeamDefinedFact(tenant, teamId, name));
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 }

@@ -1,12 +1,30 @@
+using Bdgrz.Compliance.Features.Content;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.AccessControl;
 
-public sealed class DeleteTeamHandler(IAggregateExecutor executor) : IRequestHandler<DeleteTeam>
+/// <summary>
+///     Deletes a team as a native operation on the team owner. An exact retry replays the original acceptance and
+///     deleting an already deleted team appends nothing.
+/// </summary>
+public sealed class DeleteTeamHandler(NativeOperationExecutor operations, IImmutableContentStore content,
+    TimeProvider clock) : IRequestHandler<DeleteTeam>
 {
-    public ValueTask<Result> HandleAsync(IRequestContext<DeleteTeam> context, CancellationToken ct) =>
-        executor.ExecuteAsync(
-            new Team(context.Request.TenantId, context.Request.TeamId),
-            team => AggregateOutcome.CommitOnSuccess(team.Delete()),
-            context, ct);
+    const string CommandKind = "DeleteTeam";
+    const string CurrentEpisode = "current";
+
+    public ValueTask<Result> HandleAsync(IRequestContext<DeleteTeam> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        if (request.TenantId == Uuid.Empty || request.TeamId == Uuid.Empty || request.CommandId == request.TeamId)
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A tenant, team and a command id distinct from the team are required.")));
+        return UnitOperations.RunAsync(operations, content, clock, context, RegisterMemberHandler.ActorOf(context.Actor),
+            request.CommandId, CommandKind, CurrentEpisode, null,
+            selected => new Team(request.TenantId, request.TeamId, selected), team => team.Acceptance,
+            team => team.PrepareDelete(), (Team team, OperationProvenance operation, ImmutableContentRef response) => team.Delete(operation, response),
+            Team.AlreadyDeleted);
+    }
 }

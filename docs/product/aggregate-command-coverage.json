@@ -41,26 +41,26 @@
     }
   ],
   "counts": {
-    "domainEventContracts": 459,
-    "factsWithReducer": 437,
-    "factsWithAggregateEmitter": 431,
+    "domainEventContracts": 458,
+    "factsWithReducer": 436,
+    "factsWithAggregateEmitter": 430,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 20,
     "legacyReducerOnlyFacts": 1,
-    "aggregateTypes": 112,
-    "aggregateTypesWithCommandPath": 109,
-    "requestContracts": 714,
-    "commonRequestContracts": 712,
+    "aggregateTypes": 111,
+    "aggregateTypesWithCommandPath": 108,
+    "requestContracts": 713,
+    "commonRequestContracts": 711,
     "requestClassificationCounts": {
       "command": 348,
       "confirmed_command_gap": 8,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 78,
+      "internal_reaction": 77,
       "query_or_reconstruction": 274
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 655,
+    "registeredCoreHandlerRegistrations": 654,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 38,
     "unwiredAggregateProducerClassifications": {
@@ -7400,24 +7400,6 @@
       "note": ""
     },
     {
-      "fact": "TenantOwnerRegistered",
-      "contract": "src/Compliance.Common/Features/Tenants/TenantOwnerRegistered.cs",
-      "reducers": [
-        {
-          "aggregate": "TenantOwner",
-          "source": "src/Compliance.Core/Features/Tenants/TenantOwner.cs"
-        }
-      ],
-      "emitters": [
-        "src/Compliance.Core/Features/Tenants/TenantOwner.cs"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantOwnerTests.cs"
-      ],
-      "disposition": "aggregate_fact",
-      "note": ""
-    },
-    {
       "fact": "TenantReactivated",
       "contract": "src/Compliance.Common/Features/Tenants/TenantReactivated.cs",
       "reducers": [
@@ -11598,21 +11580,6 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
-      "aggregate": "TenantOwner",
-      "source": "src/Compliance.Core/Features/Tenants/TenantOwner.cs",
-      "appliedFacts": [
-        "TenantOwnerRegistered"
-      ],
-      "commandRequests": [],
-      "internalReactionRequests": [
-        "RegisterTenantOwner"
-      ],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantOwnerTests.cs"
-      ],
-      "commandRouteDisposition": "registered_command_route"
-    },
-    {
       "aggregate": "TenantSlug",
       "source": "src/Compliance.Core/Features/Tenants/TenantSlug.cs",
       "appliedFacts": [
@@ -14181,7 +14148,7 @@
     {
       "request": "ChangeTenantSlug",
       "contract": "src/Compliance.Common/Features/Tenants/ChangeTenantSlug.cs",
-      "interfaces": "IRequest, ICallable, IPlatformOperatorOrTenantAdminRequest",
+      "interfaces": "IRequest, ICallable, IPlatformOperatorOrTenantAdminRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -14882,7 +14849,7 @@
     {
       "request": "ConfirmTenantSlug",
       "contract": "src/Compliance.Common/Features/Tenants/ConfirmTenantSlug.cs",
-      "interfaces": "IRequest, ITenantLifecycleReactionRequest",
+      "interfaces": "IRequest, ITenantLifecycleReactionRequest, IIdentifiedRequest",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -14907,7 +14874,7 @@
     {
       "request": "ConfirmTenantSlugSurrender",
       "contract": "src/Compliance.Common/Features/Tenants/ConfirmTenantSlugSurrender.cs",
-      "interfaces": "IRequest, ITenantLifecycleReactionRequest",
+      "interfaces": "IRequest, ITenantLifecycleReactionRequest, IIdentifiedRequest",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -15787,7 +15754,7 @@
     {
       "request": "DeleteRole",
       "contract": "src/Compliance.Common/Features/AccessControl/DeleteRole.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -15812,7 +15779,7 @@
     {
       "request": "DeleteTeam",
       "contract": "src/Compliance.Common/Features/AccessControl/DeleteTeam.cs",
-      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable",
+      "interfaces": "IRequest, IClientRbacMutationRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25181,34 +25148,9 @@
       "note": ""
     },
     {
-      "request": "RegisterTenantOwner",
-      "contract": "src/Compliance.Common/Features/Tenants/RegisterTenantOwner.cs",
-      "interfaces": "IRequest, ITenantLifecycleReactionRequest",
-      "classification": "internal_reaction",
-      "handlers": [
-        {
-          "name": "RegisterTenantOwnerHandler",
-          "source": "src/Compliance.Core/Features/Tenants/RegisterTenantOwnerHandler.cs",
-          "registered": true
-        }
-      ],
-      "handlerRegistration": true,
-      "directAggregateReferences": [
-        "TenantOwner"
-      ],
-      "aggregateTargets": [
-        "TenantOwner"
-      ],
-      "helperServices": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Tenants/TenantLifecycleReactionAuthorizerTests.cs"
-      ],
-      "note": "Internal event-driven follow-up command."
-    },
-    {
       "request": "RegisterTenantSlug",
       "contract": "src/Compliance.Common/Features/Tenants/RegisterTenantSlug.cs",
-      "interfaces": "IRequest, ITenantLifecycleReactionRequest",
+      "interfaces": "IRequest, ITenantLifecycleReactionRequest, IIdentifiedRequest",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -25364,7 +25306,7 @@
     {
       "request": "RejectTenantSlug",
       "contract": "src/Compliance.Common/Features/Tenants/RejectTenantSlug.cs",
-      "interfaces": "IRequest, ITenantLifecycleReactionRequest",
+      "interfaces": "IRequest, ITenantLifecycleReactionRequest, IIdentifiedRequest",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -25389,7 +25331,7 @@
     {
       "request": "RejectTenantSlugSurrender",
       "contract": "src/Compliance.Common/Features/Tenants/RejectTenantSlugSurrender.cs",
-      "interfaces": "IRequest, ITenantLifecycleReactionRequest",
+      "interfaces": "IRequest, ITenantLifecycleReactionRequest, IIdentifiedRequest",
       "classification": "internal_reaction",
       "handlers": [
         {
@@ -25653,7 +25595,7 @@
     {
       "request": "RenameRole",
       "contract": "src/Compliance.Common/Features/AccessControl/RenameRole.cs",
-      "interfaces": "IRequest, IRbacManagementRequest, ICallable",
+      "interfaces": "IRequest, IRbacManagementRequest, ICallable, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -25779,7 +25721,7 @@
     {
       "request": "RequestTenantSlugSurrender",
       "contract": "src/Compliance.Common/Features/Tenants/RequestTenantSlugSurrender.cs",
-      "interfaces": "IRequest, IPlatformOperatorRequest",
+      "interfaces": "IRequest, IPlatformOperatorRequest, IIdentifiedRequest",
       "classification": "command",
       "handlers": [
         {
@@ -28271,7 +28213,7 @@
     {
       "request": "SurrenderTenantSlug",
       "contract": "src/Compliance.Common/Features/Tenants/SurrenderTenantSlug.cs",
-      "interfaces": "IRequest, ITenantLifecycleReactionRequest",
+      "interfaces": "IRequest, ITenantLifecycleReactionRequest, IIdentifiedRequest",
       "classification": "internal_reaction",
       "handlers": [
         {

@@ -565,8 +565,13 @@ public sealed class TenantInvitationE2ETests(BrokerStackFixture broker)
             }).ExpectFailure();
 
         var newSlug = $"renamed-{Guid.NewGuid():N}"[..24];
-        using var changed = await operatorClient.PostAsJsonAsync(
-            $"/api/v1/tenants/{tenantId}/slug-changes", new { slug = newSlug });
+        using var current = await operatorClient.GetAsync($"/api/v1/tenants/{tenantId}");
+        Assert.Equal(HttpStatusCode.OK, current.StatusCode);
+        var revision = (await current.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>())
+            .GetProperty("revision").GetInt64();
+        using var changed = await operatorClient.PutAsJsonAsync(
+            $"/api/v1/tenants/{tenantId}/slug-changes/{Guid.NewGuid()}",
+            new { slug = newSlug, expected_revision = revision });
         Assert.Equal(HttpStatusCode.NoContent, changed.StatusCode);
         TenantSlugResolutionDocument? oldLink = null;
         deadline = DateTimeOffset.UtcNow.AddSeconds(30);

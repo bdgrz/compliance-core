@@ -1,8 +1,16 @@
 using System.Globalization;
+using Bdgrz.Compliance.Features.AccessControl;
+using Bdgrz.Compliance.Features.NativeOperations;
+using Bdgrz.Compliance.Features.Proofs;
 using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
+/// <summary>
+///     The global owner of one normalized slug: at most one tenant claims it and, once surrendered, it is retired for
+///     good. Every claim and surrender is a native operation keyed by its logical command id, so a replayed receiver
+///     never appends a second answer and an answer is never a bare receipt.
+/// </summary>
 public sealed class TenantSlug : Aggregate
 {
     static Uuid SlugNamespaceId { get; } =
@@ -12,22 +20,44 @@ public sealed class TenantSlug : Aggregate
     Uuid? _tenantId;
     bool _retired;
 
+    /// <summary>Acceptance of the logical operation this hydration was selected for.</summary>
+    public NativeAcceptance Acceptance { get; }
+
+    /// <summary>The tenant already holds the claim, so a further claim by it needs no fact.</summary>
+    public static RequestError AlreadyClaimed { get; } = new(RequestErrorKind.Conflict,
+        "The tenant already holds this slug.", false);
+
+    /// <summary>The tenant already gave this slug up, so a further surrender by it needs no fact.</summary>
+    public static RequestError AlreadySurrendered { get; } = new(RequestErrorKind.Conflict,
+        "The tenant already surrendered this slug.", false);
+
     public Uuid? OwningTenantId => _tenantId;
     public bool IsRetired => _retired;
 
-    public TenantSlug(string slug) : this(slug, allowReserved: false)
+    public TenantSlug(string slug, Uuid selectedCommandId = default) : this(slug, allowReserved: false, selectedCommandId)
     {
     }
 
-    internal TenantSlug(string slug, bool allowReserved)
+    internal TenantSlug(string slug, bool allowReserved, Uuid selectedCommandId = default)
         : base(CreateId(slug, allowReserved),
             new EventStreamAddress("bdgrz", "tenant-slugs", CreateId(slug, allowReserved).ToString()))
     {
         _slug = Normalize(slug, allowReserved);
-        On<TenantSlugRegistered>(Apply);
-        On<TenantSlugRegistrationRejected>(_ => { });
-        On<TenantSlugSurrendered>(Apply);
-        On<TenantSlugSurrenderRejected>(_ => { });
+        Acceptance = new NativeAcceptance(selectedCommandId);
+        On<TenantSlugRegistered>(registered =>
+        {
+            Accept(registered, registered.CommandId, registered.Operation);
+            _tenantId = registered.TenantId;
+        });
+        On<TenantSlugRegistrationRejected>(rejected => Accept(rejected, rejected.CommandId, rejected.Operation));
+        // A slug is permanently spent once surrendered, per the backlog's "a retired slug is never
+        // assigned to another organization" rule. Keep the old owner for member-only redirects.
+        On<TenantSlugSurrendered>(surrendered =>
+        {
+            Accept(surrendered, surrendered.CommandId, surrendered.Operation);
+            _retired = true;
+        });
+        On<TenantSlugSurrenderRejected>(rejected => Accept(rejected, rejected.CommandId, rejected.Operation));
     }
 
     /// <summary>
@@ -38,33 +68,78 @@ public sealed class TenantSlug : Aggregate
     /// </summary>
     public bool IsAvailableFor(Uuid tenantId) => !_retired && (_tenantId is null || _tenantId == tenantId);
 
-    public Result Register(Uuid tenantId)
+    /// <summary>
+    ///     Checks a claim against hydrated state without raising anything. A tenant that already holds the claim
+    ///     reports <see cref="AlreadyClaimed" />, which dispatchers treat as a terminal no-op.
+    /// </summary>
+    public Result PrepareRegister(Uuid tenantId)
     {
-        if (TenantSlugs.IsReservedRoute(_slug))
-            RaiseEvent(new TenantSlugRegistrationRejected(tenantId, _slug));
-        else if (!_retired && (_tenantId is null || _tenantId == tenantId))
-            RaiseEvent(new TenantSlugRegistered(tenantId, _slug));
-        else if (_tenantId != tenantId || _retired)
-            RaiseEvent(new TenantSlugRegistrationRejected(tenantId, _slug));
-        return Result.Success;
+        if (tenantId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A claim requires a tenant."));
+        return !TenantSlugs.IsReservedRoute(_slug) && !_retired && _tenantId == tenantId
+            ? Result.Failure(AlreadyClaimed)
+            : Result.Success;
     }
 
-    public Result Surrender(Uuid tenantId)
+    /// <summary>Accepts the claim, or its refusal, as the native fact of <paramref name="operation" />.</summary>
+    public Result Register(OperationProvenance operation, ImmutableContentRef firstResponse, Uuid tenantId)
     {
-        if (_tenantId == tenantId && !_retired)
-            RaiseEvent(new TenantSlugSurrendered(tenantId, _slug));
-        else if (_tenantId == tenantId)
-            return Result.Success;
+        var prepared = Prepare(operation, firstResponse, PrepareRegister(tenantId));
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (TenantSlugs.IsReservedRoute(_slug) || _retired || _tenantId is not null && _tenantId != tenantId)
+            RaiseEvent(new TenantSlugRegistrationRejected(tenantId, _slug, operation.LogicalId, operation,
+                firstResponse));
         else
-            RaiseEvent(new TenantSlugSurrenderRejected(tenantId, _slug));
+            RaiseEvent(new TenantSlugRegistered(tenantId, _slug, operation.LogicalId, operation, firstResponse));
         return Result.Success;
     }
 
-    void Apply(TenantSlugRegistered registered) => _tenantId = registered.TenantId;
+    /// <summary>
+    ///     Checks a surrender against hydrated state without raising anything. A tenant that already gave the slug up
+    ///     reports <see cref="AlreadySurrendered" />, which dispatchers treat as a terminal no-op.
+    /// </summary>
+    public Result PrepareSurrender(Uuid tenantId)
+    {
+        if (tenantId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A surrender requires a tenant."));
+        return _tenantId == tenantId && _retired ? Result.Failure(AlreadySurrendered) : Result.Success;
+    }
 
-    // A slug is permanently spent once surrendered, per the backlog's "a retired slug is never
-    // assigned to another organization" rule. Keep the old owner for member-only redirects.
-    void Apply(TenantSlugSurrendered _) => _retired = true;
+    /// <summary>Accepts the surrender, or its refusal, as the native fact of <paramref name="operation" />.</summary>
+    public Result Surrender(OperationProvenance operation, ImmutableContentRef firstResponse, Uuid tenantId)
+    {
+        var prepared = Prepare(operation, firstResponse, PrepareSurrender(tenantId));
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (_tenantId == tenantId)
+            RaiseEvent(new TenantSlugSurrendered(tenantId, _slug, operation.LogicalId, operation, firstResponse));
+        else
+            RaiseEvent(new TenantSlugSurrenderRejected(tenantId, _slug, operation.LogicalId, operation,
+                firstResponse));
+        return Result.Success;
+    }
+
+    /// <summary>The provenance of a root operation on this owner.</summary>
+    public OperationProvenance Provenance(Uuid commandId, string commandKind, ActorReference actor, string episode,
+        string authoredIntentSha256, DateTimeOffset acceptedAt) =>
+        OwnerProvenance.For(this, commandId, commandKind, actor, episode, null, authoredIntentSha256, acceptedAt);
+
+    Result Prepare(OperationProvenance operation, ImmutableContentRef firstResponse, Result prepared)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A slug operation requires its own logical operation."));
+        return prepared;
+    }
+
+    void Accept(DomainEvent fact, Uuid commandId, OperationProvenance operation)
+    {
+        OwnerProvenance.RequireOwn(this, commandId, operation);
+        Acceptance.Observe(fact);
+    }
 
     static Uuid CreateId(string slug, bool allowReserved) =>
         Uuid.CreateVersion5(SlugNamespaceId, Normalize(slug, allowReserved));

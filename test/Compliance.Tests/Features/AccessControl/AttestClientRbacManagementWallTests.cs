@@ -51,7 +51,7 @@ public sealed class AttestClientRbacManagementWallTests
         await AttestAssignmentHistoryFixture.SeedAsync(provider, Tenant, User, revoked: true);
 
         // Act
-        var deleted = await bus.DispatchAsync(new DeleteTeam(Tenant, teamId), Context(), CancellationToken.None);
+        var deleted = await bus.DispatchAsync(new DeleteTeam(Uuid.CreateVersion4(), Tenant, teamId), Context(), CancellationToken.None);
         var read = await bus.DispatchAsync(new GetTenantMember(Tenant, User), Context(), CancellationToken.None);
         var retained = await ProgramManagementServices.HydrateAsync(provider, new Team(Tenant, teamId));
 

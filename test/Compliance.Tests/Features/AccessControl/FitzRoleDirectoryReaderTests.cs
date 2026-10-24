@@ -54,7 +54,7 @@ public sealed class FitzRoleDirectoryReaderTests
         await using (var batch = await reader.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
         {
-            await reader.ApplyAsync(new RoleRenamed(TenantId, roleId, "Org Admin"));
+            await reader.ApplyAsync(RbacFacts.RoleRenamedFact(TenantId, roleId, "Org Admin"));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
 
@@ -124,7 +124,7 @@ public sealed class FitzRoleDirectoryReaderTests
         var repository = new FitzRoleDirectoryReader(client);
         var identity = new CheckpointIdentity("RoleDirectory", EventStreamPattern.ForPattern(tenant.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
-        await repository.ApplyAsync(new RoleDefined(tenant, roleId, name));
+        await repository.ApplyAsync(RbacFacts.RoleDefinedFact(tenant, roleId, name));
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 }

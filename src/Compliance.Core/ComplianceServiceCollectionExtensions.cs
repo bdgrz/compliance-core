@@ -1452,7 +1452,6 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<ListMyTenantsAuthorizer>()
             .AddRequestGuard<RegisterTenantSlugAvailabilityGuard>()
             .AddRequestHandler<RegisterTenantSlugHandler>()
-            .AddRequestHandler<RegisterTenantOwnerHandler>()
             .AddRequestHandler<ConfirmTenantSlugHandler>()
             .AddRequestHandler<RejectTenantSlugHandler>()
             .AddRequestHandler<RequestTenantSlugSurrenderHandler>()

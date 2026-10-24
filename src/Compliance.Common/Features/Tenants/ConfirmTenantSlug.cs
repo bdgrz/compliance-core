@@ -2,5 +2,13 @@ using Cntryl.Portia;
 
 namespace Bdgrz.Compliance.Features.Tenants;
 
+/// <summary>
+///     Confirms the tenant's pending slug claim or slug change once the slug owner registered it. <paramref name="CommandId" /> is the logical identity of the
+///     operation; an exact retry replays the original acceptance and changed intent conflicts.
+/// </summary>
 [Discriminator("bdgrz.tenant-slug.confirm", 1)]
-public sealed record ConfirmTenantSlug(Uuid TenantId, string Slug) : IRequest, ITenantLifecycleReactionRequest;
+public sealed record ConfirmTenantSlug(Uuid CommandId, Uuid TenantId, string Slug)
+    : IRequest, ITenantLifecycleReactionRequest, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

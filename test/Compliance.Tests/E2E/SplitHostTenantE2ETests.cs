@@ -928,8 +928,9 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
                     using var inviteDenied = await nonOperator.PostAsJsonAsync(
                         $"/api/v1/tenants/{tenantId}/invitations",
                         new { email_address = "denied@example.com", affiliation = "firm_staff" });
-                    using var slugDenied = await nonOperator.PostAsJsonAsync(
-                        $"/api/v1/tenants/{tenantId}/slug-changes", new { slug = "denied-slug" });
+                    using var slugDenied = await nonOperator.PutAsJsonAsync(
+                        $"/api/v1/tenants/{tenantId}/slug-changes/{Guid.NewGuid()}",
+                        new { slug = "denied-slug", expected_revision = 0 });
                     using var suspendDenied = await nonOperator.PostAsync(
                         $"/api/v1/tenants/{tenantId}/suspensions", null);
                     using var reactivateDenied = await nonOperator.DeleteAsync(
@@ -1250,8 +1251,13 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             Assert.Equal(HttpStatusCode.Forbidden, staffAdministratorDenied.StatusCode);
 
             var newSlug = $"split-renamed-{Guid.NewGuid():N}"[..24];
-            using var changed = await operatorClient.PostAsJsonAsync(
-                $"/api/v1/tenants/{tenantId}/slug-changes", new { slug = newSlug });
+            using var current = await operatorClient.GetAsync($"/api/v1/tenants/{tenantId}");
+            Assert.Equal(HttpStatusCode.OK, current.StatusCode);
+            var revision = (await current.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>())
+                .GetProperty("revision").GetInt64();
+            using var changed = await operatorClient.PutAsJsonAsync(
+                $"/api/v1/tenants/{tenantId}/slug-changes/{Guid.NewGuid()}",
+                new { slug = newSlug, expected_revision = revision });
             Assert.Equal(HttpStatusCode.NoContent, changed.StatusCode);
             SlugResolution? oldLink = null;
             deadline = DateTimeOffset.UtcNow.AddSeconds(120);

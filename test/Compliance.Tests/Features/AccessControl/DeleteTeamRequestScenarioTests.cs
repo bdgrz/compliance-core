@@ -21,7 +21,7 @@ public sealed class DeleteTeamRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new DeleteTeam(TenantId, TeamId))
+            .When(new DeleteTeam(Uuid.CreateVersion4(), TenantId, TeamId))
             // Assert
             .ExpectAuthorized()
             .ExpectHandled()
@@ -39,7 +39,7 @@ public sealed class DeleteTeamRequestScenarioTests
         await RequestScenario.For(provider)
             .GivenActor(RbacManagementServices.Actor())
             // Act
-            .When(new DeleteTeam(TenantId, TeamId))
+            .When(new DeleteTeam(Uuid.CreateVersion4(), TenantId, TeamId))
             // Assert
             .ExpectDenied(RequestErrorKind.Forbidden)
             .ExpectNotHandled();

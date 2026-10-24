@@ -30,6 +30,21 @@ static class RbacTeamRoleFacts
         Assert.True(result.IsSuccess, result.Error?.Message);
     }
 
+    public static async Task RevokeAsync(IServiceProvider provider, Uuid tenantId, Uuid teamId, Uuid roleId)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var current = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(new TeamRole(tenantId, teamId, roleId));
+        if (!current.IsAssigned)
+            return;
+        var id = Uuid.CreateVersion4();
+        var owner = new TeamRole(tenantId, teamId, roleId, id);
+        var result = await scope.ServiceProvider.GetRequiredService<IAggregateExecutor>().ExecuteAsync(owner,
+            item => AggregateOutcome.CommitOnSuccess(item.Remove(id, current.Version, current.AssignmentId!.Value, Actor)),
+            new RequestDispatchContext(RequestActor.System, metadata: new RequestMetadata(id, id)));
+        Assert.True(result.IsSuccess, result.Error?.Message);
+    }
+
     public static void Hydrate(TeamRole owner, bool removed)
     {
         var assigned = DomainEventSeed.Attach(Assigned(owner.TenantId, owner.TeamId, owner.RoleId), owner.Id, 1);

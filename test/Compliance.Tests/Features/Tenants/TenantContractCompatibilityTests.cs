@@ -61,7 +61,7 @@ public sealed class TenantContractCompatibilityTests
         // Act
         new AggregateScenario<Tenant>(tenant).Given(
             DomainEventSeed.Attach(registered, tenantId, 1),
-            DomainEventSeed.Attach(new TenantSlugConfirmed(tenantId, "acme"), tenantId, 2));
+            DomainEventSeed.Attach(TenantFacts.Confirmed(tenantId, "acme"), tenantId, 2));
 
         // Assert
         Assert.True(registered.CreatorIsAdministrator);

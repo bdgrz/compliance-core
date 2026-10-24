@@ -17,10 +17,10 @@ namespace Bdgrz.Compliance.Tests.Testing;
 /// </summary>
 static class RbacManagementServices
 {
-    public static ServiceProvider Build(bool allowed, Action<PortiaBuilder> handlers)
+    public static ServiceProvider Build(bool allowed, Action<PortiaBuilder> handlers, IEventStore? store = null)
     {
         var services = new ServiceCollection();
-        var events = new InMemoryEventStore();
+        var events = store ?? new InMemoryEventStore();
         services.AddSingleton<IEventStore>(events);
         services.AddSingleton<IDomainEventReader>(events);
         services.AddSingleton<IProjectionCheckpointStore, InMemoryProjectionCheckpointStore>();

@@ -51,7 +51,7 @@ public sealed class ReservedTenantRouteCollisionCheckTests
         // Arrange
         await using var fixture = new StoreFixture();
         var reservedSlug = new TenantSlug("login", allowReserved: true);
-        DomainEvent historicalClaim = new TenantSlugRegistered(Uuid.CreateVersion4(), "login");
+        DomainEvent historicalClaim = TenantFacts.Registered(Uuid.CreateVersion4(), "login");
         historicalClaim.AttachMetadata(new DomainEventMetadata(
             Uuid.CreateVersion4(), reservedSlug.Id, 1, DateTimeOffset.UtcNow));
         await fixture.Store.AppendAsync(

@@ -224,7 +224,7 @@ These remain the actionable design risks from the full source review. â€œSplitâ€
 | PlatformOperatorRoster | Tenants | retain | ACCESS-08 (in_progress) | 0.25 | [source](../../../../src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs) |
 | Tenant | Tenants | narrow | ACCESS-10 (pending), ACCESS-16 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Tenants/Tenant.cs) |
 | TenantInvitation | Tenants | split | ACCESS-11 (pending), ACCESS-13 (pending) | 0.73 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantInvitation.cs) |
-| TenantOwner | Tenants | project | ACCESS-15 (pending) | 0.71 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantOwner.cs) |
+| TenantOwner | Tenants | project | ACCESS-15 (pending) | 0.71 | source retired with the cutover |
 | TenantSlug | Tenants | retain | ACCESS-14 (pending) | 0.45 | [source](../../../../src/Compliance.Core/Features/Tenants/TenantSlug.cs) |
 | EmailAddress | UserIdentities | narrow | ACCESS-12 (pending), ACCESS-13 (pending) | 0.80 | [source](../../../../src/Compliance.Core/Features/UserIdentities/EmailAddress.cs) |
 | TenantIdentityProvider | UserIdentities | narrow | ACCESS-07 (pending), ACCESS-10 (pending) | 0.83 | [source](../../../../src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs) |

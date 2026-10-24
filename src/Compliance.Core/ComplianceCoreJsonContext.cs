@@ -1900,8 +1900,6 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(TenantSlugChangeRejected))]
 [JsonSerializable(typeof(ResolveMyTenantSlug))]
 [JsonSerializable(typeof(TenantSlugResolution))]
-[JsonSerializable(typeof(RegisterTenantOwner))]
-[JsonSerializable(typeof(TenantOwnerRegistered))]
 [JsonSerializable(typeof(RegisterTenantSlug))]
 [JsonSerializable(typeof(TenantSlugRegistered))]
 [JsonSerializable(typeof(TenantSlugRegistrationRejected))]

@@ -250,7 +250,7 @@ public sealed class SystemInstanceBoundedReadTests
             for (var index = 0; index < count; index++)
                 await _events.AppendAsync(stream, (ulong)index,
                 [
-                    DomainEventSeed.Attach(new TeamDefined(TenantId, Uuid.CreateVersion4(),
+                    DomainEventSeed.Attach(RbacFacts.TeamDefinedFact(TenantId, Uuid.CreateVersion4(),
                         "Team"), Uuid.CreateVersion4(), (ulong)index + 1),
                 ]);
         }

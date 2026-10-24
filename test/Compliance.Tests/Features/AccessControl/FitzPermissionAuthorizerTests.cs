@@ -324,8 +324,8 @@ public sealed class FitzPermissionAuthorizerTests
                          permissionIdentity, ProjectionCheckpoint.Start)))
         {
             await permissions.ApplyAsync(MemberFacts.Registered(tenantId, memberId, userId));
-            await permissions.ApplyAsync(new TeamDefined(tenantId, teamId, "Administrators"));
-            await permissions.ApplyAsync(new RoleDefined(tenantId, roleId, "Tenant Administration"));
+            await permissions.ApplyAsync(RbacFacts.TeamDefinedFact(tenantId, teamId, "Administrators"));
+            await permissions.ApplyAsync(RbacFacts.RoleDefinedFact(tenantId, roleId, "Tenant Administration"));
             await permissions.ApplyAsync(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
             await permissions.ApplyAsync(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
             await permissions.ApplyAsync(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
@@ -367,8 +367,8 @@ public sealed class FitzPermissionAuthorizerTests
             identity, ProjectionCheckpoint.Start));
         await permissions.ApplyAsync(MemberFacts.Registered(tenantId,
             RbacIds.Member(tenantId, userId), userId));
-        await permissions.ApplyAsync(new TeamDefined(tenantId, teamId, "Administrators"));
-        await permissions.ApplyAsync(new RoleDefined(tenantId, roleId, "Org Admin"));
+        await permissions.ApplyAsync(RbacFacts.TeamDefinedFact(tenantId, teamId, "Administrators"));
+        await permissions.ApplyAsync(RbacFacts.RoleDefinedFact(tenantId, roleId, "Org Admin"));
         await permissions.ApplyAsync(TeamMemberFacts.Assigned(tenantId, teamId,
             RbacIds.Member(tenantId, userId)));
         await permissions.ApplyAsync(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));

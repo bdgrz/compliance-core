@@ -29,8 +29,8 @@ public sealed class PermissionProjectionStateTests
 
         // Act
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
-        state.Apply(new RoleDefined(tenantId, roleId, BuiltInRbac.ViewerRoleName));
-        state.Apply(new RoleRenamed(tenantId, roleId, "Read only"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenantId, roleId, BuiltInRbac.ViewerRoleName));
+        state.Apply(RbacFacts.RoleRenamedFact(tenantId, roleId, "Read only"));
 
         // Assert
         Assert.Equal(3, state.Revision);
@@ -51,9 +51,9 @@ public sealed class PermissionProjectionStateTests
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
-        state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
+        state.Apply(RbacFacts.TeamDefinedFact(tenantId, teamId, "Reviewers"));
         state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
-        state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenantId, roleId, "Reviewer"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant:access"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
 
@@ -79,9 +79,9 @@ public sealed class PermissionProjectionStateTests
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
-        state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
+        state.Apply(RbacFacts.TeamDefinedFact(tenantId, teamId, "Reviewers"));
         state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
-        state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenantId, roleId, "Reviewer"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant:access"));
 
         // Act
@@ -104,8 +104,8 @@ public sealed class PermissionProjectionStateTests
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4(), "firm_staff"));
-        state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
-        state.Apply(new RoleDefined(tenantId, roleId, "Tenant Administration"));
+        state.Apply(RbacFacts.TeamDefinedFact(tenantId, teamId, "Administrators"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenantId, roleId, "Tenant Administration"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
 
@@ -127,9 +127,9 @@ public sealed class PermissionProjectionStateTests
         var legacyRoleId = Uuid.CreateVersion4();
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
-        state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
+        state.Apply(RbacFacts.TeamDefinedFact(tenantId, teamId, "Administrators"));
         state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
-        state.Apply(new RoleDefined(tenantId, legacyRoleId, "Legacy custom administrator"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenantId, legacyRoleId, "Legacy custom administrator"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, legacyRoleId, RbacPermissions.TenantRbacManage));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, legacyRoleId));
 
@@ -155,9 +155,9 @@ public sealed class PermissionProjectionStateTests
         var at = DateTimeOffset.UtcNow;
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, userId));
-        state.Apply(new TeamDefined(tenantId, teamId, "Administrators"));
+        state.Apply(RbacFacts.TeamDefinedFact(tenantId, teamId, "Administrators"));
         state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
-        state.Apply(new RoleDefined(tenantId, roleId, "Tenant Administration"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenantId, roleId, "Tenant Administration"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
 
@@ -194,9 +194,9 @@ public sealed class PermissionProjectionStateTests
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, userId,
             membershipEpisodeId: oldEpisodeId));
-        state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
+        state.Apply(RbacFacts.TeamDefinedFact(tenantId, teamId, "Reviewers"));
         state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId, oldEpisodeId));
-        state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenantId, roleId, "Reviewer"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "program:read"));
 
@@ -223,9 +223,9 @@ public sealed class PermissionProjectionStateTests
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
-        state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
+        state.Apply(RbacFacts.TeamDefinedFact(tenantId, teamId, "Reviewers"));
         state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
-        state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenantId, roleId, "Reviewer"));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant:access"));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
 
@@ -246,8 +246,8 @@ public sealed class PermissionProjectionStateTests
         var roleId = BuiltInRbac.ComplianceManagementRoleId(tenantId);
         var state = new PermissionProjectionState();
         state.Apply(MemberFacts.Registered(tenantId, memberId, Uuid.CreateVersion4()));
-        state.Apply(new TeamDefined(tenantId, teamId, "Reviewers"));
-        state.Apply(new RoleDefined(tenantId, roleId, "Reviewer"));
+        state.Apply(RbacFacts.TeamDefinedFact(tenantId, teamId, "Reviewers"));
+        state.Apply(RbacFacts.RoleDefinedFact(tenantId, roleId, "Reviewer"));
         state.Apply(TeamMemberFacts.Assigned(tenantId, teamId, memberId));
         state.Apply(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         state.Apply(RbacPermissionFacts.Assigned(tenantId, roleId, "tenant.access"));

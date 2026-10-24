@@ -605,7 +605,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListTenantMembers, Page<TenantMembershipView>>("/api/v1/tenants/{tenant_id}/members")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
-    app.MapPortiaPost<ChangeTenantSlug>("/api/v1/tenants/{tenant_id}/slug-changes")
+    app.MapPortiaPut<ChangeTenantSlug>("/api/v1/tenants/{tenant_id}/slug-changes/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Tenants");
     app.MapPortiaGet<ResolveMyTenantSlug, TenantSlugResolution>("/api/v1/tenant-slugs/{slug}/mine")
@@ -2322,10 +2322,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Identity federation");
-    app.MapPortiaPost<DefineTeam>("/api/v1/tenants/{tenant_id}/teams/{team_id}")
+    app.MapPortiaPut<DefineTeam>("/api/v1/tenants/{tenant_id}/teams/{team_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaDelete<DeleteTeam>("/api/v1/tenants/{tenant_id}/teams/{team_id}")
+    app.MapPortiaPut<DeleteTeam>("/api/v1/tenants/{tenant_id}/teams/{team_id}/deletions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
     app.MapPortiaGet<GetTeam, TeamView>("/api/v1/tenants/{tenant_id}/teams/{team_id}")
@@ -2353,10 +2353,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaDelete<RemoveTeamRole>("/api/v1/tenants/{tenant_id}/teams/{team_id}/roles/{role_id}/removals/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Teams");
-    app.MapPortiaPost<DefineRole>("/api/v1/tenants/{tenant_id}/roles/{role_id}")
+    app.MapPortiaPut<DefineRole>("/api/v1/tenants/{tenant_id}/roles/{role_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Roles");
-    app.MapPortiaDelete<DeleteRole>("/api/v1/tenants/{tenant_id}/roles/{role_id}")
+    app.MapPortiaPut<DeleteRole>("/api/v1/tenants/{tenant_id}/roles/{role_id}/deletions/{command_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Roles");
     app.MapPortiaGet<GetRole, RoleView>("/api/v1/tenants/{tenant_id}/roles/{role_id}")

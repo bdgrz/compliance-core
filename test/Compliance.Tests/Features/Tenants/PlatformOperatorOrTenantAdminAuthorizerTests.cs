@@ -120,7 +120,7 @@ public sealed class PlatformOperatorOrTenantAdminAuthorizerTests
         // Arrange
         var permissions = new RecordingPermissionAuthorizer(allowed: true);
         var authorizer = Authorizer(new FixedMembershipDirectory(true), permissions);
-        var request = new ChangeTenantSlug(Uuid.CreateVersion4(), "acme-next");
+        var request = new ChangeTenantSlug(Uuid.CreateVersion4(), Uuid.CreateVersion4(), "acme-next", 0);
         var context = new RequestContext<IPlatformOperatorOrTenantAdminRequest>(request,
             new ClaimsPrincipal(new ClaimsIdentity()));
 
@@ -137,7 +137,7 @@ public sealed class PlatformOperatorOrTenantAdminAuthorizerTests
         new(new FixedOperatorAccess(), memberships, new ActiveTenant(), permissions);
 
     static RequestContext<IPlatformOperatorOrTenantAdminRequest> Context(Uuid tenantId,
-        Uuid userId) => new(new ChangeTenantSlug(tenantId, "acme-next"), Actor(userId));
+        Uuid userId) => new(new ChangeTenantSlug(Uuid.CreateVersion4(), tenantId, "acme-next", 0), Actor(userId));
 
     static ClaimsPrincipal Actor(Uuid userId) => new(new ClaimsIdentity(
         [new Claim("iss", "bdgrz"), new Claim("sub", userId.ToString())], "BdgrzSession"));

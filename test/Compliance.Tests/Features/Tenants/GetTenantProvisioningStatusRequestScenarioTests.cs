@@ -334,7 +334,7 @@ public sealed class GetTenantProvisioningStatusRequestScenarioTests
         Assert.False(registered.ActivationRequired);
         await provider.GetRequiredService<IEventStore>().AppendAsync(new Tenant(tenantId).Stream, 0,
             [DomainEventSeed.Attach(registered, tenantId, 1),
-                DomainEventSeed.Attach(new TenantSlugConfirmed(tenantId, "acme"), tenantId, 2)]);
+                DomainEventSeed.Attach(TenantFacts.Confirmed(tenantId, "acme"), tenantId, 2)]);
     }
 
     static async Task<Tenant> SeedCompletedAsync(ServiceProvider provider, Uuid tenantId,
